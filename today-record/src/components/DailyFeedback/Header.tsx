@@ -8,7 +8,7 @@ export function HeaderSection({ view }: SectionProps) {
       <div
         className="p-8 rounded-3xl mb-6"
         style={{
-          background: "linear-gradient(135deg, #A8BBA8 0%, #8FA894 100%)",
+          background: "linear-gradient(135deg, #A8BBA8 0%, #6B7A6F 100%)",
           color: "white",
         }}
       >
@@ -46,7 +46,7 @@ export function HeaderSection({ view }: SectionProps) {
           <p
             style={{
               fontSize: "0.85rem",
-              opacity: 0.8,
+              opacity: 0.85,
               marginBottom: "0.75rem",
             }}
           >

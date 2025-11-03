@@ -9,7 +9,7 @@ export function VisionSection({ view }: SectionProps) {
       <div className="flex items-center gap-2 mb-4">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#A3BFD9" }}
+          style={{ backgroundColor: "#8FA894" }}
         >
           <Target className="w-4 h-4 text-white" />
         </div>
@@ -20,7 +20,7 @@ export function VisionSection({ view }: SectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
           className="p-5"
-          style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -39,7 +39,7 @@ export function VisionSection({ view }: SectionProps) {
         </Card>
         <Card
           className="p-5"
-          style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -64,8 +64,8 @@ export function VisionSection({ view }: SectionProps) {
               <Badge
                 key={index}
                 style={{
-                  backgroundColor: "#E5EEF5",
-                  color: "#5A7A8F",
+                  backgroundColor: "#EAEDE9",
+                  color: "#55685E",
                   padding: "0.5rem 1rem",
                   fontSize: "0.85rem",
                   whiteSpace: "nowrap",
@@ -80,7 +80,7 @@ export function VisionSection({ view }: SectionProps) {
       {view.reminder_sentence && (
         <Card
           className="p-5 mb-4"
-          style={{ backgroundColor: "#A3BFD9", color: "white", border: "none" }}
+          style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}
         >
           <p
             style={{ fontSize: "0.8rem", opacity: 0.9, marginBottom: "0.5rem" }}
@@ -96,10 +96,10 @@ export function VisionSection({ view }: SectionProps) {
         <div className="flex gap-2 items-start">
           <Sparkles
             className="w-4 h-4 flex-shrink-0 mt-1"
-            style={{ color: "#A3BFD9", opacity: 0.7 }}
+            style={{ color: "#8FA894", opacity: 0.85 }}
           />
           <p
-            style={{ color: "#6B7A6F", lineHeight: "1.6", fontSize: "0.85rem" }}
+            style={{ color: "#55685E", lineHeight: "1.6", fontSize: "0.85rem" }}
           >
             {view.vision_ai_feedback}
           </p>

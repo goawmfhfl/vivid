@@ -7,11 +7,8 @@ import { RecordForm } from "./Home/RecordForm";
 import { RecordList } from "./Home/RecordList";
 import { EditRecordDialog } from "./Home/EditRecordDialog";
 import { DeleteRecordDialog } from "./Home/DeleteRecordDialog";
-import { getCurrentUserId } from "@/hooks/useCurrentUser";
-import {
-  useCreateDailyFeedback,
-  useDailyFeedback,
-} from "@/hooks/useDailyFeedback";
+import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
+import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 
 export function Home() {
   const router = useRouter();
@@ -41,12 +38,21 @@ export function Home() {
   const { mutateAsync: createDailyFeedback, isPending } =
     useCreateDailyFeedback();
 
+  // 오늘 자 피드백 존재 여부 조회
+  const { data: todayFeedback, isLoading: feedbackLoading } =
+    useGetDailyFeedback(todayIso);
+
+  const hasTodayFeedback = !!todayFeedback;
+
   const handleOpenDailyFeedback = async () => {
     try {
+      if (hasTodayFeedback) {
+        router.push(`/daily?date=${todayIso}`);
+        return;
+      }
       await createDailyFeedback({ date: todayIso });
       router.push(`/daily?date=${todayIso}`);
     } catch (e) {
-      // 에러는 콘솔로만 기록. 필요 시 토스트 추가 가능
       console.error(e);
     }
   };
@@ -132,10 +138,10 @@ export function Home() {
               padding: "0.875rem 2rem",
               fontSize: "0.9rem",
             }}
-            disabled={isPending}
+            disabled={isPending || feedbackLoading}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            오늘 피드백 받기
+            {hasTodayFeedback ? "오늘 피드백 보기" : "오늘 피드백 받기"}
           </Button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import type { DailyReportData } from "./types";
-import type { DailyFeedbackRow } from "@/hooks/useDailyFeedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 export function mapDailyFeedbackRowToReport(
   row: DailyFeedbackRow

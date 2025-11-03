@@ -19,7 +19,7 @@ export function SummarySection({ view }: SectionProps) {
       </div>
       <Card
         className="p-6 mb-4"
-        style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <div className="space-y-4">
           <div>
@@ -33,7 +33,7 @@ export function SummarySection({ view }: SectionProps) {
             <div
               className="p-4 rounded-xl"
               style={{
-                backgroundColor: "#FAFAF8",
+                backgroundColor: "#F7F8F6",
                 borderLeft: "3px solid #A8BBA8",
               }}
             >
@@ -56,8 +56,8 @@ export function SummarySection({ view }: SectionProps) {
                     key={index}
                     className="rounded-full px-3 py-1"
                     style={{
-                      backgroundColor: "#EFE9E3",
-                      color: "#6B7A6F",
+                      backgroundColor: "#EAEDE9",
+                      color: "#55685E",
                       fontSize: "0.85rem",
                     }}
                   >

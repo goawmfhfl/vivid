@@ -1,0 +1,30 @@
+export interface DailyFeedbackRow {
+  user_id: string;
+  report_date: string;
+  day_of_week: string | null;
+  integrity_score: number | null;
+  narrative_summary: string | null;
+  emotion_curve: string[];
+  narrative: string | null;
+  lesson: string | null;
+  keywords: string[];
+  daily_ai_comment: string | null;
+  vision_summary: string | null;
+  vision_self: string | null;
+  vision_keywords: string[];
+  reminder_sentence: string | null;
+  vision_ai_feedback: string | null;
+  core_insight: string | null;
+  learning_source: string | null;
+  meta_question: string | null;
+  insight_ai_comment: string | null;
+  core_feedback: string | null;
+  positives: string[];
+  improvements: string[];
+  feedback_ai_comment: string | null;
+  ai_message: string | null;
+  growth_point: string | null;
+  adjustment_point: string | null;
+  tomorrow_focus: string | null;
+  integrity_reason: string | null;
+}

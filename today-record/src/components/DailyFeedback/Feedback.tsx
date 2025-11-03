@@ -8,7 +8,7 @@ export function FeedbackSection({ view }: SectionProps) {
       <div className="flex items-center gap-2 mb-4">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#A8BBA8" }}
+          style={{ backgroundColor: "#6B7A6F" }}
         >
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
@@ -19,7 +19,7 @@ export function FeedbackSection({ view }: SectionProps) {
       {view.core_feedback && (
         <Card
           className="p-5 mb-4"
-          style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           <p style={{ color: "#333333", lineHeight: "1.7", fontSize: "1rem" }}>
             {view.core_feedback}
@@ -29,7 +29,7 @@ export function FeedbackSection({ view }: SectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
           className="p-5"
-          style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
+          style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -45,7 +45,7 @@ export function FeedbackSection({ view }: SectionProps) {
               <li key={index} className="flex items-start gap-2">
                 <div
                   className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                  style={{ backgroundColor: "#A8BBA8" }}
+                  style={{ backgroundColor: "#6B7A6F" }}
                 />
                 <p
                   style={{
@@ -62,7 +62,7 @@ export function FeedbackSection({ view }: SectionProps) {
         </Card>
         <Card
           className="p-5"
-          style={{ backgroundColor: "#FDF6F0", border: "1px solid #F0DCC8" }}
+          style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -78,7 +78,7 @@ export function FeedbackSection({ view }: SectionProps) {
               <li key={index} className="flex items-start gap-2">
                 <div
                   className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                  style={{ backgroundColor: "#D08C60" }}
+                  style={{ backgroundColor: "#B89A7A" }}
                 />
                 <p
                   style={{
@@ -97,7 +97,7 @@ export function FeedbackSection({ view }: SectionProps) {
       {view.feedback_ai_comment && (
         <div
           className="p-5 rounded-xl flex gap-3"
-          style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
+          style={{ backgroundColor: "#F5F7F5", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{ color: "#4E4B46", lineHeight: "1.7", fontSize: "0.9rem" }}

@@ -18,7 +18,7 @@ export function FinalSection({ view }: SectionProps) {
       <Card
         className="p-6 mb-4"
         style={{
-          background: "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
+          background: "linear-gradient(135deg, #6B7A6F 0%, #55685E 100%)",
           color: "white",
           border: "none",
         }}
@@ -42,7 +42,7 @@ export function FinalSection({ view }: SectionProps) {
       </Card>
       <Card
         className="p-6 mb-4"
-        style={{ backgroundColor: "white", border: "2px solid #A8BBA8" }}
+        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <div className="flex items-start gap-3 mb-4">
           <Sparkles
@@ -59,7 +59,7 @@ export function FinalSection({ view }: SectionProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
           className="p-5"
-          style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
+          style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -78,7 +78,7 @@ export function FinalSection({ view }: SectionProps) {
         </Card>
         <Card
           className="p-5"
-          style={{ backgroundColor: "#FDF6F0", border: "1px solid #F0DCC8" }}
+          style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
@@ -98,7 +98,7 @@ export function FinalSection({ view }: SectionProps) {
       </div>
       <Card
         className="p-6"
-        style={{ backgroundColor: "#A3BFD9", color: "white", border: "none" }}
+        style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}
       >
         <div className="flex items-center justify-between">
           <div>

@@ -8,7 +8,7 @@ export function InsightSection({ view }: SectionProps) {
       <div className="flex items-center gap-2 mb-4">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#D08C60" }}
+          style={{ backgroundColor: "#B89A7A" }}
         >
           <Star className="w-4 h-4 text-white" />
         </div>
@@ -16,12 +16,12 @@ export function InsightSection({ view }: SectionProps) {
       </div>
       <Card
         className="p-6 mb-4"
-        style={{ backgroundColor: "white", border: "2px solid #D08C60" }}
+        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <p
           style={{
             fontSize: "0.8rem",
-            color: "#D08C60",
+            color: "#6B7A6F",
             marginBottom: "0.75rem",
           }}
         >
@@ -45,12 +45,12 @@ export function InsightSection({ view }: SectionProps) {
       {view.meta_question && (
         <Card
           className="p-5 mb-4"
-          style={{ backgroundColor: "#FDF6F0", border: "1px solid #F0DCC8" }}
+          style={{ backgroundColor: "#FAFAF8", border: "1px solid #E6E4DE" }}
         >
           <p
             style={{
               fontSize: "0.8rem",
-              color: "#D08C60",
+              color: "#6B7A6F",
               marginBottom: "0.5rem",
             }}
           >
@@ -66,12 +66,12 @@ export function InsightSection({ view }: SectionProps) {
           className="p-4 rounded-lg flex gap-3"
           style={{
             backgroundColor: "#F5F7F5",
-            borderLeft: "3px solid #D08C60",
+            borderLeft: "3px solid #A8BBA8",
           }}
         >
           <Sparkles
             className="w-4 h-4 flex-shrink-0 mt-0.5"
-            style={{ color: "#D08C60" }}
+            style={{ color: "#A8BBA8" }}
           />
           <p
             style={{ color: "#4E4B46", lineHeight: "1.7", fontSize: "0.9rem" }}

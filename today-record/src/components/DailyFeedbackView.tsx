@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
-import { useDailyFeedback } from "@/hooks/useDailyFeedback";
+import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { HeaderSection } from "./DailyFeedback/Header";
 import { SummarySection } from "./DailyFeedback/Summary";
 import { VisionSection } from "./DailyFeedback/Vision";
@@ -16,7 +16,7 @@ type DailyFeedbackViewProps = {
 };
 
 export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
-  const { data, isLoading, error } = useDailyFeedback(date);
+  const { data, isLoading, error } = useGetDailyFeedback(date);
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
   if (isLoading) return <LoadingState />;
@@ -35,6 +35,7 @@ export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
           <ArrowLeft className="w-4 h-4 mr-2" />
           돌아가기
         </Button>
+
         <HeaderSection view={view} />
         <SummarySection view={view} />
         <VisionSection view={view} />
