@@ -1,87 +1,111 @@
 export const DailyFeedbackSchema = {
-  name: "DailyFeedbackResponse",
+  name: "DailyReportResponse",
   schema: {
     type: "object",
     additionalProperties: false,
     properties: {
+      // Header
       date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+      day_of_week: { type: "string" },
+      integrity_score: { type: "integer", minimum: 0, maximum: 10 },
+      narrative_summary: { type: "string" },
+      emotion_curve: { type: "array", items: { type: "string" }, minItems: 0 },
+
+      // Section 1: Daily Summary
+      narrative: { type: "string" },
       lesson: { type: "string" },
-      keywords: {
+      keywords: { type: "array", items: { type: "string" }, minItems: 0 },
+      daily_ai_comment: { type: "string" },
+
+      // Section 2: Visualization Review
+      vision_summary: { type: "string" },
+      vision_self: { type: "string" },
+      vision_keywords: {
         type: "array",
-        minItems: 3,
-        maxItems: 7,
         items: { type: "string" },
+        minItems: 0,
       },
-      observation: { type: "string" },
-      insight: { type: "string" },
-      action_feedback: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          well_done: { type: "string" },
-          to_improve: { type: "string" },
-        },
-        required: ["well_done", "to_improve"],
-      },
-      focus_tomorrow: { type: "string" },
-      focus_score: { type: "integer", minimum: 0, maximum: 10 },
-      satisfaction_score: { type: "integer", minimum: 0, maximum: 10 },
+      reminder_sentence: { type: "string" },
+      vision_ai_feedback: { type: "string" },
+
+      // Section 3: Insight Analysis
+      core_insight: { type: "string" },
+      learning_source: { type: "string" },
+      meta_question: { type: "string" },
+      insight_ai_comment: { type: "string" },
+
+      // Section 4: Feedback Review
+      core_feedback: { type: "string" },
+      positives: { type: "array", items: { type: "string" }, minItems: 0 },
+      improvements: { type: "array", items: { type: "string" }, minItems: 0 },
+      feedback_ai_comment: { type: "string" },
+
+      // Section 5: Final Message
+      ai_message: { type: "string" },
+      growth_point: { type: "string" },
+      adjustment_point: { type: "string" },
+      tomorrow_focus: { type: "string" },
+      integrity_reason: { type: "string" },
     },
     required: [
       "date",
+      "integrity_score",
+      "narrative_summary",
+      "emotion_curve",
       "lesson",
       "keywords",
-      "observation",
-      "insight",
-      "action_feedback",
-      "focus_tomorrow",
-      "focus_score",
-      "satisfaction_score",
+      "core_insight",
+      "positives",
+      "improvements",
+      "ai_message",
+      "tomorrow_focus",
     ],
   },
   strict: true,
 } as const;
 
 export const SYSTEM_PROMPT = `
-당신은 사용자의 하루 기록(저널/투두/운동/노트 등)을 분석해 핵심만 뽑아 정리하는 코치형 요약가입니다.
-다음 요구사항을 반드시 지키세요.
+당신은 사용자의 하루 기록(저널/투두/운동/노트 등)을 분석해, 아래 스키마에 맞춘 일일 리포트를 생성합니다.
 
-출력 형식:
-- 오직 JSON 하나만 출력합니다. 앞뒤 설명, 마크다운, 코드블록 금지.
-- JSON 키와 타입은 아래 스키마와 완전히 동일해야 합니다.
-- insight가 뚜렷하지 않다면 빈 문자열 ""을 넣습니다.
-- scores( focus_score, satisfaction_score )는 0~10 범위의 정수로 반올림해 주세요.
-- keywords는 최소 3개, 최대 7개. 모두 #으로 시작하는 한글 단어 위주로 작성(예: ["#몰입","#자기효능감","#루틴"]).
-- 어휘는 간결·구체·행동지향 문장으로 쓰세요. (모호어 금지: “열심히”, “좀 더” 같은 표현은 피하고, 측정가능/구체 행동 제시)
+규칙:
+- 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
+- 스키마 키와 타입을 정확히 준수합니다.
+- 누락 가능 항목은 빈 문자열("") 또는 빈 배열([])로 채웁니다.
+- integrity_score는 0~10의 정수로 제공합니다.
 
 스키마(반드시 준수):
 {
   "date": "YYYY-MM-DD",
+  "day_of_week": "월요일",
+  "integrity_score": 7,
+  "narrative_summary": "string",
+  "emotion_curve": ["string", ...],
+
+  "narrative": "string",
   "lesson": "string",
-  "keywords": ["#string", "..."],
-  "observation": "string",
-  "insight": "string",
-  "action_feedback": {
-    "well_done": "string",
-    "to_improve": "string"
-  },
-  "focus_tomorrow": "string",
-  "focus_score": 0,
-  "satisfaction_score": 0
+  "keywords": ["string", ...],
+  "daily_ai_comment": "string",
+
+  "vision_summary": "string",
+  "vision_self": "string",
+  "vision_keywords": ["string", ...],
+  "reminder_sentence": "string",
+  "vision_ai_feedback": "string",
+
+  "core_insight": "string",
+  "learning_source": "string",
+  "meta_question": "string",
+  "insight_ai_comment": "string",
+
+  "core_feedback": "string",
+  "positives": ["string", ...],
+  "improvements": ["string", ...],
+  "feedback_ai_comment": "string",
+
+  "ai_message": "string",
+  "growth_point": "string",
+  "adjustment_point": "string",
+  "tomorrow_focus": "string",
+  "integrity_reason": "string"
 }
-
-작성 가이드(라벨 ↔ 필드 매핑):
-- 오늘의 한 줄 교훈 → lesson
-- 키워드 → keywords (해시태그 형식)
-- 관찰(전체적인 기록의 분석) → observation
-- 인사이트(없으면 빈 문자열) → insight
-- 잘한 점 → action_feedback.well_done
-- 개선하면 좋을 점 → action_feedback.to_improve
-- 내일의 초점 → focus_tomorrow
-- 집중/몰입 점수(0~10) → focus_score
-- 만족도(0~10) → satisfaction_score
-
-금지:
-- 응답에 스키마 외 키 추가 금지(예: "오늘의테마" 등은 결과 JSON에 넣지 않음).
-- 영어 장황설명, 마크다운, 코드펜스, 사족 금지.
 `;

@@ -7,6 +7,11 @@ import { RecordForm } from "./Home/RecordForm";
 import { RecordList } from "./Home/RecordList";
 import { EditRecordDialog } from "./Home/EditRecordDialog";
 import { DeleteRecordDialog } from "./Home/DeleteRecordDialog";
+import { getCurrentUserId } from "@/hooks/useCurrentUser";
+import {
+  useCreateDailyFeedback,
+  useDailyFeedback,
+} from "@/hooks/useDailyFeedback";
 
 export function Home() {
   const router = useRouter();
@@ -33,8 +38,17 @@ export function Home() {
     setDeletingRecordId(id);
   };
 
+  const { mutateAsync: createDailyFeedback, isPending } =
+    useCreateDailyFeedback();
+
   const handleOpenDailyFeedback = async () => {
-    router.push(`/daily?date=${todayIso}`);
+    try {
+      const result = await createDailyFeedback({ date: todayIso });
+      router.push(`/daily?date=${todayIso}`);
+    } catch (e) {
+      // 에러는 콘솔로만 기록. 필요 시 토스트 추가 가능
+      console.error(e);
+    }
   };
 
   return (
@@ -118,6 +132,7 @@ export function Home() {
               padding: "0.875rem 2rem",
               fontSize: "0.9rem",
             }}
+            disabled={isPending}
           >
             <Sparkles className="w-4 h-4 mr-2" />
             오늘 피드백 받기
