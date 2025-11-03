@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
 
     // 1️⃣ Records 데이터 조회
     const supabaseServiceKey = getServiceSupabase();
+
     const { data: records, error: recordsError } = await supabaseServiceKey
       .from("records")
       .select("*")
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // 4️⃣ 결과 생성: dummy 모드면 OpenAI 건너뛰고 더미 데이터 사용
     let feedback: any;
-    if (mode === "dummy" || process.env.DAILY_FEEDBACK_DUMMY === "1") {
+    if (mode === "dummy" || process.env.DAILY_FEEDBACK_DUMMY === "2") {
       // 간단한 더미 데이터 (스키마에 맞춤)
       const dayNames = [
         "일요일",

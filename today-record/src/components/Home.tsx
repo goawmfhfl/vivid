@@ -43,7 +43,7 @@ export function Home() {
 
   const handleOpenDailyFeedback = async () => {
     try {
-      const result = await createDailyFeedback({ date: todayIso });
+      await createDailyFeedback({ date: todayIso });
       router.push(`/daily?date=${todayIso}`);
     } catch (e) {
       // 에러는 콘솔로만 기록. 필요 시 토스트 추가 가능
