@@ -3,13 +3,13 @@ import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRecords, type Record } from "../hooks/useRecords";
-import { RecordForm } from "./Home/RecordForm";
-import { RecordList } from "./Home/RecordList";
-import { EditRecordDialog } from "./Home/EditRecordDialog";
-import { DeleteRecordDialog } from "./Home/DeleteRecordDialog";
+import { RecordForm } from "./home/RecordForm";
+import { RecordList } from "./home/RecordList";
+import { EditRecordDialog } from "./home/EditRecordDialog";
+import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
 import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
-import { HomeHeader } from "./Home/HomeHeader";
+import { HomeHeader } from "./home/HomeHeader";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 
@@ -62,14 +62,12 @@ export function Home() {
   const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
 
   // 로딩 상태 동기화 (자동 모달만 - 수동 모달은 건드리지 않음)
-  // 피드백 생성 중일 때만 모달 표시, 피드백 조회는 타임라인에 표시
   useEffect(() => {
     if (isPending) {
       // 실제 피드백 생성 중일 때 (isManual: false)
       openLoadingModal("AI에게 피드백을 요청하고 있습니다...", false);
     } else {
       // 수동으로 열린 모달이 아닌 경우에만 닫기
-      // feedbackLoading은 타임라인 섹션에서 처리하므로 모달은 닫음
       if (!loadingModalIsManual) {
         closeLoadingModal();
       }
@@ -182,7 +180,6 @@ export function Home() {
         error={error}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        feedbackLoading={feedbackLoading}
         onRetry={() => refetchRecords()}
       />
 
@@ -197,7 +194,7 @@ export function Home() {
               padding: "0.875rem 2rem",
               fontSize: "0.9rem",
             }}
-            disabled={isPending || feedbackLoading}
+            disabled={isPending}
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {hasTodayFeedback ? "오늘 피드백 보기" : "오늘 피드백 받기"}

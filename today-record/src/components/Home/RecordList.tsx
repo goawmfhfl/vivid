@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PenLine } from "lucide-react";
-import { RecordItem } from "./RecordItem";
+import { RecordItem } from "../home/RecordItem";
 import { type Record } from "../../hooks/useRecords";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
@@ -15,7 +15,6 @@ interface RecordListProps {
   error?: unknown;
   onEdit: (record: Record) => void;
   onDelete: (id: number) => void;
-  feedbackLoading?: boolean;
   onRetry?: () => void;
 }
 
@@ -25,7 +24,6 @@ export function RecordList({
   error,
   onEdit,
   onDelete,
-  feedbackLoading = false,
   onRetry,
 }: RecordListProps) {
   const { isTest } = useEnvironment();
@@ -273,26 +271,16 @@ export function RecordList({
           </div>
         </div>
       )}
-      {feedbackLoading ? (
-        <div className="py-8">
-          <LoadingSpinner
-            message="피드백을 불러오고 있습니다..."
-            size="md"
-            showMessage={true}
+      <div className="space-y-3">
+        {todayRecords.map((record) => (
+          <RecordItem
+            key={record.id}
+            record={record}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {todayRecords.map((record) => (
-            <RecordItem
-              key={record.id}
-              record={record}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

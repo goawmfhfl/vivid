@@ -13,6 +13,21 @@ export function FinalSection({ view }: SectionProps) {
     triggerOnVisible: true,
     threshold: 0.3,
   });
+
+  // 내일의 포커스를 리스트로 파싱
+  const focusItems = (() => {
+    const s = view.tomorrow_focus ?? "";
+    if (!s) return [] as string[];
+    const byPattern = Array.from(s.matchAll(/\d+\)\s*([^,]+)(?:,|$)/g)).map(
+      (m) => m[1].trim().replace(/,$/, "")
+    );
+    if (byPattern.length > 0) return byPattern;
+    return s
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+  })();
+
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-4">
@@ -146,14 +161,31 @@ export function FinalSection({ view }: SectionProps) {
             >
               내일의 포커스
             </p>
-            <p style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
-              {view.tomorrow_focus}
-            </p>
+            {focusItems.length > 0 ? (
+              <ul className="space-y-2">
+                {focusItems.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm font-semibold"
+                      style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.2)",
+                        border: "1px solid rgba(255, 255, 255, 0.35)",
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
+                {view.tomorrow_focus}
+              </p>
+            )}
           </div>
-          <ArrowRight
-            className="w-6 h-6 flex-shrink-0 ml-4"
-            style={{ opacity: 0.8 }}
-          />
         </div>
       </Card>
     </div>

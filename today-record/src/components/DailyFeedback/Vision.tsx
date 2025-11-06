@@ -4,6 +4,21 @@ import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
 
 export function VisionSection({ view }: SectionProps) {
+  // vision_ai_feedback을 리스트로 파싱 ("핵심 3단: 1) ..., 2) ..., 3) ...")
+  const feedbackItems = (() => {
+    const raw = view.vision_ai_feedback ?? "";
+    if (!raw) return [] as string[];
+    const body = raw.replace(/^핵심\s*3단\s*:\s*/i, "");
+    const byPattern = Array.from(body.matchAll(/\d+\)\s*([^,]+?)(?:,|$)/g)).map(
+      (m) => m[1].trim()
+    );
+    if (byPattern.length > 0) return byPattern;
+    return body
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+  })();
+
   return (
     <div className="mb-12">
       <div className="flex items-center gap-2 mb-4">
@@ -90,18 +105,44 @@ export function VisionSection({ view }: SectionProps) {
           </p>
         </Card>
       )}
-      {view.vision_ai_feedback && (
-        <div className="flex gap-2 items-start">
-          <Sparkles
-            className="w-4 h-4 flex-shrink-0 mt-1"
-            style={{ color: "#E5B96B", opacity: 0.85 }}
-          />
-          <p
-            style={{ color: "#55685E", lineHeight: "1.6", fontSize: "0.85rem" }}
-          >
-            {view.vision_ai_feedback}
-          </p>
-        </div>
+      {feedbackItems.length > 0 && (
+        <Card
+          className="p-5"
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+        >
+          <div className="flex items-start gap-2 mb-3">
+            <Sparkles
+              className="w-4 h-4 flex-shrink-0 mt-1"
+              style={{ color: "#E5B96B", opacity: 0.85 }}
+            />
+            <p style={{ color: "#6B7A6F", fontSize: "0.85rem" }}>핵심 3단</p>
+          </div>
+          <ul className="space-y-2">
+            {feedbackItems.map((item, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span
+                  className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm font-semibold"
+                  style={{
+                    backgroundColor: "#FFF8E7",
+                    color: "#B8860B",
+                    border: "1px solid #F2D9A6",
+                  }}
+                >
+                  {idx + 1}
+                </span>
+                <span
+                  style={{
+                    color: "#55685E",
+                    lineHeight: "1.6",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  {item}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );
