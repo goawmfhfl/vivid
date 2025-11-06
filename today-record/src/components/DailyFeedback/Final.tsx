@@ -1,6 +1,5 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Card } from "../ui/card";
-import { Progress } from "../ui/progress";
 import { SectionProps } from "./types";
 
 export function FinalSection({ view }: SectionProps) {
@@ -23,18 +22,42 @@ export function FinalSection({ view }: SectionProps) {
           border: "none",
         }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p style={{ fontSize: "0.85rem", opacity: 0.9 }}>하루 점수</p>
-            <p style={{ fontSize: "2.5rem", marginTop: "0.25rem" }}>
+        <div className="mb-3">
+          <p
+            style={{
+              fontSize: "0.85rem",
+              opacity: 0.9,
+              marginBottom: "0.5rem",
+            }}
+          >
+            하루 점수
+          </p>
+          <div className="flex items-center gap-6">
+            <p
+              style={{
+                fontSize: "2.5rem",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
               {view.integrity_score}
             </p>
+            <div
+              className="relative flex-1 overflow-hidden rounded-full"
+              style={{
+                height: "8px",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              }}
+            >
+              <div
+                className="h-full transition-all duration-300 ease-in-out rounded-full"
+                style={{
+                  width: `${view.integrity_score * 10}%`,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                }}
+              />
+            </div>
           </div>
-          <Progress
-            value={view.integrity_score * 10}
-            className="w-32"
-            style={{ height: "8px" }}
-          />
         </div>
         <p style={{ fontSize: "0.9rem", lineHeight: "1.6", opacity: 0.95 }}>
           {view.integrity_reason}
