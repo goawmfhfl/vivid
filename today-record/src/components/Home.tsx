@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
@@ -10,15 +10,31 @@ import { DeleteRecordDialog } from "./Home/DeleteRecordDialog";
 import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { HomeHeader } from "./Home/HomeHeader";
+import { useEnvironment } from "@/hooks/useEnvironment";
+import { useModalStore } from "@/store/useModalStore";
 
 export function Home() {
   const router = useRouter();
+  const { isTest } = useEnvironment();
 
-  const { data: records = [], isLoading, error } = useRecords();
+  const {
+    data: records = [],
+    isLoading,
+    error,
+    refetch: refetchRecords,
+  } = useRecords();
 
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
   const todayIso = new Date().toISOString().split("T")[0];
+
+  // 전역 모달 상태 관리
+  const openLoadingModal = useModalStore((state) => state.openLoadingModal);
+  const closeLoadingModal = useModalStore((state) => state.closeLoadingModal);
+  const loadingModalIsManual = useModalStore(
+    (state) => state.loadingModal.isManual
+  );
+  const openErrorModal = useModalStore((state) => state.openErrorModal);
 
   const hasTodayRecords = useMemo(() => {
     const todayKey = new Date().toDateString();
@@ -45,6 +61,21 @@ export function Home() {
 
   const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
 
+  // 로딩 상태 동기화 (자동 모달만 - 수동 모달은 건드리지 않음)
+  // 피드백 생성 중일 때만 모달 표시, 피드백 조회는 타임라인에 표시
+  useEffect(() => {
+    if (isPending) {
+      // 실제 피드백 생성 중일 때 (isManual: false)
+      openLoadingModal("AI에게 피드백을 요청하고 있습니다...", false);
+    } else {
+      // 수동으로 열린 모달이 아닌 경우에만 닫기
+      // feedbackLoading은 타임라인 섹션에서 처리하므로 모달은 닫음
+      if (!loadingModalIsManual) {
+        closeLoadingModal();
+      }
+    }
+  }, [isPending, loadingModalIsManual, openLoadingModal, closeLoadingModal]);
+
   const handleOpenDailyFeedback = async () => {
     try {
       if (hasTodayFeedback) {
@@ -54,13 +85,96 @@ export function Home() {
       await createDailyFeedback({ date: todayIso });
       router.push(`/daily?date=${todayIso}`);
     } catch (e) {
-      console.error(e);
+      const base =
+        e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
+      const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
+      openErrorModal(message, handleRetry);
     }
+  };
+
+  const handleRetry = () => {
+    handleOpenDailyFeedback();
+  };
+
+  // 테스트용 핸들러
+  const handleTestLoading = () => {
+    // 수동으로 열리는 경우 (isManual: true) - 자동 닫기 방지
+    openLoadingModal("테스트 로딩 중입니다...", true);
+  };
+
+  const handleTestError = () => {
+    openErrorModal("테스트 에러 메시지입니다. 이 메시지는 테스트용입니다.");
+  };
+
+  const handleTestErrorWithRetry = () => {
+    openErrorModal(
+      "재시도 가능한 테스트 에러입니다.\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.",
+      () => {
+        console.log("재시도 버튼 클릭됨");
+      }
+    );
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <HomeHeader />
+
+      {/* 테스트용 버튼 (개발 환경에서만 표시) */}
+      {isTest && (
+        <div
+          className="mb-4 p-4 rounded-lg border-2 border-dashed"
+          style={{ backgroundColor: "#FFF8E7", borderColor: "#E5B96B" }}
+        >
+          <p
+            className="text-sm font-semibold mb-2"
+            style={{ color: "#B8860B" }}
+          >
+            🧪 모달 테스트 (개발 환경)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            ;
+            <Button
+              onClick={handleTestLoading}
+              size="sm"
+              style={{
+                backgroundColor: "#6B7A6F",
+                color: "white",
+                fontSize: "0.8rem",
+                padding: "0.5rem 1rem",
+              }}
+            >
+              로딩 모달 테스트
+            </Button>
+            <Button
+              onClick={handleTestError}
+              size="sm"
+              variant="outline"
+              style={{
+                borderColor: "#DC2626",
+                color: "#DC2626",
+                fontSize: "0.8rem",
+                padding: "0.5rem 1rem",
+              }}
+            >
+              에러 모달 테스트
+            </Button>
+            <Button
+              onClick={handleTestErrorWithRetry}
+              size="sm"
+              variant="outline"
+              style={{
+                borderColor: "#DC2626",
+                color: "#DC2626",
+                fontSize: "0.8rem",
+                padding: "0.5rem 1rem",
+              }}
+            >
+              에러 모달 (재시도 포함)
+            </Button>
+          </div>
+        </div>
+      )}
+
       <RecordForm />
       <RecordList
         records={records}
@@ -68,6 +182,8 @@ export function Home() {
         error={error}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        feedbackLoading={feedbackLoading}
+        onRetry={() => refetchRecords()}
       />
 
       {hasTodayRecords && (
