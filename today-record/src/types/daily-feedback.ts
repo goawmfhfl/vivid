@@ -36,4 +36,5 @@ export interface DailyFeedbackRow {
   adjustment_point: string | null;
   tomorrow_focus: string | null;
   integrity_reason: string | null;
+  is_ai_generated: boolean | null;
 }

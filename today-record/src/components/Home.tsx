@@ -42,7 +42,7 @@ export function Home() {
   const { data: todayFeedback, isLoading: feedbackLoading } =
     useGetDailyFeedback(todayIso);
 
-  const hasTodayFeedback = !!todayFeedback;
+  const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
 
   const handleOpenDailyFeedback = async () => {
     try {

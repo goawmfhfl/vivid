@@ -115,7 +115,35 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    const feedback = JSON.parse(content) as any;
+    const feedback = JSON.parse(content) as {
+      date: string;
+      day_of_week: string;
+      integrity_score: number;
+      narrative_summary: string;
+      emotion_curve: string[];
+      narrative: string;
+      lesson: string;
+      keywords: string[];
+      daily_ai_comment: string;
+      vision_summary: string;
+      vision_self: string;
+      vision_keywords: string[];
+      reminder_sentence: string;
+      vision_ai_feedback: string;
+      core_insight: string;
+      learning_source: string;
+      meta_question: string;
+      insight_ai_comment: string;
+      core_feedback: string;
+      positives: string[];
+      improvements: string[];
+      feedback_ai_comment: string;
+      ai_message: string;
+      growth_point: string;
+      adjustment_point: string;
+      tomorrow_focus: string;
+      integrity_reason: string;
+    };
 
     // 6️⃣ Supabase daily_feedback 테이블에 저장 (새 스키마 매핑)
     const { data: insertedData, error: insertError } = await supabaseServiceKey
@@ -155,6 +183,7 @@ export async function POST(request: NextRequest) {
           adjustment_point: feedback.adjustment_point ?? null,
           tomorrow_focus: feedback.tomorrow_focus ?? null,
           integrity_reason: feedback.integrity_reason ?? null,
+          is_ai_generated: true,
         },
         { onConflict: "user_id,report_date" }
       )

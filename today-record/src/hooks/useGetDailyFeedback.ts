@@ -16,7 +16,13 @@ const fetchDailyFeedback = async (
     .single();
 
   if (error) {
-    if ((error as any).code === "PGRST116") return null;
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "PGRST116"
+    )
+      return null;
     throw error;
   }
   if (!data) return null;

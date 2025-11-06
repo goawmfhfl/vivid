@@ -1,4 +1,4 @@
-import { Lightbulb, Sparkles, Hash } from "lucide-react";
+import { Lightbulb, Sparkles } from "lucide-react";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
