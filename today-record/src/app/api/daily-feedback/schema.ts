@@ -48,39 +48,39 @@ export const DailyFeedbackSchema = {
       integrity_reason: { type: "string" },
     },
     required: [
-      // Header
+      // 헤더 섹션
       "date",
       "day_of_week",
       "integrity_score",
       "narrative_summary",
       "emotion_curve",
 
-      // Section 1
+      // 일일 요약 섹션
       "narrative",
       "lesson",
       "keywords",
       "daily_ai_comment",
 
-      // Section 2
+      // 비전 섹션
       "vision_summary",
       "vision_self",
       "vision_keywords",
       "reminder_sentence",
       "vision_ai_feedback",
 
-      // Section 3
+      // 인사이트 섹션
       "core_insight",
       "learning_source",
       "meta_question",
       "insight_ai_comment",
 
-      // Section 4
+      // 피드백 세션
       "core_feedback",
       "positives",
       "improvements",
       "feedback_ai_comment",
 
-      // Section 5
+      // 최종 섹션
       "ai_message",
       "growth_point",
       "adjustment_point",
@@ -99,6 +99,18 @@ export const SYSTEM_PROMPT = `
 - 스키마 키와 타입을 정확히 준수합니다.
 - 모든 키를 반드시 포함하세요. 값이 없으면 빈 문자열("") 또는 빈 배열([])로 채웁니다.
 - integrity_score는 0~10의 정수로 제공합니다.
+
+섹션별 처리 규칙:
+1. 비전 섹션: 오늘 입력한 레코드에서 비전 관련 내용이 없다면, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+2. 인사이트 섹션: 오늘 입력한 레코드에서 인사이트 관련 내용이 없다면, core_insight, learning_source, meta_question, insight_ai_comment 모두 빈 문자열("")로 처리합니다.
+3. 피드백 섹션: 오늘 입력한 레코드에서 피드백 관련 내용이 없다면, core_feedback, positives, improvements, feedback_ai_comment 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+
+데이터 규칙:
+- narrative_summary: 공백 포함 250자로 제한합니다.
+- narrative: 공백 포함 400자로 제한합니다.
+- keywords: 20개 이하로 제한합니다.
+- vision_keywords: 10개 이하로 제한합니다.
+- tomorrow_focus: 내일 해야 할 리스트를 "1)기능 기획서 작성하기, 2)가전 리스트 예산 작성하기, 3)네이처리퍼블릭 샴푸 구매하기" 형식으로 생성합니다. 숫자)로 시작하고 쉼표로 구분하는 리스트 문자열 형식을 유지하세요.
 
 스키마(반드시 준수):
 {
