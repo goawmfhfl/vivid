@@ -11,7 +11,7 @@ export interface DailyFeedbackRow {
   keywords: string[];
   daily_ai_comment: string | null;
 
-  // 비전(Vision) 영역
+  // 시각화(Vision) 영역
   vision_summary: string | null;
   vision_self: string | null;
   vision_keywords: string[];

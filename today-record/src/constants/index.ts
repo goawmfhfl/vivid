@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
 export const RECORD_TYPES = {
   INSIGHT: "insight",
   FEEDBACK: "feedback",
+  VISUALIZING: "visualizing",
 } as const;
 
 // Error Messages

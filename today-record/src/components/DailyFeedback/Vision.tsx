@@ -13,9 +13,7 @@ export function VisionSection({ view }: SectionProps) {
         >
           <Target className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>
-          오늘의 비전과 방향
-        </h2>
+        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 시각화</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
@@ -29,7 +27,7 @@ export function VisionSection({ view }: SectionProps) {
               marginBottom: "0.75rem",
             }}
           >
-            비전 요약
+            시각화 요약
           </p>
           <p
             style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}

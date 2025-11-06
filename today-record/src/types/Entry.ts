@@ -1,6 +1,6 @@
 export type Entry = {
   id: string;
-  type: "insight" | "feedback";
+  type: "insight" | "feedback" | "visualizing";
   content: string;
   timestamp: Date;
 };

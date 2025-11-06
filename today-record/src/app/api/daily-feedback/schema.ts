@@ -11,13 +11,13 @@ export const DailyFeedbackSchema = {
       narrative_summary: { type: "string" },
       emotion_curve: { type: "array", items: { type: "string" }, minItems: 0 },
 
-      // Section 1: Daily Summary
+      // 일일 요약 섹션
       narrative: { type: "string" },
       lesson: { type: "string" },
       keywords: { type: "array", items: { type: "string" }, minItems: 0 },
       daily_ai_comment: { type: "string" },
 
-      // Section 2: Visualization Review
+      // 시각화 섹션
       vision_summary: { type: "string" },
       vision_self: { type: "string" },
       vision_keywords: {
@@ -28,19 +28,19 @@ export const DailyFeedbackSchema = {
       reminder_sentence: { type: "string" },
       vision_ai_feedback: { type: "string" },
 
-      // Section 3: Insight Analysis
+      // 인사이트 섹션
       core_insight: { type: "string" },
       learning_source: { type: "string" },
       meta_question: { type: "string" },
       insight_ai_comment: { type: "string" },
 
-      // Section 4: Feedback Review
+      // 피드백 섹션
       core_feedback: { type: "string" },
       positives: { type: "array", items: { type: "string" }, minItems: 0 },
       improvements: { type: "array", items: { type: "string" }, minItems: 0 },
       feedback_ai_comment: { type: "string" },
 
-      // Section 5: Final Message
+      // 최종 섹션
       ai_message: { type: "string" },
       growth_point: { type: "string" },
       adjustment_point: { type: "string" },
@@ -61,7 +61,7 @@ export const DailyFeedbackSchema = {
       "keywords",
       "daily_ai_comment",
 
-      // 비전 섹션
+      // 시각화 섹션
       "vision_summary",
       "vision_self",
       "vision_keywords",
@@ -101,7 +101,7 @@ export const SYSTEM_PROMPT = `
 - integrity_score는 0~10의 정수로 제공합니다.
 
 섹션별 처리 규칙:
-1. 비전 섹션: 오늘 입력한 레코드에서 비전 관련 내용이 없다면, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+1. 시각화 섹션: 오늘 입력한 레코드에서 시각화 관련 내용이 없다면, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
 2. 인사이트 섹션: 오늘 입력한 레코드에서 인사이트 관련 내용이 없다면, core_insight, learning_source, meta_question, insight_ai_comment 모두 빈 문자열("")로 처리합니다.
 3. 피드백 섹션: 오늘 입력한 레코드에서 피드백 관련 내용이 없다면, core_feedback, positives, improvements, feedback_ai_comment 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
 

@@ -34,6 +34,19 @@ export function EditRecordDialog({
         return "인사이트";
       case RECORD_TYPES.FEEDBACK:
         return "피드백";
+      case RECORD_TYPES.VISUALIZING:
+        return "시각화";
+    }
+  };
+
+  const getTypeColor = (type: Record["type"]) => {
+    switch (type) {
+      case RECORD_TYPES.INSIGHT:
+        return "#A8BBA8";
+      case RECORD_TYPES.FEEDBACK:
+        return "#A3BFD9";
+      case RECORD_TYPES.VISUALIZING:
+        return "#8FA894";
     }
   };
 
@@ -79,23 +92,27 @@ export function EditRecordDialog({
 
         <div className="space-y-4 py-4">
           <div className="flex gap-3">
-            {([RECORD_TYPES.INSIGHT, RECORD_TYPES.FEEDBACK] as const).map(
-              (type) => (
-                <button
-                  key={type}
-                  onClick={() => setEditType(type)}
-                  className="px-4 py-2 rounded-full transition-all"
-                  style={{
-                    backgroundColor:
-                      editType === type ? "#A8BBA8" : "transparent",
-                    color: editType === type ? "white" : "#4E4B46",
-                    border: editType === type ? "none" : "1px solid #E5E7EB",
-                  }}
-                >
-                  {getTypeLabel(type)}
-                </button>
-              )
-            )}
+            {(
+              [
+                RECORD_TYPES.INSIGHT,
+                RECORD_TYPES.FEEDBACK,
+                RECORD_TYPES.VISUALIZING,
+              ] as const
+            ).map((type) => (
+              <button
+                key={type}
+                onClick={() => setEditType(type)}
+                className="px-4 py-2 rounded-full transition-all"
+                style={{
+                  backgroundColor:
+                    editType === type ? getTypeColor(type) : "transparent",
+                  color: editType === type ? "white" : "#4E4B46",
+                  border: editType === type ? "none" : "1px solid #E5E7EB",
+                }}
+              >
+                {getTypeLabel(type)}
+              </button>
+            ))}
           </div>
 
           <Textarea
@@ -122,7 +139,7 @@ export function EditRecordDialog({
             onClick={handleSaveEdit}
             disabled={!editContent.trim() || updateRecordMutation.isPending}
             style={{
-              backgroundColor: "#A8BBA8",
+              backgroundColor: getTypeColor(editType),
               color: "white",
             }}
           >

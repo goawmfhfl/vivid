@@ -32,7 +32,11 @@ export default function DateFeedbackPage() {
       lesson:
         entries.length > 0
           ? `${entries.length}개의 기록을 통해 이 날의 패턴을 분석해보니, ${
-              entries.some((e) => e.type === "insight") ? "인사이트" : "피드백"
+              entries.some((e) => e.type === "visualizing")
+                ? "시각화"
+                : entries.some((e) => e.type === "insight")
+                ? "인사이트"
+                : "피드백"
             } 중심의 성찰이 돋보입니다.`
           : "이 날에는 특별한 기록이 없었지만, 조용한 성찰의 시간을 가졌을 것입니다.",
       keywords:

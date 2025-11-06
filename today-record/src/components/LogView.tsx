@@ -216,6 +216,28 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
 
+  const getTypeLabel = (type: Entry["type"]) => {
+    switch (type) {
+      case "insight":
+        return "인사이트";
+      case "feedback":
+        return "피드백";
+      case "visualizing":
+        return "시각화";
+    }
+  };
+
+  const getTypeColor = (type: Entry["type"]) => {
+    switch (type) {
+      case "insight":
+        return "#A8BBA8";
+      case "feedback":
+        return "#A3BFD9";
+      case "visualizing":
+        return "#8FA894";
+    }
+  };
+
   // 로컬 시간 기준으로 오늘 날짜 계산 (매번 새로운 날짜 객체 생성)
   const getTodayInKorea = () => {
     const now = new Date();
@@ -397,13 +419,12 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
                         <Badge
                           className="rounded-full px-2 py-1"
                           style={{
-                            backgroundColor:
-                              entry.type === "insight" ? "#A8BBA8" : "#A3BFD9",
+                            backgroundColor: getTypeColor(entry.type),
                             color: "white",
                             fontSize: "0.75rem",
                           }}
                         >
-                          {entry.type === "insight" ? "인사이트" : "피드백"}
+                          {getTypeLabel(entry.type)}
                         </Badge>
                         <span
                           style={{

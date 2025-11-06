@@ -11,7 +11,7 @@ const openai = new OpenAI({
 interface Record {
   id: number;
   user_id: string;
-  type: "insight" | "feedback";
+  type: "insight" | "feedback" | "visualizing";
   content: string;
   created_at: string;
   kst_date: string;
@@ -21,8 +21,18 @@ interface Record {
 function buildUserPrompt(records: Record[], date: string): string {
   const insights = records.filter((r) => r.type === "insight");
   const feedbacks = records.filter((r) => r.type === "feedback");
+  const visualizings = records.filter((r) => r.type === "visualizing");
 
   let prompt = `아래는 ${date} 하루의 기록입니다. 위 스키마에 따라 분석하여 JSON만 출력하세요.\n\n`;
+
+  // 시각화 섹션
+  if (visualizings.length > 0) {
+    prompt += "=== 시각화 기록 ===\n";
+    visualizings.forEach((record, idx) => {
+      prompt += `${idx + 1}. ${record.content}\n`;
+    });
+    prompt += "\n";
+  }
 
   // Insight 섹션
   if (insights.length > 0) {

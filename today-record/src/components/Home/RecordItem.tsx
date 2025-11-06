@@ -22,6 +22,19 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
         return "인사이트";
       case "feedback":
         return "피드백";
+      case "visualizing":
+        return "시각화";
+    }
+  };
+
+  const getTypeColor = (type: Record["type"]) => {
+    switch (type) {
+      case "insight":
+        return "#A8BBA8";
+      case "feedback":
+        return "#A3BFD9";
+      case "visualizing":
+        return "#8FA894";
     }
   };
 
@@ -47,12 +60,7 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
           <Badge
             variant="secondary"
             style={{
-              backgroundColor:
-                record.type === "insight"
-                  ? "#A8BBA8"
-                  : record.type === "feedback"
-                  ? "#A3BFD9"
-                  : "#D08C60",
+              backgroundColor: getTypeColor(record.type),
               color: "white",
               fontSize: "0.75rem",
               padding: "0.25rem 0.75rem",
