@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, LogOut, User } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { RecordForm } from "./Home/RecordForm";
@@ -9,6 +9,7 @@ import { EditRecordDialog } from "./Home/EditRecordDialog";
 import { DeleteRecordDialog } from "./Home/DeleteRecordDialog";
 import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
+import { HomeHeader } from "./Home/HomeHeader";
 
 export function Home() {
   const router = useRouter();
@@ -59,66 +60,8 @@ export function Home() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-      <header className="mb-6">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h1
-              className="mb-1"
-              style={{ color: "#333333", fontSize: "1.5rem" }}
-            >
-              오늘의 기록
-            </h1>
-            <p
-              style={{
-                color: "#4E4B46",
-                opacity: 0.7,
-                fontSize: "0.9rem",
-              }}
-            >
-              {new Date().toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                weekday: "long",
-              })}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-              style={{
-                backgroundColor: "#F3F4F6",
-                border: "1px solid #EFE9E3",
-              }}
-            >
-              <User className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
-              <span
-                style={{
-                  color: "#4E4B46",
-                  fontSize: "0.8rem",
-                  maxWidth: "120px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {"goawmfhfl1@naver.com"}
-              </span>
-            </div>
-            <button
-              className="p-2 rounded-full transition-all hover:bg-gray-100"
-              style={{ color: "#6B7A6F" }}
-              title="로그아웃"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <HomeHeader />
       <RecordForm />
-
       <RecordList
         records={records}
         isLoading={isLoading}

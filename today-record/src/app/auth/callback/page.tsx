@@ -20,7 +20,6 @@ export default function AuthCallback() {
 
         if (data.session) {
           const user = data.session.user;
-          console.log("OAuth 로그인 성공:", user);
 
           router.push("/");
         } else {

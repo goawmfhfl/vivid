@@ -59,7 +59,6 @@ export function LoginView() {
       { email, password },
       {
         onSuccess: (data) => {
-          console.log("use Mutation 로그인 성공:", data);
           router.push("/");
         },
         onError: (error: unknown) => {
