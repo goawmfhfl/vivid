@@ -1,15 +1,15 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
-import { HeaderSection } from "./DailyFeedback/Header";
-import { SummarySection } from "./DailyFeedback/Summary";
-import { VisionSection } from "./DailyFeedback/Vision";
-import { InsightSection } from "./DailyFeedback/Insight";
-import { FeedbackSection } from "./DailyFeedback/Feedback";
-import { FinalSection } from "./DailyFeedback/Final";
-import { EmptyState } from "./DailyFeedback/States";
-import { mapDailyFeedbackRowToReport } from "./DailyFeedback/mappers";
-import { ScrollAnimation } from "./DailyFeedback/ScrollAnimation";
+import { HeaderSection } from "./dailyFeedback/Header";
+import { SummarySection } from "./dailyFeedback/Summary";
+import { VisionSection } from "./dailyFeedback/Vision";
+import { InsightSection } from "./dailyFeedback/Insight";
+import { FeedbackSection } from "./dailyFeedback/Feedback";
+import { FinalSection } from "./dailyFeedback/Final";
+import { EmptyState } from "./dailyFeedback/States";
+import { mapDailyFeedbackRowToReport } from "./dailyFeedback/mappers";
+import { ScrollAnimation } from "./dailyFeedback/ScrollAnimation";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
 
