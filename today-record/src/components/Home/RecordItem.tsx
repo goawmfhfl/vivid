@@ -34,7 +34,7 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
       case "feedback":
         return "#A3BFD9";
       case "visualizing":
-        return "#8FA894";
+        return "#E5B96B";
     }
   };
 
@@ -81,20 +81,61 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" style={{ color: "#6B7A6F" }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              style={{ color: "#6B7A6F" }}
+              className="focus:outline-none focus:ring-0"
+            >
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(record)}>
-              <Pencil className="w-4 h-4 mr-2" />
+          <DropdownMenuContent
+            align="end"
+            className="min-w-[140px]"
+            style={{
+              backgroundColor: "white",
+              border: "1px solid #E5E7EB",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            }}
+          >
+            <DropdownMenuItem
+              onClick={() => onEdit(record)}
+              className="focus:outline-none cursor-pointer transition-colors"
+              style={{
+                color: "#333333",
+                padding: "0.625rem 1rem",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#F3F4F6";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "white";
+              }}
+            >
+              <Pencil className="w-4 h-4 mr-2" style={{ color: "#6B7A6F" }} />
               수정하기
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(record.id)}
-              style={{ color: "#B1736C" }}
+              className="focus:outline-none cursor-pointer transition-colors"
+              style={{
+                color: "#DC2626",
+                padding: "0.625rem 1rem",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#FEF2F2";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "white";
+              }}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 mr-2" style={{ color: "#DC2626" }} />
               삭제하기
             </DropdownMenuItem>
           </DropdownMenuContent>

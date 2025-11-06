@@ -46,7 +46,18 @@ export function EditRecordDialog({
       case RECORD_TYPES.FEEDBACK:
         return "#A3BFD9";
       case RECORD_TYPES.VISUALIZING:
-        return "#8FA894";
+        return "#E5B96B";
+    }
+  };
+
+  const getButtonColor = (type: Record["type"]) => {
+    switch (type) {
+      case RECORD_TYPES.INSIGHT:
+        return "#8FA894"; // 더 진한 녹색
+      case RECORD_TYPES.FEEDBACK:
+        return "#7FA8C9"; // 더 진한 파란색
+      case RECORD_TYPES.VISUALIZING:
+        return "#D4A574"; // 더 진한 골든 옐로우
     }
   };
 
@@ -102,7 +113,7 @@ export function EditRecordDialog({
               <button
                 key={type}
                 onClick={() => setEditType(type)}
-                className="px-4 py-2 rounded-full transition-all"
+                className="px-4 py-2 rounded-full transition-all focus:outline-none"
                 style={{
                   backgroundColor:
                     editType === type ? getTypeColor(type) : "transparent",
@@ -127,11 +138,17 @@ export function EditRecordDialog({
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={handleClose}
-            style={{ color: "#6B7A6F" }}
+            style={{
+              color: "#4E4B46",
+              borderColor: "#E5E7EB",
+              backgroundColor: "white",
+              fontWeight: "500",
+            }}
+            className="hover:bg-gray-50 focus:outline-none focus:ring-0"
           >
             취소
           </Button>
@@ -139,9 +156,11 @@ export function EditRecordDialog({
             onClick={handleSaveEdit}
             disabled={!editContent.trim() || updateRecordMutation.isPending}
             style={{
-              backgroundColor: getTypeColor(editType),
-              color: "white",
+              backgroundColor: getButtonColor(editType),
+              color: "#FFFFFF",
+              fontWeight: "600",
             }}
+            className="hover:opacity-90 shadow-sm focus:outline-none focus:ring-0"
           >
             {updateRecordMutation.isPending ? "저장 중..." : "저장하기"}
           </Button>

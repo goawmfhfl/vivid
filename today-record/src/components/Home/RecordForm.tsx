@@ -34,7 +34,18 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
       case RECORD_TYPES.FEEDBACK:
         return "#A3BFD9";
       case RECORD_TYPES.VISUALIZING:
-        return "#8FA894";
+        return "#E5B96B";
+    }
+  };
+
+  const getButtonColor = (type: Record["type"]) => {
+    switch (type) {
+      case RECORD_TYPES.INSIGHT:
+        return "#8FA894"; // 더 진한 녹색
+      case RECORD_TYPES.FEEDBACK:
+        return "#7FA8C9"; // 더 진한 파란색
+      case RECORD_TYPES.VISUALIZING:
+        return "#D4A574"; // 더 진한 골든 옐로우
     }
   };
 
@@ -121,12 +132,22 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
         <Button
           onClick={handleSubmit}
           disabled={!content.trim() || createRecordMutation.isPending}
-          size="sm"
           style={{
-            backgroundColor: getTypeColor(selectedType),
-            color: "white",
+            backgroundColor:
+              !content.trim() || createRecordMutation.isPending
+                ? "#D1D5DB"
+                : getButtonColor(selectedType),
+            color: "#FFFFFF",
+            fontWeight: "600",
+            padding: "0.625rem 1.5rem",
+            borderRadius: "0.5rem",
+            transition: "all 0.2s ease-in-out",
+            boxShadow:
+              !content.trim() || createRecordMutation.isPending
+                ? "none"
+                : "0 2px 4px rgba(0, 0, 0, 0.1)",
           }}
-          className="hover:opacity-90"
+          className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="w-4 h-4 mr-2" />
           {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}

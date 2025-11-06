@@ -9,7 +9,7 @@ export function VisionSection({ view }: SectionProps) {
       <div className="flex items-center gap-2 mb-4">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#8FA894" }}
+          style={{ backgroundColor: "#E5B96B" }}
         >
           <Target className="w-4 h-4 text-white" />
         </div>
@@ -62,8 +62,8 @@ export function VisionSection({ view }: SectionProps) {
               <Badge
                 key={index}
                 style={{
-                  backgroundColor: "#EAEDE9",
-                  color: "#55685E",
+                  backgroundColor: "#FFF8E7",
+                  color: "#B8860B",
                   padding: "0.5rem 1rem",
                   fontSize: "0.85rem",
                   whiteSpace: "nowrap",
@@ -78,7 +78,7 @@ export function VisionSection({ view }: SectionProps) {
       {view.reminder_sentence && (
         <Card
           className="p-5 mb-4"
-          style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}
+          style={{ backgroundColor: "#E5B96B", color: "white", border: "none" }}
         >
           <p
             style={{ fontSize: "0.8rem", opacity: 0.9, marginBottom: "0.5rem" }}
@@ -94,7 +94,7 @@ export function VisionSection({ view }: SectionProps) {
         <div className="flex gap-2 items-start">
           <Sparkles
             className="w-4 h-4 flex-shrink-0 mt-1"
-            style={{ color: "#8FA894", opacity: 0.85 }}
+            style={{ color: "#E5B96B", opacity: 0.85 }}
           />
           <p
             style={{ color: "#55685E", lineHeight: "1.6", fontSize: "0.85rem" }}

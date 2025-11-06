@@ -234,7 +234,7 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
       case "feedback":
         return "#A3BFD9";
       case "visualizing":
-        return "#8FA894";
+        return "#E5B96B";
     }
   };
 
