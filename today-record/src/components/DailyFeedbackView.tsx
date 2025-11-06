@@ -9,6 +9,7 @@ import { FeedbackSection } from "./DailyFeedback/Feedback";
 import { FinalSection } from "./DailyFeedback/Final";
 import { LoadingState, ErrorState, EmptyState } from "./DailyFeedback/States";
 import { mapDailyFeedbackRowToReport } from "./DailyFeedback/mappers";
+import { ScrollAnimation } from "./DailyFeedback/ScrollAnimation";
 
 type DailyFeedbackViewProps = {
   date: string;
@@ -36,12 +37,41 @@ export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
           돌아가기
         </Button>
 
-        <HeaderSection view={view} />
-        <SummarySection view={view} />
-        <VisionSection view={view} />
-        <InsightSection view={view} />
-        <FeedbackSection view={view} />
-        <FinalSection view={view} />
+        <ScrollAnimation>
+          <div className="mb-64">
+            <HeaderSection view={view} />
+          </div>
+        </ScrollAnimation>
+
+        <ScrollAnimation delay={300}>
+          <div className="mb-64">
+            <SummarySection view={view} />
+          </div>
+        </ScrollAnimation>
+
+        <ScrollAnimation delay={300}>
+          <div className="mb-64">
+            <VisionSection view={view} />
+          </div>
+        </ScrollAnimation>
+
+        <ScrollAnimation delay={300}>
+          <div className="mb-64">
+            <InsightSection view={view} />
+          </div>
+        </ScrollAnimation>
+
+        <ScrollAnimation delay={300}>
+          <div className="mb-64">
+            <FeedbackSection view={view} />
+          </div>
+        </ScrollAnimation>
+
+        <ScrollAnimation delay={300}>
+          <div className="mb-12">
+            <FinalSection view={view} />
+          </div>
+        </ScrollAnimation>
         <div className="flex justify-center pt-4">
           <Button
             onClick={onBack}

@@ -1,8 +1,18 @@
+"use client";
+
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
+import { useCountUp } from "@/hooks/useCountUp";
 
 export function FinalSection({ view }: SectionProps) {
+  const [displayScore, countRef] = useCountUp({
+    targetValue: view.integrity_score ?? 0,
+    duration: 1000,
+    delay: 900,
+    triggerOnVisible: true,
+    threshold: 0.3,
+  });
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-4">
@@ -15,6 +25,7 @@ export function FinalSection({ view }: SectionProps) {
         <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 마무리</h2>
       </div>
       <Card
+        ref={countRef}
         className="p-6 mb-4"
         style={{
           background: "linear-gradient(135deg, #6B7A6F 0%, #55685E 100%)",
@@ -40,7 +51,7 @@ export function FinalSection({ view }: SectionProps) {
                 flexShrink: 0,
               }}
             >
-              {view.integrity_score}
+              {displayScore}
             </p>
             <div
               className="relative flex-1 overflow-hidden rounded-full"
@@ -50,10 +61,11 @@ export function FinalSection({ view }: SectionProps) {
               }}
             >
               <div
-                className="h-full transition-all duration-300 ease-in-out rounded-full"
+                className="h-full rounded-full"
                 style={{
-                  width: `${view.integrity_score * 10}%`,
+                  width: `${displayScore * 10}%`,
                   backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  transition: "width 0.1s linear",
                 }}
               />
             </div>

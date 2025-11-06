@@ -146,6 +146,8 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
           color: "#333333",
           lineHeight: "1.6",
           fontSize: "0.95rem",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
         }}
       >
         {record.content}

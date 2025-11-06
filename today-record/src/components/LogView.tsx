@@ -447,6 +447,8 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
                           color: "#333333",
                           lineHeight: "1.6",
                           fontSize: "0.9rem",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
                         }}
                       >
                         {entry.content}

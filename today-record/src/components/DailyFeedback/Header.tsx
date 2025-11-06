@@ -1,8 +1,17 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
+import { useCountUp } from "@/hooks/useCountUp";
 
 export function HeaderSection({ view }: SectionProps) {
+  const [displayScore] = useCountUp({
+    targetValue: view.integrity_score ?? 0,
+    duration: 1000,
+    delay: 500,
+  });
+
   return (
     <div className="mb-10">
       <div
@@ -24,7 +33,7 @@ export function HeaderSection({ view }: SectionProps) {
               className="w-16 h-16 rounded-full flex items-center justify-center mb-1"
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             >
-              <span style={{ fontSize: "1.5rem" }}>{view.integrity_score}</span>
+              <span style={{ fontSize: "1.5rem" }}>{displayScore}</span>
             </div>
             <p
               className="inline-block whitespace-nowrap text-nowrap"
