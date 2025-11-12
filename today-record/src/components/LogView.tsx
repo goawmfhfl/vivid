@@ -1,315 +1,135 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { FileText, Sparkles } from "lucide-react";
-import type { Entry } from "@/types/Entry";
-
-// 캘린더 데이터 타입 정의
-type CalendarLogMap = Record<string, { hasLog: boolean }>;
-
-interface CalendarProps {
-  year: number;
-  month: number;
-  logs: CalendarLogMap;
-  onSelectDate?: (isoDate: string) => void;
-  locale?: "ko" | "en";
-  startOfWeek?: "sun" | "mon";
-}
+import { Calendar } from "./logs/Calendar";
+import {
+  CalendarLogMap,
+  getLocalStartOfDay,
+  isSameDay,
+  parseISODateToLocalDate,
+  toISODate,
+} from "./logs/calendar-utils";
+import { useRecordsByMonth } from "@/hooks/useRecordsByMonth";
+import { useDailyFeedbackDatesByMonth } from "@/hooks/useDailyFeedbackDatesByMonth";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+import type { Record } from "@/hooks/useRecords";
 
 type LogViewProps = {
-  entries: Entry[];
-  onSelectDate: (date: Date) => void;
+  onSelectDate?: (date: Date) => void;
 };
 
-// 캘린더 매트릭스 생성 함수
-function getCalendarMatrix(
-  year: number,
-  month: number,
-  startOfWeek: "sun" | "mon" = "sun"
-) {
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0);
-  const startDay =
-    startOfWeek === "sun" ? firstDay.getDay() : (firstDay.getDay() + 6) % 7;
-
-  const matrix: (Date | null)[][] = [];
-  let currentWeek: (Date | null)[] = [];
-
-  // 이전 달 빈 칸들
-  for (let i = 0; i < startDay; i++) {
-    const prevMonthDay = new Date(year, month - 1, -startDay + i + 1);
-    currentWeek.push(prevMonthDay);
-  }
-
-  // 현재 달 날짜들
-  for (let day = 1; day <= lastDay.getDate(); day++) {
-    currentWeek.push(new Date(year, month - 1, day));
-
-    if (currentWeek.length === 7) {
-      matrix.push(currentWeek);
-      currentWeek = [];
-    }
-  }
-
-  // 다음 달 빈 칸들
-  let nextMonthDay = 1;
-  while (currentWeek.length < 7) {
-    currentWeek.push(new Date(year, month, nextMonthDay));
-    nextMonthDay++;
-  }
-
-  if (currentWeek.length > 0) {
-    matrix.push(currentWeek);
-  }
-
-  return matrix;
-}
-
-// 로컬 날짜 문자열 생성 함수 (시간대 문제 해결)
-function toISODate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// 오늘 날짜 확인 함수 (로컬 시간 기준, 실시간 계산)
-function isToday(date: Date): boolean {
-  const now = new Date();
-  // 시간을 00:00:00으로 설정하여 정확한 날짜만 비교
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0
-  );
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
-}
-
-// 캘린더 컴포넌트
-function Calendar({
-  year,
-  month,
-  logs,
-  onSelectDate,
-  locale = "ko",
-  startOfWeek = "sun",
-  selectedDate,
-}: CalendarProps & { selectedDate: Date }) {
-  const matrix = useMemo(
-    () => getCalendarMatrix(year, month, startOfWeek),
-    [year, month, startOfWeek]
-  );
-
-  const weekdays =
-    locale === "ko"
-      ? ["일", "월", "화", "수", "목", "금", "토"]
-      : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  const handleDateClick = (date: Date) => {
-    if (onSelectDate) {
-      onSelectDate(toISODate(date));
-    }
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent, date: Date) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleDateClick(date);
-    }
-  };
-
-  return (
-    <div className="w-full">
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {weekdays.map((day) => (
-          <div
-            key={day}
-            className="text-center py-2 text-sm font-medium"
-            style={{ color: "#6B7A6F" }}
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* 날짜 그리드 */}
-      <div className="grid grid-cols-7 gap-1">
-        {matrix.map((week, weekIndex) =>
-          week.map((date, dayIndex) => {
-            if (!date)
-              return (
-                <div
-                  key={`${weekIndex}-${dayIndex}`}
-                  className="aspect-square"
-                />
-              );
-
-            const isoDate = toISODate(date);
-            const hasLog = logs[isoDate]?.hasLog || false;
-            const isCurrentMonth = date.getMonth() === month - 1;
-            const isTodayDate = isToday(date);
-            const isSelected =
-              selectedDate.toISOString().split("T")[0] === isoDate;
-
-            return (
-              <button
-                key={isoDate}
-                className={`
-                  relative flex flex-col items-center justify-center
-                  aspect-square rounded-lg text-sm font-normal
-                  focus:outline-none focus:ring-2 focus:ring-gray-300
-                  ${
-                    isCurrentMonth
-                      ? "text-gray-900"
-                      : "text-gray-400 opacity-40"
-                  }
-                  ${isTodayDate ? "ring-2 ring-gray-300" : ""}
-                  ${
-                    isSelected
-                      ? "bg-[#6B7A6F] text-white hover:bg-[#5A6A5F]"
-                      : "hover:bg-gray-100"
-                  }
-                `}
-                onClick={() => handleDateClick(date)}
-                onKeyDown={(e) => handleKeyDown(e, date)}
-                aria-label={`${isoDate}, ${hasLog ? "기록 있음" : "기록 없음"}${
-                  isTodayDate ? ", 오늘" : ""
-                }${isSelected ? ", 선택됨" : ""}`}
-                tabIndex={0}
-              >
-                {/* 날짜 숫자 */}
-                <span className="text-sm">{date.getDate()}</span>
-
-                {/* 기록 점 */}
-                {hasLog && (
-                  <div
-                    className="absolute h-1.5 w-1.5 rounded-full"
-                    style={{
-                      backgroundColor: "#FFD23F",
-                      bottom: "8%",
-                    }}
-                  />
-                )}
-              </button>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-export function LogView({ entries, onSelectDate }: LogViewProps) {
+export function LogView({ onSelectDate }: LogViewProps) {
   const router = useRouter();
-  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() =>
+    getLocalStartOfDay()
+  );
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
+    getLocalStartOfDay()
+  );
 
-  const getTypeLabel = (type: Entry["type"]) => {
-    switch (type) {
-      case "insight":
-        return "인사이트";
-      case "feedback":
-        return "피드백";
-      case "visualizing":
-        return "시각화";
-    }
-  };
+  // 현재 선택된 월의 데이터만 조회
+  const currentYear = selectedMonth.getFullYear();
+  const currentMonth = selectedMonth.getMonth() + 1;
 
-  const getTypeColor = (type: Entry["type"]) => {
-    switch (type) {
-      case "insight":
-        return "#A8BBA8";
-      case "feedback":
-        return "#A3BFD9";
-      case "visualizing":
-        return "#E5B96B";
-    }
-  };
+  const {
+    data: records = [],
+    isLoading: isLoadingRecords,
+    error: recordsError,
+  } = useRecordsByMonth(currentYear, currentMonth);
 
-  // 로컬 시간 기준으로 오늘 날짜 계산 (매번 새로운 날짜 객체 생성)
-  const getTodayInKorea = () => {
-    const now = new Date();
+  const {
+    data: dailyFeedbackDates = [],
+    isLoading: isLoadingFeedback,
+    error: feedbackError,
+  } = useDailyFeedbackDatesByMonth(currentYear, currentMonth);
 
-    const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const isLoading = isLoadingRecords || isLoadingFeedback;
 
-    const today = new Date(
-      koreaTime.getFullYear(),
-      koreaTime.getMonth(),
-      koreaTime.getDate(),
-      0,
-      0,
-      0,
-      0
-    );
-    return today;
-  };
-
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    const today = getTodayInKorea();
-    return today;
-  }); // 함수로 초기화하여 매번 새로운 날짜 계산
-
-  // entries를 CalendarLogMap 형태로 변환 (로컬 시간 기준)
+  // 캘린더 표시용 맵 생성
   const logs = useMemo(() => {
     const logMap: CalendarLogMap = {};
-    entries.forEach((entry) => {
-      // 로컬 시간 기준으로 날짜 키 생성
-      const entryDate = new Date(entry.timestamp);
-      const isoDate = toISODate(entryDate);
-      logMap[isoDate] = { hasLog: true };
+
+    // Records 표시
+    records.forEach((record: Record) => {
+      const isoDate = record.kst_date;
+      if (!logMap[isoDate]) {
+        logMap[isoDate] = { hasLog: false, hasDailyFeedback: false };
+      }
+      logMap[isoDate].hasLog = true;
     });
+
+    // Daily Feedback 표시
+    dailyFeedbackDates.forEach((date) => {
+      if (!logMap[date]) {
+        logMap[date] = { hasLog: false, hasDailyFeedback: false };
+      }
+      logMap[date].hasDailyFeedback = true;
+    });
+
     return logMap;
-  }, [entries]);
+  }, [records, dailyFeedbackDates]);
 
   const handleSelectDate = (isoDate: string) => {
-    const date = new Date(isoDate);
+    const date = parseISODateToLocalDate(isoDate);
     setSelectedDate(date);
-    // 페이지 이동 없이 상태만 업데이트
-    if (onSelectDate) {
-      // 부모가 콜백을 준 경우에도 알림
-      onSelectDate(date);
-    }
+    setSelectedMonth(date);
+    onSelectDate?.(date);
   };
 
   const handlePrevMonth = () => {
-    setSelectedMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1)
+    setSelectedMonth((prev) =>
+      getLocalStartOfDay(new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
     );
   };
 
   const handleNextMonth = () => {
-    setSelectedMonth(
-      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1)
+    setSelectedMonth((prev) =>
+      getLocalStartOfDay(new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
     );
   };
 
-  // 선택된 날짜의 기록들 필터링
-  const selectedDateEntries = useMemo(() => {
+  // 선택된 날짜의 records 필터링
+  const selectedDateRecords = useMemo(() => {
     const selectedIsoDate = toISODate(selectedDate);
-    return entries.filter((entry) => {
-      const entryDate = new Date(entry.timestamp);
-      const entryIsoDate = toISODate(entryDate);
-      return entryIsoDate === selectedIsoDate;
-    });
-  }, [entries, selectedDate]);
+    return records.filter(
+      (record: Record) => record.kst_date === selectedIsoDate
+    );
+  }, [records, selectedDate]);
 
-  // 선택된 날짜가 오늘인지 확인 (실시간 계산)
-  const isToday = useMemo(() => {
-    const today = getTodayInKorea();
-    return toISODate(selectedDate) === toISODate(today);
-  }, [selectedDate]);
+  // 선택된 날짜에 daily-feedback이 있는지 확인
+  const hasDailyFeedbackForSelectedDate = useMemo(() => {
+    const selectedIsoDate = toISODate(selectedDate);
+    return dailyFeedbackDates.includes(selectedIsoDate);
+  }, [dailyFeedbackDates, selectedDate]);
+
+  const isToday = useMemo(
+    () => isSameDay(selectedDate, getLocalStartOfDay()),
+    [selectedDate]
+  );
+
+  const selectedDateLabel = useMemo(
+    () =>
+      selectedDate.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "long",
+      }),
+    [selectedDate]
+  );
+
+  const selectedMonthLabel = useMemo(
+    () =>
+      selectedMonth.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "long",
+      }),
+    [selectedMonth]
+  );
 
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
@@ -320,12 +140,19 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
             지난 기록
           </h1>
           <p style={{ color: "#4E4B46", opacity: 0.7, fontSize: "0.9rem" }}>
-            총 {entries.length}개의 기록
+            {isLoading
+              ? "로딩 중..."
+              : `${currentYear}년 ${currentMonth}월: ${records.length}개의 기록`}
           </p>
         </header>
 
         {/* Calendar */}
         <Card className="p-6 mb-6 rounded-xl border bg-white border-[#EFE9E3]">
+          {isLoading && (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="sm" />
+            </div>
+          )}
           {/* 월/년도 헤더 */}
           <div className="flex items-center justify-between mb-4">
             <button
@@ -350,10 +177,7 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
             </button>
 
             <h2 className="text-lg font-semibold" style={{ color: "#333333" }}>
-              {selectedMonth.toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-              })}
+              {selectedMonthLabel}
             </h2>
 
             <button
@@ -379,34 +203,31 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
           </div>
 
           {/* 캘린더 그리드 */}
-          <Calendar
-            year={selectedMonth.getFullYear()}
-            month={selectedMonth.getMonth() + 1}
-            logs={logs}
-            onSelectDate={handleSelectDate}
-            locale="ko"
-            startOfWeek="sun"
-            selectedDate={selectedDate}
-          />
+          {!isLoading && (
+            <Calendar
+              year={selectedMonth.getFullYear()}
+              month={selectedMonth.getMonth() + 1}
+              logs={logs}
+              onSelectDate={handleSelectDate}
+              locale="ko"
+              startOfWeek="sun"
+              selectedDate={selectedDate}
+            />
+          )}
         </Card>
 
         {/* 선택된 날짜의 기록들 */}
         <div className="mb-6">
           <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
-            {selectedDate.toLocaleDateString("ko-KR", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-              weekday: "long",
-            })}
+            {selectedDateLabel}
             {isToday && " (오늘)"}
           </h2>
 
-          {selectedDateEntries.length > 0 ? (
+          {selectedDateRecords.length > 0 ? (
             <div className="space-y-3">
-              {selectedDateEntries.map((entry) => (
+              {selectedDateRecords.map((record: Record) => (
                 <Card
-                  key={entry.id}
+                  key={record.id}
                   className="p-4"
                   style={{
                     backgroundColor: "white",
@@ -416,31 +237,13 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge
-                          className="rounded-full px-2 py-1"
-                          style={{
-                            backgroundColor: getTypeColor(entry.type),
-                            color: "white",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          {getTypeLabel(entry.type)}
-                        </Badge>
-                        <span
-                          style={{
-                            color: "#4E4B46",
-                            opacity: 0.6,
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          {new Date(entry.timestamp).toLocaleTimeString(
-                            "ko-KR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </span>
+                        {new Date(record.created_at).toLocaleTimeString(
+                          "ko-KR",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
                       </div>
                       <p
                         style={{
@@ -451,7 +254,7 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
                           wordBreak: "break-word",
                         }}
                       >
-                        {entry.content}
+                        {record.content}
                       </p>
                     </div>
                   </div>
@@ -489,11 +292,12 @@ export function LogView({ entries, onSelectDate }: LogViewProps) {
         </div>
 
         {/* AI 리뷰 버튼 */}
-        {selectedDateEntries.length > 0 && (
+        {hasDailyFeedbackForSelectedDate && (
           <div className="flex justify-center">
             <Button
               onClick={() => {
-                router.push("/feedback");
+                const dateStr = toISODate(selectedDate);
+                router.push(`/feedback/${dateStr}`);
               }}
               className="rounded-full px-6 py-3 flex items-center gap-2"
               style={{

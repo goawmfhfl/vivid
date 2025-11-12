@@ -132,6 +132,7 @@ export const SYSTEM_PROMPT = `
 - 스키마 키와 타입을 정확히 준수합니다.
 - 모든 키를 반드시 포함하세요. 값이 없으면 빈 문자열("") 또는 빈 배열([])로 채웁니다.
 - integrity_score는 0~10의 정수로 제공합니다.
+- 일일 리포트에 사용되는 단어나 어휘들은 누구나 이해할 수 있을 만큼 쉽게 작성합니다.
 
 섹션별 처리 규칙:
 1. 시각화 섹션: 오늘 입력한 레코드에서 시각화 관련 내용이 없다면, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.

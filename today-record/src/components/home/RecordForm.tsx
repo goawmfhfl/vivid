@@ -17,14 +17,11 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // 높이를 초기화하여 정확한 scrollHeight 계산
       textarea.style.height = "auto";
-      // scrollHeight에 맞춰 높이 조정 (최소 100px, 최대 300px)
       const scrollHeight = textarea.scrollHeight;
       const newHeight = Math.min(Math.max(scrollHeight, 100), 300);
       textarea.style.height = `${newHeight}px`;
 
-      // 최대 높이에 도달했을 때만 스크롤 활성화
       if (scrollHeight > 300) {
         textarea.style.overflowY = "auto";
       } else {
