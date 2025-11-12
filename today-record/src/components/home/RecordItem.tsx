@@ -1,6 +1,5 @@
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,28 +15,6 @@ interface RecordItemProps {
 }
 
 export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
-  const getTypeLabel = (type: Record["type"]) => {
-    switch (type) {
-      case "insight":
-        return "인사이트";
-      case "feedback":
-        return "피드백";
-      case "visualizing":
-        return "시각화";
-    }
-  };
-
-  const getTypeColor = (type: Record["type"]) => {
-    switch (type) {
-      case "insight":
-        return "#A8BBA8";
-      case "feedback":
-        return "#A3BFD9";
-      case "visualizing":
-        return "#E5B96B";
-    }
-  };
-
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const hours = date.getHours();
@@ -57,17 +34,6 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            style={{
-              backgroundColor: getTypeColor(record.type),
-              color: "white",
-              fontSize: "0.75rem",
-              padding: "0.25rem 0.75rem",
-            }}
-          >
-            {getTypeLabel(record.type)}
-          </Badge>
           <span
             style={{
               color: "#4E4B46",

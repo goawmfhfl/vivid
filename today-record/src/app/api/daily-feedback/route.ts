@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { DailyFeedbackSchema, SYSTEM_PROMPT } from "./schema";
+import {
+  DailyReportSchema,
+  SYSTEM_PROMPT,
+  RecordCategorizationSchema,
+  SYSTEM_PROMPT_CATEGORIZATION,
+} from "./schema";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,43 +16,56 @@ const openai = new OpenAI({
 interface Record {
   id: number;
   user_id: string;
-  type: "insight" | "feedback" | "visualizing";
   content: string;
   created_at: string;
   kst_date: string;
 }
 
-// buildUserPrompt 함수: records 데이터를 프롬프트로 변환
-function buildUserPrompt(records: Record[], date: string): string {
-  const insights = records.filter((r) => r.type === "insight");
-  const feedbacks = records.filter((r) => r.type === "feedback");
-  const visualizings = records.filter((r) => r.type === "visualizing");
+// buildCategorizationPrompt 함수: records 데이터를 카테고리화 프롬프트로 변환
+function buildCategorizationPrompt(records: Record[], date: string): string {
+  let prompt = `아래는 ${date} 하루의 기록입니다. 위 규칙에 따라 각 기록을 insights, feedbacks, visualizings 세 가지 카테고리로 분류하여 JSON만 출력하세요.\n\n`;
 
-  let prompt = `아래는 ${date} 하루의 기록입니다. 위 스키마에 따라 분석하여 JSON만 출력하세요.\n\n`;
+  records.forEach((record, idx) => {
+    prompt += `${idx + 1}. ${record.content}\n`;
+  });
+
+  return prompt;
+}
+
+// buildReportPrompt 함수: 카테고리화된 데이터를 리포트 생성 프롬프트로 변환
+function buildReportPrompt(
+  categorized: {
+    insights: string[];
+    feedbacks: string[];
+    visualizings: string[];
+  },
+  date: string
+): string {
+  let prompt = `아래는 ${date} 하루의 기록을 카테고리별로 분류한 결과입니다. 위 스키마에 따라 분석하여 JSON만 출력하세요.\n\n`;
 
   // 시각화 섹션
-  if (visualizings.length > 0) {
+  if (categorized.visualizings.length > 0) {
     prompt += "=== 시각화 기록 ===\n";
-    visualizings.forEach((record, idx) => {
-      prompt += `${idx + 1}. ${record.content}\n`;
+    categorized.visualizings.forEach((content, idx) => {
+      prompt += `${idx + 1}. ${content}\n`;
     });
     prompt += "\n";
   }
 
   // Insight 섹션
-  if (insights.length > 0) {
+  if (categorized.insights.length > 0) {
     prompt += "=== 인사이트 기록 ===\n";
-    insights.forEach((record, idx) => {
-      prompt += `${idx + 1}. ${record.content}\n`;
+    categorized.insights.forEach((content, idx) => {
+      prompt += `${idx + 1}. ${content}\n`;
     });
     prompt += "\n";
   }
 
   // Feedback 섹션
-  if (feedbacks.length > 0) {
+  if (categorized.feedbacks.length > 0) {
     prompt += "=== 피드백 기록 ===\n";
-    feedbacks.forEach((record, idx) => {
-      prompt += `${idx + 1}. ${record.content}\n`;
+    categorized.feedbacks.forEach((content, idx) => {
+      prompt += `${idx + 1}. ${content}\n`;
     });
   }
 
@@ -91,31 +109,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4️⃣ 결과 생성: OpenAI API 호출
-    const userPrompt = buildUserPrompt(records as Record[], date);
-    const completion = await openai.chat.completions.create({
+    // 2️⃣ AI 요청 #1: 기록 카테고리화
+    const categorizationPrompt = buildCategorizationPrompt(
+      records as Record[],
+      date
+    );
+
+    const categorizationCompletion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
+        { role: "system", content: SYSTEM_PROMPT_CATEGORIZATION },
+        { role: "user", content: categorizationPrompt },
       ],
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: DailyFeedbackSchema.name,
-          schema: DailyFeedbackSchema.schema,
-          strict: DailyFeedbackSchema.strict,
+          name: RecordCategorizationSchema.name,
+          schema: RecordCategorizationSchema.schema,
+          strict: RecordCategorizationSchema.strict,
         },
       },
     });
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
+
+    const categorizationContent =
+      categorizationCompletion.choices[0]?.message?.content;
+    if (!categorizationContent) {
       return NextResponse.json(
-        { error: "No content from OpenAI" },
+        { error: "No content from OpenAI categorization" },
         { status: 500 }
       );
     }
-    const feedback = JSON.parse(content) as {
+
+    const categorized = JSON.parse(categorizationContent) as {
+      insights: string[];
+      feedbacks: string[];
+      visualizings: string[];
+    };
+
+    // 3️⃣ AI 요청 #2: daily-report 생성
+    const reportPrompt = buildReportPrompt(categorized, date);
+
+    const reportCompletion = await openai.chat.completions.create({
+      model: "gpt-5",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: reportPrompt },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: DailyReportSchema.name,
+          schema: DailyReportSchema.schema,
+          strict: DailyReportSchema.strict,
+        },
+      },
+    });
+
+    const reportContent = reportCompletion.choices[0]?.message?.content;
+    if (!reportContent) {
+      return NextResponse.json(
+        { error: "No content from OpenAI report generation" },
+        { status: 500 }
+      );
+    }
+
+    const feedback = JSON.parse(reportContent) as {
       date: string;
       day_of_week: string;
       integrity_score: number;

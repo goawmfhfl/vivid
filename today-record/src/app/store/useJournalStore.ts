@@ -25,7 +25,6 @@ export const useJournalStore = create<JournalState>((set) => ({
         ...state.entries,
         {
           id: crypto.randomUUID(),
-          type: "insight" as const,
           content: `${title}: ${content}`,
           timestamp: new Date(),
         },

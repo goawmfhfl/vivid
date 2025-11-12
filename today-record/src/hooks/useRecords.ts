@@ -7,7 +7,6 @@ import { getCurrentUserId } from "./useCurrentUser";
 export interface Record {
   id: number;
   user_id: string;
-  type: "insight" | "feedback" | "visualizing";
   content: string;
   created_at: string;
   kst_date: string;
@@ -15,13 +14,11 @@ export interface Record {
 
 // Record 생성 데이터 타입
 export interface CreateRecordData {
-  type: "insight" | "feedback" | "visualizing";
   content: string;
 }
 
 // Record 업데이트 데이터 타입
 export interface UpdateRecordData {
-  type?: "insight" | "feedback" | "visualizing";
   content?: string;
 }
 
@@ -71,7 +68,6 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
       .from(API_ENDPOINTS.RECORDS)
       .insert({
         user_id: userId,
-        type: data.type,
         content: data.content,
       })
       .select()

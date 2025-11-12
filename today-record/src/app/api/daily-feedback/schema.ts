@@ -1,4 +1,37 @@
-export const DailyFeedbackSchema = {
+export const RecordCategorizationSchema = {
+  name: "RecordCategorization",
+  schema: {
+    type: "object",
+    properties: {
+      insights: { type: "array", items: { type: "string" } },
+      feedbacks: { type: "array", items: { type: "string" } },
+      visualizings: { type: "array", items: { type: "string" } },
+    },
+    required: ["insights", "feedbacks", "visualizings"],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
+export const SYSTEM_PROMPT_CATEGORIZATION = `
+당신은 사용자의 하루 기록을 분석하여 아래 세 가지 카테고리로 분류합니다:
+
+- insights: 통찰, 깨달음, 학습, 의미를 담은 문장
+
+- feedbacks: 자기 피드백, 반성, 조정 포인트
+
+- visualizings: 목표, 꿈, 상상, 계획, 시각화된 다짐
+
+규칙:
+
+- 각 레코드는 문맥에 따라 중복 포함 가능하나, 가장 적합한 카테고리에만 포함하세요.
+
+- 각 배열은 string 배열로 출력합니다.
+
+- 오직 JSON 하나만 출력하세요. 마크다운/설명 금지.
+`;
+
+export const DailyReportSchema = {
   name: "DailyReportResponse",
   schema: {
     type: "object",
