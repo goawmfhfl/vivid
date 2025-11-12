@@ -1,83 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import {
-  DailyReportSchema,
-  SYSTEM_PROMPT,
-  RecordCategorizationSchema,
-  SYSTEM_PROMPT_CATEGORIZATION,
-} from "./schema";
+import { categorizeRecords, generateDailyReport } from "./ai-service";
+import { fetchRecordsByDate, saveDailyReport } from "./db-service";
+import type { DailyFeedbackRequest } from "./types";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Records 타입 정의
-interface Record {
-  id: number;
-  user_id: string;
-  content: string;
-  created_at: string;
-  kst_date: string;
-}
-
-// buildCategorizationPrompt 함수: records 데이터를 카테고리화 프롬프트로 변환
-function buildCategorizationPrompt(records: Record[], date: string): string {
-  let prompt = `아래는 ${date} 하루의 기록입니다. 위 규칙에 따라 각 기록을 insights, feedbacks, visualizings 세 가지 카테고리로 분류하여 JSON만 출력하세요.\n\n`;
-
-  records.forEach((record, idx) => {
-    prompt += `${idx + 1}. ${record.content}\n`;
-  });
-
-  return prompt;
-}
-
-// buildReportPrompt 함수: 카테고리화된 데이터를 리포트 생성 프롬프트로 변환
-function buildReportPrompt(
-  categorized: {
-    insights: string[];
-    feedbacks: string[];
-    visualizings: string[];
-  },
-  date: string
-): string {
-  let prompt = `아래는 ${date} 하루의 기록을 카테고리별로 분류한 결과입니다. 위 스키마에 따라 분석하여 JSON만 출력하세요.\n\n`;
-
-  // 시각화 섹션
-  if (categorized.visualizings.length > 0) {
-    prompt += "=== 시각화 기록 ===\n";
-    categorized.visualizings.forEach((content, idx) => {
-      prompt += `${idx + 1}. ${content}\n`;
-    });
-    prompt += "\n";
-  }
-
-  // Insight 섹션
-  if (categorized.insights.length > 0) {
-    prompt += "=== 인사이트 기록 ===\n";
-    categorized.insights.forEach((content, idx) => {
-      prompt += `${idx + 1}. ${content}\n`;
-    });
-    prompt += "\n";
-  }
-
-  // Feedback 섹션
-  if (categorized.feedbacks.length > 0) {
-    prompt += "=== 피드백 기록 ===\n";
-    categorized.feedbacks.forEach((content, idx) => {
-      prompt += `${idx + 1}. ${content}\n`;
-    });
-  }
-
-  return prompt;
-}
-
-// POST 핸들러
+/**
+ * POST 핸들러: 일일 리포트 생성
+ *
+ * 플로우:
+ * 1. Records 조회
+ * 2. AI 카테고리화
+ * 3. AI 리포트 생성
+ * 4. DB 저장
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, date } = body;
+    const { userId, date }: DailyFeedbackRequest = body;
 
+    // 요청 검증
     if (!userId || !date) {
       return NextResponse.json(
         { error: "userId and date are required" },
@@ -85,200 +26,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = getServiceSupabase();
+
     // 1️⃣ Records 데이터 조회
-    const supabaseServiceKey = getServiceSupabase();
-
-    const { data: records, error: recordsError } = await supabaseServiceKey
-      .from("records")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("kst_date", date);
-
-    if (recordsError) {
-      console.error("Records fetch error:", recordsError);
-      return NextResponse.json(
-        { error: "Failed to fetch records" },
-        { status: 500 }
-      );
-    }
-
-    if (!records || records.length === 0) {
-      return NextResponse.json(
-        { error: "No records found for this date" },
-        { status: 404 }
-      );
-    }
+    const records = await fetchRecordsByDate(supabase, userId, date);
 
     // 2️⃣ AI 요청 #1: 기록 카테고리화
-    const categorizationPrompt = buildCategorizationPrompt(
-      records as Record[],
-      date
-    );
-
-    const categorizationCompletion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT_CATEGORIZATION },
-        { role: "user", content: categorizationPrompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: RecordCategorizationSchema.name,
-          schema: RecordCategorizationSchema.schema,
-          strict: RecordCategorizationSchema.strict,
-        },
-      },
-    });
-
-    const categorizationContent =
-      categorizationCompletion.choices[0]?.message?.content;
-    if (!categorizationContent) {
-      return NextResponse.json(
-        { error: "No content from OpenAI categorization" },
-        { status: 500 }
-      );
-    }
-
-    const categorized = JSON.parse(categorizationContent) as {
-      insights: string[];
-      feedbacks: string[];
-      visualizings: string[];
-    };
+    const categorized = await categorizeRecords(records, date);
 
     // 3️⃣ AI 요청 #2: daily-report 생성
-    const reportPrompt = buildReportPrompt(categorized, date);
+    const report = await generateDailyReport(categorized, date);
 
-    const reportCompletion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: reportPrompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: DailyReportSchema.name,
-          schema: DailyReportSchema.schema,
-          strict: DailyReportSchema.strict,
-        },
-      },
-    });
-
-    const reportContent = reportCompletion.choices[0]?.message?.content;
-    if (!reportContent) {
-      return NextResponse.json(
-        { error: "No content from OpenAI report generation" },
-        { status: 500 }
-      );
-    }
-
-    const feedback = JSON.parse(reportContent) as {
-      date: string;
-      day_of_week: string;
-      integrity_score: number;
-      narrative_summary: string;
-      emotion_curve: string[];
-      narrative: string;
-      lesson: string;
-      keywords: string[];
-      daily_ai_comment: string;
-      vision_summary: string;
-      vision_self: string;
-      vision_keywords: string[];
-      reminder_sentence: string;
-      vision_ai_feedback: string;
-      core_insight: string;
-      learning_source: string;
-      meta_question: string;
-      insight_ai_comment: string;
-      core_feedback: string;
-      positives: string[];
-      improvements: string[];
-      feedback_ai_comment: string;
-      ai_message: string;
-      growth_point: string;
-      adjustment_point: string;
-      tomorrow_focus: string;
-      integrity_reason: string;
-    };
-
-    // 6️⃣ Supabase daily_feedback 테이블에 저장 (새 스키마 매핑)
-    const { data: insertedData, error: insertError } = await supabaseServiceKey
-      .from("daily_feedback")
-      .upsert(
-        {
-          user_id: userId,
-          report_date: feedback.date,
-          day_of_week: feedback.day_of_week ?? null,
-          integrity_score: feedback.integrity_score ?? null,
-          narrative_summary: feedback.narrative_summary ?? null,
-          emotion_curve: feedback.emotion_curve ?? [],
-
-          narrative: feedback.narrative ?? null,
-          lesson: feedback.lesson ?? null,
-          keywords: feedback.keywords ?? [],
-          daily_ai_comment: feedback.daily_ai_comment ?? null,
-
-          vision_summary: feedback.vision_summary ?? null,
-          vision_self: feedback.vision_self ?? null,
-          vision_keywords: feedback.vision_keywords ?? [],
-          reminder_sentence: feedback.reminder_sentence ?? null,
-          vision_ai_feedback: feedback.vision_ai_feedback ?? null,
-
-          core_insight: feedback.core_insight ?? null,
-          learning_source: feedback.learning_source ?? null,
-          meta_question: feedback.meta_question ?? null,
-          insight_ai_comment: feedback.insight_ai_comment ?? null,
-
-          core_feedback: feedback.core_feedback ?? null,
-          positives: feedback.positives ?? [],
-          improvements: feedback.improvements ?? [],
-          feedback_ai_comment: feedback.feedback_ai_comment ?? null,
-
-          ai_message: feedback.ai_message ?? null,
-          growth_point: feedback.growth_point ?? null,
-          adjustment_point: feedback.adjustment_point ?? null,
-          tomorrow_focus: feedback.tomorrow_focus ?? null,
-          integrity_reason: feedback.integrity_reason ?? null,
-          is_ai_generated: true,
-        },
-        { onConflict: "user_id,report_date" }
-      )
-      .select();
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return NextResponse.json(
-        {
-          error: "Failed to save feedback to database",
-          details: insertError.message || String(insertError),
-          code: insertError.code,
-          hint: insertError.hint,
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!insertedData || insertedData.length === 0) {
-      return NextResponse.json(
-        { error: "Failed to save feedback to database" },
-        { status: 500 }
-      );
-    }
+    // 4️⃣ Supabase daily_feedback 테이블에 저장
+    await saveDailyReport(supabase, userId, report);
 
     return NextResponse.json(
       {
         message: "Daily report generated and saved successfully",
-        data: feedback,
+        data: report,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("API error:", error);
+
+    // 에러 타입에 따른 상태 코드 결정
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const statusCode = errorMessage.includes("No records found")
+      ? 404
+      : errorMessage.includes("No content from OpenAI")
+      ? 500
+      : errorMessage.includes("Failed to")
+      ? 500
+      : 500;
+
     return NextResponse.json(
-      { error: "Internal server error", details: String(error) },
-      { status: 500 }
+      { error: "Internal server error", details: errorMessage },
+      { status: statusCode }
     );
   }
 }
