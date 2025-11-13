@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
@@ -44,5 +44,6 @@ export const useRecordsByMonth = (year: number, month: number) => {
     queryKey: [QUERY_KEYS.RECORDS, "month", year, month],
     queryFn: () => fetchRecordsByMonth(year, month),
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    placeholderData: keepPreviousData, // 이전 데이터 유지
   });
 };
