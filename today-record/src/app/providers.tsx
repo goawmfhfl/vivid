@@ -12,8 +12,8 @@ interface JournalContextType {
   currentDailyFeedback: DailyFeedback | null;
   selectedDate: Date | null;
   periodSummary: PeriodSummary | null;
-  addEntry: (type: Entry["type"], content: string) => void;
-  editEntry: (id: string, content: string, type: Entry["type"]) => void;
+  addEntry: (content: string) => void;
+  editEntry: (id: string, content: string) => void;
   deleteEntry: (id: string) => void;
   generateFeedback: (forDate?: Date) => void;
   generatePeriodSummary: (
@@ -52,21 +52,18 @@ export function JournalProvider({ children }: { children: ReactNode }) {
     null
   );
 
-  const addEntry = (type: Entry["type"], content: string) => {
+  const addEntry = (content: string) => {
     const newEntry: Entry = {
       id: Date.now().toString(),
-      type,
       content,
       timestamp: new Date(),
     };
     setEntries((prev) => [...prev, newEntry]);
   };
 
-  const editEntry = (id: string, content: string, type: Entry["type"]) => {
+  const editEntry = (id: string, content: string) => {
     setEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === id ? { ...entry, content, type } : entry
-      )
+      prev.map((entry) => (entry.id === id ? { ...entry, content } : entry))
     );
   };
 
