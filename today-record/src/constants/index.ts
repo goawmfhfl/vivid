@@ -7,6 +7,7 @@ export const QUERY_KEYS = {
   WEEKLY_SUMMARIES: "weeklySummaries",
   MONTHLY_SUMMARIES: "monthlySummaries",
   USER_CONSENTS: "userConsents",
+  WEEKLY_CANDIDATES: "weeklyCandidates",
 } as const;
 
 // API Endpoints
@@ -17,6 +18,7 @@ export const API_ENDPOINTS = {
   WEEKLY_SUMMARIES: "weekly_summaries",
   MONTHLY_SUMMARIES: "monthly_summaries",
   USER_CONSENTS: "user_consents",
+  WEEKLY_CANDIDATES: "weekly_candidates",
 } as const;
 
 // Record Types

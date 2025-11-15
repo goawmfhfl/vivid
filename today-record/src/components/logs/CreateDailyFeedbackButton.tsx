@@ -1,0 +1,62 @@
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import { Sparkles, Loader2 } from "lucide-react";
+import { toISODate } from "./calendar-utils";
+import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
+
+interface CreateDailyFeedbackButtonProps {
+  selectedDate: Date;
+}
+
+export function CreateDailyFeedbackButton({
+  selectedDate,
+}: CreateDailyFeedbackButtonProps) {
+  const router = useRouter();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const createDailyFeedback = useCreateDailyFeedback();
+
+  const handleClick = async () => {
+    const dateStr = toISODate(selectedDate);
+    setIsGenerating(true);
+
+    try {
+      await createDailyFeedback.mutateAsync({ date: dateStr });
+      // 생성 성공 후 피드백 페이지로 이동
+      router.push(`/feedback/${dateStr}`);
+    } catch (error) {
+      console.error("AI 리뷰 생성 실패:", error);
+      alert("AI 리뷰 생성에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-center">
+      <Button
+        onClick={handleClick}
+        disabled={isGenerating}
+        className="rounded-full px-6 py-3 flex items-center gap-2"
+        style={{
+          backgroundColor: "#A8BBA8",
+          color: "white",
+          fontSize: "0.9rem",
+          fontWeight: "500",
+        }}
+      >
+        {isGenerating ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            AI 리뷰 생성 중...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4" />
+            AI 리뷰 생성하기
+          </>
+        )}
+      </Button>
+    </div>
+  );
+}

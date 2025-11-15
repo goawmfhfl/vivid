@@ -15,6 +15,7 @@ import { LogViewHeader } from "./logs/LogViewHeader";
 import { CalendarSection } from "./logs/CalendarSection";
 import { SelectedDateSection } from "./logs/SelectedDateSection";
 import { DailyFeedbackButton } from "./logs/DailyFeedbackButton";
+import { CreateDailyFeedbackButton } from "./logs/CreateDailyFeedbackButton";
 
 type LogViewProps = {
   onSelectDate?: (date: Date) => void;
@@ -28,7 +29,6 @@ export function LogView({ onSelectDate }: LogViewProps) {
     getLocalStartOfDay()
   );
 
-  // 현재 선택된 월의 데이터 조회
   const currentYear = selectedMonth.getFullYear();
   const currentMonth = selectedMonth.getMonth() + 1;
 
@@ -47,7 +47,6 @@ export function LogView({ onSelectDate }: LogViewProps) {
     selectedMonth
   );
 
-  // 이벤트 핸들러
   const handleSelectDate = (isoDate: string) => {
     const date = parseISODateToLocalDate(isoDate);
     setSelectedDate(date);
@@ -95,8 +94,12 @@ export function LogView({ onSelectDate }: LogViewProps) {
           records={selectedDateRecords}
         />
 
-        {hasDailyFeedback && (
+        {hasDailyFeedback ? (
           <DailyFeedbackButton selectedDate={selectedDate} />
+        ) : (
+          selectedDateRecords.length > 0 && (
+            <CreateDailyFeedbackButton selectedDate={selectedDate} />
+          )
         )}
       </div>
     </div>

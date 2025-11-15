@@ -26,6 +26,10 @@ export const useCreateDailyFeedback = () => {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.DAILY_FEEDBACK, variables.date],
         });
+        // 날짜별 쿼리도 무효화 (dates 쿼리 포함)
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.DAILY_FEEDBACK, "dates"],
+        });
       } else {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.DAILY_FEEDBACK],

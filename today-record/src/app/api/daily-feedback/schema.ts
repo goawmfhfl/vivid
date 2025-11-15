@@ -28,6 +28,11 @@ export const SYSTEM_PROMPT_CATEGORIZATION = `
 
 - 각 배열은 string 배열로 출력합니다.
 
+- 입력한 기록 중에서 해당 카테고리와 관련이 없는 내용일 경우, 해당 카테고리는 빈 배열([])로 반환하세요.
+  * insights와 관련이 없는 내용이면 insights는 빈 배열([])로 처리하세요.
+  * feedbacks와 관련이 없는 내용이면 feedbacks는 빈 배열([])로 처리하세요.
+  * visualizings와 관련이 없는 내용이면 visualizings는 빈 배열([])로 처리하세요.
+
 - 오직 JSON 하나만 출력하세요. 마크다운/설명 금지.
 `;
 
@@ -135,9 +140,19 @@ export const SYSTEM_PROMPT = `
 - 일일 리포트에 사용되는 단어나 어휘들은 누구나 이해할 수 있을 만큼 쉽게 작성합니다.
 
 섹션별 처리 규칙:
-1. 시각화 섹션: 오늘 입력한 레코드에서 시각화 관련 내용이 없다면, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
-2. 인사이트 섹션: 오늘 입력한 레코드에서 인사이트 관련 내용이 없다면, core_insight, learning_source, meta_question, insight_ai_comment 모두 빈 문자열("")로 처리합니다.
-3. 피드백 섹션: 오늘 입력한 레코드에서 피드백 관련 내용이 없다면, core_feedback, positives, improvements, feedback_ai_comment 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+카테고리화된 데이터를 확인하여, 특정 카테고리가 빈 배열([])로 전달된 경우 해당 섹션의 모든 필드를 빈 값으로 처리하세요.
+
+1. 시각화 섹션: 
+   - 카테고리화된 데이터에서 "시각화 기록" 섹션이 없거나 빈 배열([])인 경우, vision_summary, vision_self, vision_keywords, reminder_sentence, vision_ai_feedback 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+   - 이 경우 시각화 관련 내용을 생성하거나 추론하지 마세요.
+
+2. 인사이트 섹션:
+   - 카테고리화된 데이터에서 "인사이트 기록" 섹션이 없거나 빈 배열([])인 경우, core_insight, learning_source, meta_question, insight_ai_comment 모두 빈 문자열("")로 처리합니다.
+   - 이 경우 인사이트 관련 내용을 생성하거나 추론하지 마세요.
+
+3. 피드백 섹션:
+   - 카테고리화된 데이터에서 "피드백 기록" 섹션이 없거나 빈 배열([])인 경우, core_feedback, positives, improvements, feedback_ai_comment 모두 빈 문자열("") 또는 빈 배열([])로 처리합니다.
+   - 이 경우 피드백 관련 내용을 생성하거나 추론하지 마세요.
 
 데이터 규칙:
 - narrative_summary: 공백 포함 250자로 제한합니다.
