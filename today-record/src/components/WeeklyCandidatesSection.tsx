@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Calendar, Sparkles, Loader2, FileText } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
+import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
+import { QUERY_KEYS } from "@/constants";
 
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
+  const createWeeklyFeedback = useCreateWeeklyFeedback();
+  const queryClient = useQueryClient();
 
   // 피드백이 없는 후보만 필터링
   const candidatesWithoutFeedback = candidates.filter(
@@ -44,8 +49,38 @@ export function WeeklyCandidatesSection() {
     }
   };
 
+  // 주 종료일 계산 (ISO 형식)
+  const getWeekEnd = (weekStart: string): string => {
+    const startDate = new Date(weekStart);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    return endDate.toISOString().split("T")[0];
+  };
+
   const handleCreateFeedback = async (weekStart: string) => {
     setGeneratingWeek(weekStart);
+    try {
+      const weekEnd = getWeekEnd(weekStart);
+
+      await createWeeklyFeedback.mutateAsync({
+        start: weekStart,
+        end: weekEnd,
+        timezone: "Asia/Seoul",
+      });
+
+      // weeklyCandidates 쿼리도 무효화하여 목록 갱신
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+      });
+
+      // 성공 메시지 (선택사항)
+      // alert("주간 피드백이 생성되었습니다.");
+    } catch (error) {
+      console.error("주간 피드백 생성 실패:", error);
+      alert("주간 피드백 생성에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setGeneratingWeek(null);
+    }
   };
 
   // 로딩 중이거나 데이터가 없으면 표시하지 않음
