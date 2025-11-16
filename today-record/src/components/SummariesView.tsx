@@ -78,8 +78,6 @@ export function SummariesView() {
                   1) /
                   7
               );
-
-              // TODO: 샘플 생성 로직 구현
             }}
             className="rounded-full flex-shrink-0"
             style={{

@@ -42,8 +42,7 @@ export function SummaryList({
                   className="truncate"
                   style={{ color: "#333333", fontSize: "1rem" }}
                 >
-                  {summary.period} {summary.type === "weekly" ? "주간" : "월간"}{" "}
-                  인사이트 & 피드백
+                  {summary.overview}
                 </h3>
                 <p
                   className="truncate"
@@ -53,7 +52,8 @@ export function SummaryList({
                     fontSize: "0.8rem",
                   }}
                 >
-                  {summary.dateRange}
+                  {summary.period} {summary.type === "weekly" ? "주간" : "월간"}{" "}
+                  인사이트 & 피드백
                 </p>
               </div>
             </div>

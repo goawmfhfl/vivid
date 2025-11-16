@@ -37,11 +37,33 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <WeeklyCandidatesSection />
 
-      {currentSummaries.length > 0 ? (
-        <>
+      {/* 생성된 주간 피드백 섹션 */}
+      {currentSummaries.length > 0 && (
+        <div className="pt-6 border-t" style={{ borderColor: "#EFE9E3" }}>
+          <div className="mb-4">
+            <h2
+              style={{
+                color: "#333333",
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                marginBottom: "4px",
+              }}
+            >
+              생성된 주간 피드백
+            </h2>
+            <p
+              style={{
+                color: "#4E4B46",
+                opacity: 0.7,
+                fontSize: "0.85rem",
+              }}
+            >
+              AI가 분석한 주간 인사이트와 피드백을 확인하세요
+            </p>
+          </div>
           <SummaryList
             summaries={currentSummaries}
             color={WEEKLY_COLOR}
@@ -53,9 +75,13 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
             onPageChange={setCurrentPage}
             color={WEEKLY_COLOR}
           />
-        </>
-      ) : (
-        <EmptyState type="weekly" />
+        </div>
+      )}
+
+      {currentSummaries.length === 0 && (
+        <div className="pt-6">
+          <EmptyState type="weekly" />
+        </div>
       )}
     </div>
   );

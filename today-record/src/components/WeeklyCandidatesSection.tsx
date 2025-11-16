@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Calendar, Sparkles, Loader2, FileText } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
@@ -10,6 +9,7 @@ import { QUERY_KEYS } from "@/constants";
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
 
@@ -72,72 +72,140 @@ export function WeeklyCandidatesSection() {
   }
 
   return (
-    <div className="mt-6">
-      <h2
-        className="mb-4"
-        style={{ color: "#333333", fontSize: "1.1rem", fontWeight: "600" }}
+    <div className="mb-8">
+      {/* Notice 형태의 알림 박스 (클릭 가능) */}
+      <div
+        className="rounded-xl p-4 cursor-pointer transition-all hover:shadow-md"
+        style={{
+          backgroundColor: "#F0F7F0",
+          border: "1px solid #A8BBA8",
+        }}
+        onClick={() => setIsExpanded(!isExpanded)}
       >
-        주간 피드백 생성 가능
-      </h2>
-      <div className="space-y-3">
-        {candidatesWithRecords.map((candidate) => {
-          const isGenerating = generatingWeek === candidate.week_start;
-          return (
-            <Card
-              key={candidate.week_start}
-              className="p-4"
-              style={{
-                backgroundColor: "white",
-                border: "1px solid #EFE9E3",
-              }}
-            >
-              <div className="flex items-center justify-between">
+        <div className="flex items-start gap-3">
+          <div
+            className="p-2 rounded-lg flex-shrink-0 mt-0.5"
+            style={{ backgroundColor: "#A8BBA8" }}
+          >
+            <AlertCircle className="w-4 h-4" style={{ color: "white" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3
+                  className="mb-1"
+                  style={{
+                    color: "#333333",
+                    fontSize: "0.95rem",
+                    fontWeight: "600",
+                  }}
+                >
+                  아직 생성되지 않은 주간 피드백이 있어요
+                </h3>
+                <p
+                  style={{
+                    color: "#4E4B46",
+                    opacity: 0.8,
+                    fontSize: "0.85rem",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  {candidatesWithRecords.length}개의 주간 피드백을 생성할 수
+                  있습니다. AI가 분석한 인사이트를 확인해보세요.
+                </p>
+              </div>
+              <div
+                className="flex-shrink-0 transition-transform duration-300"
+                style={{
+                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              >
+                <ChevronDown className="w-5 h-5" style={{ color: "#A8BBA8" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 생성 가능한 주간 피드백 리스트 (드롭다운 애니메이션) */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: isExpanded
+            ? `${Math.min(candidatesWithRecords.length * 80, 400)}px`
+            : "0px",
+          opacity: isExpanded ? 1 : 0,
+          marginTop: isExpanded ? "12px" : "0px",
+          transform: isExpanded ? "translateY(0)" : "translateY(-10px)",
+        }}
+      >
+        <div className="space-y-2">
+          {candidatesWithRecords.map((candidate) => {
+            const isGenerating = generatingWeek === candidate.week_start;
+            return (
+              <div
+                key={candidate.week_start}
+                className="flex items-center justify-between p-3 rounded-lg transition-all hover:shadow-sm"
+                style={{
+                  backgroundColor: "white",
+                  border: "1px solid #EFE9E3",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div
-                    className="p-2 rounded-lg flex-shrink-0"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: "#A8BBA8" }}
-                  >
-                    <Calendar className="w-4 h-4" style={{ color: "white" }} />
-                  </div>
+                  />
                   <div className="flex-1 min-w-0">
-                    <h3
+                    <p
                       className="truncate"
-                      style={{ color: "#333333", fontSize: "1rem" }}
+                      style={{
+                        color: "#333333",
+                        fontSize: "0.9rem",
+                        fontWeight: "500",
+                      }}
                     >
                       {getWeekRange(candidate.week_start)}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <FileText
-                        className="w-3 h-3"
-                        style={{ color: "#4E4B46", opacity: 0.6 }}
-                      />
-                      <p
-                        style={{
-                          color: "#4E4B46",
-                          opacity: 0.7,
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        {candidate.record_count}개의 기록
-                      </p>
-                    </div>
+                    </p>
+                    <p
+                      style={{
+                        color: "#4E4B46",
+                        opacity: 0.6,
+                        fontSize: "0.75rem",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {candidate.record_count}개의 기록
+                    </p>
                   </div>
                 </div>
                 <Button
                   onClick={() => handleCreateFeedback(candidate.week_start)}
                   disabled={isGenerating}
-                  className="rounded-full px-4 py-2 flex items-center gap-2 flex-shrink-0"
+                  className="rounded-full px-3 py-1.5 flex items-center gap-1.5 flex-shrink-0 text-xs"
                   style={{
-                    backgroundColor: "#A8BBA8",
+                    backgroundColor: isGenerating ? "#C4D4C4" : "#A8BBA8",
                     color: "white",
-                    fontSize: "0.85rem",
+                    fontSize: "0.75rem",
                     fontWeight: "500",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isGenerating) {
+                      e.currentTarget.style.backgroundColor = "#95A995";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isGenerating) {
+                      e.currentTarget.style.backgroundColor = "#A8BBA8";
+                    }
                   }}
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      생성 중...
+                      생성 중
                     </>
                   ) : (
                     <>
@@ -147,9 +215,9 @@ export function WeeklyCandidatesSection() {
                   )}
                 </Button>
               </div>
-            </Card>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
