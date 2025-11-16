@@ -21,13 +21,6 @@ export function WeeklyCandidatesSection() {
     (candidate) => candidate.record_count > 0
   );
 
-  const formatWeekStart = (weekStart: string) => {
-    const date = new Date(weekStart);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${month}월 ${day}일`;
-  };
-
   const getWeekRange = (weekStart: string) => {
     const startDate = new Date(weekStart);
     const endDate = new Date(startDate);

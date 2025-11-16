@@ -13,20 +13,13 @@ const fetchDailyFeedback = async (
     .select("*")
     .eq("user_id", userId)
     .eq("report_date", date)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "PGRST116"
-    )
-      return null;
     throw error;
   }
-  if (!data) return null;
-  return data as unknown as DailyFeedbackRow;
+
+  return data as DailyFeedbackRow | null;
 };
 
 export const useGetDailyFeedback = (date: string) => {
