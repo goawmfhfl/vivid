@@ -1,31 +1,55 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Entry, PeriodSummary } from "@/types/Entry";
+import type { PeriodSummary } from "@/types/Entry";
 import { WeeklySummariesTab } from "./summaries/WeeklySummariesTab";
 import { MonthlySummariesTab } from "./summaries/MonthlySummariesTab";
+import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
+import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
+import {
+  calculateWeekNumber,
+  formatDateRange,
+  formatPeriod,
+  createPeriodSummaryFromWeeklyFeedback,
+} from "./summaries/weekly-feedback-mapper";
 
-type SummariesViewProps = {
-  entries: Entry[];
-  summaries: PeriodSummary[];
-  onGenerateSummary: (
-    type: "weekly" | "monthly",
-    weekNumber?: number,
-    monthNumber?: number,
-    year?: number
-  ) => void;
-  onSelectSummary: (summary: PeriodSummary) => void;
-  onCreateWeeklyFeedback?: (weekStart: string) => Promise<void>;
-};
+/**
+ * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
+ */
+function convertWeeklyFeedbackToPeriodSummary(
+  item: WeeklyFeedbackListItem
+): PeriodSummary {
+  const startDate = new Date(item.week_range.start);
+  const endDate = new Date(item.week_range.end);
 
-export function SummariesView({
-  entries: _entries, // eslint-disable-line @typescript-eslint/no-unused-vars
-  summaries,
-  onGenerateSummary,
-  onSelectSummary: _onSelectSummary, // eslint-disable-line @typescript-eslint/no-unused-vars
-  onCreateWeeklyFeedback: _onCreateWeeklyFeedback, // eslint-disable-line @typescript-eslint/no-unused-vars
-}: SummariesViewProps) {
+  const weekNumber = calculateWeekNumber(startDate);
+  const year = startDate.getFullYear();
+  const dateRange = formatDateRange(startDate, endDate);
+  const period = formatPeriod(startDate, weekNumber);
+
+  return createPeriodSummaryFromWeeklyFeedback({
+    item,
+    weekNumber,
+    year,
+    dateRange,
+    period,
+  });
+}
+
+export function SummariesView() {
   const [activeTab, setActiveTab] = useState<"weekly" | "monthly">("weekly");
+
+  // 주간 피드백 리스트 조회
+  const {
+    data: weeklyFeedbackList = [],
+    isLoading: isLoadingWeekly,
+    error: weeklyError,
+  } = useWeeklyFeedbackList();
+
+  // 주간 피드백을 PeriodSummary로 변환
+  const weeklySummaries = useMemo(() => {
+    return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
+  }, [weeklyFeedbackList]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -54,23 +78,8 @@ export function SummariesView({
                   1) /
                   7
               );
-              const currentMonth = now.getMonth() + 1;
 
-              if (activeTab === "weekly") {
-                onGenerateSummary(
-                  "weekly",
-                  currentWeek,
-                  undefined,
-                  currentYear
-                );
-              } else {
-                onGenerateSummary(
-                  "monthly",
-                  undefined,
-                  currentMonth,
-                  currentYear
-                );
-              }
+              // TODO: 샘플 생성 로직 구현
             }}
             className="rounded-full flex-shrink-0"
             style={{
@@ -123,12 +132,26 @@ export function SummariesView({
 
         {/* Weekly Tab */}
         <TabsContent value="weekly">
-          <WeeklySummariesTab summaries={summaries} />
+          {isLoadingWeekly ? (
+            <div className="flex justify-center items-center py-12">
+              <p style={{ color: "#4E4B46", opacity: 0.7 }}>
+                주간 피드백을 불러오는 중...
+              </p>
+            </div>
+          ) : weeklyError ? (
+            <div className="flex justify-center items-center py-12">
+              <p style={{ color: "#DC2626" }}>
+                주간 피드백을 불러오는 중 오류가 발생했습니다.
+              </p>
+            </div>
+          ) : (
+            <WeeklySummariesTab summaries={weeklySummaries} />
+          )}
         </TabsContent>
 
         {/* Monthly Tab */}
         <TabsContent value="monthly">
-          <MonthlySummariesTab summaries={summaries} />
+          <MonthlySummariesTab summaries={[]} />
         </TabsContent>
       </Tabs>
     </div>
