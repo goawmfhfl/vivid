@@ -13,17 +13,14 @@ export function WeeklyCandidatesSection() {
   const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
 
-  // 피드백이 없는 후보만 필터링
   const candidatesWithoutFeedback = candidates.filter(
     (candidate) => candidate.weekly_feedback_id === null
   );
 
-  // 기록이 있는 후보만 표시
   const candidatesWithRecords = candidatesWithoutFeedback.filter(
     (candidate) => candidate.record_count > 0
   );
 
-  // 주 시작일을 포맷팅
   const formatWeekStart = (weekStart: string) => {
     const date = new Date(weekStart);
     const month = date.getMonth() + 1;
@@ -31,7 +28,6 @@ export function WeeklyCandidatesSection() {
     return `${month}월 ${day}일`;
   };
 
-  // 주 범위 계산 (주 시작일부터 6일 후까지)
   const getWeekRange = (weekStart: string) => {
     const startDate = new Date(weekStart);
     const endDate = new Date(startDate);
@@ -49,7 +45,6 @@ export function WeeklyCandidatesSection() {
     }
   };
 
-  // 주 종료일 계산 (ISO 형식)
   const getWeekEnd = (weekStart: string): string => {
     const startDate = new Date(weekStart);
     const endDate = new Date(startDate);
@@ -68,13 +63,9 @@ export function WeeklyCandidatesSection() {
         timezone: "Asia/Seoul",
       });
 
-      // weeklyCandidates 쿼리도 무효화하여 목록 갱신
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
       });
-
-      // 성공 메시지 (선택사항)
-      // alert("주간 피드백이 생성되었습니다.");
     } catch (error) {
       console.error("주간 피드백 생성 실패:", error);
       alert("주간 피드백 생성에 실패했습니다. 다시 시도해주세요.");
@@ -83,7 +74,6 @@ export function WeeklyCandidatesSection() {
     }
   };
 
-  // 로딩 중이거나 데이터가 없으면 표시하지 않음
   if (isLoading || candidatesWithRecords.length === 0) {
     return null;
   }

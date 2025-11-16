@@ -63,7 +63,6 @@ export type ClosingSection = {
 
 export type WeeklyFeedback = {
   id?: string; // 필요 시
-  title: string;
   week_range: {
     start: string; // "YYYY-MM-DD"
     end: string; // "YYYY-MM-DD"
@@ -89,7 +88,6 @@ export type WeeklyFeedbackListItem = {
     start: string;
     end: string;
   };
-  integrity_avg?: number; // weekly_overview.integrity.average 정도
   is_ai_generated?: boolean;
   created_at?: string;
 };

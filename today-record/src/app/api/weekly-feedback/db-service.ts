@@ -39,7 +39,7 @@ export async function fetchWeeklyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select(
-      "id, title, week_start, week_end, integrity_avg, is_ai_generated, created_at"
+      "id, week_start, week_end, weekly_overview, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("week_start", { ascending: false });
@@ -48,17 +48,25 @@ export async function fetchWeeklyFeedbackList(
     throw new Error(`Failed to fetch weekly feedback list: ${error.message}`);
   }
 
-  return (data || []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    week_range: {
-      start: row.week_start,
-      end: row.week_end,
-    },
-    integrity_avg: row.integrity_avg ?? undefined,
-    is_ai_generated: row.is_ai_generated ?? undefined,
-    created_at: row.created_at ?? undefined,
-  }));
+  return (data || []).map((row) => {
+    // weekly_overview에서 narrative의 일부를 title로 사용하거나, 날짜 범위를 title로 사용
+    const weeklyOverview = row.weekly_overview as { narrative?: string } | null;
+    const title = weeklyOverview?.narrative
+      ? weeklyOverview.narrative.substring(0, 50) +
+        (weeklyOverview.narrative.length > 50 ? "..." : "")
+      : `${row.week_start} ~ ${row.week_end}`;
+
+    return {
+      id: String(row.id),
+      title,
+      week_range: {
+        start: row.week_start,
+        end: row.week_end,
+      },
+      is_ai_generated: row.is_ai_generated ?? undefined,
+      created_at: row.created_at ?? undefined,
+    };
+  });
 }
 
 /**
@@ -83,22 +91,35 @@ export async function fetchWeeklyFeedbackDetail(
     throw new Error(`Failed to fetch weekly feedback: ${error.message}`);
   }
 
-  if (!data || !data.payload) {
+  if (!data) {
     return null;
   }
 
-  const payload = data.payload as WeeklyFeedback;
+  // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
+  const weeklyOverview =
+    data.weekly_overview as WeeklyFeedback["weekly_overview"];
+
   return {
-    ...payload,
-    id: data.id,
+    id: String(data.id),
+    week_range: {
+      start: data.week_start,
+      end: data.week_end,
+      timezone: data.timezone || "Asia/Seoul",
+    },
+    by_day: (data.by_day as WeeklyFeedback["by_day"]) || [],
+    weekly_overview: weeklyOverview,
+    growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
+    insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
+    vision_visualization_report:
+      data.vision_visualization_report as WeeklyFeedback["vision_visualization_report"],
+    execution_reflection:
+      data.execution_reflection as WeeklyFeedback["execution_reflection"],
+    closing_section: data.closing_section as WeeklyFeedback["closing_section"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
 }
 
-/**
- * Weekly Feedback 저장
- */
 export async function saveWeeklyFeedback(
   supabase: SupabaseClient,
   userId: string,
@@ -106,15 +127,23 @@ export async function saveWeeklyFeedback(
 ): Promise<string> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
-    .insert({
-      user_id: userId,
-      week_start: feedback.week_range.start,
-      week_end: feedback.week_range.end,
-      title: feedback.title,
-      integrity_avg: feedback.weekly_overview.integrity.average,
-      is_ai_generated: feedback.is_ai_generated ?? true,
-      payload: feedback,
-    })
+    .upsert(
+      {
+        user_id: userId,
+        week_start: feedback.week_range.start,
+        week_end: feedback.week_range.end,
+        timezone: feedback.week_range.timezone || "Asia/Seoul",
+        by_day: feedback.by_day,
+        weekly_overview: feedback.weekly_overview,
+        growth_trends: feedback.growth_trends,
+        insight_replay: feedback.insight_replay,
+        vision_visualization_report: feedback.vision_visualization_report,
+        execution_reflection: feedback.execution_reflection,
+        closing_section: feedback.closing_section,
+        is_ai_generated: feedback.is_ai_generated ?? true,
+      },
+      { onConflict: "user_id,week_start" }
+    )
     .select("id")
     .single();
 
@@ -126,5 +155,5 @@ export async function saveWeeklyFeedback(
     throw new Error("Failed to save weekly feedback: no ID returned");
   }
 
-  return data.id;
+  return String(data.id);
 }

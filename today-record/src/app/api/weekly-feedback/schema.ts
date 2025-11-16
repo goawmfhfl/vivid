@@ -11,6 +11,7 @@ export const WeeklyFeedbackSchema = {
           title: { type: "string" },
           week_range: {
             type: "object",
+            additionalProperties: false,
             properties: {
               start: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
               end: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
@@ -22,6 +23,7 @@ export const WeeklyFeedbackSchema = {
             type: "array",
             items: {
               type: "object",
+              additionalProperties: false,
               properties: {
                 date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
                 weekday: { type: "string" },
@@ -42,6 +44,7 @@ export const WeeklyFeedbackSchema = {
           },
           weekly_overview: {
             type: "object",
+            additionalProperties: false,
             properties: {
               narrative: { type: "string" },
               top_keywords: { type: "array", items: { type: "string" } },
@@ -49,6 +52,7 @@ export const WeeklyFeedbackSchema = {
               emotion_trend: { type: "array", items: { type: "string" } },
               integrity: {
                 type: "object",
+                additionalProperties: false,
                 properties: {
                   average: { type: "number", minimum: 0, maximum: 10 },
                 },
@@ -69,6 +73,7 @@ export const WeeklyFeedbackSchema = {
           },
           growth_trends: {
             type: "object",
+            additionalProperties: false,
             properties: {
               growth_points_top3: { type: "array", items: { type: "string" } },
               adjustment_points_top3: {
@@ -77,6 +82,7 @@ export const WeeklyFeedbackSchema = {
               },
               integrity_score: {
                 type: "object",
+                additionalProperties: false,
                 properties: {
                   avg: { type: "number", minimum: 0, maximum: 10 },
                   min: { type: "number", minimum: 0, maximum: 10 },
@@ -94,6 +100,7 @@ export const WeeklyFeedbackSchema = {
           },
           insight_replay: {
             type: "object",
+            additionalProperties: false,
             properties: {
               core_insights: { type: "array", items: { type: "string" } },
               meta_questions_highlight: {
@@ -104,6 +111,7 @@ export const WeeklyFeedbackSchema = {
                 type: "array",
                 items: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     theme: { type: "string" },
                     count: { type: "integer", minimum: 0 },
@@ -120,12 +128,14 @@ export const WeeklyFeedbackSchema = {
           },
           vision_visualization_report: {
             type: "object",
+            additionalProperties: false,
             properties: {
               vision_summary: { type: "string" },
               vision_keywords_trend: {
                 type: "array",
                 items: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     keyword: { type: "string" },
                     days: { type: "integer", minimum: 0 },
@@ -148,6 +158,7 @@ export const WeeklyFeedbackSchema = {
           },
           execution_reflection: {
             type: "object",
+            additionalProperties: false,
             properties: {
               positives_top3: { type: "array", items: { type: "string" } },
               improvements_top3: { type: "array", items: { type: "string" } },
@@ -161,6 +172,7 @@ export const WeeklyFeedbackSchema = {
           },
           closing_section: {
             type: "object",
+            additionalProperties: false,
             properties: {
               weekly_one_liner: { type: "string" },
               next_week_objective: { type: "string" },

@@ -20,7 +20,7 @@ export const API_ENDPOINTS = {
   MONTHLY_SUMMARIES: "monthly_summaries",
   USER_CONSENTS: "user_consents",
   WEEKLY_CANDIDATES: "weekly_candidates",
-  WEEKLY_FEEDBACKS: "weekly_feedbacks",
+  WEEKLY_FEEDBACKS: "weekly_feedback",
 } as const;
 
 // Record Types
