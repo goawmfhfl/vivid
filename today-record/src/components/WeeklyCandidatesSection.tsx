@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "./ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
+import { filterWeeklyCandidatesForCreation } from "./weeklyFeedback/weekly-candidate-filter";
 
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
@@ -13,13 +14,10 @@ export function WeeklyCandidatesSection() {
   const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
 
-  const candidatesWithoutFeedback = candidates.filter(
-    (candidate) => candidate.weekly_feedback_id === null
-  );
-
-  const candidatesWithRecords = candidatesWithoutFeedback.filter(
-    (candidate) => candidate.record_count > 0
-  );
+  // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 주간 피드백 필터링
+  const candidatesForCreation = useMemo(() => {
+    return filterWeeklyCandidatesForCreation(candidates, new Date());
+  }, [candidates]);
 
   const getWeekRange = (weekStart: string) => {
     const startDate = new Date(weekStart);
@@ -67,7 +65,7 @@ export function WeeklyCandidatesSection() {
     }
   };
 
-  if (isLoading || candidatesWithRecords.length === 0) {
+  if (isLoading || candidatesForCreation.length === 0) {
     return null;
   }
 
@@ -110,7 +108,7 @@ export function WeeklyCandidatesSection() {
                     lineHeight: "1.5",
                   }}
                 >
-                  {candidatesWithRecords.length}개의 주간 피드백을 생성할 수
+                  {candidatesForCreation.length}개의 주간 피드백을 생성할 수
                   있습니다. AI가 분석한 인사이트를 확인해보세요.
                 </p>
               </div>
@@ -132,7 +130,7 @@ export function WeeklyCandidatesSection() {
         className="overflow-hidden transition-all duration-300 ease-in-out"
         style={{
           maxHeight: isExpanded
-            ? `${Math.min(candidatesWithRecords.length * 80, 400)}px`
+            ? `${Math.min(candidatesForCreation.length * 80, 400)}px`
             : "0px",
           opacity: isExpanded ? 1 : 0,
           marginTop: isExpanded ? "12px" : "0px",
@@ -140,7 +138,7 @@ export function WeeklyCandidatesSection() {
         }}
       >
         <div className="space-y-2">
-          {candidatesWithRecords.map((candidate) => {
+          {candidatesForCreation.map((candidate) => {
             const isGenerating = generatingWeek === candidate.week_start;
             return (
               <div
