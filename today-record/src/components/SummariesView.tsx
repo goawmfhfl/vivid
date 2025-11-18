@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 import type { PeriodSummary } from "@/types/Entry";
 import { WeeklySummariesTab } from "./summaries/WeeklySummariesTab";
 import { MonthlySummariesTab } from "./summaries/MonthlySummariesTab";
@@ -67,28 +67,6 @@ export function SummariesView() {
               주간 및 월간 기록을 분석하고 인사이트를 확인하세요
             </p>
           </div>
-          <Button
-            onClick={() => {
-              const now = new Date();
-              const currentYear = now.getFullYear();
-              const currentWeek = Math.ceil(
-                ((now.getTime() - new Date(currentYear, 0, 1).getTime()) /
-                  86400000 +
-                  new Date(currentYear, 0, 1).getDay() +
-                  1) /
-                  7
-              );
-            }}
-            className="rounded-full flex-shrink-0"
-            style={{
-              backgroundColor: activeTab === "weekly" ? "#A8BBA8" : "#6B7A6F",
-              color: "white",
-              padding: "0.5rem 1rem",
-              fontSize: "0.85rem",
-            }}
-          >
-            샘플 생성
-          </Button>
         </div>
       </header>
 
@@ -132,9 +110,11 @@ export function SummariesView() {
         <TabsContent value="weekly">
           {isLoadingWeekly ? (
             <div className="flex justify-center items-center py-12">
-              <p style={{ color: "#4E4B46", opacity: 0.7 }}>
-                주간 피드백을 불러오는 중...
-              </p>
+              <LoadingSpinner
+                message="주간 피드백을 불러오는 중..."
+                size="md"
+                showMessage={true}
+              />
             </div>
           ) : weeklyError ? (
             <div className="flex justify-center items-center py-12">
