@@ -102,6 +102,8 @@ export function WeeklyFeedbackReport({
     score: day.integrity_score,
   }));
 
+  console.log("data", data);
+
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
