@@ -1,0 +1,184 @@
+import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
+import { Card } from "../../ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import type { WeeklyReportData } from "./types";
+
+type GrowthTrendsSectionProps = {
+  byDay: WeeklyReportData["by_day"];
+  integrity: WeeklyReportData["integrity"];
+  growthPoints: string[];
+  adjustmentPoints: string[];
+};
+
+export function GrowthTrendsSection({
+  byDay,
+  integrity,
+  growthPoints,
+  adjustmentPoints,
+}: GrowthTrendsSectionProps) {
+  // Prepare integrity score chart data
+  const integrityChartData = byDay.map((day) => ({
+    day: day.weekday.substring(0, 1), // 월 -> 월
+    score: day.integrity_score,
+  }));
+
+  return (
+    <div className="mb-10 sm:mb-12">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <div
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: "#D08C60" }}
+        >
+          <TrendingUp className="w-4 h-4 text-white" />
+        </div>
+        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+          성장 트렌드
+        </h2>
+      </div>
+
+      {/* Integrity Score Chart */}
+      <Card
+        className="p-4 sm:p-5 mb-4"
+        style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+      >
+        <p
+          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          style={{ color: "#6B7A6F" }}
+        >
+          일별 정합도 점수
+        </p>
+        <ResponsiveContainer width="100%" height={160}>
+          <LineChart data={integrityChartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
+            <XAxis
+              dataKey="day"
+              tick={{ fontSize: 11, fill: "#6B7A6F" }}
+              axisLine={{ stroke: "#E0E0E0" }}
+            />
+            <YAxis
+              domain={[0, 10]}
+              tick={{ fontSize: 11, fill: "#6B7A6F" }}
+              axisLine={{ stroke: "#E0E0E0" }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #EFE9E3",
+                borderRadius: "8px",
+                fontSize: "0.8rem",
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="score"
+              stroke="#A8BBA8"
+              strokeWidth={2.5}
+              dot={{ fill: "#A8BBA8", r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex justify-center gap-4 sm:gap-6 mt-3">
+          <div className="text-center">
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
+              평균
+            </p>
+            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+              {integrity.average}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
+              최소
+            </p>
+            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+              {integrity.min}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
+              최대
+            </p>
+            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+              {integrity.max}
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Growth & Adjustment Points */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        {/* Growth Points */}
+        <Card
+          className="p-4 sm:p-5"
+          style={{
+            backgroundColor: "#F0F5F0",
+            border: "1px solid #D5E3D5",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle2 className="w-4 h-4" style={{ color: "#A8BBA8" }} />
+            <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+              이번 주 성장 포인트
+            </p>
+          </div>
+          <ul className="space-y-2 sm:space-y-2.5">
+            {growthPoints.map((point, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <div
+                  className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                  style={{ backgroundColor: "#A8BBA8" }}
+                />
+                <p
+                  className="text-sm sm:text-base leading-relaxed"
+                  style={{ color: "#333333" }}
+                >
+                  {point}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        {/* Adjustment Points */}
+        <Card
+          className="p-4 sm:p-5"
+          style={{
+            backgroundColor: "#FDF6F0",
+            border: "1px solid #F0DCC8",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="w-4 h-4" style={{ color: "#D08C60" }} />
+            <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+              개선 포인트
+            </p>
+          </div>
+          <ul className="space-y-2 sm:space-y-2.5">
+            {adjustmentPoints.map((point, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <div
+                  className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                  style={{ backgroundColor: "#D08C60" }}
+                />
+                <p
+                  className="text-sm sm:text-base leading-relaxed"
+                  style={{ color: "#333333" }}
+                >
+                  {point}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  );
+}
