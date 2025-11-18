@@ -1,6 +1,7 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
+import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
 import { ByDayTimelineSection } from "./report/ByDayTimelineSection";
@@ -23,10 +24,15 @@ export function WeeklyFeedbackReport({
   data,
   onBack,
 }: WeeklyFeedbackReportProps) {
+  const router = useRouter();
+
+  const handleGoToAnalysis = () => {
+    router.push("/analysis");
+  };
+
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* Back Button */}
         <Button
           variant="ghost"
           onClick={onBack}
@@ -117,14 +123,15 @@ export function WeeklyFeedbackReport({
         {/* Bottom Action */}
         <div className="flex justify-center pt-4">
           <Button
-            onClick={onBack}
-            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base"
+            onClick={handleGoToAnalysis}
+            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
             style={{
               backgroundColor: "#6B7A6F",
               color: "white",
             }}
           >
-            새로운 주간 시작하기
+            <BarChart3 className="w-4 h-4" />
+            분석 페이지로 이동
           </Button>
         </div>
       </div>

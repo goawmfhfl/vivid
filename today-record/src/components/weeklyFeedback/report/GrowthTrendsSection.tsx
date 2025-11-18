@@ -74,6 +74,14 @@ export function GrowthTrendsSection({
                 border: "1px solid #EFE9E3",
                 borderRadius: "8px",
                 fontSize: "0.8rem",
+                color: "#333333",
+              }}
+              labelStyle={{
+                color: "#6B7A6F",
+                fontWeight: 500,
+              }}
+              itemStyle={{
+                color: "#333333",
               }}
             />
             <Line
