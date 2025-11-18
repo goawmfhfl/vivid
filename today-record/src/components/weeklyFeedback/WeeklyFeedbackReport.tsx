@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
+import { ScrollAnimation } from "../ui/ScrollAnimation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
 import { ByDayTimelineSection } from "./report/ByDayTimelineSection";
@@ -36,50 +37,82 @@ export function WeeklyFeedbackReport({
           돌아가기
         </Button>
 
-        <ReportHeader
-          weekRange={data.week_range}
-          integrity={data.integrity}
-          nextWeekFocus={data.next_week_focus}
-          narrative={data.weekly_overview.narrative}
-        />
+        <ScrollAnimation>
+          <div className="mb-64">
+            <ReportHeader
+              weekRange={data.week_range}
+              integrity={data.integrity}
+              nextWeekFocus={data.next_week_focus}
+              narrative={data.weekly_overview.narrative}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <ByDayTimelineSection
-          byDay={data.by_day}
-          emotionTrend={data.weekly_overview.emotion_trend}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <ByDayTimelineSection
+              byDay={data.by_day}
+              emotionTrend={data.weekly_overview.emotion_trend}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <WeeklyOverviewSection weeklyOverview={data.weekly_overview} />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <WeeklyOverviewSection weeklyOverview={data.weekly_overview} />
+          </div>
+        </ScrollAnimation>
 
-        <GrowthTrendsSection
-          byDay={data.by_day}
-          integrity={data.integrity}
-          growthPoints={data.growth_points_top3}
-          adjustmentPoints={data.adjustment_points_top3}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <GrowthTrendsSection
+              byDay={data.by_day}
+              integrity={data.integrity}
+              growthPoints={data.growth_points_top3}
+              adjustmentPoints={data.adjustment_points_top3}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <InsightReplaySection
-          coreInsights={data.core_insights}
-          metaQuestionsHighlight={data.meta_questions_highlight}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <InsightReplaySection
+              coreInsights={data.core_insights}
+              metaQuestionsHighlight={data.meta_questions_highlight}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <VisionVisualizationSection
-          visionSummary={data.vision_summary}
-          visionKeywordsTrend={data.vision_keywords_trend}
-          alignmentComment={data.alignment_comment}
-          reminderSentencesFeatured={data.reminder_sentences_featured}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <VisionVisualizationSection
+              visionSummary={data.vision_summary}
+              visionKeywordsTrend={data.vision_keywords_trend}
+              alignmentComment={data.alignment_comment}
+              reminderSentencesFeatured={data.reminder_sentences_featured}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <ExecutionReflectionSection
-          positives={data.positives_top3}
-          improvements={data.improvements_top3}
-          aiFeedbackSummary={data.ai_feedback_summary}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <ExecutionReflectionSection
+              positives={data.positives_top3}
+              improvements={data.improvements_top3}
+              aiFeedbackSummary={data.ai_feedback_summary}
+            />
+          </div>
+        </ScrollAnimation>
 
-        <ClosingSection
-          weeklyOneLiner={data.weekly_one_liner}
-          nextWeekObjective={data.next_week_objective}
-          callToAction={data.call_to_action}
-        />
+        <ScrollAnimation delay={200}>
+          <div className="mb-12">
+            <ClosingSection
+              weeklyOneLiner={data.weekly_one_liner}
+              nextWeekObjective={data.next_week_objective}
+              callToAction={data.call_to_action}
+            />
+          </div>
+        </ScrollAnimation>
 
         {/* Bottom Action */}
         <div className="flex justify-center pt-4">

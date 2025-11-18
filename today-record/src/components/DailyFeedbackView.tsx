@@ -9,7 +9,7 @@ import { FeedbackSection } from "./dailyFeedback/Feedback";
 import { FinalSection } from "./dailyFeedback/Final";
 import { EmptyState } from "./dailyFeedback/States";
 import { mapDailyFeedbackRowToReport } from "./dailyFeedback/mappers";
-import { ScrollAnimation } from "./dailyFeedback/ScrollAnimation";
+import { ScrollAnimation } from "./ui/ScrollAnimation";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
 
