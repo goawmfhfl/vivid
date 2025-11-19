@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Swiper Cards Effect Custom Styles */
+.swiper-cards {
+  overflow: visible;
+}
+
+.swiper-cards .swiper-slide {
+  border-radius: 16px;
+  overflow: visible;
+  transform-origin: center center;
+}
+
+.swiper-cards .swiper-slide-shadow {
+  border-radius: 16px;
+}

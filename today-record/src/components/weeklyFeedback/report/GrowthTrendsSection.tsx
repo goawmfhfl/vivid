@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useMemo } from "react";
 import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
 import {
@@ -9,6 +12,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useCountUp } from "@/hooks/useCountUp";
 import type { WeeklyReportData } from "./types";
 
 type GrowthTrendsSectionProps = {
@@ -25,10 +29,42 @@ export function GrowthTrendsSection({
   adjustmentPoints,
 }: GrowthTrendsSectionProps) {
   // Prepare integrity score chart data
-  const integrityChartData = byDay.map((day) => ({
-    day: day.weekday.substring(0, 1), // 월 -> 월
-    score: day.integrity_score,
-  }));
+  const integrityChartData = useMemo(
+    () =>
+      byDay.map((day) => ({
+        day: day.weekday.substring(0, 1), // 월 -> 월
+        score: day.integrity_score,
+      })),
+    [byDay]
+  );
+
+  // Count up animations for integrity scores
+  const [displayAverage, averageRef] = useCountUp({
+    targetValue: integrity.average,
+    duration: 1000,
+    delay: 200,
+    triggerOnVisible: true,
+    threshold: 0.2,
+    rootMargin: "0px 0px -50px 0px",
+  });
+
+  const [displayMin, minRef] = useCountUp({
+    targetValue: integrity.min,
+    duration: 1000,
+    delay: 400,
+    triggerOnVisible: true,
+    threshold: 0.2,
+    rootMargin: "0px 0px -50px 0px",
+  });
+
+  const [displayMax, maxRef] = useCountUp({
+    targetValue: integrity.max,
+    duration: 1000,
+    delay: 600,
+    triggerOnVisible: true,
+    threshold: 0.2,
+    rootMargin: "0px 0px -50px 0px",
+  });
 
   return (
     <div className="mb-10 sm:mb-12">
@@ -93,29 +129,32 @@ export function GrowthTrendsSection({
             />
           </LineChart>
         </ResponsiveContainer>
-        <div className="flex justify-center gap-4 sm:gap-6 mt-3">
+        <div
+          ref={averageRef}
+          className="flex justify-center gap-4 sm:gap-6 mt-3"
+        >
           <div className="text-center">
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               평균
             </p>
             <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
-              {integrity.average}
+              {displayAverage.toFixed(1)}
             </p>
           </div>
-          <div className="text-center">
+          <div ref={minRef} className="text-center">
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               최소
             </p>
             <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
-              {integrity.min}
+              {displayMin.toFixed(1)}
             </p>
           </div>
-          <div className="text-center">
+          <div ref={maxRef} className="text-center">
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               최대
             </p>
             <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
-              {integrity.max}
+              {displayMax.toFixed(1)}
             </p>
           </div>
         </div>

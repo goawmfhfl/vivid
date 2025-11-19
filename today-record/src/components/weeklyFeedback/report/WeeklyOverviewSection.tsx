@@ -1,11 +1,62 @@
+"use client";
+
 import { Lightbulb, Sparkles } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { Card } from "../../ui/card";
+import { useCountUp } from "@/hooks/useCountUp";
 import type { WeeklyReportData } from "./types";
 
 type WeeklyOverviewSectionProps = {
   weeklyOverview: WeeklyReportData["weekly_overview"];
 };
+
+// 개별 테마 항목 컴포넌트 (애니메이션을 위해 분리)
+function ThemeItem({
+  theme,
+  index,
+  maxCount = 7,
+}: {
+  theme: { theme: string; count: number };
+  index: number;
+  maxCount?: number;
+}) {
+  const [displayCount, countRef] = useCountUp({
+    targetValue: theme.count,
+    duration: 1200,
+    delay: index * 150, // 각 항목마다 순차적으로 애니메이션 시작
+    triggerOnVisible: true,
+    threshold: 0.2,
+    rootMargin: "0px 0px -50px 0px",
+  });
+
+  const percentage = (displayCount / maxCount) * 100;
+
+  return (
+    <div ref={countRef}>
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-sm sm:text-base" style={{ color: "#333333" }}>
+          {theme.theme}
+        </p>
+        <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+          {displayCount}회
+        </p>
+      </div>
+      <div
+        className="h-2 rounded-full overflow-hidden"
+        style={{ backgroundColor: "#F0F5F0" }}
+      >
+        <div
+          className="h-2 rounded-full transition-all duration-1000 ease-out"
+          style={{
+            backgroundColor: "#A8BBA8",
+            width: `${Math.min(percentage, 100)}%`,
+            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function WeeklyOverviewSection({
   weeklyOverview,
@@ -56,31 +107,7 @@ export function WeeklyOverviewSection({
         </p>
         <div className="space-y-3">
           {weeklyOverview.repeated_themes.map((theme, index) => (
-            <div key={index}>
-              <div className="flex items-center justify-between mb-1.5">
-                <p
-                  className="text-sm sm:text-base"
-                  style={{ color: "#333333" }}
-                >
-                  {theme.theme}
-                </p>
-                <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
-                  {theme.count}회
-                </p>
-              </div>
-              <div
-                className="h-2 rounded-full"
-                style={{ backgroundColor: "#F0F5F0" }}
-              >
-                <div
-                  className="h-2 rounded-full"
-                  style={{
-                    backgroundColor: "#A8BBA8",
-                    width: `${(theme.count / 7) * 100}%`,
-                  }}
-                />
-              </div>
-            </div>
+            <ThemeItem key={index} theme={theme} index={index} />
           ))}
         </div>
       </Card>
