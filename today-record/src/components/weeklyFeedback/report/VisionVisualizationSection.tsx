@@ -80,6 +80,14 @@ export function VisionVisualizationSection({
                 border: "1px solid #EFE9E3",
                 borderRadius: "8px",
                 fontSize: "0.8rem",
+                color: "#333333",
+              }}
+              labelStyle={{
+                color: "#A3BFD9",
+                fontWeight: 500,
+              }}
+              itemStyle={{
+                color: "#010201",
               }}
             />
             <Bar dataKey="count" fill="#A3BFD9" radius={[8, 8, 0, 0]} />
@@ -95,12 +103,11 @@ export function VisionVisualizationSection({
         />
         <p
           className="text-xs sm:text-sm leading-relaxed"
-          style={{ color: "#6B7A6F" }}
+          style={{ color: "#010201" }}
         >
           {alignmentComment}
         </p>
       </div>
-
       {/* Featured Reminder Sentences */}
       <div className="space-y-3">
         {reminderSentencesFeatured.map((sentence, index) => (

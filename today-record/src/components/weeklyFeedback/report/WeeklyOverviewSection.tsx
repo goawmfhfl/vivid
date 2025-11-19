@@ -33,7 +33,7 @@ function ThemeItem({
 
   return (
     <div ref={countRef}>
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-betweeㅔn mb-1.5">
         <p className="text-sm sm:text-base" style={{ color: "#333333" }}>
           {theme.theme}
         </p>
