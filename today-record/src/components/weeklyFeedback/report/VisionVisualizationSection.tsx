@@ -9,7 +9,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { WeeklyReportData } from "./types";
 
 type VisionVisualizationSectionProps = {
   visionSummary: string;

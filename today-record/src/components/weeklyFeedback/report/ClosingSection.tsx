@@ -1,6 +1,5 @@
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { WeeklyReportData } from "./types";
 
 type ClosingSectionProps = {
   weeklyOneLiner: string;
@@ -37,7 +36,7 @@ export function ClosingSection({
         }}
       >
         <p className="text-lg sm:text-xl leading-relaxed text-center">
-          "{weeklyOneLiner}"
+          &ldquo;{weeklyOneLiner}&rdquo;
         </p>
       </Card>
 

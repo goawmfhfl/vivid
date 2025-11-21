@@ -58,7 +58,7 @@ export function LoginView() {
     loginMutation.mutate(
       { email, password },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           router.push("/");
         },
         onError: (error: unknown) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useMemo } from "react";
 import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
 import {

@@ -56,8 +56,7 @@ export function Home() {
     useCreateDailyFeedback();
 
   // 오늘 자 피드백 존재 여부 조회
-  const { data: todayFeedback, isLoading: feedbackLoading } =
-    useGetDailyFeedback(todayIso);
+  const { data: todayFeedback } = useGetDailyFeedback(todayIso);
 
   const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
 

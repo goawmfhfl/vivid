@@ -27,11 +27,7 @@ function convertWeekdayToKorean(weekday: string): string {
 /**
  * 정합도 트렌드 텍스트 생성 (간단한 버전)
  */
-function generateIntegrityTrend(
-  average: number,
-  min: number,
-  max: number
-): string {
+function generateIntegrityTrend(): string {
   // 실제로는 이전 주 데이터와 비교해야 하지만, 일단 기본값 반환
   return "전주 대비 유지";
 }
@@ -61,11 +57,7 @@ export function mapWeeklyFeedbackToReportData(
       min: integrityMin,
       max: integrityMax,
       stddev: Math.round(integrityStddev * 10) / 10,
-      trend: generateIntegrityTrend(
-        integrityAverage,
-        integrityMin,
-        integrityMax
-      ),
+      trend: generateIntegrityTrend(),
     },
     weekly_one_liner: feedback.closing_section.weekly_one_liner,
     next_week_focus: feedback.weekly_overview.next_week_focus,

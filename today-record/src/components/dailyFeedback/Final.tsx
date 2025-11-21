@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 import { useCountUp } from "@/hooks/useCountUp";

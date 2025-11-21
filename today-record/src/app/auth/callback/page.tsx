@@ -19,8 +19,6 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
-          const user = data.session.user;
-
           router.push("/");
         } else {
           console.log("세션이 없습니다.");

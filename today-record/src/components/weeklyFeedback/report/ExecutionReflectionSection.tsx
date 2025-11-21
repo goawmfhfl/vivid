@@ -1,6 +1,5 @@
 import { AlertCircle, BarChart3, CheckCircle2, Sparkles } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { WeeklyReportData } from "./types";
 
 type ExecutionReflectionSectionProps = {
   positives: string[];

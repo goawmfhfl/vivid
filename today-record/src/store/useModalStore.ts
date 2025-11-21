@@ -30,7 +30,6 @@ interface ModalStore {
 }
 
 const defaultLoadingMessage = "처리 중입니다...";
-const defaultErrorMessage = "오류가 발생했습니다. 다시 시도해주세요.";
 
 export const useModalStore = create<ModalStore>((set) => ({
   // Loading Modal 초기 상태

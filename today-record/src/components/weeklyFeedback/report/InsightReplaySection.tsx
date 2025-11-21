@@ -1,6 +1,5 @@
 import { Star } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { WeeklyReportData } from "./types";
 
 type InsightReplaySectionProps = {
   coreInsights: string[];
@@ -67,7 +66,7 @@ export function InsightReplaySection({
               className="text-sm sm:text-base leading-relaxed italic"
               style={{ color: "#4E4B46" }}
             >
-              "{question}"
+              &ldquo;{question}&rdquo;
             </p>
           ))}
         </div>
