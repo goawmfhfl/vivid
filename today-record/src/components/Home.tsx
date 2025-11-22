@@ -76,11 +76,11 @@ export function Home() {
   const handleOpenDailyFeedback = async () => {
     try {
       if (hasTodayFeedback) {
-        router.push(`/daily?date=${todayIso}`);
+        router.push(`/analysis/feedback/daily?date=${todayIso}`);
         return;
       }
       await createDailyFeedback({ date: todayIso });
-      router.push(`/daily?date=${todayIso}`);
+      router.push(`/analysis/feedback/daily?date=${todayIso}`);
     } catch (e) {
       const base =
         e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
