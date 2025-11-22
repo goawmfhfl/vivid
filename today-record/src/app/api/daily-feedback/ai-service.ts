@@ -8,9 +8,18 @@ import {
 import type { Record, CategorizedRecords, DailyReport } from "./types";
 import { buildCategorizationPrompt, buildReportPrompt } from "./prompts";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+/**
+ * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
+ */
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable."
+    );
+  }
+  return new OpenAI({ apiKey });
+}
 
 /**
  * 기록을 카테고리로 분류
@@ -20,6 +29,7 @@ export async function categorizeRecords(
   date: string
 ): Promise<CategorizedRecords> {
   const prompt = buildCategorizationPrompt(records, date);
+  const openai = getOpenAIClient();
 
   const completion = await openai.chat.completions.create({
     model: "gpt-5",
@@ -53,6 +63,7 @@ export async function generateDailyReport(
   date: string
 ): Promise<DailyReport> {
   const prompt = buildReportPrompt(categorized, date);
+  const openai = getOpenAIClient();
 
   const completion = await openai.chat.completions.create({
     model: "gpt-5",

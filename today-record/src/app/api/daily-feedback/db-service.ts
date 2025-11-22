@@ -26,9 +26,6 @@ export async function fetchRecordsByDate(
   return records as Record[];
 }
 
-/**
- * Daily Report를 데이터베이스에 저장
- */
 export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
@@ -42,35 +39,14 @@ export async function saveDailyReport(
         report_date: report.date,
         day_of_week: report.day_of_week ?? null,
         integrity_score: report.integrity_score ?? null,
-        narrative_summary: report.narrative_summary ?? null,
-        emotion_curve: report.emotion_curve ?? [],
 
-        narrative: report.narrative ?? null,
-        lesson: report.lesson ?? null,
-        keywords: report.keywords ?? [],
-        daily_ai_comment: report.daily_ai_comment ?? null,
+        emotion_overview: report.emotion_overview,
+        narrative_overview: report.narrative_overview,
+        insight_overview: report.insight_overview,
+        vision_overview: report.vision_overview,
+        feedback_overview: report.feedback_overview,
+        meta_overview: report.meta_overview,
 
-        vision_summary: report.vision_summary ?? null,
-        vision_self: report.vision_self ?? null,
-        vision_keywords: report.vision_keywords ?? [],
-        reminder_sentence: report.reminder_sentence ?? null,
-        vision_ai_feedback: report.vision_ai_feedback ?? null,
-
-        core_insight: report.core_insight ?? null,
-        learning_source: report.learning_source ?? null,
-        meta_question: report.meta_question ?? null,
-        insight_ai_comment: report.insight_ai_comment ?? null,
-
-        core_feedback: report.core_feedback ?? null,
-        positives: report.positives ?? [],
-        improvements: report.improvements ?? [],
-        feedback_ai_comment: report.feedback_ai_comment ?? null,
-
-        ai_message: report.ai_message ?? null,
-        growth_point: report.growth_point ?? null,
-        adjustment_point: report.adjustment_point ?? null,
-        tomorrow_focus: report.tomorrow_focus ?? null,
-        integrity_reason: report.integrity_reason ?? null,
         is_ai_generated: true,
       },
       { onConflict: "user_id,report_date" }

@@ -1,40 +1,72 @@
-export interface DailyFeedbackRow {
-  // 기본 정보
-  user_id: string;
-  report_date: string;
-  day_of_week: string | null;
-  integrity_score: number | null;
-  narrative_summary: string | null;
+// Emotion Overview 섹션
+export interface EmotionOverview {
+  ai_mood_valence: number | null;
+  ai_mood_arousal: number | null;
   emotion_curve: string[];
+  dominant_emotion: string | null;
+  emotion_summary: string | null;
+  emotion_notes: string | null;
+}
+
+// Narrative Overview 섹션
+export interface NarrativeOverview {
+  narrative_summary: string | null;
   narrative: string | null;
   lesson: string | null;
   keywords: string[];
-  daily_ai_comment: string | null;
+}
 
-  // 시각화(Vision) 영역
+// Insight Overview 섹션
+export interface InsightOverview {
+  core_insight: string | null;
+  learning_source: string | null;
+  meta_question: string | null;
+  insight_ai_comment: string | null;
+}
+
+// Vision Overview 섹션
+export interface VisionOverview {
   vision_summary: string | null;
   vision_self: string | null;
   vision_keywords: string[];
   reminder_sentence: string | null;
   vision_ai_feedback: string | null;
+}
 
-  // 인사이트(Insight) 영역
-  core_insight: string | null;
-  learning_source: string | null;
-  meta_question: string | null;
-  insight_ai_comment: string | null;
-
-  // 피드백(Feedback) 영역
+// Feedback Overview 섹션
+export interface FeedbackOverview {
   core_feedback: string | null;
   positives: string[];
   improvements: string[];
   feedback_ai_comment: string | null;
-
-  // 최종(Final) 영역
   ai_message: string | null;
+}
+
+// Meta Overview 섹션
+export interface MetaOverview {
   growth_point: string | null;
   adjustment_point: string | null;
   tomorrow_focus: string | null;
   integrity_reason: string | null;
+}
+
+// Daily Feedback Row (DB에서 가져온 구조)
+export interface DailyFeedbackRow {
+  id: string;
+  user_id: string;
+  report_date: string;
+  day_of_week: string | null;
+  integrity_score: number | null;
+
+  // jsonb 섹션들
+  emotion_overview: EmotionOverview | null;
+  narrative_overview: NarrativeOverview | null;
+  insight_overview: InsightOverview | null;
+  vision_overview: VisionOverview | null;
+  feedback_overview: FeedbackOverview | null;
+  meta_overview: MetaOverview | null;
+
+  created_at: string;
+  updated_at: string;
   is_ai_generated: boolean | null;
 }

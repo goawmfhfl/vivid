@@ -7,7 +7,6 @@ export type DailyReportData = {
   narrative: string;
   lesson: string;
   keywords: string[];
-  daily_ai_comment: string;
   vision_summary: string;
   vision_self: string;
   vision_keywords: string[];

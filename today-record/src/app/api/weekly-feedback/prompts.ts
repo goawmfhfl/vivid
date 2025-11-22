@@ -40,53 +40,92 @@ export function buildWeeklyFeedbackPrompt(
     } else {
       dayFeedbacks.forEach((feedback, idx) => {
         prompt += `\n[일일 피드백 ${idx + 1}]\n`;
-        if (feedback.narrative_summary) {
-          prompt += `요약: ${feedback.narrative_summary}\n`;
+
+        // narrative_overview 접근
+        if (feedback.narrative_overview?.narrative_summary) {
+          prompt += `요약: ${feedback.narrative_overview.narrative_summary}\n`;
         }
         if (feedback.integrity_score !== null) {
           prompt += `통합 점수: ${feedback.integrity_score}/10\n`;
         }
-        if (feedback.keywords && feedback.keywords.length > 0) {
-          prompt += `키워드: ${feedback.keywords.join(", ")}\n`;
+        if (
+          feedback.narrative_overview?.keywords &&
+          feedback.narrative_overview.keywords.length > 0
+        ) {
+          prompt += `키워드: ${feedback.narrative_overview.keywords.join(
+            ", "
+          )}\n`;
         }
-        if (feedback.emotion_curve && feedback.emotion_curve.length > 0) {
-          prompt += `감정 곡선: ${feedback.emotion_curve.join(" → ")}\n`;
+
+        // emotion_overview 접근
+        if (
+          feedback.emotion_overview?.emotion_curve &&
+          feedback.emotion_overview.emotion_curve.length > 0
+        ) {
+          prompt += `감정 곡선: ${feedback.emotion_overview.emotion_curve.join(
+            " → "
+          )}\n`;
         }
-        if (feedback.narrative) {
-          prompt += `이야기: ${feedback.narrative}\n`;
+
+        // narrative_overview 접근
+        if (feedback.narrative_overview?.narrative) {
+          prompt += `이야기: ${feedback.narrative_overview.narrative}\n`;
         }
-        if (feedback.lesson) {
-          prompt += `교훈: ${feedback.lesson}\n`;
+        if (feedback.narrative_overview?.lesson) {
+          prompt += `교훈: ${feedback.narrative_overview.lesson}\n`;
         }
-        if (feedback.core_insight) {
-          prompt += `핵심 인사이트: ${feedback.core_insight}\n`;
+
+        // insight_overview 접근
+        if (feedback.insight_overview?.core_insight) {
+          prompt += `핵심 인사이트: ${feedback.insight_overview.core_insight}\n`;
         }
-        if (feedback.meta_question) {
-          prompt += `메타 질문: ${feedback.meta_question}\n`;
+        if (feedback.insight_overview?.meta_question) {
+          prompt += `메타 질문: ${feedback.insight_overview.meta_question}\n`;
         }
-        if (feedback.vision_summary) {
-          prompt += `시각화 요약: ${feedback.vision_summary}\n`;
+
+        // vision_overview 접근
+        if (feedback.vision_overview?.vision_summary) {
+          prompt += `시각화 요약: ${feedback.vision_overview.vision_summary}\n`;
         }
-        if (feedback.vision_keywords && feedback.vision_keywords.length > 0) {
-          prompt += `시각화 키워드: ${feedback.vision_keywords.join(", ")}\n`;
+        if (
+          feedback.vision_overview?.vision_keywords &&
+          feedback.vision_overview.vision_keywords.length > 0
+        ) {
+          prompt += `시각화 키워드: ${feedback.vision_overview.vision_keywords.join(
+            ", "
+          )}\n`;
         }
-        if (feedback.reminder_sentence) {
-          prompt += `리마인더: ${feedback.reminder_sentence}\n`;
+        if (feedback.vision_overview?.reminder_sentence) {
+          prompt += `리마인더: ${feedback.vision_overview.reminder_sentence}\n`;
         }
-        if (feedback.core_feedback) {
-          prompt += `핵심 피드백: ${feedback.core_feedback}\n`;
+
+        // feedback_overview 접근
+        if (feedback.feedback_overview?.core_feedback) {
+          prompt += `핵심 피드백: ${feedback.feedback_overview.core_feedback}\n`;
         }
-        if (feedback.positives && feedback.positives.length > 0) {
-          prompt += `긍정적 측면: ${feedback.positives.join(", ")}\n`;
+        if (
+          feedback.feedback_overview?.positives &&
+          feedback.feedback_overview.positives.length > 0
+        ) {
+          prompt += `긍정적 측면: ${feedback.feedback_overview.positives.join(
+            ", "
+          )}\n`;
         }
-        if (feedback.improvements && feedback.improvements.length > 0) {
-          prompt += `개선점: ${feedback.improvements.join(", ")}\n`;
+        if (
+          feedback.feedback_overview?.improvements &&
+          feedback.feedback_overview.improvements.length > 0
+        ) {
+          prompt += `개선점: ${feedback.feedback_overview.improvements.join(
+            ", "
+          )}\n`;
         }
-        if (feedback.growth_point) {
-          prompt += `성장 포인트: ${feedback.growth_point}\n`;
+
+        // meta_overview 접근
+        if (feedback.meta_overview?.growth_point) {
+          prompt += `성장 포인트: ${feedback.meta_overview.growth_point}\n`;
         }
-        if (feedback.adjustment_point) {
-          prompt += `조정 포인트: ${feedback.adjustment_point}\n`;
+        if (feedback.meta_overview?.adjustment_point) {
+          prompt += `조정 포인트: ${feedback.meta_overview.adjustment_point}\n`;
         }
       });
     }

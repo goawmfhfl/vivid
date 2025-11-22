@@ -1,3 +1,12 @@
+import type {
+  EmotionOverview,
+  NarrativeOverview,
+  InsightOverview,
+  VisionOverview,
+  FeedbackOverview,
+  MetaOverview,
+} from "@/types/daily-feedback";
+
 // Record 타입 정의
 export interface Record {
   id: number;
@@ -14,35 +23,19 @@ export interface CategorizedRecords {
   visualizings: string[];
 }
 
-// Daily Report 타입
+// Daily Report 타입 (AI 응답 구조 - jsonb 섹션 기반)
 export interface DailyReport {
   date: string;
   day_of_week: string;
   integrity_score: number;
-  narrative_summary: string;
-  emotion_curve: string[];
-  narrative: string;
-  lesson: string;
-  keywords: string[];
-  daily_ai_comment: string;
-  vision_summary: string;
-  vision_self: string;
-  vision_keywords: string[];
-  reminder_sentence: string;
-  vision_ai_feedback: string;
-  core_insight: string;
-  learning_source: string;
-  meta_question: string;
-  insight_ai_comment: string;
-  core_feedback: string;
-  positives: string[];
-  improvements: string[];
-  feedback_ai_comment: string;
-  ai_message: string;
-  growth_point: string;
-  adjustment_point: string;
-  tomorrow_focus: string;
-  integrity_reason: string;
+
+  // jsonb 섹션들
+  emotion_overview: EmotionOverview;
+  narrative_overview: NarrativeOverview;
+  insight_overview: InsightOverview;
+  vision_overview: VisionOverview;
+  feedback_overview: FeedbackOverview;
+  meta_overview: MetaOverview;
 }
 
 // API 요청 본문 타입
