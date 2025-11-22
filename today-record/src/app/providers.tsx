@@ -96,7 +96,7 @@ export function JournalProvider({ children }: { children: ReactNode }) {
     };
     setDailyFeedbackMap((prev) => new Map(prev.set(dateKey, mockFeedback)));
     setCurrentDailyFeedback(mockFeedback);
-    router.push("/feedback");
+    router.push(`/analysis/feedback/daily/${dateKey}`);
   };
 
   const generatePeriodSummary = (

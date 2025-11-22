@@ -14,7 +14,7 @@ export function DailyFeedbackButton({
 
   const handleClick = () => {
     const dateStr = toISODate(selectedDate);
-    router.push(`/feedback/${dateStr}`);
+    router.push(`/analysis/feedback/daily/${dateStr}`);
   };
 
   return (
