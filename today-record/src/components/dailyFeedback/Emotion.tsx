@@ -1,9 +1,21 @@
-import { Heart, TrendingUp, TrendingDown, Zap, Wind } from "lucide-react";
+import { useState } from "react";
+import {
+  Heart,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Wind,
+  HelpCircle,
+  X,
+  ArrowRight,
+} from "lucide-react";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
 
 export const EmotionSection = ({ view }: SectionProps) => {
+  const [showValenceTooltip, setShowValenceTooltip] = useState(false);
+  const [showArousalTooltip, setShowArousalTooltip] = useState(false);
   const valence = view.ai_mood_valence ?? 0;
   const arousal = view.ai_mood_arousal ?? 0;
   const hasEmotionData =
@@ -198,35 +210,6 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   />
                 )}
 
-                {/* 축 레이블 */}
-                <div
-                  className="absolute"
-                  style={{
-                    bottom: "8px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontSize: "0.7rem",
-                    color: "#6B7A6F",
-                    fontWeight: "500",
-                  }}
-                >
-                  부정적 ← 쾌·불쾌 → 긍정적
-                </div>
-                <div
-                  className="absolute"
-                  style={{
-                    left: "8px",
-                    top: "50%",
-                    transform: "translateY(-50%) rotate(-90deg)",
-                    fontSize: "0.7rem",
-                    color: "#6B7A6F",
-                    fontWeight: "500",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  높은 에너지 ↑ 각성·에너지 ↓ 낮은 에너지
-                </div>
-
                 {/* 구역 레이블 */}
                 <div
                   className="absolute"
@@ -309,6 +292,92 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   >
                     쾌·불쾌 (Valence)
                   </p>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowValenceTooltip(!showValenceTooltip)}
+                      className="cursor-pointer"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <HelpCircle
+                        className="w-3.5 h-3.5"
+                        style={{ color: "#6B7A6F" }}
+                      />
+                    </button>
+                    {showValenceTooltip && (
+                      <div
+                        className="absolute"
+                        style={{
+                          bottom: "100%",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          marginBottom: "8px",
+                          width: "240px",
+                          padding: "12px",
+                          backgroundColor: "#333333",
+                          color: "white",
+                          borderRadius: "8px",
+                          fontSize: "0.75rem",
+                          lineHeight: "1.5",
+                          zIndex: 100,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p style={{ fontWeight: "600" }}>쾌·불쾌 (Valence)</p>
+                          <button
+                            onClick={() => setShowValenceTooltip(false)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <p>
+                          기분이 좋은가, 나쁜가를 나타내는 값입니다.
+                          <br />
+                          <strong style={{ color: "#A8BBA8" }}>-1.0</strong>
+                          : 매우 부정적 (불안, 짜증, 슬픔)
+                          <br />
+                          <strong
+                            style={{ color: "#A8BBA8", marginTop: "0.25rem" }}
+                          >
+                            0
+                          </strong>
+                          : 중립
+                          <br />
+                          <strong
+                            style={{ color: "#A8BBA8", marginTop: "0.25rem" }}
+                          >
+                            +1.0
+                          </strong>
+                          : 매우 긍정적 (설렘, 감사, 자신감)
+                        </p>
+                        <div
+                          className="absolute"
+                          style={{
+                            top: "100%",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            width: 0,
+                            height: 0,
+                            borderLeft: "6px solid transparent",
+                            borderRight: "6px solid transparent",
+                            borderTop: "6px solid #333333",
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <p
                   style={{
@@ -343,6 +412,90 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   >
                     각성·에너지 (Arousal)
                   </p>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowArousalTooltip(!showArousalTooltip)}
+                      className="cursor-pointer"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <HelpCircle
+                        className="w-3.5 h-3.5"
+                        style={{ color: "#6B7A6F" }}
+                      />
+                    </button>
+                    {showArousalTooltip && (
+                      <div
+                        className="absolute"
+                        style={{
+                          bottom: "100%",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          marginBottom: "8px",
+                          width: "250px",
+                          padding: "12px",
+                          backgroundColor: "#333333",
+                          color: "white",
+                          borderRadius: "8px",
+                          fontSize: "0.75rem",
+                          lineHeight: "1.5",
+                          zIndex: 100,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p style={{ fontWeight: "600" }}>
+                            각성·에너지 (Arousal)
+                          </p>
+                          <button
+                            onClick={() => setShowArousalTooltip(false)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <p>
+                          에너지가 높은가, 낮은가를 나타내는 값입니다.
+                          <br />
+                          <strong
+                            style={{ color: "#E5B96B", marginTop: "0.25rem" }}
+                          >
+                            0.0
+                          </strong>
+                          : 낮은 에너지 (무기력, 피곤, 평온)
+                          <br />
+                          <strong style={{ color: "#E5B96B" }}>0.5</strong>:
+                          적당한 에너지
+                          <br />
+                          <strong style={{ color: "#E5B96B" }}>1.0</strong>:
+                          높은 에너지 (몰입, 긴장, 흥분)
+                        </p>
+                        <div
+                          className="absolute"
+                          style={{
+                            top: "100%",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            width: 0,
+                            height: 0,
+                            borderLeft: "6px solid transparent",
+                            borderRight: "6px solid transparent",
+                            borderTop: "6px solid #333333",
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <p
                   style={{
@@ -359,22 +512,6 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 </p>
               </div>
             </div>
-
-            {/* 감정 구역 표시 */}
-            {quadrant && (
-              <div className="mt-4">
-                <Badge
-                  className="px-3 py-1.5"
-                  style={{
-                    backgroundColor: quadrant.color,
-                    color: "white",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {quadrant.label}
-                </Badge>
-              </div>
-            )}
           </Card>
 
           {/* 감정 해석 */}
@@ -427,105 +564,181 @@ export const EmotionSection = ({ view }: SectionProps) => {
         </Card>
       )}
 
-      {/* 감정 곡선 (emotion_curve) */}
-      {view.emotion_curve && view.emotion_curve.length > 0 && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "#6B7A6F",
-              marginBottom: "1rem",
-            }}
-          >
-            하루 감정 흐름
-          </p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {view.emotion_curve.map((emotion, index) => (
-              <Badge
-                key={index}
-                className="px-3 py-1.5 rounded-full"
-                style={{
-                  backgroundColor: "#EAEDE9",
-                  color: "#55685E",
-                  fontSize: "0.85rem",
-                }}
-              >
-                {emotion}
-              </Badge>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* 대표 감정 */}
-      {view.dominant_emotion && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "#6B7A6F",
-              marginBottom: "0.75rem",
-            }}
-          >
-            대표 감정
-          </p>
-          <p
-            style={{ color: "#333333", fontSize: "1.1rem", fontWeight: "500" }}
-          >
-            {view.dominant_emotion}
-          </p>
-        </Card>
-      )}
-
-      {/* 감정 요약 */}
-      {view.emotion_summary && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "#6B7A6F",
-              marginBottom: "0.75rem",
-            }}
-          >
-            감정 요약
-          </p>
-          <p
-            style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}
-          >
-            {view.emotion_summary}
-          </p>
-        </Card>
-      )}
-
-      {/* 감정 노트 */}
-      {view.emotion_notes && (
+      {/* 감정 정보 통합 카드 */}
+      {(view.emotion_curve?.length > 0 ||
+        view.dominant_emotion ||
+        view.emotion_summary ||
+        view.emotion_notes) && (
         <Card
           className="p-5"
-          style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "#6B7A6F",
-              marginBottom: "0.75rem",
-            }}
-          >
-            감정 노트
-          </p>
-          <p
-            style={{ color: "#4E4B46", lineHeight: "1.7", fontSize: "0.9rem" }}
-          >
-            {view.emotion_notes}
-          </p>
+          {/* 감정 곡선 */}
+          {view.emotion_curve && view.emotion_curve.length > 0 && (
+            <div className="mb-5">
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#6B7A6F",
+                  marginBottom: "1rem",
+                  fontWeight: "500",
+                }}
+              >
+                하루 감정 흐름
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {view.emotion_curve.map((emotion, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div
+                      className="relative"
+                      style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "20px",
+                        backgroundColor: "#EAEDE9",
+                        color: "#55685E",
+                        fontSize: "0.85rem",
+                        fontWeight: "500",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        minWidth: "fit-content",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                        transition: "all 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 8px rgba(0,0,0,0.1)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 2px 4px rgba(0,0,0,0.05)";
+                      }}
+                    >
+                      {/* 감정별 색상 인디케이터 */}
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          backgroundColor:
+                            index === 0
+                              ? "#A8BBA8"
+                              : index === view.emotion_curve.length - 1
+                              ? "#E5B96B"
+                              : "#6B7A6F",
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span>{emotion}</span>
+                    </div>
+                    {index < view.emotion_curve.length - 1 && (
+                      <ArrowRight
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{
+                          color: "#6B7A6F",
+                          opacity: 0.4,
+                        }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* 타임라인 바 */}
+              <div
+                className="mt-4"
+                style={{
+                  height: "4px",
+                  borderRadius: "2px",
+                  background:
+                    "linear-gradient(to right, #A8BBA8 0%, #6B7A6F 50%, #E5B96B 100%)",
+                  opacity: 0.3,
+                }}
+              />
+            </div>
+          )}
+
+          {/* 대표 감정과 요약을 함께 표시 */}
+          {(view.dominant_emotion || view.emotion_summary) && (
+            <div className="mb-5">
+              {view.dominant_emotion && (
+                <div className="mb-3">
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#6B7A6F",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    대표 감정
+                  </p>
+                  <p
+                    style={{
+                      color: "#333333",
+                      fontSize: "1rem",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {view.dominant_emotion}
+                  </p>
+                </div>
+              )}
+              {view.emotion_summary && (
+                <div>
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#6B7A6F",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    감정 요약
+                  </p>
+                  <p
+                    style={{
+                      color: "#333333",
+                      lineHeight: "1.7",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {view.emotion_summary}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 감정 노트 */}
+          {view.emotion_notes && (
+            <div
+              className="p-4 rounded-lg"
+              style={{
+                backgroundColor: "#F9F3EF",
+                borderLeft: "3px solid #B89A7A",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#6B7A6F",
+                  marginBottom: "0.5rem",
+                  fontWeight: "500",
+                }}
+              >
+                감정 노트
+              </p>
+              <p
+                style={{
+                  color: "#4E4B46",
+                  lineHeight: "1.7",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {view.emotion_notes}
+              </p>
+            </div>
+          )}
         </Card>
       )}
     </div>
