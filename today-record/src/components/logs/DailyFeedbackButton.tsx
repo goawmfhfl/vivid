@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Sparkles } from "lucide-react";
 import { toISODate } from "./calendar-utils";
+import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 
 interface DailyFeedbackButtonProps {
   selectedDate: Date;
@@ -11,10 +12,16 @@ export function DailyFeedbackButton({
   selectedDate,
 }: DailyFeedbackButtonProps) {
   const router = useRouter();
+  const dateStr = toISODate(selectedDate);
+  const { data: feedback } = useGetDailyFeedback(dateStr);
 
   const handleClick = () => {
-    const dateStr = toISODate(selectedDate);
-    router.push(`/analysis/feedback/daily/${dateStr}`);
+    if (feedback?.id) {
+      router.push(`/analysis/feedback/daily/${feedback.id}`);
+    } else {
+      // 피드백이 없으면 생성 페이지로 이동하거나 에러 처리
+      console.error("피드백을 찾을 수 없습니다.");
+    }
   };
 
   return (

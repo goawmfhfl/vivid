@@ -22,7 +22,7 @@ const fetchWeeklyFeedbackList = async (): Promise<WeeklyFeedbackListItem[]> => {
 };
 
 /**
- * 주간 피드백 상세 조회
+ * 주간 피드백 상세 조회 (id 기반)
  */
 const fetchWeeklyFeedbackDetail = async (
   id: string
@@ -72,7 +72,7 @@ export function useWeeklyFeedbackList() {
 }
 
 /**
- * 주간 피드백 상세 조회 훅
+ * 주간 피드백 상세 조회 훅 (id 기반)
  */
 export function useWeeklyFeedbackDetail(id: string | null) {
   return useQuery({

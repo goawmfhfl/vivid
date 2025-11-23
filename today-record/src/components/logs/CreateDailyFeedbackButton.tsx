@@ -21,9 +21,9 @@ export function CreateDailyFeedbackButton({
     setIsGenerating(true);
 
     try {
-      await createDailyFeedback.mutateAsync({ date: dateStr });
-      // 생성 성공 후 피드백 페이지로 이동
-      router.push(`/analysis/feedback/daily/${dateStr}`);
+      const createdFeedback = await createDailyFeedback.mutateAsync({ date: dateStr });
+      // 생성 성공 후 피드백 페이지로 이동 (id 사용)
+      router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (error) {
       console.error("AI 리뷰 생성 실패:", error);
       alert("AI 리뷰 생성에 실패했습니다. 다시 시도해주세요.");

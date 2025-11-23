@@ -71,5 +71,6 @@ export function createPeriodSummaryFromWeeklyFeedback(
     weekNumber,
     year,
     week: `${year}-W${weekNumber}`,
+    week_start: item.week_range.start, // date 기반 라우팅에 사용
   };
 }

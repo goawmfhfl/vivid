@@ -70,7 +70,58 @@ export async function fetchWeeklyFeedbackList(
 }
 
 /**
- * Weekly Feedback 상세 조회 (전체 payload)
+ * Weekly Feedback 상세 조회 (date 기반)
+ */
+export async function fetchWeeklyFeedbackByDate(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string
+): Promise<WeeklyFeedback | null> {
+  const { data, error } = await supabase
+    .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+    .select("*")
+    .eq("user_id", userId)
+    .eq("week_start", date)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(`Failed to fetch weekly feedback: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
+  const weeklyOverview =
+    data.weekly_overview as WeeklyFeedback["weekly_overview"];
+
+  return {
+    id: String(data.id),
+    week_range: {
+      start: data.week_start,
+      end: data.week_end,
+      timezone: data.timezone || "Asia/Seoul",
+    },
+    by_day: (data.by_day as WeeklyFeedback["by_day"]) || [],
+    weekly_overview: weeklyOverview,
+    growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
+    insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
+    vision_visualization_report:
+      data.vision_visualization_report as WeeklyFeedback["vision_visualization_report"],
+    execution_reflection:
+      data.execution_reflection as WeeklyFeedback["execution_reflection"],
+    closing_section: data.closing_section as WeeklyFeedback["closing_section"],
+    is_ai_generated: data.is_ai_generated ?? undefined,
+    created_at: data.created_at ?? undefined,
+  };
+}
+
+/**
+ * Weekly Feedback 상세 조회 (id 기반 - 하위 호환성 유지)
  */
 export async function fetchWeeklyFeedbackDetail(
   supabase: SupabaseClient,

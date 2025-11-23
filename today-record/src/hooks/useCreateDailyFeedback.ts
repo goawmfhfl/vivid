@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
-const createDailyFeedback = async (date: string) => {
+const createDailyFeedback = async (date: string): Promise<DailyFeedbackRow> => {
   const userId = await getCurrentUserId();
   const res = await fetch("/api/daily-feedback", {
     method: "POST",
@@ -13,7 +14,8 @@ const createDailyFeedback = async (date: string) => {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to create daily feedback");
   }
-  return (await res.json().catch(() => ({}))) as unknown;
+  const response = await res.json();
+  return response.data as DailyFeedbackRow;
 };
 
 export const useCreateDailyFeedback = () => {

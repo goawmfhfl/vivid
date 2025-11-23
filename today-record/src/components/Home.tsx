@@ -76,11 +76,13 @@ export function Home() {
   const handleOpenDailyFeedback = async () => {
     try {
       if (hasTodayFeedback) {
-        router.push(`/analysis/feedback/daily/${todayIso}`);
+        // 기존 피드백이 있으면 id로 라우팅
+        router.push(`/analysis/feedback/daily/${todayFeedback.id}`);
         return;
       }
-      await createDailyFeedback({ date: todayIso });
-      router.push(`/analysis/feedback/daily/${todayIso}`);
+      // 새 피드백 생성 후 id로 라우팅
+      const createdFeedback = await createDailyFeedback({ date: todayIso });
+      router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (e) {
       const base =
         e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";

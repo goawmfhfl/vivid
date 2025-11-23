@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DailyReport, Record } from "./types";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 /**
  * 특정 날짜의 기록 조회
@@ -30,7 +31,7 @@ export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
   report: DailyReport
-): Promise<void> {
+): Promise<DailyFeedbackRow> {
   // 먼저 기존 레코드가 있는지 확인
   const { data: existingData, error: checkError } = await supabase
     .from("daily_feedback")
@@ -98,4 +99,11 @@ export async function saveDailyReport(
 
     result = insertedData;
   }
+
+  // 저장된 레코드 반환
+  if (!result || result.length === 0) {
+    throw new Error("Failed to save feedback to database");
+  }
+
+  return result[0] as DailyFeedbackRow;
 }

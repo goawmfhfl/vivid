@@ -45,6 +45,7 @@ export type PeriodSummary = {
   year?: number;
   // New fields for contextual analysis
   week?: string; // "2025-W43"
+  week_start?: string; // "YYYY-MM-DD" - 주간 피드백의 주 시작일 (date 기반 라우팅용)
   month?: string; // "2025-10"
   summary?: string; // 주간/월간 전체 요약
   insight_core?: string; // 핵심 인사이트

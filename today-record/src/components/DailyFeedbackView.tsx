@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
-import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
+import { useGetDailyFeedback, useGetDailyFeedbackById } from "@/hooks/useGetDailyFeedback";
 import { HeaderSection } from "./dailyFeedback/Header";
 import { SummarySection } from "./dailyFeedback/Summary";
 import { VisionSection } from "./dailyFeedback/Vision";
@@ -15,12 +15,20 @@ import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
 
 type DailyFeedbackViewProps = {
-  date: string;
+  date?: string;
+  id?: string;
   onBack: () => void;
 };
 
-export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
-  const { data, isLoading, error, refetch } = useGetDailyFeedback(date);
+export function DailyFeedbackView({ date, id, onBack }: DailyFeedbackViewProps) {
+  const { data: dataByDate, isLoading: isLoadingByDate, error: errorByDate, refetch: refetchByDate } = useGetDailyFeedback(date || "");
+  const { data: dataById, isLoading: isLoadingById, error: errorById, refetch: refetchById } = useGetDailyFeedbackById(id || null);
+  
+  // id가 있으면 id로 조회, 없으면 date로 조회
+  const data = id ? dataById : dataByDate;
+  const isLoading = id ? isLoadingById : isLoadingByDate;
+  const error = id ? errorById : errorByDate;
+  const refetch = id ? refetchById : refetchByDate;
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
 
