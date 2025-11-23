@@ -21,7 +21,9 @@ export function CreateDailyFeedbackButton({
     setIsGenerating(true);
 
     try {
-      const createdFeedback = await createDailyFeedback.mutateAsync({ date: dateStr });
+      const createdFeedback = await createDailyFeedback.mutateAsync({
+        date: dateStr,
+      });
       // 생성 성공 후 피드백 페이지로 이동 (id 사용)
       router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (error) {

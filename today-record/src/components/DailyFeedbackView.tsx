@@ -1,6 +1,9 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
-import { useGetDailyFeedback, useGetDailyFeedbackById } from "@/hooks/useGetDailyFeedback";
+import {
+  useGetDailyFeedback,
+  useGetDailyFeedbackById,
+} from "@/hooks/useGetDailyFeedback";
 import { HeaderSection } from "./dailyFeedback/Header";
 import { SummarySection } from "./dailyFeedback/Summary";
 import { VisionSection } from "./dailyFeedback/Vision";
@@ -20,10 +23,24 @@ type DailyFeedbackViewProps = {
   onBack: () => void;
 };
 
-export function DailyFeedbackView({ date, id, onBack }: DailyFeedbackViewProps) {
-  const { data: dataByDate, isLoading: isLoadingByDate, error: errorByDate, refetch: refetchByDate } = useGetDailyFeedback(date || "");
-  const { data: dataById, isLoading: isLoadingById, error: errorById, refetch: refetchById } = useGetDailyFeedbackById(id || null);
-  
+export function DailyFeedbackView({
+  date,
+  id,
+  onBack,
+}: DailyFeedbackViewProps) {
+  const {
+    data: dataByDate,
+    isLoading: isLoadingByDate,
+    error: errorByDate,
+    refetch: refetchByDate,
+  } = useGetDailyFeedback(date || "");
+  const {
+    data: dataById,
+    isLoading: isLoadingById,
+    error: errorById,
+    refetch: refetchById,
+  } = useGetDailyFeedbackById(id || null);
+
   // id가 있으면 id로 조회, 없으면 date로 조회
   const data = id ? dataById : dataByDate;
   const isLoading = id ? isLoadingById : isLoadingByDate;
