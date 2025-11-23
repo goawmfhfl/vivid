@@ -66,7 +66,14 @@ export const DailyReportSchema = {
           emotion_summary: { type: "string", nullable: true },
           emotion_notes: { type: "string", nullable: true },
         },
-        required: ["emotion_curve"],
+        required: [
+          "ai_mood_valence",
+          "ai_mood_arousal",
+          "emotion_curve",
+          "dominant_emotion",
+          "emotion_summary",
+          "emotion_notes",
+        ],
         additionalProperties: false,
       },
 
@@ -79,7 +86,7 @@ export const DailyReportSchema = {
           lesson: { type: "string", nullable: true },
           keywords: { type: "array", items: { type: "string" }, minItems: 0 },
         },
-        required: ["narrative_summary", "narrative", "keywords"],
+        required: ["narrative_summary", "narrative", "lesson", "keywords"],
         additionalProperties: false,
       },
 
@@ -92,7 +99,12 @@ export const DailyReportSchema = {
           meta_question: { type: "string", nullable: true },
           insight_ai_comment: { type: "string", nullable: true },
         },
-        required: ["core_insight"],
+        required: [
+          "core_insight",
+          "learning_source",
+          "meta_question",
+          "insight_ai_comment",
+        ],
         additionalProperties: false,
       },
 
@@ -110,7 +122,13 @@ export const DailyReportSchema = {
           reminder_sentence: { type: "string", nullable: true },
           vision_ai_feedback: { type: "string", nullable: true },
         },
-        required: ["vision_summary", "vision_self", "vision_keywords"],
+        required: [
+          "vision_summary",
+          "vision_self",
+          "vision_keywords",
+          "reminder_sentence",
+          "vision_ai_feedback",
+        ],
         additionalProperties: false,
       },
 
@@ -128,7 +146,13 @@ export const DailyReportSchema = {
           feedback_ai_comment: { type: "string", nullable: true },
           ai_message: { type: "string", nullable: true },
         },
-        required: ["core_feedback", "positives", "improvements"],
+        required: [
+          "core_feedback",
+          "positives",
+          "improvements",
+          "feedback_ai_comment",
+          "ai_message",
+        ],
         additionalProperties: false,
       },
 
@@ -141,7 +165,12 @@ export const DailyReportSchema = {
           tomorrow_focus: { type: "string", nullable: true },
           integrity_reason: { type: "string", nullable: true },
         },
-        required: [],
+        required: [
+          "growth_point",
+          "adjustment_point",
+          "tomorrow_focus",
+          "integrity_reason",
+        ],
         additionalProperties: false,
       },
     },

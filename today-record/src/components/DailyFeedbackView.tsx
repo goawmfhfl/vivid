@@ -8,6 +8,7 @@ import { InsightSection } from "./dailyFeedback/Insight";
 import { FeedbackSection } from "./dailyFeedback/Feedback";
 import { FinalSection } from "./dailyFeedback/Final";
 import { EmptyState } from "./dailyFeedback/States";
+import { EmotionSection } from "./dailyFeedback/Emotion";
 import { mapDailyFeedbackRowToReport } from "./dailyFeedback/mappers";
 import { ScrollAnimation } from "./ui/ScrollAnimation";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
@@ -91,6 +92,9 @@ export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
   const hasFeedbackSection = !!(
     view.core_feedback && view.core_feedback.trim()
   );
+  const hasEmotionSection = !!(
+    view.emotion_curve && view.emotion_curve.length > 0
+  );
 
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
@@ -116,6 +120,14 @@ export function DailyFeedbackView({ date, onBack }: DailyFeedbackViewProps) {
             <SummarySection view={view} />
           </div>
         </ScrollAnimation>
+
+        {hasEmotionSection && (
+          <ScrollAnimation delay={300}>
+            <div className="mb-64">
+              <EmotionSection view={view} />
+            </div>
+          </ScrollAnimation>
+        )}
 
         {hasVisionSection && (
           <ScrollAnimation delay={300}>

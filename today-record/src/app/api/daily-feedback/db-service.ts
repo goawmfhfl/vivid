@@ -31,35 +31,71 @@ export async function saveDailyReport(
   userId: string,
   report: DailyReport
 ): Promise<void> {
-  const { data: insertedData, error: insertError } = await supabase
+  // 먼저 기존 레코드가 있는지 확인
+  const { data: existingData, error: checkError } = await supabase
     .from("daily_feedback")
-    .upsert(
-      {
-        user_id: userId,
-        report_date: report.date,
-        day_of_week: report.day_of_week ?? null,
-        integrity_score: report.integrity_score ?? null,
+    .select("id")
+    .eq("user_id", userId)
+    .eq("report_date", report.date)
+    .maybeSingle();
 
-        emotion_overview: report.emotion_overview,
-        narrative_overview: report.narrative_overview,
-        insight_overview: report.insight_overview,
-        vision_overview: report.vision_overview,
-        feedback_overview: report.feedback_overview,
-        meta_overview: report.meta_overview,
-
-        is_ai_generated: true,
-      },
-      { onConflict: "user_id,report_date" }
-    )
-    .select();
-
-  if (insertError) {
-    throw new Error(
-      `Failed to save feedback to database: ${insertError.message}`
-    );
+  if (checkError) {
+    throw new Error(`Failed to check existing feedback: ${checkError.message}`);
   }
 
-  if (!insertedData || insertedData.length === 0) {
-    throw new Error("Failed to save feedback to database");
+  const reportData = {
+    user_id: userId,
+    report_date: report.date,
+    day_of_week: report.day_of_week ?? null,
+    integrity_score: report.integrity_score ?? null,
+
+    emotion_overview: report.emotion_overview,
+    narrative_overview: report.narrative_overview,
+    insight_overview: report.insight_overview,
+    vision_overview: report.vision_overview,
+    feedback_overview: report.feedback_overview,
+    meta_overview: report.meta_overview,
+
+    is_ai_generated: true,
+  };
+
+  let result;
+  if (existingData) {
+    // 기존 레코드가 있으면 업데이트
+    const { data: updatedData, error: updateError } = await supabase
+      .from("daily_feedback")
+      .update(reportData)
+      .eq("id", existingData.id)
+      .select();
+
+    if (updateError) {
+      throw new Error(
+        `Failed to update feedback to database: ${updateError.message}`
+      );
+    }
+
+    if (!updatedData || updatedData.length === 0) {
+      throw new Error("Failed to update feedback to database");
+    }
+
+    result = updatedData;
+  } else {
+    // 기존 레코드가 없으면 삽입
+    const { data: insertedData, error: insertError } = await supabase
+      .from("daily_feedback")
+      .insert(reportData)
+      .select();
+
+    if (insertError) {
+      throw new Error(
+        `Failed to save feedback to database: ${insertError.message}`
+      );
+    }
+
+    if (!insertedData || insertedData.length === 0) {
+      throw new Error("Failed to save feedback to database");
+    }
+
+    result = insertedData;
   }
 }

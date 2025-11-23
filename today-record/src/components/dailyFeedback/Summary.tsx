@@ -69,7 +69,7 @@ export function SummarySection({ view }: SectionProps) {
           )}
         </div>
       </Card>
-      {view.daily_ai_comment && (
+      {view.feedback_ai_comment && (
         <div
           className="p-5 rounded-xl flex gap-3"
           style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
@@ -96,7 +96,7 @@ export function SummarySection({ view }: SectionProps) {
                 fontStyle: "italic",
               }}
             >
-              {view.daily_ai_comment}
+              {view.feedback_ai_comment}
             </p>
           </div>
         </div>

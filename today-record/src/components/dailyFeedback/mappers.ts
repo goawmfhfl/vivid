@@ -133,6 +133,11 @@ export function mapDailyFeedbackRowToReport(
 
     // Emotion Overview
     emotion_curve: emotion.emotion_curve,
+    ai_mood_valence: emotion.ai_mood_valence,
+    ai_mood_arousal: emotion.ai_mood_arousal,
+    dominant_emotion: emotion.dominant_emotion,
+    emotion_summary: emotion.emotion_summary,
+    emotion_notes: emotion.emotion_notes,
 
     // Narrative Overview
     narrative_summary: narrative.narrative_summary,
