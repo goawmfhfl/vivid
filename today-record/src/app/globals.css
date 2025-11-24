@@ -53,3 +53,96 @@ body {
 .vision-keywords-scroll {
   animation: scroll-horizontal 30s linear infinite;
 }
+
+/* Emotion Point Pulse Animation */
+@keyframes emotion-point-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes emotion-pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Gradient Line Shimmer Animation */
+@keyframes gradient-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gradient-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleX(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+}
+
+.gradient-line-animated {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    to right,
+    rgb(168, 187, 168) 0%,
+    rgb(107, 122, 111) 50%,
+    rgb(229, 185, 107) 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-wave 3s ease-in-out infinite;
+}
+
+.gradient-line-animated::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: gradient-shimmer 2s ease-in-out infinite;
+}

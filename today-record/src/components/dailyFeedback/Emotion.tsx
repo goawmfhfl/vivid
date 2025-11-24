@@ -193,21 +193,59 @@ export const EmotionSection = ({ view }: SectionProps) => {
 
                 {/* 감정 점 */}
                 {pointPos && (
-                  <div
-                    className="absolute"
-                    style={{
-                      left: `${pointPos.x}%`,
-                      top: `${pointPos.y}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "50%",
-                      backgroundColor: quadrant?.color || "#6B7A6F",
-                      border: "3px solid white",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                      zIndex: 10,
-                    }}
-                  />
+                  <>
+                    {/* 펄스 링들 - 트렌디한 신호 효과 */}
+                    <div
+                      className="absolute"
+                      style={{
+                        left: `${pointPos.x}%`,
+                        top: `${pointPos.y}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        opacity: 0.3,
+                        animation:
+                          "emotion-pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+                        zIndex: 8,
+                      }}
+                    />
+                    <div
+                      className="absolute"
+                      style={{
+                        left: `${pointPos.x}%`,
+                        top: `${pointPos.y}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        opacity: 0.3,
+                        animation:
+                          "emotion-pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.5s",
+                        zIndex: 9,
+                      }}
+                    />
+                    {/* 메인 포인트 점 */}
+                    <div
+                      className="absolute"
+                      style={{
+                        left: `${pointPos.x}%`,
+                        top: `${pointPos.y}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: "16px",
+                        height: "16px",
+                        borderRadius: "50%",
+                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        border: "3px solid white",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        animation:
+                          "emotion-point-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+                        zIndex: 10,
+                      }}
+                    />
+                  </>
                 )}
 
                 {/* 구역 레이블 */}
@@ -647,12 +685,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
               </div>
               {/* 타임라인 바 */}
               <div
-                className="mt-4"
+                className="mt-4 gradient-line-animated"
                 style={{
                   height: "4px",
                   borderRadius: "2px",
-                  background:
-                    "linear-gradient(to right, #A8BBA8 0%, #6B7A6F 50%, #E5B96B 100%)",
                   opacity: 0.3,
                 }}
               />
