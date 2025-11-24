@@ -24,7 +24,12 @@ export function SummarySection({ view }: SectionProps) {
         <div className="space-y-4">
           <div>
             <p
-              style={{ color: "#333333", lineHeight: "1.8", fontSize: "1rem", textAlign: "left" }}
+              style={{
+                color: "#333333",
+                lineHeight: "1.8",
+                fontSize: "1rem",
+                textAlign: "left",
+              }}
             >
               {view.narrative}
             </p>

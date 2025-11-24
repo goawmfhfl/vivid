@@ -63,16 +63,12 @@ export const DailyReportSchema = {
             minItems: 0,
           },
           dominant_emotion: { type: "string", nullable: true },
-          emotion_summary: { type: "string", nullable: true },
-          emotion_notes: { type: "string", nullable: true },
         },
         required: [
           "ai_mood_valence",
           "ai_mood_arousal",
           "emotion_curve",
           "dominant_emotion",
-          "emotion_summary",
-          "emotion_notes",
         ],
         additionalProperties: false,
       },
@@ -228,7 +224,7 @@ export const SYSTEM_PROMPT = `
 4. 감정 섹션 (emotion_overview):
    - 감정과 관련된 텍스트(기분, 감정, 상태, 스트레스, 몰입도 등)가 거의 없거나 전혀 드러나지 않는 경우:
      - emotion_curve는 []로 처리합니다.
-     - ai_mood_valence, ai_mood_arousal, dominant_emotion, emotion_summary, emotion_notes는 모두 null로 처리합니다.
+     - ai_mood_valence, ai_mood_arousal, dominant_emotion는 모두 null로 처리합니다.
      - 이 경우 감정을 추측해서 생성하지 마세요.
    - 감정 관련 내용이 충분히 드러나는 경우, 아래 규칙을 따릅니다.
 
@@ -270,14 +266,6 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
 - emotion_curve에 포함된 단어 중 하나를 선택하거나, 전체 내용을 보고 가장 잘 어울리는 단어를 사용하세요.
 - 예: "긴장된 몰입", "편안한 만족", "불안한 압박감", "지친 성취감"
 
-5) emotion_summary
-- 하루 감정을 한 문장으로 요약합니다.
-- 공백 포함 80자 이내의 짧고 쉬운 한국어 문장으로 작성합니다.
-- 예: "조금 불안했지만 해야 할 일을 끝까지 버티며 해낸 하루였다."
-
-6) emotion_notes
-- 감정에 영향을 준 구체적인 맥락이나 상황을 한두 문장으로 적습니다.
-- 없다면 null로 두되, 억지로 만들어내지 마세요.
 
 --------------------------------
 [데이터 규칙 - 기타 섹션]
@@ -304,9 +292,7 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
     "ai_mood_valence": -0.1,
     "ai_mood_arousal": 0.7,
     "emotion_curve": ["불안", "몰입", "안도"],
-    "dominant_emotion": "긴장된 몰입",
-    "emotion_summary": "조금 불안하지만 몰입도가 높은 상태",
-    "emotion_notes": "압박감 속에서 집중함"
+    "dominant_emotion": "긴장된 몰입"
   },
   "narrative_overview": {
     "narrative_summary": "string",

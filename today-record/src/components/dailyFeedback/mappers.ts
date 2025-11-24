@@ -16,8 +16,6 @@ export function mapDailyFeedbackRowToReport(
         ai_mood_valence: null,
         ai_mood_arousal: null,
         dominant_emotion: null,
-        emotion_summary: null,
-        emotion_notes: null,
       };
     }
     return {
@@ -25,8 +23,6 @@ export function mapDailyFeedbackRowToReport(
       ai_mood_valence: row.emotion_overview.ai_mood_valence ?? null,
       ai_mood_arousal: row.emotion_overview.ai_mood_arousal ?? null,
       dominant_emotion: row.emotion_overview.dominant_emotion ?? null,
-      emotion_summary: row.emotion_overview.emotion_summary ?? null,
-      emotion_notes: row.emotion_overview.emotion_notes ?? null,
     };
   };
 
@@ -136,8 +132,6 @@ export function mapDailyFeedbackRowToReport(
     ai_mood_valence: emotion.ai_mood_valence,
     ai_mood_arousal: emotion.ai_mood_arousal,
     dominant_emotion: emotion.dominant_emotion,
-    emotion_summary: emotion.emotion_summary,
-    emotion_notes: emotion.emotion_notes,
 
     // Narrative Overview
     narrative_summary: narrative.narrative_summary,

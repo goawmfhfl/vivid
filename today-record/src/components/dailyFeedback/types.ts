@@ -22,10 +22,6 @@ export type DailyReportData = {
   ai_mood_arousal: number | null;
   /** 그날 하루를 대표하는 감정 (한 단어 또는 짧은 구) */
   dominant_emotion: string | null;
-  /** 하루 감정을 한 문장으로 요약 (80자 이내) */
-  emotion_summary: string | null;
-  /** 감정에 영향을 준 구체적인 맥락이나 상황 (한두 문장) */
-  emotion_notes: string | null;
 
   // ========== 서사 섹션 (Narrative Overview) ==========
   /** 오늘의 전체 흐름을 서술한 본문 (400자 이내) */

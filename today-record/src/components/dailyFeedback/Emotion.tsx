@@ -604,9 +604,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
 
       {/* 감정 정보 통합 카드 */}
       {(view.emotion_curve?.length > 0 ||
-        view.dominant_emotion ||
-        view.emotion_summary ||
-        view.emotion_notes) && (
+        view.dominant_emotion) && (
         <Card
           className="p-5"
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
@@ -695,83 +693,26 @@ export const EmotionSection = ({ view }: SectionProps) => {
             </div>
           )}
 
-          {/* 대표 감정과 요약을 함께 표시 */}
-          {(view.dominant_emotion || view.emotion_summary) && (
+          {/* 대표 감정 표시 */}
+          {view.dominant_emotion && (
             <div className="mb-5">
-              {view.dominant_emotion && (
-                <div className="mb-3">
-                  <p
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#6B7A6F",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    대표 감정
-                  </p>
-                  <p
-                    style={{
-                      color: "#333333",
-                      fontSize: "1rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {view.dominant_emotion}
-                  </p>
-                </div>
-              )}
-              {view.emotion_summary && (
-                <div>
-                  <p
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#6B7A6F",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    감정 요약
-                  </p>
-                  <p
-                    style={{
-                      color: "#333333",
-                      lineHeight: "1.7",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    {view.emotion_summary}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 감정 노트 */}
-          {view.emotion_notes && (
-            <div
-              className="p-4 rounded-lg"
-              style={{
-                backgroundColor: "#F9F3EF",
-                borderLeft: "3px solid #B89A7A",
-              }}
-            >
               <p
                 style={{
                   fontSize: "0.75rem",
                   color: "#6B7A6F",
                   marginBottom: "0.5rem",
-                  fontWeight: "500",
                 }}
               >
-                감정 노트
+                대표 감정
               </p>
               <p
                 style={{
-                  color: "#4E4B46",
-                  lineHeight: "1.7",
-                  fontSize: "0.9rem",
+                  color: "#333333",
+                  fontSize: "1rem",
+                  fontWeight: "500",
                 }}
               >
-                {view.emotion_notes}
+                {view.dominant_emotion}
               </p>
             </div>
           )}

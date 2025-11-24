@@ -4,8 +4,6 @@ export interface EmotionOverview {
   ai_mood_arousal: number | null;
   emotion_curve: string[];
   dominant_emotion: string | null;
-  emotion_summary: string | null;
-  emotion_notes: string | null;
 }
 
 // Narrative Overview 섹션
