@@ -1,6 +1,6 @@
 import { Lightbulb, Sparkles } from "lucide-react";
 import { Card } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
 export function SummarySection({ view }: SectionProps) {
@@ -21,17 +21,17 @@ export function SummarySection({ view }: SectionProps) {
         className="p-6 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
-        <div className="space-y-4 text-center">
+        <div className="space-y-4">
           <div>
             <p
-              style={{ color: "#333333", lineHeight: "1.8", fontSize: "1rem" }}
+              style={{ color: "#333333", lineHeight: "1.8", fontSize: "1rem", textAlign: "left" }}
             >
               {view.narrative}
             </p>
           </div>
           {view.lesson && (
             <div
-              className="p-4 rounded-xl mx-auto"
+              className="p-4 rounded-xl"
               style={{
                 backgroundColor: "#F7F8F6",
                 borderLeft: "3px solid #A8BBA8",
@@ -43,6 +43,7 @@ export function SummarySection({ view }: SectionProps) {
                   color: "#4E4B46",
                   lineHeight: "1.7",
                   fontSize: "0.95rem",
+                  textAlign: "left",
                 }}
               >
                 {view.lesson}
@@ -50,22 +51,19 @@ export function SummarySection({ view }: SectionProps) {
             </div>
           )}
           {view.keywords && view.keywords.length > 0 && (
-            <div className="pt-2">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {view.keywords.map((keyword, index) => (
-                  <Badge
-                    key={index}
-                    className="rounded-full px-3 py-1"
-                    style={{
-                      backgroundColor: "#EAEDE9",
-                      color: "#55685E",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {keyword}
-                  </Badge>
-                ))}
-              </div>
+            <div className="pt-2 -mx-6 px-6">
+              <ScrollingKeywords
+                keywords={view.keywords}
+                duration={25}
+                gap="0.5rem"
+                badgeStyle={{
+                  backgroundColor: "#EAEDE9",
+                  color: "#55685E",
+                  fontSize: "0.85rem",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "9999px",
+                }}
+              />
             </div>
           )}
         </div>

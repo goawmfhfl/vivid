@@ -1,6 +1,6 @@
 import { Target, Sparkles } from "lucide-react";
 import { Card } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
 export function VisionSection({ view }: SectionProps) {
@@ -71,30 +71,8 @@ export function VisionSection({ view }: SectionProps) {
         </Card>
       </div>
       {view.vision_keywords && view.vision_keywords.length > 0 && (
-        <div className="overflow-hidden pb-2 mb-4 -mx-4 px-4" style={{ position: "relative" }}>
-          <div
-            className="flex gap-2 vision-keywords-scroll"
-            style={{
-              width: "max-content",
-            }}
-          >
-            {/* 키워드를 두 번 반복하여 무한 루프 효과 */}
-            {[...view.vision_keywords, ...view.vision_keywords].map((keyword, index) => (
-              <Badge
-                key={index}
-                style={{
-                  backgroundColor: "#FFF8E7",
-                  color: "#B8860B",
-                  padding: "0.5rem 1rem",
-                  fontSize: "0.85rem",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
-                {keyword}
-              </Badge>
-            ))}
-          </div>
+        <div className="mb-4 -mx-4 px-4">
+          <ScrollingKeywords keywords={view.vision_keywords} />
         </div>
       )}
       {view.reminder_sentence && (
