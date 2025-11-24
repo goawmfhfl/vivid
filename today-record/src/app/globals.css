@@ -39,3 +39,17 @@ body {
 .swiper-cards .swiper-slide-shadow {
   border-radius: 16px;
 }
+
+/* Vision Keywords Auto Scroll Animation */
+@keyframes scroll-horizontal {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.vision-keywords-scroll {
+  animation: scroll-horizontal 30s linear infinite;
+}

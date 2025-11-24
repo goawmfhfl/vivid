@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
@@ -8,10 +8,70 @@ interface RecordFormProps {
   onSuccess?: () => void;
 }
 
+const STORAGE_KEY = "record-form-draft";
+
 export function RecordForm({ onSuccess }: RecordFormProps) {
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const createRecordMutation = useCreateRecord();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // localStorage에서 초기값 불러오기
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedContent = localStorage.getItem(STORAGE_KEY);
+      if (savedContent) {
+        setContent(savedContent);
+      }
+    }
+  }, []);
+
+  // localStorage에 저장하는 함수 (debounce 적용)
+  const saveToLocalStorage = useCallback((value: string) => {
+    if (typeof window !== "undefined") {
+      if (value.trim()) {
+        localStorage.setItem(STORAGE_KEY, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  // debounce된 저장 함수
+  const debouncedSave = useCallback(
+    (value: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        saveToLocalStorage(value);
+      }, 500); // 500ms debounce
+    },
+    [saveToLocalStorage]
+  );
+
+  // 페이지를 떠날 때 저장 (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (content.trim()) {
+        saveToLocalStorage(content);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [content, saveToLocalStorage]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // textarea 높이 자동 조정
   useEffect(() => {
@@ -37,6 +97,10 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
         {
           onSuccess: () => {
             setContent("");
+            // localStorage에서도 삭제
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(STORAGE_KEY);
+            }
             // textarea 높이 초기화
             if (textareaRef.current) {
               textareaRef.current.style.height = "100px";
@@ -49,6 +113,13 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
         }
       );
     }
+  };
+
+  // content 변경 시 localStorage에 저장
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    debouncedSave(newContent);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -66,7 +137,7 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
       <Textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={handleContentChange}
         onKeyDown={handleKeyDown}
         placeholder="오늘의 기록을 자유롭게 작성하세요..."
         className="mb-3 resize-none text-sm focus:outline-none focus:ring-0"

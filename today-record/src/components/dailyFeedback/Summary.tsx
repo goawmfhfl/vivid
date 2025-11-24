@@ -21,7 +21,7 @@ export function SummarySection({ view }: SectionProps) {
         className="p-6 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 text-center">
           <div>
             <p
               style={{ color: "#333333", lineHeight: "1.8", fontSize: "1rem" }}
@@ -31,10 +31,11 @@ export function SummarySection({ view }: SectionProps) {
           </div>
           {view.lesson && (
             <div
-              className="p-4 rounded-xl"
+              className="p-4 rounded-xl mx-auto"
               style={{
                 backgroundColor: "#F7F8F6",
                 borderLeft: "3px solid #A8BBA8",
+                maxWidth: "fit-content",
               }}
             >
               <p
@@ -50,7 +51,7 @@ export function SummarySection({ view }: SectionProps) {
           )}
           {view.keywords && view.keywords.length > 0 && (
             <div className="pt-2">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {view.keywords.map((keyword, index) => (
                   <Badge
                     key={index}

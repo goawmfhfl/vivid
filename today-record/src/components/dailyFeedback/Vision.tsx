@@ -71,9 +71,15 @@ export function VisionSection({ view }: SectionProps) {
         </Card>
       </div>
       {view.vision_keywords && view.vision_keywords.length > 0 && (
-        <div className="overflow-x-auto pb-2 mb-4 -mx-4 px-4">
-          <div className="flex gap-2" style={{ minWidth: "max-content" }}>
-            {view.vision_keywords.map((keyword, index) => (
+        <div className="overflow-hidden pb-2 mb-4 -mx-4 px-4" style={{ position: "relative" }}>
+          <div
+            className="flex gap-2 vision-keywords-scroll"
+            style={{
+              width: "max-content",
+            }}
+          >
+            {/* 키워드를 두 번 반복하여 무한 루프 효과 */}
+            {[...view.vision_keywords, ...view.vision_keywords].map((keyword, index) => (
               <Badge
                 key={index}
                 style={{
@@ -82,6 +88,7 @@ export function VisionSection({ view }: SectionProps) {
                   padding: "0.5rem 1rem",
                   fontSize: "0.85rem",
                   whiteSpace: "nowrap",
+                  flexShrink: 0,
                 }}
               >
                 {keyword}

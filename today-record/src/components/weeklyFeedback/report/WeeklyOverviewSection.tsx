@@ -33,7 +33,7 @@ function ThemeItem({
 
   return (
     <div ref={countRef}>
-      <div className="flex items-center justify-betweeㅔn mb-1.5">
+      <div className="flex items-center justify-between mb-1.5">
         <p className="text-sm sm:text-base" style={{ color: "#333333" }}>
           {theme.theme}
         </p>
@@ -78,7 +78,7 @@ export function WeeklyOverviewSection({
       {/* Top Keywords */}
       <div className="mb-4">
         <div className="flex flex-wrap gap-2">
-          {weeklyOverview.top_keywords.map((keyword, index) => (
+          {weeklyOverview.top_keywords.slice(0, 10).map((keyword, index) => (
             <Badge
               key={index}
               className="text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2.5"
