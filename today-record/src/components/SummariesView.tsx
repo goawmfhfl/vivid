@@ -1,10 +1,13 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { ErrorDisplay } from "./ui/ErrorDisplay";
 import type { PeriodSummary } from "@/types/Entry";
 import { WeeklySummariesTab } from "./summaries/WeeklySummariesTab";
 import { MonthlySummariesTab } from "./summaries/MonthlySummariesTab";
 import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
+import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
 import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
 import {
   calculateWeekNumber,
@@ -12,6 +15,7 @@ import {
   formatPeriod,
   createPeriodSummaryFromWeeklyFeedback,
 } from "./summaries/weekly-feedback-mapper";
+import { convertMonthlyFeedbackToPeriodSummary } from "./summaries/monthly-feedback-mapper";
 
 /**
  * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
@@ -37,19 +41,49 @@ function convertWeeklyFeedbackToPeriodSummary(
 }
 
 export function SummariesView() {
-  const [activeTab, setActiveTab] = useState<"weekly" | "monthly">("weekly");
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // 주간 피드백 리스트 조회
+  // URL 쿼리 파라미터에서 탭 정보 가져오기 (기본값: weekly)
+  const activeTab = (searchParams.get("tab") || "weekly") as
+    | "weekly"
+    | "monthly";
+
+  // 주간 피드백 리스트 조회 (기본값이므로 항상 조회)
   const {
     data: weeklyFeedbackList = [],
     isLoading: isLoadingWeekly,
     error: weeklyError,
+    refetch: refetchWeekly,
   } = useWeeklyFeedbackList();
+
+  // 월간 피드백 리스트 조회 (월간 탭일 때만 조회)
+  const {
+    data: monthlyFeedbackList = [],
+    isLoading: isLoadingMonthly,
+    error: monthlyError,
+    refetch: refetchMonthly,
+  } = useGetMonthlyFeedbackList(activeTab === "monthly");
+
+  // 탭 변경 시 URL 업데이트
+  const handleTabChange = (tab: string) => {
+    const newTab = tab as "weekly" | "monthly";
+    if (newTab === "weekly") {
+      router.push("/analysis?tab=weekly");
+    } else {
+      router.push("/analysis?tab=monthly");
+    }
+  };
 
   // 주간 피드백을 PeriodSummary로 변환
   const weeklySummaries = useMemo(() => {
     return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
   }, [weeklyFeedbackList]);
+
+  // 월간 피드백을 PeriodSummary로 변환
+  const monthlySummaries = useMemo(() => {
+    return monthlyFeedbackList.map(convertMonthlyFeedbackToPeriodSummary);
+  }, [monthlyFeedbackList]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -73,7 +107,7 @@ export function SummariesView() {
       {/* Tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={(v: string) => setActiveTab(v as "weekly" | "monthly")}
+        onValueChange={handleTabChange}
         className="space-y-6"
       >
         <TabsList
@@ -117,10 +151,19 @@ export function SummariesView() {
               />
             </div>
           ) : weeklyError ? (
-            <div className="flex justify-center items-center py-12">
-              <p style={{ color: "#DC2626" }}>
-                주간 피드백을 불러오는 중 오류가 발생했습니다.
-              </p>
+            <div className="py-12">
+              <ErrorDisplay
+                message={
+                  weeklyError instanceof Error
+                    ? weeklyError.message
+                    : "주간 피드백을 불러오는 중 오류가 발생했습니다."
+                }
+                size="md"
+                onRetry={() => {
+                  refetchWeekly();
+                }}
+                retryLabel="다시 시도"
+              />
             </div>
           ) : (
             <WeeklySummariesTab summaries={weeklySummaries} />
@@ -129,7 +172,32 @@ export function SummariesView() {
 
         {/* Monthly Tab */}
         <TabsContent value="monthly">
-          <MonthlySummariesTab summaries={[]} />
+          {isLoadingMonthly ? (
+            <div className="flex justify-center items-center py-12">
+              <LoadingSpinner
+                message="월간 피드백을 불러오는 중..."
+                size="md"
+                showMessage={true}
+              />
+            </div>
+          ) : monthlyError ? (
+            <div className="py-12">
+              <ErrorDisplay
+                message={
+                  monthlyError instanceof Error
+                    ? monthlyError.message
+                    : "월간 피드백을 불러오는 중 오류가 발생했습니다."
+                }
+                size="md"
+                onRetry={() => {
+                  refetchMonthly();
+                }}
+                retryLabel="다시 시도"
+              />
+            </div>
+          ) : (
+            <MonthlySummariesTab summaries={monthlySummaries} />
+          )}
         </TabsContent>
       </Tabs>
     </div>

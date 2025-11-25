@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getServiceSupabase } from "@/lib/supabase-service";
+import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
 
@@ -12,17 +12,9 @@ export function useGetMonthlyFeedback(month: string | null) {
     queryFn: async () => {
       if (!month) return null;
 
-      const supabase = getServiceSupabase();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
+      const userId = await getCurrentUserId();
       const response = await fetch(
-        `/api/monthly-feedback/list?userId=${user.id}`
+        `/api/monthly-feedback/list?userId=${userId}`
       );
       if (!response.ok) {
         throw new Error(
@@ -41,7 +33,7 @@ export function useGetMonthlyFeedback(month: string | null) {
 
       // 상세 조회
       const detailResponse = await fetch(
-        `/api/monthly-feedback/${monthlyFeedback.id}?userId=${user.id}`
+        `/api/monthly-feedback/${monthlyFeedback.id}?userId=${userId}`
       );
       if (!detailResponse.ok) {
         throw new Error("Failed to fetch monthly feedback detail");
@@ -63,17 +55,9 @@ export function useGetMonthlyFeedbackById(id: string | null) {
     queryFn: async () => {
       if (!id) return null;
 
-      const supabase = getServiceSupabase();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
+      const userId = await getCurrentUserId();
       const response = await fetch(
-        `/api/monthly-feedback/${id}?userId=${user.id}`
+        `/api/monthly-feedback/${id}?userId=${userId}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monthly feedback");
@@ -89,21 +73,13 @@ export function useGetMonthlyFeedbackById(id: string | null) {
 /**
  * 월간 피드백 리스트 조회
  */
-export function useGetMonthlyFeedbackList() {
+export function useGetMonthlyFeedbackList(enabled: boolean = true) {
   return useQuery({
     queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "list"],
     queryFn: async () => {
-      const supabase = getServiceSupabase();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
+      const userId = await getCurrentUserId();
       const response = await fetch(
-        `/api/monthly-feedback/list?userId=${user.id}`
+        `/api/monthly-feedback/list?userId=${userId}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monthly feedback list");
@@ -112,5 +88,6 @@ export function useGetMonthlyFeedbackList() {
       const result = await response.json();
       return result.data;
     },
+    enabled, // enabled 파라미터로 조건부 조회 제어
   });
 }

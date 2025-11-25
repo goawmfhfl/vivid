@@ -39,7 +39,7 @@ export async function fetchMonthlyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select(
-      "id, month, month_label, date_range, summary_overview, is_ai_generated, created_at"
+      "id, month, month_label, date_range, recorded_days, summary_overview, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("month", { ascending: false });
@@ -70,6 +70,7 @@ export async function fetchMonthlyFeedbackList(
         end_date: "",
       },
       monthly_score: monthlyScore,
+      recorded_days: row.recorded_days || 0,
       is_ai_generated: row.is_ai_generated ?? undefined,
       created_at: row.created_at ?? undefined,
     };

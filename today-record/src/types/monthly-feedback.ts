@@ -158,6 +158,7 @@ export type MonthlyFeedbackListItem = {
     end_date: string;
   };
   monthly_score: number;
+  recorded_days?: number;
   is_ai_generated?: boolean;
   created_at?: string;
 };
