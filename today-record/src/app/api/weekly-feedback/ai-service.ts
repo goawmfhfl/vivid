@@ -3,6 +3,12 @@ import { WeeklyFeedbackSchema, SYSTEM_PROMPT_WEEKLY } from "./schema";
 import type { DailyFeedbackForWeekly, WeeklyFeedbackResponse } from "./types";
 import { buildWeeklyFeedbackPrompt } from "./prompts";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import {
+  generateCacheKey,
+  getFromCache,
+  setCache,
+  generatePromptCacheKey,
+} from "../utils/cache";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -46,15 +52,32 @@ export async function generateWeeklyFeedbackFromDaily(
   );
   const openai = getOpenAIClient();
 
-  // 기본값을 gpt-5-mini로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
+  // 기본값을 gpt-5로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
   const model = process.env.OPENAI_MODEL || "gpt-5-mini";
 
+  // 캐시 키 생성
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_WEEKLY, prompt);
+
+  // 캐시에서 조회
+  const cachedResult = getFromCache<WeeklyFeedback>(cacheKey);
+  if (cachedResult) {
+    console.log("캐시에서 결과 반환 (generateWeeklyFeedbackFromDaily)");
+    return cachedResult;
+  }
+
   try {
+    // OpenAI CachedInput: prompt_cache_key를 사용하여 OpenAI가 자동으로 캐시 확인 및 사용
+    const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT_WEEKLY);
+
     const completion = await openai.chat.completions.create({
       model,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT_WEEKLY },
-        { role: "user", content: prompt },
+        {
+          role: "system",
+          content: SYSTEM_PROMPT_WEEKLY,
+          // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+        },
+        { role: "user", content: prompt }, // 사용자 입력(dailyFeedbacks 등)은 매번 다르므로 캐싱 불가
       ],
       response_format: {
         type: "json_schema",
@@ -64,7 +87,8 @@ export async function generateWeeklyFeedbackFromDaily(
           strict: WeeklyFeedbackSchema.strict,
         },
       },
-      temperature: 0.3,
+      // OpenAI가 자동으로 캐시를 확인하고 사용하도록 prompt_cache_key 설정
+      prompt_cache_key: promptCacheKey,
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -73,25 +97,37 @@ export async function generateWeeklyFeedbackFromDaily(
     }
 
     const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
-    return parsed.weekly_feedback;
+    const result = parsed.weekly_feedback;
+
+    // 캐시에 저장
+    setCache(cacheKey, result);
+
+    return result;
   } catch (error: any) {
-    // gpt-5-mini가 사용 불가능한 경우 gpt-4o-mini로 fallback
+    // gpt-5가 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
-      model === "gpt-5-mini" &&
+      model === "gpt-5" &&
       (error?.message?.includes("model") ||
         error?.code === "model_not_found" ||
         error?.status === 404 ||
         error?.message?.includes("timeout"))
     ) {
       console.warn(
-        `gpt-5-mini 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다.`,
+        `gpt-5 모델을 사용할 수 없습니다. gpt-4로 fallback합니다.`,
         error.message
       );
+      // Fallback 시에도 동일한 캐시 키 사용
+      const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT_WEEKLY);
+
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT_WEEKLY },
-          { role: "user", content: prompt },
+          {
+            role: "system",
+            content: SYSTEM_PROMPT_WEEKLY,
+            // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+          },
+          { role: "user", content: prompt }, // 사용자 입력은 매번 다르므로 캐싱 불가
         ],
         response_format: {
           type: "json_schema",
@@ -101,7 +137,8 @@ export async function generateWeeklyFeedbackFromDaily(
             strict: WeeklyFeedbackSchema.strict,
           },
         },
-        temperature: 0.3,
+
+        prompt_cache_key: promptCacheKey,
       });
 
       const content = completion.choices[0]?.message?.content;
@@ -110,7 +147,12 @@ export async function generateWeeklyFeedbackFromDaily(
       }
 
       const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
-      return parsed.weekly_feedback;
+      const result = parsed.weekly_feedback;
+
+      // 캐시에 저장
+      setCache(cacheKey, result);
+
+      return result;
     }
     throw error;
   }

@@ -7,6 +7,12 @@ import {
 } from "./schema";
 import type { Record, CategorizedRecords, DailyReport } from "./types";
 import { buildCategorizationPrompt, buildReportPrompt } from "./prompts";
+import {
+  generateCacheKey,
+  getFromCache,
+  setCache,
+  generatePromptCacheKey,
+} from "../utils/cache";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -20,7 +26,7 @@ function getOpenAIClient(): OpenAI {
   }
   return new OpenAI({
     apiKey,
-    timeout: 30000, // 30초 타임아웃
+    timeout: 180000, // 180초(3분) 타임아웃
     maxRetries: 1, // 재시도 최소화
   });
 }
@@ -35,16 +41,29 @@ export async function categorizeRecords(
   const prompt = buildCategorizationPrompt(records, date);
   const openai = getOpenAIClient();
 
-  // 모델 선택: 환경 변수로 지정하거나 기본값 사용
-  // 기본값을 gpt-5-mini로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
-  const model = process.env.OPENAI_MODEL || "gpt-5-mini";
+  // 캐시 키 생성
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_CATEGORIZATION, prompt);
+
+  // 캐시에서 조회
+  const cachedResult = getFromCache<CategorizedRecords>(cacheKey);
+  if (cachedResult) {
+    console.log("캐시에서 결과 반환 (categorizeRecords)");
+    return cachedResult;
+  }
 
   try {
+    // OpenAI CachedInput: prompt_cache_key를 사용하여 OpenAI가 자동으로 캐시 확인 및 사용
+    const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT_CATEGORIZATION);
+
     const completion = await openai.chat.completions.create({
-      model,
+      model: "gpt-5-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT_CATEGORIZATION },
-        { role: "user", content: prompt },
+        {
+          role: "system",
+          content: SYSTEM_PROMPT_CATEGORIZATION,
+          // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+        },
+        { role: "user", content: prompt }, // 사용자 입력(records, date)은 매번 다르므로 캐싱 불가
       ],
       response_format: {
         type: "json_schema",
@@ -54,7 +73,9 @@ export async function categorizeRecords(
           strict: RecordCategorizationSchema.strict,
         },
       },
-      temperature: 0.3, // 구조화된 응답에는 낮은 temperature가 더 빠르고 일관성 있음
+      // OpenAI가 자동으로 캐시를 확인하고 사용하도록 prompt_cache_key 설정
+      // 동일한 시스템 프롬프트에 대해 캐시된 응답을 재사용하여 비용 절감
+      prompt_cache_key: promptCacheKey,
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -62,23 +83,32 @@ export async function categorizeRecords(
       throw new Error("No content from OpenAI categorization");
     }
 
-    return JSON.parse(content) as CategorizedRecords;
+    const result = JSON.parse(content) as CategorizedRecords;
+
+    // 캐시에 저장
+    setCache(cacheKey, result);
+
+    return result;
   } catch (error: any) {
-    // gpt-5-mini가 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
-      model === "gpt-5-mini" &&
-      (error?.message?.includes("model") ||
-        error?.code === "model_not_found" ||
-        error?.status === 404)
+      error?.message?.includes("model") ||
+      error?.code === "model_not_found" ||
+      error?.status === 404
     ) {
-      console.warn(
-        "gpt-5-mini 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다."
+      // Fallback 시에도 동일한 캐시 키 사용
+      const promptCacheKey = generatePromptCacheKey(
+        SYSTEM_PROMPT_CATEGORIZATION
       );
+
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT_CATEGORIZATION },
-          { role: "user", content: prompt },
+          {
+            role: "system",
+            content: SYSTEM_PROMPT_CATEGORIZATION,
+            // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+          },
+          { role: "user", content: prompt }, // 사용자 입력은 매번 다르므로 캐싱 불가
         ],
         response_format: {
           type: "json_schema",
@@ -88,7 +118,7 @@ export async function categorizeRecords(
             strict: RecordCategorizationSchema.strict,
           },
         },
-        temperature: 0.3,
+        prompt_cache_key: promptCacheKey,
       });
 
       const content = completion.choices[0]?.message?.content;
@@ -96,7 +126,12 @@ export async function categorizeRecords(
         throw new Error("No content from OpenAI categorization");
       }
 
-      return JSON.parse(content) as CategorizedRecords;
+      const result = JSON.parse(content) as CategorizedRecords;
+
+      // 캐시에 저장
+      setCache(cacheKey, result);
+
+      return result;
     }
     throw error;
   }
@@ -113,14 +148,29 @@ export async function generateDailyReport(
   const prompt = buildReportPrompt(categorized, date, records);
   const openai = getOpenAIClient();
 
-  const model = process.env.OPENAI_MODEL || "gpt-5-mini";
+  // 캐시 키 생성
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT, prompt);
+
+  // 캐시에서 조회
+  const cachedResult = getFromCache<DailyReport>(cacheKey);
+  if (cachedResult) {
+    console.log("캐시에서 결과 반환 (generateDailyReport)");
+    return cachedResult;
+  }
 
   try {
+    // OpenAI CachedInput: prompt_cache_key를 사용하여 OpenAI가 자동으로 캐시 확인 및 사용
+    const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT);
+
     const completion = await openai.chat.completions.create({
-      model,
+      model: "gpt-5-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: prompt },
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+        },
+        { role: "user", content: prompt }, // 사용자 입력(records, date 등)은 매번 다르므로 캐싱 불가
       ],
       response_format: {
         type: "json_schema",
@@ -130,7 +180,8 @@ export async function generateDailyReport(
           strict: DailyReportSchema.strict,
         },
       },
-      temperature: 0.3, // 구조화된 응답에는 낮은 temperature가 더 빠르고 일관성 있음
+      // OpenAI가 자동으로 캐시를 확인하고 사용하도록 prompt_cache_key 설정
+      prompt_cache_key: promptCacheKey,
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -138,23 +189,31 @@ export async function generateDailyReport(
       throw new Error("No content from OpenAI report generation");
     }
 
-    return JSON.parse(content) as DailyReport;
+    const result = JSON.parse(content) as DailyReport;
+
+    // 캐시에 저장
+    setCache(cacheKey, result);
+
+    return result;
   } catch (error: any) {
-    // gpt-5-mini가 사용 불가능한 경우 gpt-4o-mini로 fallback
+    // gpt-5가 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
-      model === "gpt-5-mini" &&
-      (error?.message?.includes("model") ||
-        error?.code === "model_not_found" ||
-        error?.status === 404)
+      error?.message?.includes("model") ||
+      error?.code === "model_not_found" ||
+      error?.status === 404
     ) {
-      console.warn(
-        "gpt-5-mini 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다."
-      );
+      // Fallback 시에도 동일한 캐시 키 사용
+      const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT);
+
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: prompt },
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+            // OpenAI CachedInput: 시스템 프롬프트는 고정이므로 캐싱 가능
+          },
+          { role: "user", content: prompt }, // 사용자 입력은 매번 다르므로 캐싱 불가
         ],
         response_format: {
           type: "json_schema",
@@ -164,7 +223,7 @@ export async function generateDailyReport(
             strict: DailyReportSchema.strict,
           },
         },
-        temperature: 0.3,
+        prompt_cache_key: promptCacheKey,
       });
 
       const content = completion.choices[0]?.message?.content;
@@ -172,7 +231,12 @@ export async function generateDailyReport(
         throw new Error("No content from OpenAI report generation");
       }
 
-      return JSON.parse(content) as DailyReport;
+      const result = JSON.parse(content) as DailyReport;
+
+      // 캐시에 저장
+      setCache(cacheKey, result);
+
+      return result;
     }
     throw error;
   }
