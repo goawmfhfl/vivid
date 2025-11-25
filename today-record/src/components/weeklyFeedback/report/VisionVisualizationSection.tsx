@@ -32,7 +32,10 @@ export function VisionVisualizationSection({
         >
           <Target className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           비전과 일치도
         </h2>
       </div>
@@ -42,10 +45,7 @@ export function VisionVisualizationSection({
         className="p-4 sm:p-5 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: "#333333" }}
-        >
+        <p className="text-sm leading-relaxed" style={{ color: "#333333" }}>
           {visionSummary}
         </p>
       </Card>
@@ -55,10 +55,7 @@ export function VisionVisualizationSection({
         className="p-4 sm:p-5 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#6B7A6F" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           비전 키워드 빈도
         </p>
         <ResponsiveContainer width="100%" height={180}>
@@ -100,10 +97,7 @@ export function VisionVisualizationSection({
           className="w-4 h-4 flex-shrink-0 mt-1"
           style={{ color: "#A3BFD9", opacity: 0.7 }}
         />
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: "#010201" }}
-        >
+        <p className="text-sm leading-relaxed" style={{ color: "#010201" }}>
           {alignmentComment}
         </p>
       </div>

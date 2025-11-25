@@ -37,7 +37,7 @@ export async function categorizeRecords(
 
   // 모델 선택: 환경 변수로 지정하거나 기본값 사용
   // GPT-5.1이 출시되었으므로 기본값을 gpt-5.1로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
-  const model = "gpt-5.1";
+  const model = process.env.OPENAI_MODEL || "gpt-5.1";
 
   try {
     const completion = await openai.chat.completions.create({

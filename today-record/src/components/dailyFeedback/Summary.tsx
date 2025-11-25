@@ -13,7 +13,7 @@ export function SummarySection({ view }: SectionProps) {
         >
           <Lightbulb className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           오늘의 전체 흐름
         </h2>
       </div>
@@ -24,10 +24,10 @@ export function SummarySection({ view }: SectionProps) {
         <div className="space-y-4">
           <div>
             <p
+              className="text-sm"
               style={{
                 color: "#333333",
                 lineHeight: "1.8",
-                fontSize: "1rem",
                 textAlign: "left",
               }}
             >
@@ -44,10 +44,10 @@ export function SummarySection({ view }: SectionProps) {
               }}
             >
               <p
+                className="text-sm"
                 style={{
                   color: "#4E4B46",
                   lineHeight: "1.7",
-                  fontSize: "0.95rem",
                   textAlign: "left",
                 }}
               >
@@ -64,7 +64,7 @@ export function SummarySection({ view }: SectionProps) {
                 badgeStyle={{
                   backgroundColor: "#EAEDE9",
                   color: "#55685E",
-                  fontSize: "0.85rem",
+                  fontSize: "0.875rem",
                   padding: "0.5rem 0.75rem",
                   borderRadius: "9999px",
                 }}
@@ -79,13 +79,13 @@ export function SummarySection({ view }: SectionProps) {
           style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
         >
           <Sparkles
-            className="w-5 h-5 flex-shrink-0 mt-0.5"
+            className="w-4 h-4 flex-shrink-0 mt-0.5"
             style={{ color: "#A8BBA8" }}
           />
           <div>
             <p
+              className="text-xs"
               style={{
-                fontSize: "0.75rem",
                 color: "#6B7A6F",
                 marginBottom: "0.5rem",
               }}
@@ -93,11 +93,10 @@ export function SummarySection({ view }: SectionProps) {
               AI 코멘트
             </p>
             <p
+              className="text-sm italic"
               style={{
                 color: "#4E4B46",
                 lineHeight: "1.7",
-                fontSize: "0.9rem",
-                fontStyle: "italic",
               }}
             >
               {view.feedback_ai_comment}

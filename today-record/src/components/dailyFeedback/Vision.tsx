@@ -28,7 +28,7 @@ export function VisionSection({ view }: SectionProps) {
         >
           <Target className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 시각화</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 시각화</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
@@ -36,8 +36,8 @@ export function VisionSection({ view }: SectionProps) {
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.8rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -45,7 +45,8 @@ export function VisionSection({ view }: SectionProps) {
             시각화 요약
           </p>
           <p
-            style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.7" }}
           >
             {view.vision_summary}
           </p>
@@ -55,8 +56,8 @@ export function VisionSection({ view }: SectionProps) {
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.8rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -64,7 +65,8 @@ export function VisionSection({ view }: SectionProps) {
             자기 평가
           </p>
           <p
-            style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.7" }}
           >
             {view.vision_self}
           </p>
@@ -81,11 +83,12 @@ export function VisionSection({ view }: SectionProps) {
           style={{ backgroundColor: "#E5B96B", color: "white", border: "none" }}
         >
           <p
-            style={{ fontSize: "0.8rem", opacity: 0.9, marginBottom: "0.5rem" }}
+            className="text-xs"
+            style={{ opacity: 0.9, marginBottom: "0.5rem" }}
           >
             오늘의 리마인더
           </p>
-          <p style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
+          <p className="text-sm" style={{ lineHeight: "1.6" }}>
             {view.reminder_sentence}
           </p>
         </Card>
@@ -100,7 +103,7 @@ export function VisionSection({ view }: SectionProps) {
               className="w-4 h-4 flex-shrink-0 mt-1"
               style={{ color: "#E5B96B", opacity: 0.85 }}
             />
-            <p style={{ color: "#6B7A6F", fontSize: "0.85rem" }}>핵심 3단</p>
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>핵심 3단</p>
           </div>
           <ul className="space-y-2">
             {feedbackItems.map((item, idx) => (
@@ -116,10 +119,10 @@ export function VisionSection({ view }: SectionProps) {
                   {idx + 1}
                 </span>
                 <span
+                  className="text-sm"
                   style={{
                     color: "#55685E",
                     lineHeight: "1.6",
-                    fontSize: "0.95rem",
                   }}
                 >
                   {item}

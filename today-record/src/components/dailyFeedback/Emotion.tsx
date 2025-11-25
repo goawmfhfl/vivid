@@ -90,7 +90,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
         >
           <Heart className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 감정</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 감정</h2>
       </div>
 
       {hasEmotionData ? (
@@ -102,8 +102,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
           >
             <div className="mb-4">
               <p
+                className="text-xs"
                 style={{
-                  fontSize: "0.85rem",
                   color: "#6B7A6F",
                   marginBottom: "1rem",
                 }}
@@ -250,11 +250,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
 
                 {/* 구역 레이블 */}
                 <div
-                  className="absolute"
+                  className="absolute text-xs"
                   style={{
                     right: "12px",
                     top: "12px",
-                    fontSize: "0.65rem",
                     color: "#55685E",
                     fontWeight: "500",
                   }}
@@ -262,11 +261,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   몰입·설렘
                 </div>
                 <div
-                  className="absolute"
+                  className="absolute text-xs"
                   style={{
                     right: "12px",
                     bottom: "12px",
-                    fontSize: "0.65rem",
                     color: "#55685E",
                     fontWeight: "500",
                   }}
@@ -274,11 +272,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   안도·평온
                 </div>
                 <div
-                  className="absolute"
+                  className="absolute text-xs"
                   style={{
                     left: "12px",
                     top: "12px",
-                    fontSize: "0.65rem",
                     color: "#55685E",
                     fontWeight: "500",
                   }}
@@ -286,11 +283,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   불안·초조
                 </div>
                 <div
-                  className="absolute"
+                  className="absolute text-xs"
                   style={{
                     left: "12px",
                     bottom: "12px",
-                    fontSize: "0.65rem",
                     color: "#55685E",
                     fontWeight: "500",
                   }}
@@ -322,8 +318,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
                     />
                   )}
                   <p
+                    className="text-xs"
                     style={{
-                      fontSize: "0.75rem",
                       color: "#6B7A6F",
                       fontWeight: "500",
                     }}
@@ -427,7 +423,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 >
                   {valence.toFixed(2)}
                 </p>
-                <p style={{ fontSize: "0.8rem", color: "#6B7A6F" }}>
+                <p className="text-xs" style={{ color: "#6B7A6F" }}>
                   {getValenceDescription(valence)}
                 </p>
               </div>
@@ -442,8 +438,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 <div className="flex items-center gap-2 mb-2">
                   <Zap className="w-4 h-4" style={{ color: "#E5B96B" }} />
                   <p
+                    className="text-xs"
                     style={{
-                      fontSize: "0.75rem",
                       color: "#6B7A6F",
                       fontWeight: "500",
                     }}
@@ -545,7 +541,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 >
                   {arousal.toFixed(2)}
                 </p>
-                <p style={{ fontSize: "0.8rem", color: "#6B7A6F" }}>
+                <p className="text-xs" style={{ color: "#6B7A6F" }}>
                   {getArousalDescription(arousal)}
                 </p>
               </div>
@@ -559,13 +555,13 @@ export const EmotionSection = ({ view }: SectionProps) => {
           >
             <div className="flex items-start gap-3">
               <Wind
-                className="w-5 h-5 flex-shrink-0 mt-0.5"
+                className="w-4 h-4 flex-shrink-0 mt-0.5"
                 style={{ color: "#B89A7A" }}
               />
               <div>
                 <p
+                  className="text-xs"
                   style={{
-                    fontSize: "0.75rem",
                     color: "#6B7A6F",
                     marginBottom: "0.5rem",
                   }}
@@ -573,10 +569,10 @@ export const EmotionSection = ({ view }: SectionProps) => {
                   감정 해석
                 </p>
                 <p
+                  className="text-sm"
                   style={{
                     color: "#4E4B46",
                     lineHeight: "1.7",
-                    fontSize: "0.95rem",
                   }}
                 >
                   {getEmotionInterpretation(valence, arousal)}
@@ -591,9 +587,9 @@ export const EmotionSection = ({ view }: SectionProps) => {
           style={{ backgroundColor: "#F7F8F6", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-sm"
             style={{
               color: "#6B7A6F",
-              fontSize: "0.9rem",
               textAlign: "center",
             }}
           >
@@ -612,8 +608,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
           {view.emotion_curve && view.emotion_curve.length > 0 && (
             <div className="mb-5">
               <p
+                className="text-xs"
                 style={{
-                  fontSize: "0.85rem",
                   color: "#6B7A6F",
                   marginBottom: "1rem",
                   fontWeight: "500",
@@ -625,13 +621,11 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 {view.emotion_curve.map((emotion, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div
-                      className="relative"
+                      className="relative text-sm px-3 py-1"
                       style={{
-                        padding: "0.5rem 1rem",
                         borderRadius: "20px",
                         backgroundColor: "#EAEDE9",
                         color: "#55685E",
-                        fontSize: "0.85rem",
                         fontWeight: "500",
                         display: "flex",
                         alignItems: "center",
@@ -696,8 +690,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
           {view.dominant_emotion && (
             <div className="mb-5">
               <p
+                className="text-xs"
                 style={{
-                  fontSize: "0.75rem",
                   color: "#6B7A6F",
                   marginBottom: "0.5rem",
                 }}
@@ -705,10 +699,9 @@ export const EmotionSection = ({ view }: SectionProps) => {
                 대표 감정
               </p>
               <p
+                className="text-sm font-medium"
                 style={{
                   color: "#333333",
-                  fontSize: "1rem",
-                  fontWeight: "500",
                 }}
               >
                 {view.dominant_emotion}

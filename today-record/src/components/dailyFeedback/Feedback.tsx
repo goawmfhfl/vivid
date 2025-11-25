@@ -12,7 +12,7 @@ export function FeedbackSection({ view }: SectionProps) {
         >
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           오늘의 자기 피드백
         </h2>
       </div>
@@ -21,7 +21,7 @@ export function FeedbackSection({ view }: SectionProps) {
           className="p-5 mb-4"
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
-          <p style={{ color: "#333333", lineHeight: "1.7", fontSize: "1rem" }}>
+          <p className="text-sm" style={{ color: "#333333", lineHeight: "1.7" }}>
             {view.core_feedback}
           </p>
         </Card>
@@ -32,8 +32,8 @@ export function FeedbackSection({ view }: SectionProps) {
           style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -48,10 +48,10 @@ export function FeedbackSection({ view }: SectionProps) {
                   style={{ backgroundColor: "#6B7A6F" }}
                 />
                 <p
+                  className="text-sm"
                   style={{
                     color: "#333333",
                     lineHeight: "1.6",
-                    fontSize: "0.9rem",
                   }}
                 >
                   {item}
@@ -65,8 +65,8 @@ export function FeedbackSection({ view }: SectionProps) {
           style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -81,10 +81,10 @@ export function FeedbackSection({ view }: SectionProps) {
                   style={{ backgroundColor: "#B89A7A" }}
                 />
                 <p
+                  className="text-sm"
                   style={{
                     color: "#333333",
                     lineHeight: "1.6",
-                    fontSize: "0.9rem",
                   }}
                 >
                   {item}
@@ -100,7 +100,8 @@ export function FeedbackSection({ view }: SectionProps) {
           style={{ backgroundColor: "#F5F7F5", border: "1px solid #E6E4DE" }}
         >
           <p
-            style={{ color: "#4E4B46", lineHeight: "1.7", fontSize: "0.9rem" }}
+            className="text-sm"
+            style={{ color: "#4E4B46", lineHeight: "1.7" }}
           >
             {view.feedback_ai_comment}
           </p>

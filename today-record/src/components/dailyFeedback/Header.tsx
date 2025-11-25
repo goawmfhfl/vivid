@@ -23,21 +23,21 @@ export function HeaderSection({ view }: SectionProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>
+            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ marginBottom: "0.25rem" }}>
               {view.date}
             </h1>
-            <p style={{ opacity: 0.9, fontSize: "1rem" }}>{view.dayOfWeek}</p>
+            <p className="text-sm" style={{ opacity: 0.9 }}>{view.dayOfWeek}</p>
           </div>
           <div className="text-center">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center mb-1"
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             >
-              <span style={{ fontSize: "1.5rem" }}>{displayScore}</span>
+              <span className="text-xl font-semibold">{displayScore}</span>
             </div>
             <p
-              className="inline-block whitespace-nowrap text-nowrap"
-              style={{ opacity: 0.8, fontSize: "0.75rem" }}
+              className="text-xs inline-block whitespace-nowrap"
+              style={{ opacity: 0.8 }}
             >
               하루 점수
             </p>
@@ -47,14 +47,14 @@ export function HeaderSection({ view }: SectionProps) {
           className="py-5 px-6 rounded-2xl"
           style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
         >
-          <p style={{ fontSize: "1.1rem", lineHeight: "1.7", opacity: 0.95 }}>
+          <p className="text-sm" style={{ lineHeight: "1.7", opacity: 0.95 }}>
             {view.narrative_summary}
           </p>
         </div>
         <div className="mt-5">
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               opacity: 0.85,
               marginBottom: "0.75rem",
             }}
@@ -65,11 +65,10 @@ export function HeaderSection({ view }: SectionProps) {
             {view.emotion_curve.map((emotion, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Badge
+                  className="text-sm px-3 py-1"
                   style={{
                     backgroundColor: "rgba(255, 255, 255, 0.25)",
                     color: "white",
-                    padding: "0.5rem 1rem",
-                    fontSize: "0.9rem",
                     border: "1px solid rgba(255, 255, 255, 0.3)",
                   }}
                 >

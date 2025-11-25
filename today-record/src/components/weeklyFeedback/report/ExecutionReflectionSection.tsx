@@ -21,7 +21,10 @@ export function ExecutionReflectionSection({
         >
           <BarChart3 className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           실행 패턴 회고
         </h2>
       </div>
@@ -36,10 +39,7 @@ export function ExecutionReflectionSection({
             border: "1px solid #D5E3D5",
           }}
         >
-          <p
-            className="text-xs mb-2.5 sm:mb-3"
-            style={{ color: "#6B7A6F" }}
-          >
+          <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
             이번 주 잘한 점
           </p>
           <ul className="space-y-2.5">
@@ -68,10 +68,7 @@ export function ExecutionReflectionSection({
             border: "1px solid #F0DCC8",
           }}
         >
-          <p
-            className="text-xs mb-2.5 sm:mb-3"
-            style={{ color: "#6B7A6F" }}
-          >
+          <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
             보완할 점
           </p>
           <ul className="space-y-2.5">
@@ -106,10 +103,7 @@ export function ExecutionReflectionSection({
           <p className="text-xs mb-2" style={{ color: "#6B7A6F" }}>
             실행 종합 피드백
           </p>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: "#4E4B46" }}
-          >
+          <p className="text-sm leading-relaxed" style={{ color: "#4E4B46" }}>
             {aiFeedbackSummary}
           </p>
         </div>

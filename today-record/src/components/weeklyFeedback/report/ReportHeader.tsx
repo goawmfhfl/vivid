@@ -72,10 +72,7 @@ export function ReportHeader({
               >
                 AI 트렌드 요약
               </p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ opacity: 0.95 }}
-              >
+              <p className="text-sm leading-relaxed" style={{ opacity: 0.95 }}>
                 {narrative}
               </p>
             </div>

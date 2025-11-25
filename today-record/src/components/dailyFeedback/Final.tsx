@@ -37,7 +37,7 @@ export function FinalSection({ view }: SectionProps) {
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 마무리</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 마무리</h2>
       </div>
       <Card
         ref={countRef}
@@ -50,8 +50,8 @@ export function FinalSection({ view }: SectionProps) {
       >
         <div className="mb-3">
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               opacity: 0.9,
               marginBottom: "0.5rem",
             }}
@@ -60,8 +60,8 @@ export function FinalSection({ view }: SectionProps) {
           </p>
           <div className="flex items-center gap-6">
             <p
+              className="text-4xl font-semibold"
               style={{
-                fontSize: "2.5rem",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
               }}
@@ -86,7 +86,7 @@ export function FinalSection({ view }: SectionProps) {
             </div>
           </div>
         </div>
-        <p style={{ fontSize: "0.9rem", lineHeight: "1.6", opacity: 0.95 }}>
+        <p className="text-sm" style={{ lineHeight: "1.6", opacity: 0.95 }}>
           {view.integrity_reason}
         </p>
       </Card>
@@ -96,11 +96,12 @@ export function FinalSection({ view }: SectionProps) {
       >
         <div className="flex items-start gap-3 mb-4">
           <Sparkles
-            className="w-6 h-6 flex-shrink-0"
+            className="w-5 h-5 flex-shrink-0"
             style={{ color: "#A8BBA8" }}
           />
           <p
-            style={{ color: "#333333", fontSize: "1.15rem", lineHeight: "1.8" }}
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.8" }}
           >
             {view.ai_message}
           </p>
@@ -112,8 +113,8 @@ export function FinalSection({ view }: SectionProps) {
           style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -121,7 +122,8 @@ export function FinalSection({ view }: SectionProps) {
             성장 포인트
           </p>
           <p
-            style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.7" }}
           >
             {view.growth_point}
           </p>
@@ -131,8 +133,8 @@ export function FinalSection({ view }: SectionProps) {
           style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.85rem",
               color: "#6B7A6F",
               marginBottom: "0.75rem",
             }}
@@ -140,7 +142,8 @@ export function FinalSection({ view }: SectionProps) {
             조정 포인트
           </p>
           <p
-            style={{ color: "#333333", lineHeight: "1.7", fontSize: "0.95rem" }}
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.7" }}
           >
             {view.adjustment_point}
           </p>
@@ -153,8 +156,8 @@ export function FinalSection({ view }: SectionProps) {
         <div className="flex items-center justify-between">
           <div>
             <p
+              className="text-xs"
               style={{
-                fontSize: "0.85rem",
                 opacity: 0.9,
                 marginBottom: "0.5rem",
               }}
@@ -174,14 +177,14 @@ export function FinalSection({ view }: SectionProps) {
                     >
                       {idx + 1}
                     </span>
-                    <span style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
+                    <span className="text-sm" style={{ lineHeight: "1.6" }}>
                       {item}
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p style={{ fontSize: "1.05rem", lineHeight: "1.6" }}>
+              <p className="text-sm" style={{ lineHeight: "1.6" }}>
                 {view.tomorrow_focus}
               </p>
             )}

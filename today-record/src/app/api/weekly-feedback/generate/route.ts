@@ -4,6 +4,9 @@ import { fetchDailyFeedbacksByRange, saveWeeklyFeedback } from "../db-service";
 import { generateWeeklyFeedbackFromDaily } from "../ai-service";
 import type { WeeklyFeedbackGenerateRequest } from "../types";
 
+// Next.js API Route 타임아웃 설정 (최대 3분)
+export const maxDuration = 180;
+
 /**
  * POST 핸들러: 주간 피드백 생성
  *

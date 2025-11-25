@@ -16,7 +16,7 @@ function getOpenAIClient(): OpenAI {
   }
   return new OpenAI({
     apiKey,
-    timeout: 60000, // 60초 타임아웃 (gpt-4o-mini는 더 빠르므로)
+    timeout: 180000, // 180초(3분) 타임아웃 - 주간 피드백 생성은 더 많은 데이터를 처리하므로 시간이 더 필요
     maxRetries: 1, // 재시도 최소화
   });
 }
@@ -46,7 +46,8 @@ export async function generateWeeklyFeedbackFromDaily(
   );
   const openai = getOpenAIClient();
 
-  const model = "gpt-5.1";
+  // 주간 피드백은 더 복잡한 분석이 필요하므로 gpt-5.1 사용
+  const model = process.env.OPENAI_MODEL || "gpt-5.1";
 
   try {
     const completion = await openai.chat.completions.create({
@@ -74,12 +75,17 @@ export async function generateWeeklyFeedbackFromDaily(
     const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
     return parsed.weekly_feedback;
   } catch (error: any) {
+    // 모델이 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
-      model === "gpt-5.1" &&
-      (error?.message?.includes("model") ||
-        error?.code === "model_not_found" ||
-        error?.status === 404)
+      error?.message?.includes("model") ||
+      error?.code === "model_not_found" ||
+      error?.status === 404 ||
+      error?.message?.includes("timeout")
     ) {
+      console.warn(
+        `모델 ${model} 사용 불가능. gpt-5.1로 fallback합니다.`,
+        error.message
+      );
       const completion = await openai.chat.completions.create({
         model: "gpt-5.1",
         messages: [

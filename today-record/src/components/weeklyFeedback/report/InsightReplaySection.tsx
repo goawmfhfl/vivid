@@ -19,7 +19,10 @@ export function InsightReplaySection({
         >
           <Star className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           이번 주의 인사이트
         </h2>
       </div>
@@ -35,10 +38,7 @@ export function InsightReplaySection({
               border: "1px solid #EFE9E3",
             }}
           >
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: "#333333" }}
-            >
+            <p className="text-sm leading-relaxed" style={{ color: "#333333" }}>
               {insight}
             </p>
           </Card>
@@ -53,10 +53,7 @@ export function InsightReplaySection({
           border: "2px solid #D08C60",
         }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#D08C60" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#D08C60" }}>
           이번 주 떠오른 질문들
         </p>
         <div className="space-y-2">

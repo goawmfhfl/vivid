@@ -21,7 +21,10 @@ export function ClosingSection({
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           이번 주의 결론
         </h2>
       </div>
@@ -45,16 +48,10 @@ export function ClosingSection({
         className="p-5 sm:p-6 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#6B7A6F" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           다음 주 방향
         </p>
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: "#333333" }}
-        >
+        <p className="text-sm leading-relaxed" style={{ color: "#333333" }}>
           {nextWeekObjective}
         </p>
       </Card>
@@ -64,10 +61,7 @@ export function ClosingSection({
         className="p-5 sm:p-6"
         style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#6B7A6F" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           다음 주 실행 계획
         </p>
         <ul className="space-y-2.5">

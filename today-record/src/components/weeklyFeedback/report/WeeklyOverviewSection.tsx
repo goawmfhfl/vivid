@@ -1,8 +1,8 @@
 "use client";
 
 import { Lightbulb, Sparkles } from "lucide-react";
-import { Badge } from "../../ui/badge";
 import { Card } from "../../ui/card";
+import { ScrollingKeywords } from "../../ui/ScrollingKeywords";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { WeeklyReportData } from "./types";
 
@@ -70,39 +70,40 @@ export function WeeklyOverviewSection({
         >
           <Lightbulb className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           이번 주 요약
         </h2>
       </div>
 
       {/* Top Keywords */}
-      <div className="mb-4">
-        <div className="flex flex-wrap gap-2">
-          {weeklyOverview.top_keywords.slice(0, 10).map((keyword, index) => (
-            <Badge
-              key={index}
-              className="text-sm px-3 py-2"
-              style={{
+      {weeklyOverview.top_keywords &&
+        weeklyOverview.top_keywords.length > 0 && (
+          <div className="mb-4 -mx-4 px-4">
+            <ScrollingKeywords
+              keywords={weeklyOverview.top_keywords}
+              duration={15}
+              gap="0.5rem"
+              badgeStyle={{
                 backgroundColor: "#E8EFE8",
                 color: "#6B7A6F",
+                fontSize: "0.875rem",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "9999px",
                 border: "none",
               }}
-            >
-              {keyword}
-            </Badge>
-          ))}
-        </div>
-      </div>
+            />
+          </div>
+        )}
 
       {/* Repeated Themes */}
       <Card
         className="p-4 sm:p-5 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#6B7A6F" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           반복되는 주제들
         </p>
         <div className="space-y-3">
@@ -125,10 +126,7 @@ export function WeeklyOverviewSection({
           <p className="text-xs mb-2" style={{ color: "#6B7A6F" }}>
             AI 총평
           </p>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: "#4E4B46" }}
-          >
+          <p className="text-sm leading-relaxed" style={{ color: "#4E4B46" }}>
             {weeklyOverview.ai_overall_comment}
           </p>
         </div>

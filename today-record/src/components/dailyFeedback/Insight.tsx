@@ -12,29 +12,29 @@ export function InsightSection({ view }: SectionProps) {
         >
           <Star className="w-4 h-4 text-white" />
         </div>
-        <h2 style={{ color: "#333333", fontSize: "1.3rem" }}>오늘의 깨달음</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 깨달음</h2>
       </div>
       <Card
         className="p-6 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <p
+          className="text-xs"
           style={{
-            fontSize: "0.8rem",
             color: "#6B7A6F",
             marginBottom: "0.75rem",
           }}
         >
           핵심 인사이트
         </p>
-        <p style={{ color: "#333333", fontSize: "1.15rem", lineHeight: "1.7" }}>
+        <p className="text-sm" style={{ color: "#333333", lineHeight: "1.7" }}>
           {view.core_insight}
         </p>
         {view.learning_source && (
           <p
+            className="text-xs"
             style={{
               color: "#6B7A6F",
-              fontSize: "0.85rem",
               marginTop: "0.75rem",
             }}
           >
@@ -48,15 +48,15 @@ export function InsightSection({ view }: SectionProps) {
           style={{ backgroundColor: "#FAFAF8", border: "1px solid #E6E4DE" }}
         >
           <p
+            className="text-xs"
             style={{
-              fontSize: "0.8rem",
               color: "#6B7A6F",
               marginBottom: "0.5rem",
             }}
           >
             내일의 질문
           </p>
-          <p style={{ color: "#4E4B46", fontSize: "1rem", lineHeight: "1.6" }}>
+          <p className="text-sm" style={{ color: "#4E4B46", lineHeight: "1.6" }}>
             {view.meta_question}
           </p>
         </Card>
@@ -74,7 +74,8 @@ export function InsightSection({ view }: SectionProps) {
             style={{ color: "#A8BBA8" }}
           />
           <p
-            style={{ color: "#4E4B46", lineHeight: "1.7", fontSize: "0.9rem" }}
+            className="text-sm"
+            style={{ color: "#4E4B46", lineHeight: "1.7" }}
           >
             {view.insight_ai_comment}
           </p>
