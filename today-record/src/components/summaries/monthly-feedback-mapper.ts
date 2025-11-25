@@ -21,8 +21,13 @@ export function formatMonthlyDateRange(
   });
 
   // 같은 달이면 "11월 1일 - 30일" 형식
-  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-    return `${start.toLocaleDateString("ko-KR", { month: "long" })} ${start.getDate()}일 - ${end.getDate()}일`;
+  if (
+    start.getMonth() === end.getMonth() &&
+    start.getFullYear() === end.getFullYear()
+  ) {
+    return `${start.toLocaleDateString("ko-KR", {
+      month: "long",
+    })} ${start.getDate()}일 - ${end.getDate()}일`;
   }
 
   return `${startFormatted} - ${endFormatted}`;
@@ -73,9 +78,6 @@ export function createPeriodSummaryFromMonthlyFeedback(
 export function convertMonthlyFeedbackToPeriodSummary(
   item: MonthlyFeedbackListItem
 ): PeriodSummary {
-  const startDate = new Date(item.date_range.start_date);
-  const endDate = new Date(item.date_range.end_date);
-
   // month에서 year와 monthNumber 추출 ("YYYY-MM" 형식)
   const [year, monthNum] = item.month.split("-").map(Number);
   const monthNumber = monthNum;
@@ -94,4 +96,3 @@ export function convertMonthlyFeedbackToPeriodSummary(
     period,
   });
 }
-

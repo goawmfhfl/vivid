@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
-import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
 import { useCountUp } from "@/hooks/useCountUp";
 

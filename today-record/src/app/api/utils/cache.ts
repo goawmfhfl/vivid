@@ -7,7 +7,7 @@ interface CacheEntry<T> {
 }
 
 // 캐시 저장소 (메모리 기반)
-const cacheStore = new Map<string, CacheEntry<any>>();
+const cacheStore = new Map<string, CacheEntry<unknown>>();
 // Daily/Weekly 피드백은 한 번 생성되면 변경되지 않으므로 캐시를 더 길게 설정
 // 7일 (일주일)로 설정하여 메모리 효율성과 성능을 균형있게 유지
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7일 (밀리초)

@@ -89,11 +89,12 @@ export async function categorizeRecords(
     setCache(cacheKey, result);
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; code?: string; status?: number };
     if (
-      error?.message?.includes("model") ||
-      error?.code === "model_not_found" ||
-      error?.status === 404
+      err?.message?.includes("model") ||
+      err?.code === "model_not_found" ||
+      err?.status === 404
     ) {
       // Fallback 시에도 동일한 캐시 키 사용
       const promptCacheKey = generatePromptCacheKey(
@@ -195,12 +196,13 @@ export async function generateDailyReport(
     setCache(cacheKey, result);
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // gpt-5가 사용 불가능한 경우 gpt-4o-mini로 fallback
+    const err = error as { message?: string; code?: string; status?: number };
     if (
-      error?.message?.includes("model") ||
-      error?.code === "model_not_found" ||
-      error?.status === 404
+      err?.message?.includes("model") ||
+      err?.code === "model_not_found" ||
+      err?.status === 404
     ) {
       // Fallback 시에도 동일한 캐시 키 사용
       const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT);

@@ -35,11 +35,7 @@ function getMonthDateRange(month: string): {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      userId,
-      month,
-      timezone = "Asia/Seoul",
-    }: MonthlyFeedbackGenerateRequest = body;
+    const { userId, month }: MonthlyFeedbackGenerateRequest = body;
 
     // 요청 검증
     if (!userId || !month) {

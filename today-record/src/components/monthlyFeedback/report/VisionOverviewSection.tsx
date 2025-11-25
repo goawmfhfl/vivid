@@ -144,10 +144,11 @@ export function VisionOverviewSection({
                     fontWeight: 500,
                     marginBottom: "4px",
                   }}
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value}회`,
-                    props.payload.fullName,
-                  ]}
+                  formatter={(
+                    value: number,
+                    _name: string,
+                    props: { payload?: { fullName?: string } }
+                  ) => [`${value}회`, props.payload?.fullName || ""]}
                   labelFormatter={() => ""}
                 />
                 <Bar

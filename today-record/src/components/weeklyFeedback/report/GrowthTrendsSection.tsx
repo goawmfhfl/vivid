@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
 import {
@@ -159,10 +158,7 @@ export function GrowthTrendsSection({
                     fontWeight: 500,
                     marginBottom: "4px",
                   }}
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value}점`,
-                    "정합도",
-                  ]}
+                  formatter={(value: number) => [`${value}점`, "정합도"]}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
                       const weekday = payload[0].payload.weekday;

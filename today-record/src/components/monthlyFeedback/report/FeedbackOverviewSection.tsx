@@ -37,6 +37,56 @@ const HABIT_COLORS = {
   self_care: "#6B7A6F",
 };
 
+type HabitScoreItemProps = {
+  habitKey: keyof typeof HABIT_ICONS;
+  value: number;
+  delay: number;
+};
+
+function HabitScoreItem({ habitKey, value, delay }: HabitScoreItemProps) {
+  const Icon = HABIT_ICONS[habitKey];
+  const [displayValue, valueRef] = useCountUp({
+    targetValue: value,
+    duration: 1000,
+    delay,
+    triggerOnVisible: true,
+  });
+
+  return (
+    <div ref={valueRef}>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-4 h-4" style={{ color: HABIT_COLORS[habitKey] }} />
+        <p className="text-xs" style={{ color: "#6B7A6F" }}>
+          {HABIT_LABELS[habitKey]}
+        </p>
+      </div>
+      <div className="flex items-baseline gap-1 mb-2">
+        <span
+          className="text-xl font-bold"
+          style={{ color: HABIT_COLORS[habitKey] }}
+        >
+          {displayValue}
+        </span>
+        <span className="text-sm" style={{ color: "#6B7A6F" }}>
+          / 10
+        </span>
+      </div>
+      <div
+        className="h-1.5 rounded-full"
+        style={{ backgroundColor: "#F0F5F0" }}
+      >
+        <div
+          className="h-1.5 rounded-full transition-all duration-1000 ease-out"
+          style={{
+            backgroundColor: HABIT_COLORS[habitKey],
+            width: `${(displayValue / 10) * 100}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function FeedbackOverviewSection({
   feedback_overview,
 }: FeedbackOverviewSectionProps) {
@@ -115,52 +165,14 @@ export function FeedbackOverviewSection({
           습관 점수
         </p>
         <div className="grid grid-cols-2 gap-4">
-          {habitScores.map((habit) => {
-            const Icon = HABIT_ICONS[habit.key];
-            const [displayValue, valueRef] = useCountUp({
-              targetValue: habit.value,
-              duration: 1000,
-              delay: habit.delay,
-              triggerOnVisible: true,
-            });
-
-            return (
-              <div key={habit.key} ref={valueRef}>
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon
-                    className="w-4 h-4"
-                    style={{ color: HABIT_COLORS[habit.key] }}
-                  />
-                  <p className="text-xs" style={{ color: "#6B7A6F" }}>
-                    {HABIT_LABELS[habit.key]}
-                  </p>
-                </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span
-                    className="text-xl font-bold"
-                    style={{ color: HABIT_COLORS[habit.key] }}
-                  >
-                    {displayValue}
-                  </span>
-                  <span className="text-sm" style={{ color: "#6B7A6F" }}>
-                    / 10
-                  </span>
-                </div>
-                <div
-                  className="h-1.5 rounded-full"
-                  style={{ backgroundColor: "#F0F5F0" }}
-                >
-                  <div
-                    className="h-1.5 rounded-full transition-all duration-1000 ease-out"
-                    style={{
-                      backgroundColor: HABIT_COLORS[habit.key],
-                      width: `${(displayValue / 10) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          {habitScores.map((habit) => (
+            <HabitScoreItem
+              key={habit.key}
+              habitKey={habit.key}
+              value={habit.value}
+              delay={habit.delay}
+            />
+          ))}
         </div>
       </Card>
 

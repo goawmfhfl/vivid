@@ -6,7 +6,7 @@ import type { DailyFeedbackForWeekly } from "./types";
 export function buildWeeklyFeedbackPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
   weekRange: { start: string; end: string; timezone: string },
-  emotionOverviewData?: {
+  _emotionOverviewData?: {
     daily_emotions: Array<{
       date: string;
       weekday: string;

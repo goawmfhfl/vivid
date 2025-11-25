@@ -1,22 +1,8 @@
 "use client";
 
-import {
-  Heart,
-  TrendingUp,
-  AlertTriangle,
-  Zap,
-  Cloud,
-  Sparkles,
-} from "lucide-react";
+import { Heart, TrendingUp, AlertTriangle, Zap, Sparkles } from "lucide-react";
 import { Card } from "../../ui/card";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
 
@@ -94,10 +80,7 @@ export function EmotionOverviewSection({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number, name: string, props: any) => [
-                  `${value.toFixed(1)}%`,
-                  props.payload.name,
-                ]}
+                formatter={(value: number) => [`${value.toFixed(1)}%`, ""]}
               />
             </PieChart>
           </ResponsiveContainer>

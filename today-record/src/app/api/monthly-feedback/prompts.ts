@@ -76,7 +76,11 @@ export function buildMonthlyFeedbackPrompt(
 
       // narrative_overview
       if (feedback.narrative_overview) {
-        const narrative = feedback.narrative_overview as any;
+        const narrative = feedback.narrative_overview as {
+          narrative_summary?: string;
+          narrative?: string;
+          keywords?: string[];
+        };
         if (narrative.narrative_summary) {
           prompt += `요약: ${narrative.narrative_summary}\n`;
         }
@@ -90,11 +94,22 @@ export function buildMonthlyFeedbackPrompt(
 
       // emotion_overview
       if (feedback.emotion_overview) {
-        const emotion = feedback.emotion_overview as any;
-        if (emotion.ai_mood_valence !== null) {
+        const emotion = feedback.emotion_overview as {
+          ai_mood_valence?: number | null;
+          ai_mood_arousal?: number | null;
+          emotion_quadrant?: string;
+          dominant_emotion?: string;
+        };
+        if (
+          emotion.ai_mood_valence !== null &&
+          emotion.ai_mood_valence !== undefined
+        ) {
           prompt += `감정 쾌-불쾌: ${emotion.ai_mood_valence}\n`;
         }
-        if (emotion.ai_mood_arousal !== null) {
+        if (
+          emotion.ai_mood_arousal !== null &&
+          emotion.ai_mood_arousal !== undefined
+        ) {
           prompt += `감정 각성-에너지: ${emotion.ai_mood_arousal}\n`;
         }
         if (emotion.emotion_quadrant) {
@@ -107,7 +122,10 @@ export function buildMonthlyFeedbackPrompt(
 
       // insight_overview
       if (feedback.insight_overview) {
-        const insight = feedback.insight_overview as any;
+        const insight = feedback.insight_overview as {
+          core_insight?: string;
+          meta_question?: string;
+        };
         if (insight.core_insight) {
           prompt += `핵심 인사이트: ${insight.core_insight}\n`;
         }
@@ -118,7 +136,11 @@ export function buildMonthlyFeedbackPrompt(
 
       // vision_overview
       if (feedback.vision_overview) {
-        const vision = feedback.vision_overview as any;
+        const vision = feedback.vision_overview as {
+          vision_summary?: string;
+          vision_keywords?: string[];
+          reminder_sentence?: string;
+        };
         if (vision.vision_summary) {
           prompt += `시각화 요약: ${vision.vision_summary.substring(
             0,
@@ -135,7 +157,11 @@ export function buildMonthlyFeedbackPrompt(
 
       // feedback_overview
       if (feedback.feedback_overview) {
-        const feedbackData = feedback.feedback_overview as any;
+        const feedbackData = feedback.feedback_overview as {
+          core_feedback?: string;
+          positives?: string[];
+          improvements?: string[];
+        };
         if (feedbackData.core_feedback) {
           prompt += `핵심 피드백: ${feedbackData.core_feedback}\n`;
         }
@@ -149,7 +175,10 @@ export function buildMonthlyFeedbackPrompt(
 
       // meta_overview
       if (feedback.meta_overview) {
-        const meta = feedback.meta_overview as any;
+        const meta = feedback.meta_overview as {
+          growth_point?: string;
+          adjustment_point?: string;
+        };
         if (meta.growth_point) {
           prompt += `성장 포인트: ${meta.growth_point}\n`;
         }

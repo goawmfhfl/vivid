@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { Calendar } from "lucide-react";
 import { Card } from "../../../ui/card";
 import type { DailyEmotion } from "../../../../types/weekly-feedback";

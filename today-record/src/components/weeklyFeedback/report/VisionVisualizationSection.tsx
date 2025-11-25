@@ -101,11 +101,12 @@ export function VisionVisualizationSection({
                 itemStyle={{
                   color: "#010201",
                 }}
-                formatter={(value: number, name: string, props: any) => [
-                  `${value}회`,
-                  props.payload.keyword,
-                ]}
-                labelFormatter={(label) => ""}
+                formatter={(
+                  value: number,
+                  _name: string,
+                  props: { payload?: { keyword?: string } }
+                ) => [`${value}회`, props.payload?.keyword || ""]}
+                labelFormatter={() => ""}
               />
               <Bar
                 dataKey="count"

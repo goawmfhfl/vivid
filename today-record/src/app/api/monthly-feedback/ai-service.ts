@@ -104,19 +104,20 @@ export async function generateMonthlyFeedbackFromDaily(
     setCache(cacheKey, result);
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // gpt-5가 사용 불가능한 경우 gpt-4o-mini로 fallback
+    const err = error as {
+      message?: string;
+      code?: string;
+      status?: number;
+    };
     if (
       model === "gpt-5" &&
-      (error?.message?.includes("model") ||
-        error?.code === "model_not_found" ||
-        error?.status === 404 ||
-        error?.message?.includes("timeout"))
+      (err?.message?.includes("model") ||
+        err?.code === "model_not_found" ||
+        err?.status === 404 ||
+        err?.message?.includes("timeout"))
     ) {
-      console.warn(
-        `gpt-5 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다.`,
-        error.message
-      );
       // Fallback 시에도 동일한 캐시 키 사용
       const promptCacheKey = generatePromptCacheKey(SYSTEM_PROMPT_MONTHLY);
 

@@ -9,22 +9,6 @@ function formatDateForDisplay(date: string): string {
 }
 
 /**
- * 요일 변환 (Mon -> 월요일)
- */
-function convertWeekdayToKorean(weekday: string): string {
-  const weekdayMap: Record<string, string> = {
-    Mon: "월요일",
-    Tue: "화요일",
-    Wed: "수요일",
-    Thu: "목요일",
-    Fri: "금요일",
-    Sat: "토요일",
-    Sun: "일요일",
-  };
-  return weekdayMap[weekday] || weekday;
-}
-
-/**
  * MonthlyFeedback을 MonthlyReportData로 변환
  */
 export function mapMonthlyFeedbackToReportData(

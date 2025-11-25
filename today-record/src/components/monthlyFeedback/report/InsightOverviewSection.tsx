@@ -169,7 +169,7 @@ export function InsightOverviewSection({
                 className="text-sm italic leading-relaxed"
                 style={{ color: "#4E4B46", lineHeight: "1.7" }}
               >
-                "{insight_overview.meta_question_for_month}"
+                &ldquo;{insight_overview.meta_question_for_month}&rdquo;
               </p>
             </div>
           </div>

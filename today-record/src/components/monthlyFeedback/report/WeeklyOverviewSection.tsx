@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, TrendingUp } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
@@ -92,7 +92,10 @@ function WeeklyItem({
 
       {week.weekly_comment && (
         <div className="mt-3 pt-3 border-t" style={{ borderColor: "#EFE9E3" }}>
-          <p className="text-xs leading-relaxed" style={{ color: "#4E4B46", lineHeight: "1.6" }}>
+          <p
+            className="text-xs leading-relaxed"
+            style={{ color: "#4E4B46", lineHeight: "1.6" }}
+          >
             {week.weekly_comment}
           </p>
         </div>
@@ -117,7 +120,10 @@ export function WeeklyOverviewSection({
         >
           <Calendar className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           주차별 요약
         </h2>
       </div>
@@ -130,4 +136,3 @@ export function WeeklyOverviewSection({
     </div>
   );
 }
-
