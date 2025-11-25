@@ -40,6 +40,12 @@ export type WeeklyEmotionOverview = {
   arousal_explanation: string;
   valence_patterns: string[];
   arousal_patterns: string[];
+  valence_triggers: string[];
+  arousal_triggers: string[];
+  anxious_triggers: string[];
+  engaged_triggers: string[];
+  sad_triggers: string[];
+  calm_triggers: string[];
   daily_emotions: DailyEmotion[];
 };
 

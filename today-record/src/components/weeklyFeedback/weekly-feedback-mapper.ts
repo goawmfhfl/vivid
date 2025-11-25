@@ -76,6 +76,12 @@ export function mapWeeklyFeedbackToReportData(
             feedback.emotion_overview.arousal_explanation || "",
           valence_patterns: feedback.emotion_overview.valence_patterns || [],
           arousal_patterns: feedback.emotion_overview.arousal_patterns || [],
+          valence_triggers: feedback.emotion_overview.valence_triggers || [],
+          arousal_triggers: feedback.emotion_overview.arousal_triggers || [],
+          anxious_triggers: feedback.emotion_overview.anxious_triggers || [],
+          engaged_triggers: feedback.emotion_overview.engaged_triggers || [],
+          sad_triggers: feedback.emotion_overview.sad_triggers || [],
+          calm_triggers: feedback.emotion_overview.calm_triggers || [],
           daily_emotions: (feedback.emotion_overview.daily_emotions || []).map(
             (day) => ({
               date: formatDateForDisplay(day.date),

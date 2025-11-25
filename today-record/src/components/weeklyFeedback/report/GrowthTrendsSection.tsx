@@ -54,7 +54,7 @@ export function GrowthTrendsSection({
         >
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           성장 트렌드
         </h2>
       </div>
@@ -65,7 +65,7 @@ export function GrowthTrendsSection({
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
         <p
-          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          className="text-xs mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
           주간 정합도 점수 요약
@@ -75,7 +75,7 @@ export function GrowthTrendsSection({
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               평균
             </p>
-            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+            <p className="text-base font-semibold" style={{ color: "#333333" }}>
               {displayAverage.toFixed(1)}
             </p>
           </div>
@@ -83,7 +83,7 @@ export function GrowthTrendsSection({
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               최소
             </p>
-            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+            <p className="text-base font-semibold" style={{ color: "#333333" }}>
               {displayMin.toFixed(1)}
             </p>
           </div>
@@ -91,7 +91,7 @@ export function GrowthTrendsSection({
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               최대
             </p>
-            <p className="text-base sm:text-lg" style={{ color: "#333333" }}>
+            <p className="text-base font-semibold" style={{ color: "#333333" }}>
               {displayMax.toFixed(1)}
             </p>
           </div>
@@ -110,11 +110,11 @@ export function GrowthTrendsSection({
         >
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="w-4 h-4" style={{ color: "#A8BBA8" }} />
-            <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
               이번 주 성장 포인트
             </p>
           </div>
-          <ul className="space-y-2 sm:space-y-2.5">
+          <ul className="space-y-2.5">
             {growthPoints.map((point, index) => (
               <li key={index} className="flex items-start gap-2">
                 <div
@@ -122,7 +122,7 @@ export function GrowthTrendsSection({
                   style={{ backgroundColor: "#A8BBA8" }}
                 />
                 <p
-                  className="text-sm sm:text-base leading-relaxed"
+                  className="text-sm leading-relaxed"
                   style={{ color: "#333333" }}
                 >
                   {point}
@@ -142,11 +142,11 @@ export function GrowthTrendsSection({
         >
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className="w-4 h-4" style={{ color: "#D08C60" }} />
-            <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
               개선 포인트
             </p>
           </div>
-          <ul className="space-y-2 sm:space-y-2.5">
+          <ul className="space-y-2.5">
             {adjustmentPoints.map((point, index) => (
               <li key={index} className="flex items-start gap-2">
                 <div
@@ -154,7 +154,7 @@ export function GrowthTrendsSection({
                   style={{ backgroundColor: "#D08C60" }}
                 />
                 <p
-                  className="text-sm sm:text-base leading-relaxed"
+                  className="text-sm leading-relaxed"
                   style={{ color: "#333333" }}
                 >
                   {point}

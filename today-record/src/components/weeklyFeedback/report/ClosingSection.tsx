@@ -21,7 +21,7 @@ export function ClosingSection({
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           이번 주의 결론
         </h2>
       </div>
@@ -35,7 +35,7 @@ export function ClosingSection({
           border: "none",
         }}
       >
-        <p className="text-lg sm:text-xl leading-relaxed text-center">
+        <p className="text-base sm:text-lg leading-relaxed text-center">
           &ldquo;{weeklyOneLiner}&rdquo;
         </p>
       </Card>
@@ -46,13 +46,13 @@ export function ClosingSection({
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
         <p
-          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          className="text-xs mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
           다음 주 방향
         </p>
         <p
-          className="text-base sm:text-lg leading-relaxed"
+          className="text-sm leading-relaxed"
           style={{ color: "#333333" }}
         >
           {nextWeekObjective}
@@ -65,14 +65,14 @@ export function ClosingSection({
         style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
       >
         <p
-          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          className="text-xs mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
           다음 주 실행 계획
         </p>
-        <ul className="space-y-2.5 sm:space-y-3">
+        <ul className="space-y-2.5">
           {callToAction.map((action, index) => (
-            <li key={index} className="flex items-start gap-2.5 sm:gap-3">
+            <li key={index} className="flex items-start gap-2.5">
               <div
                 className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
                 style={{ borderColor: "#A8BBA8", backgroundColor: "white" }}
@@ -83,7 +83,7 @@ export function ClosingSection({
                 />
               </div>
               <p
-                className="text-sm sm:text-base leading-relaxed"
+                className="text-sm leading-relaxed"
                 style={{ color: "#333333" }}
               >
                 {action}

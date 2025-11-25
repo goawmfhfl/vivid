@@ -32,7 +32,7 @@ export function VisionVisualizationSection({
         >
           <Target className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           비전과 일치도
         </h2>
       </div>
@@ -43,7 +43,7 @@ export function VisionVisualizationSection({
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
         <p
-          className="text-sm sm:text-base leading-relaxed"
+          className="text-sm leading-relaxed"
           style={{ color: "#333333" }}
         >
           {visionSummary}
@@ -56,7 +56,7 @@ export function VisionVisualizationSection({
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
         <p
-          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          className="text-xs mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
           비전 키워드 빈도
@@ -101,7 +101,7 @@ export function VisionVisualizationSection({
           style={{ color: "#A3BFD9", opacity: 0.7 }}
         />
         <p
-          className="text-xs sm:text-sm leading-relaxed"
+          className="text-sm leading-relaxed"
           style={{ color: "#010201" }}
         >
           {alignmentComment}
@@ -119,7 +119,7 @@ export function VisionVisualizationSection({
               border: "none",
             }}
           >
-            <p className="text-sm sm:text-base leading-relaxed">{sentence}</p>
+            <p className="text-sm leading-relaxed">{sentence}</p>
           </Card>
         ))}
       </div>

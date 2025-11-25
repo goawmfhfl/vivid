@@ -34,10 +34,10 @@ function ThemeItem({
   return (
     <div ref={countRef}>
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-sm sm:text-base" style={{ color: "#333333" }}>
+        <p className="text-sm" style={{ color: "#333333" }}>
           {theme.theme}
         </p>
-        <p className="text-xs sm:text-sm" style={{ color: "#6B7A6F" }}>
+        <p className="text-xs" style={{ color: "#6B7A6F" }}>
           {displayCount}회
         </p>
       </div>
@@ -70,7 +70,7 @@ export function WeeklyOverviewSection({
         >
           <Lightbulb className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           이번 주 요약
         </h2>
       </div>
@@ -81,7 +81,7 @@ export function WeeklyOverviewSection({
           {weeklyOverview.top_keywords.slice(0, 10).map((keyword, index) => (
             <Badge
               key={index}
-              className="text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2.5"
+              className="text-sm px-3 py-2"
               style={{
                 backgroundColor: "#E8EFE8",
                 color: "#6B7A6F",
@@ -100,7 +100,7 @@ export function WeeklyOverviewSection({
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
         <p
-          className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+          className="text-xs mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
           반복되는 주제들
@@ -118,15 +118,15 @@ export function WeeklyOverviewSection({
         style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
       >
         <Sparkles
-          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5"
+          className="w-4 h-4 flex-shrink-0 mt-0.5"
           style={{ color: "#A8BBA8" }}
         />
         <div className="flex-1 min-w-0">
-          <p className="text-xs mb-1.5 sm:mb-2" style={{ color: "#6B7A6F" }}>
+          <p className="text-xs mb-2" style={{ color: "#6B7A6F" }}>
             AI 총평
           </p>
           <p
-            className="text-sm sm:text-base leading-relaxed"
+            className="text-sm leading-relaxed"
             style={{ color: "#4E4B46" }}
           >
             {weeklyOverview.ai_overall_comment}

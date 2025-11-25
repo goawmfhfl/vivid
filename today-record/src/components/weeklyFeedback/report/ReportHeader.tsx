@@ -28,7 +28,7 @@ export function ReportHeader({
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <CalendarDays className="w-5 h-5" style={{ opacity: 0.9 }} />
-            <p className="text-sm" style={{ opacity: 0.9 }}>
+            <p className="text-xs" style={{ opacity: 0.9 }}>
               주간 리포트
             </p>
           </div>
@@ -73,7 +73,7 @@ export function ReportHeader({
                 AI 트렌드 요약
               </p>
               <p
-                className="text-base sm:text-lg leading-relaxed"
+                className="text-sm leading-relaxed"
                 style={{ opacity: 0.95 }}
               >
                 {narrative}
@@ -99,7 +99,7 @@ export function ReportHeader({
               >
                 다음 주 집중 포인트
               </p>
-              <p className="text-base sm:text-lg font-medium leading-relaxed">
+              <p className="text-sm font-medium leading-relaxed">
                 {nextWeekFocus}
               </p>
             </div>

@@ -21,7 +21,7 @@ export function ExecutionReflectionSection({
         >
           <BarChart3 className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl" style={{ color: "#333333" }}>
+        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
           실행 패턴 회고
         </h2>
       </div>
@@ -37,12 +37,12 @@ export function ExecutionReflectionSection({
           }}
         >
           <p
-            className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+            className="text-xs mb-2.5 sm:mb-3"
             style={{ color: "#6B7A6F" }}
           >
             이번 주 잘한 점
           </p>
-          <ul className="space-y-2 sm:space-y-2.5">
+          <ul className="space-y-2.5">
             {positives.map((positive, index) => (
               <li key={index} className="flex items-start gap-2">
                 <CheckCircle2
@@ -50,7 +50,7 @@ export function ExecutionReflectionSection({
                   style={{ color: "#A8BBA8" }}
                 />
                 <p
-                  className="text-sm sm:text-base leading-relaxed"
+                  className="text-sm leading-relaxed"
                   style={{ color: "#333333" }}
                 >
                   {positive}
@@ -69,12 +69,12 @@ export function ExecutionReflectionSection({
           }}
         >
           <p
-            className="text-xs sm:text-sm mb-2.5 sm:mb-3"
+            className="text-xs mb-2.5 sm:mb-3"
             style={{ color: "#6B7A6F" }}
           >
             보완할 점
           </p>
-          <ul className="space-y-2 sm:space-y-2.5">
+          <ul className="space-y-2.5">
             {improvements.map((improvement, index) => (
               <li key={index} className="flex items-start gap-2">
                 <AlertCircle
@@ -82,7 +82,7 @@ export function ExecutionReflectionSection({
                   style={{ color: "#D08C60" }}
                 />
                 <p
-                  className="text-sm sm:text-base leading-relaxed"
+                  className="text-sm leading-relaxed"
                   style={{ color: "#333333" }}
                 >
                   {improvement}
@@ -99,15 +99,15 @@ export function ExecutionReflectionSection({
         style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
       >
         <Sparkles
-          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5"
+          className="w-4 h-4 flex-shrink-0 mt-0.5"
           style={{ color: "#6B7A6F" }}
         />
         <div className="flex-1 min-w-0">
-          <p className="text-xs mb-1.5 sm:mb-2" style={{ color: "#6B7A6F" }}>
+          <p className="text-xs mb-2" style={{ color: "#6B7A6F" }}>
             실행 종합 피드백
           </p>
           <p
-            className="text-sm sm:text-base leading-relaxed"
+            className="text-sm leading-relaxed"
             style={{ color: "#4E4B46" }}
           >
             {aiFeedbackSummary}

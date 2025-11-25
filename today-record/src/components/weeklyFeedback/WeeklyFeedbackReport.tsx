@@ -4,7 +4,7 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
-import { WeeklyEmotionSection } from "./report/WeeklyEmotionSection";
+import { EmotionSection } from "./report/emotionSection/index";
 import { WeeklyOverviewSection } from "./report/WeeklyOverviewSection";
 import { GrowthTrendsSection } from "./report/GrowthTrendsSection";
 import { InsightReplaySection } from "./report/InsightReplaySection";
@@ -56,7 +56,7 @@ export function WeeklyFeedbackReport({
 
         <ScrollAnimation delay={200}>
           <div className="mb-64">
-            <WeeklyEmotionSection emotionOverview={data.emotion_overview} />
+            <EmotionSection emotionOverview={data.emotion_overview} />
           </div>
         </ScrollAnimation>
 
