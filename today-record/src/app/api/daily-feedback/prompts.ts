@@ -99,6 +99,8 @@ export function buildReportPrompt(
     prompt += "=== 레코드 생성 시간 정보 ===\n";
     prompt +=
       "아래 시간 정보를 참고하여 emotion_timeline을 생성하세요. 각 레코드의 created_at을 한국 시간(Asia/Seoul)으로 변환하여 시간대별로 그룹화하고, 해당 시간대의 감정을 분석하세요.\n";
+    prompt +=
+      "중요: emotion_timeline은 최대 5개까지만 생성하세요. 가장 중요한 시간대의 감정 변화만 선별하여 포함하고, 비슷한 시간대의 감정은 통합하거나 가장 대표적인 감정만 선택하세요.\n";
     records.forEach((record, idx) => {
       const createdAt = new Date(record.created_at);
       const kstTime = createdAt.toLocaleTimeString("ko-KR", {

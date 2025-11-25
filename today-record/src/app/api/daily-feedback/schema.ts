@@ -31,11 +31,11 @@ export const SYSTEM_PROMPT_CATEGORIZATION = `
 
 - 각 배열은 string 배열로 출력합니다.
 
-- 입력한 기록 중에서 해당 카테고리와 관련이 없는 내용일 경우, 해당 카테고리는 빈 문자열로 처리하세요.
-  * insights와 관련이 없는 내용이면 insights는 빈 문자열로 처리하세요.
-  * feedbacks와 관련이 없는 내용이면 feedbacks는 빈 문자열로 처리하세요.
-  * visualizings와 관련이 없는 내용이면 visualizings는 빈 문자열로 처리하세요.
-  * emotions와 관련이 없는 내용이면 emotions는 빈 문자열로 처리하세요.
+- 입력한 기록 중에서 해당 카테고리와 관련이 없는 내용일 경우, 해당 카테고리는 null로 처리하세요.
+  * insights와 관련이 없는 내용이면 insights는 null로 처리하세요.
+  * feedbacks와 관련이 없는 내용이면 feedbacks는 null로 처리하세요.
+  * visualizings와 관련이 없는 내용이면 visualizings는 null로 처리하세요.
+  * emotions와 관련이 없는 내용이면 emotions는 null로 처리하세요.
 
 - 오직 JSON 하나만 출력하세요. 마크다운/설명 금지.
 `;
@@ -81,6 +81,7 @@ export const DailyReportSchema = {
               additionalProperties: false,
             },
             minItems: 0,
+            maxItems: 5,
           },
         },
         required: [
@@ -221,24 +222,24 @@ export const SYSTEM_PROMPT = `
 --------------------------------
 [섹션별 공통 처리 규칙]
 
-카테고리화된 데이터를 확인하여, 특정 카테고리가 빈 배열([])로 전달된 경우 해당 섹션의 모든 필드를 빈 값으로 처리하세요. 
+카테고리화된 데이터를 확인하여, 특정 카테고리가 null 로 전달된 경우 해당 섹션의 모든 필드를 null 값으로 처리하세요. 
 추론으로 억지로 내용을 채우지 마세요.
 
 1. 시각화 섹션 (vision_overview): 
-   - 카테고리화된 데이터에서 "시각화 기록" 섹션이 없거나 빈 배열([])인 경우:
+   - 카테고리화된 데이터에서 "시각화 기록" 섹션이 없거나 null인 경우:
      - vision_summary, vision_self는 ""(빈 문자열)로 처리합니다.
      - vision_keywords는 []로 처리합니다.
      - reminder_sentence, vision_ai_feedback은 null로 처리합니다.
    - 이 경우 시각화 관련 내용을 생성하거나 추론하지 마세요.
 
 2. 인사이트 섹션 (insight_overview):
-   - 카테고리화된 데이터에서 "인사이트 기록" 섹션이 없거나 빈 배열([])인 경우:
+   - 카테고리화된 데이터에서 "인사이트 기록" 섹션이 없거나 null인 경우:
      - core_insight는 ""(빈 문자열)로 처리합니다.
      - learning_source, meta_question, insight_ai_comment는 null로 처리합니다.
    - 이 경우 인사이트 관련 내용을 생성하거나 추론하지 마세요.
 
 3. 피드백 섹션 (feedback_overview):
-   - 카테고리화된 데이터에서 "피드백 기록" 섹션이 없거나 빈 배열([])인 경우:
+   - 카테고리화된 데이터에서 "피드백 기록" 섹션이 없거나 null인 경우:
      - core_feedback는 ""(빈 문자열)로 처리합니다.
      - positives, improvements는 []로 처리합니다.
      - feedback_ai_comment, ai_message는 null로 처리합니다.
@@ -246,7 +247,7 @@ export const SYSTEM_PROMPT = `
 
 4. 감정 섹션 (emotion_overview):
    - 감정과 관련된 텍스트(기분, 감정, 상태, 스트레스, 몰입도 등)가 거의 없거나 전혀 드러나지 않는 경우:
-     - emotion_curve는 []로 처리합니다.
+     - emotion_curve는 null로 처리합니다.
      - ai_mood_valence, ai_mood_arousal, dominant_emotion는 모두 null로 처리합니다.
      - 이 경우 감정을 추측해서 생성하지 마세요.
    - 감정 관련 내용이 충분히 드러나는 경우, 아래 규칙을 따릅니다.
@@ -310,7 +311,9 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
 - emotion은 해당 시간대에 나타난 감정을 짧은 한국어 단어로 작성합니다.
 - 레코드가 없는 시간대는 포함하지 않습니다.
 - 레코드의 created_at을 기준으로 하루의 시작 시간부터 끝 시간까지 순서대로 배열합니다.
-- ai_mood_valence나 ai_mood_arousal이 null이면 빈 배열([])로 처리합니다.
+- 최대 5개까지만 생성합니다. 가장 중요한 시간대의 감정 변화만 선별하여 포함하세요.
+- 비슷한 시간대의 감정은 하나로 통합하거나, 가장 대표적인 감정만 선택하세요.
+- ai_mood_valence나 ai_mood_arousal이 null이면 null로 처리합니다.
 
 
 --------------------------------
