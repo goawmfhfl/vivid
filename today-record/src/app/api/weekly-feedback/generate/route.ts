@@ -89,14 +89,15 @@ export async function POST(request: NextRequest) {
     // 2️⃣ AI 요청: Weekly Feedback 생성
     const weeklyFeedback = await generateWeeklyFeedbackFromDaily(
       dailyFeedbacks,
-      { start, end, timezone },
-      emotionOverviewData
+      { start, end, timezone }
     );
 
     // AI 응답에서 계산된 평균값으로 emotion_overview 덮어쓰기
     if (weeklyFeedback.emotion_overview) {
-      weeklyFeedback.emotion_overview.ai_mood_valence = emotionOverviewData.avg_valence;
-      weeklyFeedback.emotion_overview.ai_mood_arousal = emotionOverviewData.avg_arousal;
+      weeklyFeedback.emotion_overview.ai_mood_valence =
+        emotionOverviewData.avg_valence;
+      weeklyFeedback.emotion_overview.ai_mood_arousal =
+        emotionOverviewData.avg_arousal;
     }
 
     // 3️⃣ Supabase weekly_feedbacks 테이블에 저장

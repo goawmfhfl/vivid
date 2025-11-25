@@ -5,18 +5,7 @@ import type { DailyFeedbackForWeekly } from "./types";
  */
 export function buildWeeklyFeedbackPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string },
-  _emotionOverviewData?: {
-    daily_emotions: Array<{
-      date: string;
-      weekday: string;
-      ai_mood_valence: number | null;
-      ai_mood_arousal: number | null;
-      dominant_emotion: string | null;
-    }>;
-    avg_valence: number | null;
-    avg_arousal: number | null;
-  }
+  weekRange: { start: string; end: string; timezone: string }
 ): string {
   let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 리포트를 생성하여 JSON만 출력하세요.\n\n`;
 

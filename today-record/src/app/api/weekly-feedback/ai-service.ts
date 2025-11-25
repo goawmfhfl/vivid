@@ -32,24 +32,9 @@ function getOpenAIClient(): OpenAI {
  */
 export async function generateWeeklyFeedbackFromDaily(
   dailyFeedbacks: DailyFeedbackForWeekly,
-  range: { start: string; end: string; timezone: string },
-  emotionOverviewData?: {
-    daily_emotions: Array<{
-      date: string;
-      weekday: string;
-      ai_mood_valence: number | null;
-      ai_mood_arousal: number | null;
-      dominant_emotion: string | null;
-    }>;
-    avg_valence: number | null;
-    avg_arousal: number | null;
-  }
+  range: { start: string; end: string; timezone: string }
 ): Promise<WeeklyFeedback> {
-  const prompt = buildWeeklyFeedbackPrompt(
-    dailyFeedbacks,
-    range,
-    emotionOverviewData
-  );
+  const prompt = buildWeeklyFeedbackPrompt(dailyFeedbacks, range);
   const openai = getOpenAIClient();
 
   // 기본값을 gpt-5로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
