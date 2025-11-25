@@ -172,10 +172,17 @@ export const WeeklyFeedbackSchema = {
             type: "object",
             additionalProperties: false,
             properties: {
-              core_insights: { type: "array", items: { type: "string" } },
+              core_insights: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 3,
+                maxItems: 7,
+              },
               meta_questions_highlight: {
                 type: "array",
                 items: { type: "string" },
+                minItems: 2,
+                maxItems: 7,
               },
               repeated_themes: {
                 type: "array",
@@ -302,8 +309,8 @@ export const SYSTEM_PROMPT_WEEKLY = `
   * valence_patterns: 일별 감정 데이터를 분석하여 쾌-불쾌를 느끼는 반복되는 패턴을 찾아 설명해주세요. 예: "월요일 아침에 부정적 감정이 높게 나타나는 패턴이 보입니다. 아마도 주말에서 평일로 전환되는 부담감 때문인 것 같아요."
   * arousal_patterns: 일별 감정 데이터를 분석하여 각성-에너지를 느끼는 반복되는 패턴을 찾아 설명해주세요. 예: "오후 시간대에 각성 수준이 높아지는 패턴이 보입니다. 집중이 필요한 작업을 하는 시간과 일치하는 것 같아요."
   * daily_emotions: 기록이 있는 날짜의 일별 감정 데이터만 포함해주세요. 기록이 없는 날짜는 제외하세요.
-- core_insights: 가장 중요한 인사이트를 5개 이하로 정리해주세요.
-- meta_questions_highlight: 메타 질문 중에서 특히 눈에 띄는 것들을 3개 이하로 선정해주세요.
+- core_insights: 가장 중요한 인사이트를 3~10개로 정리해주세요. 데이터가 풍부하면 더 많은 인사이트를 포함해도 됩니다. 각 인사이트는 구체적이고 실용적이어야 합니다.
+- meta_questions_highlight: 메타 질문 중에서 특히 눈에 띄는 것들을 2~7개로 선정해주세요. 의미 있는 질문이 많다면 더 포함해도 됩니다.
 - vision_keywords_trend: 시각화 키워드를 주제별 범주로 묶어서 정리해주세요. 최대 7개의 범주만 포함하고, 비슷한 키워드들은 하나의 주제로 묶어주세요. 예를 들어 "EdgeFunction", "스케줄러", "자동화" 같은 키워드들은 "개발"이라는 범주로 묶을 수 있어요. 각 범주의 days는 해당 범주에 속한 키워드들이 등장한 날짜 수의 합계로 계산해주세요.
 - positives_top3, improvements_top3: 각각 정확히 3개씩만 작성해주세요.
 - call_to_action: 다음 주에 바로 실행할 수 있는 구체적인 액션 아이템을 3~5개 작성해주세요.
@@ -357,8 +364,8 @@ export const SYSTEM_PROMPT_WEEKLY = `
       }
     },
     "insight_replay": {
-      "core_insights": ["가장 중요한 인사이트 배열 (5개 이하, 이해하기 쉽게)"],
-      "meta_questions_highlight": ["특히 눈에 띄는 메타 질문 배열 (3개 이하)"],
+      "core_insights": ["가장 중요한 인사이트 배열 (3~10개, 이해하기 쉽고 구체적으로)"],
+      "meta_questions_highlight": ["특히 눈에 띄는 메타 질문 배열 (2~7개)"],
       "repeated_themes": [
         {
           "theme": "반복된 주제나 패턴",

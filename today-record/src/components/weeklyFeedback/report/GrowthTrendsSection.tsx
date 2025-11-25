@@ -115,25 +115,35 @@ export function GrowthTrendsSection({
             <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
               일별 정합도 점수 추이
             </p>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart
                 data={integrity.daily_scores.map((day) => ({
                   date: day.date.split(".").slice(1, 3).join("/"),
                   weekday: day.weekday,
                   score: day.score,
+                  fullDate: day.date,
                 }))}
-                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                margin={{ top: 10, right: 15, left: 5, bottom: 60 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 10, fill: "#6B7A6F" }}
-                  axisLine={{ stroke: "#E0E0E0" }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  interval={0}
+                  tick={{
+                    fontSize: 11,
+                    fill: "#6B7A6F",
+                    fontWeight: 500,
+                  }}
+                  axisLine={{ stroke: "#E0E0E0", strokeWidth: 1.5 }}
+                  tickLine={{ stroke: "#E0E0E0" }}
                 />
                 <YAxis
                   domain={[0, 10]}
-                  tick={{ fontSize: 10, fill: "#6B7A6F" }}
-                  axisLine={{ stroke: "#E0E0E0" }}
+                  tick={{ fontSize: 11, fill: "#6B7A6F", fontWeight: 500 }}
+                  axisLine={{ stroke: "#E0E0E0", strokeWidth: 1.5 }}
                 />
                 <Tooltip
                   contentStyle={{
@@ -142,20 +152,32 @@ export function GrowthTrendsSection({
                     borderRadius: "8px",
                     fontSize: "0.8rem",
                     color: "#333333",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                   }}
                   labelStyle={{
                     color: "#D08C60",
                     fontWeight: 500,
+                    marginBottom: "4px",
                   }}
-                  formatter={(value: number) => [`${value}점`, "정합도"]}
+                  formatter={(value: number, name: string, props: any) => [
+                    `${value}점`,
+                    "정합도",
+                  ]}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      const weekday = payload[0].payload.weekday;
+                      return `${label} (${weekday})`;
+                    }
+                    return label;
+                  }}
                 />
                 <Line
                   type="monotone"
                   dataKey="score"
                   stroke="#D08C60"
-                  strokeWidth={2}
-                  dot={{ fill: "#D08C60", r: 4 }}
-                  activeDot={{ r: 6 }}
+                  strokeWidth={3}
+                  dot={{ fill: "#D08C60", r: 5 }}
+                  activeDot={{ r: 7 }}
                 />
               </LineChart>
             </ResponsiveContainer>

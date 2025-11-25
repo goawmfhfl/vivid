@@ -58,37 +58,64 @@ export function VisionVisualizationSection({
         <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           비전 키워드 빈도
         </p>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={visionKeywordsTrend}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-            <XAxis
-              dataKey="keyword"
-              tick={{ fontSize: 10, fill: "#6B7A6F" }}
-              axisLine={{ stroke: "#E0E0E0" }}
-            />
-            <YAxis
-              tick={{ fontSize: 10, fill: "#6B7A6F" }}
-              axisLine={{ stroke: "#E0E0E0" }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #EFE9E3",
-                borderRadius: "8px",
-                fontSize: "0.8rem",
-                color: "#333333",
-              }}
-              labelStyle={{
-                color: "#A3BFD9",
-                fontWeight: 500,
-              }}
-              itemStyle={{
-                color: "#010201",
-              }}
-            />
-            <Bar dataKey="count" fill="#A3BFD9" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div style={{ marginLeft: "-8px", marginRight: "-8px" }}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={visionKeywordsTrend}
+              margin={{ top: 5, right: 5, left: -10, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
+              <XAxis
+                dataKey="keyword"
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                interval={0}
+                tick={{
+                  fontSize: 11,
+                  fill: "#6B7A6F",
+                  fontWeight: 500,
+                }}
+                axisLine={{ stroke: "#E0E0E0", strokeWidth: 1.5 }}
+                tickLine={{ stroke: "#E0E0E0" }}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "#6B7A6F", fontWeight: 500 }}
+                axisLine={{ stroke: "#E0E0E0", strokeWidth: 1.5 }}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #EFE9E3",
+                  borderRadius: "8px",
+                  fontSize: "0.8rem",
+                  color: "#333333",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                }}
+                labelStyle={{
+                  color: "#A3BFD9",
+                  fontWeight: 500,
+                  marginBottom: "4px",
+                }}
+                itemStyle={{
+                  color: "#010201",
+                }}
+                formatter={(value: number, name: string, props: any) => [
+                  `${value}회`,
+                  props.payload.keyword,
+                ]}
+                labelFormatter={(label) => ""}
+              />
+              <Bar
+                dataKey="count"
+                fill="#A3BFD9"
+                radius={[8, 8, 0, 0]}
+                minPointSize={5}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
       {/* Alignment Comment */}
