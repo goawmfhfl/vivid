@@ -12,6 +12,7 @@ import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { HomeHeader } from "./home/HomeHeader";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
+import { getKSTDateString } from "@/lib/date-utils";
 
 export function Home() {
   const router = useRouter();
@@ -26,7 +27,8 @@ export function Home() {
 
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
-  const todayIso = new Date().toISOString().split("T")[0];
+  // KST 기준으로 오늘 날짜 계산
+  const todayIso = getKSTDateString();
 
   // 전역 모달 상태 관리
   const openLoadingModal = useModalStore((state) => state.openLoadingModal);
@@ -37,10 +39,11 @@ export function Home() {
   const openErrorModal = useModalStore((state) => state.openErrorModal);
 
   const hasTodayRecords = useMemo(() => {
-    const todayKey = new Date().toDateString();
+    // KST 기준 오늘 날짜 문자열
+    const todayKST = getKSTDateString();
     return records.some((record) => {
-      const recordDate = new Date(record.kst_date).toDateString();
-      return recordDate === todayKey;
+      // record.kst_date는 이미 "YYYY-MM-DD" 형식이므로 직접 비교
+      return record.kst_date === todayKST;
     });
   }, [records]);
 

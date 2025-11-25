@@ -2,11 +2,12 @@
 
 import { DailyFeedbackView } from "@/components/DailyFeedbackView";
 import { useRouter } from "next/navigation";
+import { getKSTDateString } from "@/lib/date-utils";
 
 export default function FeedbackPage() {
   const router = useRouter();
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getKSTDateString();
 
   const handleBack = () => {
     router.push("/");

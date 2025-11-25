@@ -6,6 +6,7 @@ import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
 import { filterWeeklyCandidatesForCreation } from "./weeklyFeedback/weekly-candidate-filter";
+import { getKSTDateString } from "@/lib/date-utils";
 
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
@@ -37,10 +38,10 @@ export function WeeklyCandidatesSection() {
   };
 
   const getWeekEnd = (weekStart: string): string => {
-    const startDate = new Date(weekStart);
+    const startDate = new Date(weekStart + "T00:00:00+09:00"); // KST 기준
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 6);
-    return endDate.toISOString().split("T")[0];
+    return getKSTDateString(endDate);
   };
 
   const handleCreateFeedback = async (weekStart: string) => {

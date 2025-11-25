@@ -8,6 +8,7 @@ import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { Button } from "../ui/button";
+import { getKSTDateString } from "@/lib/date-utils";
 
 interface RecordListProps {
   records: Record[];
@@ -32,9 +33,8 @@ export function RecordList({
   const [retryCount, setRetryCount] = useState(0);
 
   const todayRecords = records.filter((record) => {
-    const today = new Date();
-    const recordDate = new Date(record.kst_date);
-    return today.toDateString() === recordDate.toDateString();
+    const todayKST = getKSTDateString();
+    return record.kst_date === todayKST;
   });
 
   // 테스트용 핸들러

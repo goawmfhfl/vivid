@@ -1,4 +1,5 @@
 import type { DailyFeedbackForWeekly } from "./types";
+import { getKSTDateString } from "@/lib/date-utils";
 
 /**
  * 주간 피드백 생성을 위한 프롬프트 생성
@@ -20,8 +21,8 @@ export function buildWeeklyFeedbackPrompt(
   });
 
   // 주간 범위의 모든 날짜 생성
-  const startDate = new Date(weekRange.start);
-  const endDate = new Date(weekRange.end);
+  const startDate = new Date(weekRange.start + "T00:00:00+09:00"); // KST 기준
+  const endDate = new Date(weekRange.end + "T00:00:00+09:00"); // KST 기준
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   for (
@@ -29,7 +30,7 @@ export function buildWeeklyFeedbackPrompt(
     date <= endDate;
     date.setDate(date.getDate() + 1)
   ) {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = getKSTDateString(date);
     const weekday = weekdays[date.getDay()];
     const dayFeedbacks = feedbacksByDate.get(dateStr) || [];
 

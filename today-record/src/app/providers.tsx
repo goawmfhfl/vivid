@@ -73,6 +73,8 @@ export function JournalProvider({ children }: { children: ReactNode }) {
 
   const generateFeedback = (forDate?: Date) => {
     const targetDate = forDate || new Date();
+    // 동적 import는 클라이언트 컴포넌트에서만 사용 가능하므로
+    // 여기서는 직접 계산하거나 다른 방법 사용
     const dateKey = targetDate.toISOString().split("T")[0];
     const mockFeedback: DailyFeedback = {
       date: targetDate.toLocaleDateString("ko-KR", {

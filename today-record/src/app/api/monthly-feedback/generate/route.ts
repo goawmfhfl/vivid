@@ -3,12 +3,13 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchDailyFeedbacksByMonth, saveMonthlyFeedback } from "../db-service";
 import { generateMonthlyFeedbackFromDaily } from "../ai-service";
 import type { MonthlyFeedbackGenerateRequest } from "../types";
+import { getKSTDateString } from "@/lib/date-utils";
 
 // Next.js API Route 타임아웃 설정 (최대 5분)
 export const maxDuration = 300;
 
 /**
- * 월의 시작일과 종료일 계산
+ * 월의 시작일과 종료일 계산 (KST 기준)
  */
 function getMonthDateRange(month: string): {
   start_date: string;
@@ -19,8 +20,8 @@ function getMonthDateRange(month: string): {
   const endDate = new Date(year, monthNum, 0); // 다음 달 0일 = 이번 달 마지막 날
 
   return {
-    start_date: startDate.toISOString().split("T")[0],
-    end_date: endDate.toISOString().split("T")[0],
+    start_date: getKSTDateString(startDate),
+    end_date: getKSTDateString(endDate),
   };
 }
 

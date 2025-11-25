@@ -1,4 +1,5 @@
-import { Calendar, TrendingUp } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Calendar, HelpCircle, X } from "lucide-react";
 import { Card } from "../../ui/card";
 
 type MonthlyReportHeaderProps = {
@@ -24,20 +25,41 @@ export function MonthlyReportHeader({
   integrity_average,
   record_coverage_rate,
 }: MonthlyReportHeaderProps) {
-  const getTrendColor = (trend: string | null) => {
-    switch (trend) {
-      case "상승":
-        return "#A8BBA8";
-      case "하락":
-        return "#B89A7A";
-      case "유지":
-        return "#E5B96B";
-      case "불규칙":
-        return "#6B7A6F";
-      default:
-        return "#6B7A6F";
+  const [showIntegrityTooltip, setShowIntegrityTooltip] = useState(false);
+  const [showCoverageTooltip, setShowCoverageTooltip] = useState(false);
+  const integrityTooltipRef = useRef<HTMLDivElement>(null);
+  const coverageTooltipRef = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 시 툴팁 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (
+        showIntegrityTooltip &&
+        integrityTooltipRef.current &&
+        !integrityTooltipRef.current.contains(target)
+      ) {
+        setShowIntegrityTooltip(false);
+      }
+
+      if (
+        showCoverageTooltip &&
+        coverageTooltipRef.current &&
+        !coverageTooltipRef.current.contains(target)
+      ) {
+        setShowCoverageTooltip(false);
+      }
+    };
+
+    if (showIntegrityTooltip || showCoverageTooltip) {
+      document.addEventListener("mousedown", handleClickOutside);
     }
-  };
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showIntegrityTooltip, showCoverageTooltip]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "#A8BBA8";
@@ -49,126 +71,390 @@ export function MonthlyReportHeader({
   return (
     <div className="mb-10 sm:mb-12">
       {/* 헤더 */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-4 mb-8">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-105 group"
           style={{
             background:
               "linear-gradient(135deg, #D08C60 0%, #E5B96B 50%, #A8BBA8 100%)",
-            boxShadow: "0 4px 12px rgba(208, 140, 96, 0.3)",
+            boxShadow:
+              "0 8px 24px rgba(208, 140, 96, 0.25), 0 2px 8px rgba(208, 140, 96, 0.15)",
           }}
         >
-          <Calendar className="w-6 h-6 text-white" />
+          {/* 글로우 효과 */}
+          <div
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background:
+                "radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%)",
+            }}
+          />
+          <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-white relative z-10" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1
-            className="text-2xl sm:text-3xl font-semibold"
-            style={{ color: "#333333" }}
+            className="text-2xl sm:text-3xl font-bold mb-1.5"
+            style={{
+              color: "#333333",
+              background: "linear-gradient(135deg, #333333 0%, #6B7A6F 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
           >
             {month_label}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#6B7A6F" }}>
-            {date_range.start_date} ~ {date_range.end_date}
-          </p>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: "#A8BBA8" }}
+            />
+            <p className="text-sm font-medium" style={{ color: "#6B7A6F" }}>
+              {date_range.start_date} ~ {date_range.end_date}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* 월간 점수 카드 */}
       <Card
-        className="p-6 mb-6"
+        className="group relative p-6 sm:p-8 mb-6 transition-all duration-300 hover:shadow-xl"
         style={{
           background: `linear-gradient(135deg, ${getScoreColor(
             summary_overview.monthly_score
-          )}15 0%, ${getScoreColor(summary_overview.monthly_score)}05 100%)`,
-          border: `2px solid ${getScoreColor(
+          )}12 0%, ${getScoreColor(
             summary_overview.monthly_score
-          )}40`,
+          )}08 50%, ${getScoreColor(summary_overview.monthly_score)}05 100%)`,
+          border: `1.5px solid ${getScoreColor(
+            summary_overview.monthly_score
+          )}30`,
+          borderRadius: "20px",
+          boxShadow:
+            "0 4px 16px rgba(107, 122, 111, 0.08), 0 1px 4px rgba(107, 122, 111, 0.04)",
+          overflow: "visible",
         }}
       >
-        <div className="flex items-center justify-between mb-4">
+        {/* 배경 글로우 효과 */}
+        <div
+          className="absolute top-0 right-0 w-64 h-64 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden rounded-[20px]"
+          style={{
+            background: `radial-gradient(circle, ${getScoreColor(
+              summary_overview.monthly_score
+            )}20 0%, transparent 70%)`,
+            transform: "translate(30%, -30%)",
+          }}
+        />
+
+        {/* 상단 장식 라인 */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1 overflow-hidden rounded-t-[20px]"
+          style={{
+            background: `linear-gradient(90deg, ${getScoreColor(
+              summary_overview.monthly_score
+            )} 0%, ${getScoreColor(
+              summary_overview.monthly_score
+            )}80 50%, ${getScoreColor(summary_overview.monthly_score)} 100%)`,
+          }}
+        />
+
+        <div className="relative mb-6">
           <div>
-            <p className="text-xs mb-1" style={{ color: "#6B7A6F" }}>
+            <p
+              className="text-xs font-medium mb-2 tracking-wide uppercase"
+              style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+            >
               이번 달 점수
             </p>
             <div className="flex items-baseline gap-2">
               <span
-                className="text-4xl font-bold"
-                style={{ color: getScoreColor(summary_overview.monthly_score) }}
+                className="text-5xl sm:text-6xl font-bold transition-transform duration-300 group-hover:scale-105"
+                style={{
+                  color: getScoreColor(summary_overview.monthly_score),
+                  textShadow: `0 2px 8px ${getScoreColor(
+                    summary_overview.monthly_score
+                  )}30`,
+                }}
               >
                 {summary_overview.monthly_score}
               </span>
-              <span className="text-lg" style={{ color: "#6B7A6F" }}>
+              <span
+                className="text-xl font-semibold"
+                style={{ color: "#6B7A6F", opacity: 0.7 }}
+              >
                 / 100
               </span>
             </div>
           </div>
-          {summary_overview.integrity_trend && (
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-              style={{
-                backgroundColor: `${getTrendColor(
-                  summary_overview.integrity_trend
-                )}20`,
-                border: `1px solid ${getTrendColor(
-                  summary_overview.integrity_trend
-                )}40`,
-              }}
-            >
-              <TrendingUp
-                className="w-4 h-4"
-                style={{
-                  color: getTrendColor(summary_overview.integrity_trend),
-                }}
-              />
-              <span
-                className="text-xs font-medium"
-                style={{
-                  color: getTrendColor(summary_overview.integrity_trend),
-                }}
-              >
-                {summary_overview.integrity_trend}
-              </span>
-            </div>
-          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <p className="text-xs mb-1" style={{ color: "#6B7A6F" }}>
-              평균 정합도
-            </p>
-            <p className="text-lg font-semibold" style={{ color: "#333333" }}>
+        <div
+          className="relative grid grid-cols-2 gap-4"
+          style={{ overflow: "visible" }}
+        >
+          {/* 평균 정합도 */}
+          <div
+            className="relative p-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            ref={integrityTooltipRef}
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.6)",
+              border: "1px solid rgba(168, 187, 168, 0.2)",
+              overflow: "visible",
+            }}
+          >
+            <div className="flex items-center gap-1.5 mb-2">
+              <p
+                className="text-xs font-medium"
+                style={{ color: "#6B7A6F", letterSpacing: "0.02em" }}
+              >
+                평균 정합도
+              </p>
+              <button
+                onClick={() => setShowIntegrityTooltip(!showIntegrityTooltip)}
+                className="cursor-pointer transition-all duration-200 hover:scale-110"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <HelpCircle
+                  className={`w-3.5 h-3.5 transition-colors duration-200 ${
+                    showIntegrityTooltip ? "text-#A8BBA8" : ""
+                  }`}
+                  style={{
+                    color: showIntegrityTooltip ? "#A8BBA8" : "#6B7A6F",
+                  }}
+                />
+              </button>
+            </div>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: "#A8BBA8", lineHeight: "1.2" }}
+            >
               {integrity_average.toFixed(1)}
             </p>
+            {showIntegrityTooltip && (
+              <div
+                className="absolute animate-in fade-in slide-in-from-bottom-2 duration-200"
+                style={{
+                  bottom: "100%",
+                  left: "0",
+                  marginBottom: "10px",
+                  width: "280px",
+                  padding: "16px",
+                  backgroundColor: "#FAFAF8",
+                  color: "#333333",
+                  borderRadius: "12px",
+                  fontSize: "0.8125rem",
+                  lineHeight: "1.6",
+                  zIndex: 1000,
+                  boxShadow:
+                    "0 8px 24px rgba(107, 122, 111, 0.15), 0 2px 8px rgba(107, 122, 111, 0.1)",
+                  border: "1.5px solid #A8BBA8",
+                  overflow: "visible",
+                }}
+              >
+                {/* 상단 장식 라인 */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 rounded-t-[12px]"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #A8BBA8 0%, #E5B96B 50%, #A8BBA8 100%)",
+                  }}
+                />
+                <div className="flex items-start justify-between gap-3 mb-3 mt-1">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: "#A8BBA8" }}
+                    />
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: "#333333" }}
+                    >
+                      평균 정합도
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowIntegrityTooltip(false)}
+                    className="transition-colors duration-200 hover:bg-gray-100 rounded-full p-1"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: "4px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <X className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
+                  </button>
+                </div>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                >
+                  AI가 하루 기록을 분석해 평가한 점수의 평균입니다. 기록의
+                  깊이와 진실성을 <strong>0~10점</strong>으로 나타냅니다.
+                  높을수록 더 솔직하고 깊이 있는 기록을 했다는 의미입니다.
+                </p>
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-xs mb-1" style={{ color: "#6B7A6F" }}>
-              기록 커버리지
-            </p>
-            <p className="text-lg font-semibold" style={{ color: "#333333" }}>
+
+          {/* 기록 커버리지 */}
+          <div
+            className="relative p-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            ref={coverageTooltipRef}
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.6)",
+              border: "1px solid rgba(229, 185, 107, 0.2)",
+              overflow: "visible",
+            }}
+          >
+            <div className="flex items-center gap-1.5 mb-2">
+              <p
+                className="text-xs font-medium"
+                style={{ color: "#6B7A6F", letterSpacing: "0.02em" }}
+              >
+                기록 커버리지
+              </p>
+              <button
+                onClick={() => setShowCoverageTooltip(!showCoverageTooltip)}
+                className="cursor-pointer transition-all duration-200 hover:scale-110"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <HelpCircle
+                  className={`w-3.5 h-3.5 transition-colors duration-200 ${
+                    showCoverageTooltip ? "text-#E5B96B" : ""
+                  }`}
+                  style={{
+                    color: showCoverageTooltip ? "#E5B96B" : "#6B7A6F",
+                  }}
+                />
+              </button>
+            </div>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: "#E5B96B", lineHeight: "1.2" }}
+            >
               {Math.round(record_coverage_rate * 100)}%
             </p>
+            {showCoverageTooltip && (
+              <div
+                className="absolute animate-in fade-in slide-in-from-bottom-2 duration-200"
+                style={{
+                  bottom: "100%",
+                  right: "0",
+                  marginBottom: "10px",
+                  width: "280px",
+                  padding: "16px",
+                  backgroundColor: "#FAFAF8",
+                  color: "#333333",
+                  borderRadius: "12px",
+                  fontSize: "0.8125rem",
+                  lineHeight: "1.6",
+                  zIndex: 1000,
+                  boxShadow:
+                    "0 8px 24px rgba(107, 122, 111, 0.15), 0 2px 8px rgba(107, 122, 111, 0.1)",
+                  border: "1.5px solid #E5B96B",
+                  overflow: "visible",
+                }}
+              >
+                {/* 상단 장식 라인 */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 rounded-t-[12px]"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #E5B96B 0%, #A8BBA8 50%, #E5B96B 100%)",
+                  }}
+                />
+                <div className="flex items-start justify-between gap-3 mb-3 mt-1">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: "#E5B96B" }}
+                    />
+                    <p
+                      className="text-sm font-semibold"
+                      style={{ color: "#333333" }}
+                    >
+                      기록 커버리지
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCoverageTooltip(false)}
+                    className="transition-colors duration-200 hover:bg-gray-100 rounded-full p-1"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: "4px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <X className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
+                  </button>
+                </div>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                >
+                  해당 기간에 기록한 날짜의 비율입니다. 예를 들어{" "}
+                  <strong>11월이 30일</strong>인데 <strong>24일</strong>{" "}
+                  기록했다면 <strong>80%</strong>입니다. 높을수록 더 꾸준히
+                  기록했다는 의미입니다.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </Card>
 
       {/* 월간 제목 및 설명 */}
       <Card
-        className="p-5 mb-4"
-        style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
+        className="group relative p-6 sm:p-8 mb-4 transition-all duration-300 hover:shadow-lg overflow-hidden"
+        style={{
+          backgroundColor: "white",
+          border: "1.5px solid #EFE9E3",
+          borderRadius: "20px",
+          boxShadow:
+            "0 4px 16px rgba(107, 122, 111, 0.06), 0 1px 4px rgba(107, 122, 111, 0.04)",
+        }}
       >
-        <h2
-          className="text-xl sm:text-2xl font-semibold mb-3"
-          style={{ color: "#333333" }}
-        >
-          {summary_overview.summary_title}
-        </h2>
-        <p
-          className="text-sm leading-relaxed"
-          style={{ color: "#4E4B46", lineHeight: "1.7" }}
-        >
-          {summary_overview.summary_description}
-        </p>
+        {/* 좌측 장식 라인 */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[20px]"
+          style={{
+            background:
+              "linear-gradient(180deg, #A8BBA8 0%, #E5B96B 50%, #A8BBA8 100%)",
+          }}
+        />
+        <div className="pl-4">
+          <h2
+            className="text-xl sm:text-2xl font-bold mb-4 transition-colors duration-300 group-hover:text-[#A8BBA8]"
+            style={{ color: "#333333", lineHeight: "1.4" }}
+          >
+            {summary_overview.summary_title}
+          </h2>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: "#4E4B46", lineHeight: "1.8" }}
+          >
+            {summary_overview.summary_description}
+          </p>
+        </div>
       </Card>
     </div>
   );

@@ -1,52 +1,5 @@
 import type { WeeklyCandidateWithFeedback } from "@/types/weekly-candidate";
-
-/**
- * ============================================
- * 1. KST 시간대 처리 함수들
- * ============================================
- */
-
-/**
- * KST 기준으로 현재 날짜의 YYYY-MM-DD 문자열 반환
- *
- * 예시:
- * - 입력: new Date() (로컬 시간대)
- * - 출력: "2025-11-17" (KST 기준 날짜)
- *
- * 왜 필요한가?
- * - 브라우저는 사용자의 로컬 시간대를 사용하지만, 우리는 한국 시간(KST) 기준으로 날짜를 비교해야 함
- */
-function getKSTDateString(date: Date = new Date()): string {
-  // KST는 UTC+9 (9시간 앞서있음)
-  const kstOffset = 9 * 60; // 분 단위로 변환 (9시간 = 540분)
-
-  // UTC 시간 계산
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-
-  // KST 시간 계산 (UTC + 9시간)
-  const kst = new Date(utc + kstOffset * 60000);
-
-  // YYYY-MM-DD 형식으로 포맷팅
-  const year = kst.getFullYear();
-  const month = String(kst.getMonth() + 1).padStart(2, "0");
-  const day = String(kst.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * KST 기준으로 현재 날짜 반환 (시간은 00:00:00)
- *
- * 예시:
- * - 입력: new Date("2025-11-17T15:30:00Z") (UTC)
- * - 출력: Date 객체 (2025-11-17 00:00:00 KST)
- */
-function getKSTDate(date: Date = new Date()): Date {
-  const kstDateString = getKSTDateString(date);
-  // KST 기준으로 날짜 파싱
-  const [year, month, day] = kstDateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
+import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 
 /**
  * ============================================
