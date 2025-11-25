@@ -38,14 +38,12 @@ function generateIntegrityTrend(): string {
 export function mapWeeklyFeedbackToReportData(
   feedback: WeeklyFeedback
 ): WeeklyReportData {
-  // 정합도 점수 계산
-  const integrityScores = feedback.by_day.map((day) => day.integrity_score);
-  const integrityAverage =
-    integrityScores.reduce((sum, score) => sum + score, 0) /
-    integrityScores.length;
-  const integrityMin = Math.min(...integrityScores);
-  const integrityMax = Math.max(...integrityScores);
-  const integrityStddev = calculateStdDev(integrityScores);
+  // 정합도 점수 계산 (growth_trends에서 가져옴)
+  const integrityStats = feedback.growth_trends.integrity_score;
+  const integrityAverage = integrityStats.avg;
+  const integrityMin = integrityStats.min;
+  const integrityMax = integrityStats.max;
+  const integrityStddev = integrityStats.stddev_est;
 
   return {
     week_range: {
@@ -65,17 +63,30 @@ export function mapWeeklyFeedbackToReportData(
       narrative: feedback.weekly_overview.narrative,
       top_keywords: feedback.weekly_overview.top_keywords,
       repeated_themes: feedback.insight_replay.repeated_themes,
-      emotion_trend: feedback.weekly_overview.emotion_trend,
       ai_overall_comment: feedback.weekly_overview.ai_overall_comment,
     },
-    by_day: feedback.by_day.map((day) => ({
-      date: formatDateForDisplay(day.date),
-      weekday: convertWeekdayToKorean(day.weekday),
-      one_liner: day.one_liner,
-      key_mood: day.key_mood,
-      keywords: day.keywords,
-      integrity_score: day.integrity_score,
-    })),
+    emotion_overview: feedback.emotion_overview
+      ? {
+          ai_mood_valence: feedback.emotion_overview.ai_mood_valence,
+          ai_mood_arousal: feedback.emotion_overview.ai_mood_arousal,
+          dominant_emotion: feedback.emotion_overview.dominant_emotion,
+          valence_explanation:
+            feedback.emotion_overview.valence_explanation || "",
+          arousal_explanation:
+            feedback.emotion_overview.arousal_explanation || "",
+          valence_patterns: feedback.emotion_overview.valence_patterns || [],
+          arousal_patterns: feedback.emotion_overview.arousal_patterns || [],
+          daily_emotions: (feedback.emotion_overview.daily_emotions || []).map(
+            (day) => ({
+              date: formatDateForDisplay(day.date),
+              weekday: convertWeekdayToKorean(day.weekday),
+              ai_mood_valence: day.ai_mood_valence,
+              ai_mood_arousal: day.ai_mood_arousal,
+              dominant_emotion: day.dominant_emotion,
+            })
+          ),
+        }
+      : null,
     growth_points_top3: feedback.growth_trends.growth_points_top3,
     adjustment_points_top3: feedback.growth_trends.adjustment_points_top3,
     core_insights: feedback.insight_replay.core_insights,
@@ -97,15 +108,4 @@ export function mapWeeklyFeedbackToReportData(
     next_week_objective: feedback.closing_section.next_week_objective,
     call_to_action: feedback.closing_section.call_to_action,
   };
-}
-
-/**
- * 표준편차 계산
- */
-function calculateStdDev(values: number[]): number {
-  const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const squaredDiffs = values.map((val) => Math.pow(val - mean, 2));
-  const avgSquaredDiff =
-    squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
-  return Math.sqrt(avgSquaredDiff);
 }

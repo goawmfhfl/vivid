@@ -26,14 +26,27 @@ function getOpenAIClient(): OpenAI {
  */
 export async function generateWeeklyFeedbackFromDaily(
   dailyFeedbacks: DailyFeedbackForWeekly,
-  range: { start: string; end: string; timezone: string }
+  range: { start: string; end: string; timezone: string },
+  emotionOverviewData?: {
+    daily_emotions: Array<{
+      date: string;
+      weekday: string;
+      ai_mood_valence: number | null;
+      ai_mood_arousal: number | null;
+      dominant_emotion: string | null;
+    }>;
+    avg_valence: number | null;
+    avg_arousal: number | null;
+  }
 ): Promise<WeeklyFeedback> {
-  const prompt = buildWeeklyFeedbackPrompt(dailyFeedbacks, range);
+  const prompt = buildWeeklyFeedbackPrompt(
+    dailyFeedbacks,
+    range,
+    emotionOverviewData
+  );
   const openai = getOpenAIClient();
 
-  // 모델 선택: 환경 변수로 지정하거나 기본값 사용
-  // GPT-5.1이 출시되었으므로 기본값을 gpt-5.1로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
-  const model = process.env.OPENAI_MODEL || "gpt-5.1";
+  const model = "gpt-5.1";
 
   try {
     const completion = await openai.chat.completions.create({
@@ -50,7 +63,7 @@ export async function generateWeeklyFeedbackFromDaily(
           strict: WeeklyFeedbackSchema.strict,
         },
       },
-      temperature: 0.3, // 구조화된 응답에는 낮은 temperature가 더 빠르고 일관성 있음
+      temperature: 0.3,
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -61,18 +74,14 @@ export async function generateWeeklyFeedbackFromDaily(
     const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
     return parsed.weekly_feedback;
   } catch (error: any) {
-    // GPT-5.1이 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
       model === "gpt-5.1" &&
       (error?.message?.includes("model") ||
         error?.code === "model_not_found" ||
         error?.status === 404)
     ) {
-      console.warn(
-        "GPT-5.1 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다."
-      );
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5.1",
         messages: [
           { role: "system", content: SYSTEM_PROMPT_WEEKLY },
           { role: "user", content: prompt },

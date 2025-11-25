@@ -603,8 +603,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
       )}
 
       {/* 감정 정보 통합 카드 */}
-      {(view.emotion_curve?.length > 0 ||
-        view.dominant_emotion) && (
+      {(view.emotion_curve?.length > 0 || view.dominant_emotion) && (
         <Card
           className="p-5"
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}

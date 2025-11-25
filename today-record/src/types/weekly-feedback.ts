@@ -5,18 +5,42 @@ export type WeeklyFeedbackByDay = {
   key_mood: string;
   keywords: string[];
   integrity_score: number;
+  emotion_overview: {
+    ai_mood_valence: number | null;
+    ai_mood_arousal: number | null;
+    emotion_curve: string[];
+    dominant_emotion: string | null;
+  };
 };
 
 export type WeeklyOverview = {
   narrative: string;
   top_keywords: string[];
   repeated_themes: string[];
-  emotion_trend: string[];
   integrity: {
     average: number;
   };
   ai_overall_comment: string;
   next_week_focus: string;
+};
+
+export type DailyEmotion = {
+  date: string; // "YYYY-MM-DD"
+  weekday: string; // "Mon", "Tue", etc.
+  ai_mood_valence: number | null;
+  ai_mood_arousal: number | null;
+  dominant_emotion: string | null;
+};
+
+export type WeeklyEmotionOverview = {
+  ai_mood_valence: number | null;
+  ai_mood_arousal: number | null;
+  dominant_emotion: string | null;
+  valence_explanation: string;
+  arousal_explanation: string;
+  valence_patterns: string[];
+  arousal_patterns: string[];
+  daily_emotions: DailyEmotion[];
 };
 
 export type GrowthTrends = {
@@ -68,8 +92,8 @@ export type WeeklyFeedback = {
     end: string; // "YYYY-MM-DD"
     timezone: string; // "Asia/Seoul"
   };
-  by_day: WeeklyFeedbackByDay[];
   weekly_overview: WeeklyOverview;
+  emotion_overview?: WeeklyEmotionOverview | null;
   growth_trends: GrowthTrends;
   insight_replay: InsightReplay;
   vision_visualization_report: VisionVisualizationReport;

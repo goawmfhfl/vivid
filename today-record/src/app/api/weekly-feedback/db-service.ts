@@ -106,8 +106,9 @@ export async function fetchWeeklyFeedbackByDate(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    by_day: (data.by_day as WeeklyFeedback["by_day"]) || [],
     weekly_overview: weeklyOverview,
+    emotion_overview:
+      (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
     growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
     insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
     vision_visualization_report:
@@ -157,8 +158,9 @@ export async function fetchWeeklyFeedbackDetail(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    by_day: (data.by_day as WeeklyFeedback["by_day"]) || [],
     weekly_overview: weeklyOverview,
+    emotion_overview:
+      (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
     growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
     insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
     vision_visualization_report:
@@ -184,8 +186,8 @@ export async function saveWeeklyFeedback(
         week_start: feedback.week_range.start,
         week_end: feedback.week_range.end,
         timezone: feedback.week_range.timezone || "Asia/Seoul",
-        by_day: feedback.by_day,
         weekly_overview: feedback.weekly_overview,
+        emotion_overview: feedback.emotion_overview ?? null,
         growth_trends: feedback.growth_trends,
         insight_replay: feedback.insight_replay,
         vision_visualization_report: feedback.vision_visualization_report,

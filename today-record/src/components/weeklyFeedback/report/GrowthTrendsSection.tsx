@@ -3,41 +3,20 @@
 import { useMemo } from "react";
 import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { WeeklyReportData } from "./types";
 
 type GrowthTrendsSectionProps = {
-  byDay: WeeklyReportData["by_day"];
   integrity: WeeklyReportData["integrity"];
   growthPoints: string[];
   adjustmentPoints: string[];
 };
 
 export function GrowthTrendsSection({
-  byDay,
   integrity,
   growthPoints,
   adjustmentPoints,
 }: GrowthTrendsSectionProps) {
-  // Prepare integrity score chart data
-  const integrityChartData = useMemo(
-    () =>
-      byDay.map((day) => ({
-        day: day.weekday.substring(0, 1), // 월 -> 월
-        score: day.integrity_score,
-      })),
-    [byDay]
-  );
-
   // Count up animations for integrity scores
   const [displayAverage, averageRef] = useCountUp({
     targetValue: integrity.average,
@@ -80,7 +59,7 @@ export function GrowthTrendsSection({
         </h2>
       </div>
 
-      {/* Integrity Score Chart */}
+      {/* Integrity Score Summary */}
       <Card
         className="p-4 sm:p-5 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
@@ -89,50 +68,9 @@ export function GrowthTrendsSection({
           className="text-xs sm:text-sm mb-2.5 sm:mb-3"
           style={{ color: "#6B7A6F" }}
         >
-          일별 정합도 점수
+          주간 정합도 점수 요약
         </p>
-        <ResponsiveContainer width="100%" height={160}>
-          <LineChart data={integrityChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-            <XAxis
-              dataKey="day"
-              tick={{ fontSize: 11, fill: "#6B7A6F" }}
-              axisLine={{ stroke: "#E0E0E0" }}
-            />
-            <YAxis
-              domain={[0, 10]}
-              tick={{ fontSize: 11, fill: "#6B7A6F" }}
-              axisLine={{ stroke: "#E0E0E0" }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #EFE9E3",
-                borderRadius: "8px",
-                fontSize: "0.8rem",
-                color: "#333333",
-              }}
-              labelStyle={{
-                color: "#6B7A6F",
-                fontWeight: 500,
-              }}
-              itemStyle={{
-                color: "#333333",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke="#A8BBA8"
-              strokeWidth={2.5}
-              dot={{ fill: "#A8BBA8", r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-        <div
-          ref={averageRef}
-          className="flex justify-center gap-4 sm:gap-6 mt-3"
-        >
+        <div ref={averageRef} className="flex justify-center gap-4 sm:gap-6">
           <div className="text-center">
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               평균

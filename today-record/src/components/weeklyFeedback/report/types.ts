@@ -20,19 +20,26 @@ export type WeeklyReportData = {
     narrative: string;
     top_keywords: string[];
     repeated_themes: Array<{ theme: string; count: number }>;
-    emotion_trend: string[]; // ["불안", "몰입", "안도"]
     ai_overall_comment: string;
   };
 
-  // By Day Timeline
-  by_day: Array<{
-    date: string; // "2025.10.28"
-    weekday: string; // "월요일"
-    one_liner: string;
-    key_mood: string;
-    keywords: string[];
-    integrity_score: number;
-  }>;
+  // Emotion Overview
+  emotion_overview: {
+    ai_mood_valence: number | null;
+    ai_mood_arousal: number | null;
+    dominant_emotion: string | null;
+    valence_explanation: string;
+    arousal_explanation: string;
+    valence_patterns: string[];
+    arousal_patterns: string[];
+    daily_emotions: Array<{
+      date: string; // "2025.10.28"
+      weekday: string; // "월요일"
+      ai_mood_valence: number | null;
+      ai_mood_arousal: number | null;
+      dominant_emotion: string | null;
+    }>;
+  } | null;
 
   // Growth Trends
   growth_points_top3: string[];

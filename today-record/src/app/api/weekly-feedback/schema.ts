@@ -19,42 +19,19 @@ export const WeeklyFeedbackSchema = {
             },
             required: ["start", "end", "timezone"],
           },
-          by_day: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-                weekday: { type: "string" },
-                one_liner: { type: "string" },
-                key_mood: { type: "string" },
-                keywords: { type: "array", items: { type: "string" } },
-                integrity_score: { type: "integer", minimum: 0, maximum: 10 },
-              },
-              required: [
-                "date",
-                "weekday",
-                "one_liner",
-                "key_mood",
-                "keywords",
-                "integrity_score",
-              ],
-            },
-          },
           weekly_overview: {
             type: "object",
             additionalProperties: false,
             properties: {
               narrative: { type: "string" },
-              top_keywords: { 
-                type: "array", 
+              top_keywords: {
+                type: "array",
                 items: { type: "string" },
                 maxItems: 10,
-                description: "이번 주에 가장 많이 등장한 키워드 배열 (반드시 10개 이하)"
+                description:
+                  "이번 주에 가장 많이 등장한 키워드 배열 (반드시 10개 이하)",
               },
               repeated_themes: { type: "array", items: { type: "string" } },
-              emotion_trend: { type: "array", items: { type: "string" } },
               integrity: {
                 type: "object",
                 additionalProperties: false,
@@ -70,10 +47,62 @@ export const WeeklyFeedbackSchema = {
               "narrative",
               "top_keywords",
               "repeated_themes",
-              "emotion_trend",
               "integrity",
               "ai_overall_comment",
               "next_week_focus",
+            ],
+          },
+          emotion_overview: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              ai_mood_valence: { type: "number", nullable: true },
+              ai_mood_arousal: { type: "number", nullable: true },
+              dominant_emotion: { type: "string", nullable: true },
+              valence_explanation: { type: "string" },
+              arousal_explanation: { type: "string" },
+              valence_patterns: {
+                type: "array",
+                items: { type: "string" },
+                description: "쾌-불쾌를 느끼는 반복되는 패턴과 그 이유",
+              },
+              arousal_patterns: {
+                type: "array",
+                items: { type: "string" },
+                description: "각성-에너지를 느끼는 반복되는 패턴과 그 이유",
+              },
+              daily_emotions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                    weekday: { type: "string" },
+                    ai_mood_valence: { type: "number", nullable: true },
+                    ai_mood_arousal: { type: "number", nullable: true },
+                    dominant_emotion: { type: "string", nullable: true },
+                  },
+                  required: [
+                    "date",
+                    "weekday",
+                    "ai_mood_valence",
+                    "ai_mood_arousal",
+                    "dominant_emotion",
+                  ],
+                },
+                description: "기록이 있는 날짜의 일별 감정 데이터만 포함",
+              },
+            },
+            required: [
+              "ai_mood_valence",
+              "ai_mood_arousal",
+              "dominant_emotion",
+              "valence_explanation",
+              "arousal_explanation",
+              "valence_patterns",
+              "arousal_patterns",
+              "daily_emotions",
             ],
           },
           growth_trends: {
@@ -193,8 +222,8 @@ export const WeeklyFeedbackSchema = {
         required: [
           "title",
           "week_range",
-          "by_day",
           "weekly_overview",
+          "emotion_overview",
           "growth_trends",
           "insight_replay",
           "vision_visualization_report",
@@ -224,12 +253,19 @@ export const SYSTEM_PROMPT_WEEKLY = `
 - 사용자가 자신의 일주일을 되돌아볼 수 있도록 공감하고 응원하는 톤을 유지해주세요.
 
 📅 데이터 작성 규칙:
-- by_day 배열에는 주어진 날짜 범위의 모든 날짜를 빠짐없이 포함해주세요 (총 7일).
-- 특정 날짜에 daily-feedback 데이터가 없어도 그 날짜는 반드시 포함하고, 기본 구조를 유지한 채 적절한 기본값을 넣어주세요.
+- ⚠️ 기록이 없는 날짜는 모든 섹션에서 제외해주세요. daily-feedback 데이터가 있는 날짜만 포함하세요.
 - top_keywords: ⚠️ 반드시 10개 이하로만 선정해주세요. 가장 중요하고 자주 등장한 키워드만 엄선하여 최대 10개까지만 포함해주세요. 10개를 초과하면 안 됩니다.
 - repeated_themes: 주간 동안 계속해서 나타난 주제나 패턴을 찾아서 정리해주세요.
-- emotion_trend: 이번 주의 감정 변화를 시간 순서대로 배열해주세요.
 - growth_points_top3, adjustment_points_top3: 각각 정확히 3개씩만 작성해주세요.
+- emotion_overview: 일별 피드백의 emotion_overview 데이터를 분석하여 주간 감정을 계산하고 집계해주세요.
+  * ai_mood_valence: 일별 ai_mood_valence 값들의 평균을 계산하여 주간 평균 쾌-불쾌 값을 제공해주세요 (기록이 있는 날짜만 포함).
+  * ai_mood_arousal: 일별 ai_mood_arousal 값들의 평균을 계산하여 주간 평균 각성-에너지 값을 제공해주세요 (기록이 있는 날짜만 포함).
+  * dominant_emotion: 이번 주를 대표하는 가장 핵심적인 감정을 한 단어 또는 짧은 구로 작성해주세요.
+  * valence_explanation: 쾌-불쾌(Valence) 차원을 사용하는 이유를 명확하게 설명해주세요. 이는 감정의 긍정성/부정성을 측정하는 차원으로, 사용자가 어떤 상황에서 기쁨, 만족, 불안, 슬픔 등을 느끼는지 이해하는 데 도움이 됩니다.
+  * arousal_explanation: 각성-에너지(Arousal) 차원을 사용하는 이유를 명확하게 설명해주세요. 이는 감정의 활성화 수준을 측정하는 차원으로, 사용자가 어떤 상황에서 활기, 몰입, 평온, 무기력 등을 느끼는지 이해하는 데 도움이 됩니다.
+  * valence_patterns: 일별 감정 데이터를 분석하여 쾌-불쾌를 느끼는 반복되는 패턴을 찾아 설명해주세요. 예: "월요일 아침에 부정적 감정이 높게 나타나는 패턴이 보입니다. 아마도 주말에서 평일로 전환되는 부담감 때문인 것 같아요."
+  * arousal_patterns: 일별 감정 데이터를 분석하여 각성-에너지를 느끼는 반복되는 패턴을 찾아 설명해주세요. 예: "오후 시간대에 각성 수준이 높아지는 패턴이 보입니다. 집중이 필요한 작업을 하는 시간과 일치하는 것 같아요."
+  * daily_emotions: 기록이 있는 날짜의 일별 감정 데이터만 포함해주세요. 기록이 없는 날짜는 제외하세요.
 - core_insights: 가장 중요한 인사이트를 5개 이하로 정리해주세요.
 - meta_questions_highlight: 메타 질문 중에서 특히 눈에 띄는 것들을 3개 이하로 선정해주세요.
 - vision_keywords_trend: 시각화 키워드를 주제별 범주로 묶어서 정리해주세요. 최대 7개의 범주만 포함하고, 비슷한 키워드들은 하나의 주제로 묶어주세요. 예를 들어 "EdgeFunction", "스케줄러", "자동화" 같은 키워드들은 "개발"이라는 범주로 묶을 수 있어요. 각 범주의 days는 해당 범주에 속한 키워드들이 등장한 날짜 수의 합계로 계산해주세요.
@@ -246,35 +282,42 @@ export const SYSTEM_PROMPT_WEEKLY = `
       "end": "YYYY-MM-DD 형식의 주 종료일 (일요일)",
       "timezone": "Asia/Seoul"
     },
-    "by_day": [
-      {
-        "date": "YYYY-MM-DD 형식의 날짜",
-        "weekday": "요일 (Mon, Tue, Wed, Thu, Fri, Sat, Sun 중 하나)",
-        "one_liner": "그 날을 한 문장으로 표현한 요약",
-        "key_mood": "그 날의 주요 감정이나 분위기",
-        "keywords": ["그 날을 대표하는 키워드 배열"],
-        "integrity_score": 0-10 사이의 정수 (그 날의 통합성 점수)
-      }
-    ],
     "weekly_overview": {
       "narrative": "이번 주 전체를 이야기처럼 풀어낸 서사 (친근하고 이해하기 쉬운 말투로)",
       "top_keywords": ["이번 주에 가장 많이 등장한 키워드 배열 (반드시 10개 이하)"],
       "repeated_themes": ["주간 동안 반복적으로 나타난 주제나 패턴 배열"],
-      "emotion_trend": ["시간 순서대로 나열한 감정 변화 배열"],
       "integrity": {
         "average": 0-10 사이의 숫자 (주간 평균 통합성 점수)
       },
       "ai_overall_comment": "이번 주 전체에 대한 종합적인 코멘트 (공감하고 응원하는 톤으로)",
       "next_week_focus": "다음 주에 집중할 포인트 (간결하고 명확하게)"
     },
+    "emotion_overview": {
+      "ai_mood_valence": -1.0 ~ +1.0 범위의 숫자 또는 null (주간 평균 쾌-불쾌 값, 기록이 있는 날짜만 포함),
+      "ai_mood_arousal": 0.0 ~ 1.0 범위의 숫자 또는 null (주간 평균 각성-에너지 값, 기록이 있는 날짜만 포함),
+      "dominant_emotion": "이번 주를 대표하는 가장 핵심적인 감정 (한 단어 또는 짧은 구) 또는 null",
+      "valence_explanation": "쾌-불쾌(Valence) 차원을 사용하는 이유에 대한 명확한 설명",
+      "arousal_explanation": "각성-에너지(Arousal) 차원을 사용하는 이유에 대한 명확한 설명",
+      "valence_patterns": ["쾌-불쾌를 느끼는 반복되는 패턴과 그 이유에 대한 설명 배열"],
+      "arousal_patterns": ["각성-에너지를 느끼는 반복되는 패턴과 그 이유에 대한 설명 배열"],
+      "daily_emotions": [
+        {
+          "date": "YYYY-MM-DD 형식의 날짜 (기록이 있는 날짜만)",
+          "weekday": "요일 (Mon, Tue, Wed, Thu, Fri, Sat, Sun 중 하나)",
+          "ai_mood_valence": -1.0 ~ +1.0 범위의 숫자 또는 null,
+          "ai_mood_arousal": 0.0 ~ 1.0 범위의 숫자 또는 null,
+          "dominant_emotion": "그날 하루를 대표하는 감정 (한 단어 또는 짧은 구) 또는 null"
+        }
+      ]
+    },
     "growth_trends": {
       "growth_points_top3": ["성장한 점 3개 (구체적이고 긍정적인 표현으로)"],
       "adjustment_points_top3": ["개선이 필요한 점 3개 (건설적이고 따뜻한 표현으로)"],
       "integrity_score": {
-        "avg": 0-10 사이의 숫자 (평균),
-        "min": 0-10 사이의 숫자 (최소값),
-        "max": 0-10 사이의 숫자 (최대값),
-        "stddev_est": 0 이상의 숫자 (표준편차 추정값)
+        "avg": 0-10 사이의 숫자 (평균, 기록이 있는 날짜만 포함),
+        "min": 0-10 사이의 숫자 (최소값, 기록이 있는 날짜만 포함),
+        "max": 0-10 사이의 숫자 (최대값, 기록이 있는 날짜만 포함),
+        "stddev_est": 0 이상의 숫자 (표준편차 추정값, 기록이 있는 날짜만 포함)
       }
     },
     "insight_replay": {

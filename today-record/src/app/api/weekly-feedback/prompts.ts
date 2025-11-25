@@ -5,7 +5,18 @@ import type { DailyFeedbackForWeekly } from "./types";
  */
 export function buildWeeklyFeedbackPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
+  weekRange: { start: string; end: string; timezone: string },
+  emotionOverviewData?: {
+    daily_emotions: Array<{
+      date: string;
+      weekday: string;
+      ai_mood_valence: number | null;
+      ai_mood_arousal: number | null;
+      dominant_emotion: string | null;
+    }>;
+    avg_valence: number | null;
+    avg_arousal: number | null;
+  }
 ): string {
   let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 리포트를 생성하여 JSON만 출력하세요.\n\n`;
 
@@ -58,13 +69,20 @@ export function buildWeeklyFeedbackPrompt(
         }
 
         // emotion_overview 접근
-        if (
-          feedback.emotion_overview?.emotion_curve &&
-          feedback.emotion_overview.emotion_curve.length > 0
-        ) {
-          prompt += `감정 곡선: ${feedback.emotion_overview.emotion_curve.join(
-            " → "
-          )}\n`;
+        if (feedback.emotion_overview) {
+          const emotion = feedback.emotion_overview;
+          if (emotion.ai_mood_valence !== null) {
+            prompt += `감정 쾌-불쾌 (Valence): ${emotion.ai_mood_valence}\n`;
+          }
+          if (emotion.ai_mood_arousal !== null) {
+            prompt += `감정 각성-에너지 (Arousal): ${emotion.ai_mood_arousal}\n`;
+          }
+          if (emotion.emotion_curve && emotion.emotion_curve.length > 0) {
+            prompt += `감정 곡선: ${emotion.emotion_curve.join(" → ")}\n`;
+          }
+          if (emotion.dominant_emotion) {
+            prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
+          }
         }
 
         // narrative_overview 접근
@@ -131,7 +149,17 @@ export function buildWeeklyFeedbackPrompt(
     }
   }
 
-  prompt += `\n\n위 데이터를 종합하여 주간 리포트를 생성하세요. 각 날짜별로 by_day 배열에 항목을 추가하고, 전체 주간의 패턴과 트렌드를 분석하여 weekly_overview, growth_trends, insight_replay, vision_visualization_report, execution_reflection, closing_section을 작성하세요.`;
+  prompt += `\n\n위 데이터를 종합하여 주간 리포트를 생성하세요. 전체 주간의 패턴과 트렌드를 분석하여 weekly_overview, emotion_overview, growth_trends, growth_trends, insight_replay, vision_visualization_report, execution_reflection, closing_section을 작성하세요.
+
+중요: emotion_overview는 일별 피드백의 emotion_overview 데이터를 분석하여 작성해야 합니다.
+- ai_mood_valence: 일별 ai_mood_valence 값들의 평균을 계산하세요 (null이 아닌 값들만 평균 계산, 기록이 있는 날짜만 포함)
+- ai_mood_arousal: 일별 ai_mood_arousal 값들의 평균을 계산하세요 (null이 아닌 값들만 평균 계산, 기록이 있는 날짜만 포함)
+- dominant_emotion: 이번 주를 대표하는 가장 핵심적인 감정을 한 단어 또는 짧은 구로 작성하세요
+- valence_explanation: 쾌-불쾌(Valence)를 사용하는 이유를 명확하게 설명하세요. 이는 감정의 긍정성/부정성을 측정하는 차원으로, 사용자가 어떤 상황에서 기쁨, 만족, 불안, 슬픔 등을 느끼는지 이해하는 데 도움이 됩니다.
+- arousal_explanation: 각성-에너지(Arousal)를 사용하는 이유를 명확하게 설명하세요. 이는 감정의 활성화 수준을 측정하는 차원으로, 사용자가 어떤 상황에서 활기, 몰입, 평온, 무기력 등을 느끼는지 이해하는 데 도움이 됩니다.
+- valence_patterns: 일별 감정 데이터를 분석하여 쾌-불쾌를 느끼는 반복되는 패턴을 찾아 설명하세요. 예: "월요일 아침에 부정적 감정이 높게 나타나는 패턴이 보입니다. 아마도 주말에서 평일로 전환되는 부담감 때문인 것 같아요."
+- arousal_patterns: 일별 감정 데이터를 분석하여 각성-에너지를 느끼는 반복되는 패턴을 찾아 설명하세요. 예: "오후 시간대에 각성 수준이 높아지는 패턴이 보입니다. 집중이 필요한 작업을 하는 시간과 일치하는 것 같아요."
+- daily_emotions: 기록이 있는 날짜의 일별 감정 데이터만 포함하세요. 기록이 없는 날짜는 제외하세요. 각 항목에는 date, weekday, ai_mood_valence, ai_mood_arousal, dominant_emotion을 포함하세요.`;
 
   return prompt;
 }

@@ -4,7 +4,7 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
-import { ByDayTimelineSection } from "./report/ByDayTimelineSection";
+import { WeeklyEmotionSection } from "./report/WeeklyEmotionSection";
 import { WeeklyOverviewSection } from "./report/WeeklyOverviewSection";
 import { GrowthTrendsSection } from "./report/GrowthTrendsSection";
 import { InsightReplaySection } from "./report/InsightReplaySection";
@@ -56,10 +56,7 @@ export function WeeklyFeedbackReport({
 
         <ScrollAnimation delay={200}>
           <div className="mb-64">
-            <ByDayTimelineSection
-              byDay={data.by_day}
-              emotionTrend={data.weekly_overview.emotion_trend}
-            />
+            <WeeklyEmotionSection emotionOverview={data.emotion_overview} />
           </div>
         </ScrollAnimation>
 
@@ -72,7 +69,6 @@ export function WeeklyFeedbackReport({
         <ScrollAnimation delay={200}>
           <div className="mb-64">
             <GrowthTrendsSection
-              byDay={data.by_day}
               integrity={data.integrity}
               growthPoints={data.growth_points_top3}
               adjustmentPoints={data.adjustment_points_top3}
