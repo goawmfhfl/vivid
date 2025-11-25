@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { fetchWeeklyFeedbackDetail } from "../db-service";
+import {
+  fetchWeeklyFeedbackDetail,
+  fetchDailyFeedbacksByRange,
+} from "../db-service";
 
 /**
  * GET 핸들러: 주간 피드백 상세 조회
@@ -35,7 +38,37 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: feedback }, { status: 200 });
+    // 일별 정합도 점수 데이터 가져오기
+    const dailyFeedbacks = await fetchDailyFeedbacksByRange(
+      supabase,
+      userId,
+      feedback.week_range.start,
+      feedback.week_range.end
+    );
+
+    // 일별 정합도 점수 배열 생성 (기록이 있는 날짜만)
+    const dailyIntegrityScores = dailyFeedbacks
+      .filter((df) => df.integrity_score !== null)
+      .map((df) => {
+        const date = new Date(df.report_date);
+        const weekday = date.toLocaleDateString("ko-KR", { weekday: "long" });
+        return {
+          date: df.report_date.replace(/-/g, "."),
+          weekday,
+          score: df.integrity_score!,
+        };
+      });
+
+    // feedback 객체에 daily_integrity_scores 추가
+    const feedbackWithDailyScores = {
+      ...feedback,
+      daily_integrity_scores: dailyIntegrityScores,
+    };
+
+    return NextResponse.json(
+      { data: feedbackWithDailyScores },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);

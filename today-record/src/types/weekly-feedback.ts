@@ -108,6 +108,12 @@ export type WeeklyFeedback = {
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;
+  // 일별 정합도 점수 (API에서 추가)
+  daily_integrity_scores?: Array<{
+    date: string; // "YYYY.MM.DD"
+    weekday: string; // "월요일"
+    score: number; // 0-10
+  }>;
 };
 
 // 리스트용 가벼운 타입

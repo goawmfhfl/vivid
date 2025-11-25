@@ -28,6 +28,14 @@ export function DailyFeedbackView({
   id,
   onBack,
 }: DailyFeedbackViewProps) {
+  // id 유효성 검사: undefined, "undefined", 빈 문자열 등 제외
+  const isValidId =
+    id &&
+    id !== "undefined" &&
+    id !== "null" &&
+    id.trim() !== "" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
   const {
     data: dataByDate,
     isLoading: isLoadingByDate,
@@ -39,13 +47,13 @@ export function DailyFeedbackView({
     isLoading: isLoadingById,
     error: errorById,
     refetch: refetchById,
-  } = useGetDailyFeedbackById(id || null);
+  } = useGetDailyFeedbackById(isValidId ? id : null);
 
-  // id가 있으면 id로 조회, 없으면 date로 조회
-  const data = id ? dataById : dataByDate;
-  const isLoading = id ? isLoadingById : isLoadingByDate;
-  const error = id ? errorById : errorByDate;
-  const refetch = id ? refetchById : refetchByDate;
+  // id가 유효하면 id로 조회, 없으면 date로 조회
+  const data = isValidId ? dataById : dataByDate;
+  const isLoading = isValidId ? isLoadingById : isLoadingByDate;
+  const error = isValidId ? errorById : errorByDate;
+  const refetch = isValidId ? refetchById : refetchByDate;
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
 

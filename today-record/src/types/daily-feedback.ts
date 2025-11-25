@@ -1,9 +1,23 @@
+// Emotion Timeline 항목
+export interface EmotionTimelineItem {
+  time_range: string; // "09:00-12:00" 형식
+  emotion: string;
+}
+
 // Emotion Overview 섹션
 export interface EmotionOverview {
   ai_mood_valence: number | null;
   ai_mood_arousal: number | null;
   emotion_curve: string[];
   dominant_emotion: string | null;
+  emotion_quadrant:
+    | "몰입·설렘"
+    | "불안·초조"
+    | "슬픔·무기력"
+    | "안도·평온"
+    | null;
+  emotion_quadrant_explanation: string | null;
+  emotion_timeline: EmotionTimelineItem[];
 }
 
 // Narrative Overview 섹션

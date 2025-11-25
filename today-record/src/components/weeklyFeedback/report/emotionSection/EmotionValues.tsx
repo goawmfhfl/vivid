@@ -24,14 +24,10 @@ const getArousalDescription = (a: number) => {
 
 export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
   const {
-    showValenceTooltip,
-    showArousalTooltip,
-    showSadTooltip,
-    showCalmTooltip,
     setShowValenceTooltip,
-    setShowArousalTooltip,
-    setShowSadTooltip,
-    setShowCalmTooltip,
+    showValenceTooltip,
+    setShowEngagedTooltip,
+    showEngagedTooltip,
   } = useTooltip();
   return (
     <div className="grid grid-cols-2 gap-4 mt-4">
@@ -55,11 +51,11 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
               fontWeight: "500",
             }}
           >
-            쾌·불쾌 (Valence)
+            쾌·불쾌
           </p>
           <div className="relative">
             <button
-              onClick={() => setShowSadTooltip(!showSadTooltip)}
+              onClick={() => setShowValenceTooltip(true)}
               className="cursor-pointer"
               style={{
                 background: "none",
@@ -74,7 +70,7 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 style={{ color: "#6B7A6F" }}
               />
             </button>
-            {showSadTooltip && (
+            {showValenceTooltip && (
               <div
                 className="absolute"
                 style={{
@@ -94,7 +90,7 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 }}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <p style={{ fontWeight: "600" }}>쾌·불쾌 (Valence)</p>
+                  <p style={{ fontWeight: "600" }}>쾌·불쾌</p>
                   <button
                     onClick={() => setShowValenceTooltip(false)}
                     style={{
@@ -171,11 +167,11 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
               fontWeight: "500",
             }}
           >
-            각성·에너지 (Arousal)
+            각성·에너지
           </p>
           <div className="relative">
             <button
-              onClick={() => setShowCalmTooltip(!showCalmTooltip)}
+              onClick={() => setShowEngagedTooltip(true)}
               className="cursor-pointer"
               style={{
                 background: "none",
@@ -190,7 +186,7 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 style={{ color: "#E5B96B" }}
               />
             </button>
-            {showCalmTooltip && (
+            {showEngagedTooltip && (
               <div
                 className="absolute"
                 style={{
@@ -210,9 +206,9 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 }}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <p style={{ fontWeight: "600" }}>각성·에너지 (Arousal)</p>
+                  <p style={{ fontWeight: "600" }}>각성·에너지</p>
                   <button
-                    onClick={() => setShowArousalTooltip(false)}
+                    onClick={() => setShowEngagedTooltip(false)}
                     style={{
                       background: "none",
                       border: "none",

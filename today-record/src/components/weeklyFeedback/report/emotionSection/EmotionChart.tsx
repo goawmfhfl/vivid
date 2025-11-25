@@ -231,10 +231,10 @@ export function EmotionChart({
                         }}
                       >
                         <div>
-                          Valence: <strong>{dayValence.toFixed(2)}</strong>
+                          쾌·불쾌: <strong>{dayValence.toFixed(2)}</strong>
                         </div>
                         <div>
-                          Arousal: <strong>{dayArousal.toFixed(2)}</strong>
+                          각성·에너지: <strong>{dayArousal.toFixed(2)}</strong>
                         </div>
                         <div className="mt-1" style={{ opacity: 0.85 }}>
                           {dayQuadrant.label}

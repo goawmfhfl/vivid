@@ -56,6 +56,15 @@ export function mapWeeklyFeedbackToReportData(
       max: integrityMax,
       stddev: Math.round(integrityStddev * 10) / 10,
       trend: generateIntegrityTrend(),
+      daily_scores: feedback.daily_integrity_scores?.map((day) => ({
+        date: day.date.includes("-")
+          ? formatDateForDisplay(day.date)
+          : day.date,
+        weekday: day.weekday.includes("요일")
+          ? day.weekday
+          : convertWeekdayToKorean(day.weekday),
+        score: day.score,
+      })),
     },
     weekly_one_liner: feedback.closing_section.weekly_one_liner,
     next_week_focus: feedback.weekly_overview.next_week_focus,

@@ -3,6 +3,15 @@
 import { useMemo } from "react";
 import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { WeeklyReportData } from "./types";
 
@@ -54,7 +63,10 @@ export function GrowthTrendsSection({
         >
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           성장 트렌드
         </h2>
       </div>
@@ -64,13 +76,13 @@ export function GrowthTrendsSection({
         className="p-4 sm:p-5 mb-4"
         style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
       >
-        <p
-          className="text-xs mb-2.5 sm:mb-3"
-          style={{ color: "#6B7A6F" }}
-        >
+        <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
           주간 정합도 점수 요약
         </p>
-        <div ref={averageRef} className="flex justify-center gap-4 sm:gap-6">
+        <div
+          ref={averageRef}
+          className="flex justify-center gap-4 sm:gap-6 mb-4"
+        >
           <div className="text-center">
             <p className="text-xs" style={{ color: "#6B7A6F" }}>
               평균
@@ -96,6 +108,59 @@ export function GrowthTrendsSection({
             </p>
           </div>
         </div>
+
+        {/* 일별 정합도 점수 차트 */}
+        {integrity.daily_scores && integrity.daily_scores.length > 0 && (
+          <div className="mt-4">
+            <p className="text-xs mb-2.5 sm:mb-3" style={{ color: "#6B7A6F" }}>
+              일별 정합도 점수 추이
+            </p>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart
+                data={integrity.daily_scores.map((day) => ({
+                  date: day.date.split(".").slice(1, 3).join("/"),
+                  weekday: day.weekday,
+                  score: day.score,
+                }))}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "#6B7A6F" }}
+                  axisLine={{ stroke: "#E0E0E0" }}
+                />
+                <YAxis
+                  domain={[0, 10]}
+                  tick={{ fontSize: 10, fill: "#6B7A6F" }}
+                  axisLine={{ stroke: "#E0E0E0" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #EFE9E3",
+                    borderRadius: "8px",
+                    fontSize: "0.8rem",
+                    color: "#333333",
+                  }}
+                  labelStyle={{
+                    color: "#D08C60",
+                    fontWeight: 500,
+                  }}
+                  formatter={(value: number) => [`${value}점`, "정합도"]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#D08C60"
+                  strokeWidth={2}
+                  dot={{ fill: "#D08C60", r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </Card>
 
       {/* Growth & Adjustment Points */}

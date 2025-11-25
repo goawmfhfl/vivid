@@ -10,7 +10,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Card } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { SectionProps } from "./types";
 
 export const EmotionSection = ({ view }: SectionProps) => {
@@ -21,12 +20,20 @@ export const EmotionSection = ({ view }: SectionProps) => {
   const hasEmotionData =
     view.ai_mood_valence !== null && view.ai_mood_arousal !== null;
 
-  // 감정 구역 분류 함수
-  const getEmotionQuadrant = (v: number, a: number) => {
-    if (v > 0 && a > 0.5) return { label: "몰입·설렘·의욕", color: "#A8BBA8" };
-    if (v > 0 && a <= 0.5) return { label: "안도·평온·휴식", color: "#E5B96B" };
-    if (v <= 0 && a > 0.5) return { label: "불안·초조·당황", color: "#B89A7A" };
-    return { label: "슬픔·체념·무기력", color: "#6B7A6F" };
+  // 감정 구역 색상 매핑
+  const getQuadrantColor = (quadrant: string | null) => {
+    switch (quadrant) {
+      case "몰입·설렘":
+        return "#A8BBA8";
+      case "안도·평온":
+        return "#E5B96B";
+      case "불안·초조":
+        return "#B89A7A";
+      case "슬픔·무기력":
+        return "#6B7A6F";
+      default:
+        return "#6B7A6F";
+    }
   };
 
   // valence 설명 텍스트
@@ -45,27 +52,6 @@ export const EmotionSection = ({ view }: SectionProps) => {
     return "높은 에너지";
   };
 
-  // 감정 해석 텍스트 생성
-  const getEmotionInterpretation = (v: number, a: number) => {
-    const vDesc = getValenceDescription(v);
-    const aDesc = getArousalDescription(a);
-    const quadrant = getEmotionQuadrant(v, a);
-
-    if (v <= -0.1 && a > 0.6) {
-      return "조금 불안한데 몸은 바쁘게 돌아가는 상태. 긴장감 있는 몰입이나 압박감 속에서 일하는 느낌.";
-    }
-    if (v > 0 && a > 0.6) {
-      return "에너지가 높고 기분이 좋은 상태. 몰입도가 높고 의욕이 넘치는 하루.";
-    }
-    if (v > 0 && a <= 0.5) {
-      return "평온하고 안정적인 상태. 여유롭고 만족스러운 하루.";
-    }
-    if (v <= -0.1 && a <= 0.5) {
-      return "에너지가 낮고 기분이 가라앉은 상태. 무기력하거나 지친 느낌.";
-    }
-    return `${vDesc}이고 ${aDesc}인 상태. ${quadrant.label}에 가까운 감정입니다.`;
-  };
-
   // 2D 좌표계에서 점의 위치 계산 (x: valence, y: arousal)
   // x: -1 ~ +1 → 0 ~ 100%
   // y: 0 ~ 1 → 0 ~ 100%
@@ -79,7 +65,8 @@ export const EmotionSection = ({ view }: SectionProps) => {
   };
 
   const pointPos = hasEmotionData ? getPointPosition(valence, arousal) : null;
-  const quadrant = hasEmotionData ? getEmotionQuadrant(valence, arousal) : null;
+  const quadrant = view.emotion_quadrant;
+  const quadrantColor = getQuadrantColor(quadrant);
 
   return (
     <div className="mb-12">
@@ -90,7 +77,12 @@ export const EmotionSection = ({ view }: SectionProps) => {
         >
           <Heart className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 감정</h2>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
+          오늘의 감정
+        </h2>
       </div>
 
       {hasEmotionData ? (
@@ -204,7 +196,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                         width: "16px",
                         height: "16px",
                         borderRadius: "50%",
-                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        backgroundColor: quadrantColor,
                         opacity: 0.3,
                         animation:
                           "emotion-pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite",
@@ -220,7 +212,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                         width: "16px",
                         height: "16px",
                         borderRadius: "50%",
-                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        backgroundColor: quadrantColor,
                         opacity: 0.3,
                         animation:
                           "emotion-pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.5s",
@@ -237,7 +229,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                         width: "16px",
                         height: "16px",
                         borderRadius: "50%",
-                        backgroundColor: quadrant?.color || "#6B7A6F",
+                        backgroundColor: quadrantColor,
                         border: "3px solid white",
                         boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                         animation:
@@ -324,7 +316,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                       fontWeight: "500",
                     }}
                   >
-                    쾌·불쾌 (Valence)
+                    쾌·불쾌
                   </p>
                   <div className="relative">
                     <button
@@ -363,7 +355,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                         }}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <p style={{ fontWeight: "600" }}>쾌·불쾌 (Valence)</p>
+                          <p style={{ fontWeight: "600" }}>쾌·불쾌</p>
                           <button
                             onClick={() => setShowValenceTooltip(false)}
                             style={{
@@ -444,7 +436,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                       fontWeight: "500",
                     }}
                   >
-                    각성·에너지 (Arousal)
+                    각성·에너지
                   </p>
                   <div className="relative">
                     <button
@@ -483,9 +475,7 @@ export const EmotionSection = ({ view }: SectionProps) => {
                         }}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <p style={{ fontWeight: "600" }}>
-                            각성·에너지 (Arousal)
-                          </p>
+                          <p style={{ fontWeight: "600" }}>각성·에너지</p>
                           <button
                             onClick={() => setShowArousalTooltip(false)}
                             style={{
@@ -549,37 +539,42 @@ export const EmotionSection = ({ view }: SectionProps) => {
           </Card>
 
           {/* 감정 해석 */}
-          <Card
-            className="p-5 mb-4"
-            style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
-          >
-            <div className="flex items-start gap-3">
-              <Wind
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
-                style={{ color: "#B89A7A" }}
-              />
-              <div>
-                <p
-                  className="text-xs"
-                  style={{
-                    color: "#6B7A6F",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  감정 해석
-                </p>
-                <p
-                  className="text-sm"
-                  style={{
-                    color: "#4E4B46",
-                    lineHeight: "1.7",
-                  }}
-                >
-                  {getEmotionInterpretation(valence, arousal)}
-                </p>
+          {view.emotion_quadrant && view.emotion_quadrant_explanation && (
+            <Card
+              className="p-5 mb-4"
+              style={{
+                backgroundColor: "#F5F7F5",
+                border: "1px solid #E0E5E0",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <Wind
+                  className="w-4 h-4 flex-shrink-0 mt-0.5"
+                  style={{ color: "#B89A7A" }}
+                />
+                <div>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: "#6B7A6F",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    감정 해석
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{
+                      color: "#4E4B46",
+                      lineHeight: "1.7",
+                    }}
+                  >
+                    {view.emotion_quadrant_explanation}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
         </>
       ) : (
         <Card
@@ -617,63 +612,117 @@ export const EmotionSection = ({ view }: SectionProps) => {
               >
                 하루 감정 흐름
               </p>
-              <div className="flex items-center gap-2 flex-wrap">
-                {view.emotion_curve.map((emotion, index) => (
-                  <div key={index} className="flex items-center gap-2">
+              {/* 시간대별 감정 흐름 표시 */}
+              {view.emotion_timeline && view.emotion_timeline.length > 0 ? (
+                <div className="space-y-3">
+                  {view.emotion_timeline.map((item, index) => (
                     <div
-                      className="relative text-sm px-3 py-1"
+                      key={index}
+                      className="flex items-center gap-3"
                       style={{
-                        borderRadius: "20px",
-                        backgroundColor: "#EAEDE9",
-                        color: "#55685E",
-                        fontWeight: "500",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        minWidth: "fit-content",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                        transition: "all 0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.05)";
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 8px rgba(0,0,0,0.1)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 2px 4px rgba(0,0,0,0.05)";
+                        padding: "0.75rem",
+                        borderRadius: "8px",
+                        backgroundColor: "#FAFAF8",
+                        border: "1px solid #E6E4DE",
                       }}
                     >
-                      {/* 감정별 색상 인디케이터 */}
                       <div
-                        style={{
-                          width: "8px",
-                          height: "8px",
-                          borderRadius: "50%",
-                          backgroundColor:
-                            index === 0
-                              ? "#A8BBA8"
-                              : index === view.emotion_curve.length - 1
-                              ? "#E5B96B"
-                              : "#6B7A6F",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span>{emotion}</span>
-                    </div>
-                    {index < view.emotion_curve.length - 1 && (
-                      <ArrowRight
-                        className="w-4 h-4 flex-shrink-0"
+                        className="text-xs font-medium"
                         style={{
                           color: "#6B7A6F",
-                          opacity: 0.4,
+                          minWidth: "80px",
                         }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+                      >
+                        {item.time_range}
+                      </div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <div
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            backgroundColor:
+                              index === 0
+                                ? "#A8BBA8"
+                                : index === view.emotion_timeline.length - 1
+                                ? "#E5B96B"
+                                : "#6B7A6F",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span
+                          className="text-sm"
+                          style={{
+                            color: "#4E4B46",
+                            fontWeight: "500",
+                          }}
+                        >
+                          {item.emotion}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* 기존 방식 (시간 정보 없을 때) */
+                <div className="flex items-center gap-2 flex-wrap">
+                  {view.emotion_curve.map((emotion, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div
+                        className="relative text-sm px-3 py-1"
+                        style={{
+                          borderRadius: "20px",
+                          backgroundColor: "#EAEDE9",
+                          color: "#55685E",
+                          fontWeight: "500",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          minWidth: "fit-content",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "scale(1.05)";
+                          e.currentTarget.style.boxShadow =
+                            "0 4px 8px rgba(0,0,0,0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "scale(1)";
+                          e.currentTarget.style.boxShadow =
+                            "0 2px 4px rgba(0,0,0,0.05)";
+                        }}
+                      >
+                        {/* 감정별 색상 인디케이터 */}
+                        <div
+                          style={{
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            backgroundColor:
+                              index === 0
+                                ? "#A8BBA8"
+                                : index === view.emotion_curve.length - 1
+                                ? "#E5B96B"
+                                : "#6B7A6F",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span>{emotion}</span>
+                      </div>
+                      {index < view.emotion_curve.length - 1 && (
+                        <ArrowRight
+                          className="w-4 h-4 flex-shrink-0"
+                          style={{
+                            color: "#6B7A6F",
+                            opacity: 0.4,
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* 타임라인 바 */}
               <div
                 className="mt-4 gradient-line-animated"

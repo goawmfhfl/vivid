@@ -34,16 +34,16 @@ export async function POST(request: NextRequest) {
     // 2️⃣ AI 요청 #1: 기록 카테고리화
     const categorized = await categorizeRecords(records, date);
 
-    // 3️⃣ AI 요청 #2: daily-report 생성
-    const report = await generateDailyReport(categorized, date);
+    // 3️⃣ AI 요청 #2: daily-report 생성 (레코드 시간 정보 포함)
+    const report = await generateDailyReport(categorized, date, records);
 
     // 4️⃣ Supabase daily_feedback 테이블에 저장
-    await saveDailyReport(supabase, userId, report);
+    const savedFeedback = await saveDailyReport(supabase, userId, report);
 
     return NextResponse.json(
       {
         message: "Daily report generated and saved successfully",
-        data: report,
+        data: savedFeedback,
       },
       { status: 200 }
     );

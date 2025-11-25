@@ -11,6 +11,11 @@ export type WeeklyReportData = {
     max: number;
     stddev: number;
     trend: string; // "전주 대비 +3"
+    daily_scores?: Array<{
+      date: string; // "2025.10.28"
+      weekday: string; // "월요일"
+      score: number; // 0-10
+    }>;
   };
   weekly_one_liner: string; // "생각이 전략으로, 실행이 습관으로 달을 내린 한 주"
   next_week_focus: string; // "속도보다 방향 유지"

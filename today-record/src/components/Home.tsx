@@ -77,11 +77,17 @@ export function Home() {
     try {
       if (hasTodayFeedback) {
         // 기존 피드백이 있으면 id로 라우팅
+        if (!todayFeedback.id) {
+          throw new Error("피드백 ID를 찾을 수 없습니다.");
+        }
         router.push(`/analysis/feedback/daily/${todayFeedback.id}`);
         return;
       }
       // 새 피드백 생성 후 id로 라우팅
       const createdFeedback = await createDailyFeedback({ date: todayIso });
+      if (!createdFeedback?.id) {
+        throw new Error("생성된 피드백에 ID가 없습니다.");
+      }
       router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (e) {
       const base =

@@ -21,6 +21,7 @@ export interface CategorizedRecords {
   insights: string[];
   feedbacks: string[];
   visualizings: string[];
+  emotions: string[];
 }
 
 // Daily Report 타입 (AI 응답 구조 - jsonb 섹션 기반)

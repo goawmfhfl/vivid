@@ -46,8 +46,8 @@ export async function generateWeeklyFeedbackFromDaily(
   );
   const openai = getOpenAIClient();
 
-  // 주간 피드백은 더 복잡한 분석이 필요하므로 gpt-5.1 사용
-  const model = process.env.OPENAI_MODEL || "gpt-5.1";
+  // 기본값을 gpt-5-mini로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
+  const model = process.env.OPENAI_MODEL || "gpt-5-mini";
 
   try {
     const completion = await openai.chat.completions.create({
@@ -75,19 +75,20 @@ export async function generateWeeklyFeedbackFromDaily(
     const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
     return parsed.weekly_feedback;
   } catch (error: any) {
-    // 모델이 사용 불가능한 경우 gpt-4o-mini로 fallback
+    // gpt-5-mini가 사용 불가능한 경우 gpt-4o-mini로 fallback
     if (
-      error?.message?.includes("model") ||
-      error?.code === "model_not_found" ||
-      error?.status === 404 ||
-      error?.message?.includes("timeout")
+      model === "gpt-5-mini" &&
+      (error?.message?.includes("model") ||
+        error?.code === "model_not_found" ||
+        error?.status === 404 ||
+        error?.message?.includes("timeout"))
     ) {
       console.warn(
-        `모델 ${model} 사용 불가능. gpt-5.1로 fallback합니다.`,
+        `gpt-5-mini 모델을 사용할 수 없습니다. gpt-4o-mini로 fallback합니다.`,
         error.message
       );
       const completion = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: SYSTEM_PROMPT_WEEKLY },
           { role: "user", content: prompt },

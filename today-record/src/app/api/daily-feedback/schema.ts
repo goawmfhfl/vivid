@@ -63,12 +63,34 @@ export const DailyReportSchema = {
             minItems: 0,
           },
           dominant_emotion: { type: "string", nullable: true },
+          emotion_quadrant: {
+            type: "string",
+            nullable: true,
+            enum: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온"],
+          },
+          emotion_quadrant_explanation: { type: "string", nullable: true },
+          emotion_timeline: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                time_range: { type: "string" },
+                emotion: { type: "string" },
+              },
+              required: ["time_range", "emotion"],
+              additionalProperties: false,
+            },
+            minItems: 0,
+          },
         },
         required: [
           "ai_mood_valence",
           "ai_mood_arousal",
           "emotion_curve",
           "dominant_emotion",
+          "emotion_quadrant",
+          "emotion_quadrant_explanation",
+          "emotion_timeline",
         ],
         additionalProperties: false,
       },
@@ -194,6 +216,7 @@ export const SYSTEM_PROMPT = `
 - 모든 키를 반드시 포함하세요. 값이 없으면 null, 빈 문자열("") 또는 빈 배열([])로 채웁니다.
 - integrity_score는 0~10의 정수로 제공합니다.
 - 일일 리포트에 사용되는 단어나 어휘들은 누구나 이해할 수 있을 만큼 쉽게 작성합니다.
+- date와 day_of_week는 프롬프트에 명시된 값을 정확히 사용하세요. 프롬프트에 "YYYY-MM-DD (요일)" 형식으로 제공되면, date는 "YYYY-MM-DD", day_of_week는 "요일"로 설정하세요.
 
 --------------------------------
 [섹션별 공통 처리 규칙]
@@ -266,6 +289,29 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
 - emotion_curve에 포함된 단어 중 하나를 선택하거나, 전체 내용을 보고 가장 잘 어울리는 단어를 사용하세요.
 - 예: "긴장된 몰입", "편안한 만족", "불안한 압박감", "지친 성취감"
 
+5) emotion_quadrant
+- ai_mood_valence와 ai_mood_arousal 값을 기반으로 감정을 4개 영역 중 하나로 분류합니다.
+- 분류 기준:
+  - valence > 0 && arousal > 0.5 → "몰입·설렘"
+  - valence > 0 && arousal <= 0.5 → "안도·평온"
+  - valence <= 0 && arousal > 0.5 → "불안·초조"
+  - valence <= 0 && arousal <= 0.5 → "슬픔·무기력"
+- ai_mood_valence나 ai_mood_arousal이 null이면 null로 처리합니다.
+
+6) emotion_quadrant_explanation
+- emotion_quadrant가 선정된 이유를 친절하고 구체적으로 설명합니다.
+- 예시: "오늘의 감정 키포인트는 몰입·설렘이었습니다. 아침 운동 후 에너지가 높아지고, 오후 개발 작업에 몰입하면서 긍정적인 감정과 높은 각성이 함께 나타났습니다. 특히 새로운 기능을 구현하는 과정에서 성취감과 설렘이 동시에 느껴졌어요."
+- ai_mood_valence나 ai_mood_arousal이 null이면 null로 처리합니다.
+
+7) emotion_timeline
+- 레코드의 created_at 시간 정보를 활용하여 시간대별 감정 흐름을 생성합니다.
+- 각 항목은 { time_range: "09:00-12:00", emotion: "기대" } 형식입니다.
+- time_range는 "HH:MM-HH:MM" 형식으로 작성합니다 (예: "09:00-12:00", "14:30-18:00").
+- emotion은 해당 시간대에 나타난 감정을 짧은 한국어 단어로 작성합니다.
+- 레코드가 없는 시간대는 포함하지 않습니다.
+- 레코드의 created_at을 기준으로 하루의 시작 시간부터 끝 시간까지 순서대로 배열합니다.
+- ai_mood_valence나 ai_mood_arousal이 null이면 빈 배열([])로 처리합니다.
+
 
 --------------------------------
 [데이터 규칙 - 기타 섹션]
@@ -292,7 +338,14 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
     "ai_mood_valence": -0.1,
     "ai_mood_arousal": 0.7,
     "emotion_curve": ["불안", "몰입", "안도"],
-    "dominant_emotion": "긴장된 몰입"
+    "dominant_emotion": "긴장된 몰입",
+    "emotion_quadrant": "불안·초조",
+    "emotion_quadrant_explanation": "오늘의 감정 키포인트는 불안·초조였습니다...",
+    "emotion_timeline": [
+      { "time_range": "09:00-12:00", "emotion": "불안" },
+      { "time_range": "14:00-18:00", "emotion": "몰입" },
+      { "time_range": "19:00-21:00", "emotion": "안도" }
+    ]
   },
   "narrative_overview": {
     "narrative_summary": "string",

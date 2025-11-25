@@ -16,6 +16,9 @@ export function mapDailyFeedbackRowToReport(
         ai_mood_valence: null,
         ai_mood_arousal: null,
         dominant_emotion: null,
+        emotion_quadrant: null,
+        emotion_quadrant_explanation: null,
+        emotion_timeline: [],
       };
     }
     return {
@@ -23,6 +26,10 @@ export function mapDailyFeedbackRowToReport(
       ai_mood_valence: row.emotion_overview.ai_mood_valence ?? null,
       ai_mood_arousal: row.emotion_overview.ai_mood_arousal ?? null,
       dominant_emotion: row.emotion_overview.dominant_emotion ?? null,
+      emotion_quadrant: row.emotion_overview.emotion_quadrant ?? null,
+      emotion_quadrant_explanation:
+        row.emotion_overview.emotion_quadrant_explanation ?? null,
+      emotion_timeline: row.emotion_overview.emotion_timeline ?? [],
     };
   };
 
@@ -132,6 +139,9 @@ export function mapDailyFeedbackRowToReport(
     ai_mood_valence: emotion.ai_mood_valence,
     ai_mood_arousal: emotion.ai_mood_arousal,
     dominant_emotion: emotion.dominant_emotion,
+    emotion_quadrant: emotion.emotion_quadrant,
+    emotion_quadrant_explanation: emotion.emotion_quadrant_explanation,
+    emotion_timeline: emotion.emotion_timeline,
 
     // Narrative Overview
     narrative_summary: narrative.narrative_summary,

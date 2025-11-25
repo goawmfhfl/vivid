@@ -22,6 +22,17 @@ export type DailyReportData = {
   ai_mood_arousal: number | null;
   /** 그날 하루를 대표하는 감정 (한 단어 또는 짧은 구) */
   dominant_emotion: string | null;
+  /** 감정 영역 (몰입·설렘, 불안·초조, 슬픔·무기력, 안도·평온) */
+  emotion_quadrant:
+    | "몰입·설렘"
+    | "불안·초조"
+    | "슬픔·무기력"
+    | "안도·평온"
+    | null;
+  /** 감정 영역이 선정된 이유에 대한 설명 */
+  emotion_quadrant_explanation: string | null;
+  /** 시간대별 감정 흐름 배열 */
+  emotion_timeline: Array<{ time_range: string; emotion: string }>;
 
   // ========== 서사 섹션 (Narrative Overview) ==========
   /** 오늘의 전체 흐름을 서술한 본문 (400자 이내) */

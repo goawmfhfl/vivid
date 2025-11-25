@@ -25,7 +25,25 @@ const fetchDailyFeedbackByDate = async (
 const fetchDailyFeedbackById = async (
   id: string
 ): Promise<DailyFeedbackRow | null> => {
+  // id 유효성 검사
+  if (!id || id === "undefined" || id === "null" || id.trim() === "") {
+    throw new Error("Invalid feedback ID");
+  }
+
+  // UUID 형식 검사 (간단한 검사)
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    throw new Error(`Invalid UUID format: ${id}`);
+  }
+
   const userId = await getCurrentUserId();
+
+  // userId도 유효성 검사
+  if (!userId || userId === "undefined" || userId.trim() === "") {
+    throw new Error("Invalid user ID");
+  }
+
   const { data, error } = await supabase
     .from(API_ENDPOINTS.DAILY_FEEDBACK)
     .select("*")

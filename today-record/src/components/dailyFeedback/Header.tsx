@@ -23,10 +23,15 @@ export function HeaderSection({ view }: SectionProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold" style={{ marginBottom: "0.25rem" }}>
+            <h1
+              className="text-2xl sm:text-3xl font-semibold"
+              style={{ marginBottom: "0.25rem" }}
+            >
               {view.date}
             </h1>
-            <p className="text-sm" style={{ opacity: 0.9 }}>{view.dayOfWeek}</p>
+            <p className="text-sm" style={{ opacity: 0.9 }}>
+              {view.dayOfWeek}
+            </p>
           </div>
           <div className="text-center">
             <div
@@ -50,39 +55,6 @@ export function HeaderSection({ view }: SectionProps) {
           <p className="text-sm" style={{ lineHeight: "1.7", opacity: 0.95 }}>
             {view.narrative_summary}
           </p>
-        </div>
-        <div className="mt-5">
-          <p
-            className="text-xs"
-            style={{
-              opacity: 0.85,
-              marginBottom: "0.75rem",
-            }}
-          >
-            감정의 흐름
-          </p>
-          <div className="flex items-center gap-2 flex-wrap">
-            {view.emotion_curve.map((emotion, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Badge
-                  className="text-sm px-3 py-1"
-                  style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.25)",
-                    color: "white",
-                    border: "1px solid rgba(255, 255, 255, 0.3)",
-                  }}
-                >
-                  {emotion}
-                </Badge>
-                {index < view.emotion_curve.length - 1 && (
-                  <ArrowRight
-                    className="w-4 h-4 flex-shrink-0"
-                    style={{ opacity: 0.6 }}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
