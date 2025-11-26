@@ -24,19 +24,14 @@ export async function GET(request: NextRequest) {
     // KST 기준 현재 날짜
     const now = new Date();
     const currentKSTDateString = getKSTDateString(now);
-    const [currentYear, currentMonthNum, currentDay] = currentKSTDateString
+    const [currentYear, currentMonthNum] = currentKSTDateString
       .split("-")
       .map(Number);
-    
-    const currentMonth = `${currentYear}-${String(currentMonthNum).padStart(2, "0")}`;
-    
-    // 이번 달의 마지막 일 계산
-    const lastDayOfCurrentMonth = new Date(
-      currentYear,
-      currentMonthNum,
-      0
-    ).getDate();
-    const isLastDayOfMonth = currentDay === lastDayOfCurrentMonth;
+
+    const currentMonth = `${currentYear}-${String(currentMonthNum).padStart(
+      2,
+      "0"
+    )}`;
 
     // 지난 달 계산
     const lastMonthDate = new Date(currentYear, currentMonthNum - 2, 1);
@@ -44,12 +39,23 @@ export async function GET(request: NextRequest) {
       lastMonthDate.getMonth() + 1
     ).padStart(2, "0")}`;
 
+    // 최근 6개월 범위 계산 (더 넓은 범위로 후보를 반환하여 클라이언트에서 필터링 가능하도록)
+    // 현재 달부터 6개월 전까지
+    const monthsToCheck: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const monthDate = new Date(currentYear, currentMonthNum - i - 1, 1);
+      const monthStr = `${monthDate.getFullYear()}-${String(
+        monthDate.getMonth() + 1
+      ).padStart(2, "0")}`;
+      monthsToCheck.push(monthStr);
+    }
+
     // 이미 생성된 월간 피드백 조회 (최근 3개월)
     const { data: existingFeedbacks, error: fetchError } = await supabase
       .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
       .select("id, month")
       .eq("user_id", userId)
-      .in("month", [currentMonth, lastMonthStr])
+      .in("month", monthsToCheck)
       .order("month", { ascending: false });
 
     if (fetchError) {
@@ -73,7 +79,7 @@ export async function GET(request: NextRequest) {
       };
     };
 
-    // 후보 월 목록 생성
+    // 후보 월 목록 생성 (최근 3개월 중 생성되지 않은 모든 월)
     const candidates: Array<{
       month: string;
       month_label: string;
@@ -82,10 +88,11 @@ export async function GET(request: NextRequest) {
       record_count?: number;
     }> = [];
 
-    // 이번 달이 마지막 날이고 아직 생성되지 않았다면 후보에 추가
-    if (isLastDayOfMonth && !existingMonthsMap.has(currentMonth)) {
-      const dateRange = getMonthDateRange(currentMonth);
-      
+    // 최근 3개월 중 모든 월을 후보에 추가 (생성 여부와 관계없이)
+    // 클라이언트에서 referenceDate를 기준으로 필터링하므로, 여기서는 모든 후보를 반환
+    for (const month of monthsToCheck) {
+      const dateRange = getMonthDateRange(month);
+
       // 기록 개수 조회
       const { count: recordCount } = await supabase
         .from(API_ENDPOINTS.DAILY_FEEDBACK)
@@ -94,34 +101,14 @@ export async function GET(request: NextRequest) {
         .gte("report_date", dateRange.start)
         .lte("report_date", dateRange.end);
 
-      const [year, monthNum] = currentMonth.split("-");
-      candidates.push({
-        month: currentMonth,
-        month_label: `${year}년 ${monthNum}월`,
-        is_current: true,
-        monthly_feedback_id: null,
-        record_count: recordCount || 0,
-      });
-    }
+      const [year, monthNum] = month.split("-");
+      const existingFeedbackId = existingMonthsMap.get(month);
 
-    // 지난 달이 아직 생성되지 않았다면 후보에 추가
-    if (!existingMonthsMap.has(lastMonthStr)) {
-      const dateRange = getMonthDateRange(lastMonthStr);
-      
-      // 기록 개수 조회
-      const { count: recordCount } = await supabase
-        .from(API_ENDPOINTS.DAILY_FEEDBACK)
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("report_date", dateRange.start)
-        .lte("report_date", dateRange.end);
-
-      const [year, monthNum] = lastMonthStr.split("-");
       candidates.push({
-        month: lastMonthStr,
+        month: month,
         month_label: `${year}년 ${monthNum}월`,
-        is_current: false,
-        monthly_feedback_id: null,
+        is_current: month === currentMonth,
+        monthly_feedback_id: existingFeedbackId || null,
         record_count: recordCount || 0,
       });
     }

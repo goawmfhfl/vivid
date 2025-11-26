@@ -68,7 +68,8 @@ export function MonthlyFeedbackTestPanel() {
   });
 
   const handleGenerateDaily = async () => {
-    const userId = localStorage.getItem("userId") || prompt("User ID를 입력하세요:");
+    const userId =
+      localStorage.getItem("userId") || prompt("User ID를 입력하세요:");
     if (!userId) {
       alert("User ID가 필요합니다.");
       return;
@@ -77,7 +78,8 @@ export function MonthlyFeedbackTestPanel() {
   };
 
   const handleGenerateMonthly = async () => {
-    const userId = localStorage.getItem("userId") || prompt("User ID를 입력하세요:");
+    const userId =
+      localStorage.getItem("userId") || prompt("User ID를 입력하세요:");
     if (!userId) {
       alert("User ID가 필요합니다.");
       return;
@@ -165,7 +167,9 @@ export function MonthlyFeedbackTestPanel() {
             disabled={monthlyMutation.isPending}
             className="px-4 py-2 rounded text-sm font-medium text-white disabled:opacity-50"
             style={{
-              backgroundColor: monthlyMutation.isPending ? "#9CA3AF" : "#DC2626",
+              backgroundColor: monthlyMutation.isPending
+                ? "#9CA3AF"
+                : "#DC2626",
             }}
           >
             {monthlyMutation.isPending ? (
@@ -284,4 +288,3 @@ export function MonthlyFeedbackTestPanel() {
     </div>
   );
 }
-

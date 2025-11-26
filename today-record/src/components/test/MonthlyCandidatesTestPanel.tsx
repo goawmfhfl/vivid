@@ -94,7 +94,8 @@ export function MonthlyCandidatesTestPanel() {
           >
             선택한 날짜: {testDate} (KST)
             <br />
-            예: 11월 30일을 선택하면 11월달에 대한 피드백 생성 버튼이 표시됩니다.
+            예: 11월 30일을 선택하면 11월달에 대한 피드백 생성 버튼이
+            표시됩니다.
           </p>
         </div>
       </div>
@@ -112,4 +113,3 @@ export function MonthlyCandidatesTestPanel() {
     </div>
   );
 }
-
