@@ -2,6 +2,7 @@
 
 import { LoadingModal } from "./LoadingModal";
 import { ErrorModal } from "./ErrorModal";
+import { SuccessModal } from "./SuccessModal";
 import { useModalStore } from "@/store/useModalStore";
 
 /**
@@ -18,6 +19,12 @@ export function GlobalModals() {
     (state) => state.errorModal.retryHandler
   );
 
+  const successModal = useModalStore((state) => state.successModal);
+  const closeSuccessModal = useModalStore((state) => state.closeSuccessModal);
+  const successConfirmHandler = useModalStore(
+    (state) => state.successModal.onConfirm
+  );
+
   return (
     <>
       <LoadingModal
@@ -31,6 +38,12 @@ export function GlobalModals() {
         onClose={closeErrorModal}
         message={errorModal.message || undefined}
         onRetry={errorRetryHandler}
+      />
+      <SuccessModal
+        open={successModal.isOpen}
+        onClose={closeSuccessModal}
+        message={successModal.message || undefined}
+        onConfirm={successConfirmHandler}
       />
     </>
   );

@@ -97,8 +97,22 @@ export async function generateMonthlyFeedbackFromDaily(
       throw new Error("No content from OpenAI monthly feedback generation");
     }
 
-    const parsed = JSON.parse(content) as MonthlyFeedbackResponse;
-    const result = parsed.monthly_feedback;
+    const parsed = JSON.parse(content);
+    
+    // 응답 구조 검증: 스키마가 래퍼 없이 직접 객체를 반환하므로
+    // monthly_feedback 래퍼가 있는지 확인하고, 없으면 직접 사용
+    let result: MonthlyFeedback;
+    if (parsed && parsed.monthly_feedback) {
+      result = parsed.monthly_feedback;
+    } else if (parsed && parsed.month) {
+      // 래퍼 없이 직접 MonthlyFeedback 객체가 반환된 경우
+      result = parsed as MonthlyFeedback;
+    } else {
+      console.error("Invalid response structure:", parsed);
+      throw new Error(
+        "Invalid response from OpenAI: unexpected response structure"
+      );
+    }
 
     // 캐시에 저장
     setCache(cacheKey, result);
@@ -148,8 +162,22 @@ export async function generateMonthlyFeedbackFromDaily(
         throw new Error("No content from OpenAI monthly feedback generation");
       }
 
-      const parsed = JSON.parse(content) as MonthlyFeedbackResponse;
-      const result = parsed.monthly_feedback;
+      const parsed = JSON.parse(content);
+      
+      // 응답 구조 검증: 스키마가 래퍼 없이 직접 객체를 반환하므로
+      // monthly_feedback 래퍼가 있는지 확인하고, 없으면 직접 사용
+      let result: MonthlyFeedback;
+      if (parsed && parsed.monthly_feedback) {
+        result = parsed.monthly_feedback;
+      } else if (parsed && parsed.month) {
+        // 래퍼 없이 직접 MonthlyFeedback 객체가 반환된 경우
+        result = parsed as MonthlyFeedback;
+      } else {
+        console.error("Invalid response structure (fallback):", parsed);
+        throw new Error(
+          "Invalid response from OpenAI (fallback): unexpected response structure"
+        );
+      }
 
       // 캐시에 저장
       setCache(cacheKey, result);

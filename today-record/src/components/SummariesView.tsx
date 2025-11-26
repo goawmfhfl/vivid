@@ -17,6 +17,8 @@ import {
 } from "./summaries/weekly-feedback-mapper";
 import { convertMonthlyFeedbackToPeriodSummary } from "./summaries/monthly-feedback-mapper";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import { MonthlyFeedbackTestPanel } from "./test/MonthlyFeedbackTestPanel";
+import { MonthlyCandidatesTestPanel } from "./test/MonthlyCandidatesTestPanel";
 
 /**
  * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
@@ -86,10 +88,24 @@ export function SummariesView() {
     return monthlyFeedbackList.map(convertMonthlyFeedbackToPeriodSummary);
   }, [monthlyFeedbackList]);
 
+  // 테스트 모드 확인 (프로덕션 환경이 아닐 때만 표시)
+  const isTestMode =
+    process.env.NEXT_PUBLIC_NODE_ENV !== "production" &&
+    (process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_NODE_ENV === "test");
+
   return (
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
+      {/* 테스트 패널 (프로덕션 환경이 아닐 때만 표시) */}
+      {isTestMode && (
+        <>
+          <MonthlyFeedbackTestPanel />
+          <MonthlyCandidatesTestPanel />
+        </>
+      )}
+
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-start justify-between mb-4">

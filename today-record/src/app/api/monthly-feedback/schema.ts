@@ -40,9 +40,10 @@ export const MonthlyReportSchema = {
             description: "주요 테마를 7개 이하로 정한 이유 설명",
           },
           integrity_trend: {
-            type: "string",
-            nullable: true,
-            enum: ["상승", "하락", "유지", "불규칙", null],
+            anyOf: [
+              { type: "string", enum: ["상승", "하락", "유지", "불규칙"] },
+              { type: "null" },
+            ],
           },
           life_balance_score: { type: "integer", minimum: 0, maximum: 10 },
           life_balance_reason: {
@@ -113,9 +114,13 @@ export const MonthlyReportSchema = {
           monthly_ai_mood_valence_avg: { type: "number", nullable: true },
           monthly_ai_mood_arousal_avg: { type: "number", nullable: true },
           emotion_quadrant_dominant: {
-            type: "string",
-            nullable: true,
-            enum: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온", null],
+            anyOf: [
+              {
+                type: "string",
+                enum: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온"],
+              },
+              { type: "null" },
+            ],
           },
           emotion_quadrant_distribution: {
             type: "array",

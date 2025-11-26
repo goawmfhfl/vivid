@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
@@ -33,11 +33,6 @@ export function Home() {
 
   // 전역 모달 상태 관리
   const openLoadingModal = useModalStore((state) => state.openLoadingModal);
-  const closeLoadingModal = useModalStore((state) => state.closeLoadingModal);
-  const loadingModalIsManual = useModalStore(
-    (state) => state.loadingModal.isManual
-  );
-  const openErrorModal = useModalStore((state) => state.openErrorModal);
 
   const hasTodayRecords = useMemo(() => {
     // KST 기준 오늘 날짜 문자열
@@ -64,18 +59,16 @@ export function Home() {
 
   const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
 
-  // 로딩 상태 동기화 (자동 모달만 - 수동 모달은 건드리지 않음)
-  useEffect(() => {
-    if (isPending) {
-      // 실제 피드백 생성 중일 때 (isManual: false)
-      openLoadingModal("AI에게 피드백을 요청하고 있습니다...", false);
-    } else {
-      // 수동으로 열린 모달이 아닌 경우에만 닫기
-      if (!loadingModalIsManual) {
-        closeLoadingModal();
-      }
-    }
-  }, [isPending, loadingModalIsManual, openLoadingModal, closeLoadingModal]);
+  // 전역 모달 및 피드백 생성 상태 관리
+  const openSuccessModal = useModalStore((state) => state.openSuccessModal);
+  const openErrorModal = useModalStore((state) => state.openErrorModal);
+  const feedbackGeneration = useModalStore((state) => state.feedbackGeneration);
+  const generatingDates = useModalStore(
+    (state) => state.feedbackGeneration.generatingDates
+  );
+
+  // 전역 상태와 로컬 상태를 결합하여 피드백 생성 중인지 확인
+  const isGeneratingFeedback = isPending || generatingDates.includes(todayIso);
 
   const handleOpenDailyFeedback = async () => {
     try {
@@ -87,13 +80,43 @@ export function Home() {
         router.push(`/analysis/feedback/daily/${todayFeedback.id}`);
         return;
       }
-      // 새 피드백 생성 후 id로 라우팅
-      const createdFeedback = await createDailyFeedback({ date: todayIso });
-      if (!createdFeedback?.id) {
-        throw new Error("생성된 피드백에 ID가 없습니다.");
-      }
-      router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
+
+      // 전역 상태에 생성 시작 표시
+      feedbackGeneration.startGenerating(todayIso);
+
+      // 백그라운드에서 피드백 생성 시작 (로딩 모달 없이)
+      // mutateAsync를 사용하되, await하지 않고 then/catch로 처리
+      createDailyFeedback({ date: todayIso })
+        .then((createdFeedback) => {
+          // 전역 상태에서 생성 완료 표시
+          feedbackGeneration.finishGenerating(todayIso);
+
+          // 성공 시 전역 모달로 알림
+          if (createdFeedback?.id) {
+            openSuccessModal(
+              "오늘의 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.",
+              () => {
+                router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
+              }
+            );
+          } else {
+            throw new Error("생성된 피드백에 ID가 없습니다.");
+          }
+        })
+        .catch((e) => {
+          // 전역 상태에서 생성 완료 표시 (에러도 완료로 처리)
+          feedbackGeneration.finishGenerating(todayIso);
+
+          // 에러 시 전역 모달로 알림
+          const base =
+            e instanceof Error
+              ? e.message
+              : "피드백 생성 중 오류가 발생했습니다.";
+          const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
+          openErrorModal(message, handleRetry);
+        });
     } catch (e) {
+      // 동기 에러 처리
       const base =
         e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
       const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
@@ -208,10 +231,14 @@ export function Home() {
               fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
               boxShadow: SHADOWS.lg,
             }}
-            disabled={isPending}
+            disabled={isGeneratingFeedback}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            {hasTodayFeedback ? "오늘 피드백 보기" : "오늘 피드백 받기"}
+            {isGeneratingFeedback
+              ? "피드백 생성 중..."
+              : hasTodayFeedback
+              ? "오늘 피드백 보기"
+              : "오늘 피드백 받기"}
           </Button>
         </div>
       )}
