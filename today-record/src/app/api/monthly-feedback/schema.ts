@@ -122,7 +122,7 @@ export const MonthlyReportSchema = {
           },
           emotion_quadrant_distribution: {
             type: "array",
-            minItems: 0,
+            minItems: 4,
             maxItems: 4,
             items: {
               type: "object",
@@ -134,9 +134,18 @@ export const MonthlyReportSchema = {
                 },
                 count: { type: "integer", minimum: 0 },
                 ratio: { type: "number", minimum: 0, maximum: 1 },
+                explanation: {
+                  type: "string",
+                  description:
+                    "해당 사분면이 이 비율을 차지하는 이유에 대한 월간 데이터 분석 기반 설명",
+                },
               },
-              required: ["quadrant", "count", "ratio"],
+              required: ["quadrant", "count", "ratio", "explanation"],
             },
+          },
+          emotion_quadrant_analysis_summary: {
+            type: "string",
+            description: "4개 사분면 분포를 종합적으로 분석한 피드백",
           },
           emotion_keywords: {
             type: "array",
@@ -158,6 +167,36 @@ export const MonthlyReportSchema = {
             maxItems: 10,
           },
           emotion_stability_score: { type: "integer", minimum: 0, maximum: 10 },
+          emotion_stability_explanation: {
+            type: "string",
+            description: "감정 안정성 점수가 의미하는 바에 대한 설명",
+          },
+          emotion_stability_score_reason: {
+            type: "string",
+            description: "왜 그 점수인지 월간 데이터 분석 기반 설명",
+          },
+          emotion_stability_praise: {
+            type: "string",
+            nullable: true,
+            description:
+              "점수가 7점 이상인 경우 칭찬 메시지 (7점 미만이면 null)",
+          },
+          emotion_stability_guidelines: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 0,
+            maxItems: 5,
+            description:
+              "감정 안정성 점수를 더 높이기 위한 구체적인 가이드라인",
+          },
+          emotion_stability_actions: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 0,
+            maxItems: 5,
+            description:
+              "감정 안정성 점수를 높이기 위한 구체적인 행동 제안 (하위 호환성)",
+          },
           emotion_ai_comment: { type: "string", nullable: true },
         },
         required: [
@@ -165,11 +204,17 @@ export const MonthlyReportSchema = {
           "monthly_ai_mood_arousal_avg",
           "emotion_quadrant_dominant",
           "emotion_quadrant_distribution",
+          "emotion_quadrant_analysis_summary",
           "emotion_keywords",
           "emotion_pattern_summary",
           "positive_triggers",
           "negative_triggers",
           "emotion_stability_score",
+          "emotion_stability_explanation",
+          "emotion_stability_score_reason",
+          "emotion_stability_praise",
+          "emotion_stability_guidelines",
+          "emotion_stability_actions",
           "emotion_ai_comment",
         ],
       },
@@ -510,13 +555,35 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 3) emotion_quadrant_distribution
 
+- 반드시 4개 사분면 모두 포함합니다: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온"]
+
 - 각 사분면별로 등장 횟수와 비율을 계산합니다.
 
 - ratio = 해당 사분면이 등장한 일수 / 감정 데이터가 있는 전체 일수
 
-- count 가 0인 사분면은 배열에 포함하지 않아도 됩니다.
+- count가 0인 사분면도 반드시 포함하며, ratio는 0으로 설정합니다.
 
-4) emotion_keywords
+- 각 사분면 항목에 반드시 explanation 필드를 포함합니다:
+
+  - 해당 사분면이 이 비율을 차지하는 이유를 월간 데이터를 분석하여 구체적으로 설명합니다.
+
+  - count가 0인 경우: "이번 달에는 [사분면명] 감정이 거의 나타나지 않았습니다. [실제 데이터 분석 기반 이유]"
+
+  - count가 있는 경우: "안도·평온이 45%를 차지한 이유는 이번 달 일일 기록에서 주말 산책(8회), 저녁 독서 시간(12회), 수연과의 대화(10회) 등 평온한 활동이 반복적으로 등장했기 때문입니다. 특히 월요일 아침 운동 후와 금요일 저녁 휴식 시간에 안도감이 자주 나타났습니다."
+
+  - 실제 daily_reports 데이터를 기반으로 작성하며, 상상으로 만들어내지 않습니다.
+
+4) emotion_quadrant_analysis_summary
+
+- 4개 사분면 분포를 종합적으로 분석한 피드백을 제공합니다.
+
+- 각 사분면의 비율과 패턴을 연결하여 전체적인 감정 흐름을 설명합니다.
+
+- 예: "이번 달 감정 분포를 보면 안도·평온(45%)과 몰입·설렘(30%)이 주를 이루었고, 불안·초조(15%)와 슬픔·무기력(10%)은 상대적으로 낮았습니다. 이는 전반적으로 안정적이고 긍정적인 감정 패턴을 보여주며, 특히 주말과 저녁 시간에 평온함이, 업무와 개발 시간에 몰입감이 높게 나타났습니다."
+
+- 300자 이내로 작성합니다.
+
+5) emotion_keywords
 
 - daily_reports.emotion_overview.emotion_curve, dominant_emotion,
 
@@ -524,7 +591,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   이 달의 감정을 잘 설명하는 단어들을 최대 20개까지 추립니다.
 
-5) emotion_pattern_summary
+6) emotion_pattern_summary
 
 - 400자 이내로, 이 달 동안 감정이 어떻게 반복되었는지 설명합니다.
 
@@ -534,17 +601,23 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 특정 활동과 감정의 관계 (운동 후 안정, 야근 후 불안 등)
 
-6) positive_triggers / negative_triggers
+7) positive_triggers / negative_triggers
 
 - 반복적으로 긍정/부정 감정을 만들어낸 행동/상황을 각각 최대 10개까지 정리합니다.
 
-- 예:
+- 정확한 상황과 패턴을 기반으로 작성합니다:
 
-  - positive_triggers: ["아침 러닝 후 성취감", "기록을 마친 뒤 안도감"]
+  - positive_triggers: 구체적인 상황과 그 상황에서 느낀 감정을 명확히 표현
 
-  - negative_triggers: ["미루던 일을 떠올릴 때 압박감", "수면 부족 다음 날 짜증"]
+    예: ["아침 러닝 후 성취감과 활력 상승", "일일 기록을 마친 뒤 안도감과 만족감", "주말 산책 중 자연과의 교감으로 평온함"]
 
-7) emotion_stability_score
+  - negative_triggers: 구체적인 상황과 그 상황에서 느낀 감정을 명확히 표현
+
+    예: ["미루던 일을 떠올릴 때 압박감과 불안", "수면 부족 다음 날 피로와 짜증", "야근 후 귀가 시 무기력감"]
+
+- 실제 daily_reports의 감정 데이터와 상황 기록을 기반으로 작성합니다.
+
+8) emotion_stability_score
 
 - 감정 곡선의 출렁임 정도를 0~10 점으로 평가합니다.
 
@@ -552,11 +625,61 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 한 영역 안에서 크게 흔들리지 않고 안정적이면 높은 점수
 
+- emotion_stability_explanation:
+
+  - 감정 안정성 점수가 의미하는 바를 명확하게 설명합니다.
+
+  - 예: "감정 안정성 점수는 한 달 동안 감정의 변화 폭과 일관성을 나타냅니다. 높은 점수는 감정이 안정적으로 유지되었음을 의미하며, 낮은 점수는 감정 변화가 크고 예측하기 어려웠음을 나타냅니다."
+
+- emotion_stability_score_reason:
+
+  - 왜 그 점수인지 월간 데이터를 분석하여 구체적이고 상세하게 설명합니다.
+
+  - 반드시 실제 daily_reports의 감정 데이터를 기반으로 작성합니다.
+
+  - 감정 사분면 이동 횟수, 패턴, 특정 요일/상황에서의 변화 등을 구체적으로 언급합니다.
+
+  - 예: "감정 안정성 점수 7점은 이번 달 일일 기록에서 감정 사분면 이동이 비교적 적었고(평균 1.2회/일), 특히 안도·평온(45%)과 몰입·설렘(30%) 영역에서 안정적으로 유지되었기 때문입니다. 다만 주중 업무 스트레스가 높은 날(화요일 3회, 수요일 2회)에는 불안·초조로 이동하는 패턴이 보였고, 주말에는 대부분 안도·평온 상태를 유지했습니다."
+
+  - 점수가 낮은 경우(7점 미만): 불안정한 패턴의 구체적인 원인을 분석하여 설명합니다.
+
+  - 점수가 높은 경우(7점 이상): 안정성을 유지한 구체적인 요인을 분석하여 설명합니다.
+
+- emotion_stability_praise:
+
+  - 점수가 7점 이상인 경우 반드시 칭찬 메시지를 제공합니다 (7점 미만이면 null).
+
+  - 칭찬 메시지는 구체적이고 격려하는 톤으로 작성합니다.
+
+  - 실제 데이터에서 발견한 긍정적인 패턴을 언급합니다.
+
+  - 예: "이번 달 감정 안정성이 높게 유지되었습니다! 특히 주말 휴식(8일)과 규칙적인 운동 루틴(주 3회)이 감정의 안정성에 큰 도움이 되었네요. 안도·평온 상태가 45%를 차지한 것은 평소 루틴 관리가 잘 되고 있다는 신호입니다. 이런 패턴을 지속하면 더욱 안정적인 감정 상태를 유지할 수 있을 것 같습니다."
+
+- emotion_stability_guidelines:
+
+  - 감정 안정성 점수를 더 높이기 위한 구체적이고 실행 가능한 가이드라인을 3-5개 제공합니다.
+
+  - 반드시 실제 월간 데이터를 분석하여 개인화된 제안을 작성합니다.
+
+  - 점수가 높은 경우(7점 이상): 현재 패턴을 유지하면서 더욱 개선할 수 있는 구체적인 방향 제시
+
+  - 점수가 낮은 경우(7점 미만): 안정성을 높이기 위한 구체적이고 실행 가능한 행동 제안
+
+  - 각 가이드라인은 "무엇을", "왜", "어떻게"를 포함하여 작성합니다.
+
+  - 예: ["주말 산책이 평온함을 가져다주었으므로(8일 중 6일) 주중에도 짧은 산책 시간(15분)을 추가하여 일상의 안정감을 높이기", "수면 시간이 부족한 날(화요일, 수요일) 감정 변화가 컸으므로 규칙적인 수면 패턴(밤 11시 취침) 유지하기", "아침 운동 후 감정이 안정되었으므로(주 3회) 주 3회 이상 아침 운동을 고정 루틴으로 만들기"]
+
+- emotion_stability_actions:
+
+  - emotion_stability_guidelines와 동일한 내용입니다 (하위 호환성을 위해 유지).
+
 8) emotion_ai_comment
 
 - 왜 이런 감정 패턴이 만들어졌는지, 어떤 점이 인상적인지,
 
   다음 달을 위해 어떤 감정 전략이 도움이 될지 부드럽게 정리합니다.
+
+- 간략하게 작성합니다 (200자 이내 권장).
 
 --------------------------------
 

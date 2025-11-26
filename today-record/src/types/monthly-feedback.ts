@@ -56,12 +56,18 @@ export type EmotionOverview = {
     | "슬픔·무기력"
     | "안도·평온"
     | null;
-  emotion_quadrant_distribution: EmotionQuadrantDistribution[];
+  emotion_quadrant_distribution: EmotionQuadrantDistribution[]; // 반드시 4개 포함
+  emotion_quadrant_analysis_summary: string; // 4개 사분면 분포 종합 분석 피드백
   emotion_keywords: string[]; // 최대 20개
   emotion_pattern_summary: string | null;
   positive_triggers: string[]; // 최대 10개
   negative_triggers: string[]; // 최대 10개
   emotion_stability_score: number; // 0-10
+  emotion_stability_explanation: string; // 감정 안정성 점수가 의미하는 바에 대한 설명
+  emotion_stability_score_reason: string; // 왜 그 점수인지 월간 데이터 분석 기반 설명
+  emotion_stability_praise: string | null; // 점수가 7점 이상인 경우 칭찬 메시지
+  emotion_stability_guidelines: string[]; // 감정 안정성 점수를 더 높이기 위한 가이드라인 (최대 5개)
+  emotion_stability_actions: string[]; // 감정 안정성 점수를 높이기 위한 행동 제안 (최대 5개, 하위 호환성)
   emotion_ai_comment: string | null;
 };
 
@@ -69,6 +75,7 @@ export type EmotionQuadrantDistribution = {
   quadrant: "몰입·설렘" | "불안·초조" | "슬픔·무기력" | "안도·평온";
   count: number;
   ratio: number; // 0-1
+  explanation: string; // 해당 사분면이 이 비율을 차지하는 이유에 대한 설명
 };
 
 export type InsightOverview = {
