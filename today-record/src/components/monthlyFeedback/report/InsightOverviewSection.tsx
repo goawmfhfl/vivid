@@ -13,6 +13,13 @@ import {
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  CARD_STYLES,
+} from "./design-system";
 
 type InsightOverviewSectionProps = {
   insight_overview: MonthlyReportData["insight_overview"];
@@ -46,21 +53,27 @@ export function InsightOverviewSection({
     return date.replace(/-/g, ".");
   };
 
+  const colors = SECTION_COLORS.insight;
+
   return (
-    <div className="mb-10 sm:mb-12" style={{ marginTop: "32px" }}>
+    <div
+      className={SPACING.section.marginBottom}
+      style={{ marginTop: SPACING.section.marginTop }}
+    >
       {/* 헤더 */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #A8BBA8 0%, #98AB98 100%)",
+            background: colors.gradient,
+            boxShadow: `0 2px 8px ${colors.primary}30`,
           }}
         >
           <Brain className="w-5 h-5 text-white" />
         </div>
         <h2
-          className="text-xl sm:text-2xl font-semibold"
-          style={{ color: "#333333" }}
+          className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+          style={{ color: COMMON_COLORS.text.primary }}
         >
           월간 인사이트
         </h2>
@@ -71,31 +84,33 @@ export function InsightOverviewSection({
         {/* 인사이트 일수 */}
         <Card
           ref={daysCountRef}
-          className="p-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1.5px solid #A8BBA840",
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <div className="flex items-center justify-between">
             <div>
               <p
-                className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 인사이트 일수
               </p>
               <p
-                className="text-3xl font-bold"
+                className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
                 style={{
-                  color: "#A8BBA8",
-                  textShadow: `0 2px 4px #A8BBA820`,
+                  color: colors.primary,
+                  textShadow: `0 2px 4px ${colors.primary}20`,
                 }}
               >
                 {daysCount}
               </p>
-              <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
+              <p
+                className={`${TYPOGRAPHY.bodySmall.fontSize} mt-1`}
+                style={{ color: COMMON_COLORS.text.muted }}
+              >
                 일
               </p>
             </div>
@@ -114,31 +129,33 @@ export function InsightOverviewSection({
         {/* 인사이트 개수 */}
         <Card
           ref={recordsCountRef}
-          className="p-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1.5px solid #A8BBA840",
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <div className="flex items-center justify-between">
             <div>
               <p
-                className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 인사이트 개수
               </p>
               <p
-                className="text-3xl font-bold"
+                className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
                 style={{
-                  color: "#A8BBA8",
-                  textShadow: `0 2px 4px #A8BBA820`,
+                  color: colors.primary,
+                  textShadow: `0 2px 4px ${colors.primary}20`,
                 }}
               >
                 {recordsCount}
               </p>
-              <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
+              <p
+                className={`${TYPOGRAPHY.bodySmall.fontSize} mt-1`}
+                style={{ color: COMMON_COLORS.text.muted }}
+              >
                 개
               </p>
             </div>
@@ -158,10 +175,13 @@ export function InsightOverviewSection({
       {/* 핵심 인사이트 */}
       {insight_overview.core_insights &&
         insight_overview.core_insights.length > 0 && (
-          <div className="mb-6">
+            <div className="mb-6">
             <p
-              className="text-xs font-semibold mb-4 uppercase tracking-wide"
-              style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-4 ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               핵심 인사이트
             </p>
@@ -169,35 +189,31 @@ export function InsightOverviewSection({
               {insight_overview.core_insights.map((insight, index) => (
                 <Card
                   key={index}
-                  className="p-5 transition-all duration-300 hover:shadow-lg"
-                  style={{
-                    backgroundColor: "white",
-                    border: "1.5px solid #A8BBA840",
-                    borderRadius: "16px",
-                  }}
+                  className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+                  style={CARD_STYLES.withColor(colors.primary)}
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
-                        background:
-                          "linear-gradient(135deg, #A8BBA8 0%, #98AB98 100%)",
+                        background: colors.gradient,
+                        boxShadow: `0 2px 4px ${colors.primary}30`,
                       }}
                     >
-                      <span className="text-xs font-bold text-white">
+                      <span className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}>
                         {index + 1}
                       </span>
                     </div>
                     <div className="flex-1">
                       <p
-                        className="text-sm font-semibold mb-2 leading-relaxed"
-                        style={{ color: "#333333", lineHeight: "1.7" }}
+                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight} mb-2 ${TYPOGRAPHY.body.lineHeight}`}
+                        style={{ color: COMMON_COLORS.text.primary }}
                       >
                         {insight.summary}
                       </p>
                       <p
-                        className="text-xs leading-relaxed"
-                        style={{ color: "#6B7A6F", lineHeight: "1.6" }}
+                        className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.lineHeight}`}
+                        style={{ color: COMMON_COLORS.text.tertiary }}
                       >
                         {insight.explanation}
                       </p>
@@ -236,12 +252,18 @@ export function InsightOverviewSection({
                 </div>
                 <div className="text-left">
                   <p
-                    className="text-xs font-semibold uppercase tracking-wide mb-1"
-                    style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                    className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-1`}
+                    style={{
+                      color: COMMON_COLORS.text.tertiary,
+                      letterSpacing: "0.05em",
+                    }}
                   >
                     전체 인사이트 목록
                   </p>
-                  <p className="text-sm" style={{ color: "#4E4B46" }}>
+                  <p
+                    className={TYPOGRAPHY.body.fontSize}
+                    style={{ color: COMMON_COLORS.text.secondary }}
+                  >
                     총 {insight_overview.top_insights.length}개의 인사이트
                   </p>
                 </div>
@@ -275,14 +297,14 @@ export function InsightOverviewSection({
                             boxShadow: "0 2px 4px rgba(168, 187, 168, 0.3)",
                           }}
                         >
-                          <span className="text-xs font-bold text-white">
+                          <span className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}>
                             {index + 1}
                           </span>
                         </div>
                         <div className="flex-1">
                           <p
-                            className="text-sm leading-relaxed mb-2"
-                            style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                            className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} mb-2`}
+                            style={{ color: COMMON_COLORS.text.secondary }}
                           >
                             {insight.summary}
                           </p>
@@ -337,14 +359,17 @@ export function InsightOverviewSection({
             </div>
             <div className="flex-1">
               <p
-                className="text-xs font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 종합 인사이트 분석
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {insight_overview.insight_comprehensive_summary}
               </p>
@@ -375,14 +400,17 @@ export function InsightOverviewSection({
             </div>
             <div className="flex-1">
               <p
-                className="text-xs font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 AI 인사이트 코멘트
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {insight_overview.insight_ai_comment}
               </p>

@@ -14,6 +14,13 @@ import {
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  CARD_STYLES,
+} from "./design-system";
 
 type SummaryOverviewSectionProps = {
   summary_overview: MonthlyReportData["summary_overview"];
@@ -99,21 +106,27 @@ export function SummaryOverviewSection({
     setExpandedScore(expandedScore === id ? null : id);
   };
 
+  const colors = SECTION_COLORS.summary;
+
   return (
-    <div className="mb-10 sm:mb-12" style={{ marginTop: "32px" }}>
+    <div
+      className={SPACING.section.marginBottom}
+      style={{ marginTop: SPACING.section.marginTop }}
+    >
       {/* 헤더 */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #D08C60 0%, #C77A4F 100%)",
+            background: colors.gradient,
+            boxShadow: `0 2px 8px ${colors.primary}30`,
           }}
         >
           <Sparkles className="w-5 h-5 text-white" />
         </div>
         <h2
-          className="text-xl sm:text-2xl font-semibold"
-          style={{ color: "#333333" }}
+          className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+          style={{ color: COMMON_COLORS.text.primary }}
         >
           월간 요약
         </h2>
@@ -123,18 +136,17 @@ export function SummaryOverviewSection({
       {summary_overview.main_themes &&
         summary_overview.main_themes.length > 0 && (
           <Card
-            className="p-6 mb-6 transition-all duration-300 hover:shadow-md"
-            style={{
-              backgroundColor: "white",
-              border: "1px solid #EFE9E3",
-              borderRadius: "16px",
-            }}
+            className={`${SPACING.card.padding} mb-6 transition-all duration-300 hover:shadow-lg`}
+            style={CARD_STYLES.withColor(colors.primary)}
           >
             <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
+              <div className="flex-1">
                 <p
-                  className="text-xs font-semibold mb-3 uppercase tracking-wide"
-                  style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-4`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   이번 달 주요 테마
                 </p>
@@ -144,11 +156,10 @@ export function SummaryOverviewSection({
                       key={index}
                       className="text-sm px-4 py-2 rounded-full font-medium transition-all duration-200 hover:scale-105"
                       style={{
-                        background:
-                          "linear-gradient(135deg, #E8EFE8 0%, #D8E5D8 100%)",
-                        color: "#6B7A6F",
-                        border: "1px solid #C8D5C8",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.primary}10 100%)`,
+                        color: colors.primary,
+                        border: `1px solid ${colors.border}`,
+                        boxShadow: `0 1px 3px ${colors.primary}10`,
                       }}
                     >
                       {theme}
@@ -162,23 +173,28 @@ export function SummaryOverviewSection({
             {summary_overview.main_themes_reason && (
               <div
                 className="mt-4 pt-4 border-t"
-                style={{ borderColor: "#EFE9E3" }}
+                style={{ borderColor: COMMON_COLORS.border.light }}
               >
-                <div className="flex items-start gap-2">
-                  <Info
-                    className="w-4 h-4 flex-shrink-0 mt-0.5"
-                    style={{ color: "#A8BBA8" }}
-                  />
-                  <div>
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: colors.gradient,
+                      boxShadow: `0 2px 4px ${colors.primary}30`,
+                    }}
+                  >
+                    <Info className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1">
                     <p
-                      className="text-xs font-medium mb-1.5"
-                      style={{ color: "#6B7A6F" }}
+                      className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-2`}
+                      style={{ color: COMMON_COLORS.text.tertiary }}
                     >
                       이 테마를 선택한 이유
                     </p>
                     <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "#4E4B46", lineHeight: "1.6" }}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                      style={{ color: COMMON_COLORS.text.secondary }}
                     >
                       {summary_overview.main_themes_reason}
                     </p>
@@ -194,35 +210,36 @@ export function SummaryOverviewSection({
         {scoreItems.map((item) => {
           const Icon = item.icon;
           const isExpanded = expandedScore === item.id;
+          // 각 점수 항목의 색상을 섹션 컬러에 맞게 조정
+          const itemColor = colors.primary;
 
           return (
             <Card
               key={item.id}
               ref={item.ref}
               className="transition-all duration-300 hover:shadow-lg cursor-pointer overflow-hidden"
-              style={{
-                backgroundColor: "white",
-                border: `1.5px solid ${item.color}40`,
-                borderRadius: "16px",
-              }}
+              style={CARD_STYLES.withColor(itemColor)}
               onClick={() => toggleExpand(item.id)}
             >
               {/* 점수 헤더 */}
               <div className="p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center"
                       style={{
-                        backgroundColor: `${item.color}15`,
-                        border: `1.5px solid ${item.color}30`,
+                        background: `linear-gradient(135deg, ${itemColor}20 0%, ${itemColor}10 100%)`,
+                        border: `1.5px solid ${itemColor}30`,
                       }}
                     >
-                      <Icon className="w-5 h-5" style={{ color: item.color }} />
+                      <Icon className="w-5 h-5" style={{ color: itemColor }} />
                     </div>
                     <p
-                      className="text-xs font-semibold uppercase tracking-wide"
-                      style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                      className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                      style={{
+                        color: COMMON_COLORS.text.tertiary,
+                        letterSpacing: "0.05em",
+                      }}
                     >
                       {item.label}
                     </p>
@@ -230,12 +247,12 @@ export function SummaryOverviewSection({
                   {isExpanded ? (
                     <ChevronUp
                       className="w-4 h-4 transition-transform duration-200"
-                      style={{ color: item.color }}
+                      style={{ color: itemColor }}
                     />
                   ) : (
                     <ChevronDown
                       className="w-4 h-4 transition-transform duration-200"
-                      style={{ color: "#9CA3AF" }}
+                      style={{ color: COMMON_COLORS.text.muted }}
                     />
                   )}
                 </div>
@@ -243,17 +260,17 @@ export function SummaryOverviewSection({
                 {/* 점수 표시 */}
                 <div className="flex items-baseline gap-2 mb-4">
                   <span
-                    className="text-3xl font-bold"
+                    className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
                     style={{
-                      color: item.color,
-                      textShadow: `0 2px 4px ${item.color}20`,
+                      color: itemColor,
+                      textShadow: `0 2px 4px ${itemColor}20`,
                     }}
                   >
                     {item.value}
                   </span>
                   <span
-                    className="text-sm font-medium"
-                    style={{ color: "#9CA3AF" }}
+                    className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+                    style={{ color: COMMON_COLORS.text.muted }}
                   >
                     / 10
                   </span>
@@ -262,14 +279,17 @@ export function SummaryOverviewSection({
                 {/* 진행 바 */}
                 <div
                   className="h-2 rounded-full overflow-hidden"
-                  style={{ backgroundColor: "#F0F5F0" }}
+                  style={{
+                    backgroundColor:
+                      COMMON_COLORS.background.cardGradient.split(" ")[2],
+                  }}
                 >
                   <div
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      background: `linear-gradient(90deg, ${item.color} 0%, ${item.color}CC 100%)`,
+                      background: `linear-gradient(90deg, ${itemColor} 0%, ${itemColor}CC 100%)`,
                       width: `${(item.value / 10) * 100}%`,
-                      boxShadow: `0 2px 4px ${item.color}30`,
+                      boxShadow: `0 2px 4px ${itemColor}30`,
                     }}
                   />
                 </div>
@@ -280,28 +300,36 @@ export function SummaryOverviewSection({
                 <div
                   className="px-5 pb-5 pt-0 border-t animate-in slide-in-from-top-2 duration-300"
                   style={{
-                    borderColor: `${item.color}20`,
-                    backgroundColor: `${item.color}05`,
+                    borderColor: `${itemColor}20`,
+                    backgroundColor: `${itemColor}05`,
                   }}
                 >
                   {/* 점수 이유 */}
                   {item.reason && (
                     <div className="pt-4 pb-3">
-                      <div className="flex items-start gap-2.5 mb-2">
-                        <Info
-                          className="w-4 h-4 flex-shrink-0 mt-0.5"
-                          style={{ color: item.color }}
-                        />
+                      <div className="flex items-start gap-3 mb-2">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
+                            boxShadow: `0 2px 4px ${itemColor}30`,
+                          }}
+                        >
+                          <Info className="w-4 h-4 text-white" />
+                        </div>
                         <p
-                          className="text-xs font-semibold uppercase tracking-wide"
-                          style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                          className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                          style={{
+                            color: COMMON_COLORS.text.tertiary,
+                            letterSpacing: "0.05em",
+                          }}
                         >
                           점수 근거
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed pl-6"
-                        style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
+                        style={{ color: COMMON_COLORS.text.secondary }}
                       >
                         {item.reason}
                       </p>
@@ -311,21 +339,29 @@ export function SummaryOverviewSection({
                   {/* 피드백 */}
                   {item.feedback && (
                     <div className="pt-3 pb-2">
-                      <div className="flex items-start gap-2.5 mb-2">
-                        <Sparkles
-                          className="w-4 h-4 flex-shrink-0 mt-0.5"
-                          style={{ color: item.color }}
-                        />
+                      <div className="flex items-start gap-3 mb-2">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
+                            boxShadow: `0 2px 4px ${itemColor}30`,
+                          }}
+                        >
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
                         <p
-                          className="text-xs font-semibold uppercase tracking-wide"
-                          style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                          className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                          style={{
+                            color: COMMON_COLORS.text.tertiary,
+                            letterSpacing: "0.05em",
+                          }}
                         >
                           AI 피드백
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed pl-6"
-                        style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
+                        style={{ color: COMMON_COLORS.text.secondary }}
                       >
                         {item.feedback}
                       </p>
@@ -341,33 +377,32 @@ export function SummaryOverviewSection({
       {/* AI 종합 코멘트 */}
       {summary_overview.summary_ai_comment && (
         <Card
-          className="p-6 transition-all duration-300 hover:shadow-md"
-          style={{
-            background: "linear-gradient(135deg, #F5F7F5 0%, #F0F5F0 100%)",
-            border: "1px solid #E0E5E0",
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #A8BBA8 0%, #98AB98 100%)",
-                boxShadow: "0 2px 8px rgba(168, 187, 168, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p
-                className="text-xs font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 AI 종합 코멘트
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {summary_overview.summary_ai_comment}
               </p>

@@ -4,6 +4,13 @@ import { Target, Sparkles, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  CARD_STYLES,
+} from "./design-system";
 
 type VisionOverviewSectionProps = {
   vision_overview: MonthlyReportData["vision_overview"];
@@ -25,22 +32,27 @@ export function VisionOverviewSection({
   // AI 피드백 최대 5개
   const aiFeedbacks = vision_overview.vision_ai_feedbacks?.slice(0, 5) || [];
 
+  const colors = SECTION_COLORS.vision;
+
   return (
-    <div className="mb-10 sm:mb-12" style={{ marginTop: "32px" }}>
+    <div
+      className={SPACING.section.marginBottom}
+      style={{ marginTop: SPACING.section.marginTop }}
+    >
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-8">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-            boxShadow: "0 4px 12px rgba(124, 154, 124, 0.3)",
+            background: colors.gradient,
+            boxShadow: `0 2px 8px ${colors.primary}30`,
           }}
         >
-          <Target className="w-6 h-6 text-white" />
+          <Target className="w-5 h-5 text-white" />
         </div>
         <h2
-          className="text-2xl sm:text-3xl font-bold"
-          style={{ color: "#333333" }}
+          className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+          style={{ color: COMMON_COLORS.text.primary }}
         >
           월간 비전
         </h2>
@@ -49,24 +61,22 @@ export function VisionOverviewSection({
       {/* 통계 */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <Card
-          className="p-5 text-center transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} text-center transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <p
-            className="text-xs mb-2 uppercase tracking-wide"
-            style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+            className={`${TYPOGRAPHY.label.fontSize} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+            style={{
+              color: COMMON_COLORS.text.tertiary,
+              letterSpacing: "0.05em",
+            }}
           >
             비전 일수
           </p>
           <p
-            className="text-2xl font-bold"
+            className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
             style={{
-              background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
+              background: colors.gradient,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -76,24 +86,22 @@ export function VisionOverviewSection({
           </p>
         </Card>
         <Card
-          className="p-5 text-center transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} text-center transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <p
-            className="text-xs mb-2 uppercase tracking-wide"
-            style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+            className={`${TYPOGRAPHY.label.fontSize} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+            style={{
+              color: COMMON_COLORS.text.tertiary,
+              letterSpacing: "0.05em",
+            }}
           >
             비전 개수
           </p>
           <p
-            className="text-2xl font-bold"
+            className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
             style={{
-              background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
+              background: colors.gradient,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -104,25 +112,23 @@ export function VisionOverviewSection({
         </Card>
         <Card
           ref={consistencyRef}
-          className="p-5 text-center transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} text-center transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <p
-            className="text-xs mb-2 uppercase tracking-wide"
-            style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+            className={`${TYPOGRAPHY.label.fontSize} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+            style={{
+              color: COMMON_COLORS.text.tertiary,
+              letterSpacing: "0.05em",
+            }}
           >
             일관성 점수
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <p
-              className="text-2xl font-bold"
+              className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
+                background: colors.gradient,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -130,7 +136,10 @@ export function VisionOverviewSection({
             >
               {consistency}
             </p>
-            <span className="text-sm font-medium" style={{ color: "#9CA3AF" }}>
+            <span
+              className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+              style={{ color: COMMON_COLORS.text.muted }}
+            >
               / 10
             </span>
           </div>
@@ -144,15 +153,18 @@ export function VisionOverviewSection({
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Target className="w-5 h-5 text-white" />
             </div>
             <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               핵심 비전
             </p>
@@ -193,10 +205,9 @@ export function VisionOverviewSection({
                 </div>
                 <div className="flex-1">
                   <p
-                    className="text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-2"
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-2`}
                     style={{
-                      color: "#4E4B46",
-                      lineHeight: "1.65",
+                      color: COMMON_COLORS.text.secondary,
                       letterSpacing: "0.01em",
                       fontWeight: "400",
                     }}
@@ -207,8 +218,8 @@ export function VisionOverviewSection({
                     <span
                       className="text-xs px-2 py-0.5 rounded-full"
                       style={{
-                        backgroundColor: "rgba(124, 154, 124, 0.1)",
-                        color: "#7C9A7C",
+                        backgroundColor: `${colors.primary}15`,
+                        color: colors.primary,
                         fontWeight: "500",
                       }}
                     >
@@ -225,34 +236,32 @@ export function VisionOverviewSection({
       {/* 비전 진행 코멘트 */}
       {vision_overview.vision_progress_comment && (
         <Card
-          className="p-6 mb-8 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p
-                className="text-sm font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 비전 진행 상황
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {vision_overview.vision_progress_comment}
               </p>
@@ -268,15 +277,18 @@ export function VisionOverviewSection({
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               AI 비전 피드백
             </p>
@@ -316,10 +328,9 @@ export function VisionOverviewSection({
                   {index + 1}
                 </div>
                 <p
-                  className="flex-1 text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]"
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]`}
                   style={{
-                    color: "#4E4B46",
-                    lineHeight: "1.65",
+                    color: COMMON_COLORS.text.secondary,
                     letterSpacing: "0.01em",
                     fontWeight: "400",
                   }}

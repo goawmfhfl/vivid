@@ -13,6 +13,13 @@ import {
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  CARD_STYLES,
+} from "./design-system";
 
 type FeedbackOverviewSectionProps = {
   feedback_overview: MonthlyReportData["feedback_overview"];
@@ -51,6 +58,7 @@ type HabitScoreItemProps = {
   value: number;
   reason: string;
   delay: number;
+  sectionColor: string;
 };
 
 function HabitScoreItem({
@@ -58,6 +66,7 @@ function HabitScoreItem({
   value,
   reason,
   delay,
+  sectionColor,
 }: HabitScoreItemProps) {
   const Icon = HABIT_ICONS[habitKey];
   const [displayValue, valueRef] = useCountUp({
@@ -70,13 +79,8 @@ function HabitScoreItem({
   return (
     <div ref={valueRef}>
       <Card
-        className="p-5 transition-all duration-300 hover:shadow-lg"
-        style={{
-          backgroundColor: "white",
-          border: "1px solid #E8E8E8",
-          borderRadius: "20px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        }}
+        className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+        style={CARD_STYLES.withColor(sectionColor)}
       >
         <div className="flex items-center gap-3 mb-4">
           <div
@@ -90,14 +94,17 @@ function HabitScoreItem({
           </div>
           <div className="flex-1">
             <p
-              className="text-sm font-semibold uppercase tracking-wide mb-1"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-1`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               {HABIT_LABELS[habitKey]}
             </p>
             <div className="flex items-baseline gap-2">
               <span
-                className="text-2xl font-bold"
+                className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
                 style={{
                   background: HABIT_GRADIENTS[habitKey],
                   WebkitBackgroundClip: "text",
@@ -108,8 +115,8 @@ function HabitScoreItem({
                 {displayValue}
               </span>
               <span
-                className="text-sm font-medium"
-                style={{ color: "#9CA3AF" }}
+                className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+                style={{ color: COMMON_COLORS.text.muted }}
               >
                 / 10
               </span>
@@ -119,7 +126,8 @@ function HabitScoreItem({
         <div
           className="h-3 rounded-full overflow-hidden mb-3"
           style={{
-            backgroundColor: "#F0F5F0",
+            backgroundColor:
+              COMMON_COLORS.background.cardGradient.split(" ")[2],
             boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
           }}
         >
@@ -133,8 +141,8 @@ function HabitScoreItem({
           />
         </div>
         <p
-          className="text-xs leading-relaxed"
-          style={{ color: "#6B7A6F", lineHeight: "1.7" }}
+          className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.lineHeight}`}
+          style={{ color: COMMON_COLORS.text.tertiary }}
         >
           {reason}
         </p>
@@ -180,22 +188,27 @@ export function FeedbackOverviewSection({
   const recurringImprovements =
     feedback_overview.recurring_improvements_with_frequency || [];
 
+  const colors = SECTION_COLORS.feedback;
+
   return (
-    <div className="mb-10 sm:mb-12" style={{ marginTop: "32px" }}>
+    <div
+      className={SPACING.section.marginBottom}
+      style={{ marginTop: SPACING.section.marginTop }}
+    >
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-8">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-            boxShadow: "0 4px 12px rgba(124, 154, 124, 0.3)",
+            background: colors.gradient,
+            boxShadow: `0 2px 8px ${colors.primary}30`,
           }}
         >
-          <CheckCircle2 className="w-6 h-6 text-white" />
+          <CheckCircle2 className="w-5 h-5 text-white" />
         </div>
         <h2
-          className="text-2xl sm:text-3xl font-bold"
-          style={{ color: "#333333" }}
+          className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+          style={{ color: COMMON_COLORS.text.primary }}
         >
           월간 피드백
         </h2>
@@ -210,6 +223,7 @@ export function FeedbackOverviewSection({
             value={habit.value}
             reason={habit.reason}
             delay={habit.delay}
+            sectionColor={colors.primary}
           />
         ))}
       </div>
@@ -221,15 +235,18 @@ export function FeedbackOverviewSection({
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               핵심 피드백
             </p>
@@ -240,28 +257,24 @@ export function FeedbackOverviewSection({
                 key={index}
                 className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
                 style={{
-                  background:
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)",
+                  background: `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`,
                   borderLeft: "3px solid transparent",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderLeftColor = "#7C9A7C";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.08) 0%, rgba(124, 154, 124, 0.02) 100%)";
+                  e.currentTarget.style.borderLeftColor = colors.primary;
+                  e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}15 0%, ${colors.primary}05 100%)`;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderLeftColor = "transparent";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)";
+                  e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`;
                 }}
               >
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(124, 154, 124, 0.15) 0%, rgba(107, 138, 107, 0.1) 100%)",
-                    border: "1.5px solid rgba(124, 154, 124, 0.3)",
-                    color: "#7C9A7C",
+                    background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}15 100%)`,
+                    border: `1.5px solid ${colors.border}`,
+                    color: colors.primary,
                     fontSize: "11px",
                     fontWeight: "600",
                   }}
@@ -270,10 +283,9 @@ export function FeedbackOverviewSection({
                 </div>
                 <div className="flex-1">
                   <p
-                    className="text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-1"
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-1`}
                     style={{
-                      color: "#4E4B46",
-                      lineHeight: "1.65",
+                      color: COMMON_COLORS.text.secondary,
                       letterSpacing: "0.01em",
                       fontWeight: "400",
                     }}
@@ -284,8 +296,8 @@ export function FeedbackOverviewSection({
                     <span
                       className="text-xs px-2 py-0.5 rounded-full"
                       style={{
-                        backgroundColor: "rgba(124, 154, 124, 0.1)",
-                        color: "#7C9A7C",
+                        backgroundColor: `${colors.primary}15`,
+                        color: colors.primary,
                         fontWeight: "500",
                       }}
                     >
@@ -313,8 +325,11 @@ export function FeedbackOverviewSection({
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               반복된 개선점
             </p>
@@ -355,10 +370,9 @@ export function FeedbackOverviewSection({
                 </div>
                 <div className="flex-1">
                   <p
-                    className="text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A] mb-1"
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A] mb-1`}
                     style={{
-                      color: "#4E4B46",
-                      lineHeight: "1.65",
+                      color: COMMON_COLORS.text.secondary,
                       letterSpacing: "0.01em",
                       fontWeight: "400",
                     }}
@@ -387,34 +401,32 @@ export function FeedbackOverviewSection({
       {/* AI 피드백 코멘트 */}
       {feedback_overview.feedback_ai_comment && (
         <Card
-          className="p-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p
-                className="text-sm font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 AI 피드백 코멘트
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {feedback_overview.feedback_ai_comment}
               </p>

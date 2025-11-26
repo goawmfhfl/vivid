@@ -22,6 +22,13 @@ import {
 } from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  CARD_STYLES,
+} from "./design-system";
 
 type EmotionOverviewSectionProps = {
   emotion_overview: MonthlyReportData["emotion_overview"];
@@ -136,7 +143,7 @@ export function EmotionOverviewSection({
         fill="white"
         textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
-        className="text-xs font-semibold"
+        className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.fontWeight}`}
         style={{
           filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
         }}
@@ -171,15 +178,21 @@ export function EmotionOverviewSection({
           }}
         >
           <p
-            className="text-sm font-bold mb-1"
+            className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight} mb-1`}
             style={{ color: data.payload.color }}
           >
             {data.name}
           </p>
-          <p className="text-lg font-bold mb-2" style={{ color: "#333333" }}>
+          <p
+            className={`${TYPOGRAPHY.h3.fontSize} ${TYPOGRAPHY.h3.fontWeight} mb-2`}
+            style={{ color: COMMON_COLORS.text.primary }}
+          >
             {data.value.toFixed(1)}% ({data.payload.count}일)
           </p>
-          <p className="text-xs leading-relaxed" style={{ color: "#4E4B46" }}>
+          <p
+            className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.lineHeight}`}
+            style={{ color: COMMON_COLORS.text.secondary }}
+          >
             {data.payload.explanation}
           </p>
         </div>
@@ -188,22 +201,27 @@ export function EmotionOverviewSection({
     return null;
   };
 
+  const colors = SECTION_COLORS.emotion;
+
   return (
-    <div className="mb-10 sm:mb-12" style={{ marginTop: "32px" }}>
+    <div
+      className={SPACING.section.marginBottom}
+      style={{ marginTop: SPACING.section.marginTop }}
+    >
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-8">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-            boxShadow: "0 4px 12px rgba(124, 154, 124, 0.3)",
+            background: colors.gradient,
+            boxShadow: `0 2px 8px ${colors.primary}30`,
           }}
         >
-          <Heart className="w-6 h-6 text-white" />
+          <Heart className="w-5 h-5 text-white" />
         </div>
         <h2
-          className="text-2xl sm:text-3xl font-bold"
-          style={{ color: "#333333" }}
+          className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+          style={{ color: COMMON_COLORS.text.primary }}
         >
           월간 감정 분석
         </h2>
@@ -212,27 +230,25 @@ export function EmotionOverviewSection({
       {/* 감정 사분면 분포 차트 */}
       {quadrantChartData.length > 0 && (
         <Card
-          className="p-6 mb-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} mb-6 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Heart className="w-5 h-5 text-white" />
             </div>
             <p
-              className="text-sm font-semibold uppercase tracking-wide"
-              style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               감정 사분면 분포
             </p>
@@ -316,13 +332,13 @@ export function EmotionOverviewSection({
                       }}
                     />
                     <span
-                      className="text-xs font-medium flex-1"
-                      style={{ color: "#4E4B46" }}
+                      className={`${TYPOGRAPHY.bodySmall.fontSize} font-medium flex-1`}
+                      style={{ color: COMMON_COLORS.text.secondary }}
                     >
                       {item.name}
                     </span>
                     <span
-                      className="text-xs font-bold"
+                      className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.fontWeight}`}
                       style={{ color: item.color }}
                     >
                       {item.value.toFixed(0)}%
@@ -365,22 +381,22 @@ export function EmotionOverviewSection({
                     )}
                     <div className="flex-1">
                       <p
-                        className="text-sm font-bold mb-1"
+                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight} mb-1`}
                         style={{ color: item.color }}
                       >
                         {item.name}
                       </p>
                       <p
-                        className="text-xs font-medium"
-                        style={{ color: "#6B7A6F" }}
+                        className={`${TYPOGRAPHY.bodySmall.fontSize} font-medium`}
+                        style={{ color: COMMON_COLORS.text.tertiary }}
                       >
                         {item.value.toFixed(1)}% · {item.count}일
                       </p>
                     </div>
                   </div>
                   <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                    className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.lineHeight}`}
+                    style={{ color: COMMON_COLORS.text.secondary }}
                   >
                     {item.explanation}
                   </p>
@@ -394,34 +410,32 @@ export function EmotionOverviewSection({
       {/* 감정 사분면 분석 요약 */}
       {emotion_overview.emotion_quadrant_analysis_summary && (
         <Card
-          className="p-6 mb-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} mb-6 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p
-                className="text-sm font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 감정 사분면 분석 요약
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {emotion_overview.emotion_quadrant_analysis_summary}
               </p>
@@ -448,8 +462,11 @@ export function EmotionOverviewSection({
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <p
-                  className="text-sm font-semibold uppercase tracking-wide"
-                  style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   긍정 감정 트리거
                 </p>
@@ -460,28 +477,24 @@ export function EmotionOverviewSection({
                     key={index}
                     className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
                     style={{
-                      background:
-                        "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)",
+                      background: `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`,
                       borderLeft: "3px solid transparent",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderLeftColor = "#7C9A7C";
-                      e.currentTarget.style.background =
-                        "linear-gradient(to right, rgba(124, 154, 124, 0.08) 0%, rgba(124, 154, 124, 0.02) 100%)";
+                      e.currentTarget.style.borderLeftColor = colors.primary;
+                      e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}15 0%, ${colors.primary}05 100%)`;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderLeftColor = "transparent";
-                      e.currentTarget.style.background =
-                        "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)";
+                      e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`;
                     }}
                   >
                     <div
                       className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
                       style={{
-                        background:
-                          "linear-gradient(135deg, rgba(124, 154, 124, 0.15) 0%, rgba(107, 138, 107, 0.1) 100%)",
-                        border: "1.5px solid rgba(124, 154, 124, 0.3)",
-                        color: "#7C9A7C",
+                        background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}15 100%)`,
+                        border: `1.5px solid ${colors.border}`,
+                        color: colors.primary,
                         fontSize: "11px",
                         fontWeight: "600",
                       }}
@@ -489,10 +502,9 @@ export function EmotionOverviewSection({
                       {index + 1}
                     </div>
                     <p
-                      className="flex-1 text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]"
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]`}
                       style={{
-                        color: "#4E4B46",
-                        lineHeight: "1.65",
+                        color: COMMON_COLORS.text.secondary,
                         letterSpacing: "0.01em",
                         fontWeight: "400",
                       }}
@@ -521,8 +533,11 @@ export function EmotionOverviewSection({
                   <AlertTriangle className="w-5 h-5 text-white" />
                 </div>
                 <p
-                  className="text-sm font-semibold uppercase tracking-wide"
-                  style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   부정 감정 트리거
                 </p>
@@ -562,10 +577,9 @@ export function EmotionOverviewSection({
                       {index + 1}
                     </div>
                     <p
-                      className="flex-1 text-sm leading-relaxed pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A]"
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A]`}
                       style={{
-                        color: "#4E4B46",
-                        lineHeight: "1.65",
+                        color: COMMON_COLORS.text.secondary,
                         letterSpacing: "0.01em",
                         fontWeight: "400",
                       }}
@@ -582,21 +596,16 @@ export function EmotionOverviewSection({
       {/* 감정 안정성 점수 */}
       <Card
         ref={stabilityRef}
-        className="p-6 mb-6 transition-all duration-300 hover:shadow-lg overflow-visible"
-        style={{
-          backgroundColor: "white",
-          border: "1px solid #E8E8E8",
-          borderRadius: "20px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        }}
+        className={`${SPACING.card.padding} mb-6 transition-all duration-300 hover:shadow-lg overflow-visible`}
+        style={CARD_STYLES.withColor(colors.primary)}
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Target className="w-5 h-5 text-white" />
@@ -604,8 +613,11 @@ export function EmotionOverviewSection({
             <div>
               <div className="flex items-center gap-2">
                 <p
-                  className="text-sm font-semibold uppercase tracking-wide"
-                  style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
                 >
                   감정 안정성 점수
                 </p>
@@ -637,8 +649,8 @@ export function EmotionOverviewSection({
                             style={{ backgroundColor: "#A8BBA8" }}
                           />
                           <p
-                            className="text-xs font-semibold"
-                            style={{ color: "#333333" }}
+                            className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.fontWeight}`}
+                            style={{ color: COMMON_COLORS.text.primary }}
                           >
                             감정 안정성 점수란?
                           </p>
@@ -651,8 +663,8 @@ export function EmotionOverviewSection({
                         </button>
                       </div>
                       <p
-                        className="text-xs leading-relaxed"
-                        style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                        className={`${TYPOGRAPHY.bodySmall.fontSize} ${TYPOGRAPHY.bodySmall.lineHeight}`}
+                        style={{ color: COMMON_COLORS.text.secondary }}
                       >
                         {emotion_overview.emotion_stability_explanation}
                       </p>
@@ -664,9 +676,9 @@ export function EmotionOverviewSection({
           </div>
           <div className="flex items-baseline gap-2">
             <span
-              className="text-3xl font-bold"
+              className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
+                background: colors.gradient,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -674,7 +686,10 @@ export function EmotionOverviewSection({
             >
               {stability}
             </span>
-            <span className="text-sm font-medium" style={{ color: "#9CA3AF" }}>
+            <span
+              className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+              style={{ color: COMMON_COLORS.text.muted }}
+            >
               / 10
             </span>
           </div>
@@ -684,16 +699,17 @@ export function EmotionOverviewSection({
         <div
           className="h-4 rounded-full overflow-hidden mb-4"
           style={{
-            backgroundColor: "#F0F5F0",
+            backgroundColor:
+              COMMON_COLORS.background.cardGradient.split(" ")[2],
             boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
           }}
         >
           <div
             className="h-full rounded-full transition-all duration-1000 ease-out"
             style={{
-              background: `linear-gradient(90deg, #7C9A7C 0%, #6B8A6B 100%)`,
+              background: colors.gradient,
               width: `${(stability / 10) * 100}%`,
-              boxShadow: `0 2px 6px rgba(124, 154, 124, 0.4)`,
+              boxShadow: `0 2px 6px ${colors.primary}40`,
             }}
           />
         </div>
@@ -707,31 +723,33 @@ export function EmotionOverviewSection({
               <div
                 className="p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-sm"
                 style={{
-                  backgroundColor: "#F5F7F5",
-                  borderLeftColor: "#7C9A7C",
+                  background: COMMON_COLORS.background.cardGradient,
+                  borderLeftColor: colors.primary,
                 }}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
-                      background:
-                        "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                      boxShadow: "0 2px 4px rgba(124, 154, 124, 0.3)",
+                      background: colors.gradient,
+                      boxShadow: `0 2px 4px ${colors.primary}30`,
                     }}
                   >
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1">
                     <p
-                      className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                      style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                      className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-2`}
+                      style={{
+                        color: COMMON_COLORS.text.tertiary,
+                        letterSpacing: "0.05em",
+                      }}
                     >
                       왜 {stability}점인가요?
                     </p>
                     <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                      style={{ color: COMMON_COLORS.text.secondary }}
                     >
                       {emotion_overview.emotion_stability_score_reason}
                     </p>
@@ -745,33 +763,34 @@ export function EmotionOverviewSection({
               <div
                 className="p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-sm"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)",
-                  borderLeftColor: "#7C9A7C",
-                  boxShadow: "0 2px 8px rgba(124, 154, 124, 0.2)",
+                  background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.primary}10 100%)`,
+                  borderLeftColor: colors.primary,
+                  boxShadow: `0 2px 8px ${colors.primary}20`,
                 }}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
-                      background:
-                        "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                      boxShadow: "0 2px 4px rgba(124, 154, 124, 0.3)",
+                      background: colors.gradient,
+                      boxShadow: `0 2px 4px ${colors.primary}30`,
                     }}
                   >
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1">
                     <p
-                      className="text-xs font-semibold mb-2 uppercase tracking-wide"
-                      style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                      className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-2`}
+                      style={{
+                        color: COMMON_COLORS.text.tertiary,
+                        letterSpacing: "0.05em",
+                      }}
                     >
                       잘하고 있어요!
                     </p>
                     <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                      style={{ color: COMMON_COLORS.text.secondary }}
                     >
                       {emotion_overview.emotion_stability_praise}
                     </p>
@@ -787,18 +806,21 @@ export function EmotionOverviewSection({
           emotion_overview.emotion_stability_actions?.length > 0) && (
           <div
             className="mt-4 pt-4 border-t"
-            style={{ borderColor: "#EFE9E3" }}
+            style={{ borderColor: COMMON_COLORS.border.light }}
           >
             <div className="flex items-center gap-2 mb-3">
               <Target
                 className="w-4 h-4"
                 style={{
-                  color: "#7C9A7C",
+                  color: colors.primary,
                 }}
               />
               <p
-                className="text-xs font-semibold uppercase tracking-wide"
-                style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 {stability >= 7
                   ? "더 높은 안정성을 위한 가이드라인"
@@ -816,24 +838,27 @@ export function EmotionOverviewSection({
                   className="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
                   style={{
                     backgroundColor:
-                      index % 2 === 0 ? "#FAFAF8" : "transparent",
+                      index % 2 === 0
+                        ? COMMON_COLORS.background.base
+                        : "transparent",
                   }}
                 >
                   <div
                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-transform duration-200 hover:scale-110"
                     style={{
-                      background:
-                        "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                      boxShadow: "0 2px 4px rgba(124, 154, 124, 0.3)",
+                      background: colors.gradient,
+                      boxShadow: `0 2px 4px ${colors.primary}30`,
                     }}
                   >
-                    <span className="text-xs font-bold text-white">
+                    <span
+                      className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}
+                    >
                       {index + 1}
                     </span>
                   </div>
                   <span
-                    className="text-sm leading-relaxed flex-1"
-                    style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1`}
+                    style={{ color: COMMON_COLORS.text.secondary }}
                   >
                     {action}
                   </span>
@@ -847,34 +872,32 @@ export function EmotionOverviewSection({
       {/* AI 감정 코멘트 */}
       {emotion_overview.emotion_ai_comment && (
         <Card
-          className="p-6 transition-all duration-300 hover:shadow-lg"
-          style={{
-            backgroundColor: "white",
-            border: "1px solid #E8E8E8",
-            borderRadius: "20px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{
-                background: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-                boxShadow: "0 2px 8px rgba(124, 154, 124, 0.3)",
+                background: colors.gradient,
+                boxShadow: `0 2px 8px ${colors.primary}30`,
               }}
             >
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <p
-                className="text-sm font-semibold mb-3 uppercase tracking-wide"
-                style={{ color: "#4E4B46", letterSpacing: "0.05em" }}
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform} mb-3`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
               >
                 AI 감정 코멘트
               </p>
               <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#4E4B46", lineHeight: "1.8" }}
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                style={{ color: COMMON_COLORS.text.secondary }}
               >
                 {emotion_overview.emotion_ai_comment}
               </p>

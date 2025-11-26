@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Calendar, HelpCircle, X } from "lucide-react";
 import { Card } from "../../ui/card";
+import { COMMON_COLORS, TYPOGRAPHY } from "./design-system";
 
 type MonthlyReportHeaderProps = {
   month_label: string;
@@ -93,10 +94,10 @@ export function MonthlyReportHeader({
         </div>
         <div className="flex-1">
           <h1
-            className="text-2xl sm:text-3xl font-bold mb-1.5"
+            className={`${TYPOGRAPHY.h1.fontSize} ${TYPOGRAPHY.h1.fontWeight} mb-1.5`}
             style={{
-              color: "#333333",
-              background: "linear-gradient(135deg, #333333 0%, #6B7A6F 100%)",
+              color: COMMON_COLORS.text.primary,
+              background: `linear-gradient(135deg, ${COMMON_COLORS.text.primary} 0%, ${COMMON_COLORS.text.tertiary} 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -109,7 +110,10 @@ export function MonthlyReportHeader({
               className="w-1.5 h-1.5 rounded-full"
               style={{ backgroundColor: "#A8BBA8" }}
             />
-            <p className="text-sm font-medium" style={{ color: "#6B7A6F" }}>
+            <p
+              className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+              style={{ color: COMMON_COLORS.text.tertiary }}
+            >
               {date_range.start_date} ~ {date_range.end_date}
             </p>
           </div>
@@ -160,8 +164,11 @@ export function MonthlyReportHeader({
         <div className="relative mb-6">
           <div>
             <p
-              className="text-xs font-medium mb-2 tracking-wide uppercase"
-              style={{ color: "#6B7A6F", letterSpacing: "0.05em" }}
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-2 ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
             >
               이번 달 점수
             </p>
@@ -178,8 +185,8 @@ export function MonthlyReportHeader({
                 {summary_overview.monthly_score}
               </span>
               <span
-                className="text-xl font-semibold"
-                style={{ color: "#6B7A6F", opacity: 0.7 }}
+                className={`${TYPOGRAPHY.h3.fontSize} font-semibold`}
+                style={{ color: COMMON_COLORS.text.tertiary, opacity: 0.7 }}
               >
                 / 100
               </span>
@@ -203,8 +210,11 @@ export function MonthlyReportHeader({
           >
             <div className="flex items-center gap-1.5 mb-2">
               <p
-                className="text-xs font-medium"
-                style={{ color: "#6B7A6F", letterSpacing: "0.02em" }}
+                className={`${TYPOGRAPHY.bodySmall.fontSize} font-medium`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.02em",
+                }}
               >
                 평균 정합도
               </p>
@@ -230,7 +240,7 @@ export function MonthlyReportHeader({
               </button>
             </div>
             <p
-              className="text-2xl font-bold"
+              className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
               style={{ color: "#A8BBA8", lineHeight: "1.2" }}
             >
               {integrity_average.toFixed(1)}
@@ -271,8 +281,8 @@ export function MonthlyReportHeader({
                       style={{ backgroundColor: "#A8BBA8" }}
                     />
                     <p
-                      className="text-sm font-semibold"
-                      style={{ color: "#333333" }}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight}`}
+                      style={{ color: COMMON_COLORS.text.primary }}
                     >
                       평균 정합도
                     </p>
@@ -290,12 +300,12 @@ export function MonthlyReportHeader({
                       justifyContent: "center",
                     }}
                   >
-                    <X className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
+                    <X className="w-3.5 h-3.5" style={{ color: COMMON_COLORS.text.tertiary }} />
                   </button>
                 </div>
                 <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                  style={{ color: COMMON_COLORS.text.secondary }}
                 >
                   AI가 하루 기록을 분석해 평가한 점수의 평균입니다. 기록의
                   깊이와 진실성을 <strong>0~10점</strong>으로 나타냅니다.
@@ -317,8 +327,11 @@ export function MonthlyReportHeader({
           >
             <div className="flex items-center gap-1.5 mb-2">
               <p
-                className="text-xs font-medium"
-                style={{ color: "#6B7A6F", letterSpacing: "0.02em" }}
+                className={`${TYPOGRAPHY.bodySmall.fontSize} font-medium`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.02em",
+                }}
               >
                 기록 커버리지
               </p>
@@ -344,7 +357,7 @@ export function MonthlyReportHeader({
               </button>
             </div>
             <p
-              className="text-2xl font-bold"
+              className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
               style={{ color: "#E5B96B", lineHeight: "1.2" }}
             >
               {Math.round(record_coverage_rate * 100)}%
@@ -385,8 +398,8 @@ export function MonthlyReportHeader({
                       style={{ backgroundColor: "#E5B96B" }}
                     />
                     <p
-                      className="text-sm font-semibold"
-                      style={{ color: "#333333" }}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight}`}
+                      style={{ color: COMMON_COLORS.text.primary }}
                     >
                       기록 커버리지
                     </p>
@@ -404,12 +417,12 @@ export function MonthlyReportHeader({
                       justifyContent: "center",
                     }}
                   >
-                    <X className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
+                    <X className="w-3.5 h-3.5" style={{ color: COMMON_COLORS.text.tertiary }} />
                   </button>
                 </div>
                 <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "#4E4B46", lineHeight: "1.7" }}
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+                  style={{ color: COMMON_COLORS.text.secondary }}
                 >
                   해당 기간에 기록한 날짜의 비율입니다. 예를 들어{" "}
                   <strong>11월이 30일</strong>인데 <strong>24일</strong>{" "}
@@ -443,14 +456,14 @@ export function MonthlyReportHeader({
         />
         <div className="pl-4">
           <h2
-            className="text-xl sm:text-2xl font-bold mb-4 transition-colors duration-300 group-hover:text-[#A8BBA8]"
-            style={{ color: "#333333", lineHeight: "1.4" }}
+            className={`${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight} mb-4 transition-colors duration-300 group-hover:text-[#A8BBA8]`}
+            style={{ color: COMMON_COLORS.text.primary, lineHeight: "1.4" }}
           >
             {summary_overview.summary_title}
           </h2>
           <p
-            className="text-sm leading-relaxed"
-            style={{ color: "#4E4B46", lineHeight: "1.8" }}
+            className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight}`}
+            style={{ color: COMMON_COLORS.text.secondary }}
           >
             {summary_overview.summary_description}
           </p>
