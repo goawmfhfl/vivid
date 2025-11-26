@@ -6,7 +6,6 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import type { MonthlyReportData } from "./report/types";
 import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
 import { SummaryOverviewSection } from "./report/SummaryOverviewSection";
-import { WeeklyOverviewSection } from "./report/WeeklyOverviewSection";
 import { EmotionOverviewSection } from "./report/EmotionOverviewSection";
 import { InsightOverviewSection } from "./report/InsightOverviewSection";
 import { FeedbackOverviewSection } from "./report/FeedbackOverviewSection";
@@ -53,12 +52,6 @@ export function MonthlyFeedbackReport({
         <ScrollAnimation delay={200}>
           <div className="mb-64">
             <SummaryOverviewSection summary_overview={data.summary_overview} />
-          </div>
-        </ScrollAnimation>
-
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <WeeklyOverviewSection weekly_overview={data.weekly_overview} />
           </div>
         </ScrollAnimation>
 

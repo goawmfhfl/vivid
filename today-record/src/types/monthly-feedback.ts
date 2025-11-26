@@ -15,7 +15,6 @@ export type MonthlyFeedback = {
 
   // 섹션들
   summary_overview: SummaryOverview;
-  weekly_overview: WeeklyOverview;
   emotion_overview: EmotionOverview;
   insight_overview: InsightOverview;
   feedback_overview: FeedbackOverview;
@@ -30,33 +29,22 @@ export type SummaryOverview = {
   monthly_score: number; // 0-100
   summary_title: string;
   summary_description: string;
-  main_themes: string[]; // 최대 10개
+  main_themes: string[]; // 최대 7개
+  main_themes_reason: string; // 주요 테마를 7개 이하로 정한 이유
   integrity_trend: "상승" | "하락" | "유지" | "불규칙" | null;
   life_balance_score: number; // 0-10
+  life_balance_reason: string; // 점수가 나온 이유 (데이터 출처 기반)
+  life_balance_feedback: string; // 생활 밸런스에 대한 피드백
   execution_score: number; // 0-10
+  execution_reason: string; // 점수가 나온 이유 (데이터 출처 기반)
+  execution_feedback: string; // 실행력에 대한 피드백
   rest_score: number; // 0-10
+  rest_reason: string; // 점수가 나온 이유 (데이터 출처 기반)
+  rest_feedback: string; // 휴식/회복에 대한 피드백
   relationship_score: number; // 0-10
+  relationship_reason: string; // 점수가 나온 이유 (데이터 출처 기반)
+  relationship_feedback: string; // 관계/소통에 대한 피드백
   summary_ai_comment: string | null;
-};
-
-export type WeeklyOverview = {
-  weeks: WeeklyItem[];
-};
-
-export type WeeklyItem = {
-  week_index: number; // 1-5
-  start_date: string; // "YYYY-MM-DD"
-  end_date: string; // "YYYY-MM-DD"
-  integrity_average: number; // 0-10
-  dominant_emotion: string | null;
-  emotion_quadrant:
-    | "몰입·설렘"
-    | "불안·초조"
-    | "슬픔·무기력"
-    | "안도·평온"
-    | null;
-  weekly_keyword: string | null;
-  weekly_comment: string | null;
 };
 
 export type EmotionOverview = {

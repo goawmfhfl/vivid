@@ -115,7 +115,6 @@ export async function fetchMonthlyFeedbackByMonth(
     integrity_average: data.integrity_average,
     summary_overview:
       data.summary_overview as MonthlyFeedback["summary_overview"],
-    weekly_overview: data.weekly_overview as MonthlyFeedback["weekly_overview"],
     emotion_overview:
       data.emotion_overview as MonthlyFeedback["emotion_overview"],
     insight_overview:
@@ -168,7 +167,6 @@ export async function fetchMonthlyFeedbackDetail(
     integrity_average: data.integrity_average,
     summary_overview:
       data.summary_overview as MonthlyFeedback["summary_overview"],
-    weekly_overview: data.weekly_overview as MonthlyFeedback["weekly_overview"],
     emotion_overview:
       data.emotion_overview as MonthlyFeedback["emotion_overview"],
     insight_overview:
@@ -204,7 +202,6 @@ export async function saveMonthlyFeedback(
         record_coverage_rate: feedback.record_coverage_rate,
         integrity_average: feedback.integrity_average,
         summary_overview: feedback.summary_overview,
-        weekly_overview: feedback.weekly_overview,
         emotion_overview: feedback.emotion_overview,
         insight_overview: feedback.insight_overview,
         feedback_overview: feedback.feedback_overview,

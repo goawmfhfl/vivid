@@ -36,7 +36,11 @@ export const MonthlyReportSchema = {
             type: "array",
             items: { type: "string" },
             minItems: 0,
-            maxItems: 10,
+            maxItems: 7,
+          },
+          main_themes_reason: {
+            type: "string",
+            description: "주요 테마를 7개 이하로 정한 이유 설명",
           },
           integrity_trend: {
             type: "string",
@@ -44,9 +48,41 @@ export const MonthlyReportSchema = {
             enum: ["상승", "하락", "유지", "불규칙", null],
           },
           life_balance_score: { type: "integer", minimum: 0, maximum: 10 },
+          life_balance_reason: {
+            type: "string",
+            description: "생활 밸런스 점수가 나온 이유 (데이터 출처 기반)",
+          },
+          life_balance_feedback: {
+            type: "string",
+            description: "생활 밸런스에 대한 피드백",
+          },
           execution_score: { type: "integer", minimum: 0, maximum: 10 },
+          execution_reason: {
+            type: "string",
+            description: "실행력 점수가 나온 이유 (데이터 출처 기반)",
+          },
+          execution_feedback: {
+            type: "string",
+            description: "실행력에 대한 피드백",
+          },
           rest_score: { type: "integer", minimum: 0, maximum: 10 },
+          rest_reason: {
+            type: "string",
+            description: "휴식/회복 점수가 나온 이유 (데이터 출처 기반)",
+          },
+          rest_feedback: {
+            type: "string",
+            description: "휴식/회복에 대한 피드백",
+          },
           relationship_score: { type: "integer", minimum: 0, maximum: 10 },
+          relationship_reason: {
+            type: "string",
+            description: "관계/소통 점수가 나온 이유 (데이터 출처 기반)",
+          },
+          relationship_feedback: {
+            type: "string",
+            description: "관계/소통에 대한 피드백",
+          },
           summary_ai_comment: { type: "string", nullable: true },
         },
         required: [
@@ -54,67 +90,25 @@ export const MonthlyReportSchema = {
           "summary_title",
           "summary_description",
           "main_themes",
+          "main_themes_reason",
           "integrity_trend",
           "life_balance_score",
+          "life_balance_reason",
+          "life_balance_feedback",
           "execution_score",
+          "execution_reason",
+          "execution_feedback",
           "rest_score",
+          "rest_reason",
+          "rest_feedback",
           "relationship_score",
+          "relationship_reason",
+          "relationship_feedback",
           "summary_ai_comment",
         ],
       },
 
-      // 2. 주차별 overview 섹션
-      weekly_overview: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          weeks: {
-            type: "array",
-            minItems: 0,
-            maxItems: 5,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                week_index: { type: "integer", minimum: 1, maximum: 5 },
-                start_date: {
-                  type: "string",
-                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                },
-                end_date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-                integrity_average: { type: "number", minimum: 0, maximum: 10 },
-                dominant_emotion: { type: "string", nullable: true },
-                emotion_quadrant: {
-                  type: "string",
-                  nullable: true,
-                  enum: [
-                    "몰입·설렘",
-                    "불안·초조",
-                    "슬픔·무기력",
-                    "안도·평온",
-                    null,
-                  ],
-                },
-                weekly_keyword: { type: "string", nullable: true },
-                weekly_comment: { type: "string", nullable: true },
-              },
-              required: [
-                "week_index",
-                "start_date",
-                "end_date",
-                "integrity_average",
-                "dominant_emotion",
-                "emotion_quadrant",
-                "weekly_keyword",
-                "weekly_comment",
-              ],
-            },
-          },
-        },
-        required: ["weeks"],
-      },
-
-      // 3. 감정 섹션
+      // 2. 감정 섹션
       emotion_overview: {
         type: "object",
         additionalProperties: false,
@@ -351,7 +345,6 @@ export const MonthlyReportSchema = {
       "record_coverage_rate",
       "integrity_average",
       "summary_overview",
-      "weekly_overview",
       "emotion_overview",
       "insight_overview",
       "feedback_overview",
@@ -447,13 +440,21 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - main_themes:
 
-  - 이 달의 키워드를 최대 10개까지 뽑습니다.
+  - 이 달의 키워드를 최대 7개까지 뽑습니다.
 
   - 예: ["기록", "정체감", "직업 고민", "체력 관리", "관계 정리"]
 
+  - 반드시 7개 이하로 제한하고, 가장 중요하고 반복적으로 등장한 키워드만 선별합니다.
+
+- main_themes_reason:
+
+  - main_themes를 7개 이하로 정한 이유를 명확하게 설명합니다.
+
+  - 예: "이번 달에는 '기록', '개발', '운동'이 가장 자주 등장했고, 이 세 가지가 전체 패턴을 대표합니다. 나머지 키워드들은 이 세 가지의 하위 주제로 볼 수 있어 7개로 제한했습니다."
+
 - integrity_trend:
 
-  - 주차별 integrity_average 흐름을 기준으로,
+  - 일별 integrity_score 흐름을 기준으로,
 
     - 전체적으로 상승 → "상승"
 
@@ -469,7 +470,17 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 각 0~10 점으로, daily_reports 서사와 meta_overview 내용을 참고해 정성적으로 평가합니다.
 
-  - 점수에 대한 이유는 summary_ai_comment에서 간단히 설명합니다.
+  - 각 점수에 대해 반드시 다음 두 가지를 제공해야 합니다:
+
+    1) {score}_reason: 점수가 나온 구체적인 이유를 데이터 출처를 명시하여 설명합니다.
+
+       - 예: "생활 밸런스 점수 7점은 이번 달 일일 기록에서 운동(주 3회), 수면(평균 7시간), 업무 시간(일 8시간)이 비교적 균형 있게 유지되었기 때문입니다. 특히 주말에는 휴식과 회복 시간을 확보한 날이 8일로 확인되었습니다."
+
+    2) {score}_feedback: 해당 영역에 대한 구체적인 피드백을 제공합니다.
+
+       - 예: "생활 밸런스가 안정적인 편이지만, 주중 업무 집중도가 높아질 때 운동 시간이 줄어드는 패턴이 보입니다. 다음 달에는 주중에도 짧은 산책이나 스트레칭을 추가하면 더욱 균형 잡힌 하루를 만들 수 있을 것 같습니다."
+
+  - 모든 이유와 피드백은 실제 daily_reports 데이터를 기반으로 작성해야 하며, 상상으로 만들어내지 않습니다.
 
 - summary_ai_comment:
 
@@ -479,33 +490,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[3. weekly_overview (1~4주차 요약)]
-
-- weeks 배열에는 1주차부터 최대 5주차까지만 포함합니다.
-
-- 각 주는 다음을 포함합니다:
-
-  - week_index: 1~5
-
-  - start_date, end_date: 해당 주의 실제 날짜 범위
-
-  - integrity_average: 그 주에 속한 daily_reports 의 integrity_score 평균 (없으면 0)
-
-  - dominant_emotion: 그 주에 가장 자주 나타난 대표 감정(짧은 단어 또는 구)
-
-  - emotion_quadrant: 그 주에 가장 많이 등장한 emotion_quadrant (없으면 null)
-
-  - weekly_keyword: 그 주를 표현하는 한 단어 또는 짧은 구
-
-  - weekly_comment: 200자 이내로, 이 주의 핵심 포인트를 설명합니다.
-
-- 특정 주에 해당하는 daily_reports 가 전혀 없다면:
-
-  - 해당 주는 weeks 배열에 포함하지 않아도 됩니다.
-
---------------------------------
-
-[4. emotion_overview (감정 섹션)]
+[3. emotion_overview (감정 섹션)]
 
 1) monthly_ai_mood_valence_avg, monthly_ai_mood_arousal_avg
 
@@ -635,7 +620,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[6. feedback_overview (피드백 섹션)]
+[5. feedback_overview (피드백 섹션)]
 
 - feedback_days_count, feedback_records_count:
 
@@ -677,7 +662,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[7. vision_overview (시각화/비전 섹션)]
+[6. vision_overview (시각화/비전 섹션)]
 
 - vision_days_count, vision_records_count:
 
@@ -727,7 +712,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[8. conclusion_overview (마무리 섹션)]
+[7. conclusion_overview (마무리 섹션)]
 
 - monthly_title:
 
@@ -763,7 +748,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[9. 카테고리 데이터가 거의 없을 때의 처리 원칙]
+[8. 카테고리 데이터가 거의 없을 때의 처리 원칙]
 
 - insight, feedback, vision, emotion 과 관련된 데이터가 거의 없거나 전혀 없는 경우,
 
@@ -777,7 +762,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[10. 출력 형식 요약]
+[9. 출력 형식 요약]
 
 - 최종 출력은 MonthlyReportResponse 스키마를 만족하는 하나의 JSON 객체입니다.
 

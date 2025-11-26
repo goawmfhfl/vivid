@@ -29,13 +29,6 @@ export function mapMonthlyFeedbackToReportData(
 
     // 섹션들
     summary_overview: feedback.summary_overview,
-    weekly_overview: {
-      weeks: feedback.weekly_overview.weeks.map((week) => ({
-        ...week,
-        start_date: formatDateForDisplay(week.start_date),
-        end_date: formatDateForDisplay(week.end_date),
-      })),
-    },
     emotion_overview: feedback.emotion_overview,
     insight_overview: feedback.insight_overview,
     feedback_overview: feedback.feedback_overview,

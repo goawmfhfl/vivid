@@ -1,6 +1,5 @@
 import type {
   SummaryOverview,
-  WeeklyOverview,
   EmotionOverview,
   InsightOverview,
   FeedbackOverview,
@@ -24,23 +23,6 @@ export type MonthlyReportData = {
 
   // 섹션들
   summary_overview: SummaryOverview;
-  weekly_overview: WeeklyOverview & {
-    weeks: Array<{
-      week_index: number;
-      start_date: string; // "2025.11.01"
-      end_date: string; // "2025.11.07"
-      integrity_average: number;
-      dominant_emotion: string | null;
-      emotion_quadrant:
-        | "몰입·설렘"
-        | "불안·초조"
-        | "슬픔·무기력"
-        | "안도·평온"
-        | null;
-      weekly_keyword: string | null;
-      weekly_comment: string | null;
-    }>;
-  };
   emotion_overview: EmotionOverview;
   insight_overview: InsightOverview;
   feedback_overview: FeedbackOverview;

@@ -219,7 +219,7 @@ export function buildMonthlyFeedbackPrompt(
     });
   }
 
-  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 summary_overview, weekly_overview, emotion_overview, insight_overview, feedback_overview, vision_overview, conclusion_overview를 작성하세요.\n`;
+  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 summary_overview, emotion_overview, insight_overview, feedback_overview, vision_overview, conclusion_overview를 작성하세요.\n`;
 
   return prompt;
 }
