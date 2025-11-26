@@ -58,7 +58,6 @@ export type EmotionOverview = {
     | null;
   emotion_quadrant_distribution: EmotionQuadrantDistribution[]; // 반드시 4개 포함
   emotion_quadrant_analysis_summary: string; // 4개 사분면 분포 종합 분석 피드백
-  emotion_keywords: string[]; // 최대 20개
   emotion_pattern_summary: string | null;
   positive_triggers: string[]; // 최대 10개
   negative_triggers: string[]; // 최대 10개
@@ -81,11 +80,10 @@ export type EmotionQuadrantDistribution = {
 export type InsightOverview = {
   insight_days_count: number;
   insight_records_count: number;
-  insight_themes: string[]; // 최대 15개
-  top_insights: TopInsight[];
-  insight_depth_score: number; // 0-10
-  meta_question_for_month: string | null;
+  top_insights: TopInsight[]; // 최대 20개
+  core_insights: CoreInsight[]; // 최대 3개
   insight_ai_comment: string | null;
+  insight_comprehensive_summary: string | null; // 종합 인사이트 분석
 };
 
 export type TopInsight = {
@@ -95,21 +93,42 @@ export type TopInsight = {
   frequency: number;
 };
 
+export type CoreInsight = {
+  summary: string;
+  explanation: string; // 이 인사이트가 핵심인 이유 설명
+};
+
 export type FeedbackOverview = {
   feedback_days_count: number;
   feedback_records_count: number;
   recurring_positives: string[]; // 최대 10개
-  recurring_improvements: string[]; // 최대 10개
+  recurring_improvements: string[]; // 최대 10개 (하위 호환성)
   habit_scores: HabitScores;
+  core_feedbacks: CoreFeedback[]; // 최대 5개
+  recurring_improvements_with_frequency: RecurringImprovement[]; // 최대 10개
   core_feedback_for_month: string;
   feedback_ai_comment: string | null;
 };
 
 export type HabitScores = {
   health: number; // 0-10
+  health_reason: string; // 건강 점수가 나온 이유
   work: number; // 0-10
+  work_reason: string; // 일/학습 점수가 나온 이유
   relationship: number; // 0-10
+  relationship_reason: string; // 관계 점수가 나온 이유
   self_care: number; // 0-10
+  self_care_reason: string; // 자기 돌봄 점수가 나온 이유
+};
+
+export type CoreFeedback = {
+  summary: string;
+  frequency: number; // 등장 횟수
+};
+
+export type RecurringImprovement = {
+  summary: string;
+  frequency: number; // 등장 횟수
 };
 
 export type VisionOverview = {
@@ -117,9 +136,9 @@ export type VisionOverview = {
   vision_records_count: number;
   vision_consistency_score: number; // 0-10
   main_visions: MainVision[];
+  core_visions: MainVision[]; // 최대 7개
   vision_progress_comment: string | null;
-  reminder_sentence_for_next_month: string | null;
-  vision_ai_feedback: string | null; // "핵심 3단: 1) ..., 2) ..., 3) ..." 형식
+  vision_ai_feedbacks: string[]; // 최대 5개
 };
 
 export type MainVision = {

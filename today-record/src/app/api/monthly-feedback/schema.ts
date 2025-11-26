@@ -1,6 +1,3 @@
-// Monthly Feedback 스키마는 사용자가 제공한 내용을 그대로 사용
-// 여기서는 export만 수행
-
 export const MonthlyReportSchema = {
   name: "MonthlyReportResponse",
   schema: {
@@ -147,12 +144,6 @@ export const MonthlyReportSchema = {
             type: "string",
             description: "4개 사분면 분포를 종합적으로 분석한 피드백",
           },
-          emotion_keywords: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 20,
-          },
           emotion_pattern_summary: { type: "string", nullable: true },
           positive_triggers: {
             type: "array",
@@ -205,7 +196,6 @@ export const MonthlyReportSchema = {
           "emotion_quadrant_dominant",
           "emotion_quadrant_distribution",
           "emotion_quadrant_analysis_summary",
-          "emotion_keywords",
           "emotion_pattern_summary",
           "positive_triggers",
           "negative_triggers",
@@ -226,16 +216,10 @@ export const MonthlyReportSchema = {
         properties: {
           insight_days_count: { type: "integer", minimum: 0 },
           insight_records_count: { type: "integer", minimum: 0 },
-          insight_themes: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 15,
-          },
           top_insights: {
             type: "array",
             minItems: 0,
-            maxItems: 10,
+            maxItems: 20,
             items: {
               type: "object",
               additionalProperties: false,
@@ -256,18 +240,38 @@ export const MonthlyReportSchema = {
               required: ["summary", "first_date", "last_date", "frequency"],
             },
           },
-          insight_depth_score: { type: "integer", minimum: 0, maximum: 10 },
-          meta_question_for_month: { type: "string", nullable: true },
+          core_insights: {
+            type: "array",
+            minItems: 0,
+            maxItems: 3,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                summary: { type: "string" },
+                explanation: {
+                  type: "string",
+                  description: "이 인사이트가 핵심인 이유 설명",
+                },
+              },
+              required: ["summary", "explanation"],
+            },
+            description: "이번 달의 핵심 인사이트 최대 3개",
+          },
           insight_ai_comment: { type: "string", nullable: true },
+          insight_comprehensive_summary: {
+            type: "string",
+            nullable: true,
+            description: "모든 인사이트를 종합한 종합적인 인사이트 분석",
+          },
         },
         required: [
           "insight_days_count",
           "insight_records_count",
-          "insight_themes",
           "top_insights",
-          "insight_depth_score",
-          "meta_question_for_month",
+          "core_insights",
           "insight_ai_comment",
+          "insight_comprehensive_summary",
         ],
       },
 
@@ -295,11 +299,72 @@ export const MonthlyReportSchema = {
             additionalProperties: false,
             properties: {
               health: { type: "integer", minimum: 0, maximum: 10 },
+              health_reason: {
+                type: "string",
+                description:
+                  "건강 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
+              },
               work: { type: "integer", minimum: 0, maximum: 10 },
+              work_reason: {
+                type: "string",
+                description:
+                  "일/학습 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
+              },
               relationship: { type: "integer", minimum: 0, maximum: 10 },
+              relationship_reason: {
+                type: "string",
+                description:
+                  "관계 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
+              },
               self_care: { type: "integer", minimum: 0, maximum: 10 },
+              self_care_reason: {
+                type: "string",
+                description:
+                  "자기 돌봄 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
+              },
             },
-            required: ["health", "work", "relationship", "self_care"],
+            required: [
+              "health",
+              "health_reason",
+              "work",
+              "work_reason",
+              "relationship",
+              "relationship_reason",
+              "self_care",
+              "self_care_reason",
+            ],
+          },
+          core_feedbacks: {
+            type: "array",
+            minItems: 0,
+            maxItems: 5,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                summary: { type: "string" },
+                frequency: { type: "integer", minimum: 1 },
+              },
+              required: ["summary", "frequency"],
+            },
+            description:
+              "이번 달의 핵심 피드백 최대 5개 (가장 중요하고 반복적으로 등장한 피드백)",
+          },
+          recurring_improvements_with_frequency: {
+            type: "array",
+            minItems: 0,
+            maxItems: 10,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                summary: { type: "string" },
+                frequency: { type: "integer", minimum: 1 },
+              },
+              required: ["summary", "frequency"],
+            },
+            description:
+              "반복된 개선점과 각각의 등장 횟수 (최소 2회 이상 등장한 것만 포함)",
           },
           core_feedback_for_month: { type: "string" },
           feedback_ai_comment: { type: "string", nullable: true },
@@ -310,6 +375,8 @@ export const MonthlyReportSchema = {
           "recurring_positives",
           "recurring_improvements",
           "habit_scores",
+          "core_feedbacks",
+          "recurring_improvements_with_frequency",
           "core_feedback_for_month",
           "feedback_ai_comment",
         ],
@@ -341,18 +408,40 @@ export const MonthlyReportSchema = {
               required: ["summary", "frequency"],
             },
           },
+          core_visions: {
+            type: "array",
+            minItems: 0,
+            maxItems: 7,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                summary: { type: "string" },
+                frequency: { type: "integer", minimum: 1 },
+              },
+              required: ["summary", "frequency"],
+            },
+            description:
+              "이번 달의 핵심 비전 최대 7개 (가장 중요하고 반복적으로 등장한 비전)",
+          },
           vision_progress_comment: { type: "string", nullable: true },
-          reminder_sentence_for_next_month: { type: "string", nullable: true },
-          vision_ai_feedback: { type: "string", nullable: true },
+          vision_ai_feedbacks: {
+            type: "array",
+            minItems: 0,
+            maxItems: 5,
+            items: { type: "string" },
+            description:
+              "AI가 제공하는 비전 관련 피드백 리스트 (최대 5개, 각각 실행 가능한 구체적인 피드백)",
+          },
         },
         required: [
           "vision_days_count",
           "vision_records_count",
           "vision_consistency_score",
           "main_visions",
+          "core_visions",
           "vision_progress_comment",
-          "reminder_sentence_for_next_month",
-          "vision_ai_feedback",
+          "vision_ai_feedbacks",
         ],
       },
 
@@ -583,15 +672,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - 300자 이내로 작성합니다.
 
-5) emotion_keywords
-
-- daily_reports.emotion_overview.emotion_curve, dominant_emotion,
-
-  narrative_overview.keywords 등을 참고해서,
-
-  이 달의 감정을 잘 설명하는 단어들을 최대 20개까지 추립니다.
-
-6) emotion_pattern_summary
+5) emotion_pattern_summary
 
 - 400자 이내로, 이 달 동안 감정이 어떻게 반복되었는지 설명합니다.
 
@@ -695,49 +776,64 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 인사이트 문장 전체 개수(가능한 범위에서 추정)입니다.
 
-- insight_themes:
-
-  - 한 달 동안 반복적으로 등장한 인사이트 주제를 최대 15개까지 요약합니다.
-
-  - 예: ["일의 의미", "관계에서의 거리감", "몸과 마음의 연결"]
-
 - top_insights:
 
-  - 가장 중요하거나 자주 등장한 인사이트를 최대 10개까지 뽑습니다.
+  - 가장 중요하거나 자주 등장한 인사이트를 최대 20개까지 뽑습니다.
 
   - 각 항목:
 
     - summary: 인사이트 요약 문장
 
-    - first_date, last_date: 해당 인사이트가 처음/마지막으로 등장한 날짜 (없으면 null)
+    - first_date: 해당 인사이트가 처음 등장한 날짜 (없으면 null)
+
+    - last_date: 해당 인사이트가 마지막으로 등장한 날짜 (없으면 null)
 
     - frequency: 출현 횟수
 
-- insight_depth_score:
+  - 실제 daily_reports의 인사이트 데이터를 기반으로 작성합니다.
 
-  - 0~10 점으로, "이 달의 생각이 얼마나 깊어졌는지"를 평가합니다.
+- core_insights:
 
-  - 단순한 사실 나열보다 "나에 대한 이해, 패턴에 대한 깨달음"이 많을수록 높은 점수.
+  - 이번 달의 핵심 인사이트를 최대 3개까지 선별합니다.
 
-- meta_question_for_month:
+  - 각 항목:
 
-  - 이 달 전체를 관통하는 하나의 큰 질문을 만듭니다.
+    - summary: 핵심 인사이트 요약 문장
 
-  - 예: "나는 어떤 삶의 리듬에서 가장 나답게 살아가는가?"
+    - explanation: 이 인사이트가 핵심인 이유에 대한 설명
+
+  - 가장 중요하고 반복적으로 등장한 인사이트, 또는 사용자의 성장에 가장 큰 영향을 미친 인사이트를 선별합니다.
+
+  - 예: [
+      {
+        summary: "루틴은 한 번에 완벽하게 만드는 게 아니라, 흐트러질 때마다 다시 세우는 힘에서 나온다",
+        explanation: "이번 달 일일 기록에서 루틴 관련 인사이트가 8회 반복되었고, 특히 주말 이후 월요일 아침에 자주 등장했습니다. 이는 루틴의 지속성보다는 재시작 능력이 더 중요하다는 깨달음을 보여줍니다."
+      }
+    ]
 
 - insight_ai_comment:
 
   - 이 달의 인사이트를 기반으로, 사용자가 어떻게 성장하고 있는지 친절하게 정리합니다.
 
+  - 간략하게 작성합니다 (200자 이내 권장).
+
+- insight_comprehensive_summary:
+
+  - 모든 인사이트(top_insights, core_insights)를 종합하여 분석한 종합적인 인사이트를 제공합니다.
+
+  - 인사이트들 간의 연결점, 패턴, 전체적인 성장 방향을 설명합니다.
+
+  - 예: "이번 달의 인사이트들을 종합해보면, '루틴의 재시작 능력', '기록의 행동 촉발 효과', '작은 실행의 힘'이라는 세 가지 핵심 주제가 반복적으로 등장했습니다. 이는 완벽함보다는 지속적인 시도와 작은 변화가 더 큰 성장을 가져온다는 통찰을 보여줍니다."
+
+  - 400자 이내로 작성합니다.
+
 인사이트 관련 데이터가 거의 없다면:
 
 - insight_days_count, insight_records_count 는 0
 
-- insight_themes, top_insights 는 []
+- top_insights, core_insights 는 []
 
-- insight_depth_score 는 0
-
-- meta_question_for_month, insight_ai_comment 는 null 로 처리합니다.
+- insight_ai_comment, insight_comprehensive_summary 는 null 로 처리합니다.
 
 - 인사이트 내용을 억지로 만들어내지 마세요.
 
@@ -759,7 +855,65 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
     운동/휴식/관계/자기 돌봄 관련 기록을 참고하여 0~10 점으로 평가합니다.
 
-  - 점수에 대한 설명은 feedback_ai_comment 에 녹여서 작성합니다.
+  - 각 점수에 대해 반드시 {key}_reason 필드를 제공해야 합니다:
+
+    - health_reason: 건강 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명
+
+      예: "건강 점수 7점은 이번 달 일일 기록에서 주 3회 이상 운동(러닝 12회, 스트레칭 8회), 평균 수면 시간 7시간, 규칙적인 식사 패턴이 확인되었기 때문입니다. 다만 업무가 몰린 며칠(11월 15일, 22일, 28일)에는 운동을 건너뛰거나 수면 시간이 6시간 이하로 줄어든 패턴이 있었습니다."
+
+    - work_reason: 일/학습 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명
+
+    - relationship_reason: 관계 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명
+
+    - self_care_reason: 자기 돌봄 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명
+
+  - 모든 이유는 실제 daily_reports 데이터를 기반으로 작성해야 하며, 상상으로 만들어내지 않습니다.
+
+- core_feedbacks:
+
+  - 이번 달의 핵심 피드백을 최대 5개까지 선별합니다.
+
+  - 각 항목:
+
+    - summary: 핵심 피드백 요약 문장
+
+    - frequency: 해당 피드백이 등장한 횟수 (최소 2회 이상)
+
+  - 가장 중요하고 반복적으로 등장한 피드백을 선별합니다.
+
+  - 예: [
+      {
+        summary: "하기 싫어도 최소 루틴은 지킨 점",
+        frequency: 8
+      },
+      {
+        summary: "운동을 통해 감정을 건강하게 풀어낸 점",
+        frequency: 5
+      }
+    ]
+
+- recurring_improvements_with_frequency:
+
+  - 반복된 개선점과 각각의 등장 횟수를 제공합니다.
+
+  - 최소 2회 이상 등장한 개선점만 포함합니다.
+
+  - 각 항목:
+
+    - summary: 개선점 요약 문장
+
+    - frequency: 해당 개선점이 등장한 횟수
+
+  - 예: [
+      {
+        summary: "일이 많아질수록 식사와 수면이 먼저 밀리는 점",
+        frequency: 6
+      },
+      {
+        summary: "중요한 일을 미루다가 마감 직전에 몰아서 하는 패턴",
+        frequency: 4
+      }
+    ]
 
 - core_feedback_for_month:
 
@@ -803,23 +957,50 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - frequency: 등장 횟수.
 
+- core_visions:
+
+  - 이번 달의 핵심 비전을 최대 7개까지 선별합니다.
+
+  - 각 항목:
+
+    - summary: 핵심 비전 요약 문장
+
+    - frequency: 해당 비전이 등장한 횟수 (최소 2회 이상)
+
+  - 가장 중요하고 반복적으로 등장한 비전을 선별합니다.
+
+  - main_visions에서 빈도가 높고 의미 있는 비전을 우선적으로 선택합니다.
+
+  - 예: [
+      {
+        summary: "기록과 루틴을 바탕으로 꾸준히 성장하는 사람으로 살고 싶다",
+        frequency: 6
+      },
+      {
+        summary: "좋은 사람들과 좋은 순간을 나누는 호스트로 오래 활동하고 싶다",
+        frequency: 4
+      }
+    ]
+
 - vision_progress_comment:
 
   - 비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리합니다.
 
-- reminder_sentence_for_next_month:
+- vision_ai_feedbacks:
 
-  - 다음 달에 다시 떠올리면 좋은 리마인더 문장을 짧게 작성합니다.
+  - AI가 제공하는 비전 관련 피드백 리스트입니다 (최대 5개).
 
-  - 예: "나는 꾸준히 기록하고 움직일 때 가장 나다워진다는 걸 잊지 말자."
+  - 각 피드백은 실행 가능한 구체적인 행동 문장으로 작성합니다.
 
-- vision_ai_feedback:
+  - 비전을 실현하기 위한 구체적인 조언이나 제안을 포함합니다.
 
-  - 반드시 "핵심 3단: 1) ..., 2) ..., 3) ..." 형식으로 작성합니다.
+  - 예: [
+      "매주 한 번은 '미래의 나에게 쓰는 편지'를 기록해 비전과 현재를 연결해보세요",
+      "몸이 지칠수록 더 일을 하기보다, 최소 루틴만 지키고 과감하게 쉬는 날을 허용해보세요",
+      "이번 달에 떠올린 비전 중 가장 중요하다고 느껴지는 한 가지를 골라, 작은 실행 계획 한 줄이라도 캘린더에 박아두세요"
+    ]
 
-  - 각 항목은 실행 가능한 행동 문장으로, 너무 길지 않게 씁니다.
-
-  - 비전 관련 데이터가 거의 없다면 vision_ai_feedback 은 null 로 둡니다.
+  - 비전 관련 데이터가 거의 없다면 빈 배열 []로 처리합니다.
 
 비전/시각화 기록이 거의 없다면:
 
@@ -827,9 +1008,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - vision_consistency_score 는 0
 
-- main_visions 는 []
+- main_visions, core_visions 는 []
 
-- vision_progress_comment, reminder_sentence_for_next_month, vision_ai_feedback 은 null 또는 "" 로 처리합니다.
+- vision_progress_comment 는 null
+
+- vision_ai_feedbacks 는 []
 
 - 비전 내용을 억지로 생성하지 마세요.
 
