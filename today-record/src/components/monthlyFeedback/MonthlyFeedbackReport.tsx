@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
+import { useRouter } from "next/navigation";
 import type { MonthlyReportData } from "./report/types";
 import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
 import { SummaryOverviewSection } from "./report/SummaryOverviewSection";
@@ -11,6 +12,7 @@ import { InsightOverviewSection } from "./report/InsightOverviewSection";
 import { FeedbackOverviewSection } from "./report/FeedbackOverviewSection";
 import { VisionOverviewSection } from "./report/VisionOverviewSection";
 import { ConclusionSection } from "./report/ConclusionSection";
+import { SECTION_COLORS, COMMON_COLORS, TYPOGRAPHY, SPACING } from "./report/design-system";
 
 // 타입 재export
 export type { MonthlyReportData } from "./report/types";
@@ -24,6 +26,13 @@ export function MonthlyFeedbackReport({
   data,
   onBack,
 }: MonthlyFeedbackReportProps) {
+  const router = useRouter();
+  const colors = SECTION_COLORS.conclusion;
+
+  const handleGoToAnalysis = () => {
+    router.push("/analysis?tab=monthly");
+  };
+
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
@@ -84,6 +93,31 @@ export function MonthlyFeedbackReport({
         <ScrollAnimation delay={200}>
           <div className="mb-64">
             <ConclusionSection conclusion_overview={data.conclusion_overview} />
+          </div>
+        </ScrollAnimation>
+
+        {/* 월간 분석으로 돌아가기 버튼 */}
+        <ScrollAnimation delay={200}>
+          <div className="mt-16 mb-8 flex justify-center">
+            <Button
+              onClick={handleGoToAnalysis}
+              className="px-8 py-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
+              style={{
+                background: colors.gradient,
+                color: "white",
+                boxShadow: `0 4px 16px ${colors.primary}30`,
+                border: "none",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-5 h-5" />
+                <span
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight}`}
+                >
+                  월간 분석으로 돌아가기
+                </span>
+              </div>
+            </Button>
           </div>
         </ScrollAnimation>
       </div>
