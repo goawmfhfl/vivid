@@ -16,6 +16,7 @@ import {
   createPeriodSummaryFromWeeklyFeedback,
 } from "./summaries/weekly-feedback-mapper";
 import { convertMonthlyFeedbackToPeriodSummary } from "./summaries/monthly-feedback-mapper";
+import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 
 /**
  * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
@@ -86,18 +87,23 @@ export function SummariesView() {
   }, [monthlyFeedbackList]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+    <div
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+    >
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h1
-              className="mb-1"
-              style={{ color: "#333333", fontSize: "1.5rem" }}
+              className={`mb-1 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+              style={{ color: COLORS.text.primary }}
             >
               분석 & 요약
             </h1>
-            <p style={{ color: "#4E4B46", opacity: 0.7, fontSize: "0.9rem" }}>
+            <p
+              className={TYPOGRAPHY.body.fontSize}
+              style={{ color: COLORS.text.secondary, opacity: 0.7 }}
+            >
               주간 및 월간 기록을 분석하고 인사이트를 확인하세요
             </p>
           </div>

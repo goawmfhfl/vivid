@@ -300,7 +300,10 @@ export function MonthlyReportHeader({
                       justifyContent: "center",
                     }}
                   >
-                    <X className="w-3.5 h-3.5" style={{ color: COMMON_COLORS.text.tertiary }} />
+                    <X
+                      className="w-3.5 h-3.5"
+                      style={{ color: COMMON_COLORS.text.tertiary }}
+                    />
                   </button>
                 </div>
                 <p
@@ -417,7 +420,10 @@ export function MonthlyReportHeader({
                       justifyContent: "center",
                     }}
                   >
-                    <X className="w-3.5 h-3.5" style={{ color: COMMON_COLORS.text.tertiary }} />
+                    <X
+                      className="w-3.5 h-3.5"
+                      style={{ color: COMMON_COLORS.text.tertiary }}
+                    />
                   </button>
                 </div>
                 <p

@@ -7,6 +7,14 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { type Record } from "../../hooks/useRecords";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SHADOWS,
+  TRANSITIONS,
+  CARD_STYLES,
+  SPACING,
+} from "@/lib/design-system";
 
 interface RecordItemProps {
   record: Record;
@@ -26,19 +34,16 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
 
   return (
     <div
-      className="p-4 rounded-xl"
-      style={{
-        backgroundColor: "white",
-        border: "1px solid #EFE9E3",
-      }}
+      className={`${SPACING.card.paddingSmall} ${CARD_STYLES.hover.transition} ${CARD_STYLES.hover.hoverShadow}`}
+      style={CARD_STYLES.default}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span
+            className={TYPOGRAPHY.caption.fontSize}
             style={{
-              color: "#4E4B46",
+              color: COLORS.text.secondary,
               opacity: 0.5,
-              fontSize: "0.8rem",
             }}
           >
             {formatTime(record.created_at)}
@@ -50,7 +55,7 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
             <Button
               variant="ghost"
               size="sm"
-              style={{ color: "#6B7A6F" }}
+              style={{ color: COLORS.brand.primary }}
               className="focus:outline-none focus:ring-0"
             >
               <MoreVertical className="w-4 h-4" />
@@ -60,58 +65,63 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
             align="end"
             className="min-w-[140px]"
             style={{
-              backgroundColor: "white",
-              border: "1px solid #E5E7EB",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+              backgroundColor: COLORS.background.card,
+              border: `1px solid ${COLORS.border.input}`,
+              boxShadow: SHADOWS.md,
             }}
           >
             <DropdownMenuItem
               onClick={() => onEdit(record)}
-              className="focus:outline-none cursor-pointer transition-colors"
+              className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
               style={{
-                color: "#333333",
+                color: COLORS.text.primary,
                 padding: "0.625rem 1rem",
-                fontSize: "0.875rem",
+                fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
                 fontWeight: "500",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#F3F4F6";
+                e.currentTarget.style.backgroundColor = COLORS.background.hover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "white";
+                e.currentTarget.style.backgroundColor = COLORS.background.card;
               }}
             >
-              <Pencil className="w-4 h-4 mr-2" style={{ color: "#6B7A6F" }} />
+              <Pencil
+                className="w-4 h-4 mr-2"
+                style={{ color: COLORS.brand.primary }}
+              />
               수정하기
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(record.id)}
-              className="focus:outline-none cursor-pointer transition-colors"
+              className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
               style={{
-                color: "#DC2626",
+                color: COLORS.status.error,
                 padding: "0.625rem 1rem",
-                fontSize: "0.875rem",
+                fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
                 fontWeight: "500",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#FEF2F2";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "white";
+                e.currentTarget.style.backgroundColor = COLORS.background.card;
               }}
             >
-              <Trash2 className="w-4 h-4 mr-2" style={{ color: "#DC2626" }} />
+              <Trash2
+                className="w-4 h-4 mr-2"
+                style={{ color: COLORS.status.error }}
+              />
               삭제하기
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       <p
+        className={TYPOGRAPHY.bodyLarge.fontSize}
         style={{
-          color: "#333333",
+          color: COLORS.text.primary,
           lineHeight: "1.6",
-          fontSize: "0.95rem",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
         }}

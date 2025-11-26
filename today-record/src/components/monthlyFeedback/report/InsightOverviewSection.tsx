@@ -175,7 +175,7 @@ export function InsightOverviewSection({
       {/* 핵심 인사이트 */}
       {insight_overview.core_insights &&
         insight_overview.core_insights.length > 0 && (
-            <div className="mb-6">
+          <div className="mb-6">
             <p
               className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-4 ${TYPOGRAPHY.label.textTransform}`}
               style={{
@@ -200,7 +200,9 @@ export function InsightOverviewSection({
                         boxShadow: `0 2px 4px ${colors.primary}30`,
                       }}
                     >
-                      <span className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}>
+                      <span
+                        className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}
+                      >
                         {index + 1}
                       </span>
                     </div>
@@ -297,7 +299,9 @@ export function InsightOverviewSection({
                             boxShadow: "0 2px 4px rgba(168, 187, 168, 0.3)",
                           }}
                         >
-                          <span className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}>
+                          <span
+                            className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}
+                          >
                             {index + 1}
                           </span>
                         </div>

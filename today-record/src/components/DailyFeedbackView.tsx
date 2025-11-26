@@ -16,6 +16,7 @@ import { mapDailyFeedbackRowToReport } from "./dailyFeedback/mappers";
 import { ScrollAnimation } from "./ui/ScrollAnimation";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
+import { COLORS, SPACING } from "@/lib/design-system";
 
 type DailyFeedbackViewProps = {
   date?: string;
@@ -130,13 +131,18 @@ export function DailyFeedbackView({
   );
 
   return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
-      <div className="max-w-3xl mx-auto px-4 py-6">
+    <div
+      className="min-h-screen pb-24"
+      style={{ backgroundColor: COLORS.background.base }}
+    >
+      <div
+        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
+      >
         <Button
           variant="ghost"
           onClick={onBack}
           className="mb-6 -ml-2"
-          style={{ color: "#6B7A6F" }}
+          style={{ color: COLORS.brand.primary }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           돌아가기

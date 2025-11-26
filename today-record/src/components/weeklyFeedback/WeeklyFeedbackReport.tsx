@@ -11,6 +11,7 @@ import { InsightReplaySection } from "./report/InsightReplaySection";
 import { VisionVisualizationSection } from "./report/VisionVisualizationSection";
 import { ExecutionReflectionSection } from "./report/ExecutionReflectionSection";
 import { ClosingSection } from "./report/ClosingSection";
+import { COLORS, SPACING } from "@/lib/design-system";
 
 // 타입 재export
 export type { WeeklyReportData } from "./report/types";
@@ -31,13 +32,18 @@ export function WeeklyFeedbackReport({
   };
 
   return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
-      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div
+      className="min-h-screen pb-24"
+      style={{ backgroundColor: COLORS.background.base }}
+    >
+      <div
+        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
+      >
         <Button
           variant="ghost"
           onClick={onBack}
           className="mb-4 sm:mb-6 -ml-2 text-sm sm:text-base"
-          style={{ color: "#6B7A6F" }}
+          style={{ color: COLORS.brand.primary }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           돌아가기

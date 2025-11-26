@@ -9,6 +9,7 @@ import {
 } from "../ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { COLORS, TYPOGRAPHY, SHADOWS, TRANSITIONS } from "@/lib/design-system";
 
 export function HomeHeader() {
   const router = useRouter();
@@ -26,14 +27,17 @@ export function HomeHeader() {
     <header className="mb-6">
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h1 className="mb-1" style={{ color: "#333333", fontSize: "1.5rem" }}>
+          <h1
+            className={`mb-1 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+            style={{ color: COLORS.text.primary }}
+          >
             오늘의 기록
           </h1>
           <p
+            className={TYPOGRAPHY.body.fontSize}
             style={{
-              color: "#4E4B46",
+              color: COLORS.text.secondary,
               opacity: 0.7,
-              fontSize: "0.9rem",
             }}
           >
             {new Date().toLocaleDateString("ko-KR", {
@@ -49,23 +53,25 @@ export function HomeHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:bg-gray-50 focus:outline-none focus:ring-0"
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${TRANSITIONS.colors} focus:outline-none focus:ring-0`}
                 style={{
-                  backgroundColor: "#F3F4F6",
-                  border: "1px solid #EFE9E3",
+                  backgroundColor: COLORS.background.hover,
+                  border: `1px solid ${COLORS.border.light}`,
                 }}
               >
-                <User className="w-3.5 h-3.5" style={{ color: "#6B7A6F" }} />
+                <User
+                  className="w-3.5 h-3.5"
+                  style={{ color: COLORS.brand.primary }}
+                />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
               className="min-w-[160px]"
               style={{
-                backgroundColor: "white",
-                border: "1px solid #E5E7EB",
-                boxShadow:
-                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                backgroundColor: COLORS.background.card,
+                border: `1px solid ${COLORS.border.input}`,
+                boxShadow: SHADOWS.md,
               }}
             >
               {/* <DropdownMenuItem
@@ -91,21 +97,25 @@ export function HomeHeader() {
               </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="focus:outline-none cursor-pointer transition-colors"
+                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
                 style={{
-                  color: "#DC2626",
+                  color: COLORS.status.error,
                   padding: "0.625rem 1rem",
-                  fontSize: "0.875rem",
+                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
                   fontWeight: "500",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#FEF2F2";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "white";
+                  e.currentTarget.style.backgroundColor =
+                    COLORS.background.card;
                 }}
               >
-                <LogOut className="w-4 h-4 mr-2" style={{ color: "#DC2626" }} />
+                <LogOut
+                  className="w-4 h-4 mr-2"
+                  style={{ color: COLORS.status.error }}
+                />
                 로그아웃
               </DropdownMenuItem>
             </DropdownMenuContent>

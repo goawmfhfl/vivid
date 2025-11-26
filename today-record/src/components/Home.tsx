@@ -13,6 +13,7 @@ import { HomeHeader } from "./home/HomeHeader";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
+import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "@/lib/design-system";
 
 export function Home() {
   const router = useRouter();
@@ -124,17 +125,19 @@ export function Home() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+    <div
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+    >
       <HomeHeader />
 
       {/* 테스트용 버튼 (개발 환경에서만 표시) */}
       {isTest && (
         <div
-          className="mb-4 p-4 rounded-lg border-2 border-dashed"
+          className={`mb-4 ${SPACING.card.paddingSmall} rounded-lg border-2 border-dashed`}
           style={{ backgroundColor: "#FFF8E7", borderColor: "#E5B96B" }}
         >
           <p
-            className="text-sm font-semibold mb-2"
+            className={`${TYPOGRAPHY.body.fontSize} font-semibold mb-2`}
             style={{ color: "#B8860B" }}
           >
             🧪 모달 테스트 (개발 환경)
@@ -145,9 +148,9 @@ export function Home() {
               onClick={handleTestLoading}
               size="sm"
               style={{
-                backgroundColor: "#6B7A6F",
-                color: "white",
-                fontSize: "0.8rem",
+                backgroundColor: COLORS.brand.primary,
+                color: COLORS.text.white,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
                 padding: "0.5rem 1rem",
               }}
             >
@@ -158,9 +161,9 @@ export function Home() {
               size="sm"
               variant="outline"
               style={{
-                borderColor: "#DC2626",
-                color: "#DC2626",
-                fontSize: "0.8rem",
+                borderColor: COLORS.status.error,
+                color: COLORS.status.error,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
                 padding: "0.5rem 1rem",
               }}
             >
@@ -171,9 +174,9 @@ export function Home() {
               size="sm"
               variant="outline"
               style={{
-                borderColor: "#DC2626",
-                color: "#DC2626",
-                fontSize: "0.8rem",
+                borderColor: COLORS.status.error,
+                color: COLORS.status.error,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
                 padding: "0.5rem 1rem",
               }}
             >
@@ -197,12 +200,13 @@ export function Home() {
         <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4">
           <Button
             onClick={handleOpenDailyFeedback}
-            className="rounded-full shadow-lg"
+            className="rounded-full"
             style={{
-              backgroundColor: "#6B7A6F",
-              color: "white",
+              backgroundColor: COLORS.brand.primary,
+              color: COLORS.text.white,
               padding: "0.875rem 2rem",
-              fontSize: "0.9rem",
+              fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+              boxShadow: SHADOWS.lg,
             }}
             disabled={isPending}
           >

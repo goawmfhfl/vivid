@@ -12,7 +12,13 @@ import { InsightOverviewSection } from "./report/InsightOverviewSection";
 import { FeedbackOverviewSection } from "./report/FeedbackOverviewSection";
 import { VisionOverviewSection } from "./report/VisionOverviewSection";
 import { ConclusionSection } from "./report/ConclusionSection";
-import { SECTION_COLORS, COMMON_COLORS, TYPOGRAPHY, SPACING } from "./report/design-system";
+import {
+  SECTION_COLORS,
+  COMMON_COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  COLORS,
+} from "@/lib/design-system";
 
 // 타입 재export
 export type { MonthlyReportData } from "./report/types";
@@ -34,13 +40,18 @@ export function MonthlyFeedbackReport({
   };
 
   return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
-      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div
+      className="min-h-screen pb-24"
+      style={{ backgroundColor: COLORS.background.base }}
+    >
+      <div
+        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
+      >
         <Button
           variant="ghost"
           onClick={onBack}
           className="mb-4 sm:mb-6 -ml-2 text-sm sm:text-base"
-          style={{ color: "#6B7A6F" }}
+          style={{ color: COLORS.brand.primary }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           돌아가기
