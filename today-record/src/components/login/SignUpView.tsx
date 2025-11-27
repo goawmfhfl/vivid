@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useSignUp } from "@/hooks/useSignUp";
-import { AuthHeader } from "./forms/AuthHeader";
-import { EmailField } from "./forms/EmailField";
-import { PasswordField } from "./forms/PasswordField";
-import { NameField } from "./forms/NameField";
-import { PhoneField } from "./forms/PhoneField";
-import { TermsAgreement } from "./forms/TermsAgreement";
-import { ErrorMessage } from "./forms/ErrorMessage";
-import { SubmitButton } from "./forms/SubmitButton";
-import { TermsModal } from "./modals/TermsModal";
-import { AIDataModal } from "./modals/AIDataModal";
+import { AuthHeader } from "../forms/AuthHeader";
+import { EmailField } from "../forms/EmailField";
+import { PasswordField } from "../forms/PasswordField";
+import { NameField } from "../forms/NameField";
+import { PhoneField } from "../forms/PhoneField";
+import { TermsAgreement } from "../forms/TermsAgreement";
+import { ErrorMessage } from "../forms/ErrorMessage";
+import { SubmitButton } from "../forms/SubmitButton";
+import { TermsModal } from "../modals/TermsModal";
+import { AIDataModal } from "../modals/AIDataModal";
 
 export function SignUpView({
   initialMessage,

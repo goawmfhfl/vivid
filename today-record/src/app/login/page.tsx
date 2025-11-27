@@ -1,6 +1,6 @@
 "use client";
 
-import { LoginView } from "@/components/LoginView";
+import { LoginView } from "@/components/login/LoginView";
 
 export default function LoginPage() {
   return <LoginView />;

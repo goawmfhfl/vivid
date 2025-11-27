@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
 import { useKakaoLogin } from "@/hooks/useKakaoLogin";
-import { AuthHeader } from "./forms/AuthHeader";
-import { EmailField } from "./forms/EmailField";
-import { PasswordField } from "./forms/PasswordField";
-import { SubmitButton } from "./forms/SubmitButton";
-import { Checkbox } from "./ui/checkbox";
+import { AuthHeader } from "../forms/AuthHeader";
+import { EmailField } from "../forms/EmailField";
+import { PasswordField } from "../forms/PasswordField";
+import { SubmitButton } from "../forms/SubmitButton";
+import { Checkbox } from "../ui/checkbox";
 import { useRouter } from "next/navigation";
-import { FindAccountDialog } from "./FindAccountDialog";
+import { FindEmailDialog } from "./FindEmailDialog";
+import { FindPasswordDialog } from "./FindPasswordDialog";
 
 const EMAIL_STORAGE_KEY = "login-saved-email";
 const REMEMBER_EMAIL_KEY = "login-remember-email";
@@ -24,10 +25,8 @@ export function LoginView() {
     password?: string;
     general?: string;
   }>({});
-  const [findAccountDialogOpen, setFindAccountDialogOpen] = useState(false);
-  const [findAccountMode, setFindAccountMode] = useState<"email" | "password">(
-    "password"
-  );
+  const [findEmailDialogOpen, setFindEmailDialogOpen] = useState(false);
+  const [findPasswordDialogOpen, setFindPasswordDialogOpen] = useState(false);
 
   // React Query mutation 사용
   const router = useRouter();
@@ -175,10 +174,7 @@ export function LoginView() {
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
-              onClick={() => {
-                setFindAccountMode("email");
-                setFindAccountDialogOpen(true);
-              }}
+              onClick={() => setFindEmailDialogOpen(true)}
               className="text-sm underline"
               style={{ color: "#6B7A6F" }}
             >
@@ -187,10 +183,7 @@ export function LoginView() {
             <span style={{ color: "#6B7A6F" }}>|</span>
             <button
               type="button"
-              onClick={() => {
-                setFindAccountMode("password");
-                setFindAccountDialogOpen(true);
-              }}
+              onClick={() => setFindPasswordDialogOpen(true)}
               className="text-sm underline"
               style={{ color: "#6B7A6F" }}
             >
@@ -319,11 +312,16 @@ export function LoginView() {
           </div>
         </form>
 
-        {/* 아이디/비밀번호 찾기 다이얼로그 */}
-        <FindAccountDialog
-          open={findAccountDialogOpen}
-          onOpenChange={setFindAccountDialogOpen}
-          mode={findAccountMode}
+        {/* 이메일 찾기 다이얼로그 */}
+        <FindEmailDialog
+          open={findEmailDialogOpen}
+          onOpenChange={setFindEmailDialogOpen}
+        />
+
+        {/* 비밀번호 찾기 다이얼로그 */}
+        <FindPasswordDialog
+          open={findPasswordDialogOpen}
+          onOpenChange={setFindPasswordDialogOpen}
         />
       </div>
     </div>
