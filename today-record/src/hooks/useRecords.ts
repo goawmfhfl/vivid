@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { QUERY_KEYS, API_ENDPOINTS, ERROR_MESSAGES } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
 
 // Record 타입 정의
 export interface Record {

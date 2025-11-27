@@ -75,8 +75,6 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
   // 문자열인 경우 복호화 시도
   if (typeof obj === "string") {
     try {
-      // 암호화된 형식인지 먼저 확인
-      const wasEncrypted = isEncrypted(obj);
       const decrypted = decrypt(obj);
 
       // 복호화 실패 감지: 암호화된 형식이었는데 복호화 후에도 동일하면 실패
@@ -140,7 +138,9 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
 /**
  * WeeklyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptWeeklyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function encryptWeeklyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
     weekly_overview: encryptJsonbFields(feedback.weekly_overview as JsonbValue),
@@ -152,7 +152,9 @@ export function encryptWeeklyFeedback(feedback: Record<string, unknown>): Record
     vision_visualization_report: encryptJsonbFields(
       feedback.vision_visualization_report as JsonbValue
     ),
-    execution_reflection: encryptJsonbFields(feedback.execution_reflection as JsonbValue),
+    execution_reflection: encryptJsonbFields(
+      feedback.execution_reflection as JsonbValue
+    ),
     closing_section: encryptJsonbFields(feedback.closing_section as JsonbValue),
   };
 }
@@ -160,7 +162,9 @@ export function encryptWeeklyFeedback(feedback: Record<string, unknown>): Record
 /**
  * WeeklyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptWeeklyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function decryptWeeklyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
     weekly_overview: decryptJsonbFields(feedback.weekly_overview as JsonbValue),
@@ -172,7 +176,9 @@ export function decryptWeeklyFeedback(feedback: Record<string, unknown>): Record
     vision_visualization_report: decryptJsonbFields(
       feedback.vision_visualization_report as JsonbValue
     ),
-    execution_reflection: decryptJsonbFields(feedback.execution_reflection as JsonbValue),
+    execution_reflection: decryptJsonbFields(
+      feedback.execution_reflection as JsonbValue
+    ),
     closing_section: decryptJsonbFields(feedback.closing_section as JsonbValue),
   };
 }
@@ -180,37 +186,63 @@ export function decryptWeeklyFeedback(feedback: Record<string, unknown>): Record
 /**
  * MonthlyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptMonthlyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function encryptMonthlyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: encryptJsonbFields(feedback.summary_overview as JsonbValue),
-    emotion_overview: encryptJsonbFields(feedback.emotion_overview as JsonbValue),
-    insight_overview: encryptJsonbFields(feedback.insight_overview as JsonbValue),
-    feedback_overview: encryptJsonbFields(feedback.feedback_overview as JsonbValue),
+    summary_overview: encryptJsonbFields(
+      feedback.summary_overview as JsonbValue
+    ),
+    emotion_overview: encryptJsonbFields(
+      feedback.emotion_overview as JsonbValue
+    ),
+    insight_overview: encryptJsonbFields(
+      feedback.insight_overview as JsonbValue
+    ),
+    feedback_overview: encryptJsonbFields(
+      feedback.feedback_overview as JsonbValue
+    ),
     vision_overview: encryptJsonbFields(feedback.vision_overview as JsonbValue),
-    conclusion_overview: encryptJsonbFields(feedback.conclusion_overview as JsonbValue),
+    conclusion_overview: encryptJsonbFields(
+      feedback.conclusion_overview as JsonbValue
+    ),
   };
 }
 
 /**
  * MonthlyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptMonthlyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function decryptMonthlyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: decryptJsonbFields(feedback.summary_overview as JsonbValue),
-    emotion_overview: decryptJsonbFields(feedback.emotion_overview as JsonbValue),
-    insight_overview: decryptJsonbFields(feedback.insight_overview as JsonbValue),
-    feedback_overview: decryptJsonbFields(feedback.feedback_overview as JsonbValue),
+    summary_overview: decryptJsonbFields(
+      feedback.summary_overview as JsonbValue
+    ),
+    emotion_overview: decryptJsonbFields(
+      feedback.emotion_overview as JsonbValue
+    ),
+    insight_overview: decryptJsonbFields(
+      feedback.insight_overview as JsonbValue
+    ),
+    feedback_overview: decryptJsonbFields(
+      feedback.feedback_overview as JsonbValue
+    ),
     vision_overview: decryptJsonbFields(feedback.vision_overview as JsonbValue),
-    conclusion_overview: decryptJsonbFields(feedback.conclusion_overview as JsonbValue),
+    conclusion_overview: decryptJsonbFields(
+      feedback.conclusion_overview as JsonbValue
+    ),
   };
 }
 
 /**
  * DailyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptDailyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function encryptDailyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
     emotion_overview: feedback.emotion_overview
@@ -237,7 +269,9 @@ export function encryptDailyFeedback(feedback: Record<string, unknown>): Record<
 /**
  * DailyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptDailyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
+export function decryptDailyFeedback(
+  feedback: Record<string, unknown>
+): Record<string, unknown> {
   return {
     ...feedback,
     emotion_overview: feedback.emotion_overview

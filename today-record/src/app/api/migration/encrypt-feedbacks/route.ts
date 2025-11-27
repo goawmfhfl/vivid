@@ -7,10 +7,19 @@ import {
 import { isEncrypted } from "@/lib/encryption";
 import { API_ENDPOINTS } from "@/constants";
 
+// JSONB 값의 가능한 타입
+type JsonbValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonbValue[]
+  | { [key: string]: JsonbValue };
+
 /**
  * JSONB 필드가 암호화되어 있는지 확인하는 헬퍼 함수
  */
-function isJsonbEncrypted(obj: any): boolean {
+function isJsonbEncrypted(obj: JsonbValue): boolean {
   if (obj === null || obj === undefined) {
     return false;
   }
