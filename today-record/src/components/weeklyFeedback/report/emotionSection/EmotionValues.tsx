@@ -23,6 +23,11 @@ const getArousalDescription = (a: number) => {
 };
 
 export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
+  // 숫자로 변환 (복호화 과정에서 문자열로 변환될 수 있음)
+  const valenceNum =
+    typeof valence === "number" ? valence : Number(valence) || 0;
+  const arousalNum =
+    typeof arousal === "number" ? arousal : Number(arousal) || 0;
   const {
     setShowValenceTooltip,
     showValenceTooltip,
@@ -144,10 +149,10 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
             marginBottom: "0.25rem",
           }}
         >
-          {valence.toFixed(2)}
+          {valenceNum.toFixed(2)}
         </p>
         <p className="text-xs" style={{ color: "#6B7A6F" }}>
-          {getValenceDescription(valence)}
+          {getValenceDescription(valenceNum)}
         </p>
       </div>
 
@@ -258,10 +263,10 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
             marginBottom: "0.25rem",
           }}
         >
-          {arousal.toFixed(2)}
+          {arousalNum.toFixed(2)}
         </p>
         <p className="text-xs" style={{ color: "#6B7A6F" }}>
-          {getArousalDescription(arousal)}
+          {getArousalDescription(arousalNum)}
         </p>
       </div>
     </div>

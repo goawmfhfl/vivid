@@ -15,8 +15,11 @@ import { SectionProps } from "./types";
 export const EmotionSection = ({ view }: SectionProps) => {
   const [showValenceTooltip, setShowValenceTooltip] = useState(false);
   const [showArousalTooltip, setShowArousalTooltip] = useState(false);
-  const valence = view.ai_mood_valence ?? 0;
-  const arousal = view.ai_mood_arousal ?? 0;
+
+  // 숫자로 변환 (복호화 과정에서 문자열로 변환될 수 있음)
+  const valence = Number(view.ai_mood_valence) || 0;
+  const arousal = Number(view.ai_mood_arousal) || 0;
+
   const hasEmotionData =
     view.ai_mood_valence !== null && view.ai_mood_arousal !== null;
 

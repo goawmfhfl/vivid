@@ -33,6 +33,18 @@ function generateIntegrityTrend(): string {
 }
 
 /**
+ * 숫자로 변환하는 헬퍼 함수 (복호화 과정에서 문자열로 변환될 수 있음)
+ */
+function toNumber(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+  }
+  return 0;
+}
+
+/**
  * WeeklyFeedback을 WeeklyReportData로 변환
  */
 export function mapWeeklyFeedbackToReportData(
@@ -40,10 +52,10 @@ export function mapWeeklyFeedbackToReportData(
 ): WeeklyReportData {
   // 정합도 점수 계산 (growth_trends에서 가져옴)
   const integrityStats = feedback.growth_trends.integrity_score;
-  const integrityAverage = integrityStats.avg;
-  const integrityMin = integrityStats.min;
-  const integrityMax = integrityStats.max;
-  const integrityStddev = integrityStats.stddev_est;
+  const integrityAverage = toNumber(integrityStats.avg);
+  const integrityMin = toNumber(integrityStats.min);
+  const integrityMax = toNumber(integrityStats.max);
+  const integrityStddev = toNumber(integrityStats.stddev_est);
 
   return {
     week_range: {
@@ -63,7 +75,7 @@ export function mapWeeklyFeedbackToReportData(
         weekday: day.weekday.includes("요일")
           ? day.weekday
           : convertWeekdayToKorean(day.weekday),
-        score: day.score,
+        score: toNumber(day.score),
       })),
     },
     weekly_one_liner: feedback.closing_section.weekly_one_liner,
@@ -76,8 +88,16 @@ export function mapWeeklyFeedbackToReportData(
     },
     emotion_overview: feedback.emotion_overview
       ? {
-          ai_mood_valence: feedback.emotion_overview.ai_mood_valence,
-          ai_mood_arousal: feedback.emotion_overview.ai_mood_arousal,
+          ai_mood_valence:
+            feedback.emotion_overview.ai_mood_valence !== null &&
+            feedback.emotion_overview.ai_mood_valence !== undefined
+              ? toNumber(feedback.emotion_overview.ai_mood_valence)
+              : null,
+          ai_mood_arousal:
+            feedback.emotion_overview.ai_mood_arousal !== null &&
+            feedback.emotion_overview.ai_mood_arousal !== undefined
+              ? toNumber(feedback.emotion_overview.ai_mood_arousal)
+              : null,
           dominant_emotion: feedback.emotion_overview.dominant_emotion,
           valence_explanation:
             feedback.emotion_overview.valence_explanation || "",
@@ -95,8 +115,16 @@ export function mapWeeklyFeedbackToReportData(
             (day) => ({
               date: formatDateForDisplay(day.date),
               weekday: convertWeekdayToKorean(day.weekday),
-              ai_mood_valence: day.ai_mood_valence,
-              ai_mood_arousal: day.ai_mood_arousal,
+              ai_mood_valence:
+                day.ai_mood_valence !== null &&
+                day.ai_mood_valence !== undefined
+                  ? toNumber(day.ai_mood_valence)
+                  : null,
+              ai_mood_arousal:
+                day.ai_mood_arousal !== null &&
+                day.ai_mood_arousal !== undefined
+                  ? toNumber(day.ai_mood_arousal)
+                  : null,
               dominant_emotion: day.dominant_emotion,
             })
           ),

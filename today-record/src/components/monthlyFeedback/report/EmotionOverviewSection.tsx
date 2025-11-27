@@ -54,8 +54,14 @@ export function EmotionOverviewSection({
   const [showStabilityTooltip, setShowStabilityTooltip] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
+  // 숫자로 변환 (복호화 과정에서 문자열로 변환될 수 있음)
+  const emotionStabilityScore =
+    typeof emotion_overview.emotion_stability_score === "number"
+      ? emotion_overview.emotion_stability_score
+      : Number(emotion_overview.emotion_stability_score) || 0;
+
   const [stability, stabilityRef] = useCountUp({
-    targetValue: emotion_overview.emotion_stability_score,
+    targetValue: emotionStabilityScore,
     duration: 1000,
     delay: 0,
     triggerOnVisible: true,
@@ -102,10 +108,16 @@ export function EmotionOverviewSection({
       ratio: 0,
       explanation: `이번 달에는 ${quadrant} 감정이 거의 나타나지 않았습니다.`,
     };
+    // 숫자로 변환 (복호화 과정에서 문자열로 변환될 수 있음)
+    const ratio =
+      typeof item.ratio === "number" ? item.ratio : Number(item.ratio) || 0;
+    const count =
+      typeof item.count === "number" ? item.count : Number(item.count) || 0;
+
     return {
       name: item.quadrant,
-      value: item.ratio * 100,
-      count: item.count,
+      value: ratio * 100,
+      count: count,
       color: QUADRANT_COLORS[item.quadrant],
       explanation: item.explanation,
     };

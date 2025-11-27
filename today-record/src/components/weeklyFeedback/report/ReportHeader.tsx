@@ -42,7 +42,9 @@ export function ReportHeader({
                 style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
               >
                 <span className="text-xl font-semibold">
-                  {integrity.average}
+                  {typeof integrity.average === "number"
+                    ? integrity.average
+                    : Number(integrity.average) || 0}
                 </span>
               </div>
               <div>

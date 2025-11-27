@@ -1,30 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
+import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
-import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 
 const fetchDailyFeedbackByDate = async (
   date: string
 ): Promise<DailyFeedbackRow | null> => {
   const userId = await getCurrentUserId();
-  const { data, error } = await supabase
-    .from(API_ENDPOINTS.DAILY_FEEDBACK)
-    .select("*")
-    .eq("user_id", userId)
-    .eq("report_date", date)
-    .maybeSingle();
 
-  if (error) {
-    throw error;
+  // 서버 사이드 API를 통해 조회 (복호화는 서버에서 수행)
+  const response = await fetch(
+    `/api/daily-feedback/by-date?userId=${userId}&date=${date}`
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch daily feedback");
   }
 
-  if (!data) return null;
-  // 복호화 처리
-  return decryptDailyFeedback(
-    data as unknown as { [key: string]: unknown }
-  ) as unknown as DailyFeedbackRow | null;
+  const result = await response.json();
+  return result.data || null;
 };
 
 const fetchDailyFeedbackById = async (
@@ -49,22 +47,19 @@ const fetchDailyFeedbackById = async (
     throw new Error("Invalid user ID");
   }
 
-  const { data, error } = await supabase
-    .from(API_ENDPOINTS.DAILY_FEEDBACK)
-    .select("*")
-    .eq("user_id", userId)
-    .eq("id", id)
-    .maybeSingle();
+  // 서버 사이드 API를 통해 조회 (복호화는 서버에서 수행)
+  const response = await fetch(`/api/daily-feedback/${id}?userId=${userId}`);
 
-  if (error) {
-    throw error;
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to fetch daily feedback");
   }
 
-  if (!data) return null;
-  // 복호화 처리
-  return decryptDailyFeedback(
-    data as unknown as { [key: string]: unknown }
-  ) as unknown as DailyFeedbackRow | null;
+  const result = await response.json();
+  return result.data || null;
 };
 
 export const useGetDailyFeedback = (date: string) => {

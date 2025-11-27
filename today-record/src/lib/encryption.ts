@@ -59,7 +59,7 @@ export function encrypt(text: string): string {
     // IV와 암호화된 데이터를 함께 저장
     return `${iv.toString("hex")}:${encrypted}`;
   } catch (error) {
-    console.error("Encryption error:", error);
+    // 에러 로깅 제거 - 조용히 처리
     throw new Error("Failed to encrypt data");
   }
 }
@@ -108,23 +108,8 @@ export function decrypt(encryptedText: string): string {
 
     return decrypted;
   } catch (error) {
-    // 복호화 실패 - ENCRYPTION_KEY가 변경되었거나 데이터가 손상되었을 수 있음
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("❌ 복호화 실패:", {
-      error: errorMessage,
-      encryptedTextLength: encryptedText.length,
-      isEncryptedFormat: isEncrypted(encryptedText),
-      hint: "ENCRYPTION_KEY가 변경되었거나 데이터가 손상되었을 수 있습니다.",
-    });
-
     // 복호화 실패 시 원본 반환 (기존 평문 데이터일 수 있음)
-    // 하지만 명확한 암호화 형식인 경우 경고
-    if (isEncrypted(encryptedText)) {
-      console.error(
-        "⚠️  암호화된 데이터를 복호화할 수 없습니다. ENCRYPTION_KEY를 확인하세요."
-      );
-    }
-
+    // 에러 로깅 제거 - 클라이언트 사이드에서는 ENCRYPTION_KEY에 접근할 수 없으므로 조용히 처리
     return encryptedText;
   }
 }

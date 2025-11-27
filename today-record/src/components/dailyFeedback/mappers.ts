@@ -9,6 +9,17 @@ export function mapDailyFeedbackRowToReport(
   row: DailyFeedbackRow
 ): DailyReportData {
   // 기본값 설정 헬퍼 함수
+  // 숫자로 변환하는 헬퍼 함수 (복호화 과정에서 문자열로 변환될 수 있음)
+  const toNumber = (value: unknown): number | null => {
+    if (value === null || value === undefined) return null;
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      const num = Number(value);
+      return isNaN(num) ? null : num;
+    }
+    return null;
+  };
+
   const getEmotionOverview = () => {
     if (!row.emotion_overview) {
       return {
@@ -23,8 +34,8 @@ export function mapDailyFeedbackRowToReport(
     }
     return {
       emotion_curve: row.emotion_overview.emotion_curve ?? [],
-      ai_mood_valence: row.emotion_overview.ai_mood_valence ?? null,
-      ai_mood_arousal: row.emotion_overview.ai_mood_arousal ?? null,
+      ai_mood_valence: toNumber(row.emotion_overview.ai_mood_valence),
+      ai_mood_arousal: toNumber(row.emotion_overview.ai_mood_arousal),
       dominant_emotion: row.emotion_overview.dominant_emotion ?? null,
       emotion_quadrant: row.emotion_overview.emotion_quadrant ?? null,
       emotion_quadrant_explanation:
@@ -48,7 +59,7 @@ export function mapDailyFeedbackRowToReport(
       narrative: row.narrative_overview.narrative ?? "",
       lesson: row.narrative_overview.lesson ?? "",
       keywords: row.narrative_overview.keywords ?? [],
-      integrity_score: row.narrative_overview.integrity_score ?? 0,
+      integrity_score: toNumber(row.narrative_overview.integrity_score) ?? 0,
     };
   };
 

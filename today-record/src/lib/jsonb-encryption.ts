@@ -79,15 +79,8 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
 
       // 복호화 실패 감지: 암호화된 형식이었는데 복호화 후에도 동일하면 실패
       if (detectDecryptionFailure(obj, decrypted)) {
-        console.error(
-          "❌ JSONB 필드 복호화 실패: 암호화된 데이터를 복호화할 수 없습니다.",
-          {
-            dataLength: obj.length,
-            dataPreview: obj.substring(0, 50) + "...",
-            hint: "ENCRYPTION_KEY가 변경되었거나 데이터가 손상되었을 수 있습니다.",
-          }
-        );
         // 복호화 실패 시 원본 반환 (에러를 throw하지 않음 - 부분 복호화 허용)
+        // 에러 로깅 제거 - 조용히 처리
         return obj;
       }
 
@@ -112,7 +105,7 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
       return decrypted;
     } catch (err) {
       // 복호화 실패 시 원본 반환 (기존 평문 데이터일 수 있음)
-      console.error("❌ JSONB 필드 복호화 중 예외 발생:", err);
+      // 에러 로깅 제거 - 조용히 처리
       return obj;
     }
   }

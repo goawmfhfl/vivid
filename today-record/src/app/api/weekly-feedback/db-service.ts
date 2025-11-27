@@ -165,17 +165,14 @@ export async function fetchWeeklyFeedbackDetail(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
-  const weeklyOverview =
-    data.weekly_overview as WeeklyFeedback["weekly_overview"];
-
-  return {
+  const rawFeedback = {
     id: String(data.id),
     week_range: {
       start: data.week_start,
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    weekly_overview: weeklyOverview,
+    weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
     emotion_overview:
       (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
     growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
@@ -188,6 +185,11 @@ export async function fetchWeeklyFeedbackDetail(
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
+
+  // 복호화 처리
+  return decryptWeeklyFeedback(
+    rawFeedback as unknown as { [key: string]: unknown }
+  ) as unknown as WeeklyFeedback;
 }
 
 export async function saveWeeklyFeedback(

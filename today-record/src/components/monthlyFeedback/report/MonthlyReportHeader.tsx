@@ -24,8 +24,15 @@ export function MonthlyReportHeader({
   date_range,
   summary_overview,
 }: MonthlyReportHeaderProps) {
-  const integrity_average = summary_overview.integrity_average ?? 0;
-  const record_coverage_rate = summary_overview.record_coverage_rate ?? 0;
+  // 숫자로 변환 (복호화 과정에서 문자열로 변환될 수 있음)
+  const integrity_average =
+    typeof summary_overview.integrity_average === "number"
+      ? summary_overview.integrity_average
+      : Number(summary_overview.integrity_average) || 0;
+  const record_coverage_rate =
+    typeof summary_overview.record_coverage_rate === "number"
+      ? summary_overview.record_coverage_rate
+      : Number(summary_overview.record_coverage_rate) || 0;
   const [showIntegrityTooltip, setShowIntegrityTooltip] = useState(false);
   const [showCoverageTooltip, setShowCoverageTooltip] = useState(false);
   const integrityTooltipRef = useRef<HTMLDivElement>(null);
