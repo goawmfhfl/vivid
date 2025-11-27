@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,19 +74,21 @@ export function HomeHeader() {
                 boxShadow: SHADOWS.md,
               }}
             >
-              {/* <DropdownMenuItem
-                className="focus:outline-none cursor-pointer transition-colors"
+              <DropdownMenuItem
+                onClick={() => router.push("/settings")}
+                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
                 style={{
                   color: "#333333",
                   padding: "0.625rem 1rem",
-                  fontSize: "0.875rem",
+                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
                   fontWeight: "500",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = "#F3F4F6";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "white";
+                  e.currentTarget.style.backgroundColor =
+                    COLORS.background.card;
                 }}
               >
                 <Settings
@@ -94,7 +96,7 @@ export function HomeHeader() {
                   style={{ color: "#6B7A6F" }}
                 />
                 설정
-              </DropdownMenuItem> */}
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleLogout}
                 className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}

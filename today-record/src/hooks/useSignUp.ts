@@ -7,6 +7,8 @@ import type { User, Session } from "@supabase/supabase-js";
 export interface SignUpData {
   email: string;
   password: string;
+  name: string;
+  phone: string;
   agreeTerms: boolean;
   agreeAI: boolean;
 }
@@ -27,11 +29,19 @@ class SignUpError extends Error {
 
 // 회원가입 함수
 const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
-  const { email, password, agreeTerms, agreeAI } = data;
+  const { email, password, name, phone, agreeTerms, agreeAI } = data;
 
   // 입력 데이터 검증
   if (!email || !password) {
     throw new SignUpError("이메일과 비밀번호를 입력해주세요.");
+  }
+
+  if (!name) {
+    throw new SignUpError("이름을 입력해주세요.");
+  }
+
+  if (!phone) {
+    throw new SignUpError("전화번호를 입력해주세요.");
   }
 
   if (!agreeTerms || !agreeAI) {
@@ -47,6 +57,8 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         data: {
           agreeTerms,
           agreeAI,
+          name,
+          phone,
         },
       },
     });

@@ -25,7 +25,9 @@ export function LoginView() {
     general?: string;
   }>({});
   const [findAccountDialogOpen, setFindAccountDialogOpen] = useState(false);
-  const [findAccountMode, setFindAccountMode] = useState<"email" | "password">("password");
+  const [findAccountMode, setFindAccountMode] = useState<"email" | "password">(
+    "password"
+  );
 
   // React Query mutation 사용
   const router = useRouter();

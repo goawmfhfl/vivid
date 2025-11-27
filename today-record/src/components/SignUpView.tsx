@@ -5,6 +5,8 @@ import { useSignUp } from "@/hooks/useSignUp";
 import { AuthHeader } from "./forms/AuthHeader";
 import { EmailField } from "./forms/EmailField";
 import { PasswordField } from "./forms/PasswordField";
+import { NameField } from "./forms/NameField";
+import { PhoneField } from "./forms/PhoneField";
 import { TermsAgreement } from "./forms/TermsAgreement";
 import { ErrorMessage } from "./forms/ErrorMessage";
 import { SubmitButton } from "./forms/SubmitButton";
@@ -22,6 +24,8 @@ export function SignUpView({
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    name: "",
+    phone: "",
     agreeTerms: false,
     agreeAI: false,
   });
@@ -30,6 +34,8 @@ export function SignUpView({
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
+    name?: string;
+    phone?: string;
     terms?: string;
   }>({});
 
@@ -89,6 +95,23 @@ export function SignUpView({
         "비밀번호는 영문과 숫자를 포함해 8자 이상 입력해주세요.";
     }
 
+    // Validate name
+    if (!formData.name || formData.name.trim() === "") {
+      newErrors.name = "이름을 입력해주세요.";
+    }
+
+    // Validate phone
+    if (!formData.phone || formData.phone.trim() === "") {
+      newErrors.phone = "전화번호를 입력해주세요.";
+    } else {
+      // 전화번호 형식 검증 (숫자와 하이픈만 허용)
+      const phoneRegex = /^[0-9-]+$/;
+      const cleanedPhone = formData.phone.replace(/\s/g, "");
+      if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 10) {
+        newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
+      }
+    }
+
     // Validate terms
     if (!formData.agreeTerms || !formData.agreeAI) {
       newErrors.terms = "필수 약관에 동의해주세요.";
@@ -104,6 +127,8 @@ export function SignUpView({
     signUpMutation.mutate({
       email: formData.email,
       password: formData.password,
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
       agreeTerms: formData.agreeTerms,
       agreeAI: formData.agreeAI,
     });
@@ -112,6 +137,10 @@ export function SignUpView({
   const isFormValid = Boolean(
     formData.email &&
       formData.password &&
+      formData.name &&
+      formData.name.trim() !== "" &&
+      formData.phone &&
+      formData.phone.trim() !== "" &&
       formData.agreeTerms &&
       formData.agreeAI
   );
@@ -149,6 +178,43 @@ export function SignUpView({
             placeholder="영문+숫자 8자 이상 입력"
             error={errors.password}
           />
+
+          {/* 이름 필드 */}
+          <div>
+            <NameField
+              value={formData.name}
+              onChange={(value) => {
+                updateFormData("name", value);
+                setErrors((prev) => ({ ...prev, name: undefined }));
+              }}
+              placeholder="이름을 입력하세요"
+              error={errors.name}
+            />
+            <p
+              className="mt-1"
+              style={{ color: "#6B7A6F", fontSize: "0.8rem" }}
+            >
+              이메일 찾기에 사용됩니다
+            </p>
+          </div>
+
+          {/* 전화번호 필드 */}
+          <div>
+            <PhoneField
+              value={formData.phone}
+              onChange={(value) => {
+                updateFormData("phone", value);
+                setErrors((prev) => ({ ...prev, phone: undefined }));
+              }}
+              error={errors.phone}
+            />
+            <p
+              className="mt-1"
+              style={{ color: "#6B7A6F", fontSize: "0.8rem" }}
+            >
+              이메일 찾기에 사용됩니다
+            </p>
+          </div>
 
           <TermsAgreement
             agreeTerms={formData.agreeTerms}

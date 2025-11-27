@@ -14,6 +14,7 @@ import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "@/lib/design-system";
+import { ProfileUpdateModal } from "./ProfileUpdateModal";
 
 export function Home() {
   const router = useRouter();
@@ -254,6 +255,9 @@ export function Home() {
         open={!!deletingRecordId}
         onOpenChange={(open) => !open && setDeletingRecordId(null)}
       />
+
+      {/* 프로필 업데이트 모달 */}
+      <ProfileUpdateModal />
     </div>
   );
 }
