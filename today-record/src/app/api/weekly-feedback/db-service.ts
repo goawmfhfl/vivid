@@ -3,6 +3,7 @@ import type {
   WeeklyFeedback,
   WeeklyFeedbackListItem,
 } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import { API_ENDPOINTS } from "@/constants";
 import {
   encryptWeeklyFeedback,
@@ -18,7 +19,7 @@ export async function fetchDailyFeedbacksByRange(
   userId: string,
   start: string,
   end: string
-) {
+): Promise<DailyFeedbackRow[]> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.DAILY_FEEDBACK)
     .select("*")
@@ -33,7 +34,12 @@ export async function fetchDailyFeedbacksByRange(
 
   // 복호화 처리
   const { decryptDailyFeedback } = await import("@/lib/jsonb-encryption");
-  return (data || []).map((item) => decryptDailyFeedback(item));
+  return (data || []).map(
+    (item) =>
+      decryptDailyFeedback(
+        item as unknown as { [key: string]: unknown }
+      ) as unknown as DailyFeedbackRow
+  );
 }
 
 /**
@@ -59,10 +65,10 @@ export async function fetchWeeklyFeedbackList(
     // weekly_overview 복호화
     const decryptedOverview = decryptJsonbFields(
       row.weekly_overview as { narrative?: string } | null
-    );
-    const title = decryptedOverview?.narrative
-      ? decryptedOverview.narrative.substring(0, 50) +
-        (decryptedOverview.narrative.length > 50 ? "..." : "")
+    ) as { narrative?: string } | null;
+    const narrative = decryptedOverview?.narrative;
+    const title = narrative
+      ? narrative.substring(0, 50) + (narrative.length > 50 ? "..." : "")
       : `${row.week_start} ~ ${row.week_end}`;
 
     return {
@@ -127,7 +133,9 @@ export async function fetchWeeklyFeedbackByDate(
   };
 
   // 복호화 처리
-  return decryptWeeklyFeedback(rawFeedback);
+  return decryptWeeklyFeedback(
+    rawFeedback as unknown as { [key: string]: unknown }
+  ) as unknown as WeeklyFeedback;
 }
 
 /**
@@ -188,7 +196,9 @@ export async function saveWeeklyFeedback(
   feedback: WeeklyFeedback
 ): Promise<string> {
   // 암호화 처리
-  const encryptedFeedback = encryptWeeklyFeedback(feedback);
+  const encryptedFeedback = encryptWeeklyFeedback(
+    feedback
+  ) as unknown as WeeklyFeedback;
 
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)

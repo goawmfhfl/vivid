@@ -3,6 +3,7 @@ import type {
   MonthlyFeedback,
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import { API_ENDPOINTS } from "@/constants";
 import {
   encryptMonthlyFeedback,
@@ -18,7 +19,7 @@ export async function fetchDailyFeedbacksByMonth(
   userId: string,
   startDate: string,
   endDate: string
-) {
+): Promise<DailyFeedbackRow[]> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.DAILY_FEEDBACK)
     .select("*")
@@ -33,7 +34,12 @@ export async function fetchDailyFeedbacksByMonth(
 
   // 복호화 처리
   const { decryptDailyFeedback } = await import("@/lib/jsonb-encryption");
-  return (data || []).map((item) => decryptDailyFeedback(item));
+  return (data || []).map(
+    (item) =>
+      decryptDailyFeedback(
+        item as unknown as { [key: string]: unknown }
+      ) as unknown as DailyFeedbackRow
+  );
 }
 
 /**
@@ -135,7 +141,9 @@ export async function fetchMonthlyFeedbackByMonth(
   };
 
   // 복호화 처리
-  return decryptMonthlyFeedback(rawFeedback);
+  return decryptMonthlyFeedback(
+    rawFeedback as unknown as { [key: string]: unknown }
+  ) as unknown as MonthlyFeedback;
 }
 
 /**
@@ -188,7 +196,9 @@ export async function fetchMonthlyFeedbackDetail(
   };
 
   // 복호화 처리
-  return decryptMonthlyFeedback(rawFeedback);
+  return decryptMonthlyFeedback(
+    rawFeedback as unknown as { [key: string]: unknown }
+  ) as unknown as MonthlyFeedback;
 }
 
 /**

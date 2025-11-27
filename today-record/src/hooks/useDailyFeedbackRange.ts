@@ -31,9 +31,12 @@ const fetchDailyFeedbackRange = async (
   }
 
   // 복호화 처리
-  return (data || []).map((item) =>
-    decryptDailyFeedback(item)
-  ) as DailyFeedbackRow[];
+  return (data || []).map(
+    (item) =>
+      decryptDailyFeedback(
+        item as unknown as { [key: string]: unknown }
+      ) as unknown as DailyFeedbackRow
+  );
 };
 
 /**

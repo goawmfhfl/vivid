@@ -22,7 +22,9 @@ const fetchDailyFeedbackByDate = async (
 
   if (!data) return null;
   // 복호화 처리
-  return decryptDailyFeedback(data) as DailyFeedbackRow | null;
+  return decryptDailyFeedback(
+    data as unknown as { [key: string]: unknown }
+  ) as unknown as DailyFeedbackRow | null;
 };
 
 const fetchDailyFeedbackById = async (
@@ -60,7 +62,9 @@ const fetchDailyFeedbackById = async (
 
   if (!data) return null;
   // 복호화 처리
-  return decryptDailyFeedback(data) as DailyFeedbackRow | null;
+  return decryptDailyFeedback(
+    data as unknown as { [key: string]: unknown }
+  ) as unknown as DailyFeedbackRow | null;
 };
 
 export const useGetDailyFeedback = (date: string) => {

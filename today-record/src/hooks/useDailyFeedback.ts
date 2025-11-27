@@ -29,7 +29,9 @@ const fetchDailyFeedback = async (
 
     if (!data) return null;
     // 복호화 처리
-    return decryptDailyFeedback(data) as DailyFeedbackRow;
+    return decryptDailyFeedback(
+      data as unknown as { [key: string]: unknown }
+    ) as unknown as DailyFeedbackRow;
   } catch (error) {
     console.error("일일 피드백 조회 중 오류:", error);
     throw error;
