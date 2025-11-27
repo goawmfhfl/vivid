@@ -24,8 +24,6 @@ export function mapMonthlyFeedbackToReportData(
     },
     total_days: feedback.total_days,
     recorded_days: feedback.recorded_days,
-    record_coverage_rate: feedback.record_coverage_rate,
-    integrity_average: feedback.integrity_average,
 
     // 섹션들
     summary_overview: feedback.summary_overview,

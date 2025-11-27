@@ -8,7 +8,7 @@ export type DailyReportData = {
   date: string;
   /** 요일 (예: "월요일") */
   dayOfWeek: string;
-  /** 하루 점수 (0-10 범위의 정수) */
+  /** 하루 점수 (0-10 범위의 정수) - narrative_overview에서 가져옴 */
   integrity_score: number;
   /** 오늘의 전체 흐름 요약 (헤더에 표시되는 짧은 요약) */
   narrative_summary: string;

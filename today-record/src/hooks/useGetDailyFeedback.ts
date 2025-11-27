@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 
 const fetchDailyFeedbackByDate = async (
   date: string
@@ -19,7 +20,9 @@ const fetchDailyFeedbackByDate = async (
     throw error;
   }
 
-  return data as DailyFeedbackRow | null;
+  if (!data) return null;
+  // 복호화 처리
+  return decryptDailyFeedback(data) as DailyFeedbackRow | null;
 };
 
 const fetchDailyFeedbackById = async (
@@ -55,7 +58,9 @@ const fetchDailyFeedbackById = async (
     throw error;
   }
 
-  return data as DailyFeedbackRow | null;
+  if (!data) return null;
+  // 복호화 처리
+  return decryptDailyFeedback(data) as DailyFeedbackRow | null;
 };
 
 export const useGetDailyFeedback = (date: string) => {

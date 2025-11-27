@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DailyReport, Record } from "./types";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import { decrypt } from "@/lib/encryption";
+import {
+  encryptDailyFeedback,
+  decryptDailyFeedback,
+} from "@/lib/jsonb-encryption";
 
 /**
  * 특정 날짜의 기록 조회
@@ -24,7 +29,11 @@ export async function fetchRecordsByDate(
     throw new Error("No records found for this date");
   }
 
-  return records as Record[];
+  // 복호화 처리
+  return records.map((record) => ({
+    ...record,
+    content: decrypt(record.content),
+  })) as Record[];
 }
 
 export async function saveDailyReport(
@@ -44,19 +53,29 @@ export async function saveDailyReport(
     throw new Error(`Failed to check existing feedback: ${checkError.message}`);
   }
 
-  const reportData = {
-    user_id: userId,
-    report_date: report.date,
-    day_of_week: report.day_of_week ?? null,
-    integrity_score: report.integrity_score ?? null,
-
+  // 암호화할 데이터 준비
+  const feedbackDataToEncrypt = {
     emotion_overview: report.emotion_overview,
     narrative_overview: report.narrative_overview,
     insight_overview: report.insight_overview,
     vision_overview: report.vision_overview,
     feedback_overview: report.feedback_overview,
     meta_overview: report.meta_overview,
+  };
 
+  // 암호화 적용
+  const encryptedData = encryptDailyFeedback(feedbackDataToEncrypt);
+
+  const reportData = {
+    user_id: userId,
+    report_date: report.date,
+    day_of_week: report.day_of_week ?? null,
+    emotion_overview: encryptedData.emotion_overview,
+    narrative_overview: encryptedData.narrative_overview,
+    insight_overview: encryptedData.insight_overview,
+    vision_overview: encryptedData.vision_overview,
+    feedback_overview: encryptedData.feedback_overview,
+    meta_overview: encryptedData.meta_overview,
     is_ai_generated: true,
   };
 
@@ -105,5 +124,7 @@ export async function saveDailyReport(
     throw new Error("Failed to save feedback to database");
   }
 
-  return result[0] as DailyFeedbackRow;
+  // 복호화하여 반환
+  const savedRow = result[0] as DailyFeedbackRow;
+  return decryptDailyFeedback(savedRow) as DailyFeedbackRow;
 }

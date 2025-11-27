@@ -39,7 +39,8 @@ export function buildMonthlyFeedbackPrompt(
   prompt += `- date_range: ${dateRange.start_date} ~ ${dateRange.end_date}\n`;
   prompt += `- total_days: ${totalDays}\n`;
   prompt += `- recorded_days: ${recordedDays}\n`;
-  prompt += `- record_coverage_rate: ${recordCoverageRate}\n\n`;
+  prompt += `- record_coverage_rate (summary_overview에 포함): ${recordCoverageRate}\n`;
+  prompt += `- integrity_average (summary_overview에 포함): 일별 피드백의 narrative_overview.integrity_score 평균값을 계산하여 summary_overview에 포함하세요.\n\n`;
 
   // 일별 피드백 데이터 정리
   prompt += `=== 일별 피드백 데이터 ===\n`;
@@ -70,8 +71,8 @@ export function buildMonthlyFeedbackPrompt(
       prompt += `\n[일일 피드백 ${idx + 1}]\n`;
 
       // integrity_score
-      if (feedback.integrity_score !== null) {
-        prompt += `통합 점수: ${feedback.integrity_score}/10\n`;
+      if (feedback.narrative_overview?.integrity_score !== null && feedback.narrative_overview?.integrity_score !== undefined) {
+        prompt += `통합 점수: ${feedback.narrative_overview.integrity_score}/10\n`;
       }
 
       // narrative_overview

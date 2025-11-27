@@ -48,14 +48,14 @@ export async function GET(
 
     // 일별 정합도 점수 배열 생성 (기록이 있는 날짜만)
     const dailyIntegrityScores = dailyFeedbacks
-      .filter((df) => df.integrity_score !== null)
+      .filter((df) => df.narrative_overview?.integrity_score !== null && df.narrative_overview?.integrity_score !== undefined)
       .map((df) => {
         const date = new Date(df.report_date);
         const weekday = date.toLocaleDateString("ko-KR", { weekday: "long" });
         return {
           date: df.report_date.replace(/-/g, "."),
           weekday,
-          score: df.integrity_score!,
+          score: df.narrative_overview!.integrity_score!,
         };
       });
 

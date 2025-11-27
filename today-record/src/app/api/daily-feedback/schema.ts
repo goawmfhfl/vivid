@@ -49,7 +49,6 @@ export const DailyReportSchema = {
       // 기본 정보
       date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
       day_of_week: { type: "string" },
-      integrity_score: { type: "integer", minimum: 0, maximum: 10 },
 
       // emotion_overview 섹션
       emotion_overview: {
@@ -104,8 +103,9 @@ export const DailyReportSchema = {
           narrative: { type: "string" },
           lesson: { type: "string", nullable: true },
           keywords: { type: "array", items: { type: "string" }, minItems: 0 },
+          integrity_score: { type: "integer", minimum: 0, maximum: 10 },
         },
-        required: ["narrative_summary", "narrative", "lesson", "keywords"],
+        required: ["narrative_summary", "narrative", "lesson", "keywords", "integrity_score"],
         additionalProperties: false,
       },
 
@@ -196,7 +196,6 @@ export const DailyReportSchema = {
     required: [
       "date",
       "day_of_week",
-      "integrity_score",
       "emotion_overview",
       "narrative_overview",
       "insight_overview",
@@ -215,7 +214,7 @@ export const SYSTEM_PROMPT = `
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
 - 스키마 키와 타입을 정확히 준수합니다.
 - 모든 키를 반드시 포함하세요. 값이 없으면 null, 빈 문자열("") 또는 빈 배열([])로 채웁니다.
-- integrity_score는 0~10의 정수로 제공합니다.
+- narrative_overview.integrity_score는 0~10의 정수로 제공합니다.
 - 일일 리포트에 사용되는 단어나 어휘들은 누구나 이해할 수 있을 만큼 쉽게 작성합니다.
 - date와 day_of_week는 프롬프트에 명시된 값을 정확히 사용하세요. 프롬프트에 "YYYY-MM-DD (요일)" 형식으로 제공되면, date는 "YYYY-MM-DD", day_of_week는 "요일"로 설정하세요.
 
@@ -336,7 +335,6 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
 {
   "date": "YYYY-MM-DD",
   "day_of_week": "월요일",
-  "integrity_score": 7,
   "emotion_overview": {
     "ai_mood_valence": -0.1,
     "ai_mood_arousal": 0.7,
@@ -354,7 +352,8 @@ Circumplex Model of Affect 기반으로 다음 규칙을 따르세요.
     "narrative_summary": "string",
     "narrative": "string",
     "lesson": "string",
-    "keywords": ["string", ...]
+    "keywords": ["string", ...],
+    "integrity_score": 7
   },
   "insight_overview": {
     "core_insight": "string",

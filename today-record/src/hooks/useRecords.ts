@@ -35,21 +35,32 @@ class RecordError extends Error {
 // Records 조회 함수
 const fetchRecords = async (): Promise<Record[]> => {
   try {
-    const userId = await getCurrentUserId();
+    // 세션 토큰 가져오기
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data, error } = await supabase
-      .from(API_ENDPOINTS.RECORDS)
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    if (!session) {
+      throw new RecordError("로그인이 필요합니다.");
+    }
 
-    if (error) {
+    // API 라우트를 통해 조회 (서버 사이드에서 복호화)
+    const response = await fetch("/api/records", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new RecordError(
-        `${ERROR_MESSAGES.RECORD_FETCH_FAILED}: ${error.message}`
+        errorData.error || ERROR_MESSAGES.RECORD_FETCH_FAILED
       );
     }
 
-    return data || [];
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
     if (error instanceof RecordError) {
       throw error;
@@ -62,24 +73,34 @@ const fetchRecords = async (): Promise<Record[]> => {
 // Record 생성 함수
 const createRecord = async (data: CreateRecordData): Promise<Record> => {
   try {
-    const userId = await getCurrentUserId();
+    // 세션 토큰 가져오기
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data: newRecord, error } = await supabase
-      .from(API_ENDPOINTS.RECORDS)
-      .insert({
-        user_id: userId,
-        content: data.content,
-      })
-      .select()
-      .single();
+    if (!session) {
+      throw new RecordError("로그인이 필요합니다.");
+    }
 
-    if (error) {
+    // API 라우트를 통해 생성 (서버 사이드에서 암호화)
+    const response = await fetch("/api/records", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ content: data.content }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new RecordError(
-        `${ERROR_MESSAGES.RECORD_CREATE_FAILED}: ${error.message}`
+        errorData.error || ERROR_MESSAGES.RECORD_CREATE_FAILED
       );
     }
 
-    return newRecord;
+    const result = await response.json();
+    return result.data;
   } catch (error) {
     if (error instanceof RecordError) {
       throw error;
@@ -95,23 +116,34 @@ const updateRecord = async (
   data: UpdateRecordData
 ): Promise<Record> => {
   try {
-    const userId = await getCurrentUserId();
+    // 세션 토큰 가져오기
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data: updatedRecord, error } = await supabase
-      .from(API_ENDPOINTS.RECORDS)
-      .update(data)
-      .eq("id", id)
-      .eq("user_id", userId) // 본인 것만 수정 가능
-      .select()
-      .single();
+    if (!session) {
+      throw new RecordError("로그인이 필요합니다.");
+    }
 
-    if (error) {
+    // API 라우트를 통해 수정 (서버 사이드에서 암호화)
+    const response = await fetch(`/api/records/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new RecordError(
-        `${ERROR_MESSAGES.RECORD_UPDATE_FAILED}: ${error.message}`
+        errorData.error || ERROR_MESSAGES.RECORD_UPDATE_FAILED
       );
     }
 
-    return updatedRecord;
+    const result = await response.json();
+    return result.data;
   } catch (error) {
     if (error instanceof RecordError) {
       throw error;
@@ -124,17 +156,27 @@ const updateRecord = async (
 // Record 삭제 함수
 const deleteRecord = async (id: number): Promise<void> => {
   try {
-    const userId = await getCurrentUserId();
+    // 세션 토큰 가져오기
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { error } = await supabase
-      .from(API_ENDPOINTS.RECORDS)
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId); // 본인 것만 삭제 가능
+    if (!session) {
+      throw new RecordError("로그인이 필요합니다.");
+    }
 
-    if (error) {
+    // API 라우트를 통해 삭제
+    const response = await fetch(`/api/records/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new RecordError(
-        `${ERROR_MESSAGES.RECORD_DELETE_FAILED}: ${error.message}`
+        errorData.error || ERROR_MESSAGES.RECORD_DELETE_FAILED
       );
     }
   } catch (error) {

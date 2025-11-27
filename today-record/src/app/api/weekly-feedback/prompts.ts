@@ -46,8 +46,8 @@ export function buildWeeklyFeedbackPrompt(
         if (feedback.narrative_overview?.narrative_summary) {
           prompt += `요약: ${feedback.narrative_overview.narrative_summary}\n`;
         }
-        if (feedback.integrity_score !== null) {
-          prompt += `통합 점수: ${feedback.integrity_score}/10\n`;
+        if (feedback.narrative_overview?.integrity_score !== null && feedback.narrative_overview?.integrity_score !== undefined) {
+          prompt += `통합 점수: ${feedback.narrative_overview.integrity_score}/10\n`;
         }
         if (
           feedback.narrative_overview?.keywords &&

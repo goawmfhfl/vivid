@@ -62,8 +62,6 @@ export function MonthlyFeedbackReport({
               month_label={data.month_label}
               date_range={data.date_range}
               summary_overview={data.summary_overview}
-              integrity_average={data.integrity_average}
-              record_coverage_rate={data.record_coverage_rate}
             />
           </div>
         </ScrollAnimation>

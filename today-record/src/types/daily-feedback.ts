@@ -26,6 +26,7 @@ export interface NarrativeOverview {
   narrative: string | null;
   lesson: string | null;
   keywords: string[];
+  integrity_score: number | null;
 }
 
 // Insight Overview 섹션
@@ -68,7 +69,6 @@ export interface DailyFeedbackRow {
   user_id: string;
   report_date: string;
   day_of_week: string | null;
-  integrity_score: number | null;
 
   // jsonb 섹션들
   emotion_overview: EmotionOverview | null;

@@ -18,8 +18,6 @@ export const MonthlyReportSchema = {
       },
       total_days: { type: "integer", minimum: 0 },
       recorded_days: { type: "integer", minimum: 0 },
-      record_coverage_rate: { type: "number", minimum: 0, maximum: 1 },
-      integrity_average: { type: "number", minimum: 0, maximum: 10 },
 
       // 1. 월간 요약 섹션
       summary_overview: {
@@ -45,6 +43,8 @@ export const MonthlyReportSchema = {
               { type: "null" },
             ],
           },
+          record_coverage_rate: { type: "number", minimum: 0, maximum: 1 },
+          integrity_average: { type: "number", minimum: 0, maximum: 10 },
           life_balance_score: { type: "integer", minimum: 0, maximum: 10 },
           life_balance_reason: {
             type: "string",
@@ -90,6 +90,8 @@ export const MonthlyReportSchema = {
           "main_themes",
           "main_themes_reason",
           "integrity_trend",
+          "record_coverage_rate",
+          "integrity_average",
           "life_balance_score",
           "life_balance_reason",
           "life_balance_feedback",
@@ -481,8 +483,6 @@ export const MonthlyReportSchema = {
       "date_range",
       "total_days",
       "recorded_days",
-      "record_coverage_rate",
-      "integrity_average",
       "summary_overview",
       "emotion_overview",
       "insight_overview",
@@ -547,7 +547,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 3) integrity_average
 
-- daily_reports.integrity_score 의 평균값을 계산합니다.
+- daily_reports.narrative_overview.integrity_score 의 평균값을 계산합니다.
 
 - 소수 둘째 자리까지 반올림합니다.
 
@@ -561,7 +561,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 기준 예시:
 
-    - 기록 커버리지, integrity_average, 감정 안정성, 실행력 등을 종합적으로 반영
+    - 기록 커버리지, summary_overview.integrity_average, 감정 안정성, 실행력 등을 종합적으로 반영
 
     - 매우 힘들었지만 꾸준히 버틴 달은 점수가 높을 수 있습니다. "성공"이 아니라 "정직하게 살아낸 정도"를 점수로 표현합니다.
 

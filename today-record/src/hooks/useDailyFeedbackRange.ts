@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 
 type UseDailyFeedbackRangeParams = {
   start: string; // "YYYY-MM-DD"
@@ -29,7 +30,10 @@ const fetchDailyFeedbackRange = async (
     throw new Error(`Failed to fetch daily feedback range: ${error.message}`);
   }
 
-  return (data || []) as DailyFeedbackRow[];
+  // 복호화 처리
+  return (data || []).map((item) =>
+    decryptDailyFeedback(item)
+  ) as DailyFeedbackRow[];
 };
 
 /**

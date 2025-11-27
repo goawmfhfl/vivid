@@ -14,18 +14,18 @@ type MonthlyReportHeaderProps = {
     summary_title: string;
     summary_description: string;
     integrity_trend: "상승" | "하락" | "유지" | "불규칙" | null;
+    integrity_average: number;
+    record_coverage_rate: number;
   };
-  integrity_average: number;
-  record_coverage_rate: number;
 };
 
 export function MonthlyReportHeader({
   month_label,
   date_range,
   summary_overview,
-  integrity_average,
-  record_coverage_rate,
 }: MonthlyReportHeaderProps) {
+  const integrity_average = summary_overview.integrity_average ?? 0;
+  const record_coverage_rate = summary_overview.record_coverage_rate ?? 0;
   const [showIntegrityTooltip, setShowIntegrityTooltip] = useState(false);
   const [showCoverageTooltip, setShowCoverageTooltip] = useState(false);
   const integrityTooltipRef = useRef<HTMLDivElement>(null);

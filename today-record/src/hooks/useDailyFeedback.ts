@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
+
 // Daily Feedback 조회 함수
 const fetchDailyFeedback = async (
   date: string
@@ -26,7 +28,8 @@ const fetchDailyFeedback = async (
     }
 
     if (!data) return null;
-    return data as DailyFeedbackRow;
+    // 복호화 처리
+    return decryptDailyFeedback(data) as DailyFeedbackRow;
   } catch (error) {
     console.error("일일 피드백 조회 중 오류:", error);
     throw error;

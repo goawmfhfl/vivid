@@ -40,6 +40,7 @@ export function mapDailyFeedbackRowToReport(
         narrative: "",
         lesson: "",
         keywords: [],
+        integrity_score: 0,
       };
     }
     return {
@@ -47,6 +48,7 @@ export function mapDailyFeedbackRowToReport(
       narrative: row.narrative_overview.narrative ?? "",
       lesson: row.narrative_overview.lesson ?? "",
       keywords: row.narrative_overview.keywords ?? [],
+      integrity_score: row.narrative_overview.integrity_score ?? 0,
     };
   };
 
@@ -132,7 +134,7 @@ export function mapDailyFeedbackRowToReport(
   return {
     date: row.report_date,
     dayOfWeek: row.day_of_week ?? "",
-    integrity_score: row.integrity_score ?? 0,
+    integrity_score: narrative.integrity_score ?? 0,
 
     // Emotion Overview
     emotion_curve: emotion.emotion_curve,

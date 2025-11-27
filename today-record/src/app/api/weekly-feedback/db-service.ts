@@ -4,6 +4,11 @@ import type {
   WeeklyFeedbackListItem,
 } from "@/types/weekly-feedback";
 import { API_ENDPOINTS } from "@/constants";
+import {
+  encryptWeeklyFeedback,
+  decryptWeeklyFeedback,
+  decryptJsonbFields,
+} from "@/lib/jsonb-encryption";
 
 /**
  * 날짜 범위로 daily-feedback 조회
@@ -26,7 +31,9 @@ export async function fetchDailyFeedbacksByRange(
     throw new Error(`Failed to fetch daily feedbacks: ${error.message}`);
   }
 
-  return data || [];
+  // 복호화 처리
+  const { decryptDailyFeedback } = await import("@/lib/jsonb-encryption");
+  return (data || []).map((item) => decryptDailyFeedback(item));
 }
 
 /**
@@ -49,11 +56,13 @@ export async function fetchWeeklyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    // weekly_overview에서 narrative의 일부를 title로 사용하거나, 날짜 범위를 title로 사용
-    const weeklyOverview = row.weekly_overview as { narrative?: string } | null;
-    const title = weeklyOverview?.narrative
-      ? weeklyOverview.narrative.substring(0, 50) +
-        (weeklyOverview.narrative.length > 50 ? "..." : "")
+    // weekly_overview 복호화
+    const decryptedOverview = decryptJsonbFields(
+      row.weekly_overview as { narrative?: string } | null
+    );
+    const title = decryptedOverview?.narrative
+      ? decryptedOverview.narrative.substring(0, 50) +
+        (decryptedOverview.narrative.length > 50 ? "..." : "")
       : `${row.week_start} ~ ${row.week_end}`;
 
     return {
@@ -96,17 +105,14 @@ export async function fetchWeeklyFeedbackByDate(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
-  const weeklyOverview =
-    data.weekly_overview as WeeklyFeedback["weekly_overview"];
-
-  return {
+  const rawFeedback = {
     id: String(data.id),
     week_range: {
       start: data.week_start,
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    weekly_overview: weeklyOverview,
+    weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
     emotion_overview:
       (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
     growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
@@ -119,6 +125,9 @@ export async function fetchWeeklyFeedbackByDate(
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
+
+  // 복호화 처리
+  return decryptWeeklyFeedback(rawFeedback);
 }
 
 /**
@@ -178,22 +187,26 @@ export async function saveWeeklyFeedback(
   userId: string,
   feedback: WeeklyFeedback
 ): Promise<string> {
+  // 암호화 처리
+  const encryptedFeedback = encryptWeeklyFeedback(feedback);
+
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .upsert(
       {
         user_id: userId,
-        week_start: feedback.week_range.start,
-        week_end: feedback.week_range.end,
-        timezone: feedback.week_range.timezone || "Asia/Seoul",
-        weekly_overview: feedback.weekly_overview,
-        emotion_overview: feedback.emotion_overview ?? null,
-        growth_trends: feedback.growth_trends,
-        insight_replay: feedback.insight_replay,
-        vision_visualization_report: feedback.vision_visualization_report,
-        execution_reflection: feedback.execution_reflection,
-        closing_section: feedback.closing_section,
-        is_ai_generated: feedback.is_ai_generated ?? true,
+        week_start: encryptedFeedback.week_range.start,
+        week_end: encryptedFeedback.week_range.end,
+        timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
+        weekly_overview: encryptedFeedback.weekly_overview,
+        emotion_overview: encryptedFeedback.emotion_overview ?? null,
+        growth_trends: encryptedFeedback.growth_trends,
+        insight_replay: encryptedFeedback.insight_replay,
+        vision_visualization_report:
+          encryptedFeedback.vision_visualization_report,
+        execution_reflection: encryptedFeedback.execution_reflection,
+        closing_section: encryptedFeedback.closing_section,
+        is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,week_start" }
     )

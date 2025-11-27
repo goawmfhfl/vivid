@@ -4,6 +4,11 @@ import type {
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
 import { API_ENDPOINTS } from "@/constants";
+import {
+  encryptMonthlyFeedback,
+  decryptMonthlyFeedback,
+  decryptJsonbFields,
+} from "@/lib/jsonb-encryption";
 
 /**
  * 날짜 범위로 daily-feedback 조회 (월간용)
@@ -26,7 +31,9 @@ export async function fetchDailyFeedbacksByMonth(
     throw new Error(`Failed to fetch daily feedbacks: ${error.message}`);
   }
 
-  return data || [];
+  // 복호화 처리
+  const { decryptDailyFeedback } = await import("@/lib/jsonb-encryption");
+  return (data || []).map((item) => decryptDailyFeedback(item));
 }
 
 /**
@@ -49,12 +56,13 @@ export async function fetchMonthlyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    const summaryOverview = row.summary_overview as {
+    // summary_overview 복호화
+    const decryptedOverview = decryptJsonbFields(row.summary_overview) as {
       summary_title?: string;
       monthly_score?: number;
     } | null;
-    const title = summaryOverview?.summary_title || row.month_label;
-    const monthlyScore = summaryOverview?.monthly_score || 0;
+    const title = decryptedOverview?.summary_title || row.month_label;
+    const monthlyScore = decryptedOverview?.monthly_score || 0;
     const dateRange = row.date_range as {
       start_date: string;
       end_date: string;
@@ -104,15 +112,13 @@ export async function fetchMonthlyFeedbackByMonth(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedback 타입으로 변환
-  return {
+  const rawFeedback = {
     id: String(data.id),
     month: data.month,
     month_label: data.month_label,
     date_range: data.date_range as MonthlyFeedback["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    record_coverage_rate: data.record_coverage_rate,
-    integrity_average: data.integrity_average,
     summary_overview:
       data.summary_overview as MonthlyFeedback["summary_overview"],
     emotion_overview:
@@ -127,6 +133,9 @@ export async function fetchMonthlyFeedbackByMonth(
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
+
+  // 복호화 처리
+  return decryptMonthlyFeedback(rawFeedback);
 }
 
 /**
@@ -156,15 +165,13 @@ export async function fetchMonthlyFeedbackDetail(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedback 타입으로 변환
-  return {
+  const rawFeedback = {
     id: String(data.id),
     month: data.month,
     month_label: data.month_label,
     date_range: data.date_range as MonthlyFeedback["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    record_coverage_rate: data.record_coverage_rate,
-    integrity_average: data.integrity_average,
     summary_overview:
       data.summary_overview as MonthlyFeedback["summary_overview"],
     emotion_overview:
@@ -179,6 +186,9 @@ export async function fetchMonthlyFeedbackDetail(
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
+
+  // 복호화 처리
+  return decryptMonthlyFeedback(rawFeedback);
 }
 
 /**
@@ -189,25 +199,26 @@ export async function saveMonthlyFeedback(
   userId: string,
   feedback: MonthlyFeedback
 ): Promise<string> {
+  // 암호화 처리
+  const encryptedFeedback = encryptMonthlyFeedback(feedback);
+
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .upsert(
       {
         user_id: userId,
-        month: feedback.month,
-        month_label: feedback.month_label,
-        date_range: feedback.date_range,
-        total_days: feedback.total_days,
-        recorded_days: feedback.recorded_days,
-        record_coverage_rate: feedback.record_coverage_rate,
-        integrity_average: feedback.integrity_average,
-        summary_overview: feedback.summary_overview,
-        emotion_overview: feedback.emotion_overview,
-        insight_overview: feedback.insight_overview,
-        feedback_overview: feedback.feedback_overview,
-        vision_overview: feedback.vision_overview,
-        conclusion_overview: feedback.conclusion_overview,
-        is_ai_generated: feedback.is_ai_generated ?? true,
+        month: encryptedFeedback.month,
+        month_label: encryptedFeedback.month_label,
+        date_range: encryptedFeedback.date_range,
+        total_days: encryptedFeedback.total_days,
+        recorded_days: encryptedFeedback.recorded_days,
+        summary_overview: encryptedFeedback.summary_overview,
+        emotion_overview: encryptedFeedback.emotion_overview,
+        insight_overview: encryptedFeedback.insight_overview,
+        feedback_overview: encryptedFeedback.feedback_overview,
+        vision_overview: encryptedFeedback.vision_overview,
+        conclusion_overview: encryptedFeedback.conclusion_overview,
+        is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,month" }
     )

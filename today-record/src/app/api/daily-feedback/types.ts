@@ -28,7 +28,6 @@ export interface CategorizedRecords {
 export interface DailyReport {
   date: string;
   day_of_week: string;
-  integrity_score: number;
 
   // jsonb 섹션들
   emotion_overview: EmotionOverview;

@@ -10,8 +10,6 @@ export type MonthlyFeedback = {
   };
   total_days: number;
   recorded_days: number;
-  record_coverage_rate: number; // 0-1
-  integrity_average: number; // 0-10
 
   // 섹션들
   summary_overview: SummaryOverview;
@@ -32,6 +30,8 @@ export type SummaryOverview = {
   main_themes: string[]; // 최대 7개
   main_themes_reason: string; // 주요 테마를 7개 이하로 정한 이유
   integrity_trend: "상승" | "하락" | "유지" | "불규칙" | null;
+  record_coverage_rate: number; // 0-1
+  integrity_average: number; // 0-10
   life_balance_score: number; // 0-10
   life_balance_reason: string; // 점수가 나온 이유 (데이터 출처 기반)
   life_balance_feedback: string; // 생활 밸런스에 대한 피드백

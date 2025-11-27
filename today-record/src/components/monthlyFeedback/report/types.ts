@@ -18,8 +18,6 @@ export type MonthlyReportData = {
   };
   total_days: number;
   recorded_days: number;
-  record_coverage_rate: number;
-  integrity_average: number;
 
   // 섹션들
   summary_overview: SummaryOverview;
