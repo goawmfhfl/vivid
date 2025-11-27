@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
 import { useKakaoLogin } from "@/hooks/useKakaoLogin";
@@ -8,21 +8,43 @@ import { AuthHeader } from "./forms/AuthHeader";
 import { EmailField } from "./forms/EmailField";
 import { PasswordField } from "./forms/PasswordField";
 import { SubmitButton } from "./forms/SubmitButton";
+import { Checkbox } from "./ui/checkbox";
 import { useRouter } from "next/navigation";
+import { FindAccountDialog } from "./FindAccountDialog";
+
+const EMAIL_STORAGE_KEY = "login-saved-email";
+const REMEMBER_EMAIL_KEY = "login-remember-email";
 
 export function LoginView() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
     general?: string;
   }>({});
+  const [findAccountDialogOpen, setFindAccountDialogOpen] = useState(false);
+  const [findAccountMode, setFindAccountMode] = useState<"email" | "password">("password");
 
   // React Query mutation 사용
   const router = useRouter();
   const loginMutation = useLogin();
   const kakaoLoginMutation = useKakaoLogin();
+
+  // localStorage에서 저장된 이메일 불러오기
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+      const shouldRemember =
+        localStorage.getItem(REMEMBER_EMAIL_KEY) === "true";
+
+      if (savedEmail && shouldRemember) {
+        setEmail(savedEmail);
+        setRememberEmail(true);
+      }
+    }
+  }, []);
 
   // Email validation
   const validateEmail = (email: string): boolean => {
@@ -59,6 +81,16 @@ export function LoginView() {
       { email, password },
       {
         onSuccess: () => {
+          // 이메일 저장 처리
+          if (typeof window !== "undefined") {
+            if (rememberEmail) {
+              localStorage.setItem(EMAIL_STORAGE_KEY, email);
+              localStorage.setItem(REMEMBER_EMAIL_KEY, "true");
+            } else {
+              localStorage.removeItem(EMAIL_STORAGE_KEY);
+              localStorage.removeItem(REMEMBER_EMAIL_KEY);
+            }
+          }
           router.push("/");
         },
         onError: (error: unknown) => {
@@ -137,6 +169,51 @@ export function LoginView() {
             error={errors.password}
           />
 
+          {/* 아이디/비밀번호 찾기 링크 */}
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setFindAccountMode("email");
+                setFindAccountDialogOpen(true);
+              }}
+              className="text-sm underline"
+              style={{ color: "#6B7A6F" }}
+            >
+              이메일 찾기
+            </button>
+            <span style={{ color: "#6B7A6F" }}>|</span>
+            <button
+              type="button"
+              onClick={() => {
+                setFindAccountMode("password");
+                setFindAccountDialogOpen(true);
+              }}
+              className="text-sm underline"
+              style={{ color: "#6B7A6F" }}
+            >
+              비밀번호 찾기
+            </button>
+          </div>
+
+          {/* 이메일 저장 체크박스 */}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="remember-email"
+              checked={rememberEmail}
+              onCheckedChange={(checked) => {
+                setRememberEmail(checked === true);
+              }}
+            />
+            <label
+              htmlFor="remember-email"
+              className="cursor-pointer"
+              style={{ color: "#4E4B46", fontSize: "0.9rem" }}
+            >
+              이메일 저장하기
+            </label>
+          </div>
+
           <SubmitButton
             isLoading={loginMutation.isPending}
             isValid={isFormValid}
@@ -144,8 +221,8 @@ export function LoginView() {
             defaultText="로그인"
           />
 
-          {/* Divider */}
-          <div className="relative py-3">
+          {/* OAuth 로그인 보류 처리 */}
+          {/* <div className="relative py-3">
             <div className="absolute inset-0 flex items-center">
               <div
                 className="w-full border-t"
@@ -167,9 +244,7 @@ export function LoginView() {
             </div>
           </div>
 
-          {/* OAuth Buttons - Horizontal Icons */}
           <div className="flex items-center justify-center gap-4">
-            {/* Kakao Login */}
             <div className="flex flex-col items-center">
               <button
                 type="button"
@@ -193,7 +268,6 @@ export function LoginView() {
               </button>
             </div>
 
-            {/* Google Login */}
             <button
               type="button"
               onClick={() => {
@@ -228,7 +302,7 @@ export function LoginView() {
                 />
               </svg>
             </button>
-          </div>
+          </div> */}
 
           {/* Sign Up Link */}
           <div className="text-center pt-4">
@@ -242,6 +316,13 @@ export function LoginView() {
             </button>
           </div>
         </form>
+
+        {/* 아이디/비밀번호 찾기 다이얼로그 */}
+        <FindAccountDialog
+          open={findAccountDialogOpen}
+          onOpenChange={setFindAccountDialogOpen}
+          mode={findAccountMode}
+        />
       </div>
     </div>
   );
