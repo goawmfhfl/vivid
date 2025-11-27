@@ -70,15 +70,16 @@ export async function POST(request: NextRequest) {
       return true;
     });
 
-    // 이메일 마스킹 함수
+    // 이메일 마스킹 함수 (마지막 글자 1개만 마스킹)
     const maskEmail = (email: string): string => {
       const [localPart, domain] = email.split("@");
       if (!domain) return email;
 
-      const visibleLength = Math.min(5, localPart.length);
-      const maskedLocal =
-        localPart.slice(0, visibleLength) +
-        "*".repeat(Math.max(0, localPart.length - visibleLength));
+      if (localPart.length <= 1) {
+        return email; // 1자 이하는 마스킹하지 않음
+      }
+
+      const maskedLocal = localPart.slice(0, -1) + "*";
 
       return `${maskedLocal}@${domain}`;
     };

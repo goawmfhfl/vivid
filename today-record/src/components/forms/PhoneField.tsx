@@ -120,10 +120,10 @@ export function PhoneField({
       >
         전화번호
       </label>
-      <div className="relative flex items-center gap-2">
-        <div className="relative flex-1">
+      <div className="relative flex items-center gap-1 sm:gap-2">
+        <div className="relative min-w-[75px] flex-[0_0_75px] sm:flex-[0_0_90px]">
           <Phone
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10"
+            className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 z-10"
             style={{ color: "#6B7A6F", opacity: 0.5 }}
           />
           <Input
@@ -133,17 +133,19 @@ export function PhoneField({
             onChange={handlePart1Change}
             onKeyDown={handlePart1KeyDown}
             placeholder="010"
-            className="pl-11 pr-2 text-center"
+            className="pl-9 sm:pl-11 pr-1 sm:pr-2 text-center text-sm sm:text-base w-full"
             disabled={disabled}
             maxLength={3}
             style={{
               borderColor: error ? "#EF4444" : "#EFE9E3",
               backgroundColor: "white",
-              flex: "0 0 90px",
             }}
           />
         </div>
-        <span style={{ color: "#6B7A6F", fontSize: "1.1rem", fontWeight: 500 }}>
+        <span
+          className="text-sm sm:text-lg flex-shrink-0 px-0.5"
+          style={{ color: "#6B7A6F", fontWeight: 500 }}
+        >
           -
         </span>
         <Input
@@ -153,16 +155,18 @@ export function PhoneField({
           onChange={handlePart2Change}
           onKeyDown={handlePart2KeyDown}
           placeholder="1234"
-          className="px-3 text-center"
+          className="px-1.5 sm:px-3 text-center text-sm sm:text-base min-w-[70px] flex-[0_0_70px] sm:flex-[0_0_110px]"
           disabled={disabled}
           maxLength={4}
           style={{
             borderColor: error ? "#EF4444" : "#EFE9E3",
             backgroundColor: "white",
-            flex: "0 0 110px",
           }}
         />
-        <span style={{ color: "#6B7A6F", fontSize: "1.1rem", fontWeight: 500 }}>
+        <span
+          className="text-sm sm:text-lg flex-shrink-0 px-0.5"
+          style={{ color: "#6B7A6F", fontWeight: 500 }}
+        >
           -
         </span>
         <Input
@@ -172,13 +176,12 @@ export function PhoneField({
           onChange={handlePart3Change}
           onKeyDown={handlePart3KeyDown}
           placeholder="5678"
-          className="px-3 text-center"
+          className="px-1.5 sm:px-3 text-center text-sm sm:text-base min-w-[70px] flex-[0_0_70px] sm:flex-[0_0_110px]"
           disabled={disabled}
           maxLength={4}
           style={{
             borderColor: error ? "#EF4444" : "#EFE9E3",
             backgroundColor: "white",
-            flex: "0 0 110px",
           }}
         />
       </div>

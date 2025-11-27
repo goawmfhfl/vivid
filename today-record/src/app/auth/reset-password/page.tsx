@@ -22,9 +22,37 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // URL에서 토큰 확인
+    // URL에서 토큰 확인 및 처리
     const checkSession = async () => {
       try {
+        // URL 해시에서 access_token 추출
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const type = hashParams.get("type");
+
+        // recovery 타입의 토큰이 있으면 세션 설정
+        if (type === "recovery" && accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (sessionError) {
+            console.error("세션 설정 에러:", sessionError);
+            setErrors({
+              general:
+                "세션을 설정할 수 없습니다. 비밀번호 재설정 링크가 만료되었거나 유효하지 않습니다.",
+            });
+            setLoading(false);
+            return;
+          }
+
+          // 세션 설정 후 해시 제거 (깔끔한 URL 유지)
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+
+        // 세션 확인
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {

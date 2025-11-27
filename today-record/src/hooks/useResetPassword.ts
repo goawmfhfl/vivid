@@ -14,6 +14,31 @@ class ResetPasswordError extends Error {
   }
 }
 
+// 환경에 따른 redirectTo URL 생성
+const getRedirectToUrl = (): string => {
+  // 환경 변수 확인
+  const nodeEnv = process.env.NEXT_PUBLIC_NODE_ENV;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  // test 환경이거나 baseUrl이 설정되어 있으면 해당 URL 사용
+  if (nodeEnv === "test" && baseUrl) {
+    return `${baseUrl}/auth/reset-password`;
+  }
+
+  // 프로덕션 환경이고 baseUrl이 설정되어 있으면 사용
+  if (nodeEnv === "production" && baseUrl) {
+    return `${baseUrl}/auth/reset-password`;
+  }
+
+  // 기본값: 현재 window.location.origin 사용
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/auth/reset-password`;
+  }
+
+  // 서버 사이드에서는 기본 URL 사용 (fallback)
+  return "https://todayrecord.vercel.app/auth/reset-password";
+};
+
 // 비밀번호 재설정 함수
 const resetPassword = async (data: ResetPasswordData): Promise<void> => {
   const { email } = data;
@@ -30,9 +55,12 @@ const resetPassword = async (data: ResetPasswordData): Promise<void> => {
   }
 
   try {
+    // 환경에 따른 redirectTo URL 사용
+    const redirectTo = getRedirectToUrl();
+    
     // Supabase Auth를 통한 비밀번호 재설정 이메일 전송
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo,
     });
 
     if (error) {
