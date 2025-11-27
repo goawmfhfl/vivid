@@ -126,5 +126,9 @@ export async function saveDailyReport(
 
   // 복호화하여 반환
   const savedRow = result[0] as DailyFeedbackRow;
-  return decryptDailyFeedback(savedRow) as DailyFeedbackRow;
+  // decryptDailyFeedback는 Record<string, unknown>을 받으므로 타입 캐스팅 필요
+  const decrypted = decryptDailyFeedback(
+    savedRow as unknown as { [key: string]: unknown }
+  );
+  return decrypted as unknown as DailyFeedbackRow;
 }
