@@ -1,7 +1,10 @@
 "use client";
 
 import { ProfileSettingsView } from "@/components/ProfileSettingsView";
+import { withAuth } from "@/components/auth";
 
-export default function SettingsPage() {
+function SettingsPage() {
   return <ProfileSettingsView />;
 }
+
+export default withAuth(SettingsPage);

@@ -3,6 +3,7 @@
 import { SummariesView } from "@/components/SummariesView";
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { withAuth } from "@/components/auth";
 
 function SummariesPageContent() {
   const router = useRouter();
@@ -24,7 +25,7 @@ function SummariesPageContent() {
   return <SummariesView />;
 }
 
-export default function SummariesPage() {
+function SummariesPage() {
   return (
     <Suspense
       fallback={
@@ -49,3 +50,5 @@ export default function SummariesPage() {
     </Suspense>
   );
 }
+
+export default withAuth(SummariesPage);

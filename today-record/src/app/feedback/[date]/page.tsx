@@ -2,8 +2,9 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { DailyFeedbackView } from "@/components/DailyFeedbackView";
+import { withAuth } from "@/components/auth";
 
-export default function DateFeedbackPage() {
+function DateFeedbackPage() {
   const params = useParams();
   const router = useRouter();
 
@@ -15,3 +16,5 @@ export default function DateFeedbackPage() {
 
   return <DailyFeedbackView date={dateStr} onBack={handleBack} />;
 }
+
+export default withAuth(DateFeedbackPage);
