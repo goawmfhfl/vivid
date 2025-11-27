@@ -87,8 +87,6 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      console.log("로그인 성공:", data.user);
-      // 로그인 성공 시 이전 사용자의 데이터 캐시만 클리어
       // 새로운 사용자의 데이터는 캐시에 유지되도록 함
       clearUserDataCache(queryClient);
       router.push("/");

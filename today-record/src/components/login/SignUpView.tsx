@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { useSignUp } from "@/hooks/useSignUp";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
@@ -12,6 +12,201 @@ import { ErrorMessage } from "../forms/ErrorMessage";
 import { SubmitButton } from "../forms/SubmitButton";
 import { TermsModal } from "../modals/TermsModal";
 import { AIDataModal } from "../modals/AIDataModal";
+import { Input } from "../ui/Input";
+
+type SectionCardProps = {
+  title: string;
+  description?: string;
+  children: ReactNode;
+};
+
+const SectionCard = ({ title, description, children }: SectionCardProps) => (
+  <section className="rounded-2xl border border-[#EFE9E3] bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+    <div className="mb-4">
+      <h3 className="text-base font-semibold text-[#333333]">{title}</h3>
+      {description && (
+        <p className="mt-1 text-sm text-[#6B7A6F]">{description}</p>
+      )}
+    </div>
+    <div className="space-y-5">{children}</div>
+  </section>
+);
+
+type BasicInfoSectionProps = {
+  formData: {
+    email: string;
+    password: string;
+  };
+  errors: {
+    email?: string;
+    password?: string;
+  };
+  updateFormData: (field: "email" | "password", value: string) => void;
+  clearError: (field: "email" | "password") => void;
+};
+
+const BasicInfoSection = ({
+  formData,
+  errors,
+  updateFormData,
+  clearError,
+}: BasicInfoSectionProps) => (
+  <SectionCard
+    title="로그인 정보"
+    description="서비스 이용을 위한 기본 로그인 정보를 입력해주세요."
+  >
+    <EmailField
+      value={formData.email}
+      onChange={(value) => {
+        updateFormData("email", value);
+        clearError("email");
+      }}
+      placeholder="example@gmail.com"
+      error={errors.email}
+    />
+
+    <PasswordField
+      value={formData.password}
+      onChange={(value) => {
+        updateFormData("password", value);
+        clearError("password");
+      }}
+      placeholder="영문+숫자 8자 이상 입력"
+      error={errors.password}
+    />
+  </SectionCard>
+);
+
+type ProfileSectionProps = {
+  formData: {
+    name: string;
+    phone: string;
+  };
+  errors: {
+    name?: string;
+    phone?: string;
+  };
+  updateField: (field: "name" | "phone", value: string) => void;
+  clearError: (field: "name" | "phone") => void;
+};
+
+const ProfileSection = ({
+  formData,
+  errors,
+  updateField,
+  clearError,
+}: ProfileSectionProps) => (
+  <SectionCard
+    title="기본 프로필"
+    description="계정 복구와 이메일 찾기에 활용돼요."
+  >
+    <div>
+      <NameField
+        value={formData.name}
+        onChange={(value) => {
+          updateField("name", value);
+          clearError("name");
+        }}
+        placeholder="이름을 입력하세요"
+        error={errors.name}
+      />
+      <p className="mt-1 text-xs text-[#6B7A6F]">이메일 찾기에 사용됩니다.</p>
+    </div>
+
+    <div>
+      <PhoneField
+        value={formData.phone}
+        onChange={(value) => {
+          updateField("phone", value);
+          clearError("phone");
+        }}
+        error={errors.phone}
+      />
+      <p className="mt-1 text-xs text-[#6B7A6F]">
+        빠른 연락과 계정 보호를 위해 필요해요.
+      </p>
+    </div>
+  </SectionCard>
+);
+
+type AdditionalInfoSectionProps = {
+  birthYear: string;
+  gender: string;
+  errors: { birthYear?: string; gender?: string };
+  onBirthYearChange: (value: string) => void;
+  onGenderChange: (value: string) => void;
+};
+
+const AdditionalInfoSection = ({
+  birthYear,
+  gender,
+  errors,
+  onBirthYearChange,
+  onGenderChange,
+}: AdditionalInfoSectionProps) => (
+  <SectionCard
+    title="맞춤형 피드백 정보"
+    description="더 정교한 피드백을 위해 선택 정보를 입력해주세요."
+  >
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <label
+          className="mb-2 block text-sm font-medium text-[#333333]"
+          htmlFor="birthYear"
+        >
+          출생년도
+        </label>
+        <Input
+          id="birthYear"
+          type="text"
+          inputMode="numeric"
+          value={birthYear}
+          onChange={(e) => {
+            const cleaned = e.target.value.replace(/[^0-9]/g, "").slice(0, 4);
+            onBirthYearChange(cleaned);
+          }}
+          placeholder="예) 1994"
+          className="w-full"
+          style={{
+            borderColor: errors.birthYear ? "#EF4444" : "#EFE9E3",
+            backgroundColor: "white",
+          }}
+        />
+        {errors.birthYear && (
+          <p className="mt-1 text-xs text-[#EF4444]">{errors.birthYear}</p>
+        )}
+      </div>
+
+      <div>
+        <label
+          className="mb-2 block text-sm font-medium text-[#333333]"
+          htmlFor="gender"
+        >
+          성별
+        </label>
+        <select
+          id="gender"
+          value={gender}
+          onChange={(e) => onGenderChange(e.target.value)}
+          className="w-full rounded-md border px-3 py-2 text-sm transition-colors"
+          style={{
+            borderColor: errors.gender ? "#EF4444" : "#EFE9E3",
+            backgroundColor: "white",
+            color: gender ? "#333333" : "#9CA3AF",
+          }}
+        >
+          <option value="">선택해주세요</option>
+          <option value="female">여성</option>
+          <option value="male">남성</option>
+          <option value="other">기타/선택 안함</option>
+        </select>
+        {errors.gender && (
+          <p className="mt-1 text-xs text-[#EF4444]">{errors.gender}</p>
+        )}
+      </div>
+    </div>
+  </SectionCard>
+);
 
 export function SignUpView({
   initialMessage,
@@ -28,6 +223,9 @@ export function SignUpView({
     phone: "",
     agreeTerms: false,
     agreeAI: false,
+    agreeMarketing: false,
+    birthYear: "",
+    gender: "",
   });
 
   // 에러 상태 (이미 객체 형태)
@@ -36,6 +234,8 @@ export function SignUpView({
     password?: string;
     name?: string;
     phone?: string;
+    birthYear?: string;
+    gender?: string;
     terms?: string;
   }>({});
 
@@ -58,6 +258,10 @@ export function SignUpView({
 
   const updateModals = (modal: keyof typeof modals, isOpen: boolean) => {
     setModals((prev) => ({ ...prev, [modal]: isOpen }));
+  };
+
+  const clearFieldError = (field: keyof typeof errors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   // Email validation
@@ -112,6 +316,27 @@ export function SignUpView({
       }
     }
 
+    // Validate birth year
+    if (!formData.birthYear) {
+      newErrors.birthYear = "출생년도를 입력해주세요.";
+    } else {
+      const birthYearNum = Number(formData.birthYear);
+      const currentYear = new Date().getFullYear();
+      if (
+        isNaN(birthYearNum) ||
+        formData.birthYear.length !== 4 ||
+        birthYearNum < 1900 ||
+        birthYearNum > currentYear
+      ) {
+        newErrors.birthYear = "올바른 출생년도(YYYY)를 입력해주세요.";
+      }
+    }
+
+    // Validate gender
+    if (!formData.gender) {
+      newErrors.gender = "성별을 선택해주세요.";
+    }
+
     // Validate terms
     if (!formData.agreeTerms || !formData.agreeAI) {
       newErrors.terms = "필수 약관에 동의해주세요.";
@@ -131,6 +356,9 @@ export function SignUpView({
       phone: formData.phone.trim(),
       agreeTerms: formData.agreeTerms,
       agreeAI: formData.agreeAI,
+      agreeMarketing: formData.agreeMarketing,
+      birthYear: formData.birthYear,
+      gender: formData.gender,
     });
   };
 
@@ -141,100 +369,95 @@ export function SignUpView({
       formData.name.trim() !== "" &&
       formData.phone &&
       formData.phone.trim() !== "" &&
+      formData.birthYear &&
+      formData.gender &&
       formData.agreeTerms &&
       formData.agreeAI
   );
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 py-8"
+      className="flex min-h-screen items-center justify-center px-4 py-8"
       style={{ backgroundColor: "#FAFAF8" }}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-2xl">
         <AuthHeader
           title="myRecord"
           subtitle="기록하면, 피드백이 따라옵니다."
         />
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-5"
+          className="mt-8 space-y-8"
           aria-busy={signUpMutation.isPending}
         >
-          <EmailField
-            value={formData.email}
-            onChange={(value) => updateFormData("email", value)}
-            placeholder="example@gmail.com"
-            error={errors.email}
-          />
-
-          <PasswordField
-            value={formData.password}
-            onChange={(value) => {
-              updateFormData("password", value);
-              setErrors((prev) => ({ ...prev, password: undefined }));
+          <BasicInfoSection
+            formData={{
+              email: formData.email,
+              password: formData.password,
             }}
-            placeholder="영문+숫자 8자 이상 입력"
-            error={errors.password}
+            errors={{ email: errors.email, password: errors.password }}
+            updateFormData={(field, value) => updateFormData(field, value)}
+            clearError={(field) => clearFieldError(field)}
           />
 
-          {/* 이름 필드 */}
-          <div>
-            <NameField
-              value={formData.name}
-              onChange={(value) => {
-                updateFormData("name", value);
-                setErrors((prev) => ({ ...prev, name: undefined }));
+          <ProfileSection
+            formData={{ name: formData.name, phone: formData.phone }}
+            errors={{ name: errors.name, phone: errors.phone }}
+            updateField={(field, value) => updateFormData(field, value)}
+            clearError={(field) => clearFieldError(field)}
+          />
+
+          <AdditionalInfoSection
+            birthYear={formData.birthYear}
+            gender={formData.gender}
+            errors={{ birthYear: errors.birthYear, gender: errors.gender }}
+            onBirthYearChange={(value) => {
+              updateFormData("birthYear", value);
+              clearFieldError("birthYear");
+            }}
+            onGenderChange={(value) => {
+              updateFormData("gender", value);
+              clearFieldError("gender");
+            }}
+          />
+
+          <SectionCard
+            title="약관 및 알림 설정"
+            description="필수 약관을 확인하고 선택 동의 여부를 설정할 수 있어요."
+          >
+            <TermsAgreement
+              agreeTerms={formData.agreeTerms}
+              agreeAI={formData.agreeAI}
+              agreeMarketing={formData.agreeMarketing}
+              onTermsChange={(checked) => {
+                updateFormData("agreeTerms", checked);
+                clearFieldError("terms");
               }}
-              placeholder="이름을 입력하세요"
-              error={errors.name}
-            />
-            <p
-              className="mt-1"
-              style={{ color: "#6B7A6F", fontSize: "0.8rem" }}
-            >
-              이메일 찾기에 사용됩니다
-            </p>
-          </div>
-
-          {/* 전화번호 필드 */}
-          <div>
-            <PhoneField
-              value={formData.phone}
-              onChange={(value) => {
-                updateFormData("phone", value);
-                setErrors((prev) => ({ ...prev, phone: undefined }));
+              onAIChange={(checked) => {
+                updateFormData("agreeAI", checked);
+                clearFieldError("terms");
               }}
-              error={errors.phone}
+              onMarketingChange={(checked) => {
+                updateFormData("agreeMarketing", checked);
+              }}
+              onAgreeAll={(nextState) => {
+                updateFormData("agreeTerms", nextState);
+                updateFormData("agreeAI", nextState);
+                updateFormData("agreeMarketing", nextState);
+                if (nextState) {
+                  clearFieldError("terms");
+                }
+              }}
+              onShowTerms={() => updateModals("showTerms", true)}
+              onShowAI={() => updateModals("showAI", true)}
+              error={errors.terms}
             />
-            <p
-              className="mt-1"
-              style={{ color: "#6B7A6F", fontSize: "0.8rem" }}
-            >
-              이메일 찾기에 사용됩니다
-            </p>
-          </div>
-
-          <TermsAgreement
-            agreeTerms={formData.agreeTerms}
-            agreeAI={formData.agreeAI}
-            onTermsChange={(checked) => {
-              updateFormData("agreeTerms", checked);
-              setErrors((prev) => ({ ...prev, terms: undefined }));
-            }}
-            onAIChange={(checked) => {
-              updateFormData("agreeAI", checked);
-              setErrors((prev) => ({ ...prev, terms: undefined }));
-            }}
-            onShowTerms={() => updateModals("showTerms", true)}
-            onShowAI={() => updateModals("showAI", true)}
-            error={errors.terms}
-          />
+          </SectionCard>
 
           {infoMessage && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-blue-800 text-sm">{infoMessage}</p>
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm text-[#1F2937] shadow-sm">
+              {infoMessage}
             </div>
           )}
 
@@ -242,22 +465,23 @@ export function SignUpView({
             <ErrorMessage message={signUpMutation.error.message} />
           )}
 
-          <SubmitButton
-            isLoading={signUpMutation.isPending}
-            isValid={isFormValid}
-            loadingText="가입 중..."
-            defaultText="가입하고 시작하기"
-          />
+          <div className="space-y-6 pt-2">
+            <SubmitButton
+              isLoading={signUpMutation.isPending}
+              isValid={isFormValid}
+              loadingText="가입 중..."
+              defaultText="가입하고 시작하기"
+            />
 
-          {/* Login Link */}
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              className="underline"
-              style={{ color: "#6B7A6F", fontSize: "0.9rem" }}
-            >
-              이미 계정이 있으신가요? 로그인하기
-            </button>
+            <div className="rounded-2xl border border-[#EFE9E3] bg-white/80 py-3 text-center text-sm text-[#6B7A6F]">
+              이미 계정이 있으신가요?{" "}
+              <button
+                type="button"
+                className="font-semibold text-[#6B7A6F] underline-offset-4 hover:underline"
+              >
+                로그인하기
+              </button>
+            </div>
           </div>
         </form>
       </div>

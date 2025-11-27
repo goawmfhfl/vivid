@@ -9,11 +9,16 @@ class KakaoLoginError extends Error {
   }
 }
 
+// 리디렉션 URL 계산
+
 // 카카오 로그인 함수
 const loginWithKakao = async (): Promise<void> => {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
+      options: {
+        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + "/auth/callback",
+      },
     });
 
     if (error) {
@@ -35,9 +40,7 @@ const loginWithKakao = async (): Promise<void> => {
 export const useKakaoLogin = () => {
   return useMutation({
     mutationFn: loginWithKakao,
-    onSuccess: () => {
-      console.log("카카오 로그인 성공");
-    },
+    onSuccess: () => {},
     onError: (error: KakaoLoginError) => {
       console.error("카카오 로그인 실패:", error.message);
     },

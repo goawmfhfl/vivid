@@ -5,6 +5,9 @@ import { supabase } from "@/lib/supabase";
 export interface UpdateProfileData {
   name?: string;
   phone?: string;
+  birthYear?: string;
+  gender?: string;
+  agreeMarketing?: boolean;
 }
 
 // 커스텀 에러 클래스
@@ -17,11 +20,16 @@ class UpdateProfileError extends Error {
 
 // 프로필 업데이트 함수
 const updateProfile = async (data: UpdateProfileData): Promise<void> => {
-  const { name, phone } = data;
+  const { name, phone, birthYear, gender, agreeMarketing } = data;
 
-  // 최소 하나는 입력되어야 함
-  if (!name && !phone) {
-    throw new UpdateProfileError("이름 또는 전화번호 중 하나는 입력해주세요.");
+  if (
+    !name &&
+    !phone &&
+    !birthYear &&
+    !gender &&
+    agreeMarketing === undefined
+  ) {
+    throw new UpdateProfileError("변경할 정보를 입력해주세요.");
   }
 
   try {
@@ -42,7 +50,10 @@ const updateProfile = async (data: UpdateProfileData): Promise<void> => {
     const newMetadata = {
       ...currentMetadata,
       ...(name && { name }),
-      ...(phone && { phone }), // user_metadata에 저장
+      ...(phone && { phone }),
+      ...(birthYear && { birthYear }),
+      ...(gender && { gender }),
+      ...(agreeMarketing !== undefined && { agreeMarketing }),
     };
 
     // 프로필 업데이트 - user_metadata에만 저장

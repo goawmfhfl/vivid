@@ -99,7 +99,7 @@ export function HomeHeader() {
                   className="w-4 h-4 mr-2"
                   style={{ color: "#6B7A6F" }}
                 />
-                설정
+                프로필 설정
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleLogout}

@@ -9,8 +9,11 @@ export interface SignUpData {
   password: string;
   name: string;
   phone: string;
+  birthYear: string;
+  gender: string;
   agreeTerms: boolean;
   agreeAI: boolean;
+  agreeMarketing: boolean;
 }
 
 // 회원가입 응답 타입 정의
@@ -29,7 +32,17 @@ class SignUpError extends Error {
 
 // 회원가입 함수
 const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
-  const { email, password, name, phone, agreeTerms, agreeAI } = data;
+  const {
+    email,
+    password,
+    name,
+    phone,
+    birthYear,
+    gender,
+    agreeTerms,
+    agreeAI,
+    agreeMarketing,
+  } = data;
 
   // 입력 데이터 검증
   if (!email || !password) {
@@ -42,6 +55,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
   if (!phone) {
     throw new SignUpError("전화번호를 입력해주세요.");
+  }
+
+  if (!birthYear) {
+    throw new SignUpError("출생년도를 입력해주세요.");
+  }
+
+  if (!gender) {
+    throw new SignUpError("성별을 선택해주세요.");
   }
 
   if (!agreeTerms || !agreeAI) {
@@ -57,8 +78,11 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         data: {
           agreeTerms,
           agreeAI,
+          agreeMarketing,
           name,
-          phone, // user_metadata에 저장
+          phone,
+          birthYear,
+          gender,
         },
       },
     });

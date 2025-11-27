@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
+import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";
@@ -30,7 +31,7 @@ export function LoginView() {
   // React Query mutation 사용
   const router = useRouter();
   const loginMutation = useLogin();
-  // const kakaoLoginMutation = useKakaoLogin(); // OAuth 로그인 보류 처리로 인해 주석 처리
+  const kakaoLoginMutation = useKakaoLogin();
 
   // localStorage에서 저장된 이메일 불러오기
   useEffect(() => {
@@ -215,8 +216,7 @@ export function LoginView() {
             defaultText="로그인"
           />
 
-          {/* OAuth 로그인 보류 처리 */}
-          {/* <div className="relative py-3">
+          <div className="relative py-3">
             <div className="absolute inset-0 flex items-center">
               <div
                 className="w-full border-t"
@@ -243,14 +243,13 @@ export function LoginView() {
               <button
                 type="button"
                 onClick={() => {
-                  console.log("Kakao OAuth login");
                   kakaoLoginMutation.mutate();
                 }}
                 className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:opacity-80"
                 style={{
                   backgroundColor: "#FEE500",
                 }}
-                title="카카오 로그인 (기존 회원만)"
+                title="카카오 로그인"
                 disabled={kakaoLoginMutation.isPending}
               >
                 <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
@@ -261,42 +260,7 @@ export function LoginView() {
                 </svg>
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                console.log("Google OAuth login");
-                setTimeout(() => {
-                  router.push("/");
-                }, 1000);
-              }}
-              className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:bg-gray-50"
-              style={{
-                backgroundColor: "#FFFFFF",
-                border: "1px solid #EFE9E3",
-              }}
-              title="Google 로그인"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M18.1711 8.36793H17.5V8.33334H10V11.6667H14.7096C14.0225 13.6071 12.1762 15 10 15C7.23875 15 5 12.7613 5 10C5 7.23876 7.23875 5.00001 10 5.00001C11.2746 5.00001 12.4342 5.48084 13.3171 6.26626L15.6742 3.90918C14.1858 2.52209 12.1933 1.66667 10 1.66667C5.39791 1.66667 1.66666 5.39793 1.66666 10C1.66666 14.6021 5.39791 18.3333 10 18.3333C14.6021 18.3333 18.3333 14.6021 18.3333 10C18.3333 9.44126 18.2758 8.89584 18.1711 8.36793Z"
-                  fill="#FFC107"
-                />
-                <path
-                  d="M2.6275 6.12126L5.36542 8.12917C6.10625 6.29501 7.90042 5.00001 10 5.00001C11.2746 5.00001 12.4342 5.48084 13.3171 6.26626L15.6742 3.90918C14.1858 2.52209 12.1933 1.66667 10 1.66667C6.79917 1.66667 4.02333 3.47376 2.6275 6.12126Z"
-                  fill="#FF3D00"
-                />
-                <path
-                  d="M10 18.3333C12.1525 18.3333 14.1083 17.5096 15.5871 16.17L13.0079 13.9875C12.1431 14.6452 11.0864 15.0009 10 15C7.83249 15 5.99207 13.6179 5.29874 11.6892L2.58124 13.7829C3.96041 16.4817 6.76124 18.3333 10 18.3333Z"
-                  fill="#4CAF50"
-                />
-                <path
-                  d="M18.1712 8.36792H17.5V8.33334H10V11.6667H14.7096C14.3809 12.5902 13.7889 13.3972 13.0067 13.9879L13.0079 13.9871L15.5871 16.1696C15.4046 16.3354 18.3333 14.1667 18.3333 10C18.3333 9.44126 18.2758 8.89584 18.1712 8.36792Z"
-                  fill="#1976D2"
-                />
-              </svg>
-            </button>
-          </div> */}
+          </div>
 
           {/* Sign Up Link */}
           <div className="text-center pt-4">
