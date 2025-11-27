@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { AlertCircle, CheckCircle2, Lock } from "lucide-react";
 import { AuthHeader } from "@/components/forms/AuthHeader";
@@ -10,7 +10,6 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{
@@ -26,7 +25,9 @@ export default function ResetPasswordPage() {
     const checkSession = async () => {
       try {
         // URL 해시에서 access_token 추출
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1)
+        );
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
         const type = hashParams.get("type");

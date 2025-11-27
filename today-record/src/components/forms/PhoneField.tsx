@@ -15,7 +15,7 @@ interface PhoneFieldProps {
 export function PhoneField({
   value,
   onChange,
-  placeholder = "010-1234-5678",
+  placeholder: _placeholder = "010-1234-5678",
   error,
   disabled = false,
 }: PhoneFieldProps) {

@@ -9,10 +9,23 @@ import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
  * 월간 피드백 테스트 패널
  * 개발 환경에서만 표시되며, Daily Feedback과 Monthly Feedback을 생성할 수 있습니다.
  */
+interface DailyFeedbackResult {
+  message: string;
+  data: unknown;
+}
+
+interface MonthlyFeedbackResult {
+  message: string;
+  data: unknown;
+}
+
 export function MonthlyFeedbackTestPanel() {
   const [month, setMonth] = useState<string>("2025-11");
-  const [dailyResult, setDailyResult] = useState<any>(null);
-  const [monthlyResult, setMonthlyResult] = useState<any>(null);
+  const [dailyResult, setDailyResult] = useState<DailyFeedbackResult | null>(
+    null
+  );
+  const [monthlyResult, setMonthlyResult] =
+    useState<MonthlyFeedbackResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Daily Feedback 생성 mutation

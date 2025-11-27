@@ -33,12 +33,6 @@ export async function GET(request: NextRequest) {
       "0"
     )}`;
 
-    // 지난 달 계산
-    const lastMonthDate = new Date(currentYear, currentMonthNum - 2, 1);
-    const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(
-      lastMonthDate.getMonth() + 1
-    ).padStart(2, "0")}`;
-
     // 최근 6개월 범위 계산 (더 넓은 범위로 후보를 반환하여 클라이언트에서 필터링 가능하도록)
     // 현재 달부터 6개월 전까지
     const monthsToCheck: string[] = [];

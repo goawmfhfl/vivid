@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MonthlyCandidatesSection } from "../summaries/MonthlyCandidatesSection";
-import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 
 /**
  * 월간 후보 섹션 테스트 패널

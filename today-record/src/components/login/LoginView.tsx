@@ -31,7 +31,7 @@ export function LoginView() {
   // React Query mutation 사용
   const router = useRouter();
   const loginMutation = useLogin();
-  const kakaoLoginMutation = useKakaoLogin();
+  // const kakaoLoginMutation = useKakaoLogin(); // OAuth 로그인 보류 처리로 인해 주석 처리
 
   // localStorage에서 저장된 이메일 불러오기
   useEffect(() => {

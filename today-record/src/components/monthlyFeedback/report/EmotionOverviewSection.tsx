@@ -12,14 +12,7 @@ import {
   Target,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReportData } from "./types";
 import {
@@ -125,9 +118,15 @@ export function EmotionOverviewSection({
     midAngle,
     innerRadius,
     outerRadius,
-    name,
     value,
-  }: any) => {
+  }: {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    value: number;
+  }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -314,8 +313,6 @@ export function EmotionOverviewSection({
             {/* 범례 */}
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
               {quadrantChartData.map((item, index) => {
-                const IconComponent =
-                  QUADRANT_ICONS[item.name as keyof typeof QUADRANT_ICONS];
                 return (
                   <div
                     key={index}

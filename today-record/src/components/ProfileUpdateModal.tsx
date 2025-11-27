@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import {
@@ -19,7 +18,6 @@ import { SubmitButton } from "./forms/SubmitButton";
 const PROFILE_MODAL_DISMISSED_KEY = "profile-update-modal-dismissed";
 
 export function ProfileUpdateModal() {
-  const router = useRouter();
   const { data: currentUser, isLoading } = useCurrentUser();
   const updateProfileMutation = useUpdateProfile();
 

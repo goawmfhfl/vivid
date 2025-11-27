@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { MonthlyReportSchema, SYSTEM_PROMPT_MONTHLY } from "./schema";
-import type { DailyFeedbackForMonthly, MonthlyFeedbackResponse } from "./types";
+import type { DailyFeedbackForMonthly } from "./types";
 import { buildMonthlyFeedbackPrompt } from "./prompts";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import {

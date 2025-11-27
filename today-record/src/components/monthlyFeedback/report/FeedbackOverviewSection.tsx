@@ -8,7 +8,6 @@ import {
   Users,
   Heart,
   Sparkles,
-  TrendingUp,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import { useCountUp } from "@/hooks/useCountUp";

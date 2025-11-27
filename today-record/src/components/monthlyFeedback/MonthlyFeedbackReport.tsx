@@ -14,7 +14,6 @@ import { VisionOverviewSection } from "./report/VisionOverviewSection";
 import { ConclusionSection } from "./report/ConclusionSection";
 import {
   SECTION_COLORS,
-  COMMON_COLORS,
   TYPOGRAPHY,
   SPACING,
   COLORS,
