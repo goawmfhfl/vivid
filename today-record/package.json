@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "diagnose:decryption": "tsx scripts/diagnose-decryption-issues.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

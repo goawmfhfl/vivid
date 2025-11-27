@@ -3,11 +3,26 @@ import { encrypt, decrypt, isEncrypted } from "./encryption";
 // 숫자 암호화를 위한 마커 (암호화된 숫자를 식별하기 위해)
 const NUMBER_MARKER = "__ENCRYPTED_NUMBER__:";
 
+// JSONB 값의 가능한 타입
+type JsonbValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonbValue[]
+  | { [key: string]: JsonbValue };
+
+// 복호화 실패 감지를 위한 헬퍼 함수
+function detectDecryptionFailure(original: string, decrypted: string): boolean {
+  // 암호화된 형식이었는데 복호화 후에도 동일하면 실패
+  return isEncrypted(original) && decrypted === original;
+}
+
 /**
  * JSONB 객체 내의 문자열과 숫자 필드를 재귀적으로 암호화
  * 불린, null은 그대로 유지
  */
-export function encryptJsonbFields(obj: any): any {
+export function encryptJsonbFields(obj: JsonbValue): JsonbValue {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -37,10 +52,10 @@ export function encryptJsonbFields(obj: any): any {
   }
 
   // 객체인 경우 각 속성에 대해 재귀 호출
-  if (typeof obj === "object") {
-    const encrypted: any = {};
+  if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
+    const encrypted: Record<string, JsonbValue> = {};
     for (const [key, value] of Object.entries(obj)) {
-      encrypted[key] = encryptJsonbFields(value);
+      encrypted[key] = encryptJsonbFields(value as JsonbValue);
     }
     return encrypted;
   }
@@ -52,7 +67,7 @@ export function encryptJsonbFields(obj: any): any {
 /**
  * JSONB 객체 내의 암호화된 문자열과 숫자 필드를 재귀적으로 복호화
  */
-export function decryptJsonbFields(obj: any): any {
+export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -60,7 +75,23 @@ export function decryptJsonbFields(obj: any): any {
   // 문자열인 경우 복호화 시도
   if (typeof obj === "string") {
     try {
+      // 암호화된 형식인지 먼저 확인
+      const wasEncrypted = isEncrypted(obj);
       const decrypted = decrypt(obj);
+
+      // 복호화 실패 감지: 암호화된 형식이었는데 복호화 후에도 동일하면 실패
+      if (detectDecryptionFailure(obj, decrypted)) {
+        console.error(
+          "❌ JSONB 필드 복호화 실패: 암호화된 데이터를 복호화할 수 없습니다.",
+          {
+            dataLength: obj.length,
+            dataPreview: obj.substring(0, 50) + "...",
+            hint: "ENCRYPTION_KEY가 변경되었거나 데이터가 손상되었을 수 있습니다.",
+          }
+        );
+        // 복호화 실패 시 원본 반환 (에러를 throw하지 않음 - 부분 복호화 허용)
+        return obj;
+      }
 
       // decrypt는 항상 문자열을 반환하므로, 숫자 마커 확인
       if (
@@ -81,8 +112,9 @@ export function decryptJsonbFields(obj: any): any {
       }
 
       return decrypted;
-    } catch (error) {
+    } catch (err) {
       // 복호화 실패 시 원본 반환 (기존 평문 데이터일 수 있음)
+      console.error("❌ JSONB 필드 복호화 중 예외 발생:", err);
       return obj;
     }
   }
@@ -93,10 +125,10 @@ export function decryptJsonbFields(obj: any): any {
   }
 
   // 객체인 경우 각 속성에 대해 재귀 호출
-  if (typeof obj === "object") {
-    const decrypted: any = {};
+  if (typeof obj === "object" && obj !== null && !Array.isArray(obj)) {
+    const decrypted: Record<string, JsonbValue> = {};
     for (const [key, value] of Object.entries(obj)) {
-      decrypted[key] = decryptJsonbFields(value);
+      decrypted[key] = decryptJsonbFields(value as JsonbValue);
     }
     return decrypted;
   }
@@ -108,96 +140,96 @@ export function decryptJsonbFields(obj: any): any {
 /**
  * WeeklyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptWeeklyFeedback(feedback: any): any {
+export function encryptWeeklyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
-    weekly_overview: encryptJsonbFields(feedback.weekly_overview),
+    weekly_overview: encryptJsonbFields(feedback.weekly_overview as JsonbValue),
     emotion_overview: feedback.emotion_overview
-      ? encryptJsonbFields(feedback.emotion_overview)
+      ? encryptJsonbFields(feedback.emotion_overview as JsonbValue)
       : null,
-    growth_trends: encryptJsonbFields(feedback.growth_trends),
-    insight_replay: encryptJsonbFields(feedback.insight_replay),
+    growth_trends: encryptJsonbFields(feedback.growth_trends as JsonbValue),
+    insight_replay: encryptJsonbFields(feedback.insight_replay as JsonbValue),
     vision_visualization_report: encryptJsonbFields(
-      feedback.vision_visualization_report
+      feedback.vision_visualization_report as JsonbValue
     ),
-    execution_reflection: encryptJsonbFields(feedback.execution_reflection),
-    closing_section: encryptJsonbFields(feedback.closing_section),
+    execution_reflection: encryptJsonbFields(feedback.execution_reflection as JsonbValue),
+    closing_section: encryptJsonbFields(feedback.closing_section as JsonbValue),
   };
 }
 
 /**
  * WeeklyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptWeeklyFeedback(feedback: any): any {
+export function decryptWeeklyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
-    weekly_overview: decryptJsonbFields(feedback.weekly_overview),
+    weekly_overview: decryptJsonbFields(feedback.weekly_overview as JsonbValue),
     emotion_overview: feedback.emotion_overview
-      ? decryptJsonbFields(feedback.emotion_overview)
+      ? decryptJsonbFields(feedback.emotion_overview as JsonbValue)
       : null,
-    growth_trends: decryptJsonbFields(feedback.growth_trends),
-    insight_replay: decryptJsonbFields(feedback.insight_replay),
+    growth_trends: decryptJsonbFields(feedback.growth_trends as JsonbValue),
+    insight_replay: decryptJsonbFields(feedback.insight_replay as JsonbValue),
     vision_visualization_report: decryptJsonbFields(
-      feedback.vision_visualization_report
+      feedback.vision_visualization_report as JsonbValue
     ),
-    execution_reflection: decryptJsonbFields(feedback.execution_reflection),
-    closing_section: decryptJsonbFields(feedback.closing_section),
+    execution_reflection: decryptJsonbFields(feedback.execution_reflection as JsonbValue),
+    closing_section: decryptJsonbFields(feedback.closing_section as JsonbValue),
   };
 }
 
 /**
  * MonthlyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptMonthlyFeedback(feedback: any): any {
+export function encryptMonthlyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: encryptJsonbFields(feedback.summary_overview),
-    emotion_overview: encryptJsonbFields(feedback.emotion_overview),
-    insight_overview: encryptJsonbFields(feedback.insight_overview),
-    feedback_overview: encryptJsonbFields(feedback.feedback_overview),
-    vision_overview: encryptJsonbFields(feedback.vision_overview),
-    conclusion_overview: encryptJsonbFields(feedback.conclusion_overview),
+    summary_overview: encryptJsonbFields(feedback.summary_overview as JsonbValue),
+    emotion_overview: encryptJsonbFields(feedback.emotion_overview as JsonbValue),
+    insight_overview: encryptJsonbFields(feedback.insight_overview as JsonbValue),
+    feedback_overview: encryptJsonbFields(feedback.feedback_overview as JsonbValue),
+    vision_overview: encryptJsonbFields(feedback.vision_overview as JsonbValue),
+    conclusion_overview: encryptJsonbFields(feedback.conclusion_overview as JsonbValue),
   };
 }
 
 /**
  * MonthlyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptMonthlyFeedback(feedback: any): any {
+export function decryptMonthlyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: decryptJsonbFields(feedback.summary_overview),
-    emotion_overview: decryptJsonbFields(feedback.emotion_overview),
-    insight_overview: decryptJsonbFields(feedback.insight_overview),
-    feedback_overview: decryptJsonbFields(feedback.feedback_overview),
-    vision_overview: decryptJsonbFields(feedback.vision_overview),
-    conclusion_overview: decryptJsonbFields(feedback.conclusion_overview),
+    summary_overview: decryptJsonbFields(feedback.summary_overview as JsonbValue),
+    emotion_overview: decryptJsonbFields(feedback.emotion_overview as JsonbValue),
+    insight_overview: decryptJsonbFields(feedback.insight_overview as JsonbValue),
+    feedback_overview: decryptJsonbFields(feedback.feedback_overview as JsonbValue),
+    vision_overview: decryptJsonbFields(feedback.vision_overview as JsonbValue),
+    conclusion_overview: decryptJsonbFields(feedback.conclusion_overview as JsonbValue),
   };
 }
 
 /**
  * DailyFeedback 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptDailyFeedback(feedback: any): any {
+export function encryptDailyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
     emotion_overview: feedback.emotion_overview
-      ? encryptJsonbFields(feedback.emotion_overview)
+      ? encryptJsonbFields(feedback.emotion_overview as JsonbValue)
       : null,
     narrative_overview: feedback.narrative_overview
-      ? encryptJsonbFields(feedback.narrative_overview)
+      ? encryptJsonbFields(feedback.narrative_overview as JsonbValue)
       : null,
     insight_overview: feedback.insight_overview
-      ? encryptJsonbFields(feedback.insight_overview)
+      ? encryptJsonbFields(feedback.insight_overview as JsonbValue)
       : null,
     vision_overview: feedback.vision_overview
-      ? encryptJsonbFields(feedback.vision_overview)
+      ? encryptJsonbFields(feedback.vision_overview as JsonbValue)
       : null,
     feedback_overview: feedback.feedback_overview
-      ? encryptJsonbFields(feedback.feedback_overview)
+      ? encryptJsonbFields(feedback.feedback_overview as JsonbValue)
       : null,
     meta_overview: feedback.meta_overview
-      ? encryptJsonbFields(feedback.meta_overview)
+      ? encryptJsonbFields(feedback.meta_overview as JsonbValue)
       : null,
   };
 }
@@ -205,26 +237,26 @@ export function encryptDailyFeedback(feedback: any): any {
 /**
  * DailyFeedback 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptDailyFeedback(feedback: any): any {
+export function decryptDailyFeedback(feedback: Record<string, unknown>): Record<string, unknown> {
   return {
     ...feedback,
     emotion_overview: feedback.emotion_overview
-      ? decryptJsonbFields(feedback.emotion_overview)
+      ? decryptJsonbFields(feedback.emotion_overview as JsonbValue)
       : null,
     narrative_overview: feedback.narrative_overview
-      ? decryptJsonbFields(feedback.narrative_overview)
+      ? decryptJsonbFields(feedback.narrative_overview as JsonbValue)
       : null,
     insight_overview: feedback.insight_overview
-      ? decryptJsonbFields(feedback.insight_overview)
+      ? decryptJsonbFields(feedback.insight_overview as JsonbValue)
       : null,
     vision_overview: feedback.vision_overview
-      ? decryptJsonbFields(feedback.vision_overview)
+      ? decryptJsonbFields(feedback.vision_overview as JsonbValue)
       : null,
     feedback_overview: feedback.feedback_overview
-      ? decryptJsonbFields(feedback.feedback_overview)
+      ? decryptJsonbFields(feedback.feedback_overview as JsonbValue)
       : null,
     meta_overview: feedback.meta_overview
-      ? decryptJsonbFields(feedback.meta_overview)
+      ? decryptJsonbFields(feedback.meta_overview as JsonbValue)
       : null,
   };
 }
