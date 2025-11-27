@@ -10,12 +10,16 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { COLORS, TYPOGRAPHY, SHADOWS, TRANSITIONS } from "@/lib/design-system";
+import { queryClient } from "@/app/providers";
+import { clearAllCache } from "@/lib/cache-utils";
 
 export function HomeHeader() {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
+      // 로그아웃 전에 모든 캐시 클리어
+      clearAllCache(queryClient);
       await supabase.auth.signOut();
       router.push("/login");
     } catch (error) {

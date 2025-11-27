@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { queryClient } from "@/app/providers";
+import { clearUserDataCache } from "@/lib/cache-utils";
 
 // 로그인 데이터 타입 정의
 export interface LoginData {
@@ -86,6 +88,9 @@ export const useLogin = () => {
     mutationFn: loginUser,
     onSuccess: (data) => {
       console.log("로그인 성공:", data.user);
+      // 로그인 성공 시 이전 사용자의 데이터 캐시만 클리어
+      // 새로운 사용자의 데이터는 캐시에 유지되도록 함
+      clearUserDataCache(queryClient);
       router.push("/");
     },
     onError: (error: LoginError) => {

@@ -1,10 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { Entry, DailyFeedback, PeriodSummary } from "@/types/Entry";
+import { supabase } from "@/lib/supabase";
+import { clearAllCache, clearUserDataCache } from "@/lib/cache-utils";
 
 interface JournalContextType {
   entries: Entry[];
@@ -27,7 +29,7 @@ interface JournalContextType {
 const JournalContext = createContext<JournalContextType | undefined>(undefined);
 
 // React Query 클라이언트 생성
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5분
@@ -51,6 +53,28 @@ export function JournalProvider({ children }: { children: ReactNode }) {
   const [periodSummary, setPeriodSummary] = useState<PeriodSummary | null>(
     null
   );
+
+  // Supabase 인증 상태 변경 감지 및 캐시 관리
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        // 로그아웃 시 모든 캐시 클리어
+        clearAllCache(queryClient);
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // 로그인 또는 토큰 갱신 시 이전 사용자 데이터만 클리어
+        // 새로운 사용자의 데이터는 캐시에 유지
+        if (session?.user) {
+          clearUserDataCache(queryClient);
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const addEntry = (content: string) => {
     const newEntry: Entry = {
