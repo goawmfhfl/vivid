@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { TYPOGRAPHY } from "@/lib/design-system";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 
 /**
  * 월간 피드백 테스트 패널
@@ -11,12 +12,28 @@ import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
  */
 interface DailyFeedbackResult {
   message: string;
-  data: unknown;
+  month: string;
+  dateRange: {
+    start_date: string;
+    end_date: string;
+  };
+  totalDays: number;
+  successCount: number;
+  errorCount: number;
+  results: Array<{
+    date: string;
+    id: string;
+    success: boolean;
+  }>;
+  errors?: Array<{
+    date: string;
+    error: string;
+  }>;
 }
 
 interface MonthlyFeedbackResult {
   message: string;
-  data: unknown;
+  data: MonthlyFeedback & { id: string };
 }
 
 export function MonthlyFeedbackTestPanel() {

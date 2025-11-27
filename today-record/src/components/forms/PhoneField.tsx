@@ -15,10 +15,12 @@ interface PhoneFieldProps {
 export function PhoneField({
   value,
   onChange,
-  placeholder: _placeholder = "010-1234-5678",
+  placeholder, // 현재 사용되지 않음 (각 입력 필드에 하드코딩된 placeholder 사용)
   error,
   disabled = false,
 }: PhoneFieldProps) {
+  // placeholder는 현재 사용되지 않지만, 인터페이스 호환성을 위해 유지
+  void placeholder;
   const [part1, setPart1] = useState("");
   const [part2, setPart2] = useState("");
   const [part3, setPart3] = useState("");

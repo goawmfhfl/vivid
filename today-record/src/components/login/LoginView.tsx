@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
-import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";

@@ -67,7 +67,28 @@ const resetPassword = async (data: ResetPasswordData): Promise<void> => {
       // Supabase 에러 메시지를 한국어로 변환
       let errorMessage = error.message;
 
-      if (error.message.includes("rate_limit_exceeded")) {
+      if (
+        error.code === "over_email_send_rate_limit" ||
+        error.message.includes("over_email_send_rate_limit")
+      ) {
+        // 메시지에서 시간 정보 추출 (예: "after 2 seconds" 또는 "after 60 seconds")
+        const timeMatch = error.message.match(/(\d+)\s*(second|minute|hour)/i);
+        if (timeMatch) {
+          const timeValue = parseInt(timeMatch[1], 10);
+          const timeUnit = timeMatch[2].toLowerCase();
+          
+          let timeUnitKorean = "초";
+          if (timeUnit === "minute" || timeUnit === "minutes") {
+            timeUnitKorean = "분";
+          } else if (timeUnit === "hour" || timeUnit === "hours") {
+            timeUnitKorean = "시간";
+          }
+          
+          errorMessage = `${timeValue}${timeUnitKorean} 후에 다시 시도해주세요.`;
+        } else {
+          errorMessage = "잠시 후에 다시 시도해주세요.";
+        }
+      } else if (error.message.includes("rate_limit_exceeded")) {
         errorMessage =
           "이메일 전송이 너무 빈번합니다. 잠시 후 다시 시도해주세요.";
       } else if (error.message.includes("email_not_confirmed")) {
@@ -78,7 +99,7 @@ const resetPassword = async (data: ResetPasswordData): Promise<void> => {
         return;
       }
 
-      throw new ResetPasswordError(errorMessage, error.message);
+      throw new ResetPasswordError(errorMessage, error.code || error.message);
     }
   } catch (error) {
     if (error instanceof ResetPasswordError) {

@@ -6,6 +6,7 @@ export type RouteRule =
 const bottomNavHiddenRules: RouteRule[] = [
   { type: "exact", value: "/login" },
   { type: "exact", value: "/signup" },
+  { type: "exact", value: "/auth/reset-password" },
 ];
 
 export function shouldShowBottomNav(pathname: string): boolean {

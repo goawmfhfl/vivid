@@ -42,19 +42,13 @@ const updateProfile = async (data: UpdateProfileData): Promise<void> => {
     const newMetadata = {
       ...currentMetadata,
       ...(name && { name }),
-      ...(phone && { phone }), // user_metadata에도 저장 (하위 호환성)
+      ...(phone && { phone }), // user_metadata에 저장
     };
 
-    // 프로필 업데이트 - phone 필드에 직접 저장
-    const updateData: {
-      phone?: string;
-      data?: Record<string, unknown>;
-    } = {
-      ...(phone && { phone }), // 최상위 phone 필드에 저장
-      data: newMetadata, // user_metadata에도 저장
-    };
-
-    const { error: updateError } = await supabase.auth.updateUser(updateData);
+    // 프로필 업데이트 - user_metadata에만 저장
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: newMetadata,
+    });
 
     if (updateError) {
       let errorMessage = updateError.message;

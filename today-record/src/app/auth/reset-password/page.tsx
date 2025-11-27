@@ -19,6 +19,7 @@ export default function ResetPasswordPage() {
   }>({});
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // URL에서 토큰 확인 및 처리
@@ -94,6 +95,12 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 이미 제출 중이면 중복 요청 방지
+    if (isSubmitting) {
+      return;
+    }
+
     setErrors({});
     setSuccess(false);
 
@@ -119,6 +126,8 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: password,
@@ -134,6 +143,7 @@ export default function ResetPasswordPage() {
         }
 
         setErrors({ general: errorMessage });
+        setIsSubmitting(false);
         return;
       }
 
@@ -149,6 +159,7 @@ export default function ResetPasswordPage() {
         general:
           "비밀번호 재설정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -287,8 +298,8 @@ export default function ResetPasswordPage() {
             </div>
 
             <SubmitButton
-              isLoading={false}
-              isValid={Boolean(password && confirmPassword)}
+              isLoading={isSubmitting}
+              isValid={Boolean(password && confirmPassword) && !isSubmitting}
               loadingText="재설정 중..."
               defaultText="비밀번호 재설정"
             />

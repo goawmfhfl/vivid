@@ -53,13 +53,12 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      phone, // phone 필드에 직접 저장
       options: {
         data: {
           agreeTerms,
           agreeAI,
           name,
-          phone, // user_metadata에도 저장 (하위 호환성)
+          phone, // user_metadata에 저장
         },
       },
     });
@@ -88,24 +87,6 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
     if (!authData.user) {
       throw new SignUpError("회원가입에 실패했습니다.");
-    }
-
-    // 회원가입 후 phone 필드가 제대로 설정되지 않은 경우 updateUser로 설정
-    // (signUp에서 phone이 제대로 설정되지 않을 수 있으므로)
-    if (phone && !authData.user.phone) {
-      const { error: updateError } = await supabase.auth.updateUser({
-        phone,
-        data: {
-          ...authData.user.user_metadata,
-          name,
-          phone,
-        },
-      });
-
-      if (updateError) {
-        console.warn("전화번호 설정 중 경고:", updateError.message);
-        // 전화번호 설정 실패는 치명적이지 않으므로 계속 진행
-      }
     }
 
     return authData;

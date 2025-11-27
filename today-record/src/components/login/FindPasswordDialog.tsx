@@ -12,6 +12,7 @@ import {
 import { EmailField } from "../forms/EmailField";
 import { SubmitButton } from "../forms/SubmitButton";
 import { useResetPassword } from "@/hooks/useResetPassword";
+import { COLORS } from "@/lib/design-system";
 
 interface FindPasswordDialogProps {
   open: boolean;
@@ -73,53 +74,67 @@ export function FindPasswordDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle style={{ color: "#333333" }}>비밀번호 찾기</DialogTitle>
-          <DialogDescription style={{ color: "#6B7A6F" }}>
-            가입하신 이메일 주소를 입력해주세요. 비밀번호 재설정 링크를
-            보내드립니다.
-          </DialogDescription>
-        </DialogHeader>
+        {!success && (
+          <DialogHeader className="space-y-2 pb-2">
+            <DialogTitle
+              className="text-xl"
+              style={{ color: COLORS.text.primary }}
+            >
+              비밀번호 찾기
+            </DialogTitle>
+            <DialogDescription
+              className="text-sm leading-relaxed"
+              style={{ color: COLORS.text.tertiary }}
+            >
+              가입하신 이메일 주소를 입력해주세요.
+              <br />
+              비밀번호 재설정 링크를 보내드립니다.
+            </DialogDescription>
+          </DialogHeader>
+        )}
 
         {success ? (
-          <div className="space-y-4 py-4">
-            <div
-              className="p-4 rounded-lg flex items-start gap-3"
-              style={{
-                backgroundColor: "#D1FAE5",
-                border: "1px solid #10B981",
-              }}
-            >
-              <CheckCircle2
-                className="w-5 h-5 flex-shrink-0 mt-0.5"
-                style={{ color: "#10B981" }}
-              />
-              <div className="flex-1">
-                <p
-                  style={{
-                    color: "#065F46",
-                    fontSize: "0.9rem",
-                    fontWeight: 500,
-                  }}
-                  className="mb-1"
-                >
-                  이메일을 확인해주세요
-                </p>
-                <p style={{ color: "#047857", fontSize: "0.85rem" }}>
-                  입력하신 이메일 주소로 비밀번호 재설정 링크를 보내드렸습니다.
-                  <br />
-                  이메일을 확인하여 비밀번호를 재설정해주세요.
-                </p>
+          <div className="space-y-8 py-6">
+            {/* 성공 아이콘 */}
+            <div className="flex flex-col items-center">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+                style={{ backgroundColor: "#F0FDF4" }}
+              >
+                <CheckCircle2
+                  className="w-10 h-10"
+                  style={{ color: COLORS.status.success }}
+                />
               </div>
+              <h3
+                className="text-xl font-semibold mb-3"
+                style={{ color: COLORS.text.primary }}
+              >
+                이메일을 확인해주세요
+              </h3>
+              <p
+                className="text-base text-center leading-relaxed max-w-sm mx-auto"
+                style={{ color: COLORS.text.tertiary }}
+              >
+                입력하신 이메일 주소로
+                <br />
+                비밀번호 재설정 링크를 보내드렸습니다.
+                <br />
+                <span className="mt-2 block">
+                  이메일을 확인하여 비밀번호를 재설정해주세요.
+                </span>
+              </p>
             </div>
-            <div className="flex justify-end">
+
+            {/* 확인 버튼 */}
+            <div className="flex justify-center pt-4">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 rounded-lg transition-colors"
+                className="px-8 py-3 rounded-lg font-medium text-base"
                 style={{
-                  backgroundColor: "#6B7A6F",
-                  color: "white",
+                  backgroundColor: COLORS.brand.primary,
+                  color: COLORS.text.white,
                 }}
               >
                 확인
@@ -127,47 +142,52 @@ export function FindPasswordDialog({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
             {/* General Error */}
             {errors.general && (
               <div
-                className="p-4 rounded-lg flex items-center gap-2"
+                className="p-4 rounded-lg flex items-start gap-3"
                 style={{
                   backgroundColor: "#FEE2E2",
                   border: "1px solid #EF4444",
                 }}
               >
                 <AlertCircle
-                  className="w-5 h-5 flex-shrink-0"
+                  className="w-5 h-5 flex-shrink-0 mt-0.5"
                   style={{ color: "#EF4444" }}
                 />
-                <p style={{ color: "#991B1B", fontSize: "0.9rem" }}>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "#991B1B" }}
+                >
                   {errors.general}
                 </p>
               </div>
             )}
 
-            <EmailField
-              value={email}
-              onChange={(value) => {
-                setEmail(value);
-                setErrors((prev) => ({
-                  ...prev,
-                  email: undefined,
-                  general: undefined,
-                }));
-              }}
-              placeholder="example@gmail.com"
-              error={errors.email}
-              disabled={resetPasswordMutation.isPending}
-            />
+            <div className="space-y-5">
+              <EmailField
+                value={email}
+                onChange={(value) => {
+                  setEmail(value);
+                  setErrors((prev) => ({
+                    ...prev,
+                    email: undefined,
+                    general: undefined,
+                  }));
+                }}
+                placeholder="example@gmail.com"
+                error={errors.email}
+                disabled={resetPasswordMutation.isPending}
+              />
 
-            <SubmitButton
-              isLoading={resetPasswordMutation.isPending}
-              isValid={Boolean(email)}
-              loadingText="전송 중..."
-              defaultText="비밀번호 재설정 링크 보내기"
-            />
+              <SubmitButton
+                isLoading={resetPasswordMutation.isPending}
+                isValid={Boolean(email)}
+                loadingText="전송 중..."
+                defaultText="비밀번호 재설정 링크 보내기"
+              />
+            </div>
           </form>
         )}
       </DialogContent>
