@@ -22,6 +22,7 @@ export type WeeklyReportData = {
 
   // Weekly Overview
   weekly_overview: {
+    title: string;
     narrative: string;
     top_keywords: string[];
     repeated_themes: Array<{ theme: string; count: number }>;

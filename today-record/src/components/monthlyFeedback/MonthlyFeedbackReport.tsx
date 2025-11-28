@@ -40,11 +40,11 @@ export function MonthlyFeedbackReport({
 
   return (
     <div
-      className="min-h-screen pb-24"
+      className="min-h-screen pb-24 overflow-x-hidden"
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div
-        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
+        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding} w-full max-w-full`}
       >
         <Button
           variant="ghost"

@@ -6,6 +6,7 @@ type ReportHeaderProps = {
   integrity: WeeklyReportData["integrity"];
   nextWeekFocus: string;
   narrative: string;
+  title: string;
 };
 
 export function ReportHeader({
@@ -13,6 +14,7 @@ export function ReportHeader({
   integrity,
   nextWeekFocus,
   narrative,
+  title,
 }: ReportHeaderProps) {
   return (
     <div className="mb-8 sm:mb-10">
@@ -35,6 +37,22 @@ export function ReportHeader({
           <h1 className="text-2xl sm:text-3xl mb-2 font-semibold">
             {weekRange.start} – {weekRange.end}
           </h1>
+          {/* Weekly Title */}
+          {title && title.trim() && (
+            <div className="mt-4 mb-2">
+              <div
+                className="inline-block px-4 py-2 rounded-xl"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.25)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                <p className="text-base sm:text-lg font-semibold leading-relaxed">
+                  {title}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <div

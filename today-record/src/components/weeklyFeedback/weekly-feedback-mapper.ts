@@ -81,7 +81,8 @@ export function mapWeeklyFeedbackToReportData(
     weekly_one_liner: feedback.closing_section.weekly_one_liner,
     next_week_focus: feedback.weekly_overview.next_week_focus,
     weekly_overview: {
-      narrative: feedback.weekly_overview.narrative,
+      title: feedback.weekly_overview.title || "",
+      narrative: feedback.weekly_overview.narrative || "",
       top_keywords: feedback.weekly_overview.top_keywords,
       repeated_themes: feedback.insight_replay.repeated_themes,
       ai_overall_comment: feedback.weekly_overview.ai_overall_comment,

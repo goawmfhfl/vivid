@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import {
   useGetDailyFeedback,
@@ -29,6 +30,8 @@ export function DailyFeedbackView({
   id,
   onBack,
 }: DailyFeedbackViewProps) {
+  const router = useRouter();
+
   // id 유효성 검사: undefined, "undefined", 빈 문자열 등 제외
   const isValidId =
     id &&
@@ -199,7 +202,7 @@ export function DailyFeedbackView({
         </ScrollAnimation>
         <div className="flex justify-center pt-4">
           <Button
-            onClick={onBack}
+            onClick={() => router.push("/")}
             className="rounded-full px-8 py-6"
             style={{
               backgroundColor: "#6B7A6F",

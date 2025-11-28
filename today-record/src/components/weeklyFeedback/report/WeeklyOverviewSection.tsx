@@ -78,6 +78,16 @@ export function WeeklyOverviewSection({
         </h2>
       </div>
 
+      {/* Title */}
+      <div className="mb-4 sm:mb-5">
+        <h3
+          className="text-lg sm:text-xl font-semibold leading-relaxed"
+          style={{ color: "#333333" }}
+        >
+          {weeklyOverview.title || ""}
+        </h3>
+      </div>
+
       {/* Top Keywords */}
       {weeklyOverview.top_keywords &&
         weeklyOverview.top_keywords.length > 0 && (

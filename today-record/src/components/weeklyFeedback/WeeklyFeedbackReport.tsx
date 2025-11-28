@@ -56,6 +56,7 @@ export function WeeklyFeedbackReport({
               integrity={data.integrity}
               nextWeekFocus={data.next_week_focus}
               narrative={data.weekly_overview.narrative}
+              title={data.weekly_overview.title}
             />
           </div>
         </ScrollAnimation>
