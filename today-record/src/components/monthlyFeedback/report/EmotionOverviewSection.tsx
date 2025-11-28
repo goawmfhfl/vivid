@@ -123,6 +123,9 @@ export function EmotionOverviewSection({
     };
   });
 
+  // 차트 데이터
+  const chartData = quadrantChartData;
+
   // 차트 커스텀 라벨
   const renderCustomLabel = (props: {
     cx?: number;
@@ -141,13 +144,13 @@ export function EmotionOverviewSection({
       value = 0,
     } = props;
 
+    // 값이 너무 작으면 라벨 표시 안 함
+    if (value < 5) return null;
+
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    // 값이 너무 작으면 라벨 표시 안 함
-    if (value < 5) return null;
 
     return (
       <text
@@ -270,7 +273,7 @@ export function EmotionOverviewSection({
             <ResponsiveContainer width="100%" height={320}>
               <PieChart>
                 <defs>
-                  {quadrantChartData.map((entry, index) => {
+                  {chartData.map((entry, index) => {
                     // 각 색상에 대한 더 어두운 버전 생성
                     const darkerColor = entry.color;
                     const lighterColor = entry.color;
@@ -298,7 +301,7 @@ export function EmotionOverviewSection({
                   })}
                 </defs>
                 <Pie
-                  data={quadrantChartData}
+                  data={chartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -311,7 +314,7 @@ export function EmotionOverviewSection({
                   strokeWidth={3}
                   paddingAngle={2}
                 >
-                  {quadrantChartData.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={`url(#gradient-${index})`}
@@ -456,12 +459,15 @@ export function EmotionOverviewSection({
       )}
 
       {/* 트리거들 */}
-      <div className="mb-6">
+      <div className="mb-6 space-y-6">
         {/* 긍정 트리거 */}
         {emotion_overview.positive_triggers &&
           emotion_overview.positive_triggers.length > 0 && (
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-5">
+            <Card
+              className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+              style={CARD_STYLES.withColor("#7C9A7C")}
+            >
+              <div className="flex items-center gap-3 mb-6">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{
@@ -482,42 +488,52 @@ export function EmotionOverviewSection({
                   긍정 감정 트리거
                 </p>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {emotion_overview.positive_triggers.map((trigger, index) => (
                   <div
                     key={index}
-                    className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
+                    className="relative flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`,
-                      borderLeft: "3px solid transparent",
+                      backgroundColor: "#FAFAF8",
+                      border: `1.5px solid rgba(124, 154, 124, 0.15)`,
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderLeftColor = colors.primary;
-                      e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}15 0%, ${colors.primary}05 100%)`;
+                      e.currentTarget.style.borderColor = "#7C9A7C";
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(124, 154, 124, 0.08)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 12px rgba(124, 154, 124, 0.15)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderLeftColor = "transparent";
-                      e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`;
+                      e.currentTarget.style.borderColor =
+                        "rgba(124, 154, 124, 0.15)";
+                      e.currentTarget.style.backgroundColor = "#FAFAF8";
+                      e.currentTarget.style.boxShadow =
+                        "0 1px 3px rgba(0, 0, 0, 0.05)";
+                      e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                       style={{
-                        background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}15 100%)`,
-                        border: `1.5px solid ${colors.border}`,
-                        color: colors.primary,
-                        fontSize: "11px",
-                        fontWeight: "600",
+                        background:
+                          "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
+                        boxShadow: "0 2px 6px rgba(124, 154, 124, 0.3)",
+                        color: "white",
+                        fontSize: "13px",
+                        fontWeight: "700",
                       }}
                     >
                       {index + 1}
                     </div>
                     <p
-                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]`}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-1 transition-colors duration-200`}
                       style={{
-                        color: COMMON_COLORS.text.secondary,
+                        color: COMMON_COLORS.text.primary,
                         letterSpacing: "0.01em",
-                        fontWeight: "400",
+                        fontWeight: "500",
                       }}
                     >
                       {trigger}
@@ -525,14 +541,17 @@ export function EmotionOverviewSection({
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
         {/* 부정 트리거 */}
         {emotion_overview.negative_triggers &&
           emotion_overview.negative_triggers.length > 0 && (
-            <div>
-              <div className="flex items-center gap-3 mb-5">
+            <Card
+              className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+              style={CARD_STYLES.withColor("#D4A574")}
+            >
+              <div className="flex items-center gap-3 mb-6">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{
@@ -553,46 +572,52 @@ export function EmotionOverviewSection({
                   부정 감정 트리거
                 </p>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {emotion_overview.negative_triggers.map((trigger, index) => (
                   <div
                     key={index}
-                    className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
+                    className="relative flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                     style={{
-                      background:
-                        "linear-gradient(to right, rgba(212, 165, 116, 0.03) 0%, transparent 100%)",
-                      borderLeft: "3px solid transparent",
+                      backgroundColor: "#FAFAF8",
+                      border: `1.5px solid rgba(212, 165, 116, 0.15)`,
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderLeftColor = "#D4A574";
-                      e.currentTarget.style.background =
-                        "linear-gradient(to right, rgba(212, 165, 116, 0.08) 0%, rgba(212, 165, 116, 0.02) 100%)";
+                      e.currentTarget.style.borderColor = "#D4A574";
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(212, 165, 116, 0.08)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 12px rgba(212, 165, 116, 0.15)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderLeftColor = "transparent";
-                      e.currentTarget.style.background =
-                        "linear-gradient(to right, rgba(212, 165, 116, 0.03) 0%, transparent 100%)";
+                      e.currentTarget.style.borderColor =
+                        "rgba(212, 165, 116, 0.15)";
+                      e.currentTarget.style.backgroundColor = "#FAFAF8";
+                      e.currentTarget.style.boxShadow =
+                        "0 1px 3px rgba(0, 0, 0, 0.05)";
+                      e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                       style={{
                         background:
-                          "linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, rgba(196, 149, 100, 0.1) 100%)",
-                        border: "1.5px solid rgba(212, 165, 116, 0.3)",
-                        color: "#D4A574",
-                        fontSize: "11px",
-                        fontWeight: "600",
+                          "linear-gradient(135deg, #D4A574 0%, #C49564 100%)",
+                        boxShadow: "0 2px 6px rgba(212, 165, 116, 0.3)",
+                        color: "white",
+                        fontSize: "13px",
+                        fontWeight: "700",
                       }}
                     >
                       {index + 1}
                     </div>
                     <p
-                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A]`}
+                      className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-1 transition-colors duration-200`}
                       style={{
-                        color: COMMON_COLORS.text.secondary,
+                        color: COMMON_COLORS.text.primary,
                         letterSpacing: "0.01em",
-                        fontWeight: "400",
+                        fontWeight: "500",
                       }}
                     >
                       {trigger}
@@ -600,7 +625,7 @@ export function EmotionOverviewSection({
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
       </div>
 

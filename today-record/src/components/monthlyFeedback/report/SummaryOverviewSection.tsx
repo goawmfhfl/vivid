@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   TrendingUp,
@@ -8,7 +8,6 @@ import {
   Heart,
   Users,
   ChevronDown,
-  ChevronUp,
   Info,
 } from "lucide-react";
 import { Card } from "../../ui/card";
@@ -25,6 +24,206 @@ import {
 type SummaryOverviewSectionProps = {
   summary_overview: MonthlyReportData["summary_overview"];
 };
+
+type ScoreCardProps = {
+  label: string;
+  value: number;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  reason?: string;
+  feedback?: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+  itemColor: string;
+};
+
+function ScoreCard({
+  label,
+  value,
+  icon: Icon,
+  reason,
+  feedback,
+  isExpanded,
+  onToggle,
+  cardRef,
+  itemColor,
+}: ScoreCardProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    }
+  }, [isExpanded, reason, feedback]);
+
+  return (
+    <Card
+      ref={cardRef}
+      className="transition-all duration-300 hover:shadow-lg cursor-pointer overflow-hidden"
+      style={CARD_STYLES.withColor(itemColor)}
+      onClick={onToggle}
+    >
+      {/* 점수 헤더 */}
+      <div className={SPACING.card.padding}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, ${itemColor}20 0%, ${itemColor}10 100%)`,
+                border: `1.5px solid ${itemColor}30`,
+              }}
+            >
+              <Icon className="w-5 h-5" style={{ color: itemColor }} />
+            </div>
+            <p
+              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+              style={{
+                color: COMMON_COLORS.text.tertiary,
+                letterSpacing: "0.05em",
+              }}
+            >
+              {label}
+            </p>
+          </div>
+          <div
+            className="transition-transform duration-300 ease-in-out"
+            style={{
+              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          >
+            <ChevronDown
+              className="w-4 h-4 transition-colors duration-200"
+              style={{
+                color: isExpanded ? itemColor : COMMON_COLORS.text.muted,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* 점수 표시 */}
+        <div className="flex items-baseline gap-2 mb-4">
+          <span
+            className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
+            style={{
+              color: itemColor,
+              textShadow: `0 2px 4px ${itemColor}20`,
+            }}
+          >
+            {value}
+          </span>
+          <span
+            className={`${TYPOGRAPHY.body.fontSize} font-medium`}
+            style={{ color: COMMON_COLORS.text.muted }}
+          >
+            / 10
+          </span>
+        </div>
+
+        {/* 진행 바 */}
+        <div
+          className="h-2 rounded-full overflow-hidden"
+          style={{
+            backgroundColor:
+              COMMON_COLORS.background.cardGradient.split(" ")[2],
+          }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-1000 ease-out"
+            style={{
+              background: `linear-gradient(90deg, ${itemColor} 0%, ${itemColor}CC 100%)`,
+              width: `${(value / 10) * 100}%`,
+              boxShadow: `0 2px 4px ${itemColor}30`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 확장 영역: 이유 및 피드백 */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: isExpanded ? `${contentHeight}px` : "0px",
+          opacity: isExpanded ? 1 : 0,
+        }}
+      >
+        <div
+          ref={contentRef}
+          className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0 border-t"
+          style={{
+            borderColor: `${itemColor}20`,
+            backgroundColor: `${itemColor}05`,
+          }}
+        >
+          {/* 점수 이유 */}
+          {reason && (
+            <div className="pt-4 pb-3">
+              <div className="flex items-start gap-3 mb-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
+                    boxShadow: `0 2px 4px ${itemColor}30`,
+                  }}
+                >
+                  <Info className="w-4 h-4 text-white" />
+                </div>
+                <p
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  점수 근거
+                </p>
+              </div>
+              <p
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
+                style={{ color: COMMON_COLORS.text.secondary }}
+              >
+                {reason}
+              </p>
+            </div>
+          )}
+
+          {/* 피드백 */}
+          {feedback && (
+            <div className="pt-3 pb-2">
+              <div className="flex items-start gap-3 mb-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
+                    boxShadow: `0 2px 4px ${itemColor}30`,
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <p
+                  className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                  style={{
+                    color: COMMON_COLORS.text.tertiary,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  AI 피드백
+                </p>
+              </div>
+              <p
+                className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
+                style={{ color: COMMON_COLORS.text.secondary }}
+              >
+                {feedback}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
 
 export function SummaryOverviewSection({
   summary_overview,
@@ -114,7 +313,7 @@ export function SummaryOverviewSection({
       style={{ marginTop: SPACING.section.marginTop }}
     >
       {/* 헤더 */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-8">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
@@ -206,170 +405,25 @@ export function SummaryOverviewSection({
         )}
 
       {/* 점수 카드들 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 items-start">
         {scoreItems.map((item) => {
-          const Icon = item.icon;
           const isExpanded = expandedScore === item.id;
           // 각 점수 항목의 색상을 섹션 컬러에 맞게 조정
           const itemColor = colors.primary;
 
           return (
-            <Card
+            <ScoreCard
               key={item.id}
-              ref={item.ref}
-              className="transition-all duration-300 hover:shadow-lg cursor-pointer overflow-hidden"
-              style={CARD_STYLES.withColor(itemColor)}
-              onClick={() => toggleExpand(item.id)}
-            >
-              {/* 점수 헤더 */}
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: `linear-gradient(135deg, ${itemColor}20 0%, ${itemColor}10 100%)`,
-                        border: `1.5px solid ${itemColor}30`,
-                      }}
-                    >
-                      <Icon className="w-5 h-5" style={{ color: itemColor }} />
-                    </div>
-                    <p
-                      className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
-                      style={{
-                        color: COMMON_COLORS.text.tertiary,
-                        letterSpacing: "0.05em",
-                      }}
-                    >
-                      {item.label}
-                    </p>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp
-                      className="w-4 h-4 transition-transform duration-200"
-                      style={{ color: itemColor }}
-                    />
-                  ) : (
-                    <ChevronDown
-                      className="w-4 h-4 transition-transform duration-200"
-                      style={{ color: COMMON_COLORS.text.muted }}
-                    />
-                  )}
-                </div>
-
-                {/* 점수 표시 */}
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span
-                    className={`${TYPOGRAPHY.number.large.fontSize} ${TYPOGRAPHY.number.large.fontWeight}`}
-                    style={{
-                      color: itemColor,
-                      textShadow: `0 2px 4px ${itemColor}20`,
-                    }}
-                  >
-                    {item.value}
-                  </span>
-                  <span
-                    className={`${TYPOGRAPHY.body.fontSize} font-medium`}
-                    style={{ color: COMMON_COLORS.text.muted }}
-                  >
-                    / 10
-                  </span>
-                </div>
-
-                {/* 진행 바 */}
-                <div
-                  className="h-2 rounded-full overflow-hidden"
-                  style={{
-                    backgroundColor:
-                      COMMON_COLORS.background.cardGradient.split(" ")[2],
-                  }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{
-                      background: `linear-gradient(90deg, ${itemColor} 0%, ${itemColor}CC 100%)`,
-                      width: `${(item.value / 10) * 100}%`,
-                      boxShadow: `0 2px 4px ${itemColor}30`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* 확장 영역: 이유 및 피드백 */}
-              {isExpanded && (
-                <div
-                  className="px-5 pb-5 pt-0 border-t animate-in slide-in-from-top-2 duration-300"
-                  style={{
-                    borderColor: `${itemColor}20`,
-                    backgroundColor: `${itemColor}05`,
-                  }}
-                >
-                  {/* 점수 이유 */}
-                  {item.reason && (
-                    <div className="pt-4 pb-3">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
-                            boxShadow: `0 2px 4px ${itemColor}30`,
-                          }}
-                        >
-                          <Info className="w-4 h-4 text-white" />
-                        </div>
-                        <p
-                          className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
-                          style={{
-                            color: COMMON_COLORS.text.tertiary,
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          점수 근거
-                        </p>
-                      </div>
-                      <p
-                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
-                        style={{ color: COMMON_COLORS.text.secondary }}
-                      >
-                        {item.reason}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* 피드백 */}
-                  {item.feedback && (
-                    <div className="pt-3 pb-2">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: `linear-gradient(135deg, ${itemColor} 0%, ${itemColor}DD 100%)`,
-                            boxShadow: `0 2px 4px ${itemColor}30`,
-                          }}
-                        >
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                        <p
-                          className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
-                          style={{
-                            color: COMMON_COLORS.text.tertiary,
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          AI 피드백
-                        </p>
-                      </div>
-                      <p
-                        className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pl-11`}
-                        style={{ color: COMMON_COLORS.text.secondary }}
-                      >
-                        {item.feedback}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </Card>
+              label={item.label}
+              value={item.value}
+              icon={item.icon}
+              reason={item.reason}
+              feedback={item.feedback}
+              isExpanded={isExpanded}
+              onToggle={() => toggleExpand(item.id)}
+              cardRef={item.ref}
+              itemColor={itemColor}
+            />
           );
         })}
       </div>

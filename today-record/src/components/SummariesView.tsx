@@ -60,6 +60,8 @@ export function SummariesView() {
     refetch: refetchWeekly,
   } = useWeeklyFeedbackList();
 
+  console.log("weeklyFeedbackList", weeklyFeedbackList);
+
   // 월간 피드백 리스트 조회 (월간 탭일 때만 조회)
   const {
     data: monthlyFeedbackList = [],

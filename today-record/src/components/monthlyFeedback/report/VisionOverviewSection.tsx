@@ -26,6 +26,20 @@ export function VisionOverviewSection({
     triggerOnVisible: true,
   });
 
+  const [visionDays, visionDaysRef] = useCountUp({
+    targetValue: vision_overview.vision_days_count,
+    duration: 1000,
+    delay: 0,
+    triggerOnVisible: true,
+  });
+
+  const [visionRecords, visionRecordsRef] = useCountUp({
+    targetValue: vision_overview.vision_records_count,
+    duration: 1000,
+    delay: 0,
+    triggerOnVisible: true,
+  });
+
   // 핵심 비전 최대 7개
   const coreVisions = vision_overview.core_visions?.slice(0, 7) || [];
 
@@ -61,6 +75,7 @@ export function VisionOverviewSection({
       {/* 통계 */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <Card
+          ref={visionDaysRef}
           className={`${SPACING.card.padding} text-center transition-all duration-300 hover:shadow-lg`}
           style={CARD_STYLES.withColor(colors.primary)}
         >
@@ -82,10 +97,11 @@ export function VisionOverviewSection({
               backgroundClip: "text",
             }}
           >
-            {vision_overview.vision_days_count}
+            {visionDays}
           </p>
         </Card>
         <Card
+          ref={visionRecordsRef}
           className={`${SPACING.card.padding} text-center transition-all duration-300 hover:shadow-lg`}
           style={CARD_STYLES.withColor(colors.primary)}
         >
@@ -107,7 +123,7 @@ export function VisionOverviewSection({
               backgroundClip: "text",
             }}
           >
-            {vision_overview.vision_records_count}
+            {visionRecords}
           </p>
         </Card>
         <Card
@@ -148,8 +164,11 @@ export function VisionOverviewSection({
 
       {/* 핵심 비전 */}
       {coreVisions.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-5">
+        <Card
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
+        >
+          <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
@@ -169,58 +188,64 @@ export function VisionOverviewSection({
               핵심 비전
             </p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-3">
             {coreVisions.map((vision, index) => (
               <div
                 key={index}
-                className="relative flex items-start gap-3 py-3 px-4 rounded-xl transition-all duration-300 group"
+                className="relative flex items-start gap-4 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                 style={{
-                  background:
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)",
-                  borderLeft: "3px solid transparent",
+                  backgroundColor: "#FAFAF8",
+                  border: `1.5px solid rgba(124, 154, 124, 0.15)`,
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderLeftColor = "#7C9A7C";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.08) 0%, rgba(124, 154, 124, 0.02) 100%)";
+                  e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(124, 154, 124, 0.08)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(124, 154, 124, 0.15)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderLeftColor = "transparent";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)";
+                  e.currentTarget.style.borderColor =
+                    "rgba(124, 154, 124, 0.15)";
+                  e.currentTarget.style.backgroundColor = "#FAFAF8";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(2, 9, 2, 0.15) 0%, rgba(107, 138, 107, 0.1) 100%)",
-                    border: "1.5px solid rgba(124, 154, 124, 0.3)",
-                    color: "#7C9A7C",
-                    fontSize: "11px",
-                    fontWeight: "600",
+                    background: colors.gradient,
+                    boxShadow: `0 2px 6px ${colors.primary}30`,
+                    color: "white",
+                    fontSize: "13px",
+                    fontWeight: "700",
                   }}
                 >
                   {index + 1}
                 </div>
                 <div className="flex-1">
                   <p
-                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-2`}
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} mb-3 transition-colors duration-200`}
                     style={{
-                      color: COMMON_COLORS.text.secondary,
+                      color: COMMON_COLORS.text.primary,
                       letterSpacing: "0.01em",
-                      fontWeight: "400",
+                      fontWeight: "500",
                     }}
                   >
                     {vision.summary}
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full"
+                      className="text-xs px-3 py-1 rounded-full"
                       style={{
                         backgroundColor: `${colors.primary}15`,
                         color: colors.primary,
-                        fontWeight: "500",
+                        fontWeight: "600",
+                        border: `1px solid ${colors.primary}30`,
                       }}
                     >
                       {vision.frequency}회 반복
@@ -230,7 +255,7 @@ export function VisionOverviewSection({
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* 비전 진행 코멘트 */}
@@ -272,8 +297,11 @@ export function VisionOverviewSection({
 
       {/* AI 비전 피드백 */}
       {aiFeedbacks.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-5">
+        <Card
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
+        >
+          <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
@@ -293,46 +321,51 @@ export function VisionOverviewSection({
               AI 비전 피드백
             </p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-3">
             {aiFeedbacks.map((feedback, index) => (
               <div
                 key={index}
-                className="relative flex items-start gap-3 py-3 px-4 rounded-xl transition-all duration-300 group"
+                className="relative flex items-start gap-4 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                 style={{
-                  background:
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)",
-                  borderLeft: "3px solid transparent",
+                  backgroundColor: "#FAFAF8",
+                  border: `1.5px solid rgba(124, 154, 124, 0.15)`,
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderLeftColor = "#7C9A7C";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.08) 0%, rgba(124, 154, 124, 0.02) 100%)";
+                  e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(124, 154, 124, 0.08)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(124, 154, 124, 0.15)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderLeftColor = "transparent";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(124, 154, 124, 0.03) 0%, transparent 100%)";
+                  e.currentTarget.style.borderColor =
+                    "rgba(124, 154, 124, 0.15)";
+                  e.currentTarget.style.backgroundColor = "#FAFAF8";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                   style={{
-                    background:
-                      "linear-gradient(135deg, rgba(124, 154, 124, 0.15) 0%, rgba(107, 138, 107, 0.1) 100%)",
-                    border: "1.5px solid rgba(124, 154, 124, 0.3)",
-                    color: "#7C9A7C",
-                    fontSize: "11px",
-                    fontWeight: "600",
+                    background: colors.gradient,
+                    boxShadow: `0 2px 6px ${colors.primary}30`,
+                    color: "white",
+                    fontSize: "13px",
+                    fontWeight: "700",
                   }}
                 >
                   {index + 1}
                 </div>
                 <p
-                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A]`}
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-1 transition-colors duration-200`}
                   style={{
-                    color: COMMON_COLORS.text.secondary,
+                    color: COMMON_COLORS.text.primary,
                     letterSpacing: "0.01em",
-                    fontWeight: "400",
+                    fontWeight: "500",
                   }}
                 >
                   {feedback}
@@ -340,7 +373,7 @@ export function VisionOverviewSection({
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

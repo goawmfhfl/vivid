@@ -61,7 +61,7 @@ export function InsightOverviewSection({
       style={{ marginTop: SPACING.section.marginTop }}
     >
       {/* 헤더 */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-8">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
@@ -80,7 +80,7 @@ export function InsightOverviewSection({
       </div>
 
       {/* 대시보드 스타일 통계 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {/* 인사이트 일수 */}
         <Card
           ref={daysCountRef}
@@ -175,29 +175,60 @@ export function InsightOverviewSection({
       {/* 핵심 인사이트 */}
       {insight_overview.core_insights &&
         insight_overview.core_insights.length > 0 && (
-          <div className="mb-6">
-            <p
-              className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-4 ${TYPOGRAPHY.label.textTransform}`}
-              style={{
-                color: COMMON_COLORS.text.tertiary,
-                letterSpacing: "0.05em",
-              }}
-            >
-              핵심 인사이트
-            </p>
+          <Card
+            className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+            style={CARD_STYLES.withColor(colors.primary)}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: colors.gradient,
+                  boxShadow: `0 2px 8px ${colors.primary}30`,
+                }}
+              >
+                <Lightbulb className="w-5 h-5 text-white" />
+              </div>
+              <p
+                className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} ${TYPOGRAPHY.label.textTransform}`}
+                style={{
+                  color: COMMON_COLORS.text.tertiary,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                핵심 인사이트
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {insight_overview.core_insights.map((insight, index) => (
-                <Card
+                <div
                   key={index}
-                  className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
-                  style={CARD_STYLES.withColor(colors.primary)}
+                  className="p-4 rounded-xl transition-all duration-300 group cursor-pointer"
+                  style={{
+                    backgroundColor: "#FAFAF8",
+                    border: `1.5px solid ${colors.primary}15`,
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.backgroundColor = `${colors.primary}08`;
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.primary}15`;
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = `${colors.primary}15`;
+                    e.currentTarget.style.backgroundColor = "#FAFAF8";
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 3px rgba(0, 0, 0, 0.05)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
                         background: colors.gradient,
-                        boxShadow: `0 2px 4px ${colors.primary}30`,
+                        boxShadow: `0 2px 6px ${colors.primary}30`,
                       }}
                     >
                       <span
@@ -221,22 +252,18 @@ export function InsightOverviewSection({
                       </p>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
       {/* 인사이트 목록 (Dropdown) */}
       {insight_overview.top_insights &&
         insight_overview.top_insights.length > 0 && (
           <Card
-            className="mb-6 transition-all duration-300 hover:shadow-md overflow-hidden"
-            style={{
-              backgroundColor: "white",
-              border: "1px solid #EFE9E3",
-              borderRadius: "16px",
-            }}
+            className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg overflow-hidden`}
+            style={CARD_STYLES.withColor(colors.primary)}
           >
             <button
               onClick={toggleInsights}
@@ -277,17 +304,46 @@ export function InsightOverviewSection({
               )}
             </button>
 
-            {expandedInsights && (
-              <div className="px-5 pb-5 pt-0 border-t animate-in slide-in-from-top-2 duration-300">
+            <div
+              className="overflow-hidden transition-all duration-500 ease-in-out"
+              style={{
+                maxHeight: expandedInsights ? "2000px" : "0",
+                opacity: expandedInsights ? 1 : 0,
+              }}
+            >
+              <div
+                className="px-5 pb-5 pt-0 border-t transition-all duration-500 ease-in-out"
+                style={{
+                  transform: expandedInsights
+                    ? "translateY(0)"
+                    : "translateY(-10px)",
+                }}
+              >
                 <div className="mt-4 space-y-3">
                   {insight_overview.top_insights.map((insight, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-xl transition-all duration-200 hover:bg-gray-50"
+                      className="p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                       style={{
-                        backgroundColor:
-                          index % 2 === 0 ? "#FAFAF8" : "transparent",
-                        border: "1px solid #EFE9E3",
+                        backgroundColor: "#FAFAF8",
+                        border: `1.5px solid ${colors.primary}15`,
+                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                        animation: expandedInsights
+                          ? `fadeInUp 0.4s ease-out ${index * 0.05}s both`
+                          : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = colors.primary;
+                        e.currentTarget.style.backgroundColor = `${colors.primary}08`;
+                        e.currentTarget.style.boxShadow = `0 4px 12px ${colors.primary}15`;
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = `${colors.primary}15`;
+                        e.currentTarget.style.backgroundColor = "#FAFAF8";
+                        e.currentTarget.style.boxShadow =
+                          "0 1px 3px rgba(0, 0, 0, 0.05)";
+                        e.currentTarget.style.transform = "translateY(0)";
                       }}
                     >
                       <div className="flex items-start gap-3">
@@ -337,19 +393,15 @@ export function InsightOverviewSection({
                   ))}
                 </div>
               </div>
-            )}
+            </div>
           </Card>
         )}
 
       {/* 종합 인사이트 분석 */}
       {insight_overview.insight_comprehensive_summary && (
         <Card
-          className="p-6 mb-6 transition-all duration-300 hover:shadow-md"
-          style={{
-            background: "linear-gradient(135deg, #F5F7F5 0%, #F0F5F0 100%)",
-            border: "1px solid #E0E5E0",
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div
@@ -385,12 +437,8 @@ export function InsightOverviewSection({
       {/* AI 인사이트 코멘트 */}
       {insight_overview.insight_ai_comment && (
         <Card
-          className="p-6 transition-all duration-300 hover:shadow-md"
-          style={{
-            background: "linear-gradient(135deg, #F5F7F5 0%, #F0F5F0 100%)",
-            border: "1px solid #E0E5E0",
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.gradient}
         >
           <div className="flex items-start gap-4">
             <div

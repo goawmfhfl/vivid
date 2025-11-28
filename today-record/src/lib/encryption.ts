@@ -58,7 +58,7 @@ export function encrypt(text: string): string {
 
     // IV와 암호화된 데이터를 함께 저장
     return `${iv.toString("hex")}:${encrypted}`;
-  } catch (error) {
+  } catch {
     // 에러 로깅 제거 - 조용히 처리
     throw new Error("Failed to encrypt data");
   }
@@ -107,7 +107,7 @@ export function decrypt(encryptedText: string): string {
     decrypted += decipher.final("utf8");
 
     return decrypted;
-  } catch (error) {
+  } catch {
     // 복호화 실패 시 원본 반환 (기존 평문 데이터일 수 있음)
     // 에러 로깅 제거 - 클라이언트 사이드에서는 ENCRYPTION_KEY에 접근할 수 없으므로 조용히 처리
     return encryptedText;

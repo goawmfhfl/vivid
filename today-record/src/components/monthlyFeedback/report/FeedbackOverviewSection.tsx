@@ -229,8 +229,11 @@ export function FeedbackOverviewSection({
 
       {/* 핵심 피드백 */}
       {coreFeedbacks.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-5">
+        <Card
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
+        >
+          <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
@@ -250,54 +253,60 @@ export function FeedbackOverviewSection({
               핵심 피드백
             </p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-3">
             {coreFeedbacks.map((feedback, index) => (
               <div
                 key={index}
-                className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
+                className="relative flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`,
-                  borderLeft: "3px solid transparent",
+                  backgroundColor: "#FAFAF8",
+                  border: `1.5px solid ${colors.primary}15`,
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderLeftColor = colors.primary;
-                  e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}15 0%, ${colors.primary}05 100%)`;
+                  e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.backgroundColor = `${colors.primary}08`;
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.primary}15`;
+                  e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderLeftColor = "transparent";
-                  e.currentTarget.style.background = `linear-gradient(to right, ${colors.primary}08 0%, transparent 100%)`;
+                  e.currentTarget.style.borderColor = `${colors.primary}15`;
+                  e.currentTarget.style.backgroundColor = "#FAFAF8";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                   style={{
-                    background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}15 100%)`,
-                    border: `1.5px solid ${colors.border}`,
-                    color: colors.primary,
-                    fontSize: "11px",
-                    fontWeight: "600",
+                    background: colors.gradient,
+                    boxShadow: `0 2px 6px ${colors.primary}30`,
+                    color: "white",
+                    fontSize: "13px",
+                    fontWeight: "700",
                   }}
                 >
                   {index + 1}
                 </div>
                 <div className="flex-1">
                   <p
-                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#5A6B5A] mb-1`}
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-1 transition-colors duration-200 mb-2`}
                     style={{
-                      color: COMMON_COLORS.text.secondary,
+                      color: COMMON_COLORS.text.primary,
                       letterSpacing: "0.01em",
-                      fontWeight: "400",
+                      fontWeight: "500",
                     }}
                   >
                     {feedback.summary}
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full"
+                      className="text-xs px-2.5 py-1 rounded-full"
                       style={{
                         backgroundColor: `${colors.primary}15`,
                         color: colors.primary,
-                        fontWeight: "500",
+                        fontWeight: "600",
                       }}
                     >
                       {feedback.frequency}회 반복
@@ -307,13 +316,16 @@ export function FeedbackOverviewSection({
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* 반복된 개선점 */}
       {recurringImprovements.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-5">
+        <Card
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor("#D4A574")}
+        >
+          <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{
@@ -333,58 +345,64 @@ export function FeedbackOverviewSection({
               반복된 개선점
             </p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-3">
             {recurringImprovements.map((improvement, index) => (
               <div
                 key={index}
-                className="relative flex items-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-300 group"
+                className="relative flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
                 style={{
-                  background:
-                    "linear-gradient(to right, rgba(212, 165, 116, 0.03) 0%, transparent 100%)",
-                  borderLeft: "3px solid transparent",
+                  backgroundColor: "#FAFAF8",
+                  border: `1.5px solid rgba(212, 165, 116, 0.15)`,
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderLeftColor = "#D4A574";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(212, 165, 116, 0.08) 0%, rgba(212, 165, 116, 0.02) 100%)";
+                  e.currentTarget.style.borderColor = "#D4A574";
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(212, 165, 116, 0.08)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(212, 165, 116, 0.15)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderLeftColor = "transparent";
-                  e.currentTarget.style.background =
-                    "linear-gradient(to right, rgba(212, 165, 116, 0.03) 0%, transparent 100%)";
+                  e.currentTarget.style.borderColor =
+                    "rgba(212, 165, 116, 0.15)";
+                  e.currentTarget.style.backgroundColor = "#FAFAF8";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mt-0.5"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-semibold transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, rgba(196, 149, 100, 0.1) 100%)",
-                    border: "1.5px solid rgba(212, 165, 116, 0.3)",
-                    color: "#D4A574",
-                    fontSize: "11px",
-                    fontWeight: "600",
+                      "linear-gradient(135deg, #D4A574 0%, #C49564 100%)",
+                    boxShadow: "0 2px 6px rgba(212, 165, 116, 0.3)",
+                    color: "white",
+                    fontSize: "13px",
+                    fontWeight: "700",
                   }}
                 >
                   {index + 1}
                 </div>
                 <div className="flex-1">
                   <p
-                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-0.5 transition-colors duration-200 group-hover:text-[#B8956A] mb-1`}
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} pt-1 transition-colors duration-200 mb-2`}
                     style={{
-                      color: COMMON_COLORS.text.secondary,
+                      color: COMMON_COLORS.text.primary,
                       letterSpacing: "0.01em",
-                      fontWeight: "400",
+                      fontWeight: "500",
                     }}
                   >
                     {improvement.summary}
                   </p>
                   <div className="flex items-center gap-2">
                     <span
-                      className="text-xs px-2 py-0.5 rounded-full"
+                      className="text-xs px-2.5 py-1 rounded-full"
                       style={{
-                        backgroundColor: "rgba(212, 165, 116, 0.1)",
+                        backgroundColor: "rgba(212, 165, 116, 0.15)",
                         color: "#D4A574",
-                        fontWeight: "500",
+                        fontWeight: "600",
                       }}
                     >
                       {improvement.frequency}회 반복
@@ -394,7 +412,7 @@ export function FeedbackOverviewSection({
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* AI 피드백 코멘트 */}

@@ -11,13 +11,28 @@ class KakaoLoginError extends Error {
 
 // 리디렉션 URL 계산
 
+const getRedirectUrl = () => {
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (typeof window !== "undefined" ? window.location.origin : null);
+
+  if (!base) {
+    throw new KakaoLoginError(
+      "리디렉션 URL을 찾을 수 없습니다. 환경 변수를 확인해주세요."
+    );
+  }
+
+  return `${base.replace(/\/$/, "")}/auth/callback`;
+};
+
 // 카카오 로그인 함수
 const loginWithKakao = async (): Promise<void> => {
   try {
+    const redirectTo = getRedirectUrl();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
       options: {
-        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + "/auth/callback",
+        redirectTo,
       },
     });
 

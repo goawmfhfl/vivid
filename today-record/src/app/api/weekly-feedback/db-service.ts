@@ -64,12 +64,16 @@ export async function fetchWeeklyFeedbackList(
   return (data || []).map((row) => {
     // weekly_overview 복호화
     const decryptedOverview = decryptJsonbFields(
-      row.weekly_overview as { narrative?: string } | null
-    ) as { narrative?: string } | null;
-    const narrative = decryptedOverview?.narrative;
-    const title = narrative
-      ? narrative.substring(0, 50) + (narrative.length > 50 ? "..." : "")
-      : `${row.week_start} ~ ${row.week_end}`;
+      row.weekly_overview as { title?: string; narrative?: string } | null
+    ) as { title?: string; narrative?: string } | null;
+    
+    // title이 있으면 사용하고, 없으면 narrative의 앞부분을 사용하거나 날짜 범위 사용
+    const title =
+      decryptedOverview?.title ||
+      (decryptedOverview?.narrative
+        ? decryptedOverview.narrative.substring(0, 50) +
+          (decryptedOverview.narrative.length > 50 ? "..." : "")
+        : `${row.week_start} ~ ${row.week_end}`);
 
     return {
       id: String(row.id),

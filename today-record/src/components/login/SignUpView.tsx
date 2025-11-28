@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from "react";
 import { useSignUp } from "@/hooks/useSignUp";
+import { useCompleteSocialSignUp } from "@/hooks/useCompleteSocialSignUp";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";
@@ -43,6 +44,7 @@ type BasicInfoSectionProps = {
   };
   updateFormData: (field: "email" | "password", value: string) => void;
   clearError: (field: "email" | "password") => void;
+  isSocialMode?: boolean;
 };
 
 const BasicInfoSection = ({
@@ -50,10 +52,15 @@ const BasicInfoSection = ({
   errors,
   updateFormData,
   clearError,
+  isSocialMode = false,
 }: BasicInfoSectionProps) => (
   <SectionCard
     title="로그인 정보"
-    description="서비스 이용을 위한 기본 로그인 정보를 입력해주세요."
+    description={
+      isSocialMode
+        ? "카카오에서 가져온 이메일로 계속 진행해요."
+        : "서비스 이용을 위한 기본 로그인 정보를 입력해주세요."
+    }
   >
     <EmailField
       value={formData.email}
@@ -63,17 +70,25 @@ const BasicInfoSection = ({
       }}
       placeholder="example@gmail.com"
       error={errors.email}
+      disabled={isSocialMode && Boolean(formData.email)}
     />
 
-    <PasswordField
-      value={formData.password}
-      onChange={(value) => {
-        updateFormData("password", value);
-        clearError("password");
-      }}
-      placeholder="영문+숫자 8자 이상 입력"
-      error={errors.password}
-    />
+    {!isSocialMode && (
+      <PasswordField
+        value={formData.password}
+        onChange={(value) => {
+          updateFormData("password", value);
+          clearError("password");
+        }}
+        placeholder="영문+숫자 8자 이상 입력"
+        error={errors.password}
+      />
+    )}
+    {isSocialMode && (
+      <p className="text-xs text-[#6B7A6F]">
+        이메일은 카카오 계정과 동일하게 고정됩니다.
+      </p>
+    )}
   </SectionCard>
 );
 
@@ -210,14 +225,23 @@ const AdditionalInfoSection = ({
 
 export function SignUpView({
   initialMessage,
+  initialEmail = null,
+  isSocialOnboarding = false,
 }: {
   initialMessage?: string | null;
+  initialEmail?: string | null;
+  isSocialOnboarding?: boolean;
 }) {
-  const [infoMessage] = useState<string | null>(initialMessage || null);
+  const [infoMessage] = useState<string | null>(
+    initialMessage ||
+      (isSocialOnboarding
+        ? "카카오 간편 로그인 정보를 확인했어요. 나머지 프로필을 입력하면 가입이 완료됩니다."
+        : null)
+  );
 
   // 폼 데이터 상태 통합
   const [formData, setFormData] = useState({
-    email: "",
+    email: initialEmail || "",
     password: "",
     name: "",
     phone: "",
@@ -247,6 +271,7 @@ export function SignUpView({
 
   // React Query mutation 사용
   const signUpMutation = useSignUp();
+  const socialSignUpMutation = useCompleteSocialSignUp();
 
   // 폼 데이터 업데이트 헬퍼 함수들
   const updateFormData = (
@@ -287,16 +312,18 @@ export function SignUpView({
     // Validate email
     if (!formData.email) {
       newErrors.email = "이메일을 입력해주세요.";
-    } else if (!validateEmail(formData.email)) {
+    } else if (!isSocialOnboarding && !validateEmail(formData.email)) {
       newErrors.email = "이메일 형식이 올바르지 않습니다.";
     }
 
     // Validate password
-    if (!formData.password) {
-      newErrors.password = "비밀번호를 입력해주세요.";
-    } else if (!validatePassword(formData.password)) {
-      newErrors.password =
-        "비밀번호는 영문과 숫자를 포함해 8자 이상 입력해주세요.";
+    if (!isSocialOnboarding) {
+      if (!formData.password) {
+        newErrors.password = "비밀번호를 입력해주세요.";
+      } else if (!validatePassword(formData.password)) {
+        newErrors.password =
+          "비밀번호는 영문과 숫자를 포함해 8자 이상 입력해주세요.";
+      }
     }
 
     // Validate name
@@ -349,22 +376,33 @@ export function SignUpView({
     }
 
     // React Query mutation 실행
-    signUpMutation.mutate({
-      email: formData.email,
-      password: formData.password,
-      name: formData.name.trim(),
-      phone: formData.phone.trim(),
-      agreeTerms: formData.agreeTerms,
-      agreeAI: formData.agreeAI,
-      agreeMarketing: formData.agreeMarketing,
-      birthYear: formData.birthYear,
-      gender: formData.gender,
-    });
+    if (isSocialOnboarding) {
+      socialSignUpMutation.mutate({
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        agreeTerms: formData.agreeTerms,
+        agreeAI: formData.agreeAI,
+        agreeMarketing: formData.agreeMarketing,
+        birthYear: formData.birthYear,
+        gender: formData.gender,
+      });
+    } else {
+      signUpMutation.mutate({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        agreeTerms: formData.agreeTerms,
+        agreeAI: formData.agreeAI,
+        agreeMarketing: formData.agreeMarketing,
+        birthYear: formData.birthYear,
+        gender: formData.gender,
+      });
+    }
   };
 
-  const isFormValid = Boolean(
+  const commonFieldsValid = Boolean(
     formData.email &&
-      formData.password &&
       formData.name &&
       formData.name.trim() !== "" &&
       formData.phone &&
@@ -374,6 +412,18 @@ export function SignUpView({
       formData.agreeTerms &&
       formData.agreeAI
   );
+
+  const passwordValid = Boolean(
+    formData.password && validatePassword(formData.password)
+  );
+
+  const isFormValid = isSocialOnboarding
+    ? commonFieldsValid
+    : commonFieldsValid && passwordValid;
+
+  const isSubmitting = isSocialOnboarding
+    ? socialSignUpMutation.isPending
+    : signUpMutation.isPending;
 
   return (
     <div
@@ -389,7 +439,7 @@ export function SignUpView({
         <form
           onSubmit={handleSubmit}
           className="mt-8 space-y-8"
-          aria-busy={signUpMutation.isPending}
+          aria-busy={isSubmitting}
         >
           <BasicInfoSection
             formData={{
@@ -399,6 +449,7 @@ export function SignUpView({
             errors={{ email: errors.email, password: errors.password }}
             updateFormData={(field, value) => updateFormData(field, value)}
             clearError={(field) => clearFieldError(field)}
+            isSocialMode={isSocialOnboarding}
           />
 
           <ProfileSection
@@ -461,16 +512,29 @@ export function SignUpView({
             </div>
           )}
 
-          {signUpMutation.error && (
-            <ErrorMessage message={signUpMutation.error.message} />
+          {(isSocialOnboarding
+            ? socialSignUpMutation.error
+            : signUpMutation.error) && (
+            <ErrorMessage
+              message={
+                (isSocialOnboarding
+                  ? socialSignUpMutation.error
+                  : signUpMutation.error
+                )?.message || "요청 처리 중 오류가 발생했습니다."
+              }
+            />
           )}
 
           <div className="space-y-6 pt-2">
             <SubmitButton
-              isLoading={signUpMutation.isPending}
+              isLoading={isSubmitting}
               isValid={isFormValid}
-              loadingText="가입 중..."
-              defaultText="가입하고 시작하기"
+              loadingText={
+                isSocialOnboarding ? "정보 저장 중..." : "가입 중..."
+              }
+              defaultText={
+                isSocialOnboarding ? "정보 제출" : "가입하고 시작하기"
+              }
             />
 
             <div className="rounded-2xl border border-[#EFE9E3] bg-white/80 py-3 text-center text-sm text-[#6B7A6F]">

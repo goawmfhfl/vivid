@@ -36,7 +36,8 @@ export function ConclusionSection({
       className={SPACING.section.marginBottom}
       style={{ marginTop: SPACING.section.marginTop }}
     >
-      <div className="flex items-center gap-3 mb-6">
+      {/* 헤더 */}
+      <div className="flex items-center gap-3 mb-8">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center"
           style={{
@@ -56,7 +57,7 @@ export function ConclusionSection({
 
       {/* 월간 요약 */}
       <Card
-        className={`${SPACING.card.padding} mb-6`}
+        className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
         style={CARD_STYLES.withColor(colors.primary)}
       >
         <p
@@ -71,7 +72,7 @@ export function ConclusionSection({
       {conclusion_overview.turning_points &&
         conclusion_overview.turning_points.length > 0 && (
           <Card
-            className={`${SPACING.card.padding} mb-6`}
+            className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
             style={CARD_STYLES.gradient}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -94,41 +95,63 @@ export function ConclusionSection({
                 중요한 전환점
               </p>
             </div>
-            <ul className="space-y-2">
+            <div className="space-y-3">
               {conclusion_overview.turning_points.map((point, index) => (
-                <li key={index} className="flex items-start gap-3">
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
+                  style={{
+                    backgroundColor: "#FAFAF8",
+                    border: `1.5px solid ${colors.primary}15`,
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.backgroundColor = `${colors.primary}08`;
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${colors.primary}15`;
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = `${colors.primary}15`;
+                    e.currentTarget.style.backgroundColor = "#FAFAF8";
+                    e.currentTarget.style.boxShadow =
+                      "0 1px 3px rgba(0, 0, 0, 0.05)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{
                       background: colors.gradient,
-                      boxShadow: `0 2px 4px ${colors.primary}30`,
+                      boxShadow: `0 2px 6px ${colors.primary}30`,
                     }}
                   >
-                    <span className="text-xs font-bold text-white">
+                    <span
+                      className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}
+                    >
                       {index + 1}
                     </span>
                   </div>
                   <span
-                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1`}
-                    style={{ color: COMMON_COLORS.text.secondary }}
+                    className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-1`}
+                    style={{
+                      color: COMMON_COLORS.text.primary,
+                      fontWeight: "500",
+                    }}
                   >
                     {point}
                   </span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </Card>
         )}
 
       {/* 다음 달 포커스 */}
       {focusItems.length > 0 && (
         <Card
-          className={`${SPACING.card.padding} mb-6`}
-          style={{
-            background: `linear-gradient(135deg, ${colors.primary}12 0%, ${colors.primary}08 100%)`,
-            border: `1.5px solid ${colors.border}`,
-            borderRadius: "16px",
-          }}
+          className={`${SPACING.card.padding} mb-8 transition-all duration-300 hover:shadow-lg`}
+          style={CARD_STYLES.withColor(colors.primary)}
         >
           <div className="flex items-center gap-3 mb-4">
             <div
@@ -147,35 +170,61 @@ export function ConclusionSection({
               다음 달 집중 포인트
             </p>
           </div>
-          <ul className="space-y-2">
+          <div className="space-y-3">
             {focusItems.map((item, index) => (
-              <li key={index} className="flex items-start gap-3">
+              <div
+                key={index}
+                className="flex items-start gap-3 p-4 rounded-xl transition-all duration-300 group cursor-pointer"
+                style={{
+                  backgroundColor: "#FAFAF8",
+                  border: `1.5px solid ${colors.primary}15`,
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = colors.primary;
+                  e.currentTarget.style.backgroundColor = `${colors.primary}08`;
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.primary}15`;
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = `${colors.primary}15`;
+                  e.currentTarget.style.backgroundColor = "#FAFAF8";
+                  e.currentTarget.style.boxShadow =
+                    "0 1px 3px rgba(0, 0, 0, 0.05)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{
                     background: colors.gradient,
-                    boxShadow: `0 2px 4px ${colors.primary}30`,
+                    boxShadow: `0 2px 6px ${colors.primary}30`,
                   }}
                 >
-                  <span className="text-xs font-bold text-white">
+                  <span
+                    className={`${TYPOGRAPHY.bodySmall.fontSize} font-bold text-white`}
+                  >
                     {index + 1}
                   </span>
                 </div>
                 <span
-                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1`}
-                  style={{ color: COMMON_COLORS.text.secondary }}
+                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.lineHeight} flex-1 pt-1`}
+                  style={{
+                    color: COMMON_COLORS.text.primary,
+                    fontWeight: "500",
+                  }}
                 >
                   {item}
                 </span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </Card>
       )}
 
       {/* 응원 메시지 */}
       <Card
-        className={`${SPACING.card.padding}`}
+        className={`${SPACING.card.padding} transition-all duration-300 hover:shadow-lg`}
         style={{
           background: colors.gradient,
           color: "white",

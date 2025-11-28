@@ -14,6 +14,7 @@ export type WeeklyFeedbackByDay = {
 };
 
 export type WeeklyOverview = {
+  title: string;
   narrative: string;
   top_keywords: string[];
   repeated_themes: string[];

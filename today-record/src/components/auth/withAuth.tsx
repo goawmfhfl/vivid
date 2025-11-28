@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 /**
  * 인증이 필요한 페이지를 보호하는 고차 컴포넌트 (HOC)
@@ -31,20 +30,8 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
       }
     }, [isLoading, error, user, router]);
 
-    // 로딩 중일 때 로딩 UI 표시
-    if (isLoading) {
-      return (
-        <div
-          className="min-h-screen flex items-center justify-center"
-          style={{ backgroundColor: "#FAFAF8" }}
-        >
-          <LoadingSpinner message="인증 확인 중..." size="md" />
-        </div>
-      );
-    }
-
-    // 인증되지 않은 경우 아무것도 렌더링하지 않음 (리다이렉트 중)
-    if (error || !user) {
+    // 로딩 중이거나 인증되지 않은 경우 아무것도 렌더링하지 않음
+    if (isLoading || error || !user) {
       return null;
     }
 

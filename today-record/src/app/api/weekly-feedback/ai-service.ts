@@ -84,6 +84,13 @@ export async function generateWeeklyFeedbackFromDaily(
     const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
     const result = parsed.weekly_feedback;
 
+    // AI 응답에서 title이 최상위에 있으면 weekly_overview로 이동
+    const resultWithTitle = result as WeeklyFeedback & { title?: string };
+    if (resultWithTitle.title && !result.weekly_overview.title) {
+      result.weekly_overview.title = resultWithTitle.title;
+      delete resultWithTitle.title;
+    }
+
     // 캐시에 저장
     setCache(cacheKey, result);
 
@@ -134,6 +141,13 @@ export async function generateWeeklyFeedbackFromDaily(
 
       const parsed = JSON.parse(content) as WeeklyFeedbackResponse;
       const result = parsed.weekly_feedback;
+
+      // AI 응답에서 title이 최상위에 있으면 weekly_overview로 이동
+      const resultWithTitle = result as WeeklyFeedback & { title?: string };
+      if (resultWithTitle.title && !result.weekly_overview.title) {
+        result.weekly_overview.title = resultWithTitle.title;
+        delete resultWithTitle.title;
+      }
 
       // 캐시에 저장
       setCache(cacheKey, result);

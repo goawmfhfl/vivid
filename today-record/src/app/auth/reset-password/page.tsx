@@ -7,6 +7,8 @@ import { AlertCircle, CheckCircle2, Lock } from "lucide-react";
 import { AuthHeader } from "@/components/forms/AuthHeader";
 import { PasswordField } from "@/components/forms/PasswordField";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { Input } from "@/components/ui/Input";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -169,12 +171,10 @@ export default function ResetPasswordPage() {
         className="min-h-screen flex items-center justify-center px-4 py-8"
         style={{ backgroundColor: "#FAFAF8" }}
       >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p style={{ color: "#6B7A6F" }}>
-            비밀번호 재설정 페이지를 불러오는 중...
-          </p>
-        </div>
+        <LoadingSpinner
+          message="비밀번호 재설정 페이지를 불러오는 중..."
+          size="md"
+        />
       </div>
     );
   }
@@ -267,7 +267,7 @@ export default function ResetPasswordPage() {
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
                   style={{ color: "#6B7A6F", opacity: 0.5 }}
                 />
-                <input
+                <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => {
@@ -279,7 +279,7 @@ export default function ResetPasswordPage() {
                     }));
                   }}
                   placeholder="비밀번호를 다시 입력하세요"
-                  className="w-full pl-11 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#6B7A6F] transition-all"
+                  className="pl-11 pr-4"
                   style={{
                     borderColor: errors.confirmPassword ? "#EF4444" : "#EFE9E3",
                     backgroundColor: "white",

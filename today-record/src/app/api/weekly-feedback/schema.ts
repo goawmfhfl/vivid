@@ -8,7 +8,6 @@ export const WeeklyFeedbackSchema = {
         type: "object",
         additionalProperties: false,
         properties: {
-          title: { type: "string" },
           week_range: {
             type: "object",
             additionalProperties: false,
@@ -23,6 +22,11 @@ export const WeeklyFeedbackSchema = {
             type: "object",
             additionalProperties: false,
             properties: {
+              title: {
+                type: "string",
+                description:
+                  "이번 주를 한 줄로 요약한 제목 (예: '성장의 발걸음을 내딛은 한 주', '도전과 성취가 함께한 한 주')",
+              },
               narrative: { type: "string" },
               top_keywords: {
                 type: "array",
@@ -44,6 +48,7 @@ export const WeeklyFeedbackSchema = {
               next_week_focus: { type: "string" },
             },
             required: [
+              "title",
               "narrative",
               "top_keywords",
               "repeated_themes",
@@ -263,7 +268,6 @@ export const WeeklyFeedbackSchema = {
           },
         },
         required: [
-          "title",
           "week_range",
           "weekly_overview",
           "emotion_overview",
@@ -319,13 +323,13 @@ export const SYSTEM_PROMPT_WEEKLY = `
 
 {
   "weekly_feedback": {
-    "title": "이번 주를 한 문장으로 요약한 제목 (예: '성장의 발걸음을 내딛은 한 주')",
     "week_range": {
       "start": "YYYY-MM-DD 형식의 주 시작일 (월요일)",
       "end": "YYYY-MM-DD 형식의 주 종료일 (일요일)",
       "timezone": "Asia/Seoul"
     },
     "weekly_overview": {
+      "title": "이번 주를 한 줄로 요약한 제목 (예: '성장의 발걸음을 내딛은 한 주', '도전과 성취가 함께한 한 주')",
       "narrative": "이번 주 전체를 이야기처럼 풀어낸 서사 (친근하고 이해하기 쉬운 말투로)",
       "top_keywords": ["이번 주에 가장 많이 등장한 키워드 배열 (반드시 10개 이하)"],
       "repeated_themes": ["주간 동안 반복적으로 나타난 주제나 패턴 배열"],

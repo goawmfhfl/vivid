@@ -103,7 +103,7 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
       }
 
       return decrypted;
-    } catch (err) {
+    } catch {
       // 복호화 실패 시 원본 반환 (기존 평문 데이터일 수 있음)
       // 에러 로깅 제거 - 조용히 처리
       return obj;

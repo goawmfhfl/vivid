@@ -8,6 +8,14 @@ export default async function SignUpPage({
 }) {
   const params = await searchParams;
   const message = params.message as string | undefined;
+  const isSocialOnboarding = params.social === "1";
+  const initialEmail = params.email as string | undefined;
 
-  return <SignUpView initialMessage={message || null} />;
+  return (
+    <SignUpView
+      initialMessage={message || null}
+      initialEmail={initialEmail || null}
+      isSocialOnboarding={isSocialOnboarding}
+    />
+  );
 }

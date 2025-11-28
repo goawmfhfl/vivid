@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Calendar, HelpCircle, X } from "lucide-react";
 import { Card } from "../../ui/card";
 import { COMMON_COLORS, TYPOGRAPHY } from "./design-system";
+import { useCountUp } from "../../../hooks/useCountUp";
 
 type MonthlyReportHeaderProps = {
   month_label: string;
@@ -37,6 +38,28 @@ export function MonthlyReportHeader({
   const [showCoverageTooltip, setShowCoverageTooltip] = useState(false);
   const integrityTooltipRef = useRef<HTMLDivElement>(null);
   const coverageTooltipRef = useRef<HTMLDivElement>(null);
+
+  // useCountUp 훅을 사용한 애니메이션
+  const [monthlyScoreCount, monthlyScoreRef] = useCountUp({
+    targetValue: summary_overview.monthly_score,
+    duration: 1500,
+    delay: 200,
+    triggerOnVisible: true,
+  });
+
+  const [integrityAverageCount, integrityAverageRef] = useCountUp({
+    targetValue: Math.round(integrity_average * 10),
+    duration: 1200,
+    delay: 400,
+    triggerOnVisible: true,
+  });
+
+  const [coverageRateCount, coverageRateRef] = useCountUp({
+    targetValue: Math.round(record_coverage_rate * 100),
+    duration: 1200,
+    delay: 600,
+    triggerOnVisible: true,
+  });
 
   // 외부 클릭 시 툴팁 닫기
   useEffect(() => {
@@ -168,7 +191,7 @@ export function MonthlyReportHeader({
           }}
         />
 
-        <div className="relative mb-6">
+        <div className="relative mb-6" ref={monthlyScoreRef}>
           <div>
             <p
               className={`${TYPOGRAPHY.label.fontSize} ${TYPOGRAPHY.label.fontWeight} mb-2 ${TYPOGRAPHY.label.textTransform}`}
@@ -189,7 +212,7 @@ export function MonthlyReportHeader({
                   )}30`,
                 }}
               >
-                {summary_overview.monthly_score}
+                {monthlyScoreCount}
               </span>
               <span
                 className={`${TYPOGRAPHY.h3.fontSize} font-semibold`}
@@ -208,7 +231,12 @@ export function MonthlyReportHeader({
           {/* 평균 정합도 */}
           <div
             className="relative p-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-            ref={integrityTooltipRef}
+            ref={(node) => {
+              integrityTooltipRef.current = node;
+              if (integrityAverageRef && typeof integrityAverageRef === "object" && "current" in integrityAverageRef) {
+                (integrityAverageRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+              }
+            }}
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.6)",
               border: "1px solid rgba(168, 187, 168, 0.2)",
@@ -250,7 +278,7 @@ export function MonthlyReportHeader({
               className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
               style={{ color: "#A8BBA8", lineHeight: "1.2" }}
             >
-              {integrity_average.toFixed(1)}
+              {(integrityAverageCount / 10).toFixed(1)}
             </p>
             {showIntegrityTooltip && (
               <div
@@ -328,7 +356,12 @@ export function MonthlyReportHeader({
           {/* 기록 커버리지 */}
           <div
             className="relative p-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-            ref={coverageTooltipRef}
+            ref={(node) => {
+              coverageTooltipRef.current = node;
+              if (coverageRateRef && typeof coverageRateRef === "object" && "current" in coverageRateRef) {
+                (coverageRateRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+              }
+            }}
             style={{
               backgroundColor: "rgba(255, 255, 255, 0.6)",
               border: "1px solid rgba(229, 185, 107, 0.2)",
@@ -370,7 +403,7 @@ export function MonthlyReportHeader({
               className={`${TYPOGRAPHY.number.medium.fontSize} ${TYPOGRAPHY.number.medium.fontWeight}`}
               style={{ color: "#E5B96B", lineHeight: "1.2" }}
             >
-              {Math.round(record_coverage_rate * 100)}%
+              {coverageRateCount}%
             </p>
             {showCoverageTooltip && (
               <div
