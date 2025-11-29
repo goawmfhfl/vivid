@@ -1,5 +1,5 @@
 // Utility function for className merging
-function cn(
+export function cn(
   ...inputs: (string | undefined | null | false | Record<string, boolean>)[]
 ): string {
   return inputs
@@ -15,5 +15,3 @@ function cn(
     .filter(Boolean)
     .join(" ");
 }
-
-export { cn };

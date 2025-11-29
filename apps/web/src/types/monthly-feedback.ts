@@ -1,0 +1,20 @@
+// Re-export from @myrecords/core for backward compatibility
+export type {
+  MonthlyFeedback,
+  SummaryOverview,
+  EmotionOverview,
+  EmotionQuadrantDistribution,
+  InsightOverview,
+  TopInsight,
+  CoreInsight,
+  FeedbackOverview,
+  HabitScores,
+  CoreFeedback,
+  RecurringImprovement,
+  VisionOverview,
+  MainVision,
+  ConclusionOverview,
+  MonthlyFeedbackGenerateRequest,
+  MonthlyFeedbackListItem,
+  MonthlyFeedbackResponse,
+} from "@myrecords/core";
