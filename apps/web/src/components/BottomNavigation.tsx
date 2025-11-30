@@ -4,10 +4,30 @@ import { Home as HomeIcon, Clock, BarChart3 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { shouldShowBottomNav } from "@/lib/navigation";
+import { useEffect, useState } from "react";
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const isVisible = shouldShowBottomNav(pathname ?? "");
+  const [isErrorPage, setIsErrorPage] = useState(false);
+
+  useEffect(() => {
+    // 에러 페이지나 404 페이지 감지
+    const checkErrorPage = () => {
+      // document에 에러나 404 관련 요소가 있는지 확인
+      const hasErrorContent = document.querySelector('[data-error-page]') !== null;
+      const hasNotFoundContent = document.querySelector('[data-not-found-page]') !== null;
+      setIsErrorPage(hasErrorContent || hasNotFoundContent);
+    };
+
+    checkErrorPage();
+    // DOM 변경 감지를 위한 MutationObserver
+    const observer = new MutationObserver(checkErrorPage);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const isVisible = shouldShowBottomNav(pathname ?? "") && !isErrorPage;
 
   if (!isVisible) {
     return null;

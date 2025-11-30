@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MyRecords",
-    "slug": "myrecords",
-    "version": "0.1.0",
+    "name": "Today Journal",
+    "slug": "today-journal-mobile",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,18 +14,16 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.myrecords.app"
+      "bundleIdentifier": "com.todayjournal.mobile"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF8"
       },
-      "package": "com.myrecords.app"
+      "package": "com.todayjournal.mobile"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "scheme": "myrecords"
+    "plugins": ["expo-router"],
+    "scheme": "today-journal"
   }
 }

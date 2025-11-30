@@ -1,15 +1,11 @@
-import { StatusBar } from "expo-status-bar";
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { getKSTDateString } from "@myrecords/core";
 
 export default function App() {
-  const today = getKSTDateString();
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MyRecords</Text>
-      <Text style={styles.subtitle}>오늘 날짜: {today}</Text>
-      <StatusBar style="auto" />
+      <Text style={styles.title}>Today Journal</Text>
+      <Text style={styles.subtitle}>모바일 앱</Text>
     </View>
   );
 }
@@ -20,16 +16,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAF8",
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333333",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#6B7A6F",
+    color: "#6B7280",
   },
 });

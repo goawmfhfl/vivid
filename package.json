@@ -1,5 +1,5 @@
 {
-  "name": "myrecords",
+  "name": "today-journal-monorepo",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -10,12 +10,7 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:mobile": "npm run dev --workspace=apps/mobile",
     "build:web": "npm run build --workspace=apps/web",
-    "build:mobile": "npm run build --workspace=apps/mobile",
-    "lint": "npm run lint --workspace=apps/web",
-    "type-check": "npm run type-check --workspace=apps/web && npm run type-check --workspace=packages/core"
-  },
-  "devDependencies": {
-    "typescript": "^5"
+    "build:mobile": "npm run build --workspace=apps/mobile"
   },
   "engines": {
     "node": ">=18.0.0",
