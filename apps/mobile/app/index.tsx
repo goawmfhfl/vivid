@@ -127,6 +127,12 @@ export default function Page() {
         allowFileAccess={true}
         // 쿠키 공유 활성화
         thirdPartyCookiesEnabled={true}
+        // iOS 자동 줌 방지
+        scalesPageToFit={false}
+        // 줌 비활성화
+        bounces={false}
+        // iOS에서 줌 제스처 비활성화
+        scrollEnabled={true}
       />
     </SafeAreaView>
   );

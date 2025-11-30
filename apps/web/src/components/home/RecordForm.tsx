@@ -140,10 +140,11 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
         onChange={handleContentChange}
         onKeyDown={handleKeyDown}
         placeholder="오늘의 기록을 자유롭게 작성하세요..."
-        className="mb-3 resize-none text-sm focus:outline-none focus:ring-0"
+        className="mb-3 resize-none focus:outline-none focus:ring-0"
         style={{
           backgroundColor: "white",
           color: "#333333",
+          fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
           lineHeight: "1.6",
           border: "1px solid #E5E7EB",
           borderRadius: "0.5rem",
