@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PenLine } from "lucide-react";
 import { RecordItem } from "./RecordItem";
 import { type Record } from "../../hooks/useRecords";
@@ -9,6 +9,7 @@ import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { Button } from "../ui/button";
 import { getKSTDateString } from "@/lib/date-utils";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 
 interface RecordListProps {
   records: Record[];
@@ -36,6 +37,13 @@ export function RecordList({
     const todayKST = getKSTDateString();
     return record.kst_date === todayKST;
   });
+
+  // 오늘의 총 글자 수 계산
+  const totalCharCount = useMemo(() => {
+    return todayRecords.reduce((total, record) => {
+      return total + (record.content?.length || 0);
+    }, 0);
+  }, [todayRecords]);
 
   // 테스트용 핸들러
   const handleTestError = () => {
@@ -227,9 +235,23 @@ export function RecordList({
   // Records List
   return (
     <div className="mb-6">
-      <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
-        오늘의 타임라인
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 style={{ color: "#333333", fontSize: "1.1rem" }}>
+          오늘의 타임라인
+        </h2>
+        {totalCharCount > 0 && (
+          <span
+            className={TYPOGRAPHY.caption.fontSize}
+            style={{
+              color: COLORS.text.muted,
+              opacity: 0.6,
+              fontSize: "0.75rem",
+            }}
+          >
+            총 {totalCharCount.toLocaleString()}자
+          </span>
+        )}
+      </div>
       {/* 테스트용 버튼 (개발 환경에서만 표시) */}
       {isTest && (
         <div

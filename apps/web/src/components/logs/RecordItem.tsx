@@ -58,7 +58,7 @@ export function RecordItem({ record }: RecordItemProps) {
           )
         `,
         backgroundSize: "100% 100%, 100% 28px, 8px 8px",
-        backgroundPosition: "0 0, 0 0, 0 0",
+        backgroundPosition: "0 0, 0 2px, 0 0", // 줄무늬를 텍스트와 정렬
         // 종이 질감을 위한 필터
         filter: "contrast(1.02) brightness(1.01)",
       }}
@@ -104,7 +104,7 @@ export function RecordItem({ record }: RecordItemProps) {
 
       {/* 내용 영역 */}
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-3 mb-3">
           <span
             className={TYPOGRAPHY.caption.fontSize}
             style={{
@@ -114,14 +114,25 @@ export function RecordItem({ record }: RecordItemProps) {
           >
             {formatTime(record.created_at)}
           </span>
+          <span
+            className={TYPOGRAPHY.caption.fontSize}
+            style={{
+              color: COLORS.text.muted,
+              opacity: 0.5,
+              fontSize: "0.7rem",
+            }}
+          >
+            {record.content?.length || 0}자
+          </span>
         </div>
         <p
           className={TYPOGRAPHY.bodyLarge.fontSize}
           style={{
             color: COLORS.text.primary,
-            lineHeight: "1.6",
+            lineHeight: "28px", // 줄무늬 간격(28px)과 일치
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
+            paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
           }}
         >
           {record.content}

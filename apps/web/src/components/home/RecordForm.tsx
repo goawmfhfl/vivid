@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
+import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -79,10 +80,10 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
     if (textarea) {
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 100), 300);
+      const newHeight = Math.min(Math.max(scrollHeight, 100), 600);
       textarea.style.height = `${newHeight}px`;
 
-      if (scrollHeight > 300) {
+      if (scrollHeight > 600) {
         textarea.style.overflowY = "auto";
       } else {
         textarea.style.overflowY = "hidden";
@@ -131,53 +132,138 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
 
   return (
     <div
-      className="mb-6 p-5 rounded-2xl"
-      style={{ backgroundColor: "#F3F4F6" }}
+      className={`mb-6 ${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
+      style={{
+        backgroundColor: "#FAFAF8", // 프로젝트 base 색상 기반의 메모지 배경
+        border: `1.5px solid ${COLORS.border.light}`, // 프로젝트 border.light 색상 사용
+        borderRadius: "12px",
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `,
+        position: "relative",
+        overflow: "hidden",
+        paddingLeft: "48px", // 왼쪽 마진 라인을 위한 패딩
+        // 종이 질감 배경 패턴
+        backgroundImage: `
+          /* 왼쪽 마진 라인 */
+          linear-gradient(90deg, 
+            transparent 0px,
+            transparent 36px,
+            ${COLORS.border.card} 36px,
+            ${COLORS.border.card} 38px,
+            transparent 38px
+          ),
+          /* 가로 줄무늬 (프로젝트 그린 톤) */
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 27px,
+            rgba(107, 122, 111, 0.08) 27px,
+            rgba(107, 122, 111, 0.08) 28px
+          ),
+          /* 종이 텍스처 노이즈 */
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(107, 122, 111, 0.01) 2px,
+            rgba(107, 122, 111, 0.01) 4px
+          )
+        `,
+        backgroundSize: "100% 100%, 100% 28px, 8px 8px",
+        backgroundPosition: "0 0, 0 2px, 0 0", // 줄무늬를 텍스트와 정렬
+        // 종이 질감을 위한 필터
+        filter: "contrast(1.02) brightness(1.01)",
+      }}
     >
-      <Textarea
-        ref={textareaRef}
-        value={content}
-        onChange={handleContentChange}
-        onKeyDown={handleKeyDown}
-        placeholder="오늘의 기록을 자유롭게 작성하세요..."
-        className="mb-3 resize-none focus:outline-none focus:ring-0"
+      {/* 왼쪽 마진 라인 (프로젝트 색감) */}
+      <div
+        className="absolute left-0 top-0 bottom-0"
         style={{
-          backgroundColor: "white",
-          color: "#333333",
-          fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
-          lineHeight: "1.6",
-          border: "1px solid #E5E7EB",
-          borderRadius: "0.5rem",
-          minHeight: "100px",
-          maxHeight: "300px",
-          transition: "height 0.1s ease-out",
+          width: "2px",
+          backgroundColor: `${COLORS.border.card}CC`, // 프로젝트 border.card 색상 사용
+          left: "36px",
         }}
       />
 
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSubmit}
-          disabled={!content.trim() || createRecordMutation.isPending}
+      {/* 종이 질감 오버레이 (프로젝트 그린 톤) */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+          `,
+          mixBlendMode: "overlay",
+          opacity: 0.5,
+        }}
+      />
+
+      {/* 내용 영역 */}
+      <div className="relative z-10">
+        <Textarea
+          ref={textareaRef}
+          value={content}
+          onChange={handleContentChange}
+          onKeyDown={handleKeyDown}
+          placeholder="오늘의 기록을 자유롭게 작성하세요..."
+          className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
           style={{
-            backgroundColor:
-              !content.trim() || createRecordMutation.isPending
-                ? "#D1D5DB"
-                : "#6B7A6F",
-            color: "#FFFFFF",
-            fontWeight: "600",
-            padding: "0.625rem 1.5rem",
-            borderRadius: "0.5rem",
-            transition: "all 0.2s ease-in-out",
-            boxShadow:
-              !content.trim() || createRecordMutation.isPending
-                ? "none"
-                : "0 2px 4px rgba(0, 0, 0, 0.1)",
+            backgroundColor: "transparent",
+            color: COLORS.text.primary,
+            fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
+            lineHeight: "28px", // 줄무늬 간격(28px)과 일치
+            minHeight: "100px",
+            maxHeight: "600px",
+            transition: "height 0.1s ease-out",
+            padding: 0,
+            paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
+            boxShadow: "none",
           }}
-          className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
-        </Button>
+        />
+
+        <div className="flex items-center justify-between mb-3">
+          {/* 글자 수 표시 */}
+          <span
+            className={TYPOGRAPHY.caption.fontSize}
+            style={{
+              color: COLORS.text.muted,
+              opacity: content.length > 0 ? 0.6 : 0.3,
+              fontSize: "0.75rem",
+              transition: "opacity 0.2s ease-in-out",
+            }}
+          >
+            {content.length}자
+          </span>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSubmit}
+            disabled={!content.trim() || createRecordMutation.isPending}
+            style={{
+              backgroundColor:
+                !content.trim() || createRecordMutation.isPending
+                  ? "#D1D5DB"
+                  : COLORS.brand.primary,
+              color: "#FFFFFF",
+              fontWeight: "600",
+              padding: "0.625rem 1.5rem",
+              borderRadius: "0.5rem",
+              transition: "all 0.2s ease-in-out",
+              boxShadow:
+                !content.trim() || createRecordMutation.isPending
+                  ? "none"
+                  : "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+            className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
+          </Button>
+        </div>
       </div>
     </div>
   );
