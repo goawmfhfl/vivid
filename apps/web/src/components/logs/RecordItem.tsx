@@ -105,15 +105,15 @@ export function RecordItem({ record }: RecordItemProps) {
       {/* 내용 영역 */}
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-3">
-          <span
+            <span
             className={TYPOGRAPHY.caption.fontSize}
             style={{
               color: COLORS.text.secondary,
               opacity: 0.5,
             }}
-          >
+            >
             {formatTime(record.created_at)}
-          </span>
+            </span>
           <span
             className={TYPOGRAPHY.caption.fontSize}
             style={{
@@ -130,14 +130,14 @@ export function RecordItem({ record }: RecordItemProps) {
           style={{
             color: COLORS.text.primary,
             lineHeight: "28px", // 줄무늬 간격(28px)과 일치
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
             paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
-          }}
-        >
-          {record.content}
-        </p>
+            }}
+          >
+            {record.content}
+          </p>
+        </div>
       </div>
-    </div>
   );
 }

@@ -8,6 +8,7 @@ interface SubmitButtonProps {
   loadingText: string;
   defaultText: string;
   disabled?: boolean;
+  onClick?: () => void;
 }
 
 export function SubmitButton({
@@ -16,19 +17,23 @@ export function SubmitButton({
   loadingText,
   defaultText,
   disabled = false,
+  onClick,
 }: SubmitButtonProps) {
   const isDisabled = !isValid || isLoading || disabled;
 
   return (
     <Button
-      type="submit"
+      type={onClick ? "button" : "submit"}
       disabled={isDisabled}
-      className="w-full py-6 rounded-xl transition-all"
+      onClick={onClick}
+      className="px-8 py-3 rounded-xl transition-all font-medium"
       style={{
         backgroundColor: !isDisabled ? "#6B7A6F" : "#D1D5DB",
         color: "white",
-        fontSize: "1rem",
+        fontSize: "0.95rem",
         opacity: !isDisabled ? 1 : 0.6,
+        minWidth: "140px",
+        boxShadow: !isDisabled ? "0 2px 8px rgba(107, 122, 111, 0.2)" : "none",
       }}
     >
       {isLoading ? loadingText : defaultText}

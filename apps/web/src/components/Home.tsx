@@ -152,82 +152,82 @@ export function Home() {
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
-        <HomeHeader />
+      <HomeHeader />
 
-        {/* 테스트용 버튼 (개발 환경에서만 표시) */}
-        {isTest && (
-          <div
-            className={`mb-4 ${SPACING.card.paddingSmall} rounded-lg border-2 border-dashed`}
-            style={{ backgroundColor: "#FFF8E7", borderColor: "#E5B96B" }}
+      {/* 테스트용 버튼 (개발 환경에서만 표시) */}
+      {isTest && (
+        <div
+          className={`mb-4 ${SPACING.card.paddingSmall} rounded-lg border-2 border-dashed`}
+          style={{ backgroundColor: "#FFF8E7", borderColor: "#E5B96B" }}
+        >
+          <p
+            className={`${TYPOGRAPHY.body.fontSize} font-semibold mb-2`}
+            style={{ color: "#B8860B" }}
           >
-            <p
-              className={`${TYPOGRAPHY.body.fontSize} font-semibold mb-2`}
-              style={{ color: "#B8860B" }}
+            🧪 모달 테스트 (개발 환경)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            ;
+            <Button
+              onClick={handleTestLoading}
+              size="sm"
+              style={{
+                backgroundColor: COLORS.brand.primary,
+                color: COLORS.text.white,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
+                padding: "0.5rem 1rem",
+              }}
             >
-              🧪 모달 테스트 (개발 환경)
-            </p>
-            <div className="flex flex-wrap gap-2">
-              ;
-              <Button
-                onClick={handleTestLoading}
-                size="sm"
-                style={{
-                  backgroundColor: COLORS.brand.primary,
-                  color: COLORS.text.white,
-                  fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
-                  padding: "0.5rem 1rem",
-                }}
-              >
-                로딩 모달 테스트
-              </Button>
-              <Button
-                onClick={handleTestError}
-                size="sm"
-                variant="outline"
-                style={{
-                  borderColor: COLORS.status.error,
-                  color: COLORS.status.error,
-                  fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
-                  padding: "0.5rem 1rem",
-                }}
-              >
-                에러 모달 테스트
-              </Button>
-              <Button
-                onClick={handleTestErrorWithRetry}
-                size="sm"
-                variant="outline"
-                style={{
-                  borderColor: COLORS.status.error,
-                  color: COLORS.status.error,
-                  fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
-                  padding: "0.5rem 1rem",
-                }}
-              >
-                에러 모달 (재시도 포함)
-              </Button>
-            </div>
+              로딩 모달 테스트
+            </Button>
+            <Button
+              onClick={handleTestError}
+              size="sm"
+              variant="outline"
+              style={{
+                borderColor: COLORS.status.error,
+                color: COLORS.status.error,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
+                padding: "0.5rem 1rem",
+              }}
+            >
+              에러 모달 테스트
+            </Button>
+            <Button
+              onClick={handleTestErrorWithRetry}
+              size="sm"
+              variant="outline"
+              style={{
+                borderColor: COLORS.status.error,
+                color: COLORS.status.error,
+                fontSize: TYPOGRAPHY.bodySmall.fontSize.replace("text-", ""),
+                padding: "0.5rem 1rem",
+              }}
+            >
+              에러 모달 (재시도 포함)
+            </Button>
           </div>
-        )}
+        </div>
+      )}
 
-        <RecordForm />
-        <RecordList
-          records={records}
-          isLoading={isLoading}
-          error={error}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onRetry={() => refetchRecords()}
-        />
+      <RecordForm />
+      <RecordList
+        records={records}
+        isLoading={isLoading}
+        error={error}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onRetry={() => refetchRecords()}
+      />
 
-        {hasTodayRecords && (
-          <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4">
+      {hasTodayRecords && (
+        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4">
             <div
               className="relative cursor-pointer transition-all duration-300"
               onClick={
                 !isGeneratingFeedback ? handleOpenDailyFeedback : undefined
               }
-              style={{
+            style={{
                 backgroundColor: "#FAFAF8",
                 border: `1.5px solid ${COLORS.border.light}`,
                 borderRadius: "12px",
@@ -238,7 +238,7 @@ export function Home() {
               `,
                 position: "relative",
                 overflow: "hidden",
-                padding: "0.875rem 2rem",
+              padding: "0.875rem 2rem",
                 opacity: isGeneratingFeedback ? 0.6 : 1,
                 pointerEvents: isGeneratingFeedback ? "none" : "auto",
                 // 종이 질감 배경 패턴
@@ -307,33 +307,33 @@ export function Home() {
                 <span
                   style={{
                     color: COLORS.brand.primary,
-                    fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+              fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
                     fontWeight: "600",
                     lineHeight: "28px",
-                  }}
-                >
-                  {isGeneratingFeedback
-                    ? "피드백 생성 중..."
-                    : hasTodayFeedback
-                    ? "오늘 피드백 보기"
-                    : "오늘 피드백 받기"}
+            }}
+          >
+            {isGeneratingFeedback
+              ? "피드백 생성 중..."
+              : hasTodayFeedback
+              ? "오늘 피드백 보기"
+              : "오늘 피드백 받기"}
                 </span>
               </div>
             </div>
-          </div>
-        )}
+        </div>
+      )}
 
-        <EditRecordDialog
-          record={editingRecord}
-          open={!!editingRecord}
-          onOpenChange={(open) => !open && setEditingRecord(null)}
-        />
+      <EditRecordDialog
+        record={editingRecord}
+        open={!!editingRecord}
+        onOpenChange={(open) => !open && setEditingRecord(null)}
+      />
 
-        <DeleteRecordDialog
-          recordId={deletingRecordId}
-          open={!!deletingRecordId}
-          onOpenChange={(open) => !open && setDeletingRecordId(null)}
-        />
+      <DeleteRecordDialog
+        recordId={deletingRecordId}
+        open={!!deletingRecordId}
+        onOpenChange={(open) => !open && setDeletingRecordId(null)}
+      />
 
       {/* 프로필 업데이트 모달 */}
       <ProfileUpdateModal />

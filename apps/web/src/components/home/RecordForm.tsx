@@ -203,26 +203,26 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
 
       {/* 내용 영역 */}
       <div className="relative z-10">
-        <Textarea
-          ref={textareaRef}
-          value={content}
-          onChange={handleContentChange}
-          onKeyDown={handleKeyDown}
-          placeholder="오늘의 기록을 자유롭게 작성하세요..."
+      <Textarea
+        ref={textareaRef}
+        value={content}
+        onChange={handleContentChange}
+        onKeyDown={handleKeyDown}
+        placeholder="오늘의 기록을 자유롭게 작성하세요..."
           className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
-          style={{
+        style={{
             backgroundColor: "transparent",
             color: COLORS.text.primary,
-            fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
+          fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
             lineHeight: "28px", // 줄무늬 간격(28px)과 일치
-            minHeight: "100px",
+          minHeight: "100px",
             maxHeight: "600px",
-            transition: "height 0.1s ease-out",
+          transition: "height 0.1s ease-out",
             padding: 0,
             paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
             boxShadow: "none",
-          }}
-        />
+        }}
+      />
 
         <div className="flex items-center justify-between mb-3">
           {/* 글자 수 표시 */}
@@ -239,30 +239,30 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
           </span>
         </div>
 
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSubmit}
-            disabled={!content.trim() || createRecordMutation.isPending}
-            style={{
-              backgroundColor:
-                !content.trim() || createRecordMutation.isPending
-                  ? "#D1D5DB"
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSubmit}
+          disabled={!content.trim() || createRecordMutation.isPending}
+          style={{
+            backgroundColor:
+              !content.trim() || createRecordMutation.isPending
+                ? "#D1D5DB"
                   : COLORS.brand.primary,
-              color: "#FFFFFF",
-              fontWeight: "600",
-              padding: "0.625rem 1.5rem",
-              borderRadius: "0.5rem",
-              transition: "all 0.2s ease-in-out",
-              boxShadow:
-                !content.trim() || createRecordMutation.isPending
-                  ? "none"
-                  : "0 2px 4px rgba(0, 0, 0, 0.1)",
-            }}
-            className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
-          </Button>
+            color: "#FFFFFF",
+            fontWeight: "600",
+            padding: "0.625rem 1.5rem",
+            borderRadius: "0.5rem",
+            transition: "all 0.2s ease-in-out",
+            boxShadow:
+              !content.trim() || createRecordMutation.isPending
+                ? "none"
+                : "0 2px 4px rgba(0, 0, 0, 0.1)",
+          }}
+          className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
+        </Button>
         </div>
       </div>
     </div>

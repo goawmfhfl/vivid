@@ -1,4 +1,4 @@
-import { SignUpView } from "@/components/login/SignUpView";
+import { SignUpView } from "@/components/signup/SignUpView";
 
 // Next.js 15: searchParams는 Promise입니다
 export default async function SignUpPage({

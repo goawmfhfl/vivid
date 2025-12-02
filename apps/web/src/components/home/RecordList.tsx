@@ -237,8 +237,8 @@ export function RecordList({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 style={{ color: "#333333", fontSize: "1.1rem" }}>
-          오늘의 타임라인
-        </h2>
+        오늘의 타임라인
+      </h2>
         {totalCharCount > 0 && (
           <span
             className={TYPOGRAPHY.caption.fontSize}

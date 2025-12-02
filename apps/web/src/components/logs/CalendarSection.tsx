@@ -147,22 +147,22 @@ export function CalendarSection({
 
       {/* 내용 영역 */}
       <div className="relative z-10">
-        <MonthNavigation
-          monthLabel={monthLabel}
-          onPrevMonth={onPrevMonth}
-          onNextMonth={onNextMonth}
-          isLoading={isLoading}
-        />
+      <MonthNavigation
+        monthLabel={monthLabel}
+        onPrevMonth={onPrevMonth}
+        onNextMonth={onNextMonth}
+        isLoading={isLoading}
+      />
 
-        <Calendar
-          year={year}
-          month={month}
-          logs={logs}
-          onSelectDate={onSelectDate}
-          locale="ko"
-          startOfWeek="sun"
-          selectedDate={selectedDate}
-        />
+      <Calendar
+        year={year}
+        month={month}
+        logs={logs}
+        onSelectDate={onSelectDate}
+        locale="ko"
+        startOfWeek="sun"
+        selectedDate={selectedDate}
+      />
       </div>
     </div>
   );
