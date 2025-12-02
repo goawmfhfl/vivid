@@ -5,31 +5,18 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { updateLastLoginAt, getCurrentUserProfile } from "@/lib/profile-utils";
+import { updateLastLoginAt } from "@/lib/profile-utils";
 
-const isProfileCompleted = async (user: User): Promise<boolean> => {
-  // user_metadata에서 기본 정보 확인
+const isProfileCompleted = (user: User) => {
   const metadata = user.user_metadata || {};
-  const hasBasicInfo = Boolean(
-    metadata.name && metadata.phone && metadata.birthYear && metadata.gender
+  return Boolean(
+    metadata.name &&
+      metadata.phone &&
+      metadata.birthYear &&
+      metadata.gender &&
+      metadata.agreeTerms &&
+      metadata.agreeAI
   );
-
-  if (!hasBasicInfo) {
-    return false;
-  }
-
-  // profiles 테이블에서 약관 동의 정보 확인
-  try {
-    const profile = await getCurrentUserProfile();
-    if (!profile) {
-      return false;
-    }
-
-    return Boolean(profile.agree_terms && profile.agree_ai);
-  } catch (error) {
-    console.error("프로필 확인 중 오류:", error);
-    return false;
-  }
 };
 
 export default function AuthCallback() {
@@ -53,8 +40,7 @@ export default function AuthCallback() {
             return;
           }
 
-          const profileCompleted = await isProfileCompleted(user);
-          if (!profileCompleted) {
+          if (!isProfileCompleted(user)) {
             const emailQuery = user.email
               ? `&email=${encodeURIComponent(user.email)}`
               : "";

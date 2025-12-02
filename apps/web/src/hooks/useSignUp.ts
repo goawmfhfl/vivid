@@ -2,7 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
-import { createUserProfile } from "@/lib/profile-service";
 
 // 회원가입 데이터 타입 정의
 export interface SignUpData {
@@ -88,13 +87,16 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
       user = currentUser;
 
-      // 사용자 메타데이터 업데이트 (약관 동의 정보는 제외, profiles 테이블에만 저장)
+      // 사용자 메타데이터 업데이트
       const mergedMetadata = {
         ...(currentUser.user_metadata || {}),
         name,
         phone,
         birthYear,
         gender,
+        agreeTerms,
+        agreeAI,
+        agreeMarketing,
       };
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -114,12 +116,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       }
 
       // 1. Supabase Auth를 통한 회원가입
-      // 약관 동의 정보는 user_metadata에 저장하지 않고 profiles 테이블에만 저장
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
+            agreeTerms,
+            agreeAI,
+            agreeMarketing,
             name,
             phone,
             birthYear,
@@ -160,35 +164,6 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
     if (!user) {
       throw new SignUpError("사용자 정보를 가져올 수 없습니다.");
-    }
-
-    // 2. 프로필 테이블에 데이터 생성
-    try {
-      await createUserProfile({
-        id: user.id,
-        email: email || user.email || "",
-        name,
-        phone,
-        birthYear,
-        gender,
-        agreeTerms,
-        agreeAI,
-        agreeMarketing,
-        role: "user",
-      });
-    } catch (profileError) {
-      // 프로필 생성 실패 처리
-      const errorMessage =
-        profileError instanceof Error ? profileError.message : "";
-
-      // 프로필이 이미 존재하는 경우는 무시 (중복 가입 방지)
-      if (errorMessage.includes("이미 존재")) {
-        // 정상 처리
-      } else {
-        throw new SignUpError(
-          `회원가입은 완료되었지만 프로필 생성에 실패했습니다. 관리자에게 문의해주세요.`
-        );
-      }
     }
 
     return { user, session };
