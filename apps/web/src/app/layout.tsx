@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { JournalProvider } from "./providers";
@@ -22,12 +22,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Today Journal",
   description: "오늘의 기록을 남기고 분석하는 일기 앱",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

@@ -67,8 +67,8 @@ export function LogView({ onSelectDate }: LogViewProps) {
   };
 
   return (
-    <div className="min-h-screen pb-24" style={{ backgroundColor: "#FAFAF8" }}>
-      <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="min-h-screen" style={{ backgroundColor: "#FAFAF8" }}>
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         <LogViewHeader
           year={currentYear}
           month={currentMonth}
