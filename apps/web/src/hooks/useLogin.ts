@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
 import { queryClient } from "@/app/providers";
 import { clearUserDataCache } from "@/lib/cache-utils";
+import { updateLastLoginAt } from "@/lib/profile-utils";
 
 // 로그인 데이터 타입 정의
 export interface LoginData {
@@ -65,6 +66,9 @@ const loginUser = async (data: LoginData): Promise<LoginResponse> => {
     if (!authData.user) {
       throw new LoginError("로그인에 실패했습니다.");
     }
+
+    // 프로필의 last_login_at 업데이트
+    await updateLastLoginAt(authData.user.id);
 
     return authData;
   } catch (error) {

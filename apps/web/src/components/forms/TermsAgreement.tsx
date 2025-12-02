@@ -114,8 +114,9 @@ export function TermsAgreement({
           onClick={() => onAgreeAll(!allChecked)}
           className="w-full rounded-lg py-2 text-sm font-medium transition-colors"
           style={{
-            backgroundColor: allChecked ? "#6B7A6F" : "#EFE9E3",
-            color: allChecked ? "white" : "#6B7A6F",
+            backgroundColor: allChecked ? "#6B7A6F" : "#D1D5DB",
+            color: allChecked ? "white" : "white",
+            opacity: allChecked ? 1 : 0.6,
           }}
         >
           전체 동의하기

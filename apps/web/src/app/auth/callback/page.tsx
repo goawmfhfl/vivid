@@ -5,17 +5,31 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { updateLastLoginAt, getCurrentUserProfile } from "@/lib/profile-utils";
 
-const isProfileCompleted = (user: User) => {
+const isProfileCompleted = async (user: User): Promise<boolean> => {
+  // user_metadata에서 기본 정보 확인
   const metadata = user.user_metadata || {};
-  return Boolean(
-    metadata.name &&
-      metadata.phone &&
-      metadata.birthYear &&
-      metadata.gender &&
-      metadata.agreeTerms &&
-      metadata.agreeAI
+  const hasBasicInfo = Boolean(
+    metadata.name && metadata.phone && metadata.birthYear && metadata.gender
   );
+
+  if (!hasBasicInfo) {
+    return false;
+  }
+
+  // profiles 테이블에서 약관 동의 정보 확인
+  try {
+    const profile = await getCurrentUserProfile();
+    if (!profile) {
+      return false;
+    }
+
+    return Boolean(profile.agree_terms && profile.agree_ai);
+  } catch (error) {
+    console.error("프로필 확인 중 오류:", error);
+    return false;
+  }
 };
 
 export default function AuthCallback() {
@@ -39,13 +53,17 @@ export default function AuthCallback() {
             return;
           }
 
-          if (!isProfileCompleted(user)) {
+          const profileCompleted = await isProfileCompleted(user);
+          if (!profileCompleted) {
             const emailQuery = user.email
               ? `&email=${encodeURIComponent(user.email)}`
               : "";
             router.replace(`/signup?social=1${emailQuery}`);
             return;
           }
+
+          // 프로필의 last_login_at 업데이트
+          await updateLastLoginAt(user.id);
 
           router.replace("/");
         } else {

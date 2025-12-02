@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
+import { getCurrentUserProfile } from "@/lib/profile-utils";
 import { NameField } from "./forms/NameField";
 import { PhoneField } from "./forms/PhoneField";
 import { SubmitButton } from "./forms/SubmitButton";
@@ -60,16 +61,33 @@ export function ProfileSettingsView() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (currentUser?.user_metadata) {
-      const metadata = currentUser.user_metadata;
-      setFormData({
+    const loadProfileData = async () => {
+      if (!currentUser) return;
+
+      // user_metadata에서 기본 정보 가져오기
+      const metadata = currentUser.user_metadata || {};
+      const basicData = {
         name: (metadata.name as string) || "",
         phone: (metadata.phone as string) || "",
         birthYear: (metadata.birthYear as string) || "",
         gender: (metadata.gender as string) || "",
-        agreeMarketing: Boolean(metadata.agreeMarketing),
-      });
-    }
+        agreeMarketing: false, // 기본값
+      };
+
+      // profiles 테이블에서 약관 동의 정보 가져오기
+      try {
+        const profile = await getCurrentUserProfile();
+        if (profile) {
+          basicData.agreeMarketing = profile.agree_marketing;
+        }
+      } catch (error) {
+        console.error("프로필 정보 로드 실패:", error);
+      }
+
+      setFormData(basicData);
+    };
+
+    loadProfileData();
   }, [currentUser]);
 
   const updateField = (field: keyof typeof formData, value: string | boolean) =>

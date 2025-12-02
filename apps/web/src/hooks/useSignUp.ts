@@ -2,11 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { createUserProfile } from "@/lib/profile-service";
 
 // 회원가입 데이터 타입 정의
 export interface SignUpData {
-  email: string;
-  password: string;
+  email?: string; // 소셜 로그인 케이스에서는 optional
+  password?: string; // 소셜 로그인 케이스에서는 optional
   name: string;
   phone: string;
   birthYear: string;
@@ -14,6 +15,7 @@ export interface SignUpData {
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
+  isSocialOnboarding?: boolean; // 소셜 로그인 완료 플래그
 }
 
 // 회원가입 응답 타입 정의
@@ -42,13 +44,10 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     agreeTerms,
     agreeAI,
     agreeMarketing,
+    isSocialOnboarding = false,
   } = data;
 
-  // 입력 데이터 검증
-  if (!email || !password) {
-    throw new SignUpError("이메일과 비밀번호를 입력해주세요.");
-  }
-
+  // 공통 필드 검증
   if (!name) {
     throw new SignUpError("이름을 입력해주세요.");
   }
@@ -70,50 +69,129 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
   }
 
   try {
-    // 1. Supabase Auth를 통한 회원가입
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          agreeTerms,
-          agreeAI,
-          agreeMarketing,
-          name,
-          phone,
-          birthYear,
-          gender,
-        },
-      },
-    });
+    let user: User | null = null;
+    let session: Session | null = null;
 
-    if (authError) {
-      // Supabase 에러 메시지를 한국어로 변환
-      let errorMessage = authError.message;
+    if (isSocialOnboarding) {
+      // 소셜 로그인 완료 케이스: 이미 로그인된 사용자 정보 가져오기
+      const {
+        data: { user: currentUser },
+        error: getUserError,
+      } = await supabase.auth.getUser();
 
-      if (authError.message.includes("already registered")) {
-        errorMessage = "이미 가입된 이메일입니다.";
-      } else if (authError.message.includes("Invalid email")) {
-        errorMessage = "올바른 이메일 형식을 입력해주세요.";
-      } else if (authError.message.includes("Password should be")) {
-        errorMessage = "비밀번호는 6자 이상이어야 합니다.";
-      } else if (authError.message.includes("over_email_send_rate_limit")) {
-        errorMessage =
-          "이메일 전송이 너무 빈번합니다. 잠시 후 다시 시도해주세요.";
-      } else if (authError.message.includes("signup_disabled")) {
-        errorMessage = "현재 회원가입이 일시적으로 중단되었습니다.";
-      } else if (authError.message.includes("email_not_confirmed")) {
-        errorMessage = "이메일 인증이 필요합니다. 이메일을 확인해주세요.";
+      if (getUserError || !currentUser) {
+        throw new SignUpError(
+          "로그인 정보를 확인할 수 없습니다. 다시 시도해주세요.",
+          getUserError?.message
+        );
       }
 
-      throw new SignUpError(errorMessage, authError.message);
+      user = currentUser;
+
+      // 사용자 메타데이터 업데이트 (약관 동의 정보는 제외, profiles 테이블에만 저장)
+      const mergedMetadata = {
+        ...(currentUser.user_metadata || {}),
+        name,
+        phone,
+        birthYear,
+        gender,
+      };
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: mergedMetadata,
+      });
+
+      if (updateError) {
+        throw new SignUpError(
+          updateError.message || "정보 저장에 실패했습니다.",
+          updateError.code
+        );
+      }
+    } else {
+      // 일반 회원가입 케이스
+      if (!email || !password) {
+        throw new SignUpError("이메일과 비밀번호를 입력해주세요.");
+      }
+
+      // 1. Supabase Auth를 통한 회원가입
+      // 약관 동의 정보는 user_metadata에 저장하지 않고 profiles 테이블에만 저장
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            phone,
+            birthYear,
+            gender,
+          },
+        },
+      });
+
+      if (authError) {
+        // Supabase 에러 메시지를 한국어로 변환
+        let errorMessage = authError.message;
+
+        if (authError.message.includes("already registered")) {
+          errorMessage = "이미 가입된 이메일입니다.";
+        } else if (authError.message.includes("Invalid email")) {
+          errorMessage = "올바른 이메일 형식을 입력해주세요.";
+        } else if (authError.message.includes("Password should be")) {
+          errorMessage = "비밀번호는 6자 이상이어야 합니다.";
+        } else if (authError.message.includes("over_email_send_rate_limit")) {
+          errorMessage =
+            "이메일 전송이 너무 빈번합니다. 잠시 후 다시 시도해주세요.";
+        } else if (authError.message.includes("signup_disabled")) {
+          errorMessage = "현재 회원가입이 일시적으로 중단되었습니다.";
+        } else if (authError.message.includes("email_not_confirmed")) {
+          errorMessage = "이메일 인증이 필요합니다. 이메일을 확인해주세요.";
+        }
+
+        throw new SignUpError(errorMessage, authError.message);
+      }
+
+      if (!authData.user) {
+        throw new SignUpError("회원가입에 실패했습니다.");
+      }
+
+      user = authData.user;
+      session = authData.session;
     }
 
-    if (!authData.user) {
-      throw new SignUpError("회원가입에 실패했습니다.");
+    if (!user) {
+      throw new SignUpError("사용자 정보를 가져올 수 없습니다.");
     }
 
-    return authData;
+    // 2. 프로필 테이블에 데이터 생성
+    try {
+      await createUserProfile({
+        id: user.id,
+        email: email || user.email || "",
+        name,
+        phone,
+        birthYear,
+        gender,
+        agreeTerms,
+        agreeAI,
+        agreeMarketing,
+        role: "user",
+      });
+    } catch (profileError) {
+      // 프로필 생성 실패 처리
+      const errorMessage =
+        profileError instanceof Error ? profileError.message : "";
+
+      // 프로필이 이미 존재하는 경우는 무시 (중복 가입 방지)
+      if (errorMessage.includes("이미 존재")) {
+        // 정상 처리
+      } else {
+        throw new SignUpError(
+          `회원가입은 완료되었지만 프로필 생성에 실패했습니다. 관리자에게 문의해주세요.`
+        );
+      }
+    }
+
+    return { user, session };
   } catch (error) {
     if (error instanceof SignUpError) {
       throw error;
@@ -128,17 +206,21 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 };
 
 // 회원가입 훅
-export const useSignUp = () => {
+export const useSignUp = (isSocialOnboarding = false) => {
   const router = useRouter();
 
   return useMutation({
     mutationFn: signUpUser,
     onSuccess: (data) => {
-      console.log("use Mutation 회원가입 성공:", data);
-
-      router.push(
-        "/login?message=회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요."
-      );
+      if (isSocialOnboarding) {
+        // 소셜 로그인 완료 케이스: 홈으로 이동
+        router.push("/");
+      } else {
+        // 일반 회원가입 케이스: 로그인 페이지로 이동
+        router.push(
+          "/login?message=회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요."
+        );
+      }
     },
     onError: (error: SignUpError) => {
       console.error("회원가입 실패:", error.message);

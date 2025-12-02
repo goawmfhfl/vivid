@@ -2,7 +2,6 @@
 
 import { useState, ReactNode } from "react";
 import { useSignUp } from "@/hooks/useSignUp";
-import { useCompleteSocialSignUp } from "@/hooks/useCompleteSocialSignUp";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";
@@ -270,8 +269,7 @@ export function SignUpView({
   });
 
   // React Query mutation 사용
-  const signUpMutation = useSignUp();
-  const socialSignUpMutation = useCompleteSocialSignUp();
+  const signUpMutation = useSignUp(isSocialOnboarding);
 
   // 폼 데이터 업데이트 헬퍼 함수들
   const updateFormData = (
@@ -376,29 +374,18 @@ export function SignUpView({
     }
 
     // React Query mutation 실행
-    if (isSocialOnboarding) {
-      socialSignUpMutation.mutate({
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        agreeTerms: formData.agreeTerms,
-        agreeAI: formData.agreeAI,
-        agreeMarketing: formData.agreeMarketing,
-        birthYear: formData.birthYear,
-        gender: formData.gender,
-      });
-    } else {
-      signUpMutation.mutate({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        agreeTerms: formData.agreeTerms,
-        agreeAI: formData.agreeAI,
-        agreeMarketing: formData.agreeMarketing,
-        birthYear: formData.birthYear,
-        gender: formData.gender,
-      });
-    }
+    signUpMutation.mutate({
+      email: isSocialOnboarding ? undefined : formData.email,
+      password: isSocialOnboarding ? undefined : formData.password,
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      agreeTerms: formData.agreeTerms,
+      agreeAI: formData.agreeAI,
+      agreeMarketing: formData.agreeMarketing,
+      birthYear: formData.birthYear,
+      gender: formData.gender,
+      isSocialOnboarding,
+    });
   };
 
   const commonFieldsValid = Boolean(
@@ -421,9 +408,7 @@ export function SignUpView({
     ? commonFieldsValid
     : commonFieldsValid && passwordValid;
 
-  const isSubmitting = isSocialOnboarding
-    ? socialSignUpMutation.isPending
-    : signUpMutation.isPending;
+  const isSubmitting = signUpMutation.isPending;
 
   return (
     <div
@@ -512,15 +497,11 @@ export function SignUpView({
             </div>
           )}
 
-          {(isSocialOnboarding
-            ? socialSignUpMutation.error
-            : signUpMutation.error) && (
+          {signUpMutation.error && (
             <ErrorMessage
               message={
-                (isSocialOnboarding
-                  ? socialSignUpMutation.error
-                  : signUpMutation.error
-                )?.message || "요청 처리 중 오류가 발생했습니다."
+                signUpMutation.error?.message ||
+                "요청 처리 중 오류가 발생했습니다."
               }
             />
           )}
