@@ -9,7 +9,7 @@ import { EditRecordDialog } from "./home/EditRecordDialog";
 import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
 import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
-import { HomeHeader } from "./home/HomeHeader";
+import { AppHeader } from "./common/AppHeader";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
@@ -152,7 +152,15 @@ export function Home() {
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
-      <HomeHeader />
+      <AppHeader
+        title="오늘의 기록"
+        subtitle={new Date().toLocaleDateString("ko-KR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          weekday: "long",
+        })}
+      />
 
       {/* 테스트용 버튼 (개발 환경에서만 표시) */}
       {isTest && (

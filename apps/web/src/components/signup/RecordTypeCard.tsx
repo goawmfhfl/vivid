@@ -48,6 +48,7 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
 ];
 
 // 레코드 타입별 색상 정의
+// 프로젝트의 그린 톤과 조화롭게, 각 키워드의 특성을 살린 색상
 export const RECORD_TYPE_COLORS: Record<
   RecordType,
   {
@@ -59,39 +60,44 @@ export const RECORD_TYPE_COLORS: Record<
   }
 > = {
   daily: {
-    background: "#FAFAF8", // 기본 베이지
-    border: "#EFE9E3",
+    // 일상 기록: 따뜻하고 편안한 베이지/크림 톤
+    background: "#FAF8F5", // 따뜻한 크림
+    border: "#F0EBE0", // 부드러운 베이지 테두리
     text: "#333333",
-    lineColor: "rgba(107, 122, 111, 0.08)",
-    overlay: "rgba(168, 187, 168, 0.15)",
+    lineColor: "rgba(139, 120, 100, 0.1)", // 따뜻한 브라운 계열 줄무늬
+    overlay: "rgba(168, 150, 130, 0.12)", // 따뜻한 베이지 오버레이
   },
   emotion: {
-    background: "#FFF5F5", // 연한 핑크
-    border: "#FFE5E5",
+    // 감정 기록: 따뜻하고 감성적인 코랄/피치 톤
+    background: "#FFF8F5", // 연한 피치
+    border: "#FFE8E0", // 따뜻한 코랄 테두리
     text: "#333333",
-    lineColor: "rgba(220, 38, 38, 0.08)",
-    overlay: "rgba(255, 182, 193, 0.15)",
+    lineColor: "rgba(255, 140, 120, 0.12)", // 따뜻한 코랄 줄무늬
+    overlay: "rgba(255, 180, 160, 0.15)", // 부드러운 피치 오버레이
   },
   dream: {
-    background: "#F0F9FF", // 연한 블루
-    border: "#E0F2FE",
+    // 꿈/목표 기록: 희망적이고 밝은 라벤더/퍼플 톤
+    background: "#F8F5FF", // 연한 라벤더
+    border: "#EDE5F5", // 부드러운 퍼플 테두리
     text: "#333333",
-    lineColor: "rgba(59, 130, 246, 0.08)",
-    overlay: "rgba(147, 197, 253, 0.15)",
+    lineColor: "rgba(160, 130, 200, 0.12)", // 라벤더 줄무늬
+    overlay: "rgba(180, 150, 220, 0.15)", // 밝은 퍼플 오버레이
   },
   insight: {
-    background: "#FFFBEB", // 연한 옐로우
-    border: "#FEF3C7",
+    // 인사이트 기록: 창의적이고 영감을 주는 골드/앰버 톤
+    background: "#FFFBF0", // 따뜻한 크림
+    border: "#F5E8D0", // 골드 테두리
     text: "#333333",
-    lineColor: "rgba(245, 158, 11, 0.08)",
-    overlay: "rgba(253, 224, 71, 0.15)",
+    lineColor: "rgba(200, 160, 100, 0.12)", // 따뜻한 골드 줄무늬
+    overlay: "rgba(220, 180, 120, 0.15)", // 부드러운 앰버 오버레이
   },
   feedback: {
-    background: "#F0FDF4", // 연한 그린
-    border: "#DCFCE7",
+    // 피드백 기록: 성찰적이고 차분한 민트/그린 톤 (프로젝트 브랜드 컬러와 조화)
+    background: "#F0F7F5", // 연한 민트 그린
+    border: "#D8E8E3", // 부드러운 그린 테두리
     text: "#333333",
-    lineColor: "rgba(16, 185, 129, 0.08)",
-    overlay: "rgba(134, 239, 172, 0.15)",
+    lineColor: "rgba(107, 122, 111, 0.12)", // 프로젝트 브랜드 그린 줄무늬
+    overlay: "rgba(124, 154, 124, 0.15)", // 미드 그린 오버레이
   },
 };
 

@@ -11,7 +11,7 @@ import {
   useHasDailyFeedback,
   useDateLabels,
 } from "./logs/useLogViewData";
-import { LogViewHeader } from "./logs/LogViewHeader";
+import { AppHeader } from "./common/AppHeader";
 import { CalendarSection } from "./logs/CalendarSection";
 import { SelectedDateSection } from "./logs/SelectedDateSection";
 import { DailyFeedbackButton } from "./logs/DailyFeedbackButton";
@@ -69,11 +69,13 @@ export function LogView({ onSelectDate }: LogViewProps) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-        <LogViewHeader
-          year={currentYear}
-          month={currentMonth}
-          recordCount={records.length}
-          isLoading={isLoading}
+        <AppHeader
+          title="지난 기록"
+          subtitle={
+            isLoading
+              ? "로딩 중..."
+              : `${currentYear}년 ${currentMonth}월: ${records.length}개의 기록`
+          }
         />
 
         <CalendarSection
