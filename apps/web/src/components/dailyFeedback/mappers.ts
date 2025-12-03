@@ -88,8 +88,6 @@ export function mapDailyFeedbackRowToReport(
   const finalReport: FinalReport | null = row.final_report;
   const closingMessage = finalReport?.closing_message ?? "";
   const tomorrowFocus = finalReport?.tomorrow_focus ?? null;
-  const growthPoint = finalReport?.growth_point ?? null;
-  const adjustmentPoint = finalReport?.adjustment_point ?? null;
   const growthPoints = finalReport?.growth_points ?? null;
   const adjustmentPoints = finalReport?.adjustment_points ?? null;
 
@@ -155,8 +153,6 @@ export function mapDailyFeedbackRowToReport(
     // Final Report 데이터
     closing_message: closingMessage,
     tomorrow_focus: tomorrowFocus,
-    growth_point: growthPoint,
-    adjustment_point: adjustmentPoint,
     growth_points: growthPoints,
     adjustment_points: adjustmentPoints,
   };

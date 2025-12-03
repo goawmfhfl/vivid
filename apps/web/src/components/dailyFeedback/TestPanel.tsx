@@ -97,8 +97,18 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         "감정 흐름, 감정 영역, 시간대별 감정, 감정을 이끈 주요 사건들",
       fields: [
         { name: "emotion_curve", path: "view.emotion_curve", isPro: false },
-        { name: "ai_mood_valence", path: "view.ai_mood_valence", isPro: false },
-        { name: "ai_mood_arousal", path: "view.ai_mood_arousal", isPro: false },
+        {
+          name: "ai_mood_valence",
+          path: "view.ai_mood_valence",
+          isPro: true,
+          description: "쾌-불쾌 감정 값 (-1.0 ~ +1.0 범위) (Pro 전용)",
+        },
+        {
+          name: "ai_mood_arousal",
+          path: "view.ai_mood_arousal",
+          isPro: true,
+          description: "각성-에너지 값 (0.0 ~ 1.0 범위) (Pro 전용)",
+        },
         {
           name: "dominant_emotion",
           path: "view.dominant_emotion",
@@ -122,9 +132,9 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         {
           name: "emotion_events",
           path: "view.emotion_events",
-          isPro: false,
+          isPro: true,
           description:
-            "오늘의 감정을 이끈 주요 사건 리스트 (event, emotion, reason, suggestion)",
+            "오늘의 감정을 이끈 주요 사건 리스트 (event, emotion, reason, suggestion) (Pro 전용)",
         },
       ],
       condition: "emotion_curve.length > 0",
@@ -192,7 +202,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         {
           name: "insight_ai_comment",
           path: "view.insight_ai_comment",
-          isPro: false,
+          isPro: true,
+          description: "AI 인사이트 코멘트 (Pro 전용)",
         },
       ],
       condition: "core_insights.length > 0",
@@ -204,13 +215,30 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       fields: [
         { name: "core_feedback", path: "view.core_feedback", isPro: false },
         { name: "positives", path: "view.positives", isPro: false },
-        { name: "improvements", path: "view.improvements", isPro: false },
         {
-          name: "feedback_ai_comment",
-          path: "view.feedback_ai_comment",
-          isPro: false,
+          name: "improvements",
+          path: "view.improvements",
+          isPro: true,
+          description: "개선할 점 (Pro: 최대 6개, Free: 2~3개)",
         },
-        { name: "ai_message", path: "view.ai_message", isPro: false },
+        {
+          name: "ai_message",
+          path: "view.ai_message",
+          isPro: true,
+          description: "AI 메시지 (Pro 전용)",
+        },
+        {
+          name: "feedback_person_traits",
+          path: "view.feedback_person_traits",
+          isPro: true,
+          description: "피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용)",
+        },
+        {
+          name: "encouragement_message",
+          path: "view.encouragement_message",
+          isPro: true,
+          description: "응원의 메시지 (Pro 전용)",
+        },
       ],
       condition: "core_feedback.trim() !== ''",
     },
@@ -220,18 +248,17 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       description: "하루 정리, 내일 집중, 성장 포인트",
       fields: [
         { name: "closing_message", path: "view.closing_message", isPro: false },
-        { name: "tomorrow_focus", path: "view.tomorrow_focus", isPro: true },
-        { name: "growth_point", path: "view.growth_point", isPro: true },
+        {
+          name: "tomorrow_focus",
+          path: "view.tomorrow_focus",
+          isPro: true,
+          description: "내일 집중할 점 (Pro 전용)",
+        },
         {
           name: "growth_points",
           path: "view.growth_points",
           isPro: true,
           description: "성장 포인트 리스트 (Pro 전용)",
-        },
-        {
-          name: "adjustment_point",
-          path: "view.adjustment_point",
-          isPro: true,
         },
         {
           name: "adjustment_points",

@@ -56,8 +56,6 @@ export interface FeedbackOverview {
 
 // Meta Overview 섹션
 export interface MetaOverview {
-  growth_point: string | null;
-  adjustment_point: string | null;
   tomorrow_focus: string | null;
   integrity_reason: string | null;
 }
@@ -158,13 +156,10 @@ export interface FeedbackReport {
 
 export interface FinalReport {
   closing_message: string; // 하루를 정리하는 멘트 (400자 이내)
-  tomorrow_focus: string | null; // 내일 집중할 점
-  // 단일 문장 형태의 성장/조정 포인트 (하위 호환용)
-  growth_point: string | null; // 성장 포인트 (요약 문장)
-  adjustment_point: string | null; // 조정 포인트 (요약 문장)
+  tomorrow_focus: string | null; // 내일 집중할 점 (Pro 전용)
   // Pro 전용: 리스트 형식의 성장/조정 포인트
-  growth_points?: string[] | null; // 성장 포인트 리스트
-  adjustment_points?: string[] | null; // 조정 포인트 리스트
+  growth_points?: string[] | null; // 성장 포인트 리스트 (Pro 전용)
+  adjustment_points?: string[] | null; // 조정 포인트 리스트 (Pro 전용)
 }
 
 // Daily Feedback Row (DB에서 가져온 구조)

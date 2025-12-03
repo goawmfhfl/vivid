@@ -28,20 +28,9 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
       .filter((t) => t.length > 0);
   })();
 
-  // 성장/조정 포인트 리스트 (배열 필드를 우선 사용, 없으면 단일 문자열을 1개짜리 리스트로 변환)
-  const growthItems =
-    view.growth_points && view.growth_points.length > 0
-      ? view.growth_points
-      : view.growth_point
-      ? [view.growth_point]
-      : [];
-
-  const adjustmentItems =
-    view.adjustment_points && view.adjustment_points.length > 0
-      ? view.adjustment_points
-      : view.adjustment_point
-      ? [view.adjustment_point]
-      : [];
+  // 성장/조정 포인트 리스트 (Pro 전용)
+  const growthItems = view.growth_points ?? [];
+  const adjustmentItems = view.adjustment_points ?? [];
 
   return (
     <div className="mb-8">
@@ -223,7 +212,7 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
       )}
 
       {/* Free 모드: 성장/조정 포인트 Pro 업그레이드 유도 */}
-      {!isPro && (view.growth_point || view.adjustment_point) && (
+      {!isPro && (growthItems.length > 0 || adjustmentItems.length > 0) && (
         <Card
           className="p-4 mb-4"
           style={{

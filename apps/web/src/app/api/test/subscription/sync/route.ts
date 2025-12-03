@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncSubscriptionToMetadata } from "@/lib/subscription-utils";
-import { getAuthenticatedUserId } from "../../utils/auth";
+import { getAuthenticatedUserId } from "../../../utils/auth";
 
 /**
  * POST /api/test/subscription/sync
  * 테스트용 user_metadata 동기화 API
  * 개발 환경에서만 사용 가능
- * 
+ *
  * Authorization 헤더에서 토큰을 읽어 현재 로그인한 사용자의 user_metadata를 동기화합니다.
  */
 export async function POST(request: NextRequest) {

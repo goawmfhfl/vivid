@@ -382,29 +382,25 @@ export const FinalReportSchema = {
     type: "object",
     properties: {
       closing_message: { type: "string", maxLength: 400 },
-      tomorrow_focus: { type: "string", nullable: true },
-      growth_point: { type: "string", nullable: true },
-      adjustment_point: { type: "string", nullable: true },
+      tomorrow_focus: { type: "string", nullable: true }, // Pro 전용 필드
       growth_points: {
         type: "array",
         items: { type: "string" },
         minItems: 0,
         maxItems: 6,
         nullable: true,
-      },
+      }, // Pro 전용 필드
       adjustment_points: {
         type: "array",
         items: { type: "string" },
         minItems: 0,
         maxItems: 6,
         nullable: true,
-      },
+      }, // Pro 전용 필드
     },
     required: [
       "closing_message",
       "tomorrow_focus",
-      "growth_point",
-      "adjustment_point",
       "growth_points",
       "adjustment_points",
     ],
@@ -522,12 +518,11 @@ export const SYSTEM_PROMPT_FINAL = `
 규칙:
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
 - closing_message는 공백 포함 400자 이내로 하루를 정리하는 멘트를 작성합니다.
-- tomorrow_focus는 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하거나 null로 둡니다.
-- growth_point, adjustment_point는 하루를 대표하는 성장/조정 포인트를 한 문장으로 정리합니다.
-- growth_points, adjustment_points는 성장/조정 포인트를 리스트 형식으로 정리합니다 (각 0~6개).
+- tomorrow_focus는 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하거나 null로 둡니다. (Pro 전용 필드)
+- growth_points, adjustment_points는 성장/조정 포인트를 리스트 형식으로 정리합니다 (각 0~6개). (Pro 전용 필드)
 - 모든 타입의 리포트를 종합하여 균형있게 분석합니다.
 
 [멤버십별 차별화]
-- Pro 멤버십: 상세하고 깊이 있는 최종 리포트를 생성하세요. growth_points와 adjustment_points에 리스트 형태의 포인트를 충분히 포함하세요.
-- 무료 멤버십: 간단하게 핵심만 알려주세요. growth_points와 adjustment_points는 1~2개 이내의 짧은 항목만 포함하거나 비워두어도 됩니다.
+- Pro 멤버십: 상세하고 깊이 있는 최종 리포트를 생성하세요. tomorrow_focus, growth_points, adjustment_points에 리스트 형태의 포인트를 충분히 포함하세요.
+- 무료 멤버십: 간단하게 핵심만 알려주세요. tomorrow_focus, growth_points, adjustment_points는 null로 설정하세요.
 `;

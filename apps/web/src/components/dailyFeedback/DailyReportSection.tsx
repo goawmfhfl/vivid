@@ -410,7 +410,7 @@ export function DailyReportSection({ view, isPro = false }: SectionProps) {
               AI 코멘트
             </p>
             <p
-              className="text-sm italic"
+              className="text-sm"
               style={{
                 color: "#4E4B46",
                 lineHeight: "1.7",

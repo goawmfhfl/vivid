@@ -86,9 +86,7 @@ async function generateReport<T>(
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
   // Pro 멤버십에 따라 모델 선택
-  // Pro: gpt-5 (환경변수로 설정 가능, 기본값: gpt-4o)
-  // 무료: gpt-4o-mini
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o"; // gpt-5 출시 시 변경 가능
+  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
   const model = isPro ? proModel : "gpt-4o-mini";
 
   // Pro 멤버십에 따라 프롬프트 강화
@@ -132,8 +130,30 @@ async function generateReport<T>(
         ...("detailed_analysis" in result && { detailed_analysis: null }),
         ...("trend_analysis" in result && { trend_analysis: null }),
         // DailyReport의 Pro 전용 필드
-        ...("detailed_narrative" in result && { detailed_narrative: null }),
-        ...("context_analysis" in result && { context_analysis: null }),
+        ...("emotion_triggers" in result && { emotion_triggers: null }),
+        ...("behavioral_clues" in result && { behavioral_clues: null }),
+        // EmotionReport의 Pro 전용 필드
+        ...("ai_mood_valence" in result && { ai_mood_valence: null }),
+        ...("ai_mood_arousal" in result && { ai_mood_arousal: null }),
+        ...("emotion_events" in result && { emotion_events: null }),
+        // DreamReport의 Pro 전용 필드
+        ...("dream_goals" in result && { dream_goals: null }),
+        ...("dreamer_traits" in result && { dreamer_traits: null }),
+        // InsightReport의 Pro 전용 필드
+        ...("meta_question" in result && { meta_question: null }),
+        ...("insight_next_actions" in result && { insight_next_actions: null }),
+        // FeedbackReport의 Pro 전용 필드
+        ...("ai_message" in result && { ai_message: null }),
+        ...("feedback_person_traits" in result && {
+          feedback_person_traits: null,
+        }),
+        ...("encouragement_message" in result && {
+          encouragement_message: null,
+        }),
+        // FinalReport의 Pro 전용 필드
+        ...("tomorrow_focus" in result && { tomorrow_focus: null }),
+        ...("growth_points" in result && { growth_points: null }),
+        ...("adjustment_points" in result && { adjustment_points: null }),
       } as T;
     }
 
@@ -186,8 +206,32 @@ async function generateReport<T>(
           ...("detailed_analysis" in result && { detailed_analysis: null }),
           ...("trend_analysis" in result && { trend_analysis: null }),
           // DailyReport의 Pro 전용 필드
-          ...("detailed_narrative" in result && { detailed_narrative: null }),
-          ...("context_analysis" in result && { context_analysis: null }),
+          ...("emotion_triggers" in result && { emotion_triggers: null }),
+          ...("behavioral_clues" in result && { behavioral_clues: null }),
+          // EmotionReport의 Pro 전용 필드
+          ...("ai_mood_valence" in result && { ai_mood_valence: null }),
+          ...("ai_mood_arousal" in result && { ai_mood_arousal: null }),
+          ...("emotion_events" in result && { emotion_events: null }),
+          // DreamReport의 Pro 전용 필드
+          ...("dream_goals" in result && { dream_goals: null }),
+          ...("dreamer_traits" in result && { dreamer_traits: null }),
+          // InsightReport의 Pro 전용 필드
+          ...("meta_question" in result && { meta_question: null }),
+          ...("insight_next_actions" in result && {
+            insight_next_actions: null,
+          }),
+          // FeedbackReport의 Pro 전용 필드
+          ...("ai_message" in result && { ai_message: null }),
+          ...("feedback_person_traits" in result && {
+            feedback_person_traits: null,
+          }),
+          ...("encouragement_message" in result && {
+            encouragement_message: null,
+          }),
+          // FinalReport의 Pro 전용 필드
+          ...("tomorrow_focus" in result && { tomorrow_focus: null }),
+          ...("growth_points" in result && { growth_points: null }),
+          ...("adjustment_points" in result && { adjustment_points: null }),
         } as T;
       }
 
