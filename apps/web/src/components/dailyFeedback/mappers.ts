@@ -82,7 +82,6 @@ export function mapDailyFeedbackRowToReport(
   const improvements = feedbackReport?.improvements ?? [];
   const aiMessage = feedbackReport?.ai_message ?? null;
   const feedbackPersonTraits = feedbackReport?.feedback_person_traits ?? null;
-  const encouragementMessage = feedbackReport?.encouragement_message ?? null;
 
   // Final Report에서 데이터 추출
   const finalReport: FinalReport | null = row.final_report;
@@ -148,7 +147,6 @@ export function mapDailyFeedbackRowToReport(
     improvements: improvements,
     ai_message: aiMessage,
     feedback_person_traits: feedbackPersonTraits,
-    encouragement_message: encouragementMessage,
 
     // Final Report 데이터
     closing_message: closingMessage,

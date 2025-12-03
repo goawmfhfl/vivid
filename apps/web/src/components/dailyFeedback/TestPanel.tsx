@@ -233,12 +233,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
           description: "피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용)",
         },
-        {
-          name: "encouragement_message",
-          path: "view.encouragement_message",
-          isPro: true,
-          description: "응원의 메시지 (Pro 전용)",
-        },
       ],
       condition: "core_feedback.trim() !== ''",
     },

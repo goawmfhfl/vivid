@@ -147,9 +147,6 @@ async function generateReport<T>(
         ...("feedback_person_traits" in result && {
           feedback_person_traits: null,
         }),
-        ...("encouragement_message" in result && {
-          encouragement_message: null,
-        }),
         // FinalReport의 Pro 전용 필드
         ...("tomorrow_focus" in result && { tomorrow_focus: null }),
         ...("growth_points" in result && { growth_points: null }),
@@ -224,9 +221,6 @@ async function generateReport<T>(
           ...("ai_message" in result && { ai_message: null }),
           ...("feedback_person_traits" in result && {
             feedback_person_traits: null,
-          }),
-          ...("encouragement_message" in result && {
-            encouragement_message: null,
           }),
           // FinalReport의 Pro 전용 필드
           ...("tomorrow_focus" in result && { tomorrow_focus: null }),

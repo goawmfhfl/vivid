@@ -354,10 +354,6 @@ export function getFeedbackReportSchema(isPro: boolean) {
           maxItems: 5,
           nullable: true,
         },
-        encouragement_message: {
-          type: "string",
-          nullable: true,
-        },
       },
       required: [
         "core_feedback",
@@ -365,7 +361,6 @@ export function getFeedbackReportSchema(isPro: boolean) {
         "improvements",
         "ai_message",
         "feedback_person_traits",
-        "encouragement_message",
       ],
       additionalProperties: false,
     },

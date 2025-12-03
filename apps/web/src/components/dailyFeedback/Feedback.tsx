@@ -1,4 +1,4 @@
-import { TrendingUp, Sparkles, Lock, Heart, User } from "lucide-react";
+import { TrendingUp, Sparkles, Lock, User } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
@@ -179,38 +179,6 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
           </Card>
         )}
 
-      {/* 응원의 메시지 (Pro 전용) */}
-      {isPro && view.encouragement_message && (
-        <Card
-          className="p-5 mb-4"
-          style={{
-            backgroundColor: "#F5F7F5",
-            borderLeft: "3px solid #A8BBA8",
-          }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Heart className="w-4 h-4" style={{ color: "#A8BBA8" }} />
-            <p
-              className="text-xs font-semibold"
-              style={{
-                color: "#6B7A6F",
-              }}
-            >
-              응원의 메시지
-            </p>
-          </div>
-          <p
-            className="text-sm"
-            style={{
-              color: "#4E4B46",
-              lineHeight: "1.7",
-            }}
-          >
-            {view.encouragement_message}
-          </p>
-        </Card>
-      )}
-
       {/* AI 메시지 (Pro 전용) */}
       {isPro && view.ai_message && (
         <div
@@ -276,8 +244,7 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
                 }}
               >
                 Pro 멤버십에서는 잘한 점과 개선할 점을 최대 6개까지 제공하고, 이
-                피드백을 통해 알 수 있는 나의 특징과 응원의 메시지를 함께 정리해
-                드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를 함께
+                피드백을 통해 알 수 있는 나의 특징을 함께 정리해 드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를 함께
                 만들어보세요.
               </p>
               <p

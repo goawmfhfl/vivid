@@ -319,10 +319,6 @@ export function buildFeedbackPrompt(
         "- '너는 이런 사람이다'라고 낙인찍지 말고, 가능성과 방향성을 보여주는 문장으로 작성하세요.",
         '- 예: "자기 자신을 객관적으로 바라보려는 사람", "성장을 위해 솔직하게 기록하는 사람"',
         "",
-        "6) encouragement_message:",
-        "- 사용자를 응원하는 따뜻한 메시지를 작성하세요.",
-        "- 하루를 마무리하며 앞으로의 성장을 격려하는 문장으로 작성하세요.",
-        "",
         "톤은 담백하고 과하지 않게, 사용자를 조용히 응원하는 호스트처럼 작성하세요.",
       ].join("\n")
     : [
@@ -334,7 +330,6 @@ export function buildFeedbackPrompt(
         "3) improvements는 개선할 점을 2~3개 정도만 간결하게 작성하세요. (Pro 전용: 최대 6개)",
         "4) ai_message는 Free 유저에서는 null로 설정하세요. (Pro 전용 필드입니다.)",
         "5) feedback_person_traits는 Free 유저에서는 null로 설정하세요. (Pro 전용 필드입니다.)",
-        "6) encouragement_message는 Free 유저에서는 null로 설정하세요. (Pro 전용 필드입니다.)",
       ].join("\n");
 
   let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 피드백 기록입니다.\n${instruction}\n\n`;

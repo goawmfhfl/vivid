@@ -123,8 +123,6 @@ export type DailyReportData = {
   ai_message: string | null;
   /** 피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용) */
   feedback_person_traits: string[] | null;
-  /** 응원의 메시지 (Pro 전용) */
-  encouragement_message: string | null;
 
   // ========== Final Report 데이터 ==========
   /** 하루를 정리하는 멘트 */

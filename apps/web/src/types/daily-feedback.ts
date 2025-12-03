@@ -151,7 +151,6 @@ export interface FeedbackReport {
   ai_message: string | null; // AI 메시지 (Pro 전용)
   // Pro 전용 필드
   feedback_person_traits?: string[] | null; // 피드백을 통해 알 수 있는 사람들의 특징 (최대 5개)
-  encouragement_message?: string | null; // 응원의 메시지
 }
 
 export interface FinalReport {
