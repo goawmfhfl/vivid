@@ -305,36 +305,60 @@ export const InsightReportSchema = {
   strict: true,
 } as const;
 
-export const FeedbackReportSchema = {
-  name: "FeedbackReport",
-  schema: {
-    type: "object",
-    properties: {
-      core_feedback: { type: "string" },
-      positives: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 0,
+export function getFeedbackReportSchema(isPro: boolean) {
+  return {
+    name: "FeedbackReport",
+    schema: {
+      type: "object",
+      properties: {
+        core_feedback: { type: "string" },
+        positives: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: isPro ? 6 : 3, // Pro: 최대 6개, Free: 최대 3개
+        },
+        improvements: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: isPro ? 6 : 3, // Pro: 최대 6개, Free: 최대 3개
+        },
+        feedback_ai_comment: { type: "string", nullable: true },
+        ai_message: {
+          type: "string",
+          nullable: true,
+        }, // Pro 전용 (Free에서는 null)
+        // Pro 전용 필드
+        feedback_person_traits: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: 5,
+          nullable: true,
+        },
+        encouragement_message: {
+          type: "string",
+          nullable: true,
+        },
       },
-      improvements: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 0,
-      },
-      feedback_ai_comment: { type: "string", nullable: true },
-      ai_message: { type: "string", nullable: true },
+      required: [
+        "core_feedback",
+        "positives",
+        "improvements",
+        "feedback_ai_comment",
+        "ai_message",
+        "feedback_person_traits",
+        "encouragement_message",
+      ],
+      additionalProperties: false,
     },
-    required: [
-      "core_feedback",
-      "positives",
-      "improvements",
-      "feedback_ai_comment",
-      "ai_message",
-    ],
-    additionalProperties: false,
-  },
-  strict: true,
-} as const;
+    strict: true,
+  } as const;
+}
+
+// 기본 스키마 (일반 사용자용, 하위 호환성)
+export const FeedbackReportSchema = getFeedbackReportSchema(false);
 
 export const FinalReportSchema = {
   name: "FinalReport",

@@ -95,23 +95,29 @@ export type DailyReportData = {
   /** AI 인사이트 코멘트 */
   insight_ai_comment: string | null;
   /** 인사이트 기반 추천 행동 리스트 (Pro 전용) */
-  insight_next_actions: {
-    label: string;
-    difficulty: "낮음" | "보통" | "높음";
-    estimated_minutes: number | null;
-  }[] | null;
+  insight_next_actions:
+    | {
+        label: string;
+        difficulty: "낮음" | "보통" | "높음";
+        estimated_minutes: number | null;
+      }[]
+    | null;
 
   // ========== Feedback Report 데이터 ==========
   /** 핵심 피드백 */
   core_feedback: string;
-  /** 잘한 점 배열 */
+  /** 잘한 점 배열 (Pro: 최대 6개, Free: 2~3개) */
   positives: string[];
-  /** 개선할 점 배열 */
+  /** 개선할 점 배열 (Pro: 최대 6개, Free: 2~3개) */
   improvements: string[];
   /** AI 피드백 코멘트 */
   feedback_ai_comment: string | null;
-  /** AI 메시지 */
+  /** AI 메시지 (Pro 전용) */
   ai_message: string | null;
+  /** 피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용) */
+  feedback_person_traits: string[] | null;
+  /** 응원의 메시지 (Pro 전용) */
+  encouragement_message: string | null;
 
   // ========== Final Report 데이터 ==========
   /** 하루를 정리하는 멘트 */

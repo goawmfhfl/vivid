@@ -130,19 +130,24 @@ export interface InsightReport {
   meta_question: string | null; // 오늘의 인사이트를 더 발전시키는 방법 (간단하고 실용적으로, Pro에서만 활용)
   insight_ai_comment: string | null; // AI 코멘트
   // Pro 전용: 인사이트 기반 추천 행동 리스트
-  insight_next_actions?: {
-    label: string; // 추천 행동 한 문장
-    difficulty: "낮음" | "보통" | "높음"; // 난이도
-    estimated_minutes: number | null; // 예상 소요 시간 (분 단위, 없으면 null)
-  }[] | null;
+  insight_next_actions?:
+    | {
+        label: string; // 추천 행동 한 문장
+        difficulty: "낮음" | "보통" | "높음"; // 난이도
+        estimated_minutes: number | null; // 예상 소요 시간 (분 단위, 없으면 null)
+      }[]
+    | null;
 }
 
 export interface FeedbackReport {
   core_feedback: string; // 핵심 피드백
-  positives: string[]; // 긍정적 측면
-  improvements: string[]; // 개선점
+  positives: string[]; // 긍정적 측면 (Pro: 최대 6개, Free: 2~3개)
+  improvements: string[]; // 개선점 (Pro: 최대 6개, Free: 2~3개)
   feedback_ai_comment: string | null; // AI 코멘트
-  ai_message: string | null; // AI 메시지
+  ai_message: string | null; // AI 메시지 (Pro 전용)
+  // Pro 전용 필드
+  feedback_person_traits?: string[] | null; // 피드백을 통해 알 수 있는 사람들의 특징 (최대 5개)
+  encouragement_message?: string | null; // 응원의 메시지
 }
 
 export interface FinalReport {

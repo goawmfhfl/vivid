@@ -15,7 +15,7 @@ import {
   EmotionReportSchema,
   DreamReportSchema,
   InsightReportSchema,
-  FeedbackReportSchema,
+  getFeedbackReportSchema,
   FinalReportSchema,
   SYSTEM_PROMPT_SUMMARY,
   SYSTEM_PROMPT_DAILY,
@@ -353,7 +353,7 @@ export async function generateFeedbackReport(
   return generateReport<FeedbackReport>(
     SYSTEM_PROMPT_FEEDBACK,
     prompt,
-    FeedbackReportSchema,
+    getFeedbackReportSchema(isPro),
     cacheKey,
     isPro
   );
