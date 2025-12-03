@@ -53,13 +53,13 @@ export function getDailyReportSchema(isPro: boolean) {
     schema: {
       type: "object",
       properties: {
-        summary: { type: "string", maxLength: isPro ? 500 : 250 },
-        narrative: { type: "string", maxLength: isPro ? 800 : 400 },
+        summary: { type: "string", maxLength: isPro ? 300 : 150 },
+        narrative: { type: "string", maxLength: isPro ? 500 : 250 },
         keywords: {
           type: "array",
           items: { type: "string" },
           minItems: 0,
-          maxItems: isPro ? 30 : 20,
+          maxItems: isPro ? 10 : 5,
         },
         lesson: { type: "string", nullable: true },
         ai_comment: { type: "string", nullable: true },

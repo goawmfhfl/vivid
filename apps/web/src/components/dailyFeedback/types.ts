@@ -14,8 +14,6 @@ export type DailyReportData = {
   narrative_summary: string;
 
   // ========== Summary Report 데이터 ==========
-  /** 전체 요약 */
-  summary_summary: string;
   /** 핵심 포인트 배열 */
   summary_key_points: string[];
   /** 전체 점수 */

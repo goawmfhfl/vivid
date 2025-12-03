@@ -100,7 +100,6 @@ export function mapDailyFeedbackRowToReport(
     narrative_summary: narrativeSummary,
 
     // Summary Report 데이터
-    summary_summary: summarySummary,
     summary_key_points: summaryKeyPoints,
     overall_score: overallScore,
     detailed_analysis: detailedAnalysis,

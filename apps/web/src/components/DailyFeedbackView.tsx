@@ -1,12 +1,12 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import {
   useGetDailyFeedback,
   useGetDailyFeedbackById,
 } from "@/hooks/useGetDailyFeedback";
 import { HeaderSection } from "./dailyFeedback/Header";
-import { SummarySection } from "./dailyFeedback/Summary";
 import { DailyReportSection } from "./dailyFeedback/DailyReportSection";
 import { VisionSection } from "./dailyFeedback/Vision";
 import { InsightSection } from "./dailyFeedback/Insight";
@@ -20,6 +20,7 @@ import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
+import { TestPanel } from "./dailyFeedback/TestPanel";
 
 type DailyFeedbackViewProps = {
   date?: string;
@@ -62,7 +63,11 @@ export function DailyFeedbackView({
   const refetch = isValidId ? refetchById : refetchByDate;
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
-  const { isPro } = useSubscription();
+  const { isPro: subscriptionIsPro } = useSubscription();
+  const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
+
+  // 테스트 모드가 활성화되어 있으면 테스트 값을 사용, 아니면 실제 구독 상태 사용
+  const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
 
   if (isLoading) {
     return (
@@ -125,14 +130,11 @@ export function DailyFeedbackView({
   if (!view) return <EmptyState onBack={onBack} />;
 
   // 섹션 노출 가드: 리포트 데이터가 null이면 렌더링 제외
-  const hasSummarySection = !!(view.summary_summary && view.summary_summary.trim());
   const hasDailySection = !!(view.daily_summary && view.daily_summary.trim());
   const hasEmotionSection = !!(
     view.emotion_curve && view.emotion_curve.length > 0
   );
-  const hasDreamSection = !!(
-    view.vision_summary && view.vision_summary.trim()
-  );
+  const hasDreamSection = !!(view.vision_summary && view.vision_summary.trim());
   const hasInsightSection = !!(view.core_insight && view.core_insight.trim());
   const hasFeedbackSection = !!(
     view.core_feedback && view.core_feedback.trim()
@@ -164,14 +166,6 @@ export function DailyFeedbackView({
             <HeaderSection view={view} isPro={isPro} />
           </div>
         </ScrollAnimation>
-
-        {hasSummarySection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
-              <SummarySection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
 
         {hasDailySection && (
           <ScrollAnimation delay={300}>
@@ -233,6 +227,15 @@ export function DailyFeedbackView({
           </Button>
         </div>
       </div>
+
+      {/* 개발 환경 테스트 패널 */}
+      {view && (
+        <TestPanel
+          view={view}
+          isPro={isPro}
+          onTogglePro={(newIsPro) => setTestIsPro(newIsPro)}
+        />
+      )}
     </div>
   );
 }

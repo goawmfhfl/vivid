@@ -24,20 +24,6 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
         style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <div className="space-y-4">
-          {view.summary_summary && (
-            <div>
-              <p
-                className="text-sm"
-                style={{
-                  color: "#333333",
-                  lineHeight: "1.8",
-                  textAlign: "left",
-                }}
-              >
-                {view.summary_summary}
-              </p>
-            </div>
-          )}
           {view.summary_key_points && view.summary_key_points.length > 0 && (
             <div>
               <p
