@@ -1,6 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { DailyReport, Record } from "./types";
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import type { DailyReportResponse, Record } from "./types";
+import type {
+  DailyFeedbackRow,
+  SummaryReport,
+  DailyReport,
+  EmotionReport,
+  DreamReport,
+  InsightReport,
+  FeedbackReport,
+  FinalReport,
+} from "@/types/daily-feedback";
 import { decrypt } from "@/lib/encryption";
 import {
   encryptDailyFeedback,
@@ -39,7 +48,7 @@ export async function fetchRecordsByDate(
 export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
-  report: DailyReport
+  report: DailyReportResponse
 ): Promise<DailyFeedbackRow> {
   // 먼저 기존 레코드가 있는지 확인
   const { data: existingData, error: checkError } = await supabase
@@ -53,29 +62,32 @@ export async function saveDailyReport(
     throw new Error(`Failed to check existing feedback: ${checkError.message}`);
   }
 
-  // 암호화할 데이터 준비
-  const feedbackDataToEncrypt = {
-    emotion_overview: report.emotion_overview,
-    narrative_overview: report.narrative_overview,
-    insight_overview: report.insight_overview,
-    vision_overview: report.vision_overview,
-    feedback_overview: report.feedback_overview,
-    meta_overview: report.meta_overview,
+  // 새로운 타입별 리포트 데이터 준비 (암호화)
+  const newReportDataToEncrypt: { [key: string]: unknown } = {
+    summary_report: report.summary_report,
+    daily_report: report.daily_report,
+    emotion_report: report.emotion_report,
+    dream_report: report.dream_report,
+    insight_report: report.insight_report,
+    feedback_report: report.feedback_report,
+    final_report: report.final_report,
   };
 
-  // 암호화 적용
-  const encryptedData = encryptDailyFeedback(feedbackDataToEncrypt);
+  // 암호화 적용 (기존 encryptDailyFeedback 함수 재사용)
+  const encryptedNewReports = encryptDailyFeedback(newReportDataToEncrypt);
 
   const reportData = {
     user_id: userId,
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
-    emotion_overview: encryptedData.emotion_overview,
-    narrative_overview: encryptedData.narrative_overview,
-    insight_overview: encryptedData.insight_overview,
-    vision_overview: encryptedData.vision_overview,
-    feedback_overview: encryptedData.feedback_overview,
-    meta_overview: encryptedData.meta_overview,
+    // 새로운 타입별 리포트 필드
+    summary_report: encryptedNewReports.summary_report || null,
+    daily_report: encryptedNewReports.daily_report || null,
+    emotion_report: encryptedNewReports.emotion_report || null,
+    dream_report: encryptedNewReports.dream_report || null,
+    insight_report: encryptedNewReports.insight_report || null,
+    feedback_report: encryptedNewReports.feedback_report || null,
+    final_report: encryptedNewReports.final_report || null,
     is_ai_generated: true,
   };
 
@@ -126,7 +138,6 @@ export async function saveDailyReport(
 
   // 복호화하여 반환
   const savedRow = result[0] as DailyFeedbackRow;
-  // decryptDailyFeedback는 Record<string, unknown>을 받으므로 타입 캐스팅 필요
   const decrypted = decryptDailyFeedback(
     savedRow as unknown as { [key: string]: unknown }
   );

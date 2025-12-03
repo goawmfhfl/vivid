@@ -1,15 +1,23 @@
 import type { DailyReportData } from "./types";
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import type {
+  DailyFeedbackRow,
+  SummaryReport,
+  DailyReport,
+  EmotionReport,
+  DreamReport,
+  InsightReport,
+  FeedbackReport,
+  FinalReport,
+} from "@/types/daily-feedback";
 
 /**
  * jsonb 구조의 DailyFeedbackRow를 평면 구조의 DailyReportData로 변환
- * (프론트엔드 컴포넌트는 평면 구조를 사용)
+ * 새로운 리포트 구조(summary_report, daily_report 등)를 사용
  */
 export function mapDailyFeedbackRowToReport(
   row: DailyFeedbackRow
 ): DailyReportData {
-  // 기본값 설정 헬퍼 함수
-  // 숫자로 변환하는 헬퍼 함수 (복호화 과정에서 문자열로 변환될 수 있음)
+  // 숫자로 변환하는 헬퍼 함수
   const toNumber = (value: unknown): number | null => {
     if (value === null || value === undefined) return null;
     if (typeof value === "number") return value;
@@ -20,172 +28,127 @@ export function mapDailyFeedbackRowToReport(
     return null;
   };
 
-  const getEmotionOverview = () => {
-    if (!row.emotion_overview) {
-      return {
-        emotion_curve: [],
-        ai_mood_valence: null,
-        ai_mood_arousal: null,
-        dominant_emotion: null,
-        emotion_quadrant: null,
-        emotion_quadrant_explanation: null,
-        emotion_timeline: [],
-      };
-    }
-    return {
-      emotion_curve: row.emotion_overview.emotion_curve ?? [],
-      ai_mood_valence: toNumber(row.emotion_overview.ai_mood_valence),
-      ai_mood_arousal: toNumber(row.emotion_overview.ai_mood_arousal),
-      dominant_emotion: row.emotion_overview.dominant_emotion ?? null,
-      emotion_quadrant: row.emotion_overview.emotion_quadrant ?? null,
-      emotion_quadrant_explanation:
-        row.emotion_overview.emotion_quadrant_explanation ?? null,
-      emotion_timeline: row.emotion_overview.emotion_timeline ?? [],
-    };
-  };
+  // Summary Report에서 데이터 추출
+  const summaryReport: SummaryReport | null = row.summary_report;
+  const summarySummary = summaryReport?.summary ?? "";
+  const summaryKeyPoints = summaryReport?.key_points ?? [];
+  const overallScore = toNumber(summaryReport?.overall_score) ?? 0;
+  const detailedAnalysis = summaryReport?.detailed_analysis ?? null;
+  const trendAnalysis = summaryReport?.trend_analysis ?? null;
 
-  const getNarrativeOverview = () => {
-    if (!row.narrative_overview) {
-      return {
-        narrative_summary: "",
-        narrative: "",
-        lesson: "",
-        keywords: [],
-        integrity_score: 0,
-      };
-    }
-    return {
-      narrative_summary: row.narrative_overview.narrative_summary ?? "",
-      narrative: row.narrative_overview.narrative ?? "",
-      lesson: row.narrative_overview.lesson ?? "",
-      keywords: row.narrative_overview.keywords ?? [],
-      integrity_score: toNumber(row.narrative_overview.integrity_score) ?? 0,
-    };
-  };
+  // Daily Report에서 데이터 추출
+  const dailyReport: DailyReport | null = row.daily_report;
+  const dailySummary = dailyReport?.summary ?? "";
+  const dailyNarrative = dailyReport?.narrative ?? "";
+  const dailyKeywords = dailyReport?.keywords ?? [];
+  const dailyLesson = dailyReport?.lesson ?? null;
+  const dailyAiComment = dailyReport?.ai_comment ?? null;
+  const detailedNarrative = dailyReport?.detailed_narrative ?? null;
+  const contextAnalysis = dailyReport?.context_analysis ?? null;
 
-  const getInsightOverview = () => {
-    if (!row.insight_overview) {
-      return {
-        core_insight: "",
-        learning_source: "",
-        meta_question: "",
-        insight_ai_comment: "",
-      };
-    }
-    return {
-      core_insight: row.insight_overview.core_insight ?? "",
-      learning_source: row.insight_overview.learning_source ?? "",
-      meta_question: row.insight_overview.meta_question ?? "",
-      insight_ai_comment: row.insight_overview.insight_ai_comment ?? "",
-    };
-  };
+  // Emotion Report에서 데이터 추출
+  const emotionReport: EmotionReport | null = row.emotion_report;
+  const emotionCurve = emotionReport?.emotion_curve ?? [];
+  const aiMoodValence = toNumber(emotionReport?.ai_mood_valence);
+  const aiMoodArousal = toNumber(emotionReport?.ai_mood_arousal);
+  const dominantEmotion = emotionReport?.dominant_emotion ?? null;
+  const emotionQuadrant = emotionReport?.emotion_quadrant ?? null;
+  const emotionQuadrantExplanation =
+    emotionReport?.emotion_quadrant_explanation ?? null;
+  const emotionTimeline = emotionReport?.emotion_timeline ?? [];
 
-  const getVisionOverview = () => {
-    if (!row.vision_overview) {
-      return {
-        vision_summary: "",
-        vision_self: "",
-        vision_keywords: [],
-        reminder_sentence: "",
-        vision_ai_feedback: "",
-      };
-    }
-    return {
-      vision_summary: row.vision_overview.vision_summary ?? "",
-      vision_self: row.vision_overview.vision_self ?? "",
-      vision_keywords: row.vision_overview.vision_keywords ?? [],
-      reminder_sentence: row.vision_overview.reminder_sentence ?? "",
-      vision_ai_feedback: row.vision_overview.vision_ai_feedback ?? "",
-    };
-  };
+  // Dream Report에서 데이터 추출
+  const dreamReport: DreamReport | null = row.dream_report;
+  const visionSummary = dreamReport?.summary ?? "";
+  const visionSelf = dreamReport?.vision_self ?? "";
+  const visionKeywords = dreamReport?.vision_keywords ?? [];
+  const reminderSentence = dreamReport?.reminder_sentence ?? null;
+  const visionAiFeedback = dreamReport?.vision_ai_feedback ?? null;
 
-  const getFeedbackOverview = () => {
-    if (!row.feedback_overview) {
-      return {
-        core_feedback: "",
-        positives: [],
-        improvements: [],
-        feedback_ai_comment: "",
-        ai_message: "",
-      };
-    }
-    return {
-      core_feedback: row.feedback_overview.core_feedback ?? "",
-      positives: row.feedback_overview.positives ?? [],
-      improvements: row.feedback_overview.improvements ?? [],
-      feedback_ai_comment: row.feedback_overview.feedback_ai_comment ?? "",
-      ai_message: row.feedback_overview.ai_message ?? "",
-    };
-  };
+  // Insight Report에서 데이터 추출
+  const insightReport: InsightReport | null = row.insight_report;
+  const coreInsight = insightReport?.core_insight ?? "";
+  const learningSource = insightReport?.learning_source ?? null;
+  const metaQuestion = insightReport?.meta_question ?? null;
+  const insightAiComment = insightReport?.insight_ai_comment ?? null;
 
-  const getMetaOverview = () => {
-    if (!row.meta_overview) {
-      return {
-        growth_point: "",
-        adjustment_point: "",
-        tomorrow_focus: "",
-        integrity_reason: "",
-      };
-    }
-    return {
-      growth_point: row.meta_overview.growth_point ?? "",
-      adjustment_point: row.meta_overview.adjustment_point ?? "",
-      tomorrow_focus: row.meta_overview.tomorrow_focus ?? "",
-      integrity_reason: row.meta_overview.integrity_reason ?? "",
-    };
-  };
+  // Feedback Report에서 데이터 추출
+  const feedbackReport: FeedbackReport | null = row.feedback_report;
+  const coreFeedback = feedbackReport?.core_feedback ?? "";
+  const positives = feedbackReport?.positives ?? [];
+  const improvements = feedbackReport?.improvements ?? [];
+  const feedbackAiComment = feedbackReport?.feedback_ai_comment ?? null;
+  const aiMessage = feedbackReport?.ai_message ?? null;
 
-  const emotion = getEmotionOverview();
-  const narrative = getNarrativeOverview();
-  const insight = getInsightOverview();
-  const vision = getVisionOverview();
-  const feedback = getFeedbackOverview();
-  const meta = getMetaOverview();
+  // Final Report에서 데이터 추출
+  const finalReport: FinalReport | null = row.final_report;
+  const closingMessage = finalReport?.closing_message ?? "";
+  const tomorrowFocus = finalReport?.tomorrow_focus ?? null;
+  const growthPoint = finalReport?.growth_point ?? null;
+  const adjustmentPoint = finalReport?.adjustment_point ?? null;
+
+  // narrative_summary는 summary_report의 summary를 사용
+  // integrity_score는 summary_report의 overall_score를 사용
+  const narrativeSummary = summarySummary;
+  const integrityScore = overallScore;
+  const integrityReason = ""; // Final Report에 없으므로 빈 문자열
 
   return {
     date: row.report_date,
     dayOfWeek: row.day_of_week ?? "",
-    integrity_score: narrative.integrity_score ?? 0,
+    integrity_score: integrityScore,
+    narrative_summary: narrativeSummary,
 
-    // Emotion Overview
-    emotion_curve: emotion.emotion_curve,
-    ai_mood_valence: emotion.ai_mood_valence,
-    ai_mood_arousal: emotion.ai_mood_arousal,
-    dominant_emotion: emotion.dominant_emotion,
-    emotion_quadrant: emotion.emotion_quadrant,
-    emotion_quadrant_explanation: emotion.emotion_quadrant_explanation,
-    emotion_timeline: emotion.emotion_timeline,
+    // Summary Report 데이터
+    summary_summary: summarySummary,
+    summary_key_points: summaryKeyPoints,
+    overall_score: overallScore,
+    detailed_analysis: detailedAnalysis,
+    trend_analysis: trendAnalysis,
 
-    // Narrative Overview
-    narrative_summary: narrative.narrative_summary,
-    narrative: narrative.narrative,
-    lesson: narrative.lesson,
-    keywords: narrative.keywords,
+    // Daily Report 데이터
+    daily_summary: dailySummary,
+    narrative: dailyNarrative,
+    keywords: dailyKeywords,
+    lesson: dailyLesson,
+    ai_comment: dailyAiComment,
+    detailed_narrative: detailedNarrative,
+    context_analysis: contextAnalysis,
 
-    // Vision Overview
-    vision_summary: vision.vision_summary,
-    vision_self: vision.vision_self,
-    vision_keywords: vision.vision_keywords,
-    reminder_sentence: vision.reminder_sentence,
-    vision_ai_feedback: vision.vision_ai_feedback,
+    // Emotion Report 데이터
+    emotion_curve: emotionCurve,
+    ai_mood_valence: aiMoodValence,
+    ai_mood_arousal: aiMoodArousal,
+    dominant_emotion: dominantEmotion,
+    emotion_quadrant: emotionQuadrant,
+    emotion_quadrant_explanation: emotionQuadrantExplanation,
+    emotion_timeline: emotionTimeline,
 
-    // Insight Overview
-    core_insight: insight.core_insight,
-    learning_source: insight.learning_source,
-    meta_question: insight.meta_question,
-    insight_ai_comment: insight.insight_ai_comment,
+    // Dream Report 데이터
+    vision_summary: visionSummary,
+    vision_self: visionSelf,
+    vision_keywords: visionKeywords,
+    reminder_sentence: reminderSentence,
+    vision_ai_feedback: visionAiFeedback,
 
-    // Feedback Overview
-    core_feedback: feedback.core_feedback,
-    positives: feedback.positives,
-    improvements: feedback.improvements,
-    feedback_ai_comment: feedback.feedback_ai_comment,
-    ai_message: feedback.ai_message,
+    // Insight Report 데이터
+    core_insight: coreInsight,
+    learning_source: learningSource,
+    meta_question: metaQuestion,
+    insight_ai_comment: insightAiComment,
 
-    // Meta Overview
-    growth_point: meta.growth_point,
-    adjustment_point: meta.adjustment_point,
-    tomorrow_focus: meta.tomorrow_focus,
-    integrity_reason: meta.integrity_reason,
+    // Feedback Report 데이터
+    core_feedback: coreFeedback,
+    positives: positives,
+    improvements: improvements,
+    feedback_ai_comment: feedbackAiComment,
+    ai_message: aiMessage,
+
+    // Final Report 데이터
+    closing_message: closingMessage,
+    tomorrow_focus: tomorrowFocus,
+    growth_point: growthPoint,
+    adjustment_point: adjustmentPoint,
+    integrity_reason: integrityReason,
   };
 }

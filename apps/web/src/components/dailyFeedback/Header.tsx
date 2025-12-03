@@ -3,7 +3,7 @@
 import { SectionProps } from "./types";
 import { useCountUp } from "@/hooks/useCountUp";
 
-export function HeaderSection({ view }: SectionProps) {
+export function HeaderSection({ view, isPro = false }: SectionProps) {
   const [displayScore] = useCountUp({
     targetValue: view.integrity_score ?? 0,
     duration: 1000,

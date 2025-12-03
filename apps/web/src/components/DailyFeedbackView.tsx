@@ -7,6 +7,7 @@ import {
 } from "@/hooks/useGetDailyFeedback";
 import { HeaderSection } from "./dailyFeedback/Header";
 import { SummarySection } from "./dailyFeedback/Summary";
+import { DailyReportSection } from "./dailyFeedback/DailyReportSection";
 import { VisionSection } from "./dailyFeedback/Vision";
 import { InsightSection } from "./dailyFeedback/Insight";
 import { FeedbackSection } from "./dailyFeedback/Feedback";
@@ -18,6 +19,7 @@ import { ScrollAnimation } from "./ui/ScrollAnimation";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { ErrorDisplay } from "./ui/ErrorDisplay";
 import { COLORS, SPACING } from "@/lib/design-system";
+import { useSubscription } from "@/hooks/useSubscription";
 
 type DailyFeedbackViewProps = {
   date?: string;
@@ -60,6 +62,7 @@ export function DailyFeedbackView({
   const refetch = isValidId ? refetchById : refetchByDate;
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
+  const { isPro } = useSubscription();
 
   if (isLoading) {
     return (
@@ -121,16 +124,21 @@ export function DailyFeedbackView({
 
   if (!view) return <EmptyState onBack={onBack} />;
 
-  // 섹션 노출 가드: 코어 데이터가 모두 비어있으면 렌더링 제외
-  const hasVisionSection = !!(
+  // 섹션 노출 가드: 리포트 데이터가 null이면 렌더링 제외
+  const hasSummarySection = !!(view.summary_summary && view.summary_summary.trim());
+  const hasDailySection = !!(view.daily_summary && view.daily_summary.trim());
+  const hasEmotionSection = !!(
+    view.emotion_curve && view.emotion_curve.length > 0
+  );
+  const hasDreamSection = !!(
     view.vision_summary && view.vision_summary.trim()
   );
   const hasInsightSection = !!(view.core_insight && view.core_insight.trim());
   const hasFeedbackSection = !!(
     view.core_feedback && view.core_feedback.trim()
   );
-  const hasEmotionSection = !!(
-    view.emotion_curve && view.emotion_curve.length > 0
+  const hasFinalSection = !!(
+    view.closing_message && view.closing_message.trim()
   );
 
   return (
@@ -153,28 +161,38 @@ export function DailyFeedbackView({
 
         <ScrollAnimation>
           <div className="mb-64">
-            <HeaderSection view={view} />
+            <HeaderSection view={view} isPro={isPro} />
           </div>
         </ScrollAnimation>
 
-        <ScrollAnimation delay={300}>
-          <div className="mb-64">
-            <SummarySection view={view} />
-          </div>
-        </ScrollAnimation>
-
-        {hasEmotionSection && (
+        {hasSummarySection && (
           <ScrollAnimation delay={300}>
             <div className="mb-64">
-              <EmotionSection view={view} />
+              <SummarySection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
-        {hasVisionSection && (
+        {hasDailySection && (
           <ScrollAnimation delay={300}>
             <div className="mb-64">
-              <VisionSection view={view} />
+              <DailyReportSection view={view} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
+
+        {hasEmotionSection && (
+          <ScrollAnimation delay={300}>
+            <div className="mb-64">
+              <EmotionSection view={view} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
+
+        {hasDreamSection && (
+          <ScrollAnimation delay={300}>
+            <div className="mb-64">
+              <VisionSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
@@ -182,7 +200,7 @@ export function DailyFeedbackView({
         {hasInsightSection && (
           <ScrollAnimation delay={300}>
             <div className="mb-64">
-              <InsightSection view={view} />
+              <InsightSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
@@ -190,16 +208,18 @@ export function DailyFeedbackView({
         {hasFeedbackSection && (
           <ScrollAnimation delay={300}>
             <div className="mb-64">
-              <FeedbackSection view={view} />
+              <FeedbackSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
-        <ScrollAnimation delay={300}>
-          <div className="mb-12">
-            <FinalSection view={view} />
-          </div>
-        </ScrollAnimation>
+        {hasFinalSection && (
+          <ScrollAnimation delay={300}>
+            <div className="mb-12">
+              <FinalSection view={view} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
         <div className="flex justify-center pt-4">
           <Button
             onClick={() => router.push("/")}

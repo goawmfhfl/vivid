@@ -2,7 +2,7 @@ import { TrendingUp } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
-export function FeedbackSection({ view }: SectionProps) {
+export function FeedbackSection({ view, isPro = false }: SectionProps) {
   return (
     <div className="mb-12">
       <div className="flex items-center gap-2 mb-4">

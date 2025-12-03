@@ -12,7 +12,7 @@ import {
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
-export const EmotionSection = ({ view }: SectionProps) => {
+export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
   const [showValenceTooltip, setShowValenceTooltip] = useState(false);
   const [showArousalTooltip, setShowArousalTooltip] = useState(false);
 

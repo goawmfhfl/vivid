@@ -5,7 +5,7 @@ import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 import { useCountUp } from "@/hooks/useCountUp";
 
-export function FinalSection({ view }: SectionProps) {
+export function FinalSection({ view, isPro = false }: SectionProps) {
   const [displayScore, countRef] = useCountUp({
     targetValue: view.integrity_score ?? 0,
     duration: 1000,
@@ -86,69 +86,98 @@ export function FinalSection({ view }: SectionProps) {
             </div>
           </div>
         </div>
-        <p className="text-sm" style={{ lineHeight: "1.6", opacity: 0.95 }}>
-          {view.integrity_reason}
-        </p>
-      </Card>
-      <Card
-        className="p-6 mb-4"
-        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
-      >
-        <div className="flex items-start gap-3 mb-4">
-          <Sparkles
-            className="w-5 h-5 flex-shrink-0"
-            style={{ color: "#A8BBA8" }}
-          />
-          <p
-            className="text-sm"
-            style={{ color: "#333333", lineHeight: "1.8" }}
-          >
-            {view.ai_message}
+        {view.integrity_reason && (
+          <p className="text-sm" style={{ lineHeight: "1.6", opacity: 0.95 }}>
+            {view.integrity_reason}
           </p>
+        )}
+      </Card>
+      {view.closing_message && (
+        <Card
+          className="p-6 mb-4"
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+        >
+          <div className="flex items-start gap-3 mb-4">
+            <Sparkles
+              className="w-5 h-5 flex-shrink-0"
+              style={{ color: "#A8BBA8" }}
+            />
+            <p
+              className="text-sm"
+              style={{ color: "#333333", lineHeight: "1.8" }}
+            >
+              {view.closing_message}
+            </p>
+          </div>
+        </Card>
+      )}
+      {view.ai_message && (
+        <Card
+          className="p-6 mb-4"
+          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+        >
+          <div className="flex items-start gap-3 mb-4">
+            <Sparkles
+              className="w-5 h-5 flex-shrink-0"
+              style={{ color: "#A8BBA8" }}
+            />
+            <p
+              className="text-sm"
+              style={{ color: "#333333", lineHeight: "1.8" }}
+            >
+              {view.ai_message}
+            </p>
+          </div>
+        </Card>
+      )}
+      {(view.growth_point || view.adjustment_point) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {view.growth_point && (
+            <Card
+              className="p-5"
+              style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
+            >
+              <p
+                className="text-xs"
+                style={{
+                  color: "#6B7A6F",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                성장 포인트
+              </p>
+              <p
+                className="text-sm"
+                style={{ color: "#333333", lineHeight: "1.7" }}
+              >
+                {view.growth_point}
+              </p>
+            </Card>
+          )}
+          {view.adjustment_point && (
+            <Card
+              className="p-5"
+              style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
+            >
+              <p
+                className="text-xs"
+                style={{
+                  color: "#6B7A6F",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                조정 포인트
+              </p>
+              <p
+                className="text-sm"
+                style={{ color: "#333333", lineHeight: "1.7" }}
+              >
+                {view.adjustment_point}
+              </p>
+            </Card>
+          )}
         </div>
-      </Card>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <Card
-          className="p-5"
-          style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            className="text-xs"
-            style={{
-              color: "#6B7A6F",
-              marginBottom: "0.75rem",
-            }}
-          >
-            성장 포인트
-          </p>
-          <p
-            className="text-sm"
-            style={{ color: "#333333", lineHeight: "1.7" }}
-          >
-            {view.growth_point}
-          </p>
-        </Card>
-        <Card
-          className="p-5"
-          style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            className="text-xs"
-            style={{
-              color: "#6B7A6F",
-              marginBottom: "0.75rem",
-            }}
-          >
-            조정 포인트
-          </p>
-          <p
-            className="text-sm"
-            style={{ color: "#333333", lineHeight: "1.7" }}
-          >
-            {view.adjustment_point}
-          </p>
-        </Card>
-      </div>
+      )}
       <Card
         className="p-6"
         style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}

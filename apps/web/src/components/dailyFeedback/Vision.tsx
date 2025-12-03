@@ -3,7 +3,7 @@ import { Card } from "../ui/card";
 import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
-export function VisionSection({ view }: SectionProps) {
+export function VisionSection({ view, isPro = false }: SectionProps) {
   // vision_ai_feedback을 리스트로 파싱 ("핵심 3단: 1) ..., 2) ..., 3) ...")
   const feedbackItems = (() => {
     const raw = view.vision_ai_feedback ?? "";

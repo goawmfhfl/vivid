@@ -11,19 +11,13 @@ import type {
 
 /**
  * 전체 요약 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildSummaryPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
-  const instruction = isPro
-    ? "전체를 종합하여 상세하고 깊이 있는 요약 리포트를 생성하세요. 더 많은 세부사항과 인사이트를 포함하세요."
-    : "전체를 종합하여 간단하게 요약 리포트를 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 기록입니다. 전체를 종합하여 요약 리포트를 생성하세요.\n\n`;
 
   records.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -40,13 +34,11 @@ export function buildSummaryPrompt(
 
 /**
  * 일상 기록 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildDailyPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
   const dailyRecords = records.filter((r) => r.type === "daily");
 
@@ -54,11 +46,7 @@ export function buildDailyPrompt(
     return "";
   }
 
-  const instruction = isPro
-    ? "일상 리포트를 생성하세요. 상세한 서사와 깊이 있는 분석을 포함하세요."
-    : "일상 리포트를 간단하게 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 일상 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 일상 기록입니다. 일상 리포트를 생성하세요.\n\n`;
 
   dailyRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -75,13 +63,11 @@ export function buildDailyPrompt(
 
 /**
  * 감정 기록 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildEmotionPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
   const emotionRecords = records.filter((r) => r.type === "emotion");
 
@@ -89,11 +75,7 @@ export function buildEmotionPrompt(
     return "";
   }
 
-  const instruction = isPro
-    ? "감정 리포트를 생성하세요. 상세한 감정 분석과 시간대별 변화를 깊이 있게 분석하세요."
-    : "감정 리포트를 간단하게 생성하세요. 핵심 감정만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 감정 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 감정 기록입니다. 감정 리포트를 생성하세요.\n\n`;
 
   emotionRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -117,13 +99,11 @@ export function buildEmotionPrompt(
 
 /**
  * 꿈/목표 기록 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildDreamPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
   const dreamRecords = records.filter((r) => r.type === "dream");
 
@@ -131,11 +111,7 @@ export function buildDreamPrompt(
     return "";
   }
 
-  const instruction = isPro
-    ? "꿈/목표 리포트를 생성하세요. 상세한 비전 분석과 구체적인 피드백을 포함하세요."
-    : "꿈/목표 리포트를 간단하게 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 꿈/목표 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 꿈/목표 기록입니다. 꿈/목표 리포트를 생성하세요.\n\n`;
 
   dreamRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -152,13 +128,11 @@ export function buildDreamPrompt(
 
 /**
  * 인사이트 기록 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildInsightPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
   const insightRecords = records.filter((r) => r.type === "insight");
 
@@ -166,11 +140,7 @@ export function buildInsightPrompt(
     return "";
   }
 
-  const instruction = isPro
-    ? "인사이트 리포트를 생성하세요. 깊이 있는 분석과 메타적 사고를 포함하세요."
-    : "인사이트 리포트를 간단하게 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 인사이트 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 인사이트 기록입니다. 인사이트 리포트를 생성하세요.\n\n`;
 
   insightRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -187,13 +157,11 @@ export function buildInsightPrompt(
 
 /**
  * 피드백 기록 리포트 프롬프트 생성
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildFeedbackPrompt(
   records: Record[],
   date: string,
-  dayOfWeek: string,
-  isPro: boolean = false
+  dayOfWeek: string
 ): string {
   const feedbackRecords = records.filter((r) => r.type === "feedback");
 
@@ -201,11 +169,7 @@ export function buildFeedbackPrompt(
     return "";
   }
 
-  const instruction = isPro
-    ? "피드백 리포트를 생성하세요. 상세한 분석과 구체적인 개선 제안을 포함하세요."
-    : "피드백 리포트를 간단하게 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 피드백 기록입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 피드백 기록입니다. 피드백 리포트를 생성하세요.\n\n`;
 
   feedbackRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
@@ -222,7 +186,6 @@ export function buildFeedbackPrompt(
 
 /**
  * 최종 리포트 프롬프트 생성 (모든 리포트를 종합)
- * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
 export function buildFinalPrompt(
   date: string,
@@ -232,14 +195,9 @@ export function buildFinalPrompt(
   emotionReport: EmotionReport | null,
   dreamReport: DreamReport | null,
   insightReport: InsightReport | null,
-  feedbackReport: FeedbackReport | null,
-  isPro: boolean = false
+  feedbackReport: FeedbackReport | null
 ): string {
-  const instruction = isPro
-    ? "이를 종합하여 하루를 정리하는 상세하고 깊이 있는 최종 리포트를 생성하세요. 더 많은 인사이트와 조언을 포함하세요."
-    : "이를 종합하여 하루를 정리하는 간단한 최종 리포트를 생성하세요. 핵심만 간결하게 알려주세요.";
-
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 리포트입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 리포트입니다. 이를 종합하여 하루를 정리하는 최종 리포트를 생성하세요.\n\n`;
 
   if (summaryReport) {
     prompt += "=== 전체 요약 ===\n";
@@ -301,3 +259,4 @@ export function buildFinalPrompt(
 
   return prompt;
 }
+

@@ -1,9 +1,9 @@
-import { Lightbulb, Sparkles, Lock, TrendingUp } from "lucide-react";
+import { BookOpen, Sparkles, Lock } from "lucide-react";
 import { Card } from "../ui/card";
 import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
-export function SummarySection({ view, isPro = false }: SectionProps) {
+export function DailyReportSection({ view, isPro = false }: SectionProps) {
   return (
     <div className="mb-12">
       <div className="flex items-center gap-2 mb-4">
@@ -11,10 +11,10 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
           className="w-8 h-8 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: "#A8BBA8" }}
         >
-          <Lightbulb className="w-4 h-4 text-white" />
+          <BookOpen className="w-4 h-4 text-white" />
         </div>
         <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
-          전체 요약
+          오늘의 일상
         </h2>
       </div>
       <Card
@@ -22,8 +22,17 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
         style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
       >
         <div className="space-y-4">
-          {view.summary_summary && (
+          {view.daily_summary && (
             <div>
+              <p
+                className="text-xs"
+                style={{
+                  color: "#6B7A6F",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                요약
+              </p>
               <p
                 className="text-sm"
                 style={{
@@ -32,43 +41,34 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
                   textAlign: "left",
                 }}
               >
-                {view.summary_summary}
+                {view.daily_summary}
               </p>
             </div>
           )}
-          {view.summary_key_points && view.summary_key_points.length > 0 && (
+          {view.narrative && (
             <div>
               <p
                 className="text-xs"
                 style={{
                   color: "#6B7A6F",
-                  marginBottom: "0.75rem",
+                  marginBottom: "0.5rem",
                 }}
               >
-                핵심 포인트
+                서사
               </p>
-              <ul className="space-y-2">
-                {view.summary_key_points.map((point, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                      style={{ backgroundColor: "#A8BBA8" }}
-                    />
-                    <p
-                      className="text-sm"
-                      style={{
-                        color: "#333333",
-                        lineHeight: "1.6",
-                      }}
-                    >
-                      {point}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              <p
+                className="text-sm"
+                style={{
+                  color: "#333333",
+                  lineHeight: "1.8",
+                  textAlign: "left",
+                }}
+              >
+                {view.narrative}
+              </p>
             </div>
           )}
-          {isPro && view.detailed_analysis && (
+          {isPro && view.detailed_narrative && (
             <div
               className="p-4 rounded-xl"
               style={{
@@ -77,14 +77,13 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4" style={{ color: "#A8BBA8" }} />
                 <p
                   className="text-xs font-semibold"
                   style={{
                     color: "#6B7A6F",
                   }}
                 >
-                  상세 분석 (Pro)
+                  상세 서사 (Pro)
                 </p>
               </div>
               <p
@@ -95,7 +94,7 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
                   textAlign: "left",
                 }}
               >
-                {view.detailed_analysis}
+                {view.detailed_narrative}
               </p>
             </div>
           )}
@@ -114,11 +113,48 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
                   color: "#6B7A6F",
                 }}
               >
-                상세 분석은 Pro 멤버십에서만 제공됩니다.
+                상세 서사는 Pro 멤버십에서만 제공됩니다.
               </p>
             </div>
           )}
-          {isPro && view.trend_analysis && (
+          {view.lesson && (
+            <div
+              className="p-4 rounded-xl"
+              style={{
+                backgroundColor: "#F7F8F6",
+                borderLeft: "3px solid #A8BBA8",
+                maxWidth: "fit-content",
+              }}
+            >
+              <p
+                className="text-sm"
+                style={{
+                  color: "#4E4B46",
+                  lineHeight: "1.7",
+                  textAlign: "left",
+                }}
+              >
+                {view.lesson}
+              </p>
+            </div>
+          )}
+          {view.keywords && view.keywords.length > 0 && (
+            <div className="pt-2 -mx-6 px-6">
+              <ScrollingKeywords
+                keywords={view.keywords}
+                duration={25}
+                gap="0.5rem"
+                badgeStyle={{
+                  backgroundColor: "#EAEDE9",
+                  color: "#55685E",
+                  fontSize: "0.875rem",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "9999px",
+                }}
+              />
+            </div>
+          )}
+          {isPro && view.context_analysis && (
             <div
               className="p-4 rounded-xl"
               style={{
@@ -127,14 +163,13 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4" style={{ color: "#A8BBA8" }} />
                 <p
                   className="text-xs font-semibold"
                   style={{
                     color: "#6B7A6F",
                   }}
                 >
-                  트렌드 분석 (Pro)
+                  맥락 분석 (Pro)
                 </p>
               </div>
               <p
@@ -145,37 +180,44 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
                   textAlign: "left",
                 }}
               >
-                {view.trend_analysis}
+                {view.context_analysis}
               </p>
             </div>
           )}
         </div>
       </Card>
-      {view.overall_score !== null && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "#F7F8F6", border: "1px solid #E6E4DE" }}
+      {view.ai_comment && (
+        <div
+          className="p-5 rounded-xl flex gap-3"
+          style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
         >
-          <div className="flex items-center justify-between">
+          <Sparkles
+            className="w-4 h-4 flex-shrink-0 mt-0.5"
+            style={{ color: "#A8BBA8" }}
+          />
+          <div>
             <p
               className="text-xs"
               style={{
                 color: "#6B7A6F",
+                marginBottom: "0.5rem",
               }}
             >
-              전체 점수
+              AI 코멘트
             </p>
             <p
-              className="text-2xl font-semibold"
+              className="text-sm italic"
               style={{
-                color: "#333333",
+                color: "#4E4B46",
+                lineHeight: "1.7",
               }}
             >
-              {view.overall_score}/10
+              {view.ai_comment}
             </p>
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );
 }
+

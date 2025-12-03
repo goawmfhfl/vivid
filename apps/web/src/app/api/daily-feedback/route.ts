@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { categorizeRecords, generateDailyReport } from "./ai-service";
+import { generateAllReports } from "./ai-service";
 import { fetchRecordsByDate, saveDailyReport } from "./db-service";
+import { verifySubscription } from "@/lib/subscription-utils";
 import type { DailyFeedbackRequest } from "./types";
 
 /**
@@ -9,8 +10,8 @@ import type { DailyFeedbackRequest } from "./types";
  *
  * 플로우:
  * 1. Records 조회
- * 2. AI 카테고리화
- * 3. AI 리포트 생성
+ * 2. 타입별 리포트 생성 (병렬 처리)
+ * 3. 최종 리포트 생성
  * 4. DB 저장
  */
 export async function POST(request: NextRequest) {
@@ -31,13 +32,32 @@ export async function POST(request: NextRequest) {
     // 1️⃣ Records 데이터 조회
     const records = await fetchRecordsByDate(supabase, userId, date);
 
-    // 2️⃣ AI 요청 #1: 기록 카테고리화
-    const categorized = await categorizeRecords(records, date);
+    // 2️⃣ 요일 계산
+    const dateObj = new Date(`${date}T00:00:00+09:00`);
+    const dayOfWeek = dateObj.toLocaleDateString("ko-KR", {
+      weekday: "long",
+      timeZone: "Asia/Seoul",
+    });
 
-    // 3️⃣ AI 요청 #2: daily-report 생성 (레코드 시간 정보 포함)
-    const report = await generateDailyReport(categorized, date, records);
+    // 3️⃣ 구독 정보 확인 (서버 사이드 검증)
+    const { isPro } = await verifySubscription(userId);
 
-    // 4️⃣ Supabase daily_feedback 테이블에 저장
+    // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
+    const allReports = await generateAllReports(
+      records,
+      date,
+      dayOfWeek,
+      isPro
+    );
+
+    // 4️⃣ DailyReportResponse 형식으로 변환
+    const report = {
+      date,
+      day_of_week: dayOfWeek,
+      ...allReports,
+    };
+
+    // 5️⃣ Supabase daily_feedback 테이블에 저장
     const savedFeedback = await saveDailyReport(supabase, userId, report);
 
     return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LogOut, Settings, Cog } from "lucide-react";
+import { User, LogOut, Settings, Cog, Crown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +9,12 @@ import {
 } from "../ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { COLORS, TYPOGRAPHY, SHADOWS, TRANSITIONS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, TRANSITIONS } from "@/lib/design-system";
 import { queryClient } from "@/app/providers";
 import { clearAllCache } from "@/lib/cache-utils";
 import { useState } from "react";
 import { SystemSettingsModal } from "./SystemSettingsModal";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface AppHeaderProps {
   title: string;
@@ -23,6 +24,7 @@ interface AppHeaderProps {
 export function AppHeader({ title, subtitle }: AppHeaderProps) {
   const router = useRouter();
   const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const { isPro } = useSubscription();
 
   const handleLogout = async () => {
     try {
@@ -195,10 +197,29 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
                       opacity: 0.5,
                     }}
                   />
-                  <User
-                    className="w-3.5 h-3.5 relative z-10"
-                    style={{ color: COLORS.brand.primary }}
-                  />
+                  <div className="flex items-center gap-1.5 relative z-10">
+                    <div className="relative">
+                      <User
+                        className="w-3.5 h-3.5"
+                        style={{ color: COLORS.brand.primary }}
+                      />
+                      {isPro && (
+                        <Crown
+                          className="absolute"
+                          style={{
+                            top: "-6px",
+                            right: "-6px",
+                            width: "12px",
+                            height: "12px",
+                            color: "#FBBF24",
+                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
+                            zIndex: 20,
+                            strokeWidth: 2.5,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
