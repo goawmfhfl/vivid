@@ -247,25 +247,41 @@ export function DailyReportSection({ view, isPro = false }: SectionProps) {
             </div>
           )}
 
-          {/* 감정 트리거 (Free 모드 - 제목만) */}
+          {/* 감정 트리거 (Free 모드: Pro 업그레이드 유도) */}
           {!isPro && (
-            <div
-              className="p-4 rounded-xl flex items-center gap-2"
+            <Card
+              className="p-4"
               style={{
                 backgroundColor: "#FAFAF8",
                 border: "1px solid #E6E4DE",
               }}
             >
-              <Lock className="w-4 h-4" style={{ color: "#6B7A6F" }} />
-              <p
-                className="text-xs"
-                style={{
-                  color: "#6B7A6F",
-                }}
-              >
-                감정 트리거는 Pro 멤버십에서만 제공됩니다.
-              </p>
-            </div>
+              <div className="flex items-start gap-2">
+                <Lock className="w-4 h-4 mt-0.5" style={{ color: "#6B7A6F" }} />
+                <div className="flex-1">
+                  <p
+                    className="text-xs font-semibold mb-1"
+                    style={{
+                      color: "#4E4B46",
+                    }}
+                  >
+                    왜 이렇게 느꼈는지 알고 싶으신가요?
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: "#6B7A6F",
+                      lineHeight: "1.5",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    Pro 멤버십에서는 오늘의 감정을 만든 사건·사람·상황을
+                    카테고리별로 정리해 드립니다. "나는 왜 이렇게 느꼈을까?" 그
+                    답을 패턴으로 발견해보세요.
+                  </p>
+                </div>
+              </div>
+            </Card>
           )}
 
           {/* 행동 단서 (Pro 전용) */}
@@ -324,29 +340,57 @@ export function DailyReportSection({ view, isPro = false }: SectionProps) {
             </div>
           )}
 
-          {/* 행동 단서 (Free 모드 - 제목만) */}
+          {/* 행동 단서 (Free 모드: Pro 업그레이드 유도) */}
           {!isPro && (
-            <div
-              className="p-4 rounded-xl flex items-center gap-2"
+            <Card
+              className="p-4"
               style={{
                 backgroundColor: "#FAFAF8",
                 border: "1px solid #E6E4DE",
               }}
             >
-              <Lock className="w-4 h-4" style={{ color: "#6B7A6F" }} />
-              <p
-                className="text-xs"
-                style={{
-                  color: "#6B7A6F",
-                }}
-              >
-                행동 단서는 Pro 멤버십에서만 제공됩니다.
-              </p>
-            </div>
+              <div className="flex items-start gap-2">
+                <Lock className="w-4 h-4 mt-0.5" style={{ color: "#6B7A6F" }} />
+                <div className="flex-1">
+                  <p
+                    className="text-xs font-semibold mb-1"
+                    style={{
+                      color: "#4E4B46",
+                    }}
+                  >
+                    내 행동 패턴을 이해하고 싶으신가요?
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: "#6B7A6F",
+                      lineHeight: "1.5",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    Pro 멤버십에서는 오늘 기록 속에서 나타나는 행동 패턴을
+                    분석해 드립니다. 회피, 루틴 시도, 계획적 행동 등 내가
+                    반복하는 패턴을 발견하면, 더 나은 선택을 할 수 있어요.
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: "#6B7A6F",
+                      lineHeight: "1.5",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    같은 행동을 반복하면, 같은 결과가 반복돼요. 지금 기록을
+                    성장으로 바꿔보세요.
+                  </p>
+                </div>
+              </div>
+            </Card>
           )}
         </div>
       </Card>
-      {view.ai_comment && (
+      {/* AI 코멘트 (Pro 전용) */}
+      {isPro && view.ai_comment && (
         <div
           className="p-5 rounded-xl flex gap-3"
           style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}

@@ -112,18 +112,29 @@ export interface EmotionReport {
 }
 
 export interface DreamReport {
-  summary: string; // 꿈/목표 요약
-  vision_self: string; // 자기 평가
-  vision_keywords: string[]; // 키워드 (최대 10개)
-  reminder_sentence: string | null; // 리마인더 문장
+  summary: string; // 꿈/목표 요약 (일반: 150자 이내, Pro: 250자 이내)
+  vision_self: string; // 자기 평가 (나의 상태와 태도에 대한 짧은 메모, 200자 이내)
+  vision_keywords: string[]; // 키워드 (최대 10개, 나의 비전을 잘 나타내는 단어)
+  reminder_sentence: string | null; // 리마인더 문장 (향후 호환성을 위해 유지, UI에서는 사용하지 않을 수 있음)
   vision_ai_feedback: string | null; // AI 피드백 (핵심 3단 형식)
+  // Pro 전용 필드
+  dream_goals?: string[] | null; // 시각화를 통해 이루고 싶은 구체적인 꿈/목표 리스트 (각 항목 1문장, 최대 5개)
+  dreamer_traits?: string[] | null; // 이런 꿈을 꾸는 사람들의 특징 리스트 (각 항목 1문장, 최대 5개)
 }
 
 export interface InsightReport {
-  core_insight: string; // 핵심 인사이트
-  learning_source: string | null; // 학습 소스
-  meta_question: string | null; // 메타 질문
+  core_insights: Array<{
+    insight: string; // 핵심 인사이트 (1문장)
+    source: string; // 이 인사이트를 얻은 출처 (예: "오늘의 일상 기록", "감정 기록", "책 '어떤 책'")
+  }>; // 핵심 인사이트 리스트 (최대 5개)
+  meta_question: string | null; // 오늘의 인사이트를 더 발전시키는 방법 (간단하고 실용적으로, Pro에서만 활용)
   insight_ai_comment: string | null; // AI 코멘트
+  // Pro 전용: 인사이트 기반 추천 행동 리스트
+  insight_next_actions?: {
+    label: string; // 추천 행동 한 문장
+    difficulty: "낮음" | "보통" | "높음"; // 난이도
+    estimated_minutes: number | null; // 예상 소요 시간 (분 단위, 없으면 null)
+  }[] | null;
 }
 
 export interface FeedbackReport {

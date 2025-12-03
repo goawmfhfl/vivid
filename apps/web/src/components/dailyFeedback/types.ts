@@ -78,20 +78,28 @@ export type DailyReportData = {
   vision_self: string;
   /** 시각화 키워드 배열 */
   vision_keywords: string[];
-  /** 오늘의 리마인더 문장 */
+  /** 오늘의 리마인더 문장 (현재 UI에서는 사용하지 않을 수 있음) */
   reminder_sentence: string | null;
   /** AI 피드백 */
   vision_ai_feedback: string | null;
+  /** 시각화를 통해 이루고 싶은 꿈 목표 리스트 (Pro 전용) */
+  dream_goals: string[] | null;
+  /** 이런 꿈을 꾸는 사람들의 특징 리스트 (Pro 전용) */
+  dreamer_traits: string[] | null;
 
   // ========== Insight Report 데이터 ==========
-  /** 핵심 인사이트 */
-  core_insight: string;
-  /** 학습의 출처나 배경 */
-  learning_source: string | null;
-  /** 메타 질문 */
+  /** 핵심 인사이트 리스트 (각 항목에 출처 포함) */
+  core_insights: Array<{ insight: string; source: string }>;
+  /** 오늘의 인사이트를 더 발전시키는 방법 (간단하고 실용적으로) */
   meta_question: string | null;
   /** AI 인사이트 코멘트 */
   insight_ai_comment: string | null;
+  /** 인사이트 기반 추천 행동 리스트 (Pro 전용) */
+  insight_next_actions: {
+    label: string;
+    difficulty: "낮음" | "보통" | "높음";
+    estimated_minutes: number | null;
+  }[] | null;
 
   // ========== Feedback Report 데이터 ==========
   /** 핵심 피드백 */

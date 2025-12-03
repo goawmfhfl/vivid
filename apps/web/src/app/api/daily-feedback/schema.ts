@@ -221,6 +221,22 @@ export const DreamReportSchema = {
       },
       reminder_sentence: { type: "string", nullable: true },
       vision_ai_feedback: { type: "string", nullable: true },
+      // Pro 전용: 시각화를 통해 이루고 싶은 꿈 목표 리스트
+      dream_goals: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 0,
+        maxItems: 5,
+        nullable: true,
+      },
+      // Pro 전용: 이런 꿈을 꾸는 사람들의 특징 리스트
+      dreamer_traits: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 0,
+        maxItems: 5,
+        nullable: true,
+      },
     },
     required: [
       "summary",
@@ -228,6 +244,8 @@ export const DreamReportSchema = {
       "vision_keywords",
       "reminder_sentence",
       "vision_ai_feedback",
+      "dream_goals",
+      "dreamer_traits",
     ],
     additionalProperties: false,
   },
@@ -239,16 +257,48 @@ export const InsightReportSchema = {
   schema: {
     type: "object",
     properties: {
-      core_insight: { type: "string" },
-      learning_source: { type: "string", nullable: true },
+      core_insights: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            insight: { type: "string" },
+            source: { type: "string" },
+          },
+          required: ["insight", "source"],
+          additionalProperties: false,
+        },
+        minItems: 1,
+        maxItems: 5,
+      },
       meta_question: { type: "string", nullable: true },
       insight_ai_comment: { type: "string", nullable: true },
+      insight_next_actions: {
+        type: "array",
+        nullable: true,
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string" },
+            difficulty: {
+              type: "string",
+              enum: ["낮음", "보통", "높음"],
+            },
+            estimated_minutes: {
+              type: "integer",
+              nullable: true,
+            },
+          },
+          required: ["label", "difficulty", "estimated_minutes"],
+          additionalProperties: false,
+        },
+      },
     },
     required: [
-      "core_insight",
-      "learning_source",
+      "core_insights",
       "meta_question",
       "insight_ai_comment",
+      "insight_next_actions",
     ],
     additionalProperties: false,
   },

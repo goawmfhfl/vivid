@@ -135,7 +135,9 @@ export function DailyFeedbackView({
     view.emotion_curve && view.emotion_curve.length > 0
   );
   const hasDreamSection = !!(view.vision_summary && view.vision_summary.trim());
-  const hasInsightSection = !!(view.core_insight && view.core_insight.trim());
+  const hasInsightSection = !!(
+    view.core_insights && view.core_insights.length > 0
+  );
   const hasFeedbackSection = !!(
     view.core_feedback && view.core_feedback.trim()
   );

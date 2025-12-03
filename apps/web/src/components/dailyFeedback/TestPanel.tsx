@@ -31,7 +31,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   const [showDataPreview, setShowDataPreview] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [showFullData, setShowFullData] = useState(false);
-  
+
   // 드래그 관련 state
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -47,7 +47,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Header",
       component: "HeaderSection",
-      description: "날짜, 요일, 점수, 전체 요약, 핵심 포인트 (Pro/Free 차이는 품질로만 구분)",
+      description:
+        "날짜, 요일, 점수, 전체 요약, 핵심 포인트 (Pro/Free 차이는 품질로만 구분)",
       fields: [
         { name: "date", path: "view.date", isPro: false },
         { name: "dayOfWeek", path: "view.dayOfWeek", isPro: false },
@@ -68,7 +69,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Daily",
       component: "DailyReportSection",
-      description: "일상 기록 요약, 오늘 있었던 일, 키워드, 감정 트리거, 행동 단서",
+      description:
+        "일상 기록 요약, 오늘 있었던 일, 키워드, 감정 트리거, 행동 단서",
       fields: [
         { name: "daily_summary", path: "view.daily_summary", isPro: false },
         { name: "daily_events", path: "view.daily_events", isPro: false },
@@ -122,7 +124,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Dream",
       component: "VisionSection",
-      description: "시각화 요약, 자기 평가, 키워드",
+      description:
+        "시각화 요약, 자기 평가, 키워드 (Pro: 꿈 목표 리스트, 이런 꿈을 꾸는 사람들의 특징)",
       fields: [
         { name: "vision_summary", path: "view.vision_summary", isPro: false },
         { name: "vision_self", path: "view.vision_self", isPro: false },
@@ -137,24 +140,54 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           path: "view.vision_ai_feedback",
           isPro: false,
         },
+        {
+          name: "dream_goals",
+          path: "view.dream_goals",
+          isPro: true,
+          description: "시각화를 통해 이루고 싶은 꿈 목표 리스트 (Pro 전용)",
+        },
+        {
+          name: "dreamer_traits",
+          path: "view.dreamer_traits",
+          isPro: true,
+          description: "이런 꿈을 꾸는 사람들의 특징 리스트 (Pro 전용)",
+        },
       ],
       condition: "vision_summary.trim() !== ''",
     },
     {
       name: "Insight",
       component: "InsightSection",
-      description: "핵심 인사이트, 학습 출처, 메타 질문",
+      description:
+        "핵심 인사이트 리스트 (각 항목에 출처 포함), 인사이트 발전 방법, AI 코멘트",
       fields: [
-        { name: "core_insight", path: "view.core_insight", isPro: false },
-        { name: "learning_source", path: "view.learning_source", isPro: false },
-        { name: "meta_question", path: "view.meta_question", isPro: false },
+        {
+          name: "core_insights",
+          path: "view.core_insights",
+          isPro: false,
+          description: "핵심 인사이트 리스트 (각 항목에 insight와 source 포함)",
+        },
+        {
+          name: "meta_question",
+          path: "view.meta_question",
+          isPro: true,
+          description:
+            "오늘의 인사이트를 더 발전시키는 방법 (간단하고 실용적으로)",
+        },
+        {
+          name: "insight_next_actions",
+          path: "view.insight_next_actions",
+          isPro: true,
+          description:
+            "오늘 인사이트를 행동으로 옮기는 추천 액션 리스트 (Pro 전용)",
+        },
         {
           name: "insight_ai_comment",
           path: "view.insight_ai_comment",
           isPro: false,
         },
       ],
-      condition: "core_insight.trim() !== ''",
+      condition: "core_insights.length > 0",
     },
     {
       name: "Feedback",
@@ -219,7 +252,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         case "Dream":
           return !!(view.vision_summary && view.vision_summary.trim());
         case "Insight":
-          return !!(view.core_insight && view.core_insight.trim());
+          return !!(view.core_insights && view.core_insights.length > 0);
         case "Feedback":
           return !!(view.core_feedback && view.core_feedback.trim());
         case "Final":
@@ -230,17 +263,28 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     })();
 
     const proFields = def.fields.filter((f) => f.isPro);
-    const allFields = def.fields.map((field) => ({
-      ...field,
-      value: getFieldValue(field.path),
-      hasValue: (() => {
-        const val = getFieldValue(field.path);
-        if (val === null || val === undefined) return false;
-        if (Array.isArray(val)) return val.length > 0;
-        if (typeof val === "string") return val.trim() !== "";
-        return true;
-      })(),
-    }));
+    const allFields = def.fields.map((field) => {
+      // computed 필드는 path에 "(computed)" 또는 "computed from"이 포함됨
+      const isComputed =
+        field.path.includes("(computed)") ||
+        field.path.includes("computed from");
+      const value = isComputed ? null : getFieldValue(field.path);
+
+      return {
+        ...field,
+        value,
+        hasValue: (() => {
+          // computed 필드는 vision_keywords가 있으면 사용 가능
+          if (isComputed && field.path.includes("vision_keywords")) {
+            return !!(view.vision_keywords && view.vision_keywords.length > 0);
+          }
+          if (value === null || value === undefined) return false;
+          if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === "string") return value.trim() !== "";
+          return true;
+        })(),
+      };
+    });
 
     return {
       ...def,
@@ -269,13 +313,13 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       if (isDragging && panelRef.current) {
         const newX = e.clientX - dragStart.x;
         const newY = e.clientY - dragStart.y;
-        
+
         // 화면 경계 내에 유지
         const panelWidth = panelRef.current.offsetWidth;
         const panelHeight = panelRef.current.offsetHeight;
         const maxX = window.innerWidth - panelWidth;
         const maxY = window.innerHeight - panelHeight;
-        
+
         setPosition({
           x: Math.max(0, Math.min(newX, maxX)),
           y: Math.max(0, Math.min(newY, maxY)),
@@ -598,6 +642,17 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                           {field.path}
                         </span>
                       </div>
+                      {(field as any).description && (
+                        <p
+                          className="text-xs mt-1 pl-5"
+                          style={{
+                            color: COLORS.text.secondary,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {(field as any).description}
+                        </p>
+                      )}
                       {showDataPreview && (
                         <div
                           className="mt-1 pl-5 text-xs rounded p-1"

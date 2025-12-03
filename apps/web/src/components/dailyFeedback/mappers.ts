@@ -64,13 +64,15 @@ export function mapDailyFeedbackRowToReport(
   const visionKeywords = dreamReport?.vision_keywords ?? [];
   const reminderSentence = dreamReport?.reminder_sentence ?? null;
   const visionAiFeedback = dreamReport?.vision_ai_feedback ?? null;
+  const dreamGoals = dreamReport?.dream_goals ?? null;
+  const dreamerTraits = dreamReport?.dreamer_traits ?? null;
 
   // Insight Report에서 데이터 추출
   const insightReport: InsightReport | null = row.insight_report;
-  const coreInsight = insightReport?.core_insight ?? "";
-  const learningSource = insightReport?.learning_source ?? null;
+  const coreInsights = insightReport?.core_insights ?? [];
   const metaQuestion = insightReport?.meta_question ?? null;
   const insightAiComment = insightReport?.insight_ai_comment ?? null;
+  const insightNextActions = insightReport?.insight_next_actions ?? null;
 
   // Feedback Report에서 데이터 추출
   const feedbackReport: FeedbackReport | null = row.feedback_report;
@@ -129,12 +131,14 @@ export function mapDailyFeedbackRowToReport(
     vision_keywords: visionKeywords,
     reminder_sentence: reminderSentence,
     vision_ai_feedback: visionAiFeedback,
+    dream_goals: dreamGoals,
+    dreamer_traits: dreamerTraits,
 
     // Insight Report 데이터
-    core_insight: coreInsight,
-    learning_source: learningSource,
+    core_insights: coreInsights,
     meta_question: metaQuestion,
     insight_ai_comment: insightAiComment,
+    insight_next_actions: insightNextActions,
 
     // Feedback Report 데이터
     core_feedback: coreFeedback,
