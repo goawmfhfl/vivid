@@ -24,7 +24,6 @@ export interface EmotionOverview {
 export interface NarrativeOverview {
   narrative_summary: string | null;
   narrative: string | null;
-  lesson: string | null;
   keywords: string[];
   integrity_score: number | null;
 }
@@ -42,7 +41,6 @@ export interface VisionOverview {
   vision_summary: string | null;
   vision_self: string | null;
   vision_keywords: string[];
-  reminder_sentence: string | null;
   vision_ai_feedback: string | null;
 }
 
@@ -64,9 +62,7 @@ export interface MetaOverview {
 export interface SummaryReport {
   summary: string; // 전체 요약 (일반: 250자, Pro: 500자)
   key_points: string[]; // 핵심 포인트 (일반: 최대 5개, Pro: 최대 10개)
-  overall_score: number | null; // 전체 점수 (0-10)
   // Pro 전용 필드
-  detailed_analysis?: string | null; // 상세 분석 (Pro만)
   trend_analysis?: string | null; // 트렌드 분석 (Pro만)
 }
 
@@ -74,7 +70,6 @@ export interface DailyReport {
   summary: string; // 일상 기록 요약 (일반: 150자, Pro: 300자, 최대 200자)
   daily_events: string[]; // 오늘 있었던 일 리스트 (서사 대신)
   keywords: string[]; // 키워드 (일반: 최대 5개, Pro: 최대 10개)
-  lesson: string | null; // 배운 점
   ai_comment: string | null; // AI 코멘트
   // Pro 전용 필드
   emotion_triggers?: {
@@ -120,7 +115,6 @@ export interface DreamReport {
   summary: string; // 꿈/목표 요약 (일반: 150자 이내, Pro: 250자 이내)
   vision_self: string; // 자기 평가 (나의 상태와 태도에 대한 짧은 메모, 200자 이내)
   vision_keywords: string[]; // 키워드 (최대 10개, 나의 비전을 잘 나타내는 단어)
-  reminder_sentence: string | null; // 리마인더 문장 (향후 호환성을 위해 유지, UI에서는 사용하지 않을 수 있음)
   vision_ai_feedback: string | null; // AI 피드백 (핵심 3단 형식)
   // Pro 전용 필드
   dream_goals?: string[] | null; // 시각화를 통해 이루고 싶은 구체적인 꿈/목표 리스트 (각 항목 1문장, 최대 5개)

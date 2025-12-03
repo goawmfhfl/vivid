@@ -19,21 +19,12 @@ export function getSummaryReportSchema(isPro: boolean) {
           minItems: 0,
           maxItems: isPro ? 10 : 5, // Pro: 10개, 일반: 5개
         },
-        overall_score: {
-          type: "integer",
-          minimum: 0,
-          maximum: 10,
-          nullable: true,
-        },
         // Pro 전용 필드 (무료 멤버십에서는 null로 처리됨)
-        detailed_analysis: { type: "string", nullable: true },
         trend_analysis: { type: "string", nullable: true },
       },
       required: [
         "summary",
         "key_points",
-        "overall_score",
-        "detailed_analysis",
         "trend_analysis",
       ],
       additionalProperties: false,
@@ -66,7 +57,6 @@ export function getDailyReportSchema(isPro: boolean) {
           minItems: 0,
           maxItems: isPro ? 10 : 5,
         },
-        lesson: { type: "string", nullable: true },
         ai_comment: { type: "string", nullable: true },
         // Pro 전용 필드 (무료 멤버십에서는 null로 처리됨)
         emotion_triggers: {
@@ -132,7 +122,6 @@ export function getDailyReportSchema(isPro: boolean) {
         "summary",
         "daily_events",
         "keywords",
-        "lesson",
         "ai_comment",
         "emotion_triggers",
         "behavioral_clues",
@@ -237,7 +226,6 @@ export const DreamReportSchema = {
         minItems: 0,
         maxItems: 10,
       },
-      reminder_sentence: { type: "string", nullable: true },
       vision_ai_feedback: { type: "string", nullable: true },
       // Pro 전용: 시각화를 통해 이루고 싶은 꿈 목표 리스트
       dream_goals: {
@@ -260,7 +248,6 @@ export const DreamReportSchema = {
       "summary",
       "vision_self",
       "vision_keywords",
-      "reminder_sentence",
       "vision_ai_feedback",
       "dream_goals",
       "dreamer_traits",
@@ -412,7 +399,6 @@ export const SYSTEM_PROMPT_SUMMARY = `
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
 - summary는 공백 포함 250자 이내로 작성합니다.
 - key_points는 최대 5개까지 핵심 포인트를 추출합니다.
-- overall_score는 0-10 범위의 정수로, 하루 전체를 평가합니다.
 - 모든 기록을 종합하여 균형있게 분석합니다.
 
 [멤버십별 차별화]

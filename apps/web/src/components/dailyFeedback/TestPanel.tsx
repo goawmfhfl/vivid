@@ -75,7 +75,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         { name: "daily_summary", path: "view.daily_summary", isPro: false },
         { name: "daily_events", path: "view.daily_events", isPro: false },
         { name: "keywords", path: "view.keywords", isPro: false },
-        { name: "lesson", path: "view.lesson", isPro: false },
         { name: "ai_comment", path: "view.ai_comment", isPro: false },
         {
           name: "emotion_triggers",
@@ -148,11 +147,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         { name: "vision_summary", path: "view.vision_summary", isPro: false },
         { name: "vision_self", path: "view.vision_self", isPro: false },
         { name: "vision_keywords", path: "view.vision_keywords", isPro: false },
-        {
-          name: "reminder_sentence",
-          path: "view.reminder_sentence",
-          isPro: false,
-        },
         {
           name: "vision_ai_feedback",
           path: "view.vision_ai_feedback",

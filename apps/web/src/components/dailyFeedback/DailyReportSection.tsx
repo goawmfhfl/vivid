@@ -133,27 +133,6 @@ export function DailyReportSection({ view, isPro = false }: SectionProps) {
               </ul>
             </div>
           )}
-          {view.lesson && (
-            <div
-              className="p-4 rounded-xl"
-              style={{
-                backgroundColor: "#F7F8F6",
-                borderLeft: "3px solid #A8BBA8",
-                maxWidth: "fit-content",
-              }}
-            >
-              <p
-                className="text-sm"
-                style={{
-                  color: "#4E4B46",
-                  lineHeight: "1.7",
-                  textAlign: "left",
-                }}
-              >
-                {view.lesson}
-              </p>
-            </div>
-          )}
           {view.keywords && view.keywords.length > 0 && (
             <div className="pt-2 -mx-6 px-6">
               <ScrollingKeywords

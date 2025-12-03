@@ -127,7 +127,6 @@ async function generateReport<T>(
       result = {
         ...result,
         // SummaryReport의 Pro 전용 필드
-        ...("detailed_analysis" in result && { detailed_analysis: null }),
         ...("trend_analysis" in result && { trend_analysis: null }),
         // DailyReport의 Pro 전용 필드
         ...("emotion_triggers" in result && { emotion_triggers: null }),
@@ -200,7 +199,6 @@ async function generateReport<T>(
         result = {
           ...result,
           // SummaryReport의 Pro 전용 필드
-          ...("detailed_analysis" in result && { detailed_analysis: null }),
           ...("trend_analysis" in result && { trend_analysis: null }),
           // DailyReport의 Pro 전용 필드
           ...("emotion_triggers" in result && { emotion_triggers: null }),

@@ -8,7 +8,7 @@ export type DailyReportData = {
   date: string;
   /** 요일 (예: "월요일") */
   dayOfWeek: string;
-  /** 하루 점수 (0-10 범위의 정수) - summary_report의 overall_score */
+  /** 하루 점수 (0-10 범위의 정수) - narrative_overview의 integrity_score */
   integrity_score: number;
   /** 오늘의 전체 흐름 요약 (헤더에 표시되는 짧은 요약) - summary_report의 summary */
   narrative_summary: string;
@@ -16,10 +16,6 @@ export type DailyReportData = {
   // ========== Summary Report 데이터 ==========
   /** 핵심 포인트 배열 */
   summary_key_points: string[];
-  /** 전체 점수 */
-  overall_score: number;
-  /** 상세 분석 (Pro 전용) */
-  detailed_analysis: string | null;
   /** 트렌드 분석 (Pro 전용) */
   trend_analysis: string | null;
 
@@ -30,8 +26,6 @@ export type DailyReportData = {
   daily_events: string[];
   /** 키워드 배열 */
   keywords: string[];
-  /** 배운 점 */
-  lesson: string | null;
   /** AI 코멘트 */
   ai_comment: string | null;
   /** 감정 트리거 (Pro 전용) */
@@ -87,8 +81,6 @@ export type DailyReportData = {
   vision_self: string;
   /** 시각화 키워드 배열 */
   vision_keywords: string[];
-  /** 오늘의 리마인더 문장 (현재 UI에서는 사용하지 않을 수 있음) */
-  reminder_sentence: string | null;
   /** AI 피드백 */
   vision_ai_feedback: string | null;
   /** 시각화를 통해 이루고 싶은 꿈 목표 리스트 (Pro 전용) */

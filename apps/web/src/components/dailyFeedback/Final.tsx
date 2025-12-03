@@ -115,26 +115,6 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
           </div>
         </Card>
       )}
-      {/* AI 메시지 (Pro 전용) */}
-      {isPro && view.ai_message && (
-        <Card
-          className="p-6 mb-4"
-          style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
-        >
-          <div className="flex items-start gap-3 mb-4">
-            <Sparkles
-              className="w-5 h-5 flex-shrink-0"
-              style={{ color: "#A8BBA8" }}
-            />
-            <p
-              className="text-sm"
-              style={{ color: "#333333", lineHeight: "1.8" }}
-            >
-              {view.ai_message}
-            </p>
-          </div>
-        </Card>
-      )}
       {/* 성장/조정 포인트 (Pro 전용 리스트) */}
       {isPro && (growthItems.length > 0 || adjustmentItems.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

@@ -59,7 +59,6 @@ export function buildDailyPrompt(
 - summary: 오늘 하루의 요약을 200자 이내로 작성하세요 (상세하게).
 - daily_events: 오늘 있었던 구체적인 일들을 리스트 형식으로 작성하세요 (최대 15개).
 - keywords: 핵심 키워드를 추출하세요 (최대 10개).
-- lesson: 배운 점을 작성하세요.
 - ai_comment: AI 코멘트를 작성하세요.
 - emotion_triggers: 감정을 만든 사건·사람·상황을 다음 4가지 카테고리로 분류하세요:
   * people: 직장동료, 가족, 연인, 친구 등 사람 관련
@@ -76,7 +75,6 @@ export function buildDailyPrompt(
 - summary: 오늘 하루의 요약을 150자 이내로 작성하세요 (간단하게).
 - daily_events: 오늘 있었던 구체적인 일들을 리스트 형식으로 작성하세요 (최대 10개).
 - keywords: 핵심 키워드를 추출하세요 (최대 5개).
-- lesson: 배운 점을 작성하세요.
 - ai_comment: AI 코멘트를 작성하세요.
 - emotion_triggers: null로 설정하세요.
 - behavioral_clues: null로 설정하세요.`;
@@ -372,9 +370,6 @@ export function buildFinalPrompt(
     prompt += "=== 전체 요약 ===\n";
     prompt += `요약: ${summaryReport.summary}\n`;
     prompt += `핵심 포인트: ${summaryReport.key_points.join(", ")}\n`;
-    if (summaryReport.overall_score !== null) {
-      prompt += `전체 점수: ${summaryReport.overall_score}/10\n`;
-    }
     prompt += "\n";
   }
 
@@ -383,9 +378,6 @@ export function buildFinalPrompt(
     prompt += `요약: ${dailyReport.summary}\n`;
     prompt += `오늘 있었던 일: ${dailyReport.daily_events.join(", ")}\n`;
     prompt += `키워드: ${dailyReport.keywords.join(", ")}\n`;
-    if (dailyReport.lesson) {
-      prompt += `배운 점: ${dailyReport.lesson}\n`;
-    }
     prompt += "\n";
   }
 

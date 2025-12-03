@@ -32,8 +32,6 @@ export function mapDailyFeedbackRowToReport(
   const summaryReport: SummaryReport | null = row.summary_report;
   const summarySummary = summaryReport?.summary ?? "";
   const summaryKeyPoints = summaryReport?.key_points ?? [];
-  const overallScore = toNumber(summaryReport?.overall_score) ?? 0;
-  const detailedAnalysis = summaryReport?.detailed_analysis ?? null;
   const trendAnalysis = summaryReport?.trend_analysis ?? null;
 
   // Daily Report에서 데이터 추출
@@ -41,7 +39,6 @@ export function mapDailyFeedbackRowToReport(
   const dailySummary = dailyReport?.summary ?? "";
   const dailyEvents = dailyReport?.daily_events ?? [];
   const dailyKeywords = dailyReport?.keywords ?? [];
-  const dailyLesson = dailyReport?.lesson ?? null;
   const dailyAiComment = dailyReport?.ai_comment ?? null;
   const emotionTriggers = dailyReport?.emotion_triggers ?? null;
   const behavioralClues = dailyReport?.behavioral_clues ?? null;
@@ -63,7 +60,6 @@ export function mapDailyFeedbackRowToReport(
   const visionSummary = dreamReport?.summary ?? "";
   const visionSelf = dreamReport?.vision_self ?? "";
   const visionKeywords = dreamReport?.vision_keywords ?? [];
-  const reminderSentence = dreamReport?.reminder_sentence ?? null;
   const visionAiFeedback = dreamReport?.vision_ai_feedback ?? null;
   const dreamGoals = dreamReport?.dream_goals ?? null;
   const dreamerTraits = dreamReport?.dreamer_traits ?? null;
@@ -91,9 +87,9 @@ export function mapDailyFeedbackRowToReport(
   const adjustmentPoints = finalReport?.adjustment_points ?? null;
 
   // narrative_summary는 summary_report의 summary를 사용
-  // integrity_score는 summary_report의 overall_score를 사용
+  // integrity_score는 narrative_overview의 integrity_score를 사용 (없으면 0)
   const narrativeSummary = summarySummary;
-  const integrityScore = overallScore;
+  const integrityScore = toNumber(row.narrative_overview?.integrity_score) ?? 0;
 
   return {
     date: row.report_date,
@@ -103,15 +99,12 @@ export function mapDailyFeedbackRowToReport(
 
     // Summary Report 데이터
     summary_key_points: summaryKeyPoints,
-    overall_score: overallScore,
-    detailed_analysis: detailedAnalysis,
     trend_analysis: trendAnalysis,
 
     // Daily Report 데이터
     daily_summary: dailySummary,
     daily_events: dailyEvents,
     keywords: dailyKeywords,
-    lesson: dailyLesson,
     ai_comment: dailyAiComment,
     emotion_triggers: emotionTriggers,
     behavioral_clues: behavioralClues,
@@ -130,7 +123,6 @@ export function mapDailyFeedbackRowToReport(
     vision_summary: visionSummary,
     vision_self: visionSelf,
     vision_keywords: visionKeywords,
-    reminder_sentence: reminderSentence,
     vision_ai_feedback: visionAiFeedback,
     dream_goals: dreamGoals,
     dreamer_traits: dreamerTraits,

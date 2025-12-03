@@ -56,56 +56,6 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
               </ul>
             </div>
           )}
-          {isPro && view.detailed_analysis && (
-            <div
-              className="p-4 rounded-xl"
-              style={{
-                backgroundColor: "#F7F8F6",
-                borderLeft: "3px solid #A8BBA8",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4" style={{ color: "#A8BBA8" }} />
-                <p
-                  className="text-xs font-semibold"
-                  style={{
-                    color: "#6B7A6F",
-                  }}
-                >
-                  상세 분석 (Pro)
-                </p>
-              </div>
-              <p
-                className="text-sm"
-                style={{
-                  color: "#4E4B46",
-                  lineHeight: "1.7",
-                  textAlign: "left",
-                }}
-              >
-                {view.detailed_analysis}
-              </p>
-            </div>
-          )}
-          {!isPro && (
-            <div
-              className="p-4 rounded-xl flex items-center gap-2"
-              style={{
-                backgroundColor: "#FAFAF8",
-                border: "1px solid #E6E4DE",
-              }}
-            >
-              <Lock className="w-4 h-4" style={{ color: "#6B7A6F" }} />
-              <p
-                className="text-xs"
-                style={{
-                  color: "#6B7A6F",
-                }}
-              >
-                상세 분석은 Pro 멤버십에서만 제공됩니다.
-              </p>
-            </div>
-          )}
           {isPro && view.trend_analysis && (
             <div
               className="p-4 rounded-xl"
@@ -139,31 +89,6 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
           )}
         </div>
       </Card>
-      {view.overall_score !== null && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "#F7F8F6", border: "1px solid #E6E4DE" }}
-        >
-          <div className="flex items-center justify-between">
-            <p
-              className="text-xs"
-              style={{
-                color: "#6B7A6F",
-              }}
-            >
-              전체 점수
-            </p>
-            <p
-              className="text-2xl font-semibold"
-              style={{
-                color: "#333333",
-              }}
-            >
-              {view.overall_score}/10
-            </p>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
