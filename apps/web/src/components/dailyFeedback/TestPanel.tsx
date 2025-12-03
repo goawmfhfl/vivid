@@ -68,21 +68,21 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Daily",
       component: "DailyReportSection",
-      description: "일상 기록 요약, 서사, 키워드",
+      description: "일상 기록 요약, 오늘 있었던 일, 키워드, 감정 트리거, 행동 단서",
       fields: [
         { name: "daily_summary", path: "view.daily_summary", isPro: false },
-        { name: "narrative", path: "view.narrative", isPro: false },
+        { name: "daily_events", path: "view.daily_events", isPro: false },
         { name: "keywords", path: "view.keywords", isPro: false },
         { name: "lesson", path: "view.lesson", isPro: false },
         { name: "ai_comment", path: "view.ai_comment", isPro: false },
         {
-          name: "detailed_narrative",
-          path: "view.detailed_narrative",
+          name: "emotion_triggers",
+          path: "view.emotion_triggers",
           isPro: true,
         },
         {
-          name: "context_analysis",
-          path: "view.context_analysis",
+          name: "behavioral_clues",
+          path: "view.behavioral_clues",
           isPro: true,
         },
       ],
@@ -258,21 +258,23 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       setIsDragging(true);
       const rect = panelRef.current.getBoundingClientRect();
       setDragStart({
-        x: e.clientX - rect.left - position.x,
-        y: e.clientY - rect.top - position.y,
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
       });
     }
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && panelRef.current) {
         const newX = e.clientX - dragStart.x;
         const newY = e.clientY - dragStart.y;
         
         // 화면 경계 내에 유지
-        const maxX = window.innerWidth - (panelRef.current?.offsetWidth || 400);
-        const maxY = window.innerHeight - (panelRef.current?.offsetHeight || 200);
+        const panelWidth = panelRef.current.offsetWidth;
+        const panelHeight = panelRef.current.offsetHeight;
+        const maxX = window.innerWidth - panelWidth;
+        const maxY = window.innerHeight - panelHeight;
         
         setPosition({
           x: Math.max(0, Math.min(newX, maxX)),
@@ -299,11 +301,11 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   return (
     <div
       ref={panelRef}
-      className="fixed z-50 cursor-move"
+      className="fixed z-50"
       style={{
         top: position.y || 80,
-        right: position.x ? "auto" : 16,
-        left: position.x ? position.x : "auto",
+        right: position.x === 0 ? 16 : "auto",
+        left: position.x > 0 ? position.x : "auto",
         maxWidth: selectedSection ? "600px" : "400px",
         width: "calc(100vw - 2rem)",
         maxHeight: "calc(100vh - 8rem)",
@@ -322,8 +324,21 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       >
         <div className="p-4">
           {/* 헤더 */}
-          <div className="flex items-center justify-between mb-3">
+          <div
+            className="flex items-center justify-between mb-3"
+            onMouseDown={handleMouseDown}
+            style={{
+              cursor: isDragging ? "grabbing" : "grab",
+            }}
+          >
             <div className="flex items-center gap-2">
+              <GripVertical
+                className="w-4 h-4"
+                style={{
+                  color: COLORS.text.muted,
+                  opacity: 0.6,
+                }}
+              />
               <div
                 className="w-2 h-2 rounded-full"
                 style={{

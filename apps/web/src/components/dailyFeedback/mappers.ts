@@ -39,12 +39,12 @@ export function mapDailyFeedbackRowToReport(
   // Daily Report에서 데이터 추출
   const dailyReport: DailyReport | null = row.daily_report;
   const dailySummary = dailyReport?.summary ?? "";
-  const dailyNarrative = dailyReport?.narrative ?? "";
+  const dailyEvents = dailyReport?.daily_events ?? [];
   const dailyKeywords = dailyReport?.keywords ?? [];
   const dailyLesson = dailyReport?.lesson ?? null;
   const dailyAiComment = dailyReport?.ai_comment ?? null;
-  const detailedNarrative = dailyReport?.detailed_narrative ?? null;
-  const contextAnalysis = dailyReport?.context_analysis ?? null;
+  const emotionTriggers = dailyReport?.emotion_triggers ?? null;
+  const behavioralClues = dailyReport?.behavioral_clues ?? null;
 
   // Emotion Report에서 데이터 추출
   const emotionReport: EmotionReport | null = row.emotion_report;
@@ -107,12 +107,12 @@ export function mapDailyFeedbackRowToReport(
 
     // Daily Report 데이터
     daily_summary: dailySummary,
-    narrative: dailyNarrative,
+    daily_events: dailyEvents,
     keywords: dailyKeywords,
     lesson: dailyLesson,
     ai_comment: dailyAiComment,
-    detailed_narrative: detailedNarrative,
-    context_analysis: contextAnalysis,
+    emotion_triggers: emotionTriggers,
+    behavioral_clues: behavioralClues,
 
     // Emotion Report 데이터
     emotion_curve: emotionCurve,

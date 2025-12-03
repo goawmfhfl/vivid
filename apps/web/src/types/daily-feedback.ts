@@ -74,14 +74,25 @@ export interface SummaryReport {
 }
 
 export interface DailyReport {
-  summary: string; // 일상 기록 요약 (일반: 250자, Pro: 500자)
-  narrative: string; // 일상 서사 (일반: 400자, Pro: 800자)
-  keywords: string[]; // 키워드 (일반: 최대 20개, Pro: 최대 30개)
+  summary: string; // 일상 기록 요약 (일반: 150자, Pro: 300자, 최대 200자)
+  daily_events: string[]; // 오늘 있었던 일 리스트 (서사 대신)
+  keywords: string[]; // 키워드 (일반: 최대 5개, Pro: 최대 10개)
   lesson: string | null; // 배운 점
   ai_comment: string | null; // AI 코멘트
   // Pro 전용 필드
-  detailed_narrative?: string | null; // 상세 서사 (Pro만)
-  context_analysis?: string | null; // 맥락 분석 (Pro만)
+  emotion_triggers?: {
+    people: string[]; // 사람 관련: 직장동료, 가족, 연인, 친구
+    work: string[]; // 업무 관련: 데드라인, 불안, 일정폭주
+    environment: string[]; // 환경: 날씨, 피로, 금전
+    self: string[]; // 자기 요인: 기대, 비교, 자기비판
+  } | null;
+  behavioral_clues?: {
+    avoidance: string[]; // 회피 행동
+    routine_attempt: string[]; // 루틴 시도
+    routine_failure: string[]; // 루틴 실패
+    impulsive: string[]; // 즉흥 충동
+    planned: string[]; // 계획적 행동
+  } | null;
 }
 
 export interface EmotionReport {

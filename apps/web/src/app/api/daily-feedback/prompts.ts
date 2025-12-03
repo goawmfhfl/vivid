@@ -55,8 +55,31 @@ export function buildDailyPrompt(
   }
 
   const instruction = isPro
-    ? "일상 리포트를 생성하세요. 상세한 서사와 깊이 있는 분석을 포함하세요."
-    : "일상 리포트를 간단하게 생성하세요. 핵심만 간결하게 알려주세요.";
+    ? `일상 리포트를 생성하세요. 
+- summary: 오늘 하루의 요약을 200자 이내로 작성하세요 (상세하게).
+- daily_events: 오늘 있었던 구체적인 일들을 리스트 형식으로 작성하세요 (최대 15개).
+- keywords: 핵심 키워드를 추출하세요 (최대 10개).
+- lesson: 배운 점을 작성하세요.
+- ai_comment: AI 코멘트를 작성하세요.
+- emotion_triggers: 감정을 만든 사건·사람·상황을 다음 4가지 카테고리로 분류하세요:
+  * people: 직장동료, 가족, 연인, 친구 등 사람 관련
+  * work: 데드라인, 불안, 일정폭주 등 업무 관련
+  * environment: 날씨, 피로, 금전 등 환경 관련
+  * self: 기대, 비교, 자기비판 등 자기 요인
+- behavioral_clues: 오늘 기록 속에서 나타나는 행동 패턴을 다음 5가지로 분류하세요:
+  * avoidance: 회피 행동
+  * routine_attempt: 루틴 시도
+  * routine_failure: 루틴 실패
+  * impulsive: 즉흥 충동
+  * planned: 계획적 행동`
+    : `일상 리포트를 간단하게 생성하세요. 
+- summary: 오늘 하루의 요약을 150자 이내로 작성하세요 (간단하게).
+- daily_events: 오늘 있었던 구체적인 일들을 리스트 형식으로 작성하세요 (최대 10개).
+- keywords: 핵심 키워드를 추출하세요 (최대 5개).
+- lesson: 배운 점을 작성하세요.
+- ai_comment: AI 코멘트를 작성하세요.
+- emotion_triggers: null로 설정하세요.
+- behavioral_clues: null로 설정하세요.`;
 
   let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 일상 기록입니다. ${instruction}\n\n`;
 

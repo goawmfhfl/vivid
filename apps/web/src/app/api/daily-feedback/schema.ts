@@ -53,8 +53,13 @@ export function getDailyReportSchema(isPro: boolean) {
     schema: {
       type: "object",
       properties: {
-        summary: { type: "string", maxLength: isPro ? 300 : 150 },
-        narrative: { type: "string", maxLength: isPro ? 500 : 250 },
+        summary: { type: "string", maxLength: isPro ? 200 : 150 },
+        daily_events: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: isPro ? 15 : 10,
+        },
         keywords: {
           type: "array",
           items: { type: "string" },
@@ -64,23 +69,73 @@ export function getDailyReportSchema(isPro: boolean) {
         lesson: { type: "string", nullable: true },
         ai_comment: { type: "string", nullable: true },
         // Pro 전용 필드 (무료 멤버십에서는 null로 처리됨)
-        detailed_narrative: {
-          type: "string",
+        emotion_triggers: {
+          type: "object",
           nullable: true,
+          properties: {
+            people: {
+              type: "array",
+              items: { type: "string" },
+            },
+            work: {
+              type: "array",
+              items: { type: "string" },
+            },
+            environment: {
+              type: "array",
+              items: { type: "string" },
+            },
+            self: {
+              type: "array",
+              items: { type: "string" },
+            },
+          },
+          required: ["people", "work", "environment", "self"],
+          additionalProperties: false,
         },
-        context_analysis: {
-          type: "string",
+        behavioral_clues: {
+          type: "object",
           nullable: true,
+          properties: {
+            avoidance: {
+              type: "array",
+              items: { type: "string" },
+            },
+            routine_attempt: {
+              type: "array",
+              items: { type: "string" },
+            },
+            routine_failure: {
+              type: "array",
+              items: { type: "string" },
+            },
+            impulsive: {
+              type: "array",
+              items: { type: "string" },
+            },
+            planned: {
+              type: "array",
+              items: { type: "string" },
+            },
+          },
+          required: [
+            "avoidance",
+            "routine_attempt",
+            "routine_failure",
+            "impulsive",
+            "planned",
+          ],
+          additionalProperties: false,
         },
       },
       required: [
         "summary",
-        "narrative",
+        "daily_events",
         "keywords",
         "lesson",
         "ai_comment",
-        "detailed_narrative",
-        "context_analysis",
+        "emotion_triggers",
+        "behavioral_clues",
       ],
       additionalProperties: false,
     },
