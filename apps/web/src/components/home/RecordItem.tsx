@@ -15,6 +15,11 @@ import {
   CARD_STYLES,
   SPACING,
 } from "@/lib/design-system";
+import {
+  RECORD_TYPES,
+  RECORD_TYPE_COLORS,
+  type RecordType,
+} from "../signup/RecordTypeCard";
 
 interface RecordItemProps {
   record: Record;
@@ -32,12 +37,16 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
     return `${period} ${displayHours}:${minutes.toString().padStart(2, "0")}`;
   };
 
+  const recordType = (record.type as RecordType) || "daily";
+  const typeColors = RECORD_TYPE_COLORS[recordType];
+  const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
+
   return (
     <div
       className={`${SPACING.card.paddingSmall} ${CARD_STYLES.hover.transition} relative`}
       style={{
-        backgroundColor: "#FAFAF8", // 프로젝트 base 색상 기반의 메모지 배경
-        border: `1.5px solid ${COLORS.border.light}`, // 프로젝트 border.light 색상 사용
+        backgroundColor: typeColors.background,
+        border: `1.5px solid ${typeColors.border}`,
         borderRadius: "12px",
         boxShadow: `
           0 2px 8px rgba(0,0,0,0.04),
@@ -57,13 +66,13 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
             ${COLORS.border.card} 38px,
             transparent 38px
           ),
-          /* 가로 줄무늬 (프로젝트 그린 톤) */
+          /* 가로 줄무늬 (타입별 색상) */
           repeating-linear-gradient(
             to bottom,
             transparent 0px,
             transparent 27px,
-            rgba(107, 122, 111, 0.08) 27px,
-            rgba(107, 122, 111, 0.08) 28px
+            ${typeColors.lineColor} 27px,
+            ${typeColors.lineColor} 28px
           ),
           /* 종이 텍스처 노이즈 */
           repeating-linear-gradient(
@@ -106,13 +115,13 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
         }}
       />
 
-      {/* 종이 질감 오버레이 (프로젝트 그린 톤) */}
+      {/* 종이 질감 오버레이 (타입별 색상) */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
             radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+            radial-gradient(circle at 75% 75%, ${typeColors.overlay} 0%, transparent 40%)
           `,
           mixBlendMode: "overlay",
           opacity: 0.5,
@@ -121,17 +130,28 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
 
       {/* 내용 영역 */}
       <div className="relative z-10">
-      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-          <span
-            className={TYPOGRAPHY.caption.fontSize}
-            style={{
-              color: COLORS.text.secondary,
-              opacity: 0.5,
-            }}
-          >
-            {formatTime(record.created_at)}
-          </span>
+            {typeInfo && (
+              <span
+                style={{
+                  fontSize: "1rem",
+                  opacity: 0.7,
+                }}
+                title={typeInfo.title}
+              >
+                {typeInfo.icon}
+              </span>
+            )}
+            <span
+              className={TYPOGRAPHY.caption.fontSize}
+              style={{
+                color: COLORS.text.secondary,
+                opacity: 0.5,
+              }}
+            >
+              {formatTime(record.created_at)}
+            </span>
             <span
               className={TYPOGRAPHY.caption.fontSize}
               style={{
@@ -142,90 +162,90 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
             >
               {record.content?.length || 0}자
             </span>
-        </div>
+          </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              style={{ color: COLORS.brand.primary }}
-              className="focus:outline-none focus:ring-0"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="min-w-[140px]"
-            style={{
-              backgroundColor: COLORS.background.card,
-              border: `1px solid ${COLORS.border.input}`,
-              boxShadow: SHADOWS.md,
-            }}
-          >
-            <DropdownMenuItem
-              onClick={() => onEdit(record)}
-              className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                style={{ color: COLORS.brand.primary }}
+                className="focus:outline-none focus:ring-0"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="min-w-[140px]"
               style={{
-                color: COLORS.text.primary,
-                padding: "0.625rem 1rem",
-                fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                fontWeight: "500",
+                backgroundColor: COLORS.background.card,
+                border: `1px solid ${COLORS.border.input}`,
+                boxShadow: SHADOWS.md,
               }}
-              onMouseEnter={(e) => {
+            >
+              <DropdownMenuItem
+                onClick={() => onEdit(record)}
+                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+                style={{
+                  color: COLORS.text.primary,
+                  padding: "0.625rem 1rem",
+                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+                  fontWeight: "500",
+                }}
+                onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor =
                     COLORS.background.hover;
-              }}
-              onMouseLeave={(e) => {
+                }}
+                onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor =
                     COLORS.background.card;
-              }}
-            >
-              <Pencil
-                className="w-4 h-4 mr-2"
-                style={{ color: COLORS.brand.primary }}
-              />
-              수정하기
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onDelete(record.id)}
-              className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
-              style={{
-                color: COLORS.status.error,
-                padding: "0.625rem 1rem",
-                fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                fontWeight: "500",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#FEF2F2";
-              }}
-              onMouseLeave={(e) => {
+                }}
+              >
+                <Pencil
+                  className="w-4 h-4 mr-2"
+                  style={{ color: COLORS.brand.primary }}
+                />
+                수정하기
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete(record.id)}
+                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+                style={{
+                  color: COLORS.status.error,
+                  padding: "0.625rem 1rem",
+                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+                  fontWeight: "500",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#FEF2F2";
+                }}
+                onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor =
                     COLORS.background.card;
-              }}
-            >
-              <Trash2
-                className="w-4 h-4 mr-2"
-                style={{ color: COLORS.status.error }}
-              />
-              삭제하기
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <p
-        className={TYPOGRAPHY.bodyLarge.fontSize}
-        style={{
-          color: COLORS.text.primary,
+                }}
+              >
+                <Trash2
+                  className="w-4 h-4 mr-2"
+                  style={{ color: COLORS.status.error }}
+                />
+                삭제하기
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <p
+          className={TYPOGRAPHY.bodyLarge.fontSize}
+          style={{
+            color: COLORS.text.primary,
             lineHeight: "28px", // 줄무늬 간격(28px)과 일치
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
             paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
-        }}
-      >
-        {record.content}
-      </p>
+          }}
+        >
+          {record.content}
+        </p>
       </div>
     </div>
   );

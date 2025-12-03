@@ -14,6 +14,7 @@ export interface SignUpData {
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
+  recordTypes?: string[]; // 기록 타입 배열
   isSocialOnboarding?: boolean; // 소셜 로그인 완료 플래그
 }
 
@@ -43,6 +44,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     agreeTerms,
     agreeAI,
     agreeMarketing,
+    recordTypes = [],
     isSocialOnboarding = false,
   } = data;
 
@@ -97,6 +99,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         agreeTerms,
         agreeAI,
         agreeMarketing,
+        recordTypes,
       };
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -115,48 +118,49 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         throw new SignUpError("이메일과 비밀번호를 입력해주세요.");
       }
 
-    // 1. Supabase Auth를 통한 회원가입
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          agreeTerms,
-          agreeAI,
-          agreeMarketing,
-          name,
-          phone,
-          birthYear,
-          gender,
+      // 1. Supabase Auth를 통한 회원가입
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            agreeTerms,
+            agreeAI,
+            agreeMarketing,
+            name,
+            phone,
+            birthYear,
+            gender,
+            recordTypes,
+          },
         },
-      },
-    });
+      });
 
-    if (authError) {
-      // Supabase 에러 메시지를 한국어로 변환
-      let errorMessage = authError.message;
+      if (authError) {
+        // Supabase 에러 메시지를 한국어로 변환
+        let errorMessage = authError.message;
 
-      if (authError.message.includes("already registered")) {
-        errorMessage = "이미 가입된 이메일입니다.";
-      } else if (authError.message.includes("Invalid email")) {
-        errorMessage = "올바른 이메일 형식을 입력해주세요.";
-      } else if (authError.message.includes("Password should be")) {
-        errorMessage = "비밀번호는 6자 이상이어야 합니다.";
-      } else if (authError.message.includes("over_email_send_rate_limit")) {
-        errorMessage =
-          "이메일 전송이 너무 빈번합니다. 잠시 후 다시 시도해주세요.";
-      } else if (authError.message.includes("signup_disabled")) {
-        errorMessage = "현재 회원가입이 일시적으로 중단되었습니다.";
-      } else if (authError.message.includes("email_not_confirmed")) {
-        errorMessage = "이메일 인증이 필요합니다. 이메일을 확인해주세요.";
+        if (authError.message.includes("already registered")) {
+          errorMessage = "이미 가입된 이메일입니다.";
+        } else if (authError.message.includes("Invalid email")) {
+          errorMessage = "올바른 이메일 형식을 입력해주세요.";
+        } else if (authError.message.includes("Password should be")) {
+          errorMessage = "비밀번호는 6자 이상이어야 합니다.";
+        } else if (authError.message.includes("over_email_send_rate_limit")) {
+          errorMessage =
+            "이메일 전송이 너무 빈번합니다. 잠시 후 다시 시도해주세요.";
+        } else if (authError.message.includes("signup_disabled")) {
+          errorMessage = "현재 회원가입이 일시적으로 중단되었습니다.";
+        } else if (authError.message.includes("email_not_confirmed")) {
+          errorMessage = "이메일 인증이 필요합니다. 이메일을 확인해주세요.";
+        }
+
+        throw new SignUpError(errorMessage, authError.message);
       }
 
-      throw new SignUpError(errorMessage, authError.message);
-    }
-
-    if (!authData.user) {
-      throw new SignUpError("회원가입에 실패했습니다.");
-    }
+      if (!authData.user) {
+        throw new SignUpError("회원가입에 실패했습니다.");
+      }
 
       user = authData.user;
       session = authData.session;
@@ -192,9 +196,9 @@ export const useSignUp = (isSocialOnboarding = false) => {
         router.push("/");
       } else {
         // 일반 회원가입 케이스: 로그인 페이지로 이동
-      router.push(
-        "/login?message=회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요."
-      );
+        router.push(
+          "/login?message=회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요."
+        );
       }
     },
     onError: (error: SignUpError) => {

@@ -1,5 +1,10 @@
 import type { Record } from "@/hooks/useRecords";
 import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
+import {
+  RECORD_TYPES,
+  RECORD_TYPE_COLORS,
+  type RecordType,
+} from "../signup/RecordTypeCard";
 
 interface RecordItemProps {
   record: Record;
@@ -15,12 +20,16 @@ export function RecordItem({ record }: RecordItemProps) {
     return `${period} ${displayHours}:${minutes.toString().padStart(2, "0")}`;
   };
 
+  const recordType = (record.type as RecordType) || "daily";
+  const typeColors = RECORD_TYPE_COLORS[recordType];
+  const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
+
   return (
     <div
       className={`${SPACING.card.paddingSmall} ${CARD_STYLES.hover.transition} relative`}
       style={{
-        backgroundColor: "#FAFAF8", // 프로젝트 base 색상 기반의 메모지 배경
-        border: `1.5px solid ${COLORS.border.light}`, // 프로젝트 border.light 색상 사용
+        backgroundColor: typeColors.background,
+        border: `1.5px solid ${typeColors.border}`,
         borderRadius: "12px",
         boxShadow: `
           0 2px 8px rgba(0,0,0,0.04),
@@ -40,13 +49,13 @@ export function RecordItem({ record }: RecordItemProps) {
             ${COLORS.border.card} 38px,
             transparent 38px
           ),
-          /* 가로 줄무늬 (프로젝트 그린 톤) */
+          /* 가로 줄무늬 (타입별 색상) */
           repeating-linear-gradient(
             to bottom,
             transparent 0px,
             transparent 27px,
-            rgba(107, 122, 111, 0.08) 27px,
-            rgba(107, 122, 111, 0.08) 28px
+            ${typeColors.lineColor} 27px,
+            ${typeColors.lineColor} 28px
           ),
           /* 종이 텍스처 노이즈 */
           repeating-linear-gradient(
@@ -89,13 +98,13 @@ export function RecordItem({ record }: RecordItemProps) {
         }}
       />
 
-      {/* 종이 질감 오버레이 (프로젝트 그린 톤) */}
+      {/* 종이 질감 오버레이 (타입별 색상) */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
             radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+            radial-gradient(circle at 75% 75%, ${typeColors.overlay} 0%, transparent 40%)
           `,
           mixBlendMode: "overlay",
           opacity: 0.5,
@@ -105,15 +114,26 @@ export function RecordItem({ record }: RecordItemProps) {
       {/* 내용 영역 */}
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-3">
+          {typeInfo && (
             <span
+              style={{
+                fontSize: "1rem",
+                opacity: 0.7,
+              }}
+              title={typeInfo.title}
+            >
+              {typeInfo.icon}
+            </span>
+          )}
+          <span
             className={TYPOGRAPHY.caption.fontSize}
             style={{
               color: COLORS.text.secondary,
               opacity: 0.5,
             }}
-            >
+          >
             {formatTime(record.created_at)}
-            </span>
+          </span>
           <span
             className={TYPOGRAPHY.caption.fontSize}
             style={{

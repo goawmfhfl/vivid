@@ -26,15 +26,19 @@ export function SubmitButton({
       type={onClick ? "button" : "submit"}
       disabled={isDisabled}
       onClick={onClick}
-      className="px-8 py-3 rounded-xl transition-all font-medium"
+      className={`px-8 py-3 rounded-xl transition-all font-medium ${
+        onClick ? "flex-shrink-0" : "w-full"
+      }`}
       style={{
         backgroundColor: !isDisabled ? "#6B7A6F" : "#D1D5DB",
         color: "white",
         fontSize: "0.95rem",
         opacity: !isDisabled ? 1 : 0.6,
-        minWidth: "140px",
+        minWidth: onClick ? "140px" : "auto",
         boxShadow: !isDisabled ? "0 2px 8px rgba(107, 122, 111, 0.2)" : "none",
+        border: "none",
       }}
+      variant={undefined}
     >
       {isLoading ? loadingText : defaultText}
     </Button>

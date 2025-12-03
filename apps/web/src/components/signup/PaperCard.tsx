@@ -1,20 +1,12 @@
 import { ReactNode } from "react";
 import { COLORS } from "@/lib/design-system";
-import { PostItLabel } from "./PostItLabel";
 
 interface PaperCardProps {
   children: ReactNode;
   className?: string;
-  stepNumber?: number;
-  stepLabel?: string;
 }
 
-export function PaperCard({
-  children,
-  className = "",
-  stepNumber,
-  stepLabel,
-}: PaperCardProps) {
+export function PaperCard({ children, className = "" }: PaperCardProps) {
   return (
     <div
       className={`relative ${className}`}
@@ -74,11 +66,6 @@ export function PaperCard({
           overflow: "hidden",
         }}
       />
-
-      {/* 포스트잇 라벨 */}
-      {stepNumber && stepLabel && (
-        <PostItLabel stepNumber={stepNumber} label={stepLabel} />
-      )}
 
       <div className="relative z-10">{children}</div>
     </div>

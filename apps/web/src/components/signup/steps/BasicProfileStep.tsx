@@ -23,7 +23,7 @@ export function BasicProfileStep({
   onClearError,
 }: BasicProfileStepProps) {
   return (
-    <PaperCard className="p-6 sm:p-8" stepNumber={2} stepLabel="기본 프로필">
+    <PaperCard className="p-6 sm:p-8">
       <div className="mb-6">
         <h2
           className="text-xl font-semibold mb-2"

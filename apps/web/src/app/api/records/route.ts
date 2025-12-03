@@ -67,11 +67,18 @@ export async function POST(request: NextRequest) {
   try {
     const authenticatedUserId = await getAuthenticatedUserId(request);
     const body = await request.json();
-    const { content } = body;
+    const { content, type } = body;
 
     if (!content || typeof content !== "string") {
       return NextResponse.json(
         { error: "content is required and must be a string" },
+        { status: 400 }
+      );
+    }
+
+    if (!type || typeof type !== "string") {
+      return NextResponse.json(
+        { error: "type is required and must be a string" },
         { status: 400 }
       );
     }
@@ -86,6 +93,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: authenticatedUserId,
         content: encryptedContent,
+        type: type,
       })
       .select()
       .single();

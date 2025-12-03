@@ -28,7 +28,7 @@ export function TermsStep({
   onShowAI,
 }: TermsStepProps) {
   return (
-    <PaperCard className="p-6 sm:p-8" stepNumber={4} stepLabel="약관 동의">
+    <PaperCard className="p-6 sm:p-8">
       <div className="mb-6">
         <h2
           className="text-xl font-semibold mb-2"

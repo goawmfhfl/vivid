@@ -170,27 +170,6 @@ export function LoginView() {
             error={errors.password}
           />
 
-          {/* 아이디/비밀번호 찾기 링크 */}
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setFindEmailDialogOpen(true)}
-              className="text-sm underline"
-              style={{ color: "#6B7A6F" }}
-            >
-              이메일 찾기
-            </button>
-            <span style={{ color: "#6B7A6F" }}>|</span>
-            <button
-              type="button"
-              onClick={() => setFindPasswordDialogOpen(true)}
-              className="text-sm underline"
-              style={{ color: "#6B7A6F" }}
-            >
-              비밀번호 찾기
-            </button>
-          </div>
-
           {/* 이메일 저장 체크박스 */}
           <div className="flex items-center gap-2">
             <Checkbox
@@ -209,12 +188,27 @@ export function LoginView() {
             </label>
           </div>
 
-          <SubmitButton
-            isLoading={loginMutation.isPending}
-            isValid={isFormValid}
-            loadingText="로그인 중..."
-            defaultText="로그인"
-          />
+          {/* 로그인 버튼 - 고정 위치 */}
+          <div className="w-full">
+            <SubmitButton
+              isLoading={loginMutation.isPending}
+              isValid={isFormValid}
+              loadingText="로그인 중..."
+              defaultText="로그인"
+            />
+          </div>
+
+          {/* 회원가입하기 버튼 - 이메일/비밀번호 찾기 자리 */}
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/signup")}
+              className="text-sm underline"
+              style={{ color: "#6B7A6F" }}
+            >
+              계정이 없으신가요? 회원가입하기
+            </button>
+          </div>
 
           <div className="relative py-3">
             <div className="absolute inset-0 flex items-center">
@@ -262,15 +256,24 @@ export function LoginView() {
             </div>
           </div>
 
-          {/* Sign Up Link */}
-          <div className="text-center pt-4">
+          {/* 이메일/비밀번호 찾기 - 아래로 이동 */}
+          <div className="flex items-center justify-center gap-3 pt-2">
             <button
               type="button"
-              onClick={() => router.push("/signup")}
-              className="underline"
-              style={{ color: "#6B7A6F", fontSize: "0.9rem" }}
+              onClick={() => setFindEmailDialogOpen(true)}
+              className="text-sm underline"
+              style={{ color: "#6B7A6F" }}
             >
-              계정이 없으신가요? 회원가입하기
+              이메일 찾기
+            </button>
+            <span style={{ color: "#6B7A6F" }}>|</span>
+            <button
+              type="button"
+              onClick={() => setFindPasswordDialogOpen(true)}
+              className="text-sm underline"
+              style={{ color: "#6B7A6F" }}
+            >
+              비밀번호 찾기
             </button>
           </div>
         </form>

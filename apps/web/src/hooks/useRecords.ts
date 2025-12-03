@@ -9,11 +9,13 @@ export interface Record {
   content: string;
   created_at: string;
   kst_date: string;
+  type?: string | null;
 }
 
 // Record 생성 데이터 타입
 export interface CreateRecordData {
   content: string;
+  type: string;
 }
 
 // Record 업데이트 데이터 타입
@@ -88,7 +90,7 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ content: data.content }),
+      body: JSON.stringify({ content: data.content, type: data.type }),
     });
 
     if (!response.ok) {

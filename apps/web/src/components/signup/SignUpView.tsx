@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSignUp } from "@/hooks/useSignUp";
-import { AuthHeader } from "../forms/AuthHeader";
 import { ErrorMessage } from "../forms/ErrorMessage";
 import { SubmitButton } from "../forms/SubmitButton";
 import { TermsModal } from "../modals/TermsModal";
@@ -47,6 +46,7 @@ export function SignUpView({
     agreeMarketing: false,
     birthYear: "",
     gender: "",
+    recordTypes: [] as string[],
   });
 
   // 에러 상태
@@ -58,6 +58,7 @@ export function SignUpView({
     birthYear?: string;
     gender?: string;
     terms?: string;
+    recordTypes?: string;
   }>({});
 
   // 모달 상태
@@ -68,10 +69,29 @@ export function SignUpView({
 
   const signUpMutation = useSignUp(isSocialOnboarding);
 
+  // 이메일 중복 에러 처리: 1단계로 이동하고 이메일 에러 표시
+  useEffect(() => {
+    if (signUpMutation.error) {
+      const errorMessage = signUpMutation.error.message || "";
+      if (
+        errorMessage.includes("이미 가입된 이메일") ||
+        errorMessage.includes("already registered")
+      ) {
+        // 1단계로 이동
+        setCurrentStep(1);
+        // 이메일 에러 설정
+        setErrors((prev) => ({
+          ...prev,
+          email: "이미 가입된 이메일입니다.",
+        }));
+      }
+    }
+  }, [signUpMutation.error]);
+
   // 폼 데이터 업데이트 헬퍼
   const updateFormData = (
     field: keyof typeof formData,
-    value: string | boolean
+    value: string | boolean | string[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -148,6 +168,10 @@ export function SignUpView({
       if (!formData.gender) {
         newErrors.gender = "성별을 선택해주세요.";
       }
+
+      if (formData.recordTypes.length !== 2) {
+        newErrors.recordTypes = "기록 타입을 2개 선택해주세요.";
+      }
     } else if (step === 4) {
       // 약관 동의 검증
       if (!formData.agreeTerms || !formData.agreeAI) {
@@ -203,6 +227,7 @@ export function SignUpView({
       agreeMarketing: formData.agreeMarketing,
       birthYear: formData.birthYear,
       gender: formData.gender,
+      recordTypes: formData.recordTypes,
       isSocialOnboarding,
     });
   };
@@ -224,7 +249,10 @@ export function SignUpView({
         formData.phone.replace(/\s/g, "").length >= 10
       );
     } else if (currentStep === 3) {
-      return Boolean(formData.birthYear && formData.gender);
+      return (
+        Boolean(formData.birthYear && formData.gender) &&
+        formData.recordTypes.length === 2
+      );
     } else if (currentStep === 4) {
       return formData.agreeTerms && formData.agreeAI;
     }
@@ -237,11 +265,6 @@ export function SignUpView({
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div className="w-full max-w-2xl">
-        <AuthHeader
-          title="myRecord"
-          subtitle="기록하면, 피드백이 따라옵니다."
-        />
-
         <div className="mt-8">
           <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
@@ -254,120 +277,150 @@ export function SignUpView({
             </div>
           )}
 
-          {signUpMutation.error && (
-            <div className="mb-6">
-              <ErrorMessage
-                message={
-                  signUpMutation.error?.message ||
-                  "요청 처리 중 오류가 발생했습니다."
-                }
-              />
-            </div>
-          )}
+          {signUpMutation.error &&
+            !(
+              signUpMutation.error.message.includes("이미 가입된 이메일") ||
+              signUpMutation.error.message.includes("already registered")
+            ) && (
+              <div className="mb-6">
+                <ErrorMessage
+                  message={
+                    signUpMutation.error?.message ||
+                    "요청 처리 중 오류가 발생했습니다."
+                  }
+                />
+              </div>
+            )}
 
           {/* 단계별 컨텐츠 */}
-          <div className="mb-8">
-            {currentStep === 1 && (
-              <LoginInfoStep
-                email={formData.email}
-                password={formData.password}
-                emailError={errors.email}
-                passwordError={errors.password}
-                isSocialMode={isSocialOnboarding}
-                onEmailChange={(value) => {
-                  updateFormData("email", value);
-                  clearFieldError("email");
-                }}
-                onPasswordChange={(value) => {
-                  updateFormData("password", value);
-                  clearFieldError("password");
-                }}
-                onClearError={clearFieldError}
-              />
-            )}
+          <div className="mb-6 relative" style={{ minHeight: "300px" }}>
+            <div
+              key={currentStep}
+              style={{
+                animation: "fadeInSlide 0.3s ease-in-out",
+              }}
+            >
+              {currentStep === 1 && (
+                <LoginInfoStep
+                  email={formData.email}
+                  password={formData.password}
+                  emailError={errors.email}
+                  passwordError={errors.password}
+                  isSocialMode={isSocialOnboarding}
+                  onEmailChange={(value) => {
+                    updateFormData("email", value);
+                    clearFieldError("email");
+                  }}
+                  onPasswordChange={(value) => {
+                    updateFormData("password", value);
+                    clearFieldError("password");
+                  }}
+                  onClearError={clearFieldError}
+                />
+              )}
 
-            {currentStep === 2 && (
-              <BasicProfileStep
-                name={formData.name}
-                phone={formData.phone}
-                nameError={errors.name}
-                phoneError={errors.phone}
-                onNameChange={(value) => {
-                  updateFormData("name", value);
-                  clearFieldError("name");
-                }}
-                onPhoneChange={(value) => {
-                  updateFormData("phone", value);
-                  clearFieldError("phone");
-                }}
-                onClearError={clearFieldError}
-              />
-            )}
+              {currentStep === 2 && (
+                <BasicProfileStep
+                  name={formData.name}
+                  phone={formData.phone}
+                  nameError={errors.name}
+                  phoneError={errors.phone}
+                  onNameChange={(value) => {
+                    updateFormData("name", value);
+                    clearFieldError("name");
+                  }}
+                  onPhoneChange={(value) => {
+                    updateFormData("phone", value);
+                    clearFieldError("phone");
+                  }}
+                  onClearError={clearFieldError}
+                />
+              )}
 
-            {currentStep === 3 && (
-              <AdditionalInfoStep
-                birthYear={formData.birthYear}
-                gender={formData.gender}
-                birthYearError={errors.birthYear}
-                genderError={errors.gender}
-                onBirthYearChange={(value) => {
-                  updateFormData("birthYear", value);
-                  clearFieldError("birthYear");
-                }}
-                onGenderChange={(value) => {
-                  updateFormData("gender", value);
-                  clearFieldError("gender");
-                }}
-              />
-            )}
+              {currentStep === 3 && (
+                <AdditionalInfoStep
+                  birthYear={formData.birthYear}
+                  gender={formData.gender}
+                  recordTypes={formData.recordTypes as any}
+                  birthYearError={errors.birthYear}
+                  genderError={errors.gender}
+                  onBirthYearChange={(value) => {
+                    updateFormData("birthYear", value);
+                    clearFieldError("birthYear");
+                  }}
+                  onGenderChange={(value) => {
+                    updateFormData("gender", value);
+                    clearFieldError("gender");
+                  }}
+                  onRecordTypeToggle={(type) => {
+                    const currentTypes = formData.recordTypes;
+                    const isSelected = currentTypes.includes(type);
 
-            {currentStep === 4 && (
-              <TermsStep
-                agreeTerms={formData.agreeTerms}
-                agreeAI={formData.agreeAI}
-                agreeMarketing={formData.agreeMarketing}
-                termsError={errors.terms}
-                onTermsChange={(checked) => {
-                  updateFormData("agreeTerms", checked);
-                  clearFieldError("terms");
-                }}
-                onAIChange={(checked) => {
-                  updateFormData("agreeAI", checked);
-                  clearFieldError("terms");
-                }}
-                onMarketingChange={(checked) => {
-                  updateFormData("agreeMarketing", checked);
-                }}
-                onAgreeAll={(nextState) => {
-                  updateFormData("agreeTerms", nextState);
-                  updateFormData("agreeAI", nextState);
-                  updateFormData("agreeMarketing", nextState);
-                  if (nextState) {
+                    if (isSelected) {
+                      // 선택 해제
+                      updateFormData(
+                        "recordTypes",
+                        currentTypes.filter((t) => t !== type)
+                      );
+                    } else {
+                      // 선택 추가 (최대 2개)
+                      if (currentTypes.length < 2) {
+                        updateFormData("recordTypes", [...currentTypes, type]);
+                      }
+                    }
+                  }}
+                />
+              )}
+
+              {currentStep === 4 && (
+                <TermsStep
+                  agreeTerms={formData.agreeTerms}
+                  agreeAI={formData.agreeAI}
+                  agreeMarketing={formData.agreeMarketing}
+                  termsError={errors.terms}
+                  onTermsChange={(checked) => {
+                    updateFormData("agreeTerms", checked);
                     clearFieldError("terms");
+                  }}
+                  onAIChange={(checked) => {
+                    updateFormData("agreeAI", checked);
+                    clearFieldError("terms");
+                  }}
+                  onMarketingChange={(checked) => {
+                    updateFormData("agreeMarketing", checked);
+                  }}
+                  onAgreeAll={(nextState) => {
+                    updateFormData("agreeTerms", nextState);
+                    updateFormData("agreeAI", nextState);
+                    updateFormData("agreeMarketing", nextState);
+                    if (nextState) {
+                      clearFieldError("terms");
+                    }
+                  }}
+                  onShowTerms={() =>
+                    setModals((prev) => ({ ...prev, showTerms: true }))
                   }
-                }}
-                onShowTerms={() =>
-                  setModals((prev) => ({ ...prev, showTerms: true }))
-                }
-                onShowAI={() =>
-                  setModals((prev) => ({ ...prev, showAI: true }))
-                }
-              />
-            )}
+                  onShowAI={() =>
+                    setModals((prev) => ({ ...prev, showAI: true }))
+                  }
+                />
+              )}
+            </div>
           </div>
 
           {/* 네비게이션 버튼 */}
-          <div className="flex items-center justify-center gap-3 mt-8">
+          <div className="flex items-center justify-center gap-3 mt-6">
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={handlePrev}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all hover:opacity-80"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all hover:opacity-80 flex-shrink-0"
                 style={{
                   color: COLORS.text.secondary,
                   backgroundColor: COLORS.background.card,
                   border: `1.5px solid ${COLORS.border.light}`,
                   boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
+                  minWidth: "100px",
                 }}
               >
                 <ChevronLeft className="h-4 w-4" />

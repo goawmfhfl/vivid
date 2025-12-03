@@ -25,7 +25,7 @@ export function LoginInfoStep({
   onClearError,
 }: LoginInfoStepProps) {
   return (
-    <PaperCard className="p-6 sm:p-8" stepNumber={1} stepLabel="로그인 정보">
+    <PaperCard className="p-6 sm:p-8">
       <div className="mb-6">
         <h2
           className="text-xl font-semibold mb-2"

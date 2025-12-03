@@ -13,7 +13,7 @@ import { HomeHeader } from "./home/HomeHeader";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
 
 export function Home() {
@@ -222,27 +222,27 @@ export function Home() {
 
       {hasTodayRecords && (
         <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4">
-            <div
-              className="relative cursor-pointer transition-all duration-300"
-              onClick={
-                !isGeneratingFeedback ? handleOpenDailyFeedback : undefined
-              }
+          <div
+            className="relative cursor-pointer transition-all duration-300"
+            onClick={
+              !isGeneratingFeedback ? handleOpenDailyFeedback : undefined
+            }
             style={{
-                backgroundColor: "#FAFAF8",
-                border: `1.5px solid ${COLORS.border.light}`,
-                borderRadius: "12px",
-                boxShadow: `
+              backgroundColor: "#FAFAF8",
+              border: `1.5px solid ${COLORS.border.light}`,
+              borderRadius: "12px",
+              boxShadow: `
                 0 2px 8px rgba(0,0,0,0.04),
                 0 1px 3px rgba(0,0,0,0.02),
                 inset 0 1px 0 rgba(255,255,255,0.6)
               `,
-                position: "relative",
-                overflow: "hidden",
+              position: "relative",
+              overflow: "hidden",
               padding: "0.875rem 2rem",
-                opacity: isGeneratingFeedback ? 0.6 : 1,
-                pointerEvents: isGeneratingFeedback ? "none" : "auto",
-                // 종이 질감 배경 패턴
-                backgroundImage: `
+              opacity: isGeneratingFeedback ? 0.6 : 1,
+              pointerEvents: isGeneratingFeedback ? "none" : "auto",
+              // 종이 질감 배경 패턴
+              backgroundImage: `
                 /* 가로 줄무늬 (프로젝트 그린 톤) */
                 repeating-linear-gradient(
                   to bottom,
@@ -260,66 +260,66 @@ export function Home() {
                   rgba(107, 122, 111, 0.01) 4px
                 )
               `,
-                backgroundSize: "100% 28px, 8px 8px",
-                backgroundPosition: "0 2px, 0 0",
-                filter: "contrast(1.02) brightness(1.01)",
-              }}
-              onMouseEnter={(e) => {
-                if (!isGeneratingFeedback) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = `
+              backgroundSize: "100% 28px, 8px 8px",
+              backgroundPosition: "0 2px, 0 0",
+              filter: "contrast(1.02) brightness(1.01)",
+            }}
+            onMouseEnter={(e) => {
+              if (!isGeneratingFeedback) {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `
                   0 4px 16px rgba(107, 122, 111, 0.08),
                   0 2px 6px rgba(0,0,0,0.04),
                   inset 0 1px 0 rgba(255,255,255,0.6)
                 `;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isGeneratingFeedback) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = `
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isGeneratingFeedback) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = `
                   0 2px 8px rgba(0,0,0,0.04),
                   0 1px 3px rgba(0,0,0,0.02),
                   inset 0 1px 0 rgba(255,255,255,0.6)
                 `;
-                }
-              }}
-            >
-              {/* 종이 질감 오버레이 */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: `
+              }
+            }}
+          >
+            {/* 종이 질감 오버레이 */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `
                   radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
                   radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
                 `,
-                  mixBlendMode: "overlay",
-                  opacity: 0.5,
-                }}
-              />
+                mixBlendMode: "overlay",
+                opacity: 0.5,
+              }}
+            />
 
-              {/* 버튼 내용 */}
-              <div className="relative z-10 flex items-center justify-center gap-2">
-                <Sparkles
-                  className="w-4 h-4"
-                  style={{ color: COLORS.brand.primary }}
-                />
-                <span
-                  style={{
-                    color: COLORS.brand.primary,
-              fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                    fontWeight: "600",
-                    lineHeight: "28px",
-            }}
-          >
-            {isGeneratingFeedback
-              ? "피드백 생성 중..."
-              : hasTodayFeedback
-              ? "오늘 피드백 보기"
-              : "오늘 피드백 받기"}
-                </span>
-              </div>
+            {/* 버튼 내용 */}
+            <div className="relative z-10 flex items-center justify-center gap-2">
+              <Sparkles
+                className="w-4 h-4"
+                style={{ color: COLORS.brand.primary }}
+              />
+              <span
+                style={{
+                  color: COLORS.brand.primary,
+                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+                  fontWeight: "600",
+                  lineHeight: "28px",
+                }}
+              >
+                {isGeneratingFeedback
+                  ? "피드백 생성 중..."
+                  : hasTodayFeedback
+                  ? "오늘 피드백 보기"
+                  : "오늘 피드백 받기"}
+              </span>
             </div>
+          </div>
         </div>
       )}
 
