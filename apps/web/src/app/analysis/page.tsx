@@ -1,6 +1,6 @@
 "use client";
 
-import { SummariesView } from "@/components/SummariesView";
+import { SummariesView } from "@/components/summaries/SummariesView";
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { withAuth } from "@/components/auth";

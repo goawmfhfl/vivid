@@ -12,6 +12,7 @@ import { VisionVisualizationSection } from "./report/VisionVisualizationSection"
 import { ExecutionReflectionSection } from "./report/ExecutionReflectionSection";
 import { ClosingSection } from "./report/ClosingSection";
 import { COLORS, SPACING } from "@/lib/design-system";
+import { TestPanel } from "./TestPanel";
 
 // 타입 재export
 export type { WeeklyReportData } from "./report/types";
@@ -19,11 +20,15 @@ export type { WeeklyReportData } from "./report/types";
 type WeeklyFeedbackReportProps = {
   data: WeeklyReportData;
   onBack: () => void;
+  isPro?: boolean;
+  onTogglePro?: (isPro: boolean) => void;
 };
 
 export function WeeklyFeedbackReport({
   data,
   onBack,
+  isPro = false,
+  onTogglePro = () => {},
 }: WeeklyFeedbackReportProps) {
   const router = useRouter();
 
@@ -138,6 +143,9 @@ export function WeeklyFeedbackReport({
           </Button>
         </div>
       </div>
+
+      {/* TestPanel 추가 */}
+      <TestPanel view={data} isPro={isPro} onTogglePro={onTogglePro} />
     </div>
   );
 }

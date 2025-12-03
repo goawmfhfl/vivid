@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PeriodSummary } from "@/types/Entry";
-import { WeeklyCandidatesSection } from "../WeeklyCandidatesSection";
+import { WeeklyCandidatesSection } from "./WeeklyCandidatesSection";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
 import { SummaryList } from "./SummaryList";

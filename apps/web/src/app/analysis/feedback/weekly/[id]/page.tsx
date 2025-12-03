@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import { useWeeklyFeedbackDetail } from "@/hooks/useWeeklyFeedback";
+import { useSubscription } from "@/hooks/useSubscription";
 import { WeeklyFeedbackReport } from "@/components/weeklyFeedback/WeeklyFeedbackReport";
 import { WeeklyFeedbackLoadingState } from "@/components/weeklyFeedback/LoadingState";
 import { WeeklyFeedbackErrorState } from "@/components/weeklyFeedback/ErrorState";
@@ -24,6 +26,12 @@ export default function WeeklyViewPage({
     error,
     refetch,
   } = useWeeklyFeedbackDetail(resolvedParams.id);
+
+  const { isPro: subscriptionIsPro } = useSubscription();
+  const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
+
+  // 테스트 모드가 활성화되어 있으면 테스트 값을 사용, 아니면 실제 구독 상태 사용
+  const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
 
   const handleBack = () => {
     router.push("/analysis");
@@ -57,6 +65,12 @@ export default function WeeklyViewPage({
   // WeeklyFeedback을 WeeklyReportData로 변환
   const reportData = mapWeeklyFeedbackToReportData(weeklyFeedback);
 
-  return <WeeklyFeedbackReport data={reportData} onBack={handleBack} />;
+  return (
+    <WeeklyFeedbackReport
+      data={reportData}
+      onBack={handleBack}
+      isPro={isPro}
+      onTogglePro={setTestIsPro}
+    />
+  );
 }
-

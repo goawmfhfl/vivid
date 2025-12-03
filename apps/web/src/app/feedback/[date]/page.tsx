@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { DailyFeedbackView } from "@/components/DailyFeedbackView";
+import { DailyFeedbackView } from "@/components/dailyFeedback/DailyFeedbackView";
 import { withAuth } from "@/components/auth";
 
 function DateFeedbackPage() {

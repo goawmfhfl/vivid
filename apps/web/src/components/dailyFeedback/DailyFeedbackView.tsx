@@ -1,26 +1,26 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   useGetDailyFeedback,
   useGetDailyFeedbackById,
 } from "@/hooks/useGetDailyFeedback";
-import { HeaderSection } from "./dailyFeedback/Header";
-import { DailyReportSection } from "./dailyFeedback/DailyReportSection";
-import { VisionSection } from "./dailyFeedback/Vision";
-import { InsightSection } from "./dailyFeedback/Insight";
-import { FeedbackSection } from "./dailyFeedback/Feedback";
-import { FinalSection } from "./dailyFeedback/Final";
-import { EmptyState } from "./dailyFeedback/States";
-import { EmotionSection } from "./dailyFeedback/Emotion";
-import { mapDailyFeedbackRowToReport } from "./dailyFeedback/mappers";
-import { ScrollAnimation } from "./ui/ScrollAnimation";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { ErrorDisplay } from "./ui/ErrorDisplay";
+import { HeaderSection } from "./Header";
+import { DailyReportSection } from "./DailyReportSection";
+import { VisionSection } from "./Vision";
+import { InsightSection } from "./Insight";
+import { FeedbackSection } from "./Feedback";
+import { FinalSection } from "./Final";
+import { EmptyState } from "./States";
+import { EmotionSection } from "./Emotion";
+import { mapDailyFeedbackRowToReport } from "./mappers";
+import { ScrollAnimation } from "../ui/ScrollAnimation";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
-import { TestPanel } from "./dailyFeedback/TestPanel";
+import { TestPanel } from "./TestPanel";
 
 type DailyFeedbackViewProps = {
   date?: string;

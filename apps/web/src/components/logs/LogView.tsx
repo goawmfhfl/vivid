@@ -1,21 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import {
-  getLocalStartOfDay,
-  parseISODateToLocalDate,
-} from "./logs/calendar-utils";
+import { getLocalStartOfDay, parseISODateToLocalDate } from "./calendar-utils";
 import {
   useLogViewData,
   useSelectedDateRecords,
   useHasDailyFeedback,
   useDateLabels,
-} from "./logs/useLogViewData";
-import { AppHeader } from "./common/AppHeader";
-import { CalendarSection } from "./logs/CalendarSection";
-import { SelectedDateSection } from "./logs/SelectedDateSection";
-import { DailyFeedbackButton } from "./logs/DailyFeedbackButton";
-import { CreateDailyFeedbackButton } from "./logs/CreateDailyFeedbackButton";
+} from "./useLogViewData";
+import { AppHeader } from "../common/AppHeader";
+import { CalendarSection } from "./CalendarSection";
+import { SelectedDateSection } from "./SelectedDateSection";
+import { DailyFeedbackButton } from "./DailyFeedbackButton";
+import { CreateDailyFeedbackButton } from "./CreateDailyFeedbackButton";
 
 type LogViewProps = {
   onSelectDate?: (date: Date) => void;

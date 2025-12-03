@@ -1,6 +1,6 @@
 "use client";
 
-import { DailyFeedbackView } from "@/components/DailyFeedbackView";
+import { DailyFeedbackView } from "@/components/dailyFeedback/DailyFeedbackView";
 import { useRouter } from "next/navigation";
 import { getKSTDateString } from "@/lib/date-utils";
 import { withAuth } from "@/components/auth";

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { use } from "react";
-import { DailyFeedbackView } from "@/components/DailyFeedbackView";
+import { DailyFeedbackView } from "@/components/dailyFeedback/DailyFeedbackView";
 
 export default function DailyViewPage({
   params,

@@ -1,13 +1,13 @@
 import { ArrowLeft } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   useGetMonthlyFeedback,
   useGetMonthlyFeedbackById,
 } from "@/hooks/useGetMonthlyFeedback";
-import { MonthlyFeedbackReport } from "./monthlyFeedback/MonthlyFeedbackReport";
-import { mapMonthlyFeedbackToReportData } from "./monthlyFeedback/monthly-feedback-mapper";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { ErrorDisplay } from "./ui/ErrorDisplay";
+import { MonthlyFeedbackReport } from "./MonthlyFeedbackReport";
+import { mapMonthlyFeedbackToReportData } from "./monthly-feedback-mapper";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { ErrorDisplay } from "../ui/ErrorDisplay";
 
 type MonthlyFeedbackViewProps = {
   month?: string;

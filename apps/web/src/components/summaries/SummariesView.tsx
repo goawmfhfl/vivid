@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { ErrorDisplay } from "./ui/ErrorDisplay";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { ErrorDisplay } from "../ui/ErrorDisplay";
 import type { PeriodSummary } from "@/types/Entry";
-import { WeeklySummariesTab } from "./summaries/WeeklySummariesTab";
-import { MonthlySummariesTab } from "./summaries/MonthlySummariesTab";
+import { WeeklySummariesTab } from "./WeeklySummariesTab";
+import { MonthlySummariesTab } from "./MonthlySummariesTab";
 import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
 import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
 import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
@@ -14,12 +14,12 @@ import {
   formatDateRange,
   formatPeriod,
   createPeriodSummaryFromWeeklyFeedback,
-} from "./summaries/weekly-feedback-mapper";
-import { convertMonthlyFeedbackToPeriodSummary } from "./summaries/monthly-feedback-mapper";
+} from "./weekly-feedback-mapper";
+import { convertMonthlyFeedbackToPeriodSummary } from "./monthly-feedback-mapper";
 import { COLORS, SPACING } from "@/lib/design-system";
-import { AppHeader } from "./common/AppHeader";
-import { MonthlyFeedbackTestPanel } from "./test/MonthlyFeedbackTestPanel";
-import { MonthlyCandidatesTestPanel } from "./test/MonthlyCandidatesTestPanel";
+import { AppHeader } from "../common/AppHeader";
+import { MonthlyFeedbackTestPanel } from "../test/MonthlyFeedbackTestPanel";
+import { MonthlyCandidatesTestPanel } from "../test/MonthlyCandidatesTestPanel";
 
 /**
  * 주간 피드백 리스트 아이템을 PeriodSummary로 변환

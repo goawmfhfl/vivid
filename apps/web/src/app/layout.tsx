@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { JournalProvider } from "./providers";
-import { BottomNavigation } from "../components/BottomNavigation";
+import { BottomNavigation } from "../components/common/BottomNavigation";
 import { GlobalModals } from "../components/ui/modals/GlobalModals";
 
 const geistSans = Geist({
@@ -25,10 +25,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

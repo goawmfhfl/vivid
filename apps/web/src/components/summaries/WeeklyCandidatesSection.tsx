@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
-import { filterWeeklyCandidatesForCreation } from "./weeklyFeedback/weekly-candidate-filter";
+import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
 
 export function WeeklyCandidatesSection() {
