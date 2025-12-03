@@ -211,25 +211,6 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
         </Card>
       )}
 
-      {/* AI 코멘트 */}
-      {view.feedback_ai_comment && (
-        <div
-          className="p-5 rounded-xl flex gap-3 mb-4"
-          style={{ backgroundColor: "#F5F7F5", border: "1px solid #E6E4DE" }}
-        >
-          <Sparkles
-            className="w-4 h-4 flex-shrink-0 mt-0.5"
-            style={{ color: "#A8BBA8" }}
-          />
-          <p
-            className="text-sm"
-            style={{ color: "#4E4B46", lineHeight: "1.7" }}
-          >
-            {view.feedback_ai_comment}
-          </p>
-        </div>
-      )}
-
       {/* AI 메시지 (Pro 전용) */}
       {isPro && view.ai_message && (
         <div
@@ -294,10 +275,10 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
                   marginBottom: "0.5rem",
                 }}
               >
-                Pro 멤버십에서는 잘한 점과 개선할 점을 최대 6개까지 제공하고,
-                이 피드백을 통해 알 수 있는 나의 특징과 응원의 메시지를 함께
-                정리해 드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를
-                함께 만들어보세요.
+                Pro 멤버십에서는 잘한 점과 개선할 점을 최대 6개까지 제공하고, 이
+                피드백을 통해 알 수 있는 나의 특징과 응원의 메시지를 함께 정리해
+                드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를 함께
+                만들어보세요.
               </p>
               <p
                 className="text-xs"

@@ -233,7 +233,6 @@ export async function generateDailyReport(
   const dailyRecords = records.filter((r) => r.type === "daily");
 
   if (dailyRecords.length === 0) {
-    console.log(`[Daily Report] No daily records found. Total records: ${records.length}`);
     return null;
   }
 

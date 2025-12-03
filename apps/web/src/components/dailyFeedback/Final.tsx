@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Lock } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -27,6 +27,21 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
       .map((t) => t.trim())
       .filter((t) => t.length > 0);
   })();
+
+  // 성장/조정 포인트 리스트 (배열 필드를 우선 사용, 없으면 단일 문자열을 1개짜리 리스트로 변환)
+  const growthItems =
+    view.growth_points && view.growth_points.length > 0
+      ? view.growth_points
+      : view.growth_point
+      ? [view.growth_point]
+      : [];
+
+  const adjustmentItems =
+    view.adjustment_points && view.adjustment_points.length > 0
+      ? view.adjustment_points
+      : view.adjustment_point
+      ? [view.adjustment_point]
+      : [];
 
   return (
     <div className="mb-8">
@@ -91,11 +106,6 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
             </div>
           </div>
         </div>
-        {view.integrity_reason && (
-          <p className="text-sm" style={{ lineHeight: "1.6", opacity: 0.95 }}>
-            {view.integrity_reason}
-          </p>
-        )}
       </Card>
       {view.closing_message && (
         <Card
@@ -116,7 +126,8 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
           </div>
         </Card>
       )}
-      {view.ai_message && (
+      {/* AI 메시지 (Pro 전용) */}
+      {isPro && view.ai_message && (
         <Card
           className="p-6 mb-4"
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
@@ -135,12 +146,16 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
           </div>
         </Card>
       )}
-      {(view.growth_point || view.adjustment_point) && (
+      {/* 성장/조정 포인트 (Pro 전용 리스트) */}
+      {isPro && (growthItems.length > 0 || adjustmentItems.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {view.growth_point && (
+          {growthItems.length > 0 && (
             <Card
               className="p-5"
-              style={{ backgroundColor: "#F4F6F4", border: "1px solid #E6E4DE" }}
+              style={{
+                backgroundColor: "#F4F6F4",
+                border: "1px solid #E6E4DE",
+              }}
             >
               <p
                 className="text-xs"
@@ -151,18 +166,31 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
               >
                 성장 포인트
               </p>
-              <p
-                className="text-sm"
-                style={{ color: "#333333", lineHeight: "1.7" }}
-              >
-                {view.growth_point}
-              </p>
+              <ul className="space-y-2">
+                {growthItems.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span
+                      className="inline-flex w-1.5 h-1.5 rounded-full mt-2"
+                      style={{ backgroundColor: "#6B7A6F" }}
+                    />
+                    <span
+                      className="text-sm"
+                      style={{ color: "#333333", lineHeight: "1.6" }}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </Card>
           )}
-          {view.adjustment_point && (
+          {adjustmentItems.length > 0 && (
             <Card
               className="p-5"
-              style={{ backgroundColor: "#F9F3EF", border: "1px solid #E6E4DE" }}
+              style={{
+                backgroundColor: "#F9F3EF",
+                border: "1px solid #E6E4DE",
+              }}
             >
               <p
                 className="text-xs"
@@ -173,15 +201,62 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
               >
                 조정 포인트
               </p>
-              <p
-                className="text-sm"
-                style={{ color: "#333333", lineHeight: "1.7" }}
-              >
-                {view.adjustment_point}
-              </p>
+              <ul className="space-y-2">
+                {adjustmentItems.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span
+                      className="inline-flex w-1.5 h-1.5 rounded-full mt-2"
+                      style={{ backgroundColor: "#B89A7A" }}
+                    />
+                    <span
+                      className="text-sm"
+                      style={{ color: "#333333", lineHeight: "1.6" }}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </Card>
           )}
         </div>
+      )}
+
+      {/* Free 모드: 성장/조정 포인트 Pro 업그레이드 유도 */}
+      {!isPro && (view.growth_point || view.adjustment_point) && (
+        <Card
+          className="p-4 mb-4"
+          style={{
+            backgroundColor: "#FAFAF8",
+            border: "1px solid #E6E4DE",
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <Lock className="w-4 h-4 mt-0.5" style={{ color: "#6B7A6F" }} />
+            <div className="flex-1">
+              <p
+                className="text-xs font-semibold mb-1"
+                style={{
+                  color: "#4E4B46",
+                }}
+              >
+                오늘 하루에서 배운 점을 더 깊게 정리해보고 싶으신가요?
+              </p>
+              <p
+                className="text-xs"
+                style={{
+                  color: "#6B7A6F",
+                  lineHeight: "1.5",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Pro 멤버십에서는 성장 포인트와 조정 포인트를 리스트로 정리해
+                드리고, 오늘 점수가 나온 이유까지 함께 정리해 드립니다. 기록을
+                성장으로 바꾸는 당신만의 마무리 리포트를 확인해보세요.
+              </p>
+            </div>
+          </div>
+        </Card>
       )}
       <Card
         className="p-6"

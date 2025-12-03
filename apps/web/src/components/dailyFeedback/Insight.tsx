@@ -19,6 +19,38 @@ export function InsightSection({ view, isPro = false }: SectionProps) {
           오늘의 깨달음
         </h2>
       </div>
+      {/* AI 코멘트 (Pro 전용) */}
+      {isPro && view.insight_ai_comment && (
+        <div
+          className="p-4 rounded-lg flex gap-3 mb-4"
+          style={{
+            backgroundColor: "#F5F7F5",
+            borderLeft: "3px solid #A8BBA8",
+          }}
+        >
+          <Sparkles
+            className="w-4 h-4 flex-shrink-0 mt-0.5"
+            style={{ color: "#A8BBA8" }}
+          />
+          <div className="flex-1">
+            <p
+              className="text-xs mb-1"
+              style={{
+                color: "#6B7A6F",
+                fontWeight: 500,
+              }}
+            >
+              AI 코멘트
+            </p>
+            <p
+              className="text-sm"
+              style={{ color: "#4E4B46", lineHeight: "1.7" }}
+            >
+              {view.insight_ai_comment}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 핵심 인사이트 리스트 */}
       {view.core_insights && view.core_insights.length > 0 && (
@@ -174,28 +206,6 @@ export function InsightSection({ view, isPro = false }: SectionProps) {
             </div>
           </div>
         </Card>
-      )}
-
-      {/* AI 코멘트 (Pro 전용) */}
-      {isPro && view.insight_ai_comment && (
-        <div
-          className="p-4 rounded-lg flex gap-3"
-          style={{
-            backgroundColor: "#F5F7F5",
-            borderLeft: "3px solid #A8BBA8",
-          }}
-        >
-          <Sparkles
-            className="w-4 h-4 flex-shrink-0 mt-0.5"
-            style={{ color: "#A8BBA8" }}
-          />
-          <p
-            className="text-sm"
-            style={{ color: "#4E4B46", lineHeight: "1.7" }}
-          >
-            {view.insight_ai_comment}
-          </p>
-        </div>
       )}
     </div>
   );

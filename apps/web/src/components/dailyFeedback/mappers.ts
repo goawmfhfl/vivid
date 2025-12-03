@@ -56,6 +56,7 @@ export function mapDailyFeedbackRowToReport(
   const emotionQuadrantExplanation =
     emotionReport?.emotion_quadrant_explanation ?? null;
   const emotionTimeline = emotionReport?.emotion_timeline ?? [];
+  const emotionEvents = emotionReport?.emotion_events ?? null;
 
   // Dream Report에서 데이터 추출
   const dreamReport: DreamReport | null = row.dream_report;
@@ -79,7 +80,6 @@ export function mapDailyFeedbackRowToReport(
   const coreFeedback = feedbackReport?.core_feedback ?? "";
   const positives = feedbackReport?.positives ?? [];
   const improvements = feedbackReport?.improvements ?? [];
-  const feedbackAiComment = feedbackReport?.feedback_ai_comment ?? null;
   const aiMessage = feedbackReport?.ai_message ?? null;
   const feedbackPersonTraits = feedbackReport?.feedback_person_traits ?? null;
   const encouragementMessage = feedbackReport?.encouragement_message ?? null;
@@ -90,12 +90,13 @@ export function mapDailyFeedbackRowToReport(
   const tomorrowFocus = finalReport?.tomorrow_focus ?? null;
   const growthPoint = finalReport?.growth_point ?? null;
   const adjustmentPoint = finalReport?.adjustment_point ?? null;
+  const growthPoints = finalReport?.growth_points ?? null;
+  const adjustmentPoints = finalReport?.adjustment_points ?? null;
 
   // narrative_summary는 summary_report의 summary를 사용
   // integrity_score는 summary_report의 overall_score를 사용
   const narrativeSummary = summarySummary;
   const integrityScore = overallScore;
-  const integrityReason = ""; // Final Report에 없으므로 빈 문자열
 
   return {
     date: row.report_date,
@@ -126,6 +127,7 @@ export function mapDailyFeedbackRowToReport(
     emotion_quadrant: emotionQuadrant,
     emotion_quadrant_explanation: emotionQuadrantExplanation,
     emotion_timeline: emotionTimeline,
+    emotion_events: emotionEvents,
 
     // Dream Report 데이터
     vision_summary: visionSummary,
@@ -146,7 +148,6 @@ export function mapDailyFeedbackRowToReport(
     core_feedback: coreFeedback,
     positives: positives,
     improvements: improvements,
-    feedback_ai_comment: feedbackAiComment,
     ai_message: aiMessage,
     feedback_person_traits: feedbackPersonTraits,
     encouragement_message: encouragementMessage,
@@ -156,6 +157,7 @@ export function mapDailyFeedbackRowToReport(
     tomorrow_focus: tomorrowFocus,
     growth_point: growthPoint,
     adjustment_point: adjustmentPoint,
-    integrity_reason: integrityReason,
+    growth_points: growthPoints,
+    adjustment_points: adjustmentPoints,
   };
 }

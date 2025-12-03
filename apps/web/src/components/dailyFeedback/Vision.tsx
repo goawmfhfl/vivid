@@ -117,38 +117,6 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
           </ul>
         </Card>
       )}
-
-      {/* Pro 전용: 이런 꿈을 꾸는 사람들의 특징 */}
-      {isPro && view.dreamer_traits && view.dreamer_traits.length > 0 && (
-        <Card
-          className="p-5 mb-4"
-          style={{ backgroundColor: "#F7F8F6", border: "1px solid #E6E4DE" }}
-        >
-          <p
-            className="text-xs font-semibold mb-3"
-            style={{ color: "#6B7A6F" }}
-          >
-            이런 꿈을 꾸는 사람의 특징 (Pro)
-          </p>
-          <ul className="space-y-2">
-            {view.dreamer_traits.map((trait, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span
-                  className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: "#A8BBA8" }}
-                />
-                <p
-                  className="text-xs"
-                  style={{ color: "#55685E", lineHeight: "1.6" }}
-                >
-                  {trait}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
       {/* 핵심 3단 피드백 */}
       {feedbackItems.length > 0 && (
         <Card
@@ -186,6 +154,37 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
                 >
                   {item}
                 </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {/* Pro 전용: 이런 꿈을 꾸는 사람들의 특징 */}
+      {isPro && view.dreamer_traits && view.dreamer_traits.length > 0 && (
+        <Card
+          className="p-5 mb-4"
+          style={{ backgroundColor: "#F7F8F6", border: "1px solid #E6E4DE" }}
+        >
+          <p
+            className="text-xs font-semibold mb-3"
+            style={{ color: "#6B7A6F" }}
+          >
+            이런 꿈을 꾸는 사람의 특징 (Pro)
+          </p>
+          <ul className="space-y-2">
+            {view.dreamer_traits.map((trait, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span
+                  className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: "#A8BBA8" }}
+                />
+                <p
+                  className="text-xs"
+                  style={{ color: "#55685E", lineHeight: "1.6" }}
+                >
+                  {trait}
+                </p>
               </li>
             ))}
           </ul>

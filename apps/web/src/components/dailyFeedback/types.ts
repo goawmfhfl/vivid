@@ -70,6 +70,15 @@ export type DailyReportData = {
   emotion_quadrant_explanation: string | null;
   /** 시간대별 감정 흐름 배열 */
   emotion_timeline: Array<{ time_range: string; emotion: string }>;
+  /** 오늘의 감정을 이끈 주요 사건들 */
+  emotion_events:
+    | {
+        event: string;
+        emotion: string;
+        reason?: string | null;
+        suggestion?: string | null;
+      }[]
+    | null;
 
   // ========== Dream Report 데이터 ==========
   /** 시각화 요약 */
@@ -110,8 +119,6 @@ export type DailyReportData = {
   positives: string[];
   /** 개선할 점 배열 (Pro: 최대 6개, Free: 2~3개) */
   improvements: string[];
-  /** AI 피드백 코멘트 */
-  feedback_ai_comment: string | null;
   /** AI 메시지 (Pro 전용) */
   ai_message: string | null;
   /** 피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용) */
@@ -124,12 +131,14 @@ export type DailyReportData = {
   closing_message: string;
   /** 내일 집중할 것 */
   tomorrow_focus: string | null;
-  /** 성장 포인트 */
+  /** 성장 포인트 (요약 문장, 하위 호환용) */
   growth_point: string | null;
-  /** 조정 포인트 */
+  /** 조정 포인트 (요약 문장, 하위 호환용) */
   adjustment_point: string | null;
-  /** 하루 점수의 이유 */
-  integrity_reason: string;
+  /** 성장 포인트 리스트 (Pro 전용) */
+  growth_points: string[] | null;
+  /** 조정 포인트 리스트 (Pro 전용) */
+  adjustment_points: string[] | null;
 };
 
 /**

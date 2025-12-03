@@ -51,7 +51,6 @@ export interface FeedbackOverview {
   core_feedback: string | null;
   positives: string[];
   improvements: string[];
-  feedback_ai_comment: string | null;
   ai_message: string | null;
 }
 
@@ -109,6 +108,14 @@ export interface EmotionReport {
   emotion_quadrant_explanation: string | null;
   emotion_timeline: EmotionTimelineItem[];
   ai_comment: string | null;
+  emotion_events?:
+    | {
+        event: string;
+        emotion: string;
+        reason?: string | null;
+        suggestion?: string | null;
+      }[]
+    | null;
 }
 
 export interface DreamReport {
@@ -143,7 +150,6 @@ export interface FeedbackReport {
   core_feedback: string; // 핵심 피드백
   positives: string[]; // 긍정적 측면 (Pro: 최대 6개, Free: 2~3개)
   improvements: string[]; // 개선점 (Pro: 최대 6개, Free: 2~3개)
-  feedback_ai_comment: string | null; // AI 코멘트
   ai_message: string | null; // AI 메시지 (Pro 전용)
   // Pro 전용 필드
   feedback_person_traits?: string[] | null; // 피드백을 통해 알 수 있는 사람들의 특징 (최대 5개)
@@ -153,8 +159,12 @@ export interface FeedbackReport {
 export interface FinalReport {
   closing_message: string; // 하루를 정리하는 멘트 (400자 이내)
   tomorrow_focus: string | null; // 내일 집중할 점
-  growth_point: string | null; // 성장 포인트
-  adjustment_point: string | null; // 조정 포인트
+  // 단일 문장 형태의 성장/조정 포인트 (하위 호환용)
+  growth_point: string | null; // 성장 포인트 (요약 문장)
+  adjustment_point: string | null; // 조정 포인트 (요약 문장)
+  // Pro 전용: 리스트 형식의 성장/조정 포인트
+  growth_points?: string[] | null; // 성장 포인트 리스트
+  adjustment_points?: string[] | null; // 조정 포인트 리스트
 }
 
 // Daily Feedback Row (DB에서 가져온 구조)

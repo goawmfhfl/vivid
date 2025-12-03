@@ -93,7 +93,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Emotion",
       component: "EmotionSection",
-      description: "감정 흐름, 감정 영역, 시간대별 감정",
+      description:
+        "감정 흐름, 감정 영역, 시간대별 감정, 감정을 이끈 주요 사건들",
       fields: [
         { name: "emotion_curve", path: "view.emotion_curve", isPro: false },
         { name: "ai_mood_valence", path: "view.ai_mood_valence", isPro: false },
@@ -117,6 +118,13 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           name: "emotion_timeline",
           path: "view.emotion_timeline",
           isPro: false,
+        },
+        {
+          name: "emotion_events",
+          path: "view.emotion_events",
+          isPro: false,
+          description:
+            "오늘의 감정을 이끈 주요 사건 리스트 (event, emotion, reason, suggestion)",
         },
       ],
       condition: "emotion_curve.length > 0",
@@ -215,14 +223,21 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         { name: "tomorrow_focus", path: "view.tomorrow_focus", isPro: true },
         { name: "growth_point", path: "view.growth_point", isPro: true },
         {
+          name: "growth_points",
+          path: "view.growth_points",
+          isPro: true,
+          description: "성장 포인트 리스트 (Pro 전용)",
+        },
+        {
           name: "adjustment_point",
           path: "view.adjustment_point",
           isPro: true,
         },
         {
-          name: "integrity_reason",
-          path: "view.integrity_reason",
-          isPro: false,
+          name: "adjustment_points",
+          path: "view.adjustment_points",
+          isPro: true,
+          description: "조정 포인트 리스트 (Pro 전용)",
         },
       ],
       condition: "closing_message.trim() !== ''",

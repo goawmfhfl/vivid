@@ -190,6 +190,23 @@ export const EmotionReportSchema = {
         maxItems: 5,
       },
       ai_comment: { type: "string", nullable: true },
+      emotion_events: {
+        type: "array",
+        nullable: true,
+        items: {
+          type: "object",
+          properties: {
+            event: { type: "string" },
+            emotion: { type: "string" },
+            reason: { type: "string", nullable: true },
+            suggestion: { type: "string", nullable: true },
+          },
+          required: ["event", "emotion", "reason", "suggestion"],
+          additionalProperties: false,
+        },
+        minItems: 0,
+        maxItems: 5,
+      },
     },
     required: [
       "emotion_curve",
@@ -200,6 +217,7 @@ export const EmotionReportSchema = {
       "emotion_quadrant_explanation",
       "emotion_timeline",
       "ai_comment",
+      "emotion_events",
     ],
     additionalProperties: false,
   },
@@ -324,7 +342,6 @@ export function getFeedbackReportSchema(isPro: boolean) {
           minItems: 0,
           maxItems: isPro ? 6 : 3, // Pro: 최대 6개, Free: 최대 3개
         },
-        feedback_ai_comment: { type: "string", nullable: true },
         ai_message: {
           type: "string",
           nullable: true,
@@ -346,7 +363,6 @@ export function getFeedbackReportSchema(isPro: boolean) {
         "core_feedback",
         "positives",
         "improvements",
-        "feedback_ai_comment",
         "ai_message",
         "feedback_person_traits",
         "encouragement_message",
@@ -369,12 +385,28 @@ export const FinalReportSchema = {
       tomorrow_focus: { type: "string", nullable: true },
       growth_point: { type: "string", nullable: true },
       adjustment_point: { type: "string", nullable: true },
+      growth_points: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 0,
+        maxItems: 6,
+        nullable: true,
+      },
+      adjustment_points: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 0,
+        maxItems: 6,
+        nullable: true,
+      },
     },
     required: [
       "closing_message",
       "tomorrow_focus",
       "growth_point",
       "adjustment_point",
+      "growth_points",
+      "adjustment_points",
     ],
     additionalProperties: false,
   },
@@ -428,10 +460,20 @@ export const SYSTEM_PROMPT_EMOTION = `
 - emotion_timeline은 최대 5개까지만 생성합니다.
 - 감정 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
 - 감정 관련 내용이 거의 없으면 ai_mood_valence, ai_mood_arousal, dominant_emotion, emotion_quadrant, emotion_quadrant_explanation은 null로 처리합니다.
+ - emotion_events는 오늘의 감정을 이끈 주요 사건들을 정리합니다.
+   - 각 항목은 { event, emotion, reason, suggestion } 구조를 가집니다.
+   - event: 어떤 사건/상황이었는지, 한 문장으로 작성합니다.
+   - emotion: 그때 느꼈던 감정을 한 단어 또는 짧은 표현으로 작성합니다.
+   - reason: 그렇게 느낀 이유를 짧게 설명합니다.
+   - suggestion: 이 감정을 다루거나 돌보는 데 도움이 되는 간단한 제안을 작성합니다.
 
 [멤버십별 차별화]
-- Pro 멤버십: 상세한 감정 분석과 시간대별 변화를 깊이 있게 분석하세요.
-- 무료 멤버십: 간단하게 핵심 감정만 알려주세요. 간결하고 요약된 형태로 응답하세요.
+- Pro 멤버십:
+  - 상세한 감정 분석과 시간대별 변화를 깊이 있게 분석하세요.
+  - emotion_events는 3~5개 정도 생성하고, reason과 suggestion을 포함하여 사용자가 자신의 감정을 이해하고 돌볼 수 있도록 도와주세요.
+- 무료 멤버십:
+  - 간단하게 핵심 감정만 알려주세요. 간결하고 요약된 형태로 응답하세요.
+  - emotion_events는 최대 3개까지만 생성하고, event와 emotion, 짧은 reason만 포함하세요. suggestion은 필요할 때만 간단히 작성하거나 null로 둘 수 있습니다.
 `;
 
 export const SYSTEM_PROMPT_DREAM = `
@@ -481,9 +523,11 @@ export const SYSTEM_PROMPT_FINAL = `
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
 - closing_message는 공백 포함 400자 이내로 하루를 정리하는 멘트를 작성합니다.
 - tomorrow_focus는 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하거나 null로 둡니다.
+- growth_point, adjustment_point는 하루를 대표하는 성장/조정 포인트를 한 문장으로 정리합니다.
+- growth_points, adjustment_points는 성장/조정 포인트를 리스트 형식으로 정리합니다 (각 0~6개).
 - 모든 타입의 리포트를 종합하여 균형있게 분석합니다.
 
 [멤버십별 차별화]
-- Pro 멤버십: 상세하고 깊이 있는 최종 리포트를 생성하세요. 더 많은 인사이트와 조언을 포함하세요.
-- 무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.
+- Pro 멤버십: 상세하고 깊이 있는 최종 리포트를 생성하세요. growth_points와 adjustment_points에 리스트 형태의 포인트를 충분히 포함하세요.
+- 무료 멤버십: 간단하게 핵심만 알려주세요. growth_points와 adjustment_points는 1~2개 이내의 짧은 항목만 포함하거나 비워두어도 됩니다.
 `;
