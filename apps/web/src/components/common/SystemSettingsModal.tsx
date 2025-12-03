@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/app/providers";
 import { QUERY_KEYS } from "@/constants";
@@ -20,9 +21,13 @@ export function SystemSettingsModal({
   onClose,
 }: SystemSettingsModalProps) {
   const { data: user, isLoading } = useCurrentUser();
+  const { isPro } = useSubscription();
   const [selectedTypes, setSelectedTypes] = useState<RecordType[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 최대 선택 개수: Pro 유저는 5개, 일반 유저는 2개
+  const maxSelections = isPro ? 5 : 2;
 
   // 사용자의 현재 기록 타입 불러오기
   useEffect(() => {
@@ -41,18 +46,26 @@ export function SystemSettingsModal({
       // 이미 선택된 경우 제거
       setSelectedTypes(selectedTypes.filter((id) => id !== typeId));
     } else {
-      // 선택되지 않은 경우 추가 (최대 2개)
-      if (selectedTypes.length < 2) {
+      // 선택되지 않은 경우 추가
+      if (selectedTypes.length < maxSelections) {
         setSelectedTypes([...selectedTypes, typeId]);
       } else {
-        setError("기록 타입은 최대 2개까지 선택할 수 있습니다.");
+        setError(
+          isPro
+            ? "기록 타입은 최대 5개까지 선택할 수 있습니다."
+            : "기록 타입은 최대 2개까지 선택할 수 있습니다. Pro 멤버십을 이용하면 5개까지 선택할 수 있습니다."
+        );
       }
     }
   };
 
   const handleSave = async () => {
-    if (selectedTypes.length > 2) {
-      setError("기록 타입은 최대 2개까지 선택할 수 있습니다.");
+    if (selectedTypes.length > maxSelections) {
+      setError(
+        isPro
+          ? "기록 타입은 최대 5개까지 선택할 수 있습니다."
+          : "기록 타입은 최대 2개까지 선택할 수 있습니다."
+      );
       return;
     }
 
@@ -178,7 +191,9 @@ export function SystemSettingsModal({
                   className="mb-3 sm:mb-4 text-xs sm:text-sm"
                   style={{ color: COLORS.text.secondary, opacity: 0.8 }}
                 >
-                  사용할 기록 타입을 선택하세요. (최대 2개)
+                  {isPro
+                    ? "사용할 기록 타입을 선택하세요. (최대 5개 - Pro 멤버십)"
+                    : "사용할 기록 타입을 선택하세요. (최대 2개)"}
                 </p>
 
                 {isLoading ? (
@@ -190,7 +205,7 @@ export function SystemSettingsModal({
                     {RECORD_TYPES.map((type) => {
                       const isSelected = selectedTypes.includes(type.id);
                       const isDisabled =
-                        !isSelected && selectedTypes.length >= 2;
+                        !isSelected && selectedTypes.length >= maxSelections;
 
                       return (
                         <button
@@ -281,7 +296,15 @@ export function SystemSettingsModal({
                   className="mt-3 sm:mt-4 text-xs sm:text-sm text-center"
                   style={{ color: COLORS.text.tertiary }}
                 >
-                  선택된 타입: {selectedTypes.length}/2
+                  선택된 타입: {selectedTypes.length}/{maxSelections}
+                  {!isPro && (
+                    <span
+                      className="ml-2"
+                      style={{ color: COLORS.brand.primary, fontSize: "0.75rem" }}
+                    >
+                      (Pro 멤버십: 5개까지 가능)
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

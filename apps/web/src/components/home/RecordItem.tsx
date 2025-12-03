@@ -131,23 +131,36 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
       {/* 내용 영역 */}
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {typeInfo && (
-              <span
-                style={{
-                  fontSize: "1rem",
-                  opacity: 0.7,
-                }}
-                title={typeInfo.title}
-              >
-                {typeInfo.icon}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  style={{
+                    fontSize: "0.95rem",
+                    lineHeight: "1",
+                  }}
+                >
+                  {typeInfo.icon}
+                </span>
+                <span
+                  className={TYPOGRAPHY.caption.fontSize}
+                  style={{
+                    color: COLORS.text.primary,
+                    fontWeight: "500",
+                    fontSize: "0.875rem",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {typeInfo.title}
+                </span>
+              </div>
             )}
             <span
               className={TYPOGRAPHY.caption.fontSize}
               style={{
                 color: COLORS.text.secondary,
                 opacity: 0.5,
+                fontSize: "0.75rem",
               }}
             >
               {formatTime(record.created_at)}
@@ -185,7 +198,9 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
               }}
             >
               <DropdownMenuItem
-                onClick={() => onEdit(record)}
+                onClick={() => {
+                  onEdit(record);
+                }}
                 className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
                 style={{
                   color: COLORS.text.primary,

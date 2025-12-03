@@ -25,6 +25,7 @@ export function Home() {
   } = useRecords();
 
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
   // KST 기준으로 오늘 날짜 계산
   const todayIso = getKSTDateString();
@@ -40,6 +41,14 @@ export function Home() {
 
   const handleEdit = (record: Record) => {
     setEditingRecord(record);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = (open: boolean) => {
+    if (!open) {
+      setIsEditDialogOpen(false);
+      setEditingRecord(null);
+    }
   };
 
   const handleDelete = (id: number) => {
@@ -252,8 +261,8 @@ export function Home() {
 
       <EditRecordDialog
         record={editingRecord}
-        open={!!editingRecord}
-        onOpenChange={(open) => !open && setEditingRecord(null)}
+        open={isEditDialogOpen}
+        onOpenChange={handleCloseEditDialog}
       />
 
       <DeleteRecordDialog

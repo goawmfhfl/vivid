@@ -233,8 +233,11 @@ export async function generateDailyReport(
   const dailyRecords = records.filter((r) => r.type === "daily");
 
   if (dailyRecords.length === 0) {
+    console.log(`[Daily Report] No daily records found. Total records: ${records.length}`);
     return null;
   }
+
+  console.log(`[Daily Report] Found ${dailyRecords.length} daily records`);
 
   const prompt = buildDailyPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY, prompt);

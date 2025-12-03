@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { Textarea } from "../ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useUpdateRecord, type Record } from "../../hooks/useRecords";
 import { COLORS } from "@/lib/design-system";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { RECORD_TYPES, type RecordType } from "../signup/RecordTypeCard";
+import { ChevronDown } from "lucide-react";
 
 interface EditRecordDialogProps {
   record: Record | null;
@@ -21,26 +19,71 @@ export function EditRecordDialog({
   onOpenChange,
 }: EditRecordDialogProps) {
   const [editContent, setEditContent] = useState("");
+  const [selectedType, setSelectedType] = useState<RecordType | null>(null);
+  const [showTypeSelector, setShowTypeSelector] = useState(false);
   const updateRecordMutation = useUpdateRecord();
+  const { data: currentUser } = useCurrentUser();
+
+  // 활성화된 타입 목록 가져오기
+  const activeTypes = currentUser?.user_metadata?.recordTypes as
+    | RecordType[]
+    | undefined;
 
   // record가 변경될 때마다 상태 업데이트
   useEffect(() => {
     if (record) {
       setEditContent(record.content);
+      // record.type이 활성화된 타입 목록에 있으면 선택, 없으면 null
+      const recordType = record.type as RecordType | null;
+      if (recordType && activeTypes && activeTypes.includes(recordType)) {
+        setSelectedType(recordType);
+      } else {
+        // 활성화된 타입이 있으면 첫 번째 타입을 기본값으로 설정
+        setSelectedType(
+          activeTypes && activeTypes.length > 0 ? activeTypes[0] : null
+        );
+      }
     }
-  }, [record]);
+  }, [record, activeTypes]);
+
+  useEffect(() => {
+    if (!showTypeSelector) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const typeSelector = target.closest("[data-type-selector]");
+      const typeButton = target.closest("[data-type-selector-button]");
+
+      if (!typeSelector && !typeButton) {
+        setShowTypeSelector(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTypeSelector]);
 
   const handleSaveEdit = () => {
     if (record && editContent.trim()) {
+      const updateData: { content: string; type?: string } = {
+        content: editContent,
+      };
+      if (selectedType) {
+        updateData.type = selectedType;
+      }
+
       updateRecordMutation.mutate(
         {
           id: record.id,
-          data: { content: editContent },
+          data: updateData,
         },
         {
           onSuccess: () => {
             onOpenChange(false);
             setEditContent("");
+            setSelectedType(null);
           },
           onError: (error) => {
             console.error("기록 수정 실패:", error.message);
@@ -53,12 +96,26 @@ export function EditRecordDialog({
   const handleClose = () => {
     onOpenChange(false);
     setEditContent("");
+    setSelectedType(null);
+    setShowTypeSelector(false);
   };
 
+  // 선택된 타입 정보 가져오기
+  const selectedTypeInfo = selectedType
+    ? RECORD_TYPES.find((t) => t.id === selectedType)
+    : null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent
-        className="max-w-[calc(100vw-2rem)] sm:max-w-md"
+        className="max-w-[calc(100vw-2rem)] sm:max-w-md [&>button]:z-[110]"
         style={{
           maxWidth: "calc(100vw - 2rem)",
           width: "calc(100vw - 2rem)",
@@ -97,8 +154,14 @@ export function EditRecordDialog({
           backgroundPosition: "0 2px, 0 0",
           filter: "contrast(1.02) brightness(1.01)",
         }}
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
       >
-        <div className="relative overflow-hidden rounded-lg">
+        <div
+          className="relative overflow-hidden rounded-lg"
+          style={{ zIndex: 1 }}
+        >
           {/* 종이 질감 오버레이 */}
           <div
             className="absolute inset-0 pointer-events-none rounded-lg"
@@ -109,10 +172,11 @@ export function EditRecordDialog({
               `,
               mixBlendMode: "overlay",
               opacity: 0.5,
+              zIndex: 0,
             }}
           />
 
-          <div className="relative z-10">
+          <div className="relative" style={{ zIndex: 1 }}>
             <DialogHeader className="pb-3 sm:pb-4">
               <DialogTitle
                 className="text-base sm:text-lg"
@@ -126,6 +190,106 @@ export function EditRecordDialog({
             </DialogHeader>
 
             <div className="space-y-4 py-4">
+              {/* 타입 선택 */}
+              {activeTypes && activeTypes.length > 0 && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    data-type-selector-button
+                    onClick={() => setShowTypeSelector(!showTypeSelector)}
+                    className="w-full text-left p-3 rounded-lg border transition-all"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.8)",
+                      borderColor: COLORS.border.light,
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {selectedTypeInfo ? (
+                          <>
+                            <span className="text-lg">
+                              {selectedTypeInfo.icon}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {selectedTypeInfo.title}
+                            </span>
+                          </>
+                        ) : (
+                          <span
+                            className="text-sm"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            타입 선택
+                          </span>
+                        )}
+                      </div>
+                      <ChevronDown
+                        className="w-4 h-4"
+                        style={{
+                          color: COLORS.text.secondary,
+                          transform: showTypeSelector
+                            ? "rotate(180deg)"
+                            : "rotate(0deg)",
+                          transition: "transform 0.2s",
+                        }}
+                      />
+                    </div>
+                  </button>
+
+                  {/* 타입 선택 드롭다운 */}
+                  {showTypeSelector && (
+                    <div
+                      data-type-selector
+                      className="absolute z-50 w-full mt-1 rounded-lg border shadow-lg overflow-hidden"
+                      style={{
+                        backgroundColor: COLORS.background.base,
+                        borderColor: COLORS.border.light,
+                        maxHeight: "300px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {activeTypes.map((typeId) => {
+                        const typeInfo = RECORD_TYPES.find(
+                          (t) => t.id === typeId
+                        );
+                        if (!typeInfo) return null;
+
+                        const isSelected = selectedType === typeId;
+
+                        return (
+                          <button
+                            key={typeId}
+                            type="button"
+                            onClick={() => {
+                              setSelectedType(typeId);
+                              setShowTypeSelector(false);
+                            }}
+                            className="w-full text-left p-3 hover:bg-opacity-50 transition-colors"
+                            style={{
+                              backgroundColor: isSelected
+                                ? COLORS.background.hover
+                                : "transparent",
+                              color: COLORS.text.primary,
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{typeInfo.icon}</span>
+                              <span
+                                className="text-sm font-medium"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {typeInfo.title}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
@@ -217,19 +381,14 @@ export function EditRecordDialog({
                       : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (
-                    editContent.trim() &&
-                    !updateRecordMutation.isPending
-                  ) {
+                  if (editContent.trim() && !updateRecordMutation.isPending) {
                     e.currentTarget.style.backgroundColor = COLORS.brand.dark;
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (
-                    editContent.trim() &&
-                    !updateRecordMutation.isPending
-                  ) {
-                    e.currentTarget.style.backgroundColor = COLORS.brand.primary;
+                  if (editContent.trim() && !updateRecordMutation.isPending) {
+                    e.currentTarget.style.backgroundColor =
+                      COLORS.brand.primary;
                   }
                 }}
               >

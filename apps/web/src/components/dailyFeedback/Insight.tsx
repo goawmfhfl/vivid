@@ -12,7 +12,12 @@ export function InsightSection({ view, isPro = false }: SectionProps) {
         >
           <Star className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 깨달음</h2>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
+          오늘의 깨달음
+        </h2>
       </div>
       <Card
         className="p-6 mb-4"
@@ -56,7 +61,10 @@ export function InsightSection({ view, isPro = false }: SectionProps) {
           >
             내일의 질문
           </p>
-          <p className="text-sm" style={{ color: "#4E4B46", lineHeight: "1.6" }}>
+          <p
+            className="text-sm"
+            style={{ color: "#4E4B46", lineHeight: "1.6" }}
+          >
             {view.meta_question}
           </p>
         </Card>

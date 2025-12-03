@@ -37,7 +37,12 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 마무리</h2>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
+          오늘의 마무리
+        </h2>
       </div>
       <Card
         ref={countRef}

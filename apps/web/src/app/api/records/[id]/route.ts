@@ -15,7 +15,7 @@ export async function PATCH(
     const authenticatedUserId = await getAuthenticatedUserId(request);
     const { id } = await params;
     const body = await request.json();
-    const { content } = body;
+    const { content, type } = body;
 
     if (content !== undefined && typeof content !== "string") {
       return NextResponse.json(
@@ -24,13 +24,23 @@ export async function PATCH(
       );
     }
 
+    if (type !== undefined && typeof type !== "string") {
+      return NextResponse.json(
+        { error: "type must be a string" },
+        { status: 400 }
+      );
+    }
+
     const supabase = getServiceSupabase();
 
     // 업데이트 데이터 준비
-    const updateData: { content?: string } = {};
+    const updateData: { content?: string; type?: string } = {};
     if (content !== undefined) {
       // 암호화 처리
       updateData.content = encrypt(content);
+    }
+    if (type !== undefined) {
+      updateData.type = type;
     }
 
     const { data: updatedRecord, error } = await supabase

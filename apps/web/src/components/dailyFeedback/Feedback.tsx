@@ -12,7 +12,10 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
         >
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           오늘의 자기 피드백
         </h2>
       </div>
@@ -21,7 +24,10 @@ export function FeedbackSection({ view, isPro = false }: SectionProps) {
           className="p-5 mb-4"
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
-          <p className="text-sm" style={{ color: "#333333", lineHeight: "1.7" }}>
+          <p
+            className="text-sm"
+            style={{ color: "#333333", lineHeight: "1.7" }}
+          >
             {view.core_feedback}
           </p>
         </Card>

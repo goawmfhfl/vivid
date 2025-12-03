@@ -28,7 +28,12 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
         >
           <Target className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>오늘의 시각화</h2>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
+          오늘의 시각화
+        </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card
@@ -103,7 +108,9 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
               className="w-4 h-4 flex-shrink-0 mt-1"
               style={{ color: "#E5B96B", opacity: 0.85 }}
             />
-            <p className="text-xs" style={{ color: "#6B7A6F" }}>핵심 3단</p>
+            <p className="text-xs" style={{ color: "#6B7A6F" }}>
+              핵심 3단
+            </p>
           </div>
           <ul className="space-y-2">
             {feedbackItems.map((item, idx) => (

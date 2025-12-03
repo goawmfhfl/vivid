@@ -21,6 +21,7 @@ export interface CreateRecordData {
 // Record 업데이트 데이터 타입
 export interface UpdateRecordData {
   content?: string;
+  type?: string;
 }
 
 // 커스텀 에러 클래스

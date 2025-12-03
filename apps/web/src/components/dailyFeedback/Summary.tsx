@@ -1,6 +1,5 @@
 import { Lightbulb, Sparkles, Lock, TrendingUp } from "lucide-react";
 import { Card } from "../ui/card";
-import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
 export function SummarySection({ view, isPro = false }: SectionProps) {
@@ -13,7 +12,10 @@ export function SummarySection({ view, isPro = false }: SectionProps) {
         >
           <Lightbulb className="w-4 h-4 text-white" />
         </div>
-        <h2 className="text-xl sm:text-2xl font-semibold" style={{ color: "#333333" }}>
+        <h2
+          className="text-xl sm:text-2xl font-semibold"
+          style={{ color: "#333333" }}
+        >
           전체 요약
         </h2>
       </div>
