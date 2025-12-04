@@ -88,7 +88,7 @@ export function buildMonthlyFeedbackPrompt(
         if (narrative.narrative) {
           prompt += `이야기: ${narrative.narrative.substring(0, 200)}...\n`;
         }
-        if (narrative.keywords && narrative.keywords.length > 0) {
+        if (Array.isArray(narrative.keywords) && narrative.keywords.length > 0) {
           prompt += `키워드: ${narrative.keywords.join(", ")}\n`;
         }
       }
@@ -148,7 +148,7 @@ export function buildMonthlyFeedbackPrompt(
             150
           )}...\n`;
         }
-        if (vision.vision_keywords && vision.vision_keywords.length > 0) {
+        if (Array.isArray(vision.vision_keywords) && vision.vision_keywords.length > 0) {
           prompt += `시각화 키워드: ${vision.vision_keywords.join(", ")}\n`;
         }
         if (vision.reminder_sentence) {
@@ -166,10 +166,10 @@ export function buildMonthlyFeedbackPrompt(
         if (feedbackData.core_feedback) {
           prompt += `핵심 피드백: ${feedbackData.core_feedback}\n`;
         }
-        if (feedbackData.positives && feedbackData.positives.length > 0) {
+        if (Array.isArray(feedbackData.positives) && feedbackData.positives.length > 0) {
           prompt += `긍정적 측면: ${feedbackData.positives.join(", ")}\n`;
         }
-        if (feedbackData.improvements && feedbackData.improvements.length > 0) {
+        if (Array.isArray(feedbackData.improvements) && feedbackData.improvements.length > 0) {
           prompt += `개선점: ${feedbackData.improvements.join(", ")}\n`;
         }
       }
@@ -197,22 +197,22 @@ export function buildMonthlyFeedbackPrompt(
 
     categorizedRecords.forEach((records, date) => {
       prompt += `\n${date}:\n`;
-      if (records.insights.length > 0) {
+      if (Array.isArray(records.insights) && records.insights.length > 0) {
         prompt += `- 인사이트: ${records.insights.slice(0, 3).join(", ")}${
           records.insights.length > 3 ? "..." : ""
         }\n`;
       }
-      if (records.feedbacks.length > 0) {
+      if (Array.isArray(records.feedbacks) && records.feedbacks.length > 0) {
         prompt += `- 피드백: ${records.feedbacks.slice(0, 3).join(", ")}${
           records.feedbacks.length > 3 ? "..." : ""
         }\n`;
       }
-      if (records.visualizings.length > 0) {
+      if (Array.isArray(records.visualizings) && records.visualizings.length > 0) {
         prompt += `- 시각화: ${records.visualizings.slice(0, 3).join(", ")}${
           records.visualizings.length > 3 ? "..." : ""
         }\n`;
       }
-      if (records.emotions.length > 0) {
+      if (Array.isArray(records.emotions) && records.emotions.length > 0) {
         prompt += `- 감정: ${records.emotions.slice(0, 3).join(", ")}${
           records.emotions.length > 3 ? "..." : ""
         }\n`;

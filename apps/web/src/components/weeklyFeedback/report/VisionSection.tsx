@@ -390,7 +390,7 @@ export function VisionSection({
                                   {category.count}개
                                 </span>
                               </div>
-                              {category.examples &&
+                              {Array.isArray(category.examples) &&
                                 category.examples.length > 0 && (
                                   <div className="flex flex-wrap gap-1.5 mb-2">
                                     {category.examples.map((example, eIdx) => (

@@ -262,7 +262,8 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                   </p>
 
                   {/* 쾌-불쾌 패턴 */}
-                  {emotionReport.valence_patterns?.length > 0 && (
+                  {Array.isArray(emotionReport.valence_patterns) &&
+                    emotionReport.valence_patterns.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp
@@ -297,7 +298,8 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                   )}
 
                   {/* 각성-에너지 패턴 */}
-                  {emotionReport.arousal_patterns?.length > 0 && (
+                  {Array.isArray(emotionReport.arousal_patterns) &&
+                    emotionReport.arousal_patterns.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Zap className="w-4 h-4" style={{ color: "#E5B96B" }} />
@@ -333,8 +335,10 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
           )}
 
           {/* 트리거 분석 */}
-          {(emotionReport.valence_triggers?.length > 0 ||
-            emotionReport.arousal_triggers?.length > 0) && (
+          {(Array.isArray(emotionReport.valence_triggers) &&
+            emotionReport.valence_triggers.length > 0) ||
+            (Array.isArray(emotionReport.arousal_triggers) &&
+              emotionReport.arousal_triggers.length > 0) ? (
             <Card
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
@@ -363,7 +367,8 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                   </p>
 
                   {/* 쾌-불쾌 트리거 */}
-                  {emotionReport.valence_triggers?.length > 0 && (
+                  {Array.isArray(emotionReport.valence_triggers) &&
+                    emotionReport.valence_triggers.length > 0 && (
                     <div className="mb-4">
                       <p
                         className="text-xs font-medium mb-2"
@@ -390,7 +395,8 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                   )}
 
                   {/* 각성-에너지 트리거 */}
-                  {emotionReport.arousal_triggers?.length > 0 && (
+                  {Array.isArray(emotionReport.arousal_triggers) &&
+                    emotionReport.arousal_triggers.length > 0 && (
                     <div>
                       <p
                         className="text-xs font-medium mb-2"

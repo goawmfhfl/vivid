@@ -70,7 +70,7 @@ export function InsightSection({
       </div>
 
       {/* Core Insights - 모든 사용자 */}
-      {insightReport.core_insights &&
+      {Array.isArray(insightReport.core_insights) &&
         insightReport.core_insights.length > 0 && (
           <Card
             className="p-5 sm:p-6 mb-4"
@@ -128,7 +128,7 @@ export function InsightSection({
         )}
 
       {/* Meta Questions Highlight - 모든 사용자 */}
-      {insightReport.meta_questions_highlight &&
+      {Array.isArray(insightReport.meta_questions_highlight) &&
         insightReport.meta_questions_highlight.length > 0 && (
           <Card
             className="p-5 sm:p-6 mb-4"
@@ -394,7 +394,7 @@ export function InsightSection({
                                 {category.count}개
                               </span>
                             </div>
-                            {category.examples &&
+                            {Array.isArray(category.examples) &&
                               category.examples.length > 0 && (
                                 <div className="mb-2">
                                   <p

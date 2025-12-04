@@ -65,36 +65,43 @@ export function ExecutionSection({
       </div>
 
       {/* Positives Top 3 - 모든 사용자 */}
-      {executionReport.positives_top3 && executionReport.positives_top3.length > 0 && (
-        <Card
-          className={`${SPACING.card.padding} mb-4`}
-          style={{
-            backgroundColor: "#F0F5F0",
-            border: "1px solid #D5E3D5",
-          }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <CheckCircle2 className="w-4 h-4" style={{ color: EXECUTION_COLOR }} />
-            <p className="text-xs font-semibold" style={{ color: COLORS.text.secondary }}>
-              잘한 점
-            </p>
-          </div>
-          <ul className="space-y-2">
-            {executionReport.positives_top3.map((positive, idx) => (
-              <li
-                key={idx}
-                className="text-sm leading-relaxed"
-                style={{ color: COLORS.text.primary }}
+      {Array.isArray(executionReport.positives_top3) &&
+        executionReport.positives_top3.length > 0 && (
+          <Card
+            className={`${SPACING.card.padding} mb-4`}
+            style={{
+              backgroundColor: "#F0F5F0",
+              border: "1px solid #D5E3D5",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2
+                className="w-4 h-4"
+                style={{ color: EXECUTION_COLOR }}
+              />
+              <p
+                className="text-xs font-semibold"
+                style={{ color: COLORS.text.secondary }}
               >
-                • {positive}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+                잘한 점
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {executionReport.positives_top3.map((positive, idx) => (
+                <li
+                  key={idx}
+                  className="text-sm leading-relaxed"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  • {positive}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
 
       {/* Improvements Top 3 - 모든 사용자 */}
-      {executionReport.improvements_top3 &&
+      {Array.isArray(executionReport.improvements_top3) &&
         executionReport.improvements_top3.length > 0 && (
           <Card
             className={`${SPACING.card.padding} mb-4`}
@@ -105,7 +112,10 @@ export function ExecutionSection({
           >
             <div className="flex items-center gap-2 mb-3">
               <XCircle className="w-4 h-4" style={{ color: "#B89A7A" }} />
-              <p className="text-xs font-semibold" style={{ color: COLORS.text.secondary }}>
+              <p
+                className="text-xs font-semibold"
+                style={{ color: COLORS.text.secondary }}
+              >
                 개선할 점
               </p>
             </div>
@@ -132,10 +142,16 @@ export function ExecutionSection({
             border: "1px solid #E6E4DE",
           }}
         >
-          <p className={`text-xs ${SPACING.element.marginBottomSmall}`} style={{ color: COLORS.text.secondary }}>
+          <p
+            className={`text-xs ${SPACING.element.marginBottomSmall}`}
+            style={{ color: COLORS.text.secondary }}
+          >
             AI 종합 피드백
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: COLORS.text.primary }}
+          >
             {executionReport.ai_feedback_summary}
           </p>
         </Card>
@@ -151,7 +167,10 @@ export function ExecutionSection({
           }}
         >
           <div className="flex items-start gap-2">
-            <Lock className="w-4 h-4 mt-0.5" style={{ color: COLORS.brand.primary }} />
+            <Lock
+              className="w-4 h-4 mt-0.5"
+              style={{ color: COLORS.brand.primary }}
+            />
             <div className="flex-1">
               <p
                 className="text-xs font-semibold mb-1"
@@ -166,8 +185,9 @@ export function ExecutionSection({
                   lineHeight: "1.5",
                 }}
               >
-                Pro 멤버십에서는 피드백 패턴, 정체성 분석, 개선-행동 정렬을 시각화해
-                드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를 함께 만들어보세요.
+                Pro 멤버십에서는 피드백 패턴, 정체성 분석, 개선-행동 정렬을
+                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를
+                함께 만들어보세요.
               </p>
             </div>
           </div>
@@ -191,7 +211,10 @@ export function ExecutionSection({
                   }}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <BarChart3 className="w-4 h-4" style={{ color: EXECUTION_COLOR }} />
+                    <BarChart3
+                      className="w-4 h-4"
+                      style={{ color: EXECUTION_COLOR }}
+                    />
                     <p
                       className="text-xs font-semibold"
                       style={{ color: COLORS.text.secondary }}
@@ -218,7 +241,6 @@ export function ExecutionSection({
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ category, value }) => `${category}: ${value}개`}
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
@@ -231,7 +253,9 @@ export function ExecutionSection({
                                 key={`cell-${index}`}
                                 fill={
                                   entry.color ||
-                                  EXECUTION_COLORS[index % EXECUTION_COLORS.length]
+                                  EXECUTION_COLORS[
+                                    index % EXECUTION_COLORS.length
+                                  ]
                                 }
                               />
                             )
@@ -243,12 +267,18 @@ export function ExecutionSection({
                             border: `1px solid ${COLORS.border.light}`,
                             borderRadius: "8px",
                           }}
+                          formatter={(
+                            value: number,
+                            name: string,
+                            props: any
+                          ) => [`${value}개`, props.payload?.category || name]}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                   {executionReport.feedback_patterns.positives_categories &&
-                    executionReport.feedback_patterns.positives_categories.length > 0 && (
+                    executionReport.feedback_patterns.positives_categories
+                      .length > 0 && (
                       <div className="mt-4 space-y-2">
                         {executionReport.feedback_patterns.positives_categories.map(
                           (category, idx) => (
@@ -317,13 +347,22 @@ export function ExecutionSection({
                             .improvements_categories_chart.data
                         }
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.default} />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={COLORS.border.default}
+                        />
                         <XAxis
                           dataKey="category"
-                          style={{ fontSize: "0.75rem", color: COLORS.text.secondary }}
+                          style={{
+                            fontSize: "0.75rem",
+                            color: COLORS.text.secondary,
+                          }}
                         />
                         <YAxis
-                          style={{ fontSize: "0.75rem", color: COLORS.text.secondary }}
+                          style={{
+                            fontSize: "0.75rem",
+                            color: COLORS.text.secondary,
+                          }}
                         />
                         <Tooltip
                           contentStyle={{
@@ -339,7 +378,9 @@ export function ExecutionSection({
                                 key={`cell-${index}`}
                                 fill={
                                   entry.color ||
-                                  EXECUTION_COLORS[index % EXECUTION_COLORS.length]
+                                  EXECUTION_COLORS[
+                                    index % EXECUTION_COLORS.length
+                                  ]
                                 }
                               />
                             )
@@ -349,7 +390,8 @@ export function ExecutionSection({
                     </ResponsiveContainer>
                   </div>
                   {executionReport.feedback_patterns.improvements_categories &&
-                    executionReport.feedback_patterns.improvements_categories.length > 0 && (
+                    executionReport.feedback_patterns.improvements_categories
+                      .length > 0 && (
                       <div className="mt-4 space-y-2">
                         {executionReport.feedback_patterns.improvements_categories.map(
                           (category, idx) => (
@@ -403,7 +445,10 @@ export function ExecutionSection({
               }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-4 h-4" style={{ color: COLORS.brand.secondary }} />
+                <User
+                  className="w-4 h-4"
+                  style={{ color: COLORS.brand.secondary }}
+                />
                 <p
                   className="text-xs font-semibold"
                   style={{ color: COLORS.text.secondary }}
@@ -420,44 +465,47 @@ export function ExecutionSection({
                 </p>
               )}
               {executionReport.person_traits_analysis.key_traits &&
-                executionReport.person_traits_analysis.key_traits.length > 0 && (
+                executionReport.person_traits_analysis.key_traits.length >
+                  0 && (
                   <div className="space-y-3">
-                    {executionReport.person_traits_analysis.key_traits.map((trait, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 rounded-lg"
-                        style={{
-                          backgroundColor: COLORS.background.card,
-                          border: `1px solid ${COLORS.border.light}`,
-                        }}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <p
-                            className="text-sm font-semibold"
-                            style={{ color: COLORS.text.primary }}
-                          >
-                            {trait.trait}
-                          </p>
-                          <span
-                            className="text-xs px-2 py-1 rounded"
-                            style={{
-                              backgroundColor: EXECUTION_COLOR,
-                              color: "white",
-                            }}
-                          >
-                            {trait.frequency}회
-                          </span>
+                    {executionReport.person_traits_analysis.key_traits.map(
+                      (trait, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg"
+                          style={{
+                            backgroundColor: COLORS.background.card,
+                            border: `1px solid ${COLORS.border.light}`,
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <p
+                              className="text-sm font-semibold"
+                              style={{ color: COLORS.text.primary }}
+                            >
+                              {trait.trait}
+                            </p>
+                            <span
+                              className="text-xs px-2 py-1 rounded"
+                              style={{
+                                backgroundColor: EXECUTION_COLOR,
+                                color: "white",
+                              }}
+                            >
+                              {trait.frequency}회
+                            </span>
+                          </div>
+                          {trait.insight && (
+                            <p
+                              className="text-xs mt-1"
+                              style={{ color: COLORS.text.secondary }}
+                            >
+                              {trait.insight}
+                            </p>
+                          )}
                         </div>
-                        {trait.insight && (
-                          <p
-                            className="text-xs mt-1"
-                            style={{ color: COLORS.text.secondary }}
-                          >
-                            {trait.insight}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 )}
             </Card>
@@ -465,7 +513,8 @@ export function ExecutionSection({
 
           {/* Core Feedback Themes - 핵심 피드백 테마 */}
           {executionReport.core_feedback_themes &&
-            executionReport.core_feedback_themes.visualization?.themes_timeline && (
+            executionReport.core_feedback_themes.visualization
+              ?.themes_timeline && (
               <Card
                 className={`${SPACING.card.padding} mb-4`}
                 style={{
@@ -474,7 +523,10 @@ export function ExecutionSection({
                 }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-4 h-4" style={{ color: EXECUTION_COLOR }} />
+                  <TrendingUp
+                    className="w-4 h-4"
+                    style={{ color: EXECUTION_COLOR }}
+                  />
                   <p
                     className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
@@ -526,41 +578,44 @@ export function ExecutionSection({
                   )}
                 </div>
                 {executionReport.core_feedback_themes.main_themes &&
-                  executionReport.core_feedback_themes.main_themes.length > 0 && (
+                  executionReport.core_feedback_themes.main_themes.length >
+                    0 && (
                     <div className="mt-4 space-y-2">
-                      {executionReport.core_feedback_themes.main_themes.map((theme, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-lg"
-                          style={{
-                            backgroundColor: "#F0F5F0",
-                            border: `1px solid #D5E3D5`,
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <p
-                              className="text-sm font-semibold"
-                              style={{ color: COLORS.text.primary }}
-                            >
-                              {theme.theme}
-                            </p>
-                            <span
-                              className="text-xs"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              {theme.frequency}회
-                            </span>
+                      {executionReport.core_feedback_themes.main_themes.map(
+                        (theme, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-lg"
+                            style={{
+                              backgroundColor: "#F0F5F0",
+                              border: `1px solid #D5E3D5`,
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <p
+                                className="text-sm font-semibold"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {theme.theme}
+                              </p>
+                              <span
+                                className="text-xs"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {theme.frequency}회
+                              </span>
+                            </div>
+                            {theme.insight && (
+                              <p
+                                className="text-xs mt-1"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {theme.insight}
+                              </p>
+                            )}
                           </div>
-                          {theme.insight && (
-                            <p
-                              className="text-xs mt-1"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              {theme.insight}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   )}
               </Card>
@@ -576,7 +631,10 @@ export function ExecutionSection({
               }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-4 h-4" style={{ color: EXECUTION_COLOR }} />
+                <Target
+                  className="w-4 h-4"
+                  style={{ color: EXECUTION_COLOR }}
+                />
                 <p
                   className="text-xs font-semibold"
                   style={{ color: COLORS.text.secondary }}
@@ -604,15 +662,24 @@ export function ExecutionSection({
                     정렬 점수
                   </p>
                   <p className="text-2xl font-bold mb-1">
-                    {executionReport.improvement_action_alignment.alignment_score.value}점
+                    {
+                      executionReport.improvement_action_alignment
+                        .alignment_score.value
+                    }
+                    점
                   </p>
                   <p className="text-xs">
-                    {executionReport.improvement_action_alignment.alignment_score.description}
+                    {
+                      executionReport.improvement_action_alignment
+                        .alignment_score.description
+                    }
                   </p>
                 </div>
               )}
-              {executionReport.improvement_action_alignment.strong_connections &&
-                executionReport.improvement_action_alignment.strong_connections.length > 0 && (
+              {executionReport.improvement_action_alignment
+                .strong_connections &&
+                executionReport.improvement_action_alignment.strong_connections
+                  .length > 0 && (
                   <div className="space-y-2">
                     {executionReport.improvement_action_alignment.strong_connections.map(
                       (connection, idx) => (
@@ -625,7 +692,10 @@ export function ExecutionSection({
                           }}
                         >
                           <div className="flex items-start gap-2">
-                            <ArrowRight className="w-4 h-4 mt-0.5" style={{ color: EXECUTION_COLOR }} />
+                            <ArrowRight
+                              className="w-4 h-4 mt-0.5"
+                              style={{ color: EXECUTION_COLOR }}
+                            />
                             <div className="flex-1">
                               <p
                                 className="text-sm font-semibold mb-1"
@@ -665,7 +735,10 @@ export function ExecutionSection({
               }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-4 h-4" style={{ color: COLORS.brand.secondary }} />
+                <Sparkles
+                  className="w-4 h-4"
+                  style={{ color: COLORS.brand.secondary }}
+                />
                 <p
                   className="text-xs font-semibold"
                   style={{ color: COLORS.text.secondary }}
@@ -676,31 +749,33 @@ export function ExecutionSection({
               {executionReport.growth_insights.key_learnings &&
                 executionReport.growth_insights.key_learnings.length > 0 && (
                   <div className="space-y-3 mb-4">
-                    {executionReport.growth_insights.key_learnings.map((learning, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 rounded-lg"
-                        style={{
-                          backgroundColor: COLORS.background.card,
-                          border: `1px solid ${COLORS.border.light}`,
-                        }}
-                      >
-                        <p
-                          className="text-sm font-semibold mb-1"
-                          style={{ color: COLORS.text.primary }}
+                    {executionReport.growth_insights.key_learnings.map(
+                      (learning, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg"
+                          style={{
+                            backgroundColor: COLORS.background.card,
+                            border: `1px solid ${COLORS.border.light}`,
+                          }}
                         >
-                          {learning.learning}
-                        </p>
-                        {learning.implication && (
                           <p
-                            className="text-xs mt-1"
-                            style={{ color: COLORS.text.secondary }}
+                            className="text-sm font-semibold mb-1"
+                            style={{ color: COLORS.text.primary }}
                           >
-                            {learning.implication}
+                            {learning.learning}
                           </p>
-                        )}
-                      </div>
-                    ))}
+                          {learning.implication && (
+                            <p
+                              className="text-xs mt-1"
+                              style={{ color: COLORS.text.secondary }}
+                            >
+                              {learning.implication}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    )}
                   </div>
                 )}
               {executionReport.growth_insights.next_week_focus &&
@@ -713,26 +788,28 @@ export function ExecutionSection({
                       다음 주 포커스
                     </p>
                     <ul className="space-y-2">
-                      {executionReport.growth_insights.next_week_focus.map((focus, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          <span className="text-xs mt-0.5">•</span>
-                          <div className="flex-1">
-                            <p className="text-sm">{focus.area}</p>
-                            {focus.reason && (
-                              <p
-                                className="text-xs mt-1"
-                                style={{ color: COLORS.text.secondary }}
-                              >
-                                {focus.reason}
-                              </p>
-                            )}
-                          </div>
-                        </li>
-                      ))}
+                      {executionReport.growth_insights.next_week_focus.map(
+                        (focus, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            <span className="text-xs mt-0.5">•</span>
+                            <div className="flex-1">
+                              <p className="text-sm">{focus.area}</p>
+                              {focus.reason && (
+                                <p
+                                  className="text-xs mt-1"
+                                  style={{ color: COLORS.text.secondary }}
+                                >
+                                  {focus.reason}
+                                </p>
+                              )}
+                            </div>
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 )}
@@ -743,4 +820,3 @@ export function ExecutionSection({
     </div>
   );
 }
-

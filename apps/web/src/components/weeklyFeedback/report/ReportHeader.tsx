@@ -76,7 +76,7 @@ export function ReportHeader({
         )}
 
         {/* Key Points */}
-        {summaryReport?.key_points && summaryReport.key_points.length > 0 && (
+        {Array.isArray(summaryReport?.key_points) && summaryReport.key_points.length > 0 && (
           <div className="mb-5">
             <p
               className="text-xs mb-3"

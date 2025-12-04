@@ -95,7 +95,7 @@ export function ClosingSection({
       )}
 
       {/* Call to Action - Checklist Style */}
-      {closingReport.call_to_action?.actions &&
+      {Array.isArray(closingReport.call_to_action?.actions) &&
         closingReport.call_to_action.actions.length > 0 && (
           <Card
             className="p-5 sm:p-6 mb-4"
@@ -252,7 +252,8 @@ export function ClosingSection({
           )}
 
           {/* Characteristics Radar Chart */}
-          {closingReport.this_week_identity.visualization?.characteristics_radar && (
+          {closingReport.this_week_identity.visualization
+            ?.characteristics_radar && (
             <Card
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
@@ -282,7 +283,10 @@ export function ClosingSection({
                   <div style={{ marginLeft: "-8px", marginRight: "-8px" }}>
                     <ResponsiveContainer width="100%" height={300}>
                       <RadarChart
-                        data={closingReport.this_week_identity.visualization.characteristics_radar.data}
+                        data={
+                          closingReport.this_week_identity.visualization
+                            .characteristics_radar.data
+                        }
                       >
                         <PolarGrid stroke="#E0E0E0" />
                         <PolarAngleAxis
@@ -329,7 +333,8 @@ export function ClosingSection({
 
           {/* Core Characteristics */}
           {closingReport.this_week_identity.core_characteristics &&
-            closingReport.this_week_identity.core_characteristics.length > 0 && (
+            closingReport.this_week_identity.core_characteristics.length >
+              0 && (
               <Card
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
@@ -390,22 +395,23 @@ export function ClosingSection({
                             >
                               {char.description}
                             </p>
-                            {char.evidence && char.evidence.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                {char.evidence.map((evidence, eIdx) => (
-                                  <span
-                                    key={eIdx}
-                                    className="px-2 py-0.5 rounded text-xs"
-                                    style={{
-                                      backgroundColor: "#F0F5F0",
-                                      color: "#6B7A6F",
-                                    }}
-                                  >
-                                    {evidence}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                            {Array.isArray(char.evidence) &&
+                              char.evidence.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {char.evidence.map((evidence, eIdx) => (
+                                    <span
+                                      key={eIdx}
+                                      className="px-2 py-0.5 rounded text-xs"
+                                      style={{
+                                        backgroundColor: "#F0F5F0",
+                                        color: "#6B7A6F",
+                                      }}
+                                    >
+                                      {evidence}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                           </div>
                         )
                       )}

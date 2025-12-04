@@ -368,22 +368,38 @@ export function buildFinalPrompt(
 
   if (summaryReport) {
     prompt += "=== 전체 요약 ===\n";
-    prompt += `요약: ${summaryReport.summary}\n`;
-    prompt += `핵심 포인트: ${summaryReport.key_points.join(", ")}\n`;
+    prompt += `요약: ${summaryReport.summary || "없음"}\n`;
+    prompt += `핵심 포인트: ${
+      Array.isArray(summaryReport.key_points) && summaryReport.key_points.length > 0
+        ? summaryReport.key_points.join(", ")
+        : "없음"
+    }\n`;
     prompt += "\n";
   }
 
   if (dailyReport) {
     prompt += "=== 일상 리포트 ===\n";
-    prompt += `요약: ${dailyReport.summary}\n`;
-    prompt += `오늘 있었던 일: ${dailyReport.daily_events.join(", ")}\n`;
-    prompt += `키워드: ${dailyReport.keywords.join(", ")}\n`;
+    prompt += `요약: ${dailyReport.summary || "없음"}\n`;
+    prompt += `오늘 있었던 일: ${
+      Array.isArray(dailyReport.daily_events) && dailyReport.daily_events.length > 0
+        ? dailyReport.daily_events.join(", ")
+        : "없음"
+    }\n`;
+    prompt += `키워드: ${
+      Array.isArray(dailyReport.keywords) && dailyReport.keywords.length > 0
+        ? dailyReport.keywords.join(", ")
+        : "없음"
+    }\n`;
     prompt += "\n";
   }
 
   if (emotionReport) {
     prompt += "=== 감정 리포트 ===\n";
-    prompt += `감정 흐름: ${emotionReport.emotion_curve.join(" → ")}\n`;
+    prompt += `감정 흐름: ${
+      Array.isArray(emotionReport.emotion_curve) && emotionReport.emotion_curve.length > 0
+        ? emotionReport.emotion_curve.join(" → ")
+        : "없음"
+    }\n`;
     if (emotionReport.dominant_emotion) {
       prompt += `대표 감정: ${emotionReport.dominant_emotion}\n`;
     }
@@ -392,26 +408,34 @@ export function buildFinalPrompt(
 
   if (dreamReport) {
     prompt += "=== 꿈/목표 리포트 ===\n";
-    prompt += `요약: ${dreamReport.summary}\n`;
-    prompt += `자기 평가: ${dreamReport.vision_self}\n`;
+    prompt += `요약: ${dreamReport.summary || "없음"}\n`;
+    prompt += `자기 평가: ${dreamReport.vision_self || "없음"}\n`;
     prompt += "\n";
   }
 
   if (insightReport) {
     prompt += "=== 인사이트 리포트 ===\n";
-    prompt += `핵심 인사이트: ${insightReport.core_insights
-      .map((i) => i.insight)
-      .join(", ")}\n`;
+    prompt += `핵심 인사이트: ${
+      Array.isArray(insightReport.core_insights) && insightReport.core_insights.length > 0
+        ? insightReport.core_insights.map((i) => i.insight).join(", ")
+        : "없음"
+    }\n`;
     prompt += "\n";
   }
 
   if (feedbackReport) {
     prompt += "=== 피드백 리포트 ===\n";
-    prompt += `핵심 피드백: ${feedbackReport.core_feedback}\n`;
-    if (feedbackReport.positives.length > 0) {
+    prompt += `핵심 피드백: ${feedbackReport.core_feedback || "없음"}\n`;
+    if (
+      Array.isArray(feedbackReport.positives) &&
+      feedbackReport.positives.length > 0
+    ) {
       prompt += `긍정적 측면: ${feedbackReport.positives.join(", ")}\n`;
     }
-    if (feedbackReport.improvements.length > 0) {
+    if (
+      Array.isArray(feedbackReport.improvements) &&
+      feedbackReport.improvements.length > 0
+    ) {
       prompt += `개선점: ${feedbackReport.improvements.join(", ")}\n`;
     }
     prompt += "\n";

@@ -115,7 +115,7 @@ export function DailyLifeSection({
               >
                 {dailyLifeReport.daily_summaries_trend?.overall_narrative}
               </p>
-              {dailyLifeReport.daily_summaries_trend.key_highlights &&
+              {Array.isArray(dailyLifeReport.daily_summaries_trend.key_highlights) &&
                 dailyLifeReport.daily_summaries_trend.key_highlights.length >
                   0 && (
                   <ul className="space-y-2 mt-3">
