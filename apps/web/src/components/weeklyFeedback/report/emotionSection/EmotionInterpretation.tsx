@@ -45,10 +45,10 @@ const getArousalDescription = (a: number) => {
 
 // 감정 구역 분류 함수
 const getEmotionQuadrant = (v: number, a: number) => {
-  if (v > 0 && a > 0.5) return { label: "몰입·설렘·의욕", color: "#A8BBA8" };
-  if (v > 0 && a <= 0.5) return { label: "안도·평온·휴식", color: "#E5B96B" };
+  if (v > 0 && a > 0.5) return { label: "몰입·설렘·의욕", color: "#D4C4B0" };
+  if (v > 0 && a <= 0.5) return { label: "안도·평온·휴식", color: "#E6D5C3" };
   if (v <= 0 && a > 0.5) return { label: "불안·초조·당황", color: "#B89A7A" };
-  return { label: "슬픔·체념·무기력", color: "#6B7A6F" };
+  return { label: "슬픔·체념·무기력", color: "#A78A6A" };
 };
 
 export function EmotionInterpretation({
@@ -58,19 +58,25 @@ export function EmotionInterpretation({
   return (
     <Card
       className="p-5 mb-4"
-      style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+        border: "1px solid #E6D5C3",
+        borderRadius: "16px",
+      }}
     >
       <div className="flex items-start gap-3">
         <Wind
           className="w-5 h-5 flex-shrink-0 mt-0.5"
-          style={{ color: "#B89A7A" }}
+          style={{ color: "#8B6F47" }}
         />
         <div>
           <p
             className="text-xs"
             style={{
-              color: "#6B7A6F",
+              color: "#4E4B46",
               marginBottom: "0.5rem",
+              fontWeight: 600,
             }}
           >
             주간 감정 해석
@@ -78,7 +84,7 @@ export function EmotionInterpretation({
           <p
             className="text-sm"
             style={{
-              color: "#4E4B46",
+              color: "#333333",
               lineHeight: "1.7",
             }}
           >

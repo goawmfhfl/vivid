@@ -39,15 +39,16 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
       <div
         className="p-4 rounded-lg"
         style={{
-          backgroundColor: "#F7F8F6",
-          border: "1px solid #E6E4DE",
+          background:
+            "linear-gradient(135deg, rgba(184, 154, 122, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
+          border: "1px solid #E6D5C3",
         }}
       >
         <div className="flex items-center gap-2 mb-2">
           {valence >= 0 ? (
-            <TrendingUp className="w-4 h-4" style={{ color: "#A8BBA8" }} />
+            <TrendingUp className="w-4 h-4" style={{ color: "#8B6F47" }} />
           ) : (
-            <TrendingDown className="w-4 h-4" style={{ color: "#B89A7A" }} />
+            <TrendingDown className="w-4 h-4" style={{ color: "#8B6F47" }} />
           )}
           <p
             className="text-xs"
@@ -72,7 +73,7 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
             >
               <HelpCircle
                 className="w-3.5 h-3.5"
-                style={{ color: "#6B7A6F" }}
+                style={{ color: "#8B6F47" }}
               />
             </button>
             {showValenceTooltip && (
@@ -111,15 +112,15 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 <p>
                   기분이 좋은가, 나쁜가를 나타내는 값입니다.
                   <br />
-                  <strong style={{ color: "#A8BBA8" }}>-1.0</strong>
+                  <strong style={{ color: "#8B6F47" }}>-1.0</strong>
                   : 매우 부정적 (불안, 짜증, 슬픔)
                   <br />
-                  <strong style={{ color: "#A8BBA8", marginTop: "0.25rem" }}>
+                  <strong style={{ color: "#8B6F47", marginTop: "0.25rem" }}>
                     0
                   </strong>
                   : 중립
                   <br />
-                  <strong style={{ color: "#A8BBA8", marginTop: "0.25rem" }}>
+                  <strong style={{ color: "#8B6F47", marginTop: "0.25rem" }}>
                     +1.0
                   </strong>
                   : 매우 긍정적 (설렘, 감사, 자신감)
@@ -159,12 +160,13 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
       <div
         className="p-4 rounded-lg"
         style={{
-          backgroundColor: "#F7F8F6",
-          border: "1px solid #E6E4DE",
+          background:
+            "linear-gradient(135deg, rgba(184, 154, 122, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
+          border: "1px solid #E6D5C3",
         }}
       >
         <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-4 h-4" style={{ color: "#E5B96B" }} />
+          <Zap className="w-4 h-4" style={{ color: "#8B6F47" }} />
           <p
             className="text-xs"
             style={{
@@ -188,7 +190,7 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
             >
               <HelpCircle
                 className="w-3.5 h-3.5"
-                style={{ color: "#E5B96B" }}
+                style={{ color: "#8B6F47" }}
               />
             </button>
             {showEngagedTooltip && (
@@ -227,15 +229,15 @@ export function EmotionValues({ valence, arousal }: EmotionValuesProps) {
                 <p>
                   에너지가 높은가, 낮은가를 나타내는 값입니다.
                   <br />
-                  <strong style={{ color: "#E5B96B", marginTop: "0.25rem" }}>
+                  <strong style={{ color: "#8B6F47", marginTop: "0.25rem" }}>
                     0.0
                   </strong>
                   : 낮은 에너지 (무기력, 피곤, 평온)
                   <br />
-                  <strong style={{ color: "#E5B96B" }}>0.5</strong>: 적당한
+                  <strong style={{ color: "#8B6F47" }}>0.5</strong>: 적당한
                   에너지
                   <br />
-                  <strong style={{ color: "#E5B96B" }}>1.0</strong>: 높은 에너지
+                  <strong style={{ color: "#8B6F47" }}>1.0</strong>: 높은 에너지
                   (몰입, 긴장, 흥분)
                 </p>
                 <div

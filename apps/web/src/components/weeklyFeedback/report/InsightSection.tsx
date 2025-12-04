@@ -37,16 +37,15 @@ type InsightSectionProps = {
 const INSIGHT_COLOR = "#E5B96B";
 const INSIGHT_COLOR_DARK = "#D4A85A";
 const INSIGHT_COLOR_LIGHT = "#F5E6C8";
-// 잘한 점 섹션 배경색(#E6E4DE, #FAFAF8)과 조화로운 차트 색상 팔레트
-// 베이지/크림 계열과 그린 계열이 자연스럽게 어울리는 색상
+// 골드/베이지 계열 차트 색상 팔레트
 const INSIGHT_COLORS = [
-  "#A8BBA8", // 라이트 그린 - 잘한 점 섹션과 조화
-  "#B89A7A", // 베이지 브라운 - 배경색과 조화
-  "#9DB29D", // 미드 그린 - 자연스러운 전환
-  "#D4C4B0", // 웜 베이지 - 크림 계열과 조화
-  "#8FA38F", // 다크 그린 - 깊이감
-  "#E6D5C3", // 라이트 크림 - 부드러운 톤
-  "#7C9A7C", // 브랜드 그린 - 일관성 유지
+  "#E5B96B", // 골드 - 메인 색상
+  "#D4A85A", // 다크 골드
+  "#C9A052", // 미드 골드
+  "#B89A7A", // 베이지 브라운
+  "#D4C4B0", // 웜 베이지
+  "#E6D5C3", // 라이트 크림
+  "#F5E6C8", // 매우 연한 베이지
 ];
 
 // 모던한 차트 스타일을 위한 커스텀 컴포넌트
@@ -213,12 +212,9 @@ export function InsightSection({
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#E8F0F8" }}
+                style={{ backgroundColor: INSIGHT_COLOR_LIGHT }}
               >
-                <Target
-                  className="w-4 h-4"
-                  style={{ color: COLORS.brand.secondary }}
-                />
+                <Target className="w-4 h-4" style={{ color: INSIGHT_COLOR }} />
               </div>
               <div className="flex-1">
                 <p
@@ -241,7 +237,7 @@ export function InsightSection({
                         <span
                           className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                           style={{
-                            backgroundColor: COLORS.brand.secondary,
+                            backgroundColor: INSIGHT_COLOR,
                           }}
                         />
                         <span>{question}</span>
@@ -261,7 +257,7 @@ export function InsightSection({
           style={{
             background:
               "linear-gradient(135deg, rgba(229, 185, 107, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
-            border: "1px solid #D5E3D5",
+            border: "1px solid #E6D5C3",
             borderRadius: "16px",
           }}
           onClick={() => router.push("/subscription")}
@@ -299,7 +295,7 @@ export function InsightSection({
                   className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                   style={{
                     backgroundColor: "rgba(229, 185, 107, 0.2)",
-                    color: "#6B7A6F",
+                    color: INSIGHT_COLOR_DARK,
                     letterSpacing: "0.5px",
                   }}
                 >
@@ -318,7 +314,7 @@ export function InsightSection({
                 성장으로 이어지도록 도와드려요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
-                <span style={{ color: COLORS.brand.primary }}>
+                <span style={{ color: INSIGHT_COLOR }}>
                   Pro 멤버십으로 업그레이드
                 </span>
                 <ArrowRight
@@ -343,7 +339,7 @@ export function InsightSection({
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #D5E3D5",
+                  border: "1px solid #E6D5C3",
                   borderRadius: "16px",
                 }}
               >
@@ -548,8 +544,8 @@ export function InsightSection({
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
                   background:
-                    "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #D5E3D5",
+                    "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #E6D5C3",
                   borderRadius: "16px",
                 }}
               >
@@ -557,8 +553,7 @@ export function InsightSection({
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                     style={{
-                      background:
-                        "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
+                      background: `linear-gradient(135deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
                     }}
                   >
                     <Sparkles className="w-5 h-5 text-white" />
@@ -591,8 +586,8 @@ export function InsightSection({
                               <span
                                 className="px-2 py-0.5 rounded text-xs"
                                 style={{
-                                  backgroundColor: "#FFF9E6",
-                                  color: "#B89A7A",
+                                  backgroundColor: INSIGHT_COLOR_LIGHT,
+                                  color: INSIGHT_COLOR_DARK,
                                 }}
                               >
                                 {strength.frequency}회
@@ -621,8 +616,8 @@ export function InsightSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #E6D5C3",
                 borderRadius: "16px",
               }}
             >
@@ -630,8 +625,7 @@ export function InsightSection({
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
-                    background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                    background: `linear-gradient(135deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
                   }}
                 >
                   <TrendingUp className="w-5 h-5 text-white" />
@@ -696,7 +690,7 @@ export function InsightSection({
                                 <span
                                   className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                   style={{
-                                    backgroundColor: COLORS.brand.primary,
+                                    backgroundColor: INSIGHT_COLOR,
                                   }}
                                 />
                                 <div className="flex-1">
@@ -728,7 +722,7 @@ export function InsightSection({
               style={{
                 background:
                   "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                border: "1px solid #E6D5C3",
                 borderRadius: "16px",
               }}
             >

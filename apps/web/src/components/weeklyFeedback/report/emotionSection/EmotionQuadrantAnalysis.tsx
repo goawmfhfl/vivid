@@ -28,7 +28,7 @@ export function EmotionQuadrantAnalysis({
       icon: <AlertTriangle className="w-4 h-4" />,
       color: "#B89A7A",
       bgGradient:
-        "linear-gradient(135deg, rgba(184, 154, 122, 0.08) 0%, rgba(184, 154, 122, 0.03) 100%)",
+        "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
       borderColor: "rgba(184, 154, 122, 0.2)",
       triggers: emotionReport.anxious_triggers,
     },
@@ -36,30 +36,30 @@ export function EmotionQuadrantAnalysis({
       id: "engaged",
       title: "몰입·설렘을 느끼는 상황",
       icon: <Zap className="w-4 h-4" />,
-      color: "#A8BBA8",
+      color: "#B89A7A",
       bgGradient:
-        "linear-gradient(135deg, rgba(168, 187, 168, 0.08) 0%, rgba(168, 187, 168, 0.03) 100%)",
-      borderColor: "rgba(168, 187, 168, 0.2)",
+        "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+      borderColor: "rgba(184, 154, 122, 0.2)",
       triggers: emotionReport.engaged_triggers,
     },
     {
       id: "sad",
       title: "슬픔·무기력을 느끼는 상황",
       icon: <Cloud className="w-4 h-4" />,
-      color: "#6B7A6F",
+      color: "#B89A7A",
       bgGradient:
-        "linear-gradient(135deg, rgba(107, 122, 111, 0.08) 0%, rgba(107, 122, 111, 0.03) 100%)",
-      borderColor: "rgba(107, 122, 111, 0.2)",
+        "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+      borderColor: "rgba(184, 154, 122, 0.2)",
       triggers: emotionReport.sad_triggers,
     },
     {
       id: "calm",
       title: "안도·평온을 느끼는 상황",
       icon: <Sparkles className="w-4 h-4" />,
-      color: "#E5B96B",
+      color: "#B89A7A",
       bgGradient:
-        "linear-gradient(135deg, rgba(229, 185, 107, 0.08) 0%, rgba(229, 185, 107, 0.03) 100%)",
-      borderColor: "rgba(229, 185, 107, 0.2)",
+        "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+      borderColor: "rgba(184, 154, 122, 0.2)",
       triggers: emotionReport.calm_triggers,
     },
   ];
@@ -79,7 +79,7 @@ export function EmotionQuadrantAnalysis({
             className="p-5 transition-all duration-300 hover:shadow-lg"
             style={{
               background: quadrant.bgGradient,
-              border: `1px solid ${quadrant.borderColor}`,
+              border: "1px solid rgba(184, 154, 122, 0.2)",
               borderRadius: "12px",
               position: "relative",
               overflow: "hidden",
@@ -90,15 +90,15 @@ export function EmotionQuadrantAnalysis({
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-110"
                 style={{
-                  backgroundColor: `${quadrant.color}15`,
-                  color: quadrant.color,
+                  backgroundColor: "rgba(139, 111, 71, 0.15)",
+                  color: "#8B6F47",
                 }}
               >
                 {quadrant.icon}
               </div>
               <h4
                 className="text-xs font-semibold flex-1"
-                style={{ color: quadrant.color }}
+                style={{ color: "#333333" }}
               >
                 {quadrant.title}
               </h4>
@@ -111,7 +111,7 @@ export function EmotionQuadrantAnalysis({
                   <div key={idx} className="flex items-start gap-3">
                     <div
                       className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                      style={{ backgroundColor: quadrant.color }}
+                      style={{ backgroundColor: "#8B6F47" }}
                     />
                     <p
                       className="text-sm leading-relaxed flex-1"

@@ -16,13 +16,18 @@ export function EmotionPatternAnalysis({
       {/* 설명 섹션 */}
       <Card
         className="p-5"
-        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+          border: "1px solid #E6D5C3",
+          borderRadius: "16px",
+        }}
       >
         <div className="space-y-4">
           {/* 쾌-불쾌 설명 */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4" style={{ color: "#6B7A6F" }} />
+              <TrendingUp className="w-4 h-4" style={{ color: "#8B6F47" }} />
               <h3
                 className="text-sm font-semibold"
                 style={{
@@ -35,7 +40,7 @@ export function EmotionPatternAnalysis({
             <p
               className="text-sm"
               style={{
-                color: "#6B7A6F",
+                color: "#4E4B46",
                 lineHeight: "1.6",
               }}
             >
@@ -46,7 +51,7 @@ export function EmotionPatternAnalysis({
           {/* 각성-에너지 설명 */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4" style={{ color: "#6B7A6F" }} />
+              <Zap className="w-4 h-4" style={{ color: "#8B6F47" }} />
               <h3
                 className="text-sm font-semibold"
                 style={{
@@ -59,7 +64,7 @@ export function EmotionPatternAnalysis({
             <p
               className="text-sm"
               style={{
-                color: "#6B7A6F",
+                color: "#4E4B46",
                 lineHeight: "1.6",
               }}
             >
