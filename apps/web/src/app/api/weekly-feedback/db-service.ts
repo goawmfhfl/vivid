@@ -216,6 +216,7 @@ export async function saveWeeklyFeedback(
         week_start: encryptedFeedback.week_range.start,
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
+        integrity_score: encryptedFeedback.integrity_score,
         weekly_overview: encryptedFeedback.weekly_overview,
         daily_life_report: encryptedFeedback.daily_life_report,
         emotion_report: encryptedFeedback.emotion_report ?? null,

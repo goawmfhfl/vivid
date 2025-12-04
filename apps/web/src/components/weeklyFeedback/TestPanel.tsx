@@ -41,111 +41,24 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   const isDev = process.env.NODE_ENV === "development";
   if (!isDev) return null;
 
-  // 섹션별 상세 정보 정의
+  // 섹션별 상세 정보 정의 (새로운 구조 반영)
   const sectionDefinitions = [
     {
       name: "Header",
       component: "ReportHeader",
-      description: "주간 범위, 정합도 점수, 다음 주 포커스, 주간 한 줄 요약",
+      description: "주간 범위, 정합도 점수, 주간 개요",
       fields: [
         { name: "week_range", path: "view.week_range", isPro: false },
-        { name: "integrity", path: "view.integrity", isPro: false },
-        { name: "next_week_focus", path: "view.next_week_focus", isPro: false },
-        { name: "weekly_one_liner", path: "view.weekly_one_liner", isPro: false },
+        { name: "integrity_score", path: "view.integrity_score", isPro: false },
         { name: "title", path: "view.weekly_overview.title", isPro: false },
-        { name: "narrative", path: "view.weekly_overview.narrative", isPro: false },
-      ],
-      condition: "항상 표시",
-    },
-    {
-      name: "Emotion",
-      component: "EmotionSection",
-      description: "주간 감정 개요, 감정 패턴, 트리거 분석",
-      fields: [
         {
-          name: "ai_mood_valence",
-          path: "view.emotion_overview?.ai_mood_valence",
+          name: "narrative",
+          path: "view.weekly_overview.narrative",
           isPro: false,
         },
         {
-          name: "ai_mood_arousal",
-          path: "view.emotion_overview?.ai_mood_arousal",
-          isPro: false,
-        },
-        {
-          name: "dominant_emotion",
-          path: "view.emotion_overview?.dominant_emotion",
-          isPro: false,
-        },
-        {
-          name: "valence_explanation",
-          path: "view.emotion_overview?.valence_explanation",
-          isPro: false,
-        },
-        {
-          name: "arousal_explanation",
-          path: "view.emotion_overview?.arousal_explanation",
-          isPro: false,
-        },
-        {
-          name: "valence_patterns",
-          path: "view.emotion_overview?.valence_patterns",
-          isPro: false,
-        },
-        {
-          name: "arousal_patterns",
-          path: "view.emotion_overview?.arousal_patterns",
-          isPro: false,
-        },
-        {
-          name: "valence_triggers",
-          path: "view.emotion_overview?.valence_triggers",
-          isPro: false,
-        },
-        {
-          name: "arousal_triggers",
-          path: "view.emotion_overview?.arousal_triggers",
-          isPro: false,
-        },
-        {
-          name: "anxious_triggers",
-          path: "view.emotion_overview?.anxious_triggers",
-          isPro: false,
-        },
-        {
-          name: "engaged_triggers",
-          path: "view.emotion_overview?.engaged_triggers",
-          isPro: false,
-        },
-        {
-          name: "sad_triggers",
-          path: "view.emotion_overview?.sad_triggers",
-          isPro: false,
-        },
-        {
-          name: "calm_triggers",
-          path: "view.emotion_overview?.calm_triggers",
-          isPro: false,
-        },
-        {
-          name: "daily_emotions",
-          path: "view.emotion_overview?.daily_emotions",
-          isPro: false,
-        },
-      ],
-      condition: "emotion_overview !== null",
-    },
-    {
-      name: "Weekly Overview",
-      component: "WeeklyOverviewSection",
-      description: "주간 요약, 상위 키워드, 반복되는 테마",
-      fields: [
-        { name: "title", path: "view.weekly_overview.title", isPro: false },
-        { name: "narrative", path: "view.weekly_overview.narrative", isPro: false },
-        { name: "top_keywords", path: "view.weekly_overview.top_keywords", isPro: false },
-        {
-          name: "repeated_themes",
-          path: "view.weekly_overview.repeated_themes",
+          name: "top_keywords",
+          path: "view.weekly_overview.top_keywords",
           isPro: false,
         },
         {
@@ -154,94 +67,207 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
       ],
-      condition: "weekly_overview.narrative.trim() !== ''",
+      condition: "항상 표시",
     },
     {
-      name: "Growth Trends",
-      component: "GrowthTrendsSection",
-      description: "성장 포인트, 조정 포인트, 정합도 통계",
+      name: "Daily Life",
+      component: "DailyLifeSection",
+      description: "이번 주의 일상 리포트",
       fields: [
-        { name: "integrity", path: "view.integrity", isPro: false },
         {
-          name: "growth_points_top3",
-          path: "view.growth_points_top3",
+          name: "summary",
+          path: "view.daily_life_report.summary",
           isPro: false,
         },
         {
-          name: "adjustment_points_top3",
-          path: "view.adjustment_points_top3",
+          name: "daily_summaries_trend",
+          path: "view.daily_life_report.daily_summaries_trend",
+          isPro: true,
+        },
+        {
+          name: "events_pattern",
+          path: "view.daily_life_report.events_pattern",
+          isPro: true,
+        },
+        {
+          name: "emotion_triggers_analysis",
+          path: "view.daily_life_report.emotion_triggers_analysis",
+          isPro: true,
+        },
+        {
+          name: "behavioral_patterns",
+          path: "view.daily_life_report.behavioral_patterns",
+          isPro: true,
+        },
+        {
+          name: "keywords_analysis",
+          path: "view.daily_life_report.keywords_analysis",
+          isPro: true,
+        },
+      ],
+      condition: "daily_life_report.summary !== ''",
+    },
+    {
+      name: "Emotion",
+      component: "EmotionSection",
+      description: "주간 감정 개요, 감정 패턴, 트리거 분석",
+      fields: [
+        {
+          name: "ai_mood_valence",
+          path: "view.emotion_report?.ai_mood_valence",
+          isPro: false,
+        },
+        {
+          name: "ai_mood_arousal",
+          path: "view.emotion_report?.ai_mood_arousal",
+          isPro: false,
+        },
+        {
+          name: "dominant_emotion",
+          path: "view.emotion_report?.dominant_emotion",
+          isPro: false,
+        },
+        {
+          name: "valence_explanation",
+          path: "view.emotion_report?.valence_explanation",
+          isPro: false,
+        },
+        {
+          name: "arousal_explanation",
+          path: "view.emotion_report?.arousal_explanation",
+          isPro: false,
+        },
+        {
+          name: "daily_emotions",
+          path: "view.emotion_report?.daily_emotions",
           isPro: false,
         },
       ],
-      condition: "growth_points_top3.length > 0 || adjustment_points_top3.length > 0",
+      condition: "emotion_report !== null",
     },
     {
-      name: "Insight Replay",
-      component: "InsightReplaySection",
-      description: "핵심 인사이트, 메타 질문 하이라이트",
+      name: "Vision",
+      component: "VisionSection",
+      description: "이번 주의 비전 리포트",
       fields: [
-        { name: "core_insights", path: "view.core_insights", isPro: false },
+        {
+          name: "vision_summary",
+          path: "view.vision_report.vision_summary",
+          isPro: false,
+        },
+        {
+          name: "vision_consistency",
+          path: "view.vision_report.vision_consistency",
+          isPro: true,
+        },
+        {
+          name: "goals_pattern",
+          path: "view.vision_report.goals_pattern",
+          isPro: true,
+        },
+        {
+          name: "next_week_vision_focus",
+          path: "view.vision_report.next_week_vision_focus",
+          isPro: true,
+        },
+      ],
+      condition: "vision_report.vision_summary.trim() !== ''",
+    },
+    {
+      name: "Insight",
+      component: "InsightSection",
+      description: "이번 주의 인사이트 리포트",
+      fields: [
+        {
+          name: "core_insights",
+          path: "view.insight_report.core_insights",
+          isPro: false,
+        },
         {
           name: "meta_questions_highlight",
-          path: "view.meta_questions_highlight",
+          path: "view.insight_report.meta_questions_highlight",
           isPro: false,
+        },
+        {
+          name: "insight_patterns",
+          path: "view.insight_report.insight_patterns",
+          isPro: true,
+        },
+        {
+          name: "growth_insights",
+          path: "view.insight_report.growth_insights",
+          isPro: true,
         },
       ],
-      condition: "core_insights.length > 0",
+      condition: "insight_report.core_insights.length > 0",
     },
     {
-      name: "Vision Visualization",
-      component: "VisionVisualizationSection",
-      description: "비전 요약, 키워드 트렌드, 정렬 코멘트, 리마인더 문장",
+      name: "Execution",
+      component: "ExecutionSection",
+      description: "이번 주의 피드백 리포트",
       fields: [
-        { name: "vision_summary", path: "view.vision_summary", isPro: false },
         {
-          name: "vision_keywords_trend",
-          path: "view.vision_keywords_trend",
+          name: "positives_top3",
+          path: "view.execution_report.positives_top3",
           isPro: false,
         },
-        { name: "alignment_comment", path: "view.alignment_comment", isPro: false },
-        {
-          name: "reminder_sentences_featured",
-          path: "view.reminder_sentences_featured",
-          isPro: false,
-        },
-      ],
-      condition: "vision_summary.trim() !== ''",
-    },
-    {
-      name: "Execution Reflection",
-      component: "ExecutionReflectionSection",
-      description: "긍정적 측면, 개선점, AI 피드백 요약",
-      fields: [
-        { name: "positives_top3", path: "view.positives_top3", isPro: false },
         {
           name: "improvements_top3",
-          path: "view.improvements_top3",
+          path: "view.execution_report.improvements_top3",
           isPro: false,
         },
         {
           name: "ai_feedback_summary",
-          path: "view.ai_feedback_summary",
+          path: "view.execution_report.ai_feedback_summary",
           isPro: false,
         },
+        {
+          name: "feedback_patterns",
+          path: "view.execution_report.feedback_patterns",
+          isPro: true,
+        },
+        {
+          name: "growth_insights",
+          path: "view.execution_report.growth_insights",
+          isPro: true,
+        },
       ],
-      condition: "positives_top3.length > 0 || improvements_top3.length > 0",
+      condition:
+        "execution_report.positives_top3.length > 0 || execution_report.improvements_top3.length > 0",
     },
     {
       name: "Closing",
       component: "ClosingSection",
-      description: "주간 한 줄 요약, 다음 주 목표, 행동 촉구",
+      description: "이번 주의 마무리 리포트",
       fields: [
-        { name: "weekly_one_liner", path: "view.weekly_one_liner", isPro: false },
         {
-          name: "next_week_objective",
-          path: "view.next_week_objective",
+          name: "weekly_one_liner",
+          path: "view.closing_report.call_to_action?.weekly_one_liner",
           isPro: false,
         },
-        { name: "call_to_action", path: "view.call_to_action", isPro: false },
+        {
+          name: "next_week_objective",
+          path: "view.closing_report.call_to_action?.next_week_objective",
+          isPro: false,
+        },
+        {
+          name: "actions",
+          path: "view.closing_report.call_to_action?.actions",
+          isPro: false,
+        },
+        {
+          name: "this_week_identity",
+          path: "view.closing_report.this_week_identity",
+          isPro: true,
+        },
+        {
+          name: "growth_story",
+          path: "view.closing_report.growth_story",
+          isPro: true,
+        },
       ],
-      condition: "weekly_one_liner.trim() !== ''",
+      condition:
+        "closing_report.call_to_action?.weekly_one_liner.trim() !== ''",
     },
   ];
 
@@ -261,34 +287,41 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     return value;
   };
 
-  // 섹션별 데이터 검증
+  // 섹션별 데이터 검증 (새로운 구조 반영)
   const sections = sectionDefinitions.map((def) => {
     const hasData = (() => {
       switch (def.name) {
         case "Header":
           return true;
-        case "Emotion":
-          return view.emotion_overview !== null;
-        case "Weekly Overview":
+        case "Daily Life":
           return !!(
-            view.weekly_overview?.narrative &&
-            view.weekly_overview.narrative.trim()
+            view.daily_life_report?.summary &&
+            view.daily_life_report.summary.trim()
           );
-        case "Growth Trends":
-          return (
-            view.growth_points_top3.length > 0 ||
-            view.adjustment_points_top3.length > 0
+        case "Emotion":
+          return view.emotion_report !== null;
+        case "Vision":
+          return !!(
+            view.vision_report?.vision_summary &&
+            view.vision_report.vision_summary.trim()
           );
-        case "Insight Replay":
-          return view.core_insights.length > 0;
-        case "Vision Visualization":
-          return !!(view.vision_summary && view.vision_summary.trim());
-        case "Execution Reflection":
+        case "Insight":
           return (
-            view.positives_top3.length > 0 || view.improvements_top3.length > 0
+            view.insight_report?.core_insights &&
+            view.insight_report.core_insights.length > 0
+          );
+        case "Execution":
+          return (
+            (view.execution_report?.positives_top3 &&
+              view.execution_report.positives_top3.length > 0) ||
+            (view.execution_report?.improvements_top3 &&
+              view.execution_report.improvements_top3.length > 0)
           );
         case "Closing":
-          return !!(view.weekly_one_liner && view.weekly_one_liner.trim());
+          return !!(
+            view.closing_report?.call_to_action?.weekly_one_liner &&
+            view.closing_report.call_to_action.weekly_one_liner.trim()
+          );
         default:
           return false;
       }
@@ -825,4 +858,3 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     </div>
   );
 }
-

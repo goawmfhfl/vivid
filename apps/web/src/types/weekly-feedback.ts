@@ -698,7 +698,11 @@ export type ExecutionReport = {
 // Closing Report
 // ============================================
 export type ClosingReport = {
-  call_to_action: string[]; // 3-5개
+  call_to_action: {
+    weekly_one_liner: string;
+    next_week_objective: string;
+    actions: string[]; // 3-5개
+  };
   this_week_identity: {
     summary: string;
     core_characteristics: Array<{

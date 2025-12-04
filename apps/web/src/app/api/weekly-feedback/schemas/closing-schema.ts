@@ -8,10 +8,25 @@ export function getClosingReportSchema(isPro: boolean) {
     additionalProperties: false,
     properties: {
       call_to_action: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 3,
-        maxItems: 5,
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          weekly_one_liner: {
+            type: "string",
+            maxLength: isPro ? 200 : 150,
+          },
+          next_week_objective: {
+            type: "string",
+            maxLength: isPro ? 300 : 200,
+          },
+          actions: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 3,
+            maxItems: 5,
+          },
+        },
+        required: ["weekly_one_liner", "next_week_objective", "actions"],
       },
       this_week_identity: {
         type: "object",
