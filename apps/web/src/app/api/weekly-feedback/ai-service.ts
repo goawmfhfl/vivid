@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import {
   getWeeklyFeedbackSchema,
-  SYSTEM_PROMPT_WEEKLY_OVERVIEW,
+  SYSTEM_PROMPT_SUMMARY_REPORT,
   SYSTEM_PROMPT_DAILY_LIFE,
   SYSTEM_PROMPT_EMOTION,
   SYSTEM_PROMPT_VISION,
@@ -9,9 +9,9 @@ import {
   SYSTEM_PROMPT_EXECUTION,
   SYSTEM_PROMPT_CLOSING,
 } from "./schema";
-import type { DailyFeedbackForWeekly, WeeklyFeedbackResponse } from "./types";
+import type { DailyFeedbackForWeekly } from "./types";
 import {
-  buildWeeklyOverviewPrompt,
+  buildSummaryReportPrompt,
   buildDailyLifePrompt,
   buildEmotionPrompt,
   buildVisionPrompt,
@@ -21,7 +21,7 @@ import {
 } from "./prompts";
 import type {
   WeeklyFeedback,
-  WeeklyOverview,
+  SummaryReport,
   DailyLifeReport,
   EmotionReport,
   VisionReport,
@@ -162,30 +162,31 @@ async function generateSection<T>(
 }
 
 /**
- * Weekly Overview 생성
+ * Summary Report 생성
  */
-async function generateWeeklyOverview(
+async function generateSummaryReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean
-): Promise<WeeklyOverview> {
-  const prompt = buildWeeklyOverviewPrompt(dailyFeedbacks, range);
-  const schema = getWeeklyFeedbackSchema(isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_WEEKLY_OVERVIEW, prompt);
+): Promise<SummaryReport> {
+  const prompt = buildSummaryReportPrompt(dailyFeedbacks, range);
 
-  const response = await generateSection<{ weekly_overview: WeeklyOverview }>(
-    SYSTEM_PROMPT_WEEKLY_OVERVIEW,
+  const schema = getWeeklyFeedbackSchema(isPro);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY_REPORT, prompt);
+
+  const response = await generateSection<{ summary_report: SummaryReport }>(
+    SYSTEM_PROMPT_SUMMARY_REPORT,
     prompt,
     {
-      name: "WeeklyOverviewResponse",
+      name: "SummaryReportResponse",
       schema: {
         type: "object",
         additionalProperties: false,
         properties: {
-          weekly_overview:
-            schema.schema.properties.weekly_feedback.properties.weekly_overview,
+          summary_report:
+            schema.schema.properties.weekly_feedback.properties.summary_report,
         },
-        required: ["weekly_overview"],
+        required: ["summary_report"],
       },
       strict: true,
     },
@@ -193,7 +194,7 @@ async function generateWeeklyOverview(
     isPro
   );
 
-  return response.weekly_overview;
+  return response.summary_report;
 }
 
 /**
@@ -205,6 +206,7 @@ async function generateDailyLifeReport(
   isPro: boolean
 ): Promise<DailyLifeReport> {
   const prompt = buildDailyLifePrompt(dailyFeedbacks, range);
+  console.log("generateDailyLifeReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY_LIFE, prompt);
 
@@ -243,6 +245,7 @@ async function generateEmotionReport(
   isPro: boolean
 ): Promise<EmotionReport> {
   const prompt = buildEmotionPrompt(dailyFeedbacks, range);
+  console.log("generateEmotionReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, prompt);
 
@@ -280,6 +283,7 @@ async function generateVisionReport(
   isPro: boolean
 ): Promise<VisionReport> {
   const prompt = buildVisionPrompt(dailyFeedbacks, range);
+  console.log("generateVisionReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, prompt);
 
@@ -317,6 +321,7 @@ async function generateInsightReport(
   isPro: boolean
 ): Promise<InsightReport> {
   const prompt = buildInsightPrompt(dailyFeedbacks, range);
+  console.log("generateInsightReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, prompt);
 
@@ -352,6 +357,7 @@ async function generateExecutionReport(
   isPro: boolean
 ): Promise<ExecutionReport> {
   const prompt = buildExecutionPrompt(dailyFeedbacks, range);
+  console.log("generateExecutionReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EXECUTION, prompt);
 
@@ -390,6 +396,7 @@ async function generateClosingReport(
   isPro: boolean
 ): Promise<ClosingReport> {
   const prompt = buildClosingPrompt(dailyFeedbacks, range);
+  console.log("generateClosingReport", prompt);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, prompt);
 
@@ -417,24 +424,6 @@ async function generateClosingReport(
 }
 
 /**
- * Integrity Score 계산 (일별 데이터에서 평균 계산)
- */
-function calculateIntegrityScore(
-  dailyFeedbacks: DailyFeedbackForWeekly
-): number {
-  const scores = dailyFeedbacks
-    .map((feedback) => feedback.narrative_overview?.integrity_score)
-    .filter((score): score is number => score !== null && score !== undefined);
-
-  if (scores.length === 0) {
-    return 0;
-  }
-
-  const sum = scores.reduce((acc, score) => acc + score, 0);
-  return Math.round((sum / scores.length) * 10) / 10;
-}
-
-/**
  * Daily Feedback 배열을 기반으로 주간 피드백 생성 (Promise.all로 병렬 처리)
  */
 export async function generateWeeklyFeedbackFromDaily(
@@ -444,7 +433,7 @@ export async function generateWeeklyFeedbackFromDaily(
 ): Promise<WeeklyFeedback> {
   // Promise.all로 7개 섹션 병렬 생성
   const [
-    weeklyOverview,
+    summaryReport,
     dailyLifeReport,
     emotionReport,
     visionReport,
@@ -452,7 +441,7 @@ export async function generateWeeklyFeedbackFromDaily(
     executionReport,
     closingReport,
   ] = await Promise.all([
-    generateWeeklyOverview(dailyFeedbacks, range, isPro),
+    generateSummaryReport(dailyFeedbacks, range, isPro),
     generateDailyLifeReport(dailyFeedbacks, range, isPro),
     generateEmotionReport(dailyFeedbacks, range, isPro),
     generateVisionReport(dailyFeedbacks, range, isPro),
@@ -461,14 +450,10 @@ export async function generateWeeklyFeedbackFromDaily(
     generateClosingReport(dailyFeedbacks, range, isPro),
   ]);
 
-  // Integrity Score 계산
-  const integrityScore = calculateIntegrityScore(dailyFeedbacks);
-
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {
     week_range: range,
-    integrity_score: integrityScore,
-    weekly_overview: weeklyOverview,
+    summary_report: summaryReport,
     daily_life_report: dailyLifeReport,
     emotion_report: emotionReport,
     vision_report: visionReport,

@@ -79,8 +79,7 @@ export function mapWeeklyFeedbackToReportData(
       start: formatDateForDisplay(feedback.week_range.start),
       end: formatDateForDisplay(feedback.week_range.end),
     },
-    integrity_score: toNumber(feedback.integrity_score),
-    weekly_overview: feedback.weekly_overview,
+    summary_report: feedback.summary_report,
     daily_life_report: feedback.daily_life_report,
     emotion_report: feedback.emotion_report
       ? {
@@ -110,12 +109,5 @@ export function mapWeeklyFeedbackToReportData(
     insight_report: feedback.insight_report,
     execution_report: feedback.execution_report,
     closing_report: feedback.closing_report,
-    daily_integrity_scores: feedback.daily_integrity_scores?.map((day) => ({
-      date: day.date.includes("-") ? formatDateForDisplay(day.date) : day.date,
-      weekday: day.weekday.includes("요일")
-        ? day.weekday
-        : convertWeekdayToKorean(day.weekday),
-      score: toNumber(day.score),
-    })),
   };
 }

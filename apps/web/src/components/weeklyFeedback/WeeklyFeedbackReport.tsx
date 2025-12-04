@@ -53,13 +53,12 @@ export function WeeklyFeedbackReport({
           돌아가기
         </Button>
 
-        {/* Header (Weekly Overview 통합) */}
+        {/* Header (Summary Report) */}
         <ScrollAnimation>
           <div className="mb-64">
             <ReportHeader
               weekRange={data.week_range}
-              integrityScore={data.integrity_score}
-              weeklyOverview={data.weekly_overview}
+              summaryReport={data.summary_report}
             />
           </div>
         </ScrollAnimation>

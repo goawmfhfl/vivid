@@ -1,21 +1,15 @@
 import { CalendarDays, TrendingUp } from "lucide-react";
-import type { WeeklyOverview } from "@/types/weekly-feedback";
-import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import type { SummaryReport } from "@/types/weekly-feedback";
 
 type ReportHeaderProps = {
   weekRange: {
     start: string; // "2025.10.28"
     end: string; // "2025.11.03"
   };
-  integrityScore: number; // 0-10
-  weeklyOverview: WeeklyOverview;
+  summaryReport: SummaryReport;
 };
 
-export function ReportHeader({
-  weekRange,
-  integrityScore,
-  weeklyOverview,
-}: ReportHeaderProps) {
+export function ReportHeader({ weekRange, summaryReport }: ReportHeaderProps) {
   return (
     <div className="mb-8 sm:mb-10">
       {/* Main Header Card */}
@@ -37,43 +31,10 @@ export function ReportHeader({
           <h1 className="text-2xl sm:text-3xl mb-2 font-semibold">
             {weekRange.start} – {weekRange.end}
           </h1>
-          {/* Weekly Title */}
-          {weeklyOverview.title && weeklyOverview.title.trim() && (
-            <div className="mt-4 mb-2">
-              <div
-                className="inline-block px-4 py-2 rounded-xl"
-                style={{
-                  backgroundColor: "rgba(255, 255, 255, 0.25)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                <p className="text-base sm:text-lg font-semibold leading-relaxed">
-                  {weeklyOverview.title}
-                </p>
-              </div>
-            </div>
-          )}
-          <div className="flex items-center gap-3 mt-4">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-              >
-                <span className="text-xl font-semibold">
-                  {Math.round(integrityScore * 10) / 10}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs" style={{ opacity: 0.8 }}>
-                  평균 정합도
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Weekly Narrative - AI Summary */}
-        {weeklyOverview.narrative && (
+        {/* Summary */}
+        {summaryReport.summary && (
           <div
             className="py-5 px-6 rounded-2xl mb-5"
             style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
@@ -94,42 +55,41 @@ export function ReportHeader({
                   className="text-sm leading-relaxed"
                   style={{ opacity: 0.95 }}
                 >
-                  {weeklyOverview.narrative}
+                  {summaryReport.summary}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Top Keywords */}
-        {weeklyOverview.top_keywords &&
-          weeklyOverview.top_keywords.length > 0 && (
-            <div className="mb-5">
-              <p
-                className="text-xs mb-2"
-                style={{ opacity: 0.85, fontWeight: 500 }}
-              >
-                이번 주 키워드
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {weeklyOverview.top_keywords.map((keyword, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 rounded-full text-xs"
-                    style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.25)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    {keyword}
-                  </span>
-                ))}
-              </div>
+        {/* Key Points */}
+        {summaryReport.key_points && summaryReport.key_points.length > 0 && (
+          <div className="mb-5">
+            <p
+              className="text-xs mb-2"
+              style={{ opacity: 0.85, fontWeight: 500 }}
+            >
+              핵심 포인트
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {summaryReport.key_points.map((point, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 rounded-full text-xs"
+                  style={{
+                    backgroundColor: "rgba(255, 255, 255, 0.25)",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  {point}
+                </span>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-        {/* AI Overall Comment */}
-        {weeklyOverview.ai_overall_comment && (
+        {/* Trend Analysis (Pro 전용) */}
+        {summaryReport.trend_analysis && (
           <div
             className="py-4 px-5 rounded-xl"
             style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
@@ -140,10 +100,10 @@ export function ReportHeader({
                   className="text-xs mb-2"
                   style={{ opacity: 0.85, fontWeight: 500 }}
                 >
-                  AI 종합 코멘트
+                  트렌드 분석
                 </p>
-                <p className="text-sm font-medium leading-relaxed">
-                  {weeklyOverview.ai_overall_comment}
+                <p className="text-sm font-medium leading-relaxed whitespace-pre-line">
+                  {summaryReport.trend_analysis}
                 </p>
               </div>
             </div>

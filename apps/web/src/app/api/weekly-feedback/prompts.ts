@@ -14,32 +14,37 @@ function formatDateForEmotion(dateStr: string): string {
 }
 
 /**
- * Weekly Overview 프롬프트 생성
+ * Summary Report 프롬프트 생성
  */
-export function buildWeeklyOverviewPrompt(
+export function buildSummaryReportPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
   weekRange: { start: string; end: string; timezone: string }
 ): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 전체 요약(weekly_overview)을 생성하여 JSON만 출력하세요.\n\n`;
+  console.log("buildSummaryReportPrompt", dailyFeedbacks);
+
+  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 전체 요약(summary_report)을 생성하여 JSON만 출력하세요.\n\n`;
 
   dailyFeedbacks.forEach((feedback, idx) => {
     prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
 
-    if (feedback.narrative_overview?.narrative_summary) {
-      prompt += `요약: ${feedback.narrative_overview.narrative_summary}\n`;
+    // Summary Report 데이터 사용
+    if (feedback.summary_report?.summary) {
+      prompt += `요약: ${feedback.summary_report.summary}\n`;
     }
     if (
-      feedback.narrative_overview?.keywords &&
-      feedback.narrative_overview.keywords.length > 0
+      feedback.summary_report?.key_points &&
+      feedback.summary_report.key_points.length > 0
     ) {
-      prompt += `키워드: ${feedback.narrative_overview.keywords.join(", ")}\n`;
+      prompt += `핵심 포인트: ${feedback.summary_report.key_points.join(
+        ", "
+      )}\n`;
     }
-    if (feedback.narrative_overview?.narrative) {
-      prompt += `이야기: ${feedback.narrative_overview.narrative}\n`;
+    if (feedback.summary_report?.trend_analysis) {
+      prompt += `트렌드 분석: ${feedback.summary_report.trend_analysis}\n`;
     }
   });
 
-  prompt += `\n\n위 데이터를 종합하여 주간 전체 요약을 생성하세요.`;
+  prompt += `\n\n위 데이터를 종합하여 주간 전체 요약(summary_report)을 생성하세요.`;
   return prompt;
 }
 

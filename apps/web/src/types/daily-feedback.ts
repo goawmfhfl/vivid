@@ -60,7 +60,7 @@ export interface MetaOverview {
 
 // 타입별 리포트 구조
 export interface SummaryReport {
-  summary: string; // 전체 요약 (일반: 250자, Pro: 500자)
+  summary: string; // 전체 요약 (일반: 200자, Pro: 300자)
   key_points: string[]; // 핵심 포인트 (일반: 최대 5개, Pro: 최대 10개)
   // Pro 전용 필드
   trend_analysis?: string | null; // 트렌드 분석 (Pro만)

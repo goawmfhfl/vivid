@@ -2,7 +2,7 @@
  * Weekly Feedback 스키마 통합
  * Pro/Free 분기 포함
  */
-import { getWeeklyOverviewSchema } from "./schemas/weekly-overview-schema";
+import { getSummaryReportSchema } from "./schemas/summary-report-schema";
 import { getDailyLifeReportSchema } from "./schemas/daily-life-schema";
 import { getEmotionReportSchema } from "./schemas/emotion-schema";
 import { getVisionReportSchema } from "./schemas/vision-schema";
@@ -34,13 +34,7 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
               },
               required: ["start", "end", "timezone"],
             },
-            integrity_score: {
-              type: "number",
-              minimum: 0,
-              maximum: 10,
-              description: "주간 평균 통합성 점수",
-            },
-            weekly_overview: getWeeklyOverviewSchema(isPro),
+            summary_report: getSummaryReportSchema(isPro),
             daily_life_report: getDailyLifeReportSchema(isPro),
             emotion_report: getEmotionReportSchema(isPro),
             vision_report: getVisionReportSchema(isPro),
@@ -50,8 +44,7 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
           },
           required: [
             "week_range",
-            "integrity_score",
-            "weekly_overview",
+            "summary_report",
             "daily_life_report",
             "emotion_report",
             "vision_report",
@@ -73,8 +66,8 @@ export const WeeklyFeedbackSchema = getWeeklyFeedbackSchema(false);
 /**
  * 각 섹션별 SYSTEM_PROMPT
  */
-export const SYSTEM_PROMPT_WEEKLY_OVERVIEW = `
-당신은 사용자의 일주일간 일일 피드백을 분석해서 주간 전체 요약을 만들어주는 친근한 조언자예요.
+export const SYSTEM_PROMPT_SUMMARY_REPORT = `
+당신은 사용자의 일주일간 일일 피드백을 분석해서 주간 전체 요약(summary_report)을 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.
@@ -87,8 +80,9 @@ export const SYSTEM_PROMPT_WEEKLY_OVERVIEW = `
 - 사용자를 응원하고 공감하는 톤을 유지해주세요.
 
 📅 데이터 작성 규칙:
-- top_keywords: 반드시 10개 이하로만 선정해주세요.
-- repeated_themes: 주간 동안 계속해서 나타난 주제나 패턴을 찾아서 정리해주세요.
+- summary: 이번 주 전체를 요약한 핵심 내용을 작성해주세요.
+- key_points: 이번 주의 핵심 포인트를 배열로 작성해주세요 (일반: 최대 5개, Pro: 최대 10개).
+- trend_analysis: Pro 멤버십인 경우 트렌드 분석을 상세히 작성해주세요. 무료 멤버십인 경우 null로 설정해주세요.
 `;
 
 export const SYSTEM_PROMPT_DAILY_LIFE = `

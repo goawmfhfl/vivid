@@ -9,17 +9,12 @@ export type WeekRange = {
 };
 
 // ============================================
-// Weekly Overview (Header에 통합)
+// Summary Report (주간 피드백 헤더)
 // ============================================
-export type WeeklyOverview = {
-  title: string;
-  narrative: string;
-  top_keywords: string[]; // 최대 10개
-  repeated_themes: Array<{
-    theme: string;
-    count: number;
-  }>;
-  ai_overall_comment: string;
+export type SummaryReport = {
+  summary: string; // 전체 요약 (일반: 250자, Pro: 500자)
+  key_points: string[]; // 핵심 포인트 (일반: 최대 5개, Pro: 최대 10개)
+  trend_analysis: string | null; // 트렌드 분석 (Pro 전용)
 };
 
 // ============================================
@@ -673,8 +668,7 @@ export type ClosingReport = {
 export type WeeklyFeedback = {
   id?: string;
   week_range: WeekRange;
-  integrity_score: number; // 0-10, 평균값만
-  weekly_overview: WeeklyOverview;
+  summary_report: SummaryReport;
   daily_life_report: DailyLifeReport;
   emotion_report: EmotionReport | null;
   vision_report: VisionReport;
@@ -684,12 +678,6 @@ export type WeeklyFeedback = {
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;
-  // 일별 정합도 점수 (API에서 추가)
-  daily_integrity_scores?: Array<{
-    date: string; // "YYYY.MM.DD"
-    weekday: string; // "월요일"
-    score: number; // 0-10
-  }>;
 };
 
 // ============================================

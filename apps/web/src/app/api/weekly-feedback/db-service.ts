@@ -52,7 +52,7 @@ export async function fetchWeeklyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select(
-      "id, week_start, week_end, weekly_overview, is_ai_generated, created_at"
+      "id, week_start, week_end, summary_report, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("week_start", { ascending: false });
@@ -62,18 +62,17 @@ export async function fetchWeeklyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    // weekly_overview 복호화
-    const decryptedOverview = decryptJsonbFields(
-      row.weekly_overview as { title?: string; narrative?: string } | null
-    ) as { title?: string; narrative?: string } | null;
+    // summary_report 복호화
+    const decryptedSummaryReport = decryptJsonbFields(
+      row.summary_report as { summary?: string; key_points?: string[] } | null
+    ) as { summary?: string; key_points?: string[] } | null;
 
-    // title이 있으면 사용하고, 없으면 narrative의 앞부분을 사용하거나 날짜 범위 사용
+    // summary의 앞부분을 사용하거나 날짜 범위 사용
     const title =
-      decryptedOverview?.title ||
-      (decryptedOverview?.narrative
-        ? decryptedOverview.narrative.substring(0, 50) +
-          (decryptedOverview.narrative.length > 50 ? "..." : "")
-        : `${row.week_start} ~ ${row.week_end}`);
+      decryptedSummaryReport?.summary
+        ? decryptedSummaryReport.summary.substring(0, 50) +
+          (decryptedSummaryReport.summary.length > 50 ? "..." : "")
+        : `${row.week_start} ~ ${row.week_end}`;
 
     return {
       id: String(row.id),
@@ -122,8 +121,7 @@ export async function fetchWeeklyFeedbackByDate(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    integrity_score: data.integrity_score as number,
-    weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
+    summary_report: data.summary_report as WeeklyFeedback["summary_report"],
     daily_life_report:
       data.daily_life_report as WeeklyFeedback["daily_life_report"],
     emotion_report:
@@ -177,8 +175,7 @@ export async function fetchWeeklyFeedbackDetail(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    integrity_score: data.integrity_score as number,
-    weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
+    summary_report: data.summary_report as WeeklyFeedback["summary_report"],
     daily_life_report:
       data.daily_life_report as WeeklyFeedback["daily_life_report"],
     emotion_report:
@@ -216,8 +213,7 @@ export async function saveWeeklyFeedback(
         week_start: encryptedFeedback.week_range.start,
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
-        integrity_score: encryptedFeedback.integrity_score,
-        weekly_overview: encryptedFeedback.weekly_overview,
+        summary_report: encryptedFeedback.summary_report,
         daily_life_report: encryptedFeedback.daily_life_report,
         emotion_report: encryptedFeedback.emotion_report ?? null,
         vision_report: encryptedFeedback.vision_report,
