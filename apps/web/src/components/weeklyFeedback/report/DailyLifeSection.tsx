@@ -55,7 +55,8 @@ export function DailyLifeSection({
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
-            backgroundColor: "white",
+            background:
+              "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
             border: "1px solid #E6E4DE",
             borderRadius: "16px",
           }}
@@ -63,7 +64,7 @@ export function DailyLifeSection({
           <div className="flex items-start gap-3 mb-3">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F0F5F0" }}
+              style={{ backgroundColor: "#E8F0E8" }}
             >
               <BookOpen className="w-4 h-4" style={{ color: "#A8BBA8" }} />
             </div>
@@ -90,7 +91,8 @@ export function DailyLifeSection({
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
-            backgroundColor: "white",
+            background:
+              "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
             border: "1px solid #E6E4DE",
             borderRadius: "16px",
           }}
@@ -98,7 +100,7 @@ export function DailyLifeSection({
           <div className="flex items-start gap-3 mb-4">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F0F5F0" }}
+              style={{ backgroundColor: "#E8F0E8" }}
             >
               <TrendingUp className="w-4 h-4" style={{ color: "#A8BBA8" }} />
             </div>
@@ -115,7 +117,9 @@ export function DailyLifeSection({
               >
                 {dailyLifeReport.daily_summaries_trend?.overall_narrative}
               </p>
-              {Array.isArray(dailyLifeReport.daily_summaries_trend.key_highlights) &&
+              {Array.isArray(
+                dailyLifeReport.daily_summaries_trend.key_highlights
+              ) &&
                 dailyLifeReport.daily_summaries_trend.key_highlights.length >
                   0 && (
                   <ul className="space-y-2 mt-3">
@@ -128,7 +132,7 @@ export function DailyLifeSection({
                         >
                           <span
                             className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: COLORS.brand.primary }}
+                            style={{ backgroundColor: "#A8BBA8" }}
                           />
                           <span style={{ lineHeight: "1.6" }}>{highlight}</span>
                         </li>
@@ -184,8 +188,8 @@ export function DailyLifeSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
+                                backgroundColor: "#F0F5F0",
+                                border: "1px solid #E0E5E0",
                               }}
                             >
                               <div className="flex items-start justify-between gap-2 mb-1">
@@ -198,7 +202,7 @@ export function DailyLifeSection({
                                 <span
                                   className="px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0"
                                   style={{
-                                    backgroundColor: "#E8EFE8",
+                                    backgroundColor: "#E8F0E8",
                                     color: "#6B7A6F",
                                   }}
                                 >
@@ -237,8 +241,8 @@ export function DailyLifeSection({
                                 key={idx}
                                 className="px-3 py-1.5 rounded-lg"
                                 style={{
-                                  backgroundColor: "#F0F5F0",
-                                  border: "1px solid #D5E3D5",
+                                  backgroundColor: "#E8F0E8",
+                                  border: "1px solid #E0E5E0",
                                 }}
                               >
                                 <span
@@ -314,8 +318,8 @@ export function DailyLifeSection({
                           key={category}
                           className="p-3 rounded-lg"
                           style={{
-                            backgroundColor: "#FAFAF8",
-                            border: "1px solid #EFE9E3",
+                            backgroundColor: "#F0F5F0",
+                            border: "1px solid #E0E5E0",
                           }}
                         >
                           <p
@@ -333,7 +337,7 @@ export function DailyLifeSection({
                           <div className="flex items-baseline gap-1 mb-2">
                             <span
                               className="text-lg font-bold"
-                              style={{ color: COLORS.brand.primary }}
+                              style={{ color: "#7C9A7C" }}
                             >
                               {data.percentage}%
                             </span>
@@ -418,8 +422,8 @@ export function DailyLifeSection({
                           key={pattern}
                           className="p-3 rounded-lg"
                           style={{
-                            backgroundColor: "#FAFAF8",
-                            border: "1px solid #EFE9E3",
+                            backgroundColor: "#F0F5F0",
+                            border: "1px solid #E0E5E0",
                           }}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -512,13 +516,13 @@ export function DailyLifeSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
+                                backgroundColor: "#F0F5F0",
+                                border: "1px solid #E0E5E0",
                               }}
                             >
                               <p
                                 className="text-xs font-semibold mb-1"
-                                style={{ color: COLORS.brand.primary }}
+                                style={{ color: "#7C9A7C" }}
                               >
                                 {pattern.time_period}
                               </p>
@@ -546,8 +550,8 @@ export function DailyLifeSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #E6E4DE",
                 borderRadius: "16px",
               }}
             >
@@ -610,8 +614,8 @@ export function DailyLifeSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
+                                backgroundColor: "#F0F5F0",
+                                border: "1px solid #E0E5E0",
                               }}
                             >
                               <div className="flex items-start justify-between gap-2 mb-1">
@@ -669,8 +673,8 @@ export function DailyLifeSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #E6E4DE",
                 borderRadius: "16px",
               }}
             >
@@ -679,7 +683,7 @@ export function DailyLifeSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
+                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
                   }}
                 >
                   <Target className="w-5 h-5 text-white" />
@@ -703,8 +707,8 @@ export function DailyLifeSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
+                                backgroundColor: "#F0F5F0",
+                                border: "1px solid #E0E5E0",
                               }}
                             >
                               <p
@@ -736,8 +740,7 @@ export function DailyLifeSection({
                                           <span
                                             className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                             style={{
-                                              backgroundColor:
-                                                COLORS.brand.primary,
+                                              backgroundColor: "#7C9A7C",
                                             }}
                                           />
                                           <span style={{ lineHeight: "1.6" }}>
@@ -795,7 +798,7 @@ export function DailyLifeSection({
           style={{
             background:
               "linear-gradient(135deg, rgba(168, 187, 168, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
-            border: "1px solid #D5E3D5",
+            border: "1px solid #E6E4DE",
             borderRadius: "16px",
           }}
           onClick={() => router.push("/subscription")}
@@ -852,7 +855,7 @@ export function DailyLifeSection({
                 드립니다. 지금 기록을 성장으로 바꿔보세요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
-                <span style={{ color: COLORS.brand.primary }}>
+                <span style={{ color: "#7C9A7C" }}>
                   Pro 멤버십으로 업그레이드
                 </span>
                 <ArrowRight className="w-4 h-4" style={{ color: "#A8BBA8" }} />

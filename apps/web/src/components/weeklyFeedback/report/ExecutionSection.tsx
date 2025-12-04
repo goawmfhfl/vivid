@@ -148,20 +148,20 @@ export function ExecutionSection({
           <Card
             className="p-5 sm:p-6 mb-4"
             style={{
-              backgroundColor: COLORS.background.card,
-              border: "1px solid #E6E4DE",
+              background:
+                "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #D5E3D5",
               borderRadius: "16px",
             }}
           >
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#E8F0F8" }}
+                style={{
+                  background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${EXECUTION_COLOR_DARK} 100%)`,
+                }}
               >
-                <CheckCircle2
-                  className="w-4 h-4"
-                  style={{ color: EXECUTION_COLOR }}
-                />
+                <CheckCircle2 className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
                 <p
@@ -201,20 +201,20 @@ export function ExecutionSection({
           <Card
             className="p-5 sm:p-6 mb-4"
             style={{
-              backgroundColor: COLORS.background.card,
-              border: "1px solid #E6E4DE",
+              background:
+                "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #D5E3D5",
               borderRadius: "16px",
             }}
           >
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#E8F0F8" }}
+                style={{
+                  background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${EXECUTION_COLOR_DARK} 100%)`,
+                }}
               >
-                <XCircle
-                  className="w-4 h-4"
-                  style={{ color: COLORS.brand.secondary }}
-                />
+                <XCircle className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
                 <p
@@ -253,20 +253,20 @@ export function ExecutionSection({
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
-            backgroundColor: COLORS.background.card,
-            border: "1px solid #E6E4DE",
+            background:
+              "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+            border: "1px solid #D5E3D5",
             borderRadius: "16px",
           }}
         >
           <div className="flex items-start gap-3 mb-3">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F0F5F0" }}
+              style={{
+                background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${EXECUTION_COLOR_DARK} 100%)`,
+              }}
             >
-              <Sparkles
-                className="w-4 h-4"
-                style={{ color: EXECUTION_COLOR }}
-              />
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
               <p
@@ -292,7 +292,7 @@ export function ExecutionSection({
           className="p-5 sm:p-6 cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group"
           style={{
             background:
-              "linear-gradient(135deg, rgba(107, 122, 111, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
+              "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
             border: "1px solid #D5E3D5",
             borderRadius: "16px",
           }}
@@ -521,7 +521,7 @@ export function ExecutionSection({
                                     <span
                                       className="px-3 py-1 rounded-full text-xs font-semibold"
                                       style={{
-                                        backgroundColor: "#E8F0F8",
+                                        backgroundColor: "#E8F0E8",
                                         color: EXECUTION_COLOR_DARK,
                                       }}
                                     >
@@ -549,7 +549,7 @@ export function ExecutionSection({
                                                 style={{
                                                   backgroundColor: "white",
                                                   color: COLORS.text.secondary,
-                                                  border: "1px solid #EFE9E3",
+                                                  border: "1px solid #E0E5E0",
                                                 }}
                                               >
                                                 {example}
@@ -739,7 +739,7 @@ export function ExecutionSection({
                                     <span
                                       className="px-3 py-1 rounded-full text-xs font-semibold"
                                       style={{
-                                        backgroundColor: "#E8F0F8",
+                                        backgroundColor: "#E8F0E8",
                                         color: COLORS.brand.primary,
                                       }}
                                     >
@@ -767,7 +767,7 @@ export function ExecutionSection({
                                                 style={{
                                                   backgroundColor: "white",
                                                   color: COLORS.text.secondary,
-                                                  border: "1px solid #EFE9E3",
+                                                  border: "1px solid #E0E5E0",
                                                 }}
                                               >
                                                 {example}
@@ -861,7 +861,7 @@ export function ExecutionSection({
                                 <span
                                   className="px-2 py-0.5 rounded-full text-xs font-semibold"
                                   style={{
-                                    backgroundColor: "#E8F0F8",
+                                    backgroundColor: "#E8F0E8",
                                     color: EXECUTION_COLOR_DARK,
                                   }}
                                 >
@@ -989,7 +989,7 @@ export function ExecutionSection({
                                   <span
                                     className="px-2 py-0.5 rounded-full text-xs font-semibold"
                                     style={{
-                                      backgroundColor: "#E8F0F8",
+                                      backgroundColor: "#E8F0E8",
                                       color: EXECUTION_COLOR_DARK,
                                     }}
                                   >
@@ -1224,7 +1224,7 @@ export function ExecutionSection({
                                       <span
                                         className="text-xs px-2 py-0.5 rounded"
                                         style={{
-                                          backgroundColor: "#E8F0F8",
+                                          backgroundColor: "#E8F0E8",
                                           color: EXECUTION_COLOR_DARK,
                                           fontWeight: 500,
                                         }}
@@ -1266,7 +1266,7 @@ export function ExecutionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                 border: "1px solid #D5E3D5",
                 borderRadius: "16px",
               }}
@@ -1275,8 +1275,7 @@ export function ExecutionSection({
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
-                    background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                    background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${EXECUTION_COLOR_DARK} 100%)`,
                   }}
                 >
                   <Sparkles className="w-5 h-5 text-white" />

@@ -369,8 +369,8 @@ export function VisionSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#E8F0F8",
-                                border: "1px solid #C5D5E5",
+                                backgroundColor: "#FAFAF8",
+                                border: "1px solid #EFE9E3",
                               }}
                             >
                               <div className="flex items-center justify-between mb-2">
