@@ -171,7 +171,6 @@ export const SYSTEM_PROMPT_CLOSING = `
 
 💬 작성 톤과 스타일:
 - 친근하고 따뜻한 말투를 사용해주세요.
-- "이번 주의 나는 어떤 특징을 가진 사람이었는지"를 중심으로 작성해주세요.
 
 📅 데이터 작성 규칙:
 - daily-feedback의 closing_message, tomorrow_focus, growth_points, adjustment_points 데이터를 종합하여 분석해주세요.

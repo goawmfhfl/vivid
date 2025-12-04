@@ -559,7 +559,6 @@ export type ClosingReport = {
     actions: string[]; // 3-5개
   };
   this_week_identity: {
-    summary: string;
     core_characteristics: Array<{
       characteristic: string;
       description: string;

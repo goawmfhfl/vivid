@@ -40,7 +40,7 @@ export function ClosingSection({
       <div className="flex items-center gap-2 mb-3 sm:mb-4">
         <div
           className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#A8BBA8" }}
+          style={{ backgroundColor: "#6B7A6F" }}
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
@@ -69,71 +69,72 @@ export function ClosingSection({
         </Card>
       )}
 
-      {/* Next Week Objective */}
-      {closingReport.call_to_action?.next_week_objective && (
+      {/* Next Week Objective and Actions - Combined */}
+      {(closingReport.call_to_action?.next_week_objective ||
+        (Array.isArray(closingReport.call_to_action?.actions) &&
+          closingReport.call_to_action.actions.length > 0)) && (
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
-            backgroundColor: "white",
-            border: "1px solid #EFE9E3",
+            background:
+              "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+            border: "1px solid #D5E3D5",
             borderRadius: "16px",
           }}
         >
-          <p
-            className="text-xs mb-2.5 sm:mb-3"
-            style={{ color: COLORS.text.secondary }}
-          >
-            다음 주 방향
-          </p>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: COLORS.text.primary }}
-          >
-            {closingReport.call_to_action.next_week_objective}
-          </p>
+          {closingReport.call_to_action?.next_week_objective && (
+            <div className="mb-4">
+              <p
+                className="text-xs mb-2.5 sm:mb-3 font-semibold"
+                style={{ color: COLORS.text.secondary }}
+              >
+                다음 주 방향
+              </p>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: COLORS.text.primary }}
+              >
+                {closingReport.call_to_action.next_week_objective}
+              </p>
+            </div>
+          )}
+          {Array.isArray(closingReport.call_to_action?.actions) &&
+            closingReport.call_to_action.actions.length > 0 && (
+              <div>
+                <p
+                  className="text-xs mb-2.5 sm:mb-3 font-semibold"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  다음 주 실행 계획
+                </p>
+                <ul className="space-y-2.5">
+                  {closingReport.call_to_action.actions.map((action, index) => (
+                    <li key={index} className="flex items-start gap-2.5">
+                      <div
+                        className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{
+                          borderColor: "#6B7A6F",
+                          backgroundColor: "white",
+                        }}
+                      >
+                        <CheckCircle2
+                          className="w-3 h-3"
+                          style={{ color: "#6B7A6F" }}
+                        />
+                      </div>
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {action}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
         </Card>
       )}
-
-      {/* Call to Action - Checklist Style */}
-      {Array.isArray(closingReport.call_to_action?.actions) &&
-        closingReport.call_to_action.actions.length > 0 && (
-          <Card
-            className="p-5 sm:p-6 mb-4"
-            style={{
-              backgroundColor: "#F0F5F0",
-              border: "1px solid #D5E3D5",
-              borderRadius: "16px",
-            }}
-          >
-            <p
-              className="text-xs mb-2.5 sm:mb-3"
-              style={{ color: COLORS.text.secondary }}
-            >
-              다음 주 실행 계획
-            </p>
-            <ul className="space-y-2.5">
-              {closingReport.call_to_action.actions.map((action, index) => (
-                <li key={index} className="flex items-start gap-2.5">
-                  <div
-                    className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style={{ borderColor: "#A8BBA8", backgroundColor: "white" }}
-                  >
-                    <CheckCircle2
-                      className="w-3 h-3"
-                      style={{ color: "#A8BBA8" }}
-                    />
-                  </div>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {action}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
 
       {/* Free 모드: Pro 업그레이드 유도 */}
       {!isPro && (
@@ -141,7 +142,7 @@ export function ClosingSection({
           className="p-5 sm:p-6 cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group"
           style={{
             background:
-              "linear-gradient(135deg, rgba(168, 187, 168, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
+              "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
             border: "1px solid #D5E3D5",
             borderRadius: "16px",
           }}
@@ -152,7 +153,7 @@ export function ClosingSection({
             className="absolute top-0 right-0 w-32 h-32 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
             style={{
               background:
-                "radial-gradient(circle, rgba(168, 187, 168, 0.8) 0%, transparent 70%)",
+                "radial-gradient(circle, rgba(107, 122, 111, 0.8) 0%, transparent 70%)",
             }}
           />
 
@@ -161,8 +162,8 @@ export function ClosingSection({
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.3) 0%, rgba(168, 187, 168, 0.15) 100%)",
-                border: "1px solid rgba(168, 187, 168, 0.3)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.3) 0%, rgba(107, 122, 111, 0.15) 100%)",
+                border: "1px solid rgba(107, 122, 111, 0.3)",
               }}
             >
               <Lock className="w-5 h-5" style={{ color: "#A8BBA8" }} />
@@ -179,7 +180,7 @@ export function ClosingSection({
                 <span
                   className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                   style={{
-                    backgroundColor: "rgba(168, 187, 168, 0.2)",
+                    backgroundColor: "rgba(107, 122, 111, 0.2)",
                     color: "#6B7A6F",
                     letterSpacing: "0.5px",
                   }}
@@ -212,47 +213,8 @@ export function ClosingSection({
       {/* Pro 모드: 상세 분석 표시 */}
       {isPro && closingReport.this_week_identity && (
         <div className="space-y-6">
-          {/* This Week Identity Summary */}
-          {closingReport.this_week_identity.summary && (
-            <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
-                  }}
-                >
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    이번 주의 나는
-                  </p>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                  >
-                    {closingReport.this_week_identity.summary}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
           {/* Characteristics Radar Chart */}
-          {closingReport.this_week_identity.visualization
+          {closingReport.this_week_identity?.visualization
             ?.characteristics_radar && (
             <Card
               className="p-5 sm:p-6 relative overflow-hidden group"
@@ -300,13 +262,32 @@ export function ClosingSection({
                         <PolarRadiusAxis
                           angle={90}
                           domain={[0, 10]}
-                          tick={{ fontSize: 10, fill: COLORS.text.secondary }}
+                          tickCount={6}
+                          allowDataOverflow={false}
+                          tick={{
+                            fontSize: 10,
+                            fill: COLORS.text.secondary,
+                            fontWeight: 500,
+                          }}
+                          tickFormatter={(value) => {
+                            // 정수 값만 표시 (0, 2, 2, 4, 6, 8)
+                            const intValue = Math.round(value);
+                            if (intValue === 0 || intValue === 10)
+                              return intValue.toString();
+                            if (
+                              intValue % 2 === 0 &&
+                              intValue > 0 &&
+                              intValue < 10
+                            )
+                              return intValue.toString();
+                            return "";
+                          }}
                         />
                         <Radar
                           name="특성"
                           dataKey="value"
                           stroke="#6B7A6F"
-                          fill="#A8BBA8"
+                          fill="#6B7A6F"
                           fillOpacity={0.6}
                           strokeWidth={2}
                         />
@@ -339,7 +320,7 @@ export function ClosingSection({
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
                   background:
-                    "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                    "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                   border: "1px solid #D5E3D5",
                   borderRadius: "16px",
                 }}
@@ -349,7 +330,7 @@ export function ClosingSection({
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                     style={{
                       background:
-                        "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                        "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
                     }}
                   >
                     <Sparkles className="w-5 h-5 text-white" />
@@ -476,7 +457,7 @@ export function ClosingSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                 border: "1px solid #D5E3D5",
                 borderRadius: "16px",
               }}
@@ -486,7 +467,7 @@ export function ClosingSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
                   }}
                 >
                   <Zap className="w-5 h-5 text-white" />
@@ -516,7 +497,7 @@ export function ClosingSection({
                           <div
                             className="absolute left-0 top-1.5 w-4 h-4 rounded-full flex items-center justify-center"
                             style={{
-                              backgroundColor: "#A8BBA8",
+                              backgroundColor: "#6B7A6F",
                               border: "2px solid white",
                               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                             }}
@@ -565,7 +546,7 @@ export function ClosingSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                 border: "1px solid #D5E3D5",
                 borderRadius: "16px",
               }}
@@ -575,7 +556,7 @@ export function ClosingSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #E5B96B 0%, #D4A85A 100%)",
+                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
                   }}
                 >
                   <Star className="w-5 h-5 text-white" />
@@ -742,7 +723,7 @@ export function ClosingSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                 border: "1px solid #D5E3D5",
                 borderRadius: "16px",
               }}
@@ -752,7 +733,7 @@ export function ClosingSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
                   }}
                 >
                   <TrendingUp className="w-5 h-5 text-white" />
@@ -799,7 +780,7 @@ export function ClosingSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
                 border: "1px solid #D5E3D5",
                 borderRadius: "16px",
               }}
@@ -809,7 +790,7 @@ export function ClosingSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
                   }}
                 >
                   <Target className="w-5 h-5 text-white" />
@@ -870,7 +851,7 @@ export function ClosingSection({
                                   <span
                                     className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                     style={{
-                                      backgroundColor: "#A3BFD9",
+                                      backgroundColor: "#6B7A6F",
                                     }}
                                   />
                                   <p

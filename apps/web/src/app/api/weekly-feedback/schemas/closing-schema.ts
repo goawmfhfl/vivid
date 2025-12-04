@@ -32,10 +32,6 @@ export function getClosingReportSchema(isPro: boolean) {
         type: "object",
         additionalProperties: false,
         properties: {
-          summary: {
-            type: "string",
-            maxLength: isPro ? 300 : 200,
-          },
           core_characteristics: {
             type: "array",
             items: {
@@ -213,7 +209,6 @@ export function getClosingReportSchema(isPro: boolean) {
         },
         required: isPro
           ? [
-              "summary",
               "core_characteristics",
               "growth_story",
               "strengths_highlighted",
@@ -222,7 +217,6 @@ export function getClosingReportSchema(isPro: boolean) {
               "visualization",
             ]
           : [
-              "summary",
               "core_characteristics",
               "growth_story",
               "strengths_highlighted",

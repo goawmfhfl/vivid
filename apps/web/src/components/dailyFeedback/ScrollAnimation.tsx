@@ -12,6 +12,30 @@ export function ScrollAnimation({ children, delay = 0 }: ScrollAnimationProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const currentRef = ref.current;
+    if (!currentRef) return;
+
+    // 초기 마운트 시 이미 뷰포트에 있는지 확인
+    const checkInitialVisibility = () => {
+      const rect = currentRef.getBoundingClientRect();
+      const windowHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+      const isInViewport = rect.top < windowHeight && rect.bottom > 0;
+
+      if (isInViewport) {
+        setTimeout(() => {
+          setIsVisible(true);
+        }, delay);
+        return true;
+      }
+      return false;
+    };
+
+    // 이미 보이는 상태면 옵저버 설정 불필요
+    if (checkInitialVisibility()) {
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -24,20 +48,15 @@ export function ScrollAnimation({ children, delay = 0 }: ScrollAnimationProps) {
         });
       },
       {
-        threshold: 0.15,
-        rootMargin: "0px 0px -80px 0px",
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
       }
     );
 
-    const currentRef = ref.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      observer.disconnect();
     };
   }, [delay]);
 
