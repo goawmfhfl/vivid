@@ -87,14 +87,11 @@ export function mapDailyFeedbackRowToReport(
   const adjustmentPoints = finalReport?.adjustment_points ?? null;
 
   // narrative_summary는 summary_report의 summary를 사용
-  // integrity_score는 narrative_overview의 integrity_score를 사용 (없으면 0)
   const narrativeSummary = summarySummary;
-  const integrityScore = toNumber(row.narrative_overview?.integrity_score) ?? 0;
 
   return {
     date: row.report_date,
     dayOfWeek: row.day_of_week ?? "",
-    integrity_score: integrityScore,
     narrative_summary: narrativeSummary,
 
     // Summary Report 데이터

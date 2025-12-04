@@ -3,17 +3,8 @@
 import { Sparkles, Lock } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
-import { useCountUp } from "@/hooks/useCountUp";
 
 export function FinalSection({ view, isPro = false }: SectionProps) {
-  const [displayScore, countRef] = useCountUp({
-    targetValue: view.integrity_score ?? 0,
-    duration: 1000,
-    delay: 900,
-    triggerOnVisible: true,
-    threshold: 0.3,
-  });
-
   // 내일의 포커스를 리스트로 파싱
   const focusItems = (() => {
     const s = view.tomorrow_focus ?? "";
@@ -48,54 +39,6 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
           오늘의 마무리
         </h2>
       </div>
-      <Card
-        ref={countRef}
-        className="p-6 mb-4"
-        style={{
-          background: "linear-gradient(135deg, #6B7A6F 0%, #55685E 100%)",
-          color: "white",
-          border: "none",
-        }}
-      >
-        <div className="mb-3">
-          <p
-            className="text-xs"
-            style={{
-              opacity: 0.9,
-              marginBottom: "0.5rem",
-            }}
-          >
-            하루 점수
-          </p>
-          <div className="flex items-center gap-6">
-            <p
-              className="text-4xl font-semibold"
-              style={{
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-            >
-              {displayScore}
-            </p>
-            <div
-              className="relative flex-1 overflow-hidden rounded-full"
-              style={{
-                height: "8px",
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${displayScore * 10}%`,
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  transition: "width 0.1s linear",
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
       {view.closing_message && (
         <Card
           className="p-6 mb-4"
@@ -220,8 +163,8 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
                 }}
               >
                 Pro 멤버십에서는 성장 포인트와 조정 포인트를 리스트로 정리해
-                드리고, 오늘 점수가 나온 이유까지 함께 정리해 드립니다. 기록을
-                성장으로 바꾸는 당신만의 마무리 리포트를 확인해보세요.
+                드립니다. 기록을 성장으로 바꾸는 당신만의 마무리 리포트를
+                확인해보세요.
               </p>
             </div>
           </div>

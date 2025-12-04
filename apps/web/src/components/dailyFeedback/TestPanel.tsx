@@ -48,11 +48,10 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       name: "Header",
       component: "HeaderSection",
       description:
-        "날짜, 요일, 점수, 전체 요약, 핵심 포인트 (Pro/Free 차이는 품질로만 구분)",
+        "날짜, 요일, 전체 요약, 핵심 포인트 (Pro/Free 차이는 품질로만 구분)",
       fields: [
         { name: "date", path: "view.date", isPro: false },
         { name: "dayOfWeek", path: "view.dayOfWeek", isPro: false },
-        { name: "integrity_score", path: "view.integrity_score", isPro: false },
         {
           name: "narrative_summary",
           path: "view.narrative_summary",
