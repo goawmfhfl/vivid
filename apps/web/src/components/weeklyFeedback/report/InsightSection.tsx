@@ -7,6 +7,7 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { InsightReport } from "@/types/weekly-feedback";
@@ -36,14 +37,16 @@ type InsightSectionProps = {
 const INSIGHT_COLOR = "#E5B96B";
 const INSIGHT_COLOR_DARK = "#D4A85A";
 const INSIGHT_COLOR_LIGHT = "#F5E6C8";
+// 잘한 점 섹션 배경색(#E6E4DE, #FAFAF8)과 조화로운 차트 색상 팔레트
+// 베이지/크림 계열과 그린 계열이 자연스럽게 어울리는 색상
 const INSIGHT_COLORS = [
-  "#E5B96B",
-  "#D4A85A",
-  "#C9A052",
-  "#B89A7A",
-  "#A78A6A",
-  "#9A7C5A",
-  "#8A6C4A",
+  "#A8BBA8", // 라이트 그린 - 잘한 점 섹션과 조화
+  "#B89A7A", // 베이지 브라운 - 배경색과 조화
+  "#9DB29D", // 미드 그린 - 자연스러운 전환
+  "#D4C4B0", // 웜 베이지 - 크림 계열과 조화
+  "#8FA38F", // 다크 그린 - 깊이감
+  "#E6D5C3", // 라이트 크림 - 부드러운 톤
+  "#7C9A7C", // 브랜드 그린 - 일관성 유지
 ];
 
 // 모던한 차트 스타일을 위한 커스텀 컴포넌트
@@ -761,25 +764,76 @@ export function InsightSection({
                         border: `1px solid ${COLORS.border.light}`,
                       }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="text-xs font-medium"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          정렬 점수
-                        </span>
-                        <span
-                          className="text-2xl font-bold"
-                          style={{ color: INSIGHT_COLOR }}
-                        >
-                          {
-                            insightReport.insight_action_alignment
-                              .alignment_score.value
-                          }
-                        </span>
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            정렬 점수
+                          </span>
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: INSIGHT_COLOR }}
+                          >
+                            {(() => {
+                              const score =
+                                insightReport.insight_action_alignment
+                                  .alignment_score.value;
+                              // 정렬 점수는 별도로 처리: 0-1 사이면 비율로 해석, 1-5 사이면 5점 만점, 5-100 사이면 이미 100점 만점
+                              let percentage: number;
+                              if (score > 0 && score <= 1) {
+                                // 0-1 사이: 비율로 해석 (0.9 = 90점)
+                                percentage = Math.round(score * 100);
+                              } else if (score > 1 && score <= 5) {
+                                // 1-5 사이: 5점 만점으로 해석 (4.5 / 5 = 90점)
+                                percentage = Math.round((score / 5) * 100);
+                              } else {
+                                // 5-100 사이: 이미 100점 만점
+                                percentage = Math.round(score);
+                              }
+                              return `${percentage} / 100`;
+                            })()}
+                          </span>
+                        </div>
+                        {/* 프로그레스 바 */}
+                        <div className="relative">
+                          <div
+                            className="w-full h-4 rounded-full overflow-hidden"
+                            style={{
+                              backgroundColor: COLORS.border.light,
+                            }}
+                          >
+                            <div
+                              className="h-full rounded-full transition-all duration-500 relative"
+                              style={{
+                                width: `${(() => {
+                                  const score =
+                                    insightReport.insight_action_alignment
+                                      .alignment_score.value;
+                                  // 정렬 점수는 별도로 처리: 0-1 사이면 비율로 해석, 1-5 사이면 5점 만점, 5-100 사이면 이미 100점 만점
+                                  let percentage: number;
+                                  if (score > 0 && score <= 1) {
+                                    // 0-1 사이: 비율로 해석 (0.9 = 90%)
+                                    percentage = score * 100;
+                                  } else if (score > 1 && score <= 5) {
+                                    // 1-5 사이: 5점 만점으로 해석 (4.5 / 5 = 90%)
+                                    percentage = (score / 5) * 100;
+                                  } else {
+                                    // 5-100 사이: 이미 100점 만점
+                                    percentage = score;
+                                  }
+                                  return Math.min(100, Math.max(0, percentage));
+                                })()}%`,
+                                background: `linear-gradient(90deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
+                                boxShadow: `0 2px 4px ${INSIGHT_COLOR}40`,
+                              }}
+                            />
+                          </div>
+                        </div>
                       </div>
                       <p
-                        className="text-xs mt-2 leading-relaxed"
+                        className="text-xs leading-relaxed"
                         style={{
                           color: COLORS.text.secondary,
                           lineHeight: "1.6",

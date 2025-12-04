@@ -123,7 +123,7 @@ export function VisionSection({
                   className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                   style={{
                     backgroundColor: "rgba(163, 191, 217, 0.2)",
-                    color: "#6B7A6F",
+                    color: "#5A7A9A",
                     letterSpacing: "0.5px",
                   }}
                 >
@@ -162,7 +162,7 @@ export function VisionSection({
               style={{
                 background:
                   "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -238,8 +238,8 @@ export function VisionSection({
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
                   background:
-                    "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #D5E3D5",
+                    "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #C5D5E5",
                   borderRadius: "16px",
                 }}
               >
@@ -248,7 +248,7 @@ export function VisionSection({
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                     style={{
                       background:
-                        "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                     }}
                   >
                     <Lightbulb className="w-5 h-5 text-white" />
@@ -281,8 +281,8 @@ export function VisionSection({
                               <span
                                 className="px-2 py-0.5 rounded text-xs"
                                 style={{
-                                  backgroundColor: "#E8EFE8",
-                                  color: "#6B7A6F",
+                                  backgroundColor: "#E8F0F8",
+                                  color: "#5A7A9A",
                                 }}
                               >
                                 {keyword.days}일
@@ -305,8 +305,8 @@ export function VisionSection({
                                         key={rIdx}
                                         className="px-2 py-0.5 rounded text-xs"
                                         style={{
-                                          backgroundColor: "#F0F5F0",
-                                          color: "#6B7A6F",
+                                          backgroundColor: "#E8F0F8",
+                                          color: "#5A7A9A",
                                         }}
                                       >
                                         {related}
@@ -330,8 +330,8 @@ export function VisionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -340,7 +340,7 @@ export function VisionSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                   }}
                 >
                   <BarChart3 className="w-5 h-5 text-white" />
@@ -369,8 +369,8 @@ export function VisionSection({
                               key={idx}
                               className="p-3 rounded-lg"
                               style={{
-                                backgroundColor: "#F0F5F0",
-                                border: "1px solid #D5E3D5",
+                                backgroundColor: "#E8F0F8",
+                                border: "1px solid #C5D5E5",
                               }}
                             >
                               <div className="flex items-center justify-between mb-2">
@@ -383,8 +383,8 @@ export function VisionSection({
                                 <span
                                   className="px-2 py-0.5 rounded text-xs"
                                   style={{
-                                    backgroundColor: "#E8EFE8",
-                                    color: "#6B7A6F",
+                                    backgroundColor: "#D5E5F0",
+                                    color: "#5A7A9A",
                                   }}
                                 >
                                   {category.count}개
@@ -399,8 +399,8 @@ export function VisionSection({
                                         className="px-2 py-0.5 rounded text-xs"
                                         style={{
                                           backgroundColor: "white",
-                                          color: "#6B7A6F",
-                                          border: "1px solid #D5E3D5",
+                                          color: "#5A7A9A",
+                                          border: "1px solid #C5D5E5",
                                         }}
                                       >
                                         {example}
@@ -432,8 +432,8 @@ export function VisionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -442,7 +442,7 @@ export function VisionSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #E5B96B 0%, #D4A85A 100%)",
+                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                   }}
                 >
                   <Star className="w-5 h-5 text-white" />
@@ -486,8 +486,8 @@ export function VisionSection({
                                 <span
                                   className="px-2 py-0.5 rounded text-xs"
                                   style={{
-                                    backgroundColor: "#FFF9E6",
-                                    color: "#B89A7A",
+                                    backgroundColor: "#E8F0F8",
+                                    color: "#5A7A9A",
                                   }}
                                 >
                                   {trait.frequency}회
@@ -517,8 +517,8 @@ export function VisionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -527,7 +527,7 @@ export function VisionSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
+                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                   }}
                 >
                   <Sparkles className="w-5 h-5 text-white" />
@@ -564,7 +564,7 @@ export function VisionSection({
                               <span
                                 className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                 style={{
-                                  backgroundColor: "#B89A7A",
+                                  backgroundColor: "#A3BFD9",
                                 }}
                               />
                               <div className="flex-1">
@@ -607,8 +607,8 @@ export function VisionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -617,7 +617,7 @@ export function VisionSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #6B7A6F 0%, #5A6A5F 100%)",
+                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                   }}
                 >
                   <Zap className="w-5 h-5 text-white" />
@@ -661,8 +661,8 @@ export function VisionSection({
                                 <span
                                   className="px-2 py-0.5 rounded text-xs"
                                   style={{
-                                    backgroundColor: "#E8EFE8",
-                                    color: "#6B7A6F",
+                                    backgroundColor: "#E8F0F8",
+                                    color: "#5A7A9A",
                                   }}
                                 >
                                   {theme.frequency}회
@@ -700,8 +700,8 @@ export function VisionSection({
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(168, 187, 168, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -710,7 +710,7 @@ export function VisionSection({
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                   }}
                 >
                   <CheckCircle2 className="w-5 h-5 text-white" />
@@ -732,29 +732,66 @@ export function VisionSection({
                   )}
                   {visionReport.vision_action_alignment.alignment_score && (
                     <div
-                      className="mb-4 p-3 rounded-lg"
-                      style={{ backgroundColor: "#F0F5F0" }}
+                      className="mb-4 p-4 rounded-lg"
+                      style={{
+                        backgroundColor: COLORS.background.base,
+                        border: `1px solid ${COLORS.border.light}`,
+                      }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className="text-xs font-medium"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          정렬 점수
-                        </span>
-                        <span
-                          className="text-lg font-bold"
-                          style={{ color: COLORS.brand.primary }}
-                        >
-                          {
-                            visionReport.vision_action_alignment.alignment_score
-                              .value
-                          }
-                        </span>
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            정렬 점수
+                          </span>
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: "#5A7A9A" }}
+                          >
+                            {(() => {
+                              const score =
+                                visionReport.vision_action_alignment
+                                  .alignment_score.value;
+                              // 비전-행동 정렬 점수는 0-100 사이의 값
+                              const percentage = Math.round(score);
+                              return `${percentage} / 100`;
+                            })()}
+                          </span>
+                        </div>
+                        {/* 프로그레스 바 */}
+                        <div className="relative">
+                          <div
+                            className="w-full h-4 rounded-full overflow-hidden"
+                            style={{
+                              backgroundColor: COLORS.border.light,
+                            }}
+                          >
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.min(
+                                  100,
+                                  Math.max(
+                                    0,
+                                    visionReport.vision_action_alignment
+                                      .alignment_score.value
+                                  )
+                                )}%`,
+                                background: `linear-gradient(90deg, #A3BFD9 0%, #8FA8C7 100%)`,
+                                boxShadow: `0 2px 4px rgba(163, 191, 217, 0.4)`,
+                              }}
+                            />
+                          </div>
+                        </div>
                       </div>
                       <p
-                        className="text-xs"
-                        style={{ color: COLORS.text.secondary }}
+                        className="text-xs leading-relaxed"
+                        style={{
+                          color: COLORS.text.secondary,
+                          lineHeight: "1.6",
+                        }}
                       >
                         {
                           visionReport.vision_action_alignment.alignment_score
@@ -780,9 +817,9 @@ export function VisionSection({
                                 key={idx}
                                 className="px-3 py-1.5 rounded-lg text-xs"
                                 style={{
-                                  backgroundColor: "#F0F5F0",
-                                  color: "#6B7A6F",
-                                  border: "1px solid #D5E3D5",
+                                  backgroundColor: "#E8F0F8",
+                                  color: "#5A7A9A",
+                                  border: "1px solid #C5D5E5",
                                 }}
                               >
                                 {strength}
@@ -812,7 +849,7 @@ export function VisionSection({
                                 <span
                                   className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                   style={{
-                                    backgroundColor: "#B89A7A",
+                                    backgroundColor: "#A3BFD9",
                                   }}
                                 />
                                 <span style={{ lineHeight: "1.6" }}>{gap}</span>
@@ -834,7 +871,7 @@ export function VisionSection({
               style={{
                 background:
                   "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #D5E3D5",
+                border: "1px solid #C5D5E5",
                 borderRadius: "16px",
               }}
             >
@@ -922,8 +959,8 @@ export function VisionSection({
                                 className="px-3 py-1.5 rounded-lg text-xs"
                                 style={{
                                   backgroundColor: "#E8F0F8",
-                                  color: "#6B7A6F",
-                                  border: "1px solid #D5E3D5",
+                                  color: "#5A7A9A",
+                                  border: "1px solid #C5D5E5",
                                 }}
                               >
                                 {momentum}
