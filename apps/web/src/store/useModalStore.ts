@@ -6,6 +6,11 @@ interface LoadingModalState {
   isOpen: boolean;
   message: string;
   isManual: boolean; // 수동으로 열린 경우 자동 닫기 방지
+  progress?: {
+    current: number;
+    total: number;
+    currentStep: string;
+  };
 }
 
 interface ErrorModalState {
@@ -26,12 +31,31 @@ interface FeedbackGenerationState {
   finishGenerating: (date: string) => void;
 }
 
+interface WeeklyFeedbackProgress {
+  weekStart: string;
+  current: number;
+  total: number;
+  currentStep: string;
+}
+
+interface DailyFeedbackProgress {
+  date: string;
+  current: number;
+  total: number;
+  currentStep: string;
+}
+
 interface ModalStore {
   // Loading Modal
   loadingModal: LoadingModalState;
   openLoadingModal: (message?: string, isManual?: boolean) => void;
   closeLoadingModal: () => void;
   setLoadingMessage: (message: string) => void;
+  setLoadingProgress: (progress: {
+    current: number;
+    total: number;
+    currentStep: string;
+  }) => void;
 
   // Error Modal
   errorModal: ErrorModalState;
@@ -47,6 +71,24 @@ interface ModalStore {
 
   // Feedback Generation State
   feedbackGeneration: FeedbackGenerationState;
+
+  // Weekly Feedback Progress (전역 상태)
+  weeklyFeedbackProgress: Record<string, WeeklyFeedbackProgress>; // weekStart를 키로 사용
+  setWeeklyFeedbackProgress: (
+    weekStart: string,
+    progress: WeeklyFeedbackProgress | null
+  ) => void;
+  clearWeeklyFeedbackProgress: (weekStart: string) => void;
+  clearAllWeeklyFeedbackProgress: () => void;
+
+  // Daily Feedback Progress (전역 상태)
+  dailyFeedbackProgress: Record<string, DailyFeedbackProgress>; // date를 키로 사용
+  setDailyFeedbackProgress: (
+    date: string,
+    progress: DailyFeedbackProgress | null
+  ) => void;
+  clearDailyFeedbackProgress: (date: string) => void;
+  clearAllDailyFeedbackProgress: () => void;
 }
 
 const defaultLoadingMessage = "처리 중입니다...";
@@ -82,6 +124,15 @@ export const useModalStore = create<ModalStore>((set) => ({
       loadingModal: {
         ...state.loadingModal,
         message,
+      },
+    })),
+
+  setLoadingProgress: (progress) =>
+    set((state) => ({
+      loadingModal: {
+        ...state.loadingModal,
+        progress,
+        message: `${progress.currentStep} 생성 중... (${progress.current}/${progress.total})`,
       },
     })),
 
@@ -178,4 +229,53 @@ export const useModalStore = create<ModalStore>((set) => ({
         };
       }),
   },
+
+  // Weekly Feedback Progress 초기 상태
+  weeklyFeedbackProgress: {},
+
+  setWeeklyFeedbackProgress: (weekStart, progress) =>
+    set((state) => {
+      if (progress === null) {
+        const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
+        return { weeklyFeedbackProgress: rest };
+      }
+      return {
+        weeklyFeedbackProgress: {
+          ...state.weeklyFeedbackProgress,
+          [weekStart]: progress,
+        },
+      };
+    }),
+
+  clearWeeklyFeedbackProgress: (weekStart) =>
+    set((state) => {
+      const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
+      return { weeklyFeedbackProgress: rest };
+    }),
+
+  clearAllWeeklyFeedbackProgress: () => set({ weeklyFeedbackProgress: {} }),
+
+  // Daily Feedback Progress 초기 상태
+  dailyFeedbackProgress: {},
+  setDailyFeedbackProgress: (date, progress) =>
+    set((state) => {
+      if (progress === null) {
+        const { [date]: _, ...rest } = state.dailyFeedbackProgress;
+        return { dailyFeedbackProgress: rest };
+      }
+      return {
+        dailyFeedbackProgress: {
+          ...state.dailyFeedbackProgress,
+          [date]: progress,
+        },
+      };
+    }),
+
+  clearDailyFeedbackProgress: (date) =>
+    set((state) => {
+      const { [date]: _, ...rest } = state.dailyFeedbackProgress;
+      return { dailyFeedbackProgress: rest };
+    }),
+
+  clearAllDailyFeedbackProgress: () => set({ dailyFeedbackProgress: {} }),
 }));

@@ -68,11 +68,10 @@ export async function fetchWeeklyFeedbackList(
     ) as { summary?: string; key_points?: string[] } | null;
 
     // summary의 앞부분을 사용하거나 날짜 범위 사용
-    const title =
-      decryptedSummaryReport?.summary
-        ? decryptedSummaryReport.summary.substring(0, 50) +
-          (decryptedSummaryReport.summary.length > 50 ? "..." : "")
-        : `${row.week_start} ~ ${row.week_end}`;
+    const title = decryptedSummaryReport?.summary
+      ? decryptedSummaryReport.summary.substring(0, 50) +
+        (decryptedSummaryReport.summary.length > 50 ? "..." : "")
+      : `${row.week_start} ~ ${row.week_end}`;
 
     return {
       id: String(row.id),

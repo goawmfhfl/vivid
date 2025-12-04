@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -6,16 +6,20 @@ import { RecordForm } from "./home/RecordForm";
 import { RecordList } from "./home/RecordList";
 import { EditRecordDialog } from "./home/EditRecordDialog";
 import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
-import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
+import { CircularProgress } from "./ui/CircularProgress";
+import { getCurrentUserId } from "@/hooks/useCurrentUser";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants";
 
 export function Home() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const {
     data: records = [],
@@ -27,6 +31,9 @@ export function Home() {
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const currentEsRef = useRef<EventSource | null>(null);
+
   // KST 기준으로 오늘 날짜 계산
   const todayIso = getKSTDateString();
 
@@ -55,9 +62,6 @@ export function Home() {
     setDeletingRecordId(id);
   };
 
-  const { mutateAsync: createDailyFeedback, isPending } =
-    useCreateDailyFeedback();
-
   // 오늘 자 피드백 존재 여부 조회
   const { data: todayFeedback } = useGetDailyFeedback(todayIso);
 
@@ -66,13 +70,32 @@ export function Home() {
   // 전역 모달 및 피드백 생성 상태 관리
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const openErrorModal = useModalStore((state) => state.openErrorModal);
-  const feedbackGeneration = useModalStore((state) => state.feedbackGeneration);
-  const generatingDates = useModalStore(
-    (state) => state.feedbackGeneration.generatingDates
-  );
+  const {
+    dailyFeedbackProgress,
+    setDailyFeedbackProgress,
+    clearDailyFeedbackProgress,
+  } = useModalStore();
 
-  // 전역 상태와 로컬 상태를 결합하여 피드백 생성 중인지 확인
-  const isGeneratingFeedback = isPending || generatingDates.includes(todayIso);
+  // 진행 상황 확인
+  const progress = dailyFeedbackProgress[todayIso] || null;
+  const isGeneratingFeedback = isGenerating || progress !== null;
+  const progressPercentage = progress
+    ? Math.min(Math.round((progress.current / progress.total) * 100), 99)
+    : 0;
+
+  // 섹션 이름을 한글로 변환
+  const getSectionNameKR = (sectionName: string) => {
+    const names: { [key: string]: string } = {
+      SummaryReport: "전체 요약",
+      DailyReport: "일상 분석",
+      EmotionReport: "감정 분석",
+      DreamReport: "꿈/목표 분석",
+      InsightReport: "인사이트",
+      FeedbackReport: "피드백",
+      FinalReport: "최종 정리중",
+    };
+    return names[sectionName] || sectionName;
+  };
 
   const handleOpenDailyFeedback = async () => {
     try {
@@ -85,51 +108,157 @@ export function Home() {
         return;
       }
 
-      // 전역 상태에 생성 시작 표시
-      feedbackGeneration.startGenerating(todayIso);
+      setIsGenerating(true);
+      let currentEs: EventSource | null = null;
 
-      // 백그라운드에서 피드백 생성 시작 (로딩 모달 없이)
-      // mutateAsync를 사용하되, await하지 않고 then/catch로 처리
-      createDailyFeedback({ date: todayIso })
-        .then((createdFeedback) => {
-          // 전역 상태에서 생성 완료 표시
-          feedbackGeneration.finishGenerating(todayIso);
+      try {
+        const userId = await getCurrentUserId();
 
-          // 성공 시 전역 모달로 알림
-          if (createdFeedback?.id) {
-            openSuccessModal(
-              "오늘의 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.",
-              () => {
-                router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
-              }
-            );
-          } else {
-            throw new Error("생성된 피드백에 ID가 없습니다.");
-          }
-        })
-        .catch((e) => {
-          // 전역 상태에서 생성 완료 표시 (에러도 완료로 처리)
-          feedbackGeneration.finishGenerating(todayIso);
+        const sectionNames = [
+          "SummaryReport",
+          "DailyReport",
+          "EmotionReport",
+          "DreamReport",
+          "InsightReport",
+          "FeedbackReport",
+          "FinalReport",
+        ];
 
-          // 에러 시 전역 모달로 알림
-          const base =
-            e instanceof Error
-              ? e.message
-              : "피드백 생성 중 오류가 발생했습니다.";
-          const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
-          openErrorModal(message, handleRetry);
+        // 진행 상황 초기화 (전역 상태)
+        setDailyFeedbackProgress(todayIso, {
+          date: todayIso,
+          current: 0,
+          total: sectionNames.length,
+          currentStep: getSectionNameKR(sectionNames[0]),
         });
+
+        // SSE를 사용하여 진행 상황 수신
+        await new Promise<void>((resolve, reject) => {
+          const params = new URLSearchParams({
+            userId,
+            date: todayIso,
+            timezone: "Asia/Seoul",
+          });
+
+          const es = new EventSource(
+            `/api/daily-feedback/generate-stream?${params.toString()}`
+          );
+          currentEs = es;
+          currentEsRef.current = es;
+
+          // Promise 완료/실패 시 EventSource 정리
+          const cleanup = () => {
+            try {
+              if (es && es.readyState !== EventSource.CLOSED) {
+                es.close();
+              }
+            } catch (e) {
+              // 무시
+            }
+            currentEsRef.current = null;
+          };
+
+          es.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+
+              if (data.type === "progress") {
+                // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
+                setDailyFeedbackProgress(todayIso, {
+                  date: todayIso,
+                  current: data.current,
+                  total: data.total,
+                  currentStep: getSectionNameKR(data.sectionName),
+                });
+              } else if (data.type === "complete") {
+                // 완료 처리
+                cleanup();
+
+                queryClient.invalidateQueries({
+                  queryKey: [QUERY_KEYS.DAILY_FEEDBACK],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: [QUERY_KEYS.RECORDS],
+                });
+
+                // 진행 상황 초기화
+                clearDailyFeedbackProgress(todayIso);
+
+                // 성공 시 전역 모달로 알림
+                if (data.data?.id) {
+                  openSuccessModal(
+                    "오늘의 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.",
+                    () => {
+                      router.push(`/analysis/feedback/daily/${data.data.id}`);
+                    }
+                  );
+                } else {
+                  throw new Error("생성된 피드백에 ID가 없습니다.");
+                }
+
+                resolve();
+              } else if (data.type === "error") {
+                // 에러 처리
+                cleanup();
+
+                clearDailyFeedbackProgress(todayIso);
+                openErrorModal(
+                  `피드백 생성 중 오류가 발생했습니다: ${data.error}`
+                );
+
+                reject(new Error(data.error));
+              }
+            } catch (error) {
+              console.error("SSE 메시지 파싱 오류:", error);
+              cleanup();
+              clearDailyFeedbackProgress(todayIso);
+              openErrorModal("피드백 생성 중 알 수 없는 오류가 발생했습니다.");
+              reject(new Error("SSE 메시지 파싱 오류"));
+            }
+          };
+
+          es.onerror = (error) => {
+            cleanup();
+            clearDailyFeedbackProgress(todayIso);
+            openErrorModal("피드백 생성 중 SSE 연결 오류가 발생했습니다.");
+            reject(error);
+          };
+        });
+      } catch (error) {
+        console.error("피드백 생성 실패:", error);
+
+        // EventSource 정리
+        try {
+          if (
+            currentEsRef.current &&
+            currentEsRef.current.readyState !== EventSource.CLOSED
+          ) {
+            currentEsRef.current.close();
+          }
+        } catch (e) {
+          // 무시
+        }
+        currentEsRef.current = null;
+
+        // 진행 상황 초기화
+        clearDailyFeedbackProgress(todayIso);
+
+        openErrorModal(
+          `피드백 생성에 실패했습니다. 다시 시도해주세요. ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      } finally {
+        setIsGenerating(false);
+      }
     } catch (e) {
       // 동기 에러 처리
       const base =
         e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
       const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
-      openErrorModal(message, handleRetry);
+      openErrorModal(message);
+      setIsGenerating(false);
     }
-  };
-
-  const handleRetry = () => {
-    handleOpenDailyFeedback();
   };
 
   return (
@@ -157,9 +286,9 @@ export function Home() {
       />
 
       {hasTodayRecords && (
-        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4">
+        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4">
           <div
-            className="relative cursor-pointer transition-all duration-300"
+            className="relative cursor-pointer transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
             onClick={
               !isGeneratingFeedback ? handleOpenDailyFeedback : undefined
             }
@@ -174,8 +303,7 @@ export function Home() {
               `,
               position: "relative",
               overflow: "hidden",
-              padding: "0.875rem 2rem",
-              opacity: isGeneratingFeedback ? 0.6 : 1,
+              opacity: isGeneratingFeedback ? 0.9 : 1,
               pointerEvents: isGeneratingFeedback ? "none" : "auto",
               // 종이 질감 배경 패턴
               backgroundImage: `
@@ -235,25 +363,53 @@ export function Home() {
             />
 
             {/* 버튼 내용 */}
-            <div className="relative z-10 flex items-center justify-center gap-2">
+            <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
+              {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
+              {progress && (
+                <CircularProgress
+                  percentage={progressPercentage}
+                  size={40}
+                  strokeWidth={4}
+                  showText={true}
+                  textSize="sm"
+                  className="flex-shrink-0"
+                />
+              )}
               <Sparkles
-                className="w-4 h-4"
+                className={`flex-shrink-0 ${
+                  progress ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
+                }`}
                 style={{ color: COLORS.brand.primary }}
               />
-              <span
-                style={{
-                  color: COLORS.brand.primary,
-                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                  fontWeight: "600",
-                  lineHeight: "28px",
-                }}
-              >
-                {isGeneratingFeedback
-                  ? "피드백 생성 중..."
-                  : hasTodayFeedback
-                  ? "오늘 피드백 보기"
-                  : "오늘 피드백 받기"}
-              </span>
+              <div className="flex flex-col items-start gap-0.5">
+                <span
+                  className="text-sm sm:text-base"
+                  style={{
+                    color: COLORS.brand.primary,
+                    fontSize: progress ? "0.875rem" : "1rem",
+                    fontWeight: "600",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {isGeneratingFeedback
+                    ? "피드백 생성 중..."
+                    : hasTodayFeedback
+                    ? "오늘 피드백 보기"
+                    : "오늘 피드백 생성하기"}
+                </span>
+                {progress && (
+                  <span
+                    className="text-xs sm:text-sm"
+                    style={{
+                      color: "#6B7A6F",
+                      fontSize: "0.7rem",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {progress.currentStep}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

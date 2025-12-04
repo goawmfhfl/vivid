@@ -45,7 +45,7 @@ const fetchWeeklyFeedbackDetail = async (
  */
 const createWeeklyFeedback = async (
   params: Omit<WeeklyFeedbackGenerateRequest, "userId">
-): Promise<WeeklyFeedback> => {
+): Promise<WeeklyFeedback & { __tracking?: any[] }> => {
   const userId = await getCurrentUserId();
   const res = await fetch("/api/weekly-feedback/generate", {
     method: "POST",
@@ -57,6 +57,12 @@ const createWeeklyFeedback = async (
     throw new Error(text || "Failed to create weekly feedback");
   }
   const data = await res.json();
+
+  // 추적 정보가 있으면 결과에 포함
+  if (data.tracking) {
+    return { ...data.data, __tracking: data.tracking };
+  }
+
   return data.data;
 };
 

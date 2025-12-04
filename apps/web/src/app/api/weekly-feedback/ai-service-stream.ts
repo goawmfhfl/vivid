@@ -36,9 +36,6 @@ import {
   generatePromptCacheKey,
 } from "../utils/cache";
 
-/**
- * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
- */
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -54,21 +51,32 @@ function getOpenAIClient(): OpenAI {
 }
 
 /**
- * AI 리포트 생성 헬퍼 함수
- * @param isPro Pro 멤버십 여부에 따라 모델과 프롬프트를 차별화
+ * 진행 상황 콜백 타입
+ */
+type ProgressCallback = (
+  step: number,
+  total: number,
+  sectionName: string
+) => void;
+
+/**
+ * Section 생성 헬퍼 함수 (진행 상황 추적 포함)
  */
 async function generateSection<T>(
   systemPrompt: string,
   userPrompt: string,
   schema: { name: string; schema: any; strict: boolean },
   cacheKey: string,
-  isPro: boolean = false
+  isPro: boolean,
+  sectionName: string,
+  progressCallback?: ProgressCallback
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);
   if (cachedResult) {
     console.log(`캐시에서 결과 반환 (${schema.name}, Pro: ${isPro})`);
+    // 캐시된 경우에도 진행 상황 알림 (이미 완료된 것으로 간주)
     return cachedResult;
   }
 
@@ -114,7 +122,8 @@ async function generateSection<T>(
       throw new Error(`No content from OpenAI (${schema.name})`);
     }
 
-    const result = JSON.parse(content) as T;
+    const parsed = JSON.parse(content);
+    const result = Object.values(parsed)[0] as T;
 
     // 캐시에 저장 (멤버십별로 구분)
     setCache(proCacheKey, result);
@@ -128,7 +137,7 @@ async function generateSection<T>(
       const cachedTokens =
         (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
       (result as any).__tracking = {
-        name: schema.name,
+        name: sectionName,
         model,
         duration_ms,
         usage: {
@@ -158,78 +167,13 @@ async function generateSection<T>(
       err?.message?.includes("429")
     ) {
       const quotaError = new Error(
-        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
+        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요.`
       );
       (quotaError as any).code = "INSUFFICIENT_QUOTA";
       (quotaError as any).status = 429;
       throw quotaError;
     }
 
-    // 모델 관련 에러 처리 (Fallback)
-    if (
-      err?.message?.includes("model") ||
-      err?.code === "model_not_found" ||
-      err?.status === 404
-    ) {
-      // Fallback
-      const fallbackStartTime = Date.now();
-      const fallbackModel = isPro ? proModel : "gpt-4o-mini";
-      const completion = await openai.chat.completions.create({
-        model: fallbackModel,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: schema.name,
-            schema: schema.schema,
-            strict: schema.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-      });
-
-      const fallbackEndTime = Date.now();
-      const fallbackDuration_ms = fallbackEndTime - fallbackStartTime;
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error(`No content from OpenAI (${schema.name})`);
-      }
-
-      const result = JSON.parse(content) as T;
-
-      // 캐시에 저장 (멤버십별로 구분)
-      setCache(proCacheKey, result);
-
-      // 추적 정보를 결과에 첨부 (테스트 환경에서만)
-      if (
-        process.env.NODE_ENV === "development" ||
-        process.env.NEXT_PUBLIC_NODE_ENV === "development"
-      ) {
-        const usage = completion.usage;
-        const cachedTokens =
-          (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-        (result as any).__tracking = {
-          name: schema.name,
-          model: fallbackModel,
-          duration_ms: fallbackDuration_ms,
-          usage: {
-            prompt_tokens: usage?.prompt_tokens || 0,
-            completion_tokens: usage?.completion_tokens || 0,
-            total_tokens: usage?.total_tokens || 0,
-            cached_tokens: cachedTokens,
-          },
-        };
-      }
-
-      return result;
-    }
     throw error;
   }
 }
@@ -240,11 +184,17 @@ async function generateSection<T>(
 async function generateSummaryReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<SummaryReport> {
   const prompt = buildSummaryReportPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY_REPORT, prompt);
+
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(1, 7, "SummaryReport");
+  }
 
   const response = await generateSection<{ summary_report: SummaryReport }>(
     SYSTEM_PROMPT_SUMMARY_REPORT,
@@ -263,7 +213,9 @@ async function generateSummaryReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "SummaryReport",
+    progressCallback
   );
 
   return response.summary_report;
@@ -275,11 +227,17 @@ async function generateSummaryReport(
 async function generateDailyLifeReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<DailyLifeReport> {
   const prompt = buildDailyLifePrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY_LIFE, prompt);
+
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(2, 7, "DailyLifeReport");
+  }
 
   const response = await generateSection<{
     daily_life_report: DailyLifeReport;
@@ -301,7 +259,9 @@ async function generateDailyLifeReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "DailyLifeReport",
+    progressCallback
   );
 
   return response.daily_life_report;
@@ -313,15 +273,19 @@ async function generateDailyLifeReport(
 async function generateEmotionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<EmotionReport> {
   const prompt = buildEmotionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, prompt);
 
-  const response = await generateSection<{
-    emotion_report: EmotionReport;
-  }>(
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(3, 7, "EmotionReport");
+  }
+
+  const response = await generateSection<{ emotion_report: EmotionReport }>(
     SYSTEM_PROMPT_EMOTION,
     prompt,
     {
@@ -338,7 +302,9 @@ async function generateEmotionReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "EmotionReport",
+    progressCallback
   );
 
   return response.emotion_report;
@@ -350,15 +316,19 @@ async function generateEmotionReport(
 async function generateVisionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<VisionReport> {
   const prompt = buildVisionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, prompt);
 
-  const response = await generateSection<{
-    vision_report: VisionReport;
-  }>(
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(4, 7, "VisionReport");
+  }
+
+  const response = await generateSection<{ vision_report: VisionReport }>(
     SYSTEM_PROMPT_VISION,
     prompt,
     {
@@ -375,7 +345,9 @@ async function generateVisionReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "VisionReport",
+    progressCallback
   );
 
   return response.vision_report;
@@ -387,11 +359,17 @@ async function generateVisionReport(
 async function generateInsightReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<InsightReport> {
   const prompt = buildInsightPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, prompt);
+
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(5, 7, "InsightReport");
+  }
 
   const response = await generateSection<{ insight_report: InsightReport }>(
     SYSTEM_PROMPT_INSIGHT,
@@ -410,7 +388,9 @@ async function generateInsightReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "InsightReport",
+    progressCallback
   );
 
   return response.insight_report;
@@ -422,15 +402,19 @@ async function generateInsightReport(
 async function generateExecutionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<ExecutionReport> {
   const prompt = buildExecutionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EXECUTION, prompt);
 
-  const response = await generateSection<{
-    execution_report: ExecutionReport;
-  }>(
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(6, 7, "ExecutionReport");
+  }
+
+  const response = await generateSection<{ execution_report: ExecutionReport }>(
     SYSTEM_PROMPT_EXECUTION,
     prompt,
     {
@@ -448,7 +432,9 @@ async function generateExecutionReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "ExecutionReport",
+    progressCallback
   );
 
   return response.execution_report;
@@ -460,11 +446,17 @@ async function generateExecutionReport(
 async function generateClosingReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean
+  isPro: boolean,
+  progressCallback?: ProgressCallback
 ): Promise<ClosingReport> {
   const prompt = buildClosingPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, prompt);
+
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(7, 7, "ClosingReport");
+  }
 
   const response = await generateSection<{ closing_report: ClosingReport }>(
     SYSTEM_PROMPT_CLOSING,
@@ -483,52 +475,71 @@ async function generateClosingReport(
       strict: true,
     },
     cacheKey,
-    isPro
+    isPro,
+    "ClosingReport",
+    progressCallback
   );
 
   return response.closing_report;
 }
 
 /**
- * Daily Feedback 배열을 기반으로 주간 피드백 생성 (순차 처리)
- * 7개 섹션을 순차적으로 생성
+ * Daily Feedback 배열을 기반으로 주간 피드백 생성 (순차 처리 + 진행 상황 콜백)
+ * 7개 섹션을 순차적으로 생성하며 각 섹션 생성 시점에 진행 상황을 콜백으로 전달
  */
-export async function generateWeeklyFeedbackFromDaily(
+export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<WeeklyFeedback> {
-  // 순차적으로 7개 섹션 생성
+  // 순차적으로 7개 섹션 생성 (각 섹션 생성 시점에 진행 상황 알림)
   const summaryReport = await generateSummaryReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
+
+  // summary_report가 제대로 생성되었는지 확인
+  if (!summaryReport) {
+    throw new Error("Summary report 생성에 실패했습니다.");
+  }
   const dailyLifeReport = await generateDailyLifeReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
   const emotionReport = await generateEmotionReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
-  const visionReport = await generateVisionReport(dailyFeedbacks, range, isPro);
+  const visionReport = await generateVisionReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  );
   const insightReport = await generateInsightReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
   const executionReport = await generateExecutionReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
   const closingReport = await generateClosingReport(
     dailyFeedbacks,
     range,
-    isPro
+    isPro,
+    progressCallback
   );
 
   // 최종 Weekly Feedback 조합

@@ -1,14 +1,4 @@
 import OpenAI from "openai";
-import type { Record } from "./types";
-import type {
-  SummaryReport,
-  DailyReport,
-  EmotionReport,
-  DreamReport,
-  InsightReport,
-  FeedbackReport,
-  FinalReport,
-} from "@/types/daily-feedback";
 import {
   getSummaryReportSchema,
   getDailyReportSchema,
@@ -25,6 +15,7 @@ import {
   SYSTEM_PROMPT_FEEDBACK,
   SYSTEM_PROMPT_FINAL,
 } from "./schema";
+import type { Record } from "./types";
 import {
   buildSummaryPrompt,
   buildDailyPrompt,
@@ -34,6 +25,15 @@ import {
   buildFeedbackPrompt,
   buildFinalPrompt,
 } from "./prompts";
+import type {
+  SummaryReport,
+  DailyReport,
+  EmotionReport,
+  DreamReport,
+  InsightReport,
+  FeedbackReport,
+  FinalReport,
+} from "@/types/daily-feedback";
 import {
   generateCacheKey,
   getFromCache,
@@ -41,9 +41,6 @@ import {
   generatePromptCacheKey,
 } from "../utils/cache";
 
-/**
- * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
- */
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -54,31 +51,44 @@ function getOpenAIClient(): OpenAI {
   return new OpenAI({
     apiKey,
     timeout: 180000, // 180초(3분) 타임아웃
-    maxRetries: 1, // 재시도 최소화
+    maxRetries: 0, // 재시도 최소화
   });
 }
 
 /**
- * AI 리포트 생성 헬퍼 함수
- * @param isPro Pro 멤버십 여부에 따라 모델과 프롬프트를 차별화
- * @param getSchema 멤버십별 스키마를 반환하는 함수 (동적 스키마 생성용)
+ * 진행 상황 콜백 타입
  */
-async function generateReport<T>(
+type ProgressCallback = (
+  step: number,
+  total: number,
+  sectionName: string,
+  tracking?: any
+) => void;
+
+/**
+ * Section 생성 헬퍼 함수 (진행 상황 추적 포함)
+ */
+async function generateSection<T>(
   systemPrompt: string,
   userPrompt: string,
   schema:
     | { name: string; schema: any; strict: boolean }
     | ((isPro: boolean) => { name: string; schema: any; strict: boolean }),
   cacheKey: string,
-  isPro: boolean = false
+  isPro: boolean,
+  sectionName: string,
+  progressCallback?: ProgressCallback
 ): Promise<T> {
-  // 스키마가 함수인 경우 멤버십별로 동적 생성
-  const finalSchema = typeof schema === "function" ? schema(isPro) : schema;
+  // 진행 상황 알림 (섹션 시작)
+  const schemaObj = typeof schema === "function" ? schema(isPro) : schema;
+  progressCallback?.(0, 0, sectionName);
+
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);
   if (cachedResult) {
-    console.log(`캐시에서 결과 반환 (${finalSchema.name}, Pro: ${isPro})`);
+    console.log(`캐시에서 결과 반환 (${schemaObj.name}, Pro: ${isPro})`);
+    // 캐시된 경우에도 진행 상황 알림 (이미 완료된 것으로 간주)
     return cachedResult;
   }
 
@@ -94,6 +104,7 @@ async function generateReport<T>(
     ? `${systemPrompt}\n\n[Pro 멤버십: 더 상세하고 깊이 있는 분석을 제공하세요. 더 많은 세부사항과 인사이트를 포함하세요.]`
     : `${systemPrompt}\n\n[무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.]`;
 
+  const startTime = Date.now();
   try {
     const completion = await openai.chat.completions.create({
       model,
@@ -107,130 +118,70 @@ async function generateReport<T>(
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: finalSchema.name,
-          schema: finalSchema.schema,
-          strict: finalSchema.strict,
+          name: schemaObj.name,
+          schema: schemaObj.schema,
+          strict: schemaObj.strict,
         },
       },
       prompt_cache_key: promptCacheKey,
     });
 
+    const endTime = Date.now();
+    const duration_ms = endTime - startTime;
+
     const content = completion.choices[0]?.message?.content;
     if (!content) {
-      throw new Error(`No content from OpenAI (${finalSchema.name})`);
+      throw new Error(`No content from OpenAI (${schemaObj.name})`);
     }
 
-    let result = JSON.parse(content) as T;
+    const parsed = JSON.parse(content);
+    const result = Object.values(parsed)[0] as T; // 스키마가 { "SummaryReportResponse": { ... } } 형태이므로 실제 데이터를 추출
 
-    // 무료 멤버십인 경우 Pro 전용 필드를 null로 설정
-    if (!isPro && result && typeof result === "object") {
-      result = {
-        ...result,
-        // SummaryReport의 Pro 전용 필드
-        ...("trend_analysis" in result && { trend_analysis: null }),
-        // DailyReport의 Pro 전용 필드
-        ...("emotion_triggers" in result && { emotion_triggers: null }),
-        ...("behavioral_clues" in result && { behavioral_clues: null }),
-        // EmotionReport의 Pro 전용 필드
-        ...("ai_mood_valence" in result && { ai_mood_valence: null }),
-        ...("ai_mood_arousal" in result && { ai_mood_arousal: null }),
-        ...("emotion_events" in result && { emotion_events: null }),
-        // DreamReport의 Pro 전용 필드
-        ...("dream_goals" in result && { dream_goals: null }),
-        ...("dreamer_traits" in result && { dreamer_traits: null }),
-        // InsightReport의 Pro 전용 필드
-        ...("meta_question" in result && { meta_question: null }),
-        ...("insight_next_actions" in result && { insight_next_actions: null }),
-        // FeedbackReport의 Pro 전용 필드
-        ...("ai_message" in result && { ai_message: null }),
-        ...("feedback_person_traits" in result && {
-          feedback_person_traits: null,
-        }),
-        // FinalReport의 Pro 전용 필드
-        ...("tomorrow_focus" in result && { tomorrow_focus: null }),
-        ...("growth_points" in result && { growth_points: null }),
-        ...("adjustment_points" in result && { adjustment_points: null }),
-      } as T;
-    }
-
-    // 캐시에 저장 (멤버십별로 구분)
     setCache(proCacheKey, result);
+
+    // 개발 환경에서 추적 정보 추가
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.NEXT_PUBLIC_NODE_ENV === "development"
+    ) {
+      const usage = completion.usage;
+      const cachedTokens =
+        (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
+      (result as any).__tracking = {
+        name: sectionName,
+        model,
+        duration_ms,
+        usage: {
+          prompt_tokens: usage?.prompt_tokens || 0,
+          completion_tokens: usage?.completion_tokens || 0,
+          total_tokens: usage?.total_tokens || 0,
+          cached_tokens: cachedTokens,
+        },
+      };
+    }
 
     return result;
   } catch (error: unknown) {
-    const err = error as { message?: string; code?: string; status?: number };
+    const err = error as {
+      message?: string;
+      code?: string;
+      status?: number;
+      type?: string;
+    };
+
     if (
-      err?.message?.includes("model") ||
-      err?.code === "model_not_found" ||
-      err?.status === 404
+      err?.status === 429 ||
+      err?.code === "insufficient_quota" ||
+      err?.type === "insufficient_quota" ||
+      err?.message?.includes("쿼터") ||
+      err?.message?.includes("quota")
     ) {
-      // Fallback: Pro는 proModel, 일반은 gpt-4o-mini
-      const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o"; // gpt-5 출시 시 변경 가능
-      const fallbackModel = isPro ? proModel : "gpt-4o-mini";
-      const completion = await openai.chat.completions.create({
-        model: fallbackModel,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: finalSchema.name,
-            schema: finalSchema.schema,
-            strict: finalSchema.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-      });
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error(`No content from OpenAI (${finalSchema.name})`);
-      }
-
-      let result = JSON.parse(content) as T;
-
-      // 무료 멤버십인 경우 Pro 전용 필드를 null로 설정
-      if (!isPro && result && typeof result === "object") {
-        result = {
-          ...result,
-          // SummaryReport의 Pro 전용 필드
-          ...("trend_analysis" in result && { trend_analysis: null }),
-          // DailyReport의 Pro 전용 필드
-          ...("emotion_triggers" in result && { emotion_triggers: null }),
-          ...("behavioral_clues" in result && { behavioral_clues: null }),
-          // EmotionReport의 Pro 전용 필드
-          ...("ai_mood_valence" in result && { ai_mood_valence: null }),
-          ...("ai_mood_arousal" in result && { ai_mood_arousal: null }),
-          ...("emotion_events" in result && { emotion_events: null }),
-          // DreamReport의 Pro 전용 필드
-          ...("dream_goals" in result && { dream_goals: null }),
-          ...("dreamer_traits" in result && { dreamer_traits: null }),
-          // InsightReport의 Pro 전용 필드
-          ...("meta_question" in result && { meta_question: null }),
-          ...("insight_next_actions" in result && {
-            insight_next_actions: null,
-          }),
-          // FeedbackReport의 Pro 전용 필드
-          ...("ai_message" in result && { ai_message: null }),
-          ...("feedback_person_traits" in result && {
-            feedback_person_traits: null,
-          }),
-          // FinalReport의 Pro 전용 필드
-          ...("tomorrow_focus" in result && { tomorrow_focus: null }),
-          ...("growth_points" in result && { growth_points: null }),
-          ...("adjustment_points" in result && { adjustment_points: null }),
-        } as T;
-      }
-
-      // 캐시에 저장 (멤버십별로 구분)
-      setCache(proCacheKey, result);
-
-      return result;
+      const quotaError = new Error(
+        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schemaObj.name})`
+      );
+      (quotaError as any).code = "INSUFFICIENT_QUOTA";
+      (quotaError as any).status = 429;
+      throw quotaError;
     }
     throw error;
   }
@@ -239,32 +190,36 @@ async function generateReport<T>(
 /**
  * 전체 요약 리포트 생성
  */
-export async function generateSummaryReport(
+async function generateSummaryReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<SummaryReport> {
   const prompt = buildSummaryPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY, prompt);
 
-  return generateReport<SummaryReport>(
+  return generateSection<SummaryReport>(
     SYSTEM_PROMPT_SUMMARY,
     prompt,
     (isPro) => getSummaryReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    "SummaryReport",
+    progressCallback
   );
 }
 
 /**
  * 일상 기록 리포트 생성
  */
-export async function generateDailyReport(
+async function generateDailyReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<DailyReport | null> {
   const dailyRecords = records.filter((r) => r.type === "daily");
 
@@ -272,28 +227,29 @@ export async function generateDailyReport(
     return null;
   }
 
-  console.log(`[Daily Report] Found ${dailyRecords.length} daily records`);
-
   const prompt = buildDailyPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY, prompt);
 
-  return generateReport<DailyReport>(
+  return generateSection<DailyReport>(
     SYSTEM_PROMPT_DAILY,
     prompt,
     (isPro) => getDailyReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    "DailyReport",
+    progressCallback
   );
 }
 
 /**
  * 감정 기록 리포트 생성
  */
-export async function generateEmotionReport(
+async function generateEmotionReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<EmotionReport | null> {
   const emotionRecords = records.filter((r) => r.type === "emotion");
 
@@ -304,23 +260,26 @@ export async function generateEmotionReport(
   const prompt = buildEmotionPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, prompt);
 
-  return generateReport<EmotionReport>(
+  return generateSection<EmotionReport>(
     SYSTEM_PROMPT_EMOTION,
     prompt,
     EmotionReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    "EmotionReport",
+    progressCallback
   );
 }
 
 /**
  * 꿈/목표 기록 리포트 생성
  */
-export async function generateDreamReport(
+async function generateDreamReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<DreamReport | null> {
   const dreamRecords = records.filter((r) => r.type === "dream");
 
@@ -331,23 +290,26 @@ export async function generateDreamReport(
   const prompt = buildDreamPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DREAM, prompt);
 
-  return generateReport<DreamReport>(
+  return generateSection<DreamReport>(
     SYSTEM_PROMPT_DREAM,
     prompt,
     DreamReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    "DreamReport",
+    progressCallback
   );
 }
 
 /**
  * 인사이트 기록 리포트 생성
  */
-export async function generateInsightReport(
+async function generateInsightReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<InsightReport | null> {
   const insightRecords = records.filter((r) => r.type === "insight");
 
@@ -358,23 +320,26 @@ export async function generateInsightReport(
   const prompt = buildInsightPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, prompt);
 
-  return generateReport<InsightReport>(
+  return generateSection<InsightReport>(
     SYSTEM_PROMPT_INSIGHT,
     prompt,
     InsightReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    "InsightReport",
+    progressCallback
   );
 }
 
 /**
  * 피드백 기록 리포트 생성
  */
-export async function generateFeedbackReport(
+async function generateFeedbackReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<FeedbackReport | null> {
   const feedbackRecords = records.filter((r) => r.type === "feedback");
 
@@ -385,19 +350,21 @@ export async function generateFeedbackReport(
   const prompt = buildFeedbackPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_FEEDBACK, prompt);
 
-  return generateReport<FeedbackReport>(
+  return generateSection<FeedbackReport>(
     SYSTEM_PROMPT_FEEDBACK,
     prompt,
-    getFeedbackReportSchema(isPro),
+    (isPro) => getFeedbackReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    "FeedbackReport",
+    progressCallback
   );
 }
 
 /**
  * 최종 리포트 생성 (모든 리포트를 종합)
  */
-export async function generateFinalReport(
+async function generateFinalReport(
   date: string,
   dayOfWeek: string,
   summaryReport: SummaryReport | null,
@@ -406,7 +373,8 @@ export async function generateFinalReport(
   dreamReport: DreamReport | null,
   insightReport: InsightReport | null,
   feedbackReport: FeedbackReport | null,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<FinalReport> {
   const prompt = buildFinalPrompt(
     date,
@@ -421,25 +389,26 @@ export async function generateFinalReport(
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_FINAL, prompt);
 
-  return generateReport<FinalReport>(
+  return generateSection<FinalReport>(
     SYSTEM_PROMPT_FINAL,
     prompt,
     FinalReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    "FinalReport",
+    progressCallback
   );
 }
 
 /**
- * 모든 타입별 리포트 생성 (순차 처리)
- * 병렬 요청은 rate limiting 및 retry 에러를 유발할 수 있으므로 순차 처리로 변경
- * @param isPro Pro 멤버십 여부에 따라 모델과 프롬프트 차별화
+ * 모든 타입별 리포트 생성 (진행 상황 콜백 포함)
  */
-export async function generateAllReports(
+export async function generateAllReportsWithProgress(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  progressCallback?: ProgressCallback
 ): Promise<{
   summary_report: SummaryReport;
   daily_report: DailyReport | null;
@@ -449,45 +418,67 @@ export async function generateAllReports(
   feedback_report: FeedbackReport | null;
   final_report: FinalReport;
 }> {
+  const sectionNames = [
+    "SummaryReport",
+    "DailyReport",
+    "EmotionReport",
+    "DreamReport",
+    "InsightReport",
+    "FeedbackReport",
+    "FinalReport",
+  ];
+  const totalSections = sectionNames.length;
+  let completedSections = 0;
+
+  const callProgress = (sectionName: string, tracking?: any) => {
+    completedSections++;
+    progressCallback?.(completedSections, totalSections, sectionName, tracking);
+  };
+
   // 1. 전체 요약 리포트 생성
   const summaryReport = await generateSummaryReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
 
-  // 2. 타입별 리포트 순차 생성 (병렬 요청 제거)
-  // 병렬 요청은 rate limiting 및 retry 에러를 유발할 수 있으므로 순차 처리로 변경
+  // 2. 타입별 리포트 순차 생성
   const dailyReport = await generateDailyReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
   const emotionReport = await generateEmotionReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
   const dreamReport = await generateDreamReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
   const insightReport = await generateInsightReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
   const feedbackReport = await generateFeedbackReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
 
   // 3. 최종 리포트 생성
@@ -500,7 +491,8 @@ export async function generateAllReports(
     dreamReport,
     insightReport,
     feedbackReport,
-    isPro
+    isPro,
+    (c, t, n, tr) => callProgress(n, tr)
   );
 
   return {

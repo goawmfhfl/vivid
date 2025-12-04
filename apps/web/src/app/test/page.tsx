@@ -2,8 +2,10 @@
 
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { SubscriptionTestPanel } from "@/components/test/SubscriptionTestPanel";
+import { TokenTestPanel } from "@/components/test/TokenTestPanel";
 import { AppHeader } from "@/components/common/AppHeader";
 import { SPACING } from "@/lib/design-system";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SubscriptionTestPage() {
   const { isTest, isDevelopment } = useEnvironment();
@@ -24,12 +26,22 @@ export default function SubscriptionTestPage() {
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
       <AppHeader
-        title="구독 테스트"
-        subtitle="구독 상태를 테스트하고 관리할 수 있습니다"
+        title="테스트 페이지"
+        subtitle="다양한 기능을 테스트하고 확인할 수 있습니다"
       />
 
-      <SubscriptionTestPanel />
+      <Tabs defaultValue="subscription" className="space-y-6 mt-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="subscription">구독 테스트</TabsTrigger>
+          <TabsTrigger value="token">토큰 테스트</TabsTrigger>
+        </TabsList>
+        <TabsContent value="subscription">
+          <SubscriptionTestPanel />
+        </TabsContent>
+        <TabsContent value="token">
+          <TokenTestPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-

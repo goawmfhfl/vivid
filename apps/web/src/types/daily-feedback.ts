@@ -171,14 +171,6 @@ export interface DailyFeedbackRow {
   feedback_report: FeedbackReport | null;
   final_report: FinalReport | null;
 
-  // 기존 필드들 (하위 호환성 유지)
-  emotion_overview: EmotionOverview | null;
-  narrative_overview: NarrativeOverview | null;
-  insight_overview: InsightOverview | null;
-  vision_overview: VisionOverview | null;
-  feedback_overview: FeedbackOverview | null;
-  meta_overview: MetaOverview | null;
-
   created_at: string;
   updated_at: string;
   is_ai_generated: boolean | null;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
@@ -7,6 +7,10 @@ import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
 import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
+import { useAIRequestStore } from "@/store/useAIRequestStore";
+import { useEnvironment } from "@/hooks/useEnvironment";
+import { useModalStore } from "@/store/useModalStore";
+import { getCurrentUserId } from "@/hooks/useCurrentUser";
 
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
@@ -14,6 +18,31 @@ export function WeeklyCandidatesSection() {
   const [isExpanded, setIsExpanded] = useState(false);
   const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
+  const { addRequest, updateRequest, requests, openModal } =
+    useAIRequestStore();
+  const { isTest } = useEnvironment();
+  const {
+    weeklyFeedbackProgress,
+    setWeeklyFeedbackProgress,
+    clearWeeklyFeedbackProgress,
+  } = useModalStore();
+
+  // 진행 상태 추적 (테스트 환경에서만 - 요금 모달 자동 열기용)
+  useEffect(() => {
+    if (!isTest || requests.length === 0) return;
+
+    const completedCount = requests.filter(
+      (r) => r.endTime !== undefined || r.error !== undefined
+    ).length;
+    const totalCount = requests.length;
+
+    if (completedCount === totalCount && totalCount > 0) {
+      // 모든 요청 완료 시 요금 모달 자동으로 열기
+      setTimeout(() => {
+        openModal();
+      }, 300);
+    }
+  }, [requests, isTest, openModal]);
 
   // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 주간 피드백 필터링
   const candidatesForCreation = useMemo(() => {
@@ -46,23 +75,187 @@ export function WeeklyCandidatesSection() {
 
   const handleCreateFeedback = async (weekStart: string) => {
     setGeneratingWeek(weekStart);
+    let currentEsRef: { current: EventSource | null } = { current: null };
+
     try {
       const weekEnd = getWeekEnd(weekStart);
+      const userId = await getCurrentUserId();
 
-      await createWeeklyFeedback.mutateAsync({
-        start: weekStart,
-        end: weekEnd,
-        timezone: "Asia/Seoul",
+      // 테스트 환경에서 추적 시작 및 로딩 모달 열기
+      const requestIds: string[] = [];
+      const sectionNames = [
+        "SummaryReport",
+        "DailyLifeReport",
+        "EmotionReport",
+        "VisionReport",
+        "InsightReport",
+        "ExecutionReport",
+        "ClosingReport",
+      ];
+
+      // 진행 상황 초기화 (전역 상태)
+      setWeeklyFeedbackProgress(weekStart, {
+        weekStart,
+        current: 0,
+        total: sectionNames.length,
+        currentStep: sectionNames[0],
       });
 
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+      if (isTest) {
+        // 각 섹션에 대한 요청 ID 생성
+        sectionNames.forEach((name) => {
+          const id = addRequest({
+            name,
+            model: "gpt-5-mini", // 기본 모델 (실제로는 응답에서 확인)
+          });
+          requestIds.push(id);
+        });
+      }
+
+      // SSE를 사용하여 진행 상황 수신
+      await new Promise<void>((resolve, reject) => {
+        const params = new URLSearchParams({
+          userId,
+          start: weekStart,
+          end: weekEnd,
+          timezone: "Asia/Seoul",
+        });
+
+        const es = new EventSource(
+          `/api/weekly-feedback/generate-stream?${params.toString()}`
+        );
+        currentEsRef.current = es;
+
+        // Promise 완료/실패 시 EventSource 정리
+        const cleanup = () => {
+          try {
+            if (es && es.readyState !== EventSource.CLOSED) {
+              es.close();
+            }
+          } catch (e) {
+            // 무시
+          }
+          currentEsRef.current = null;
+        };
+
+        es.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "progress") {
+              // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
+              // 완료 전이므로 99%를 넘지 않도록 제한
+              setWeeklyFeedbackProgress(weekStart, {
+                weekStart,
+                current: data.current,
+                total: data.total,
+                currentStep: data.sectionName,
+              });
+            } else if (data.type === "complete") {
+              // 완료 처리 - 99%에서 멈추도록 설정
+              setWeeklyFeedbackProgress(weekStart, {
+                weekStart,
+                current: data.total, // 전체 섹션 수
+                total: data.total,
+                currentStep: "완료",
+              });
+
+              cleanup();
+
+              // 테스트 환경에서 추적 정보 처리
+              if (isTest && data.data.__tracking) {
+                const tracking = Array.isArray(data.data.__tracking)
+                  ? data.data.__tracking
+                  : [data.data.__tracking];
+                tracking.forEach((t: any, index: number) => {
+                  if (requestIds[index]) {
+                    updateRequest(requestIds[index], {
+                      model: t.model,
+                      endTime: Date.now(),
+                      duration_ms: t.duration_ms,
+                      usage: t.usage,
+                    });
+                  }
+                });
+              }
+
+              queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+              });
+
+              resolve();
+            } else if (data.type === "error") {
+              // 에러 처리
+              cleanup();
+
+              if (isTest) {
+                requests.forEach((req) => {
+                  if (!req.endTime) {
+                    updateRequest(req.id, {
+                      error: data.error,
+                      endTime: Date.now(),
+                    });
+                  }
+                });
+              }
+
+              reject(new Error(data.error));
+            }
+          } catch (error) {
+            console.error("SSE 메시지 파싱 오류:", error);
+          }
+        };
+
+        es.onerror = (error) => {
+          cleanup();
+
+          if (isTest) {
+            requests.forEach((req) => {
+              if (!req.endTime) {
+                updateRequest(req.id, {
+                  error: "SSE 연결 오류",
+                  endTime: Date.now(),
+                });
+              }
+            });
+          }
+
+          reject(error);
+        };
       });
     } catch (error) {
       console.error("주간 피드백 생성 실패:", error);
+
+      // EventSource 정리
+      const esToClose = currentEsRef.current;
+      try {
+        if (esToClose && esToClose.readyState !== EventSource.CLOSED) {
+          esToClose.close();
+        }
+      } catch (e) {
+        // 무시
+      }
+      currentEsRef.current = null;
+
+      // 진행 상황 초기화 (전역 상태)
+      clearWeeklyFeedbackProgress(weekStart);
+
+      // 테스트 환경에서 에러 추적
+      if (isTest) {
+        requests.forEach((req) => {
+          if (!req.endTime) {
+            updateRequest(req.id, {
+              error: error instanceof Error ? error.message : String(error),
+              endTime: Date.now(),
+            });
+          }
+        });
+      }
+
       alert("주간 피드백 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setGeneratingWeek(null);
+      // 진행 상황은 완료/에러 핸들러에서 이미 처리됨
     }
   };
 
@@ -110,7 +303,8 @@ export function WeeklyCandidatesSection() {
                   }}
                 >
                   {candidatesForCreation.length}개의 주간 피드백을 생성할 수
-                  있습니다. AI가 분석한 인사이트를 확인해보세요.
+                  있어요. 기록을 통해 나를 이해하고, 나답게 성장하는 시간을
+                  가져보세요.
                 </p>
               </div>
               <div
@@ -140,38 +334,64 @@ export function WeeklyCandidatesSection() {
       >
         <div className="space-y-2">
           {candidatesForCreation.map((candidate) => {
-            const isGenerating = generatingWeek === candidate.week_start;
+            const progress =
+              weeklyFeedbackProgress[candidate.week_start] || null;
+            // 진행 상황이 있거나 현재 생성 중이면 로딩 상태로 표시
+            const isGenerating =
+              generatingWeek === candidate.week_start || progress !== null;
+
+            // 서버 응답값으로만 진행률 계산 (최대 99%)
+            const actualPercentage = progress
+              ? Math.round((progress.current / progress.total) * 100)
+              : 0;
+            const progressPercentage = Math.min(actualPercentage, 99);
+
+            // 섹션 이름을 한글로 변환 (브랜딩 컨셉에 맞게 친절하게)
+            const getSectionNameKR = (sectionName: string) => {
+              const names: Record<string, string> = {
+                SummaryReport: "전체 요약",
+                DailyLifeReport: "일상 분석",
+                EmotionReport: "감정 분석",
+                VisionReport: "비전 분석",
+                InsightReport: "인사이트",
+                ExecutionReport: "실행 분석",
+                ClosingReport: "최종 정리",
+              };
+              return names[sectionName] || sectionName;
+            };
+
             return (
               <div
                 key={candidate.week_start}
-                className="flex items-center justify-between p-3 rounded-lg transition-all hover:shadow-sm"
+                className="flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:shadow-sm"
                 style={{
                   backgroundColor: "white",
                   border: "1px solid #EFE9E3",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: "#A8BBA8" }}
                   />
                   <div className="flex-1 min-w-0">
                     <p
-                      className="truncate"
+                      className="truncate text-sm sm:text-base"
                       style={{
                         color: "#333333",
-                        fontSize: "0.9rem",
+                        fontSize: "0.85rem",
                         fontWeight: "500",
                       }}
                     >
                       {getWeekRange(candidate.week_start)}
                     </p>
                     <p
+                      className="text-xs sm:text-sm"
                       style={{
                         color: "#4E4B46",
                         opacity: 0.6,
-                        fontSize: "0.75rem",
+                        fontSize: "0.7rem",
                         marginTop: "2px",
                       }}
                     >
@@ -179,40 +399,99 @@ export function WeeklyCandidatesSection() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={() => handleCreateFeedback(candidate.week_start)}
-                  disabled={isGenerating}
-                  className="rounded-full px-3 py-1.5 flex items-center gap-1.5 flex-shrink-0 text-xs"
-                  style={{
-                    backgroundColor: isGenerating ? "#C4D4C4" : "#A8BBA8",
-                    color: "white",
-                    fontSize: "0.75rem",
-                    fontWeight: "500",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isGenerating) {
-                      e.currentTarget.style.backgroundColor = "#95A995";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isGenerating) {
-                      e.currentTarget.style.backgroundColor = "#A8BBA8";
-                    }
-                  }}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      생성 중
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3 h-3" />
-                      생성하기
-                    </>
+                <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+                  {/* 진행 상황 표시 (버튼 옆에) */}
+                  {progress && (
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="flex flex-col items-end gap-0.5 sm:gap-1">
+                        <p
+                          className="text-xs sm:text-sm"
+                          style={{
+                            color: "#6B7A6F",
+                            fontSize: "0.6rem",
+                            fontWeight: "500",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          <span className="sm:hidden">
+                            {getSectionNameKR(progress.currentStep)}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {getSectionNameKR(progress.currentStep)} 생성 중...
+                          </span>
+                        </p>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <div
+                            className="h-1 sm:h-1.5 rounded-full overflow-hidden"
+                            style={{
+                              width: "60px",
+                              backgroundColor: "#EFE9E3",
+                            }}
+                          >
+                            <div
+                              className="h-full transition-all duration-500 ease-out"
+                              style={{
+                                width: `${progressPercentage}%`,
+                                backgroundColor: "#A8BBA8",
+                              }}
+                            />
+                          </div>
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "#6B7A6F",
+                              fontSize: "0.65rem",
+                              fontWeight: "600",
+                              minWidth: "28px",
+                              textAlign: "right",
+                            }}
+                          >
+                            {progressPercentage}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </Button>
+                  <Button
+                    onClick={() => handleCreateFeedback(candidate.week_start)}
+                    disabled={isGenerating}
+                    className="rounded-full px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 sm:gap-1.5 flex-shrink-0 text-xs relative"
+                    style={{
+                      backgroundColor: isGenerating ? "#C4D4C4" : "#A8BBA8",
+                      color: "white",
+                      fontSize: "0.7rem",
+                      fontWeight: "500",
+                      transition: "all 0.2s",
+                      minWidth: "70px",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isGenerating) {
+                        e.currentTarget.style.backgroundColor = "#95A995";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isGenerating) {
+                        e.currentTarget.style.backgroundColor = "#A8BBA8";
+                      }
+                    }}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                        <span className="text-[0.65rem] sm:text-[0.7rem]">
+                          생성 중
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span className="text-[0.65rem] sm:text-[0.7rem]">
+                          생성하기
+                        </span>
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             );
           })}

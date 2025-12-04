@@ -136,19 +136,28 @@ export function encryptWeeklyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    weekly_overview: encryptJsonbFields(feedback.weekly_overview as JsonbValue),
-    emotion_overview: feedback.emotion_overview
-      ? encryptJsonbFields(feedback.emotion_overview as JsonbValue)
+    // 새로운 스키마 필드들
+    summary_report: feedback.summary_report
+      ? encryptJsonbFields(feedback.summary_report as JsonbValue)
       : null,
-    growth_trends: encryptJsonbFields(feedback.growth_trends as JsonbValue),
-    insight_replay: encryptJsonbFields(feedback.insight_replay as JsonbValue),
-    vision_visualization_report: encryptJsonbFields(
-      feedback.vision_visualization_report as JsonbValue
-    ),
-    execution_reflection: encryptJsonbFields(
-      feedback.execution_reflection as JsonbValue
-    ),
-    closing_section: encryptJsonbFields(feedback.closing_section as JsonbValue),
+    daily_life_report: feedback.daily_life_report
+      ? encryptJsonbFields(feedback.daily_life_report as JsonbValue)
+      : null,
+    emotion_report: feedback.emotion_report
+      ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
+      : null,
+    vision_report: feedback.vision_report
+      ? encryptJsonbFields(feedback.vision_report as JsonbValue)
+      : null,
+    insight_report: feedback.insight_report
+      ? encryptJsonbFields(feedback.insight_report as JsonbValue)
+      : null,
+    execution_report: feedback.execution_report
+      ? encryptJsonbFields(feedback.execution_report as JsonbValue)
+      : null,
+    closing_report: feedback.closing_report
+      ? encryptJsonbFields(feedback.closing_report as JsonbValue)
+      : null,
   };
 }
 
@@ -160,19 +169,28 @@ export function decryptWeeklyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    weekly_overview: decryptJsonbFields(feedback.weekly_overview as JsonbValue),
-    emotion_overview: feedback.emotion_overview
-      ? decryptJsonbFields(feedback.emotion_overview as JsonbValue)
+    // 새로운 스키마 필드들
+    summary_report: feedback.summary_report
+      ? decryptJsonbFields(feedback.summary_report as JsonbValue)
       : null,
-    growth_trends: decryptJsonbFields(feedback.growth_trends as JsonbValue),
-    insight_replay: decryptJsonbFields(feedback.insight_replay as JsonbValue),
-    vision_visualization_report: decryptJsonbFields(
-      feedback.vision_visualization_report as JsonbValue
-    ),
-    execution_reflection: decryptJsonbFields(
-      feedback.execution_reflection as JsonbValue
-    ),
-    closing_section: decryptJsonbFields(feedback.closing_section as JsonbValue),
+    daily_life_report: feedback.daily_life_report
+      ? decryptJsonbFields(feedback.daily_life_report as JsonbValue)
+      : null,
+    emotion_report: feedback.emotion_report
+      ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
+      : null,
+    vision_report: feedback.vision_report
+      ? decryptJsonbFields(feedback.vision_report as JsonbValue)
+      : null,
+    insight_report: feedback.insight_report
+      ? decryptJsonbFields(feedback.insight_report as JsonbValue)
+      : null,
+    execution_report: feedback.execution_report
+      ? decryptJsonbFields(feedback.execution_report as JsonbValue)
+      : null,
+    closing_report: feedback.closing_report
+      ? decryptJsonbFields(feedback.closing_report as JsonbValue)
+      : null,
   };
 }
 
@@ -261,25 +279,6 @@ export function encryptDailyFeedback(
     final_report: feedback.final_report
       ? encryptJsonbFields(feedback.final_report as JsonbValue)
       : null,
-    // 기존 필드 (하위 호환성)
-    emotion_overview: feedback.emotion_overview
-      ? encryptJsonbFields(feedback.emotion_overview as JsonbValue)
-      : null,
-    narrative_overview: feedback.narrative_overview
-      ? encryptJsonbFields(feedback.narrative_overview as JsonbValue)
-      : null,
-    insight_overview: feedback.insight_overview
-      ? encryptJsonbFields(feedback.insight_overview as JsonbValue)
-      : null,
-    vision_overview: feedback.vision_overview
-      ? encryptJsonbFields(feedback.vision_overview as JsonbValue)
-      : null,
-    feedback_overview: feedback.feedback_overview
-      ? encryptJsonbFields(feedback.feedback_overview as JsonbValue)
-      : null,
-    meta_overview: feedback.meta_overview
-      ? encryptJsonbFields(feedback.meta_overview as JsonbValue)
-      : null,
   };
 }
 
@@ -313,25 +312,6 @@ export function decryptDailyFeedback(
       : null,
     final_report: feedback.final_report
       ? decryptJsonbFields(feedback.final_report as JsonbValue)
-      : null,
-    // 기존 필드 (하위 호환성)
-    emotion_overview: feedback.emotion_overview
-      ? decryptJsonbFields(feedback.emotion_overview as JsonbValue)
-      : null,
-    narrative_overview: feedback.narrative_overview
-      ? decryptJsonbFields(feedback.narrative_overview as JsonbValue)
-      : null,
-    insight_overview: feedback.insight_overview
-      ? decryptJsonbFields(feedback.insight_overview as JsonbValue)
-      : null,
-    vision_overview: feedback.vision_overview
-      ? decryptJsonbFields(feedback.vision_overview as JsonbValue)
-      : null,
-    feedback_overview: feedback.feedback_overview
-      ? decryptJsonbFields(feedback.feedback_overview as JsonbValue)
-      : null,
-    meta_overview: feedback.meta_overview
-      ? decryptJsonbFields(feedback.meta_overview as JsonbValue)
       : null,
   };
 }
