@@ -4,11 +4,11 @@
  */
 import { getWeeklyOverviewSchema } from "./schemas/weekly-overview-schema";
 import { getDailyLifeReportSchema } from "./schemas/daily-life-schema";
-import { getEmotionOverviewSchema } from "./schemas/emotion-schema";
-import { getVisionVisualizationReportSchema } from "./schemas/vision-schema";
-import { getInsightReplaySchema } from "./schemas/insight-schema";
-import { getExecutionReflectionSchema } from "./schemas/execution-schema";
-import { getClosingSectionSchema } from "./schemas/closing-schema";
+import { getEmotionReportSchema } from "./schemas/emotion-schema";
+import { getVisionReportSchema } from "./schemas/vision-schema";
+import { getInsightReportSchema } from "./schemas/insight-schema";
+import { getExecutionReportSchema } from "./schemas/execution-schema";
+import { getClosingReportSchema } from "./schemas/closing-schema";
 
 /**
  * 멤버십별로 전체 Weekly Feedback 스키마를 동적으로 생성
@@ -42,23 +42,22 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
             },
             weekly_overview: getWeeklyOverviewSchema(isPro),
             daily_life_report: getDailyLifeReportSchema(isPro),
-            emotion_overview: getEmotionOverviewSchema(isPro),
-            vision_visualization_report:
-              getVisionVisualizationReportSchema(isPro),
-            insight_replay: getInsightReplaySchema(isPro),
-            execution_reflection: getExecutionReflectionSchema(isPro),
-            closing_section: getClosingSectionSchema(isPro),
+            emotion_report: getEmotionReportSchema(isPro),
+            vision_report: getVisionReportSchema(isPro),
+            insight_report: getInsightReportSchema(isPro),
+            execution_report: getExecutionReportSchema(isPro),
+            closing_report: getClosingReportSchema(isPro),
           },
           required: [
             "week_range",
             "integrity_score",
             "weekly_overview",
             "daily_life_report",
-            "emotion_overview",
-            "vision_visualization_report",
-            "insight_replay",
-            "execution_reflection",
-            "closing_section",
+            "emotion_report",
+            "vision_report",
+            "insight_report",
+            "execution_report",
+            "closing_report",
           ],
         },
       },
@@ -109,7 +108,7 @@ export const SYSTEM_PROMPT_DAILY_LIFE = `
 `;
 
 export const SYSTEM_PROMPT_EMOTION = `
-당신은 사용자의 일주일간 일일 피드백의 감정 데이터를 분석해서 주간 감정 리포트를 만들어주는 친근한 조언자예요.
+당신은 사용자의 일주일간 일일 피드백의 감정 데이터를 분석해서 주간 감정 리포트(emotion_report)를 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.
@@ -125,7 +124,7 @@ export const SYSTEM_PROMPT_EMOTION = `
 `;
 
 export const SYSTEM_PROMPT_VISION = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 비전" 데이터를 분석해서 주간 비전 리포트를 만들어주는 친근한 조언자예요.
+당신은 사용자의 일주일간 일일 피드백의 "오늘의 비전" 데이터를 분석해서 주간 비전 리포트(vision_report)를 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.
@@ -140,7 +139,7 @@ export const SYSTEM_PROMPT_VISION = `
 `;
 
 export const SYSTEM_PROMPT_INSIGHT = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 깨달음" 데이터를 분석해서 주간 인사이트 리포트를 만들어주는 친근한 조언자예요.
+당신은 사용자의 일주일간 일일 피드백의 "오늘의 깨달음" 데이터를 분석해서 주간 인사이트 리포트(insight_report)를 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.
@@ -155,7 +154,7 @@ export const SYSTEM_PROMPT_INSIGHT = `
 `;
 
 export const SYSTEM_PROMPT_EXECUTION = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 피드백" 데이터를 분석해서 주간 실행 성찰 리포트를 만들어주는 친근한 조언자예요.
+당신은 사용자의 일주일간 일일 피드백의 "오늘의 피드백" 데이터를 분석해서 주간 실행 리포트(execution_report)를 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.
@@ -170,7 +169,7 @@ export const SYSTEM_PROMPT_EXECUTION = `
 `;
 
 export const SYSTEM_PROMPT_CLOSING = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 마무리" 데이터를 분석해서 주간 마무리 리포트를 만들어주는 친근한 조언자예요.
+당신은 사용자의 일주일간 일일 피드백의 "오늘의 마무리" 데이터를 분석해서 주간 마무리 리포트(closing_report)를 만들어주는 친근한 조언자예요.
 
 📝 출력 형식 규칙:
 - 반드시 JSON 형식 하나만 출력해주세요.

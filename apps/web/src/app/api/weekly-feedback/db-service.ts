@@ -66,7 +66,7 @@ export async function fetchWeeklyFeedbackList(
     const decryptedOverview = decryptJsonbFields(
       row.weekly_overview as { title?: string; narrative?: string } | null
     ) as { title?: string; narrative?: string } | null;
-    
+
     // title이 있으면 사용하고, 없으면 narrative의 앞부분을 사용하거나 날짜 범위 사용
     const title =
       decryptedOverview?.title ||
@@ -122,16 +122,17 @@ export async function fetchWeeklyFeedbackByDate(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
+    integrity_score: data.integrity_score as number,
     weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
-    emotion_overview:
-      (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
-    growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
-    insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
-    vision_visualization_report:
-      data.vision_visualization_report as WeeklyFeedback["vision_visualization_report"],
-    execution_reflection:
-      data.execution_reflection as WeeklyFeedback["execution_reflection"],
-    closing_section: data.closing_section as WeeklyFeedback["closing_section"],
+    daily_life_report:
+      data.daily_life_report as WeeklyFeedback["daily_life_report"],
+    emotion_report:
+      (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
+    vision_report: data.vision_report as WeeklyFeedback["vision_report"],
+    insight_report: data.insight_report as WeeklyFeedback["insight_report"],
+    execution_report:
+      data.execution_report as WeeklyFeedback["execution_report"],
+    closing_report: data.closing_report as WeeklyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -176,16 +177,17 @@ export async function fetchWeeklyFeedbackDetail(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
+    integrity_score: data.integrity_score as number,
     weekly_overview: data.weekly_overview as WeeklyFeedback["weekly_overview"],
-    emotion_overview:
-      (data.emotion_overview as WeeklyFeedback["emotion_overview"]) ?? null,
-    growth_trends: data.growth_trends as WeeklyFeedback["growth_trends"],
-    insight_replay: data.insight_replay as WeeklyFeedback["insight_replay"],
-    vision_visualization_report:
-      data.vision_visualization_report as WeeklyFeedback["vision_visualization_report"],
-    execution_reflection:
-      data.execution_reflection as WeeklyFeedback["execution_reflection"],
-    closing_section: data.closing_section as WeeklyFeedback["closing_section"],
+    daily_life_report:
+      data.daily_life_report as WeeklyFeedback["daily_life_report"],
+    emotion_report:
+      (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
+    vision_report: data.vision_report as WeeklyFeedback["vision_report"],
+    insight_report: data.insight_report as WeeklyFeedback["insight_report"],
+    execution_report:
+      data.execution_report as WeeklyFeedback["execution_report"],
+    closing_report: data.closing_report as WeeklyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -215,13 +217,12 @@ export async function saveWeeklyFeedback(
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
         weekly_overview: encryptedFeedback.weekly_overview,
-        emotion_overview: encryptedFeedback.emotion_overview ?? null,
-        growth_trends: encryptedFeedback.growth_trends,
-        insight_replay: encryptedFeedback.insight_replay,
-        vision_visualization_report:
-          encryptedFeedback.vision_visualization_report,
-        execution_reflection: encryptedFeedback.execution_reflection,
-        closing_section: encryptedFeedback.closing_section,
+        daily_life_report: encryptedFeedback.daily_life_report,
+        emotion_report: encryptedFeedback.emotion_report ?? null,
+        vision_report: encryptedFeedback.vision_report,
+        insight_report: encryptedFeedback.insight_report,
+        execution_report: encryptedFeedback.execution_report,
+        closing_report: encryptedFeedback.closing_report,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,week_start" }

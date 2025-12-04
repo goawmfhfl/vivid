@@ -7,6 +7,7 @@ export interface WeeklyFeedbackGenerateRequest {
   start: string; // "YYYY-MM-DD"
   end: string; // "YYYY-MM-DD"
   timezone?: string; // default "Asia/Seoul"
+  isPro?: boolean; // Pro 멤버십 여부 (서버에서 확인하거나 클라이언트에서 전달)
 }
 
 // AI 요청을 위한 daily feedback 배열 타입

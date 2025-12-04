@@ -1,8 +1,8 @@
 /**
- * Vision Visualization Report 스키마
+ * Vision Report 스키마
  * Pro/Free 분기 포함
  */
-export function getVisionVisualizationReportSchema(isPro: boolean) {
+export function getVisionReportSchema(isPro: boolean) {
   return {
     type: "object",
     additionalProperties: false,
@@ -314,4 +314,3 @@ export function getVisionVisualizationReportSchema(isPro: boolean) {
     ],
   };
 }
-

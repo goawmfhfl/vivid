@@ -1,8 +1,8 @@
 /**
- * Emotion Overview 스키마
+ * Emotion Report 스키마
  * Pro/Free 분기 포함
  */
-export function getEmotionOverviewSchema(isPro: boolean) {
+export function getEmotionReportSchema(isPro: boolean) {
   return {
     type: "object",
     additionalProperties: false,
@@ -74,7 +74,13 @@ export function getEmotionOverviewSchema(isPro: boolean) {
             ai_mood_arousal: { type: "number", nullable: true },
             dominant_emotion: { type: "string", nullable: true },
           },
-          required: ["date", "weekday", "ai_mood_valence", "ai_mood_arousal", "dominant_emotion"],
+          required: [
+            "date",
+            "weekday",
+            "ai_mood_valence",
+            "ai_mood_arousal",
+            "dominant_emotion",
+          ],
         },
         description: "기록이 있는 날짜의 일별 감정 데이터만 포함",
       },
@@ -97,4 +103,3 @@ export function getEmotionOverviewSchema(isPro: boolean) {
     ],
   };
 }
-

@@ -264,7 +264,7 @@ export type DailyLifeReport = {
 };
 
 // ============================================
-// Emotion Overview
+// Emotion Report
 // ============================================
 export type DailyEmotion = {
   date: string; // "11/24월" 형식
@@ -274,7 +274,7 @@ export type DailyEmotion = {
   dominant_emotion: string | null;
 };
 
-export type WeeklyEmotionOverview = {
+export type EmotionReport = {
   ai_mood_valence: number | null;
   ai_mood_arousal: number | null;
   dominant_emotion: string | null;
@@ -292,9 +292,9 @@ export type WeeklyEmotionOverview = {
 };
 
 // ============================================
-// Vision Visualization Report
+// Vision Report
 // ============================================
-export type VisionVisualizationReport = {
+export type VisionReport = {
   vision_summary: string;
   vision_consistency: {
     summary: string;
@@ -407,9 +407,9 @@ export type VisionVisualizationReport = {
 };
 
 // ============================================
-// Insight Replay
+// Insight Report
 // ============================================
-export type InsightReplay = {
+export type InsightReport = {
   core_insights: string[]; // 3-7개
   meta_questions_highlight: string[]; // 2-7개
   repeated_themes: Array<{
@@ -551,9 +551,9 @@ export type InsightReplay = {
 };
 
 // ============================================
-// Execution Reflection (Feedback)
+// Execution Report (Feedback)
 // ============================================
-export type ExecutionReflection = {
+export type ExecutionReport = {
   positives_top3: string[];
   improvements_top3: string[];
   ai_feedback_summary: string;
@@ -695,9 +695,9 @@ export type ExecutionReflection = {
 };
 
 // ============================================
-// Closing Section
+// Closing Report
 // ============================================
-export type ClosingSection = {
+export type ClosingReport = {
   call_to_action: string[]; // 3-5개
   this_week_identity: {
     summary: string;
@@ -769,11 +769,11 @@ export type WeeklyFeedback = {
   integrity_score: number; // 0-10, 평균값만
   weekly_overview: WeeklyOverview;
   daily_life_report: DailyLifeReport;
-  emotion_overview: WeeklyEmotionOverview | null;
-  vision_visualization_report: VisionVisualizationReport;
-  insight_replay: InsightReplay;
-  execution_reflection: ExecutionReflection;
-  closing_section: ClosingSection;
+  emotion_report: EmotionReport | null;
+  vision_report: VisionReport;
+  insight_report: InsightReport;
+  execution_report: ExecutionReport;
+  closing_report: ClosingReport;
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;

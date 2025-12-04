@@ -1,8 +1,8 @@
 /**
- * Execution Reflection (Feedback) 스키마
+ * Execution Report (Feedback) 스키마
  * Pro/Free 분기 포함
  */
-export function getExecutionReflectionSchema(isPro: boolean) {
+export function getExecutionReportSchema(isPro: boolean) {
   return {
     type: "object",
     additionalProperties: false,
@@ -118,12 +118,19 @@ export function getExecutionReflectionSchema(isPro: boolean) {
                       required: ["type", "data"],
                     },
                   },
-                  required: ["positives_categories_chart", "improvements_categories_chart"],
+                  required: [
+                    "positives_categories_chart",
+                    "improvements_categories_chart",
+                  ],
                 },
               }
             : {}),
         },
-        required: ["summary", "positives_categories", "improvements_categories"],
+        required: [
+          "summary",
+          "positives_categories",
+          "improvements_categories",
+        ],
       },
       person_traits_analysis: {
         type: "object",
@@ -349,4 +356,3 @@ export function getExecutionReflectionSchema(isPro: boolean) {
     ],
   };
 }
-

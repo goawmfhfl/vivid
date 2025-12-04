@@ -1,8 +1,8 @@
 /**
- * Closing Section 스키마
+ * Closing Report 스키마
  * Pro/Free 분기 포함
  */
-export function getClosingSectionSchema(isPro: boolean) {
+export function getClosingReportSchema(isPro: boolean) {
   return {
     type: "object",
     additionalProperties: false,
@@ -38,7 +38,12 @@ export function getClosingSectionSchema(isPro: boolean) {
                 },
                 frequency: { type: "integer", minimum: 0 },
               },
-              required: ["characteristic", "description", "evidence", "frequency"],
+              required: [
+                "characteristic",
+                "description",
+                "evidence",
+                "frequency",
+              ],
             },
             maxItems: isPro ? 7 : 5,
           },
@@ -152,7 +157,11 @@ export function getClosingSectionSchema(isPro: boolean) {
                             additionalProperties: false,
                             properties: {
                               characteristic: { type: "string" },
-                              value: { type: "number", minimum: 0, maximum: 10 },
+                              value: {
+                                type: "number",
+                                minimum: 0,
+                                maximum: 10,
+                              },
                             },
                             required: ["characteristic", "value"],
                           },
@@ -226,7 +235,10 @@ export function getClosingSectionSchema(isPro: boolean) {
         required: ["summary", "intention", "focus_areas"],
       },
     },
-    required: ["call_to_action", "this_week_identity", "next_week_identity_intention"],
+    required: [
+      "call_to_action",
+      "this_week_identity",
+      "next_week_identity_intention",
+    ],
   };
 }
-

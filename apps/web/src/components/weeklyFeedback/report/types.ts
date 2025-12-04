@@ -1,78 +1,45 @@
-// Weekly Report Data Type
+// Weekly Report Data Type (새로운 구조 반영)
+import type {
+  WeeklyOverview,
+  DailyLifeReport,
+  EmotionReport,
+  VisionReport,
+  InsightReport,
+  ExecutionReport,
+  ClosingReport,
+} from "@/types/weekly-feedback";
+
 export type WeeklyReportData = {
-  // Header
+  // Header (Weekly Overview 통합)
   week_range: {
     start: string; // "2025.10.28"
     end: string; // "2025.11.03"
   };
-  integrity: {
-    average: number;
-    min: number;
-    max: number;
-    stddev: number;
-    trend: string; // "전주 대비 +3"
-    daily_scores?: Array<{
-      date: string; // "2025.10.28"
-      weekday: string; // "월요일"
-      score: number; // 0-10
-    }>;
-  };
-  weekly_one_liner: string; // "생각이 전략으로, 실행이 습관으로 달을 내린 한 주"
-  next_week_focus: string; // "속도보다 방향 유지"
-
-  // Weekly Overview
-  weekly_overview: {
-    title: string;
-    narrative: string;
-    top_keywords: string[];
-    repeated_themes: Array<{ theme: string; count: number }>;
-    ai_overall_comment: string;
-  };
-
-  // Emotion Overview
-  emotion_overview: {
-    ai_mood_valence: number | null;
-    ai_mood_arousal: number | null;
-    dominant_emotion: string | null;
-    valence_explanation: string;
-    arousal_explanation: string;
-    valence_patterns: string[];
-    arousal_patterns: string[];
-    valence_triggers: string[];
-    arousal_triggers: string[];
-    anxious_triggers: string[];
-    engaged_triggers: string[];
-    sad_triggers: string[];
-    calm_triggers: string[];
-    daily_emotions: Array<{
-      date: string; // "2025.10.28"
-      weekday: string; // "월요일"
-      ai_mood_valence: number | null;
-      ai_mood_arousal: number | null;
-      dominant_emotion: string | null;
-    }>;
-  } | null;
-
-  // Growth Trends
-  growth_points_top3: string[];
-  adjustment_points_top3: string[];
-
-  // Insight Replay
-  core_insights: string[];
-  meta_questions_highlight: string[];
-
+  integrity_score: number; // 0-10
+  weekly_overview: WeeklyOverview;
+  
+  // Daily Life Report
+  daily_life_report: DailyLifeReport;
+  
+  // Emotion Report
+  emotion_report: EmotionReport | null;
+  
   // Vision Report
-  vision_summary: string;
-  vision_keywords_trend: Array<{ keyword: string; count: number }>;
-  alignment_comment: string;
-  reminder_sentences_featured: string[];
-
-  // Execution Reflection
-  positives_top3: string[];
-  improvements_top3: string[];
-  ai_feedback_summary: string;
-
-  // Closing
-  next_week_objective: string;
-  call_to_action: string[];
+  vision_report: VisionReport;
+  
+  // Insight Report
+  insight_report: InsightReport;
+  
+  // Execution Report
+  execution_report: ExecutionReport;
+  
+  // Closing Report
+  closing_report: ClosingReport;
+  
+  // 일별 정합도 점수 (API에서 추가)
+  daily_integrity_scores?: Array<{
+    date: string; // "2025.10.28"
+    weekday: string; // "월요일"
+    score: number; // 0-10
+  }>;
 };

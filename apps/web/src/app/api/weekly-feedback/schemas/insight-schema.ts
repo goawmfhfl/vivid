@@ -1,8 +1,8 @@
 /**
- * Insight Replay 스키마
+ * Insight Report 스키마
  * Pro/Free 분기 포함
  */
-export function getInsightReplaySchema(isPro: boolean) {
+export function getInsightReportSchema(isPro: boolean) {
   return {
     type: "object",
     additionalProperties: false,
@@ -391,4 +391,3 @@ export function getInsightReplaySchema(isPro: boolean) {
     ],
   };
 }
-
