@@ -15,6 +15,7 @@ export const maxDuration = 180;
  * 2. AI로 Weekly Feedback 생성
  * 3. DB 저장
  */
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
