@@ -98,8 +98,18 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
-          name: "keywords_analysis",
-          path: "view.daily_life_report.keywords_analysis",
+          name: "daily_rhythm",
+          path: "view.daily_life_report.daily_rhythm",
+          isPro: true,
+        },
+        {
+          name: "growth_insights",
+          path: "view.daily_life_report.growth_insights",
+          isPro: true,
+        },
+        {
+          name: "next_week_suggestions",
+          path: "view.daily_life_report.next_week_suggestions",
           isPro: true,
         },
       ],
@@ -140,6 +150,46 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           path: "view.emotion_report?.daily_emotions",
           isPro: false,
         },
+        {
+          name: "valence_patterns",
+          path: "view.emotion_report?.valence_patterns",
+          isPro: true,
+        },
+        {
+          name: "arousal_patterns",
+          path: "view.emotion_report?.arousal_patterns",
+          isPro: true,
+        },
+        {
+          name: "valence_triggers",
+          path: "view.emotion_report?.valence_triggers",
+          isPro: true,
+        },
+        {
+          name: "arousal_triggers",
+          path: "view.emotion_report?.arousal_triggers",
+          isPro: true,
+        },
+        {
+          name: "anxious_triggers",
+          path: "view.emotion_report?.anxious_triggers",
+          isPro: true,
+        },
+        {
+          name: "engaged_triggers",
+          path: "view.emotion_report?.engaged_triggers",
+          isPro: true,
+        },
+        {
+          name: "sad_triggers",
+          path: "view.emotion_report?.sad_triggers",
+          isPro: true,
+        },
+        {
+          name: "calm_triggers",
+          path: "view.emotion_report?.calm_triggers",
+          isPro: true,
+        },
       ],
       condition: "emotion_report !== null",
     },
@@ -159,8 +209,33 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
+          name: "vision_keywords_trend",
+          path: "view.vision_report.vision_keywords_trend",
+          isPro: true,
+        },
+        {
           name: "goals_pattern",
           path: "view.vision_report.goals_pattern",
+          isPro: true,
+        },
+        {
+          name: "self_vision_alignment",
+          path: "view.vision_report.self_vision_alignment",
+          isPro: true,
+        },
+        {
+          name: "dreamer_traits_evolution",
+          path: "view.vision_report.dreamer_traits_evolution",
+          isPro: true,
+        },
+        {
+          name: "ai_feedback_patterns",
+          path: "view.vision_report.ai_feedback_patterns",
+          isPro: true,
+        },
+        {
+          name: "vision_action_alignment",
+          path: "view.vision_report.vision_action_alignment",
           isPro: true,
         },
         {
@@ -187,8 +262,33 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
+          name: "repeated_themes",
+          path: "view.insight_report.repeated_themes",
+          isPro: true,
+        },
+        {
           name: "insight_patterns",
           path: "view.insight_report.insight_patterns",
+          isPro: true,
+        },
+        {
+          name: "meta_questions_analysis",
+          path: "view.insight_report.meta_questions_analysis",
+          isPro: true,
+        },
+        {
+          name: "ai_comment_patterns",
+          path: "view.insight_report.ai_comment_patterns",
+          isPro: true,
+        },
+        {
+          name: "action_patterns",
+          path: "view.insight_report.action_patterns",
+          isPro: true,
+        },
+        {
+          name: "insight_action_alignment",
+          path: "view.insight_report.insight_action_alignment",
           isPro: true,
         },
         {
@@ -222,6 +322,26 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         {
           name: "feedback_patterns",
           path: "view.execution_report.feedback_patterns",
+          isPro: true,
+        },
+        {
+          name: "person_traits_analysis",
+          path: "view.execution_report.person_traits_analysis",
+          isPro: true,
+        },
+        {
+          name: "core_feedback_themes",
+          path: "view.execution_report.core_feedback_themes",
+          isPro: true,
+        },
+        {
+          name: "ai_message_patterns",
+          path: "view.execution_report.ai_message_patterns",
+          isPro: true,
+        },
+        {
+          name: "improvement_action_alignment",
+          path: "view.execution_report.improvement_action_alignment",
           isPro: true,
         },
         {
@@ -259,8 +379,33 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
-          name: "growth_story",
-          path: "view.closing_report.growth_story",
+          name: "this_week_identity.core_characteristics",
+          path: "view.closing_report.this_week_identity?.core_characteristics",
+          isPro: true,
+        },
+        {
+          name: "this_week_identity.growth_story",
+          path: "view.closing_report.this_week_identity?.growth_story",
+          isPro: true,
+        },
+        {
+          name: "this_week_identity.strengths_highlighted",
+          path: "view.closing_report.this_week_identity?.strengths_highlighted",
+          isPro: true,
+        },
+        {
+          name: "this_week_identity.areas_of_awareness",
+          path: "view.closing_report.this_week_identity?.areas_of_awareness",
+          isPro: true,
+        },
+        {
+          name: "this_week_identity.identity_evolution",
+          path: "view.closing_report.this_week_identity?.identity_evolution",
+          isPro: true,
+        },
+        {
+          name: "next_week_identity_intention",
+          path: "view.closing_report.next_week_identity_intention",
           isPro: true,
         },
       ],
@@ -271,16 +416,20 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
 
   // 필드 값 가져오기 헬퍼
   const getFieldValue = (path: string) => {
-    const parts = path.split(".");
+    // "view." 제거
+    const pathWithoutView = path.replace(/^view\./, "");
+    
+    // 옵셔널 체이닝(`?.`)과 일반 점(`.`)을 모두 분리
+    // `?.`가 있으면 옵셔널로 처리, 없으면 일반 접근
+    const parts = pathWithoutView.split(/\?\.|\./).filter(Boolean);
+    
     let value: any = view;
-    for (const part of parts.slice(1)) {
-      // 옵셔널 체이닝 처리
-      if (part.includes("?.")) {
-        const cleanPart = part.replace("?.", "");
-        value = value?.[cleanPart];
-      } else {
-        value = value?.[part];
+    for (const part of parts) {
+      // 모든 접근에 옵셔널 체이닝 사용 (null/undefined 안전)
+      if (value === null || value === undefined) {
+        return undefined;
       }
+      value = value[part];
     }
     return value;
   };
