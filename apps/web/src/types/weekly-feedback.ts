@@ -38,26 +38,11 @@ export type DailyLifeReport = {
       days: string[]; // "YYYY-MM-DD"
       context: string;
     }>;
-    event_categories: {
-      work?: {
-        count: number;
-        examples: string[];
-      };
-      self_care?: {
-        count: number;
-        examples: string[];
-      };
-      social?: {
-        count: number;
-        examples: string[];
-      };
-      [key: string]:
-        | {
-            count: number;
-            examples: string[];
-          }
-        | undefined;
-    };
+    event_categories: Array<{
+      category: string;
+      count: number;
+      examples: string[];
+    }>;
     timing_patterns: Array<{
       time_range: string;
       common_events: string[];
@@ -171,26 +156,11 @@ export type DailyLifeReport = {
       context: string;
       sentiment: "positive" | "negative" | "neutral";
     }>;
-    keyword_categories: {
-      stress?: {
-        keywords: string[];
-        count: number;
-      };
-      resilience?: {
-        keywords: string[];
-        count: number;
-      };
-      self_care?: {
-        keywords: string[];
-        count: number;
-      };
-      [key: string]:
-        | {
-            keywords: string[];
-            count: number;
-          }
-        | undefined;
-    };
+    keyword_categories: Array<{
+      category: string;
+      keywords: string[];
+      count: number;
+    }>;
     visualization?: {
       word_cloud: {
         keywords: Array<{
@@ -309,30 +279,12 @@ export type VisionReport = {
   }>;
   goals_pattern: {
     summary: string;
-    goal_categories: {
-      daily_routine?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      product_development?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      business_setup?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      [key: string]:
-        | {
-            count: number;
-            examples: string[];
-            insight: string;
-          }
-        | undefined;
-    };
+    goal_categories: Array<{
+      category: string;
+      count: number;
+      examples: string[];
+      insight: string;
+    }>;
     visualization?: {
       goal_categories_chart: {
         type: "pie";
@@ -418,25 +370,12 @@ export type InsightReport = {
   }>;
   insight_patterns: {
     summary: string;
-    insight_categories: {
-      strength_discovery?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      growth_mindset?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      [key: string]:
-        | {
-            count: number;
-            examples: string[];
-            insight: string;
-          }
-        | undefined;
-    };
+    insight_categories: Array<{
+      category: string;
+      count: number;
+      examples: string[];
+      insight: string;
+    }>;
     visualization?: {
       insight_categories_chart: {
         type: "pie";
@@ -559,54 +498,18 @@ export type ExecutionReport = {
   ai_feedback_summary: string;
   feedback_patterns: {
     summary: string;
-    positives_categories: {
-      self_awareness?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      problem_solving?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      focus_and_execution?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      [key: string]:
-        | {
-            count: number;
-            examples: string[];
-            insight: string;
-          }
-        | undefined;
-    };
-    improvements_categories: {
-      planning_structure?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      understanding_depth?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      execution_systems?: {
-        count: number;
-        examples: string[];
-        insight: string;
-      };
-      [key: string]:
-        | {
-            count: number;
-            examples: string[];
-            insight: string;
-          }
-        | undefined;
-    };
+    positives_categories: Array<{
+      category: string;
+      count: number;
+      examples: string[];
+      insight: string;
+    }>;
+    improvements_categories: Array<{
+      category: string;
+      count: number;
+      examples: string[];
+      insight: string;
+    }>;
     visualization?: {
       positives_categories_chart: {
         type: "pie";

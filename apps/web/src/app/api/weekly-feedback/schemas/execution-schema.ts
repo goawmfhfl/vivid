@@ -32,42 +32,42 @@ export function getExecutionReportSchema(isPro: boolean) {
             maxLength: isPro ? 300 : 200,
           },
           positives_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string" },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                examples: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["count", "examples", "insight"],
+                insight: { type: "string" },
               },
+              required: ["category", "count", "examples", "insight"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           improvements_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string" },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                examples: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["count", "examples", "insight"],
+                insight: { type: "string" },
               },
+              required: ["category", "count", "examples", "insight"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           ...(isPro
             ? {
@@ -126,11 +126,14 @@ export function getExecutionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: [
-          "summary",
-          "positives_categories",
-          "improvements_categories",
-        ],
+        required: isPro
+          ? [
+              "summary",
+              "positives_categories",
+              "improvements_categories",
+              "visualization",
+            ]
+          : ["summary", "positives_categories", "improvements_categories"],
       },
       person_traits_analysis: {
         type: "object",
@@ -190,7 +193,9 @@ export function getExecutionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "key_traits"],
+        required: isPro
+          ? ["summary", "key_traits", "visualization"]
+          : ["summary", "key_traits"],
       },
       core_feedback_themes: {
         type: "object",
@@ -245,7 +250,9 @@ export function getExecutionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "main_themes"],
+        required: isPro
+          ? ["summary", "main_themes", "visualization"]
+          : ["summary", "main_themes"],
       },
       ai_message_patterns: {
         type: "object",

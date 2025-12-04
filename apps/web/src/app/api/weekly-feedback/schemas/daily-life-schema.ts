@@ -106,22 +106,22 @@ export function getDailyLifeReportSchema(isPro: boolean) {
             maxItems: isPro ? 10 : 5,
           },
           event_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                examples: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["count", "examples"],
               },
+              required: ["category", "count", "examples"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           timing_patterns: {
             type: "array",
@@ -141,7 +141,11 @@ export function getDailyLifeReportSchema(isPro: boolean) {
             maxItems: isPro ? 5 : 3,
           },
         },
-        required: ["most_frequent_events", "event_categories", "timing_patterns"],
+        required: [
+          "most_frequent_events",
+          "event_categories",
+          "timing_patterns",
+        ],
       },
       emotion_triggers_analysis: {
         type: "object",
@@ -216,7 +220,9 @@ export function getDailyLifeReportSchema(isPro: boolean) {
           },
           ...visualizationSchema,
         },
-        required: ["summary", "category_distribution"],
+        required: isPro
+          ? ["summary", "category_distribution", "visualization"]
+          : ["summary", "category_distribution"],
       },
       behavioral_patterns: {
         type: "object",
@@ -301,7 +307,13 @@ export function getDailyLifeReportSchema(isPro: boolean) {
                 required: ["count", "percentage", "examples", "insight"],
               },
             },
-            required: ["planned", "impulsive", "routine_attempt", "avoidance", "routine_failure"],
+            required: [
+              "planned",
+              "impulsive",
+              "routine_attempt",
+              "avoidance",
+              "routine_failure",
+            ],
           },
           ...(isPro
             ? {
@@ -352,7 +364,14 @@ export function getDailyLifeReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "pattern_distribution"],
+        required: isPro
+          ? [
+              "summary",
+              "pattern_distribution",
+              "visualization",
+              "behavior_emotion_correlation",
+            ]
+          : ["summary", "pattern_distribution"],
       },
       keywords_analysis: {
         type: "object",
@@ -376,27 +395,33 @@ export function getDailyLifeReportSchema(isPro: boolean) {
                   enum: ["positive", "negative", "neutral"],
                 },
               },
-              required: ["keyword", "frequency", "days", "context", "sentiment"],
+              required: [
+                "keyword",
+                "frequency",
+                "days",
+                "context",
+                "sentiment",
+              ],
             },
             maxItems: isPro ? 15 : 10,
           },
           keyword_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  keywords: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  count: { type: "integer", minimum: 0 },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                keywords: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["keywords", "count"],
+                count: { type: "integer", minimum: 0 },
               },
+              required: ["category", "keywords", "count"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           ...(isPro
             ? {
@@ -445,7 +470,9 @@ export function getDailyLifeReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["top_keywords", "keyword_categories"],
+        required: isPro
+          ? ["top_keywords", "keyword_categories", "visualization"]
+          : ["top_keywords", "keyword_categories"],
       },
       ai_comments_insights: {
         type: "object",
@@ -501,7 +528,9 @@ export function getDailyLifeReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["common_themes", "actionable_advice_summary"],
+        required: isPro
+          ? ["common_themes", "actionable_advice_summary", "visualization"]
+          : ["common_themes", "actionable_advice_summary"],
       },
       daily_rhythm: {
         type: "object",
@@ -528,7 +557,12 @@ export function getDailyLifeReportSchema(isPro: boolean) {
                 },
                 pattern_description: { type: "string" },
               },
-              required: ["time_period", "common_activities", "typical_emotions", "pattern_description"],
+              required: [
+                "time_period",
+                "common_activities",
+                "typical_emotions",
+                "pattern_description",
+              ],
             },
             maxItems: isPro ? 5 : 3,
           },
@@ -568,7 +602,9 @@ export function getDailyLifeReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "time_patterns"],
+        required: isPro
+          ? ["summary", "time_patterns", "visualization"]
+          : ["summary", "time_patterns"],
       },
       growth_insights: {
         type: "object",
@@ -614,7 +650,11 @@ export function getDailyLifeReportSchema(isPro: boolean) {
             maxItems: isPro ? 5 : 3,
           },
         },
-        required: ["resilience_patterns", "improvement_opportunities", "strengths_highlighted"],
+        required: [
+          "resilience_patterns",
+          "improvement_opportunities",
+          "strengths_highlighted",
+        ],
       },
       next_week_suggestions: {
         type: "object",
@@ -660,4 +700,3 @@ export function getDailyLifeReportSchema(isPro: boolean) {
     ],
   };
 }
-

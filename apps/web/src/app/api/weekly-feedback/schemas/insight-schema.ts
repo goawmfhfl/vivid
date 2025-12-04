@@ -40,23 +40,23 @@ export function getInsightReportSchema(isPro: boolean) {
             maxLength: isPro ? 300 : 200,
           },
           insight_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string" },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                examples: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["count", "examples", "insight"],
+                insight: { type: "string" },
               },
+              required: ["category", "count", "examples", "insight"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           ...(isPro
             ? {
@@ -121,7 +121,14 @@ export function getInsightReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "insight_categories"],
+        required: isPro
+          ? [
+              "summary",
+              "insight_categories",
+              "visualization",
+              "key_strengths_identified",
+            ]
+          : ["summary", "insight_categories"],
       },
       meta_questions_analysis: {
         type: "object",
@@ -178,7 +185,9 @@ export function getInsightReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "question_themes"],
+        required: isPro
+          ? ["summary", "question_themes", "visualization"]
+          : ["summary", "question_themes"],
       },
       ai_comment_patterns: {
         type: "object",
@@ -306,7 +315,14 @@ export function getInsightReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "difficulty_distribution", "time_commitment"],
+        required: isPro
+          ? [
+              "summary",
+              "difficulty_distribution",
+              "time_commitment",
+              "visualization",
+            ]
+          : ["summary", "difficulty_distribution", "time_commitment"],
       },
       insight_action_alignment: {
         type: "object",

@@ -211,14 +211,24 @@ export function getClosingReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: [
-          "summary",
-          "core_characteristics",
-          "growth_story",
-          "strengths_highlighted",
-          "areas_of_awareness",
-          "identity_evolution",
-        ],
+        required: isPro
+          ? [
+              "summary",
+              "core_characteristics",
+              "growth_story",
+              "strengths_highlighted",
+              "areas_of_awareness",
+              "identity_evolution",
+              "visualization",
+            ]
+          : [
+              "summary",
+              "core_characteristics",
+              "growth_story",
+              "strengths_highlighted",
+              "areas_of_awareness",
+              "identity_evolution",
+            ],
       },
       next_week_identity_intention: {
         type: "object",

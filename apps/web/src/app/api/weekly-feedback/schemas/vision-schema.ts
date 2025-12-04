@@ -54,23 +54,23 @@ export function getVisionReportSchema(isPro: boolean) {
             maxLength: isPro ? 300 : 200,
           },
           goal_categories: {
-            type: "object",
-            additionalProperties: true,
-            patternProperties: {
-              "^.*$": {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string" },
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                examples: {
+                  type: "array",
+                  items: { type: "string" },
                 },
-                required: ["count", "examples", "insight"],
+                insight: { type: "string" },
               },
+              required: ["category", "count", "examples", "insight"],
             },
+            minItems: 1,
+            maxItems: isPro ? 10 : 7,
           },
           ...(isPro
             ? {
@@ -105,7 +105,9 @@ export function getVisionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "goal_categories"],
+        required: isPro
+          ? ["summary", "goal_categories", "visualization"]
+          : ["summary", "goal_categories"],
       },
       self_vision_alignment: {
         type: "object",
@@ -161,7 +163,9 @@ export function getVisionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "key_traits"],
+        required: isPro
+          ? ["summary", "key_traits", "visualization"]
+          : ["summary", "key_traits"],
       },
       dreamer_traits_evolution: {
         type: "object",
@@ -217,7 +221,9 @@ export function getVisionReportSchema(isPro: boolean) {
               }
             : {}),
         },
-        required: ["summary", "common_traits"],
+        required: isPro
+          ? ["summary", "common_traits", "visualization"]
+          : ["summary", "common_traits"],
       },
       ...(isPro
         ? {
@@ -303,14 +309,26 @@ export function getVisionReportSchema(isPro: boolean) {
         required: ["focus_areas", "maintain_momentum"],
       },
     },
-    required: [
-      "vision_summary",
-      "vision_consistency",
-      "vision_keywords_trend",
-      "goals_pattern",
-      "self_vision_alignment",
-      "dreamer_traits_evolution",
-      "next_week_vision_focus",
-    ],
+    required: isPro
+      ? [
+          "vision_summary",
+          "vision_consistency",
+          "vision_keywords_trend",
+          "goals_pattern",
+          "self_vision_alignment",
+          "dreamer_traits_evolution",
+          "ai_feedback_patterns",
+          "vision_action_alignment",
+          "next_week_vision_focus",
+        ]
+      : [
+          "vision_summary",
+          "vision_consistency",
+          "vision_keywords_trend",
+          "goals_pattern",
+          "self_vision_alignment",
+          "dreamer_traits_evolution",
+          "next_week_vision_focus",
+        ],
   };
 }
