@@ -13,6 +13,9 @@ import { CalendarSection } from "./CalendarSection";
 import { SelectedDateSection } from "./SelectedDateSection";
 import { DailyFeedbackButton } from "./DailyFeedbackButton";
 import { CreateDailyFeedbackButton } from "./CreateDailyFeedbackButton";
+import { EditRecordDialog } from "../home/EditRecordDialog";
+import { DeleteRecordDialog } from "../home/DeleteRecordDialog";
+import { type Record } from "@/hooks/useRecords";
 
 type LogViewProps = {
   onSelectDate?: (date: Date) => void;
@@ -25,6 +28,9 @@ export function LogView({ onSelectDate }: LogViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(() =>
     getLocalStartOfDay()
   );
+  const [editingRecord, setEditingRecord] = useState<Record | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
 
   const currentYear = selectedMonth.getFullYear();
   const currentMonth = selectedMonth.getMonth() + 1;
@@ -63,6 +69,22 @@ export function LogView({ onSelectDate }: LogViewProps) {
     );
   };
 
+  const handleEdit = (record: Record) => {
+    setEditingRecord(record);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = (open: boolean) => {
+    if (!open) {
+      setIsEditDialogOpen(false);
+      setEditingRecord(null);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    setDeletingRecordId(id);
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAFAF8" }}>
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -91,6 +113,8 @@ export function LogView({ onSelectDate }: LogViewProps) {
           dateLabel={selectedDateLabel}
           isToday={isToday}
           records={selectedDateRecords}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
 
         {hasDailyFeedback ? (
@@ -101,6 +125,24 @@ export function LogView({ onSelectDate }: LogViewProps) {
           )
         )}
       </div>
+
+      {/* 편집 다이얼로그 */}
+      <EditRecordDialog
+        record={editingRecord}
+        open={isEditDialogOpen}
+        onOpenChange={handleCloseEditDialog}
+      />
+
+      {/* 삭제 다이얼로그 */}
+      <DeleteRecordDialog
+        recordId={deletingRecordId}
+        open={deletingRecordId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingRecordId(null);
+          }
+        }}
+      />
     </div>
   );
 }

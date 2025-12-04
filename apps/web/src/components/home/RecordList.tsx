@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PenLine } from "lucide-react";
-import { RecordItem } from "./RecordItem";
+import { RecordItem } from "../common/RecordItem";
 import { type Record } from "../../hooks/useRecords";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";

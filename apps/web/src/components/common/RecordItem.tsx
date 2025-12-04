@@ -23,11 +23,17 @@ import {
 
 interface RecordItemProps {
   record: Record;
-  onEdit: (record: Record) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (record: Record) => void;
+  onDelete?: (id: number) => void;
+  showActions?: boolean; // 편집/삭제 버튼 표시 여부
 }
 
-export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
+export function RecordItem({
+  record,
+  onEdit,
+  onDelete,
+  showActions = true,
+}: RecordItemProps) {
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const hours = date.getHours();
@@ -40,6 +46,9 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
   const recordType = (record.type as RecordType) || "daily";
   const typeColors = RECORD_TYPE_COLORS[recordType];
   const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
+
+  // 편집/삭제 기능이 있는지 확인
+  const hasActions = showActions && (onEdit || onDelete);
 
   return (
     <div
@@ -130,7 +139,11 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
 
       {/* 내용 영역 */}
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-3">
+        <div
+          className={`flex items-start justify-between mb-3 ${
+            hasActions ? "" : "flex-wrap"
+          }`}
+        >
           <div className="flex items-center gap-2.5 flex-wrap">
             {typeInfo && (
               <div className="flex items-center gap-1.5">
@@ -177,77 +190,84 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
             </span>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                style={{ color: COLORS.brand.primary }}
-                className="focus:outline-none focus:ring-0"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="min-w-[140px]"
-              style={{
-                backgroundColor: COLORS.background.card,
-                border: `1px solid ${COLORS.border.input}`,
-                boxShadow: SHADOWS.md,
-              }}
-            >
-              <DropdownMenuItem
-                onClick={() => {
-                  onEdit(record);
-                }}
-                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
-                style={{
-                  color: COLORS.text.primary,
-                  padding: "0.625rem 1rem",
-                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                  fontWeight: "500",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    COLORS.background.hover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    COLORS.background.card;
-                }}
-              >
-                <Pencil
-                  className="w-4 h-4 mr-2"
+          {/* 편집/삭제 메뉴 */}
+          {hasActions && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   style={{ color: COLORS.brand.primary }}
-                />
-                수정하기
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete(record.id)}
-                className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+                  className="focus:outline-none focus:ring-0"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[140px]"
                 style={{
-                  color: COLORS.status.error,
-                  padding: "0.625rem 1rem",
-                  fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
-                  fontWeight: "500",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#FEF2F2";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    COLORS.background.card;
+                  backgroundColor: COLORS.background.card,
+                  border: `1px solid ${COLORS.border.input}`,
+                  boxShadow: SHADOWS.md,
                 }}
               >
-                <Trash2
-                  className="w-4 h-4 mr-2"
-                  style={{ color: COLORS.status.error }}
-                />
-                삭제하기
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {onEdit && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      onEdit(record);
+                    }}
+                    className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+                    style={{
+                      color: COLORS.text.primary,
+                      padding: "0.625rem 1rem",
+                      fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+                      fontWeight: "500",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        COLORS.background.hover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        COLORS.background.card;
+                    }}
+                  >
+                    <Pencil
+                      className="w-4 h-4 mr-2"
+                      style={{ color: COLORS.brand.primary }}
+                    />
+                    수정하기
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem
+                    onClick={() => onDelete(record.id)}
+                    className={`focus:outline-none cursor-pointer ${TRANSITIONS.colors}`}
+                    style={{
+                      color: COLORS.status.error,
+                      padding: "0.625rem 1rem",
+                      fontSize: TYPOGRAPHY.body.fontSize.replace("text-", ""),
+                      fontWeight: "500",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#FEF2F2";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        COLORS.background.card;
+                    }}
+                  >
+                    <Trash2
+                      className="w-4 h-4 mr-2"
+                      style={{ color: COLORS.status.error }}
+                    />
+                    삭제하기
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <p
           className={TYPOGRAPHY.bodyLarge.fontSize}
@@ -265,3 +285,4 @@ export function RecordItem({ record, onEdit, onDelete }: RecordItemProps) {
     </div>
   );
 }
+
