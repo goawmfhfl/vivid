@@ -111,26 +111,26 @@ export function Home() {
       setIsGenerating(true);
       let currentEs: EventSource | null = null;
 
+      const sectionNames = [
+        "SummaryReport",
+        "DailyReport",
+        "EmotionReport",
+        "DreamReport",
+        "InsightReport",
+        "FeedbackReport",
+        "FinalReport",
+      ];
+
+      // 진행 상황 즉시 초기화 (버튼 클릭 시 바로 프로그래스바 표시)
+      setDailyFeedbackProgress(todayIso, {
+        date: todayIso,
+        current: 0,
+        total: sectionNames.length,
+        currentStep: getSectionNameKR(sectionNames[0]),
+      });
+
       try {
         const userId = await getCurrentUserId();
-
-        const sectionNames = [
-          "SummaryReport",
-          "DailyReport",
-          "EmotionReport",
-          "DreamReport",
-          "InsightReport",
-          "FeedbackReport",
-          "FinalReport",
-        ];
-
-        // 진행 상황 초기화 (전역 상태)
-        setDailyFeedbackProgress(todayIso, {
-          date: todayIso,
-          current: 0,
-          total: sectionNames.length,
-          currentStep: getSectionNameKR(sectionNames[0]),
-        });
 
         // SSE를 사용하여 진행 상황 수신
         await new Promise<void>((resolve, reject) => {
@@ -391,7 +391,7 @@ export function Home() {
                     lineHeight: "1.2",
                   }}
                 >
-                  {isGeneratingFeedback
+                  {progress
                     ? "피드백 생성 중..."
                     : hasTodayFeedback
                     ? "오늘 피드백 보기"

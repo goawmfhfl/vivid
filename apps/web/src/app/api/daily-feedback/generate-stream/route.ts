@@ -22,23 +22,37 @@ export async function GET(request: NextRequest) {
   // SSE 스트림 생성
   const stream = new ReadableStream({
     async start(controller) {
+      let isClosed = false;
+
       const sendProgress = (
         step: number,
         total: number,
         sectionName: string,
         tracking?: any
       ) => {
-        const data = JSON.stringify({
-          type: "progress",
-          current: step,
-          total,
-          sectionName,
-          tracking, // 추적 정보도 함께 전송
-        });
-        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        // 컨트롤러가 이미 닫혀있으면 무시
+        if (isClosed) {
+          return;
+        }
+        try {
+          const data = JSON.stringify({
+            type: "progress",
+            current: step,
+            total,
+            sectionName,
+            tracking, // 추적 정보도 함께 전송
+          });
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        } catch (error) {
+          // 컨트롤러가 닫혀있으면 무시
+          isClosed = true;
+          console.warn("Cannot send progress: controller is closed");
+        }
       };
 
       const sendComplete = (data: any & { id: string; tracking?: any[] }) => {
+        if (isClosed) return;
+        isClosed = true;
         const result = JSON.stringify({
           type: "complete",
           data,
@@ -48,6 +62,8 @@ export async function GET(request: NextRequest) {
       };
 
       const sendError = (error: string) => {
+        if (isClosed) return;
+        isClosed = true;
         const data = JSON.stringify({
           type: "error",
           error,
@@ -61,7 +77,6 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams;
         const userId = searchParams.get("userId");
         const date = searchParams.get("date");
-        const isProFromRequest = searchParams.get("isPro") === "true";
 
         // 요청 검증
         if (!userId || !date) {
@@ -72,8 +87,7 @@ export async function GET(request: NextRequest) {
         const supabase = getServiceSupabase();
 
         // Pro 멤버십 확인
-        const isPro =
-          isProFromRequest ?? (await verifySubscription(userId)).isPro;
+        const isPro = (await verifySubscription(userId)).isPro;
 
         // 1️⃣ Records 데이터 조회
         const records = await fetchRecordsByDate(supabase, userId, date);
@@ -108,8 +122,8 @@ export async function GET(request: NextRequest) {
 
         // 추적 정보 수집 (테스트 환경에서만)
         const trackingInfo =
-          process.env.NODE_ENV === "development" ||
-          process.env.NEXT_PUBLIC_NODE_ENV === "development"
+          process.env.NODE_ENV === "test" ||
+          process.env.NEXT_PUBLIC_NODE_ENV === "test"
             ? extractTrackingInfo(report)
             : undefined;
 

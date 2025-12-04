@@ -15,7 +15,6 @@ import { getCurrentUserId } from "@/hooks/useCurrentUser";
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
   const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
   const { addRequest, updateRequest, requests, openModal } =
@@ -25,6 +24,8 @@ export function WeeklyCandidatesSection() {
     weeklyFeedbackProgress,
     setWeeklyFeedbackProgress,
     clearWeeklyFeedbackProgress,
+    weeklyCandidatesDropdown,
+    toggleWeeklyCandidatesDropdown,
   } = useModalStore();
 
   // 진행 상태 추적 (테스트 환경에서만 - 요금 모달 자동 열기용)
@@ -272,7 +273,7 @@ export function WeeklyCandidatesSection() {
           backgroundColor: "#F0F7F0",
           border: "1px solid #A8BBA8",
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={toggleWeeklyCandidatesDropdown}
       >
         <div className="flex items-start gap-3">
           <div
@@ -310,7 +311,9 @@ export function WeeklyCandidatesSection() {
               <div
                 className="flex-shrink-0 transition-transform duration-300"
                 style={{
-                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transform: weeklyCandidatesDropdown.isExpanded
+                    ? "rotate(180deg)"
+                    : "rotate(0deg)",
                 }}
               >
                 <ChevronDown className="w-5 h-5" style={{ color: "#A8BBA8" }} />
@@ -324,12 +327,14 @@ export function WeeklyCandidatesSection() {
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
         style={{
-          maxHeight: isExpanded
+          maxHeight: weeklyCandidatesDropdown.isExpanded
             ? `${Math.min(candidatesForCreation.length * 80, 400)}px`
             : "0px",
-          opacity: isExpanded ? 1 : 0,
-          marginTop: isExpanded ? "12px" : "0px",
-          transform: isExpanded ? "translateY(0)" : "translateY(-10px)",
+          opacity: weeklyCandidatesDropdown.isExpanded ? 1 : 0,
+          marginTop: weeklyCandidatesDropdown.isExpanded ? "12px" : "0px",
+          transform: weeklyCandidatesDropdown.isExpanded
+            ? "translateY(0)"
+            : "translateY(-10px)",
         }}
       >
         <div className="space-y-2">

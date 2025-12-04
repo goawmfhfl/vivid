@@ -45,6 +45,12 @@ interface DailyFeedbackProgress {
   currentStep: string;
 }
 
+interface WeeklyCandidatesDropdownState {
+  isExpanded: boolean;
+  toggle: () => void;
+  setExpanded: (expanded: boolean) => void;
+}
+
 interface ModalStore {
   // Loading Modal
   loadingModal: LoadingModalState;
@@ -89,6 +95,11 @@ interface ModalStore {
   ) => void;
   clearDailyFeedbackProgress: (date: string) => void;
   clearAllDailyFeedbackProgress: () => void;
+
+  // Weekly Candidates Dropdown (전역 상태)
+  weeklyCandidatesDropdown: WeeklyCandidatesDropdownState;
+  toggleWeeklyCandidatesDropdown: () => void;
+  setWeeklyCandidatesDropdownExpanded: (expanded: boolean) => void;
 }
 
 const defaultLoadingMessage = "처리 중입니다...";
@@ -278,4 +289,39 @@ export const useModalStore = create<ModalStore>((set) => ({
     }),
 
   clearAllDailyFeedbackProgress: () => set({ dailyFeedbackProgress: {} }),
+
+  // Weekly Candidates Dropdown 초기 상태
+  weeklyCandidatesDropdown: {
+    isExpanded: false,
+    toggle: () =>
+      set((state) => ({
+        weeklyCandidatesDropdown: {
+          ...state.weeklyCandidatesDropdown,
+          isExpanded: !state.weeklyCandidatesDropdown.isExpanded,
+        },
+      })),
+    setExpanded: (expanded) =>
+      set((state) => ({
+        weeklyCandidatesDropdown: {
+          ...state.weeklyCandidatesDropdown,
+          isExpanded: expanded,
+        },
+      })),
+  },
+
+  toggleWeeklyCandidatesDropdown: () =>
+    set((state) => ({
+      weeklyCandidatesDropdown: {
+        ...state.weeklyCandidatesDropdown,
+        isExpanded: !state.weeklyCandidatesDropdown.isExpanded,
+      },
+    })),
+
+  setWeeklyCandidatesDropdownExpanded: (expanded) =>
+    set((state) => ({
+      weeklyCandidatesDropdown: {
+        ...state.weeklyCandidatesDropdown,
+        isExpanded: expanded,
+      },
+    })),
 }));

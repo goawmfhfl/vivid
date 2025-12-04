@@ -135,14 +135,99 @@ async function generateSection<T>(
     }
 
     const parsed = JSON.parse(content);
-    const result = Object.values(parsed)[0] as T; // 스키마가 { "SummaryReportResponse": { ... } } 형태이므로 실제 데이터를 추출
+
+    // 파싱된 결과에서 실제 데이터 추출
+    // OpenAI는 다양한 형태로 반환할 수 있음:
+    // 1. { "SummaryReportResponse": { summary_report: {...} } }
+    // 2. { "summary_report": {...} }
+    // 3. { "SummaryReportResponse": {...} } (직접 객체)
+    let result: T;
+
+    // parsed가 이미 직접 객체인 경우 (래퍼 없이)
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      Object.keys(parsed).length > 0
+    ) {
+      const firstValue = Object.values(parsed)[0];
+
+      // 첫 번째 값이 객체인 경우
+      if (
+        firstValue !== null &&
+        firstValue !== undefined &&
+        typeof firstValue === "object" &&
+        !Array.isArray(firstValue)
+      ) {
+        result = firstValue as T;
+      } else if (typeof firstValue === "string") {
+        // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
+        console.warn(
+          `[${schemaObj.name}] First value is string, checking parsed structure:`,
+          {
+            parsed,
+            parsedKeys: Object.keys(parsed),
+            firstValue,
+          }
+        );
+
+        // parsed가 직접 원하는 구조인지 확인 (예: { summary_report: {...} })
+        // 또는 다른 키를 확인
+        const keys = Object.keys(parsed);
+        const objectValue = keys.find(
+          (key) =>
+            parsed[key] !== null &&
+            parsed[key] !== undefined &&
+            typeof parsed[key] === "object" &&
+            !Array.isArray(parsed[key])
+        );
+
+        if (objectValue) {
+          result = parsed[objectValue] as T;
+        } else {
+          // parsed 자체가 원하는 객체인 경우
+          result = parsed as T;
+        }
+      } else {
+        // 그 외의 경우 parsed 자체를 사용
+        result = parsed as T;
+      }
+    } else {
+      // parsed가 배열이거나 null인 경우
+      result = parsed as T;
+    }
+
+    // 결과가 객체가 아닌 경우 에러
+    if (
+      result === null ||
+      result === undefined ||
+      typeof result !== "object" ||
+      Array.isArray(result)
+    ) {
+      console.error(`Invalid result type for ${schemaObj.name}:`, {
+        resultType: typeof result,
+        result,
+        parsed,
+        parsedKeys: Object.keys(parsed || {}),
+        parsedValues: Object.values(parsed || {}),
+      });
+      throw new Error(
+        `Invalid response format for ${
+          schemaObj.name
+        }: expected object but got ${typeof result}. This may indicate a schema mismatch.`
+      );
+    }
 
     setCache(proCacheKey, result);
 
-    // 개발 환경에서 추적 정보 추가
+    // 개발 환경에서 추적 정보 추가 (객체인 경우에만)
     if (
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_NODE_ENV === "development"
+      (process.env.NODE_ENV === "development" ||
+        process.env.NEXT_PUBLIC_NODE_ENV === "development") &&
+      result !== null &&
+      result !== undefined &&
+      typeof result === "object" &&
+      !Array.isArray(result)
     ) {
       const usage = completion.usage;
       const cachedTokens =

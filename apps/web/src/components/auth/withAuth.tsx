@@ -19,7 +19,6 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
   return function AuthenticatedComponent(props: P) {
     const router = useRouter();
     const { data: user, isLoading, error } = useCurrentUser();
-    console.log("user", user);
 
     useEffect(() => {
       // 로딩 중이 아닐 때만 인증 상태 확인
