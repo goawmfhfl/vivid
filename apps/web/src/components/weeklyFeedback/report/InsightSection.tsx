@@ -23,6 +23,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
+  Legend,
 } from "recharts";
 
 type InsightSectionProps = {
@@ -30,7 +32,7 @@ type InsightSectionProps = {
   isPro?: boolean;
 };
 
-// 브랜드 색상: 골드/베이지 계열 (VisionSection의 #E5B96B와 유사한 톤)
+// 인사이트 섹션 브랜드 색상: 골드/베이지 계열
 const INSIGHT_COLOR = "#E5B96B";
 const INSIGHT_COLOR_DARK = "#D4A85A";
 const INSIGHT_COLOR_LIGHT = "#F5E6C8";
@@ -43,6 +45,78 @@ const INSIGHT_COLORS = [
   "#9A7C5A",
   "#8A6C4A",
 ];
+
+// 모던한 차트 스타일을 위한 커스텀 컴포넌트
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div
+        style={{
+          backgroundColor: COLORS.background.card,
+          border: `1px solid ${COLORS.border.light}`,
+          borderRadius: "12px",
+          padding: "12px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            color: COLORS.text.primary,
+            marginBottom: "4px",
+          }}
+        >
+          {payload[0].payload?.category || payload[0].name}
+        </p>
+        <p
+          style={{
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            color: payload[0].payload?.color || INSIGHT_COLOR,
+          }}
+        >
+          {payload[0].value}개
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  payload,
+}: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  if (percent < 0.05) return null; // 5% 미만은 라벨 숨김
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      style={{
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
+      }}
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
 
 export function InsightSection({
   insightReport,
@@ -83,7 +157,7 @@ export function InsightSection({
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: INSIGHT_COLOR_LIGHT }}
+                style={{ backgroundColor: "#FFF9E6" }}
               >
                 <Lightbulb
                   className="w-4 h-4"
@@ -97,28 +171,23 @@ export function InsightSection({
                 >
                   핵심 인사이트
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {insightReport.core_insights.map((insight, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-3"
-                      style={{ color: COLORS.text.primary }}
+                      className="flex items-start gap-2 text-sm leading-relaxed"
+                      style={{
+                        color: COLORS.text.primary,
+                        lineHeight: "1.7",
+                      }}
                     >
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                      <span
+                        className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                         style={{
-                          background: `linear-gradient(135deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
-                          color: "white",
+                          backgroundColor: INSIGHT_COLOR,
                         }}
-                      >
-                        <span className="text-xs font-semibold">{idx + 1}</span>
-                      </div>
-                      <p
-                        className="text-sm leading-relaxed flex-1"
-                        style={{ lineHeight: "1.7" }}
-                      >
-                        {insight}
-                      </p>
+                      />
+                      <span>{insight}</span>
                     </li>
                   ))}
                 </ul>
@@ -133,15 +202,15 @@ export function InsightSection({
           <Card
             className="p-5 sm:p-6 mb-4"
             style={{
-              backgroundColor: "#F0F5F0",
-              border: "1px solid #D5E3D5",
+              backgroundColor: COLORS.background.card,
+              border: "1px solid #E6E4DE",
               borderRadius: "16px",
             }}
           >
             <div className="flex items-start gap-3 mb-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#E8EFE8" }}
+                style={{ backgroundColor: "#E8F0F8" }}
               >
                 <Target
                   className="w-4 h-4"
@@ -160,13 +229,19 @@ export function InsightSection({
                     (question, idx) => (
                       <li
                         key={idx}
-                        className="text-sm leading-relaxed"
+                        className="flex items-start gap-2 text-sm leading-relaxed"
                         style={{
                           color: COLORS.text.primary,
                           lineHeight: "1.7",
                         }}
                       >
-                        • {question}
+                        <span
+                          className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                          style={{
+                            backgroundColor: COLORS.brand.secondary,
+                          }}
+                        />
+                        <span>{question}</span>
                       </li>
                     )
                   )}
@@ -296,58 +371,78 @@ export function InsightSection({
                         {insightReport.insight_patterns.summary}
                       </p>
                     )}
-                    {/* 차트와 카테고리 리스트를 함께 표시 */}
+                    {/* 모던한 파이 차트 */}
                     {insightReport.insight_patterns.visualization
                       ?.insight_categories_chart && (
-                      <div className="mb-4">
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={
-                                  insightReport.insight_patterns.visualization
-                                    .insight_categories_chart.data
-                                }
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                                stroke={COLORS.background.card}
-                                strokeWidth={2}
-                              >
-                                {insightReport.insight_patterns.visualization.insight_categories_chart.data.map(
-                                  (entry, index) => (
-                                    <Cell
-                                      key={`cell-${index}`}
-                                      fill={
-                                        entry.color ||
-                                        INSIGHT_COLORS[
-                                          index % INSIGHT_COLORS.length
-                                        ]
-                                      }
-                                    />
-                                  )
-                                )}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: COLORS.background.card,
-                                  border: `1px solid ${COLORS.border.light}`,
-                                  borderRadius: "8px",
-                                }}
-                                formatter={(
-                                  value: number,
-                                  name: string,
-                                  props: any
-                                ) => [
-                                  `${value}개`,
-                                  props.payload?.category || name,
-                                ]}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                      <div className="mb-6">
+                        <div
+                          className="rounded-xl p-4"
+                          style={{
+                            backgroundColor: COLORS.background.base,
+                            border: `1px solid ${COLORS.border.light}`,
+                          }}
+                        >
+                          <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={
+                                    insightReport.insight_patterns.visualization
+                                      .insight_categories_chart.data
+                                  }
+                                  cx="50%"
+                                  cy="50%"
+                                  labelLine={false}
+                                  label={CustomLabel}
+                                  outerRadius={100}
+                                  innerRadius={40}
+                                  fill="#8884d8"
+                                  dataKey="value"
+                                  nameKey="category"
+                                  stroke={COLORS.background.card}
+                                  strokeWidth={3}
+                                  animationDuration={800}
+                                  animationBegin={0}
+                                >
+                                  {insightReport.insight_patterns.visualization.insight_categories_chart.data.map(
+                                    (entry, index) => (
+                                      <Cell
+                                        key={`cell-${index}`}
+                                        fill={
+                                          entry.color ||
+                                          INSIGHT_COLORS[
+                                            index % INSIGHT_COLORS.length
+                                          ]
+                                        }
+                                        style={{
+                                          filter:
+                                            "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                                        }}
+                                      />
+                                    )
+                                  )}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend
+                                  wrapperStyle={{
+                                    paddingTop: "20px",
+                                  }}
+                                  iconType="circle"
+                                  formatter={(value, entry: any) => (
+                                    <span
+                                      style={{
+                                        fontSize: "0.75rem",
+                                        color: COLORS.text.primary,
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      {entry.payload?.category || value}
+                                    </span>
+                                  )}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -517,91 +612,6 @@ export function InsightSection({
               </Card>
             )}
 
-          {/* Meta Questions Analysis - 메타 질문 테마 분석 */}
-          {insightReport.meta_questions_analysis &&
-            insightReport.meta_questions_analysis.visualization
-              ?.question_themes_chart && (
-              <Card
-                className="p-5 sm:p-6 relative overflow-hidden group"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #D5E3D5",
-                  borderRadius: "16px",
-                }}
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      background: `linear-gradient(135deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
-                    }}
-                  >
-                    <Target className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      메타 질문 테마 분석
-                    </p>
-                    {insightReport.meta_questions_analysis.summary && (
-                      <p
-                        className="text-sm mb-4 leading-relaxed"
-                        style={{
-                          color: COLORS.text.primary,
-                          lineHeight: "1.7",
-                        }}
-                      >
-                        {insightReport.meta_questions_analysis.summary}
-                      </p>
-                    )}
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={
-                            insightReport.meta_questions_analysis.visualization
-                              .question_themes_chart.data
-                          }
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke={COLORS.border.default}
-                          />
-                          <XAxis
-                            dataKey="theme"
-                            style={{
-                              fontSize: "0.75rem",
-                              color: COLORS.text.secondary,
-                            }}
-                          />
-                          <YAxis
-                            style={{
-                              fontSize: "0.75rem",
-                              color: COLORS.text.secondary,
-                            }}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: COLORS.background.card,
-                              border: `1px solid ${COLORS.border.light}`,
-                              borderRadius: "8px",
-                            }}
-                          />
-                          <Bar
-                            dataKey="count"
-                            fill={INSIGHT_COLOR}
-                            radius={[8, 8, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-
           {/* Growth Insights - 성장 인사이트 */}
           {insightReport.growth_insights && (
             <Card
@@ -746,7 +756,10 @@ export function InsightSection({
                   {insightReport.insight_action_alignment.alignment_score && (
                     <div
                       className="mb-4 p-4 rounded-lg"
-                      style={{ backgroundColor: "#F0F5F0" }}
+                      style={{
+                        backgroundColor: COLORS.background.base,
+                        border: `1px solid ${COLORS.border.light}`,
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
@@ -757,7 +770,7 @@ export function InsightSection({
                         </span>
                         <span
                           className="text-2xl font-bold"
-                          style={{ color: COLORS.brand.primary }}
+                          style={{ color: INSIGHT_COLOR }}
                         >
                           {
                             insightReport.insight_action_alignment

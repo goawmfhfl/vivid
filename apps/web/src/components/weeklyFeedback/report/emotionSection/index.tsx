@@ -335,10 +335,10 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
           )}
 
           {/* 트리거 분석 */}
-          {(Array.isArray(emotionReport.valence_triggers) &&
+          {((Array.isArray(emotionReport.valence_triggers) &&
             emotionReport.valence_triggers.length > 0) ||
             (Array.isArray(emotionReport.arousal_triggers) &&
-              emotionReport.arousal_triggers.length > 0) ? (
+              emotionReport.arousal_triggers.length > 0)) && (
             <Card
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
