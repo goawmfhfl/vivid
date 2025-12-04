@@ -380,11 +380,6 @@ export type InsightReport = {
           color: string;
         }>;
       };
-      insight_timeline: Array<{
-        date: string;
-        insights_count: number;
-        main_theme: string;
-      }>;
     };
     key_strengths_identified: Array<{
       strength: string;
@@ -419,44 +414,6 @@ export type InsightReport = {
       example: string;
       insight: string;
     }>;
-  };
-  action_patterns: {
-    summary: string;
-    difficulty_distribution: {
-      낮음: {
-        count: number;
-        percentage: number;
-        examples: string[];
-        insight: string | null;
-      };
-      보통: {
-        count: number;
-        percentage: number;
-        examples: string[];
-        insight: string | null;
-      };
-      높음: {
-        count: number;
-        percentage: number;
-        examples: string[];
-        insight: string | null;
-      };
-    };
-    time_commitment: {
-      average_minutes: number;
-      range: string;
-      insight: string;
-    };
-    visualization?: {
-      difficulty_chart: {
-        type: "bar";
-        data: Array<{
-          difficulty: string;
-          count: number;
-          color: string;
-        }>;
-      };
-    };
   };
   insight_action_alignment: {
     summary: string;

@@ -282,11 +282,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
-          name: "action_patterns",
-          path: "view.insight_report.action_patterns",
-          isPro: true,
-        },
-        {
           name: "insight_action_alignment",
           path: "view.insight_report.insight_action_alignment",
           isPro: true,
@@ -418,11 +413,11 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   const getFieldValue = (path: string) => {
     // "view." 제거
     const pathWithoutView = path.replace(/^view\./, "");
-    
+
     // 옵셔널 체이닝(`?.`)과 일반 점(`.`)을 모두 분리
     // `?.`가 있으면 옵셔널로 처리, 없으면 일반 접근
     const parts = pathWithoutView.split(/\?\.|\./).filter(Boolean);
-    
+
     let value: any = view;
     for (const part of parts) {
       // 모든 접근에 옵셔널 체이닝 사용 (null/undefined 안전)

@@ -85,21 +85,8 @@ export function getInsightReportSchema(isPro: boolean) {
                       },
                       required: ["type", "data"],
                     },
-                    insight_timeline: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          date: { type: "string" },
-                          insights_count: { type: "integer", minimum: 0 },
-                          main_theme: { type: "string" },
-                        },
-                        required: ["date", "insights_count", "main_theme"],
-                      },
-                    },
                   },
-                  required: ["insight_categories_chart", "insight_timeline"],
+                  required: ["insight_categories_chart"],
                 },
                 key_strengths_identified: {
                   type: "array",
@@ -215,115 +202,6 @@ export function getInsightReportSchema(isPro: boolean) {
         },
         required: ["summary", "common_themes"],
       },
-      action_patterns: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          summary: {
-            type: "string",
-            maxLength: isPro ? 300 : 200,
-          },
-          difficulty_distribution: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              낮음: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  percentage: { type: "number", minimum: 0, maximum: 100 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string", nullable: true },
-                },
-                required: ["count", "percentage", "examples", "insight"],
-              },
-              보통: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  percentage: { type: "number", minimum: 0, maximum: 100 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string", nullable: true },
-                },
-                required: ["count", "percentage", "examples", "insight"],
-              },
-              높음: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  count: { type: "integer", minimum: 0 },
-                  percentage: { type: "number", minimum: 0, maximum: 100 },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                  insight: { type: "string", nullable: true },
-                },
-                required: ["count", "percentage", "examples", "insight"],
-              },
-            },
-            required: ["낮음", "보통", "높음"],
-          },
-          time_commitment: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              average_minutes: { type: "number", minimum: 0 },
-              range: { type: "string" },
-              insight: { type: "string" },
-            },
-            required: ["average_minutes", "range", "insight"],
-          },
-          ...(isPro
-            ? {
-                visualization: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    difficulty_chart: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: {
-                        type: { type: "string", enum: ["bar"] },
-                        data: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                              difficulty: { type: "string" },
-                              count: { type: "integer" },
-                              color: { type: "string" },
-                            },
-                            required: ["difficulty", "count", "color"],
-                          },
-                        },
-                      },
-                      required: ["type", "data"],
-                    },
-                  },
-                  required: ["difficulty_chart"],
-                },
-              }
-            : {}),
-        },
-        required: isPro
-          ? [
-              "summary",
-              "difficulty_distribution",
-              "time_commitment",
-              "visualization",
-            ]
-          : ["summary", "difficulty_distribution", "time_commitment"],
-      },
       insight_action_alignment: {
         type: "object",
         additionalProperties: false,
@@ -401,7 +279,6 @@ export function getInsightReportSchema(isPro: boolean) {
       "insight_patterns",
       "meta_questions_analysis",
       "ai_comment_patterns",
-      "action_patterns",
       "insight_action_alignment",
       "growth_insights",
     ],
