@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Heart } from "lucide-react";
 import { Card } from "../../../ui/card";
-import type { WeeklyReportData } from "../types";
+import type { EmotionReport } from "@/types/weekly-feedback";
 import { EmotionChart } from "./EmotionChart";
 import { EmotionValues } from "./EmotionValues";
 import { EmotionInterpretation } from "./EmotionInterpretation";
@@ -10,20 +10,28 @@ import { EmotionQuadrantAnalysis } from "./EmotionQuadrantAnalysis";
 import { TooltipProvider, useTooltip } from "./TooltipContext";
 
 type EmotionSectionProps = {
-  emotionOverview: WeeklyReportData["emotion_overview"];
+  emotionReport: EmotionReport | null;
+  isPro?: boolean;
 };
 
-export function EmotionSection({ emotionOverview }: EmotionSectionProps) {
+export function EmotionSection({
+  emotionReport,
+  isPro = false,
+}: EmotionSectionProps) {
+  if (!emotionReport) {
+    return null;
+  }
+
   return (
     <TooltipProvider>
-      <EmotionSectionContent emotionOverview={emotionOverview} />
+      <EmotionSectionContent emotionReport={emotionReport} isPro={isPro} />
     </TooltipProvider>
   );
 }
 
-function EmotionSectionContent({ emotionOverview }: EmotionSectionProps) {
+function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
   // 일별 감정 데이터 (기록이 있는 날짜만 포함)
-  const dailyEmotions = emotionOverview?.daily_emotions || [];
+  const dailyEmotions = emotionReport?.daily_emotions || [];
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const { setSelectedDayIndex } = useTooltip();
@@ -51,12 +59,12 @@ function EmotionSectionContent({ emotionOverview }: EmotionSectionProps) {
 
   // AI가 생성한 주간 평균 감정 데이터
   const weeklyAverage =
-    emotionOverview &&
-    emotionOverview.ai_mood_valence !== null &&
-    emotionOverview.ai_mood_arousal !== null
+    emotionReport &&
+    emotionReport.ai_mood_valence !== null &&
+    emotionReport.ai_mood_arousal !== null
       ? {
-          valence: emotionOverview.ai_mood_valence,
-          arousal: emotionOverview.ai_mood_arousal,
+          valence: emotionReport.ai_mood_valence,
+          arousal: emotionReport.ai_mood_arousal,
         }
       : null;
 
@@ -134,16 +142,18 @@ function EmotionSectionContent({ emotionOverview }: EmotionSectionProps) {
       </div>
 
       {/* 감정 패턴 분석 */}
-      {emotionOverview && (
+      {emotionReport && (
         <div style={{ marginTop: "32px" }}>
-          <EmotionPatternAnalysis emotionOverview={emotionOverview} />
+          <EmotionPatternAnalysis emotionReport={emotionReport} />
         </div>
       )}
 
       {/* 감정 영역별 상황 분석 */}
-      <div style={{ marginTop: "32px" }}>
-        <EmotionQuadrantAnalysis emotionOverview={emotionOverview} />
-      </div>
+      {emotionReport && (
+        <div style={{ marginTop: "32px" }}>
+          <EmotionQuadrantAnalysis emotionReport={emotionReport} />
+        </div>
+      )}
     </div>
   );
 }

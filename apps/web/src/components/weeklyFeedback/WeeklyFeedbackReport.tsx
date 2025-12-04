@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
 import { EmotionSection } from "./report/emotionSection/index";
-import { WeeklyOverviewSection } from "./report/WeeklyOverviewSection";
-import { GrowthTrendsSection } from "./report/GrowthTrendsSection";
-import { InsightReplaySection } from "./report/InsightReplaySection";
-import { VisionVisualizationSection } from "./report/VisionVisualizationSection";
-import { ExecutionReflectionSection } from "./report/ExecutionReflectionSection";
+import { DailyLifeSection } from "./report/DailyLifeSection";
+import { VisionSection } from "./report/VisionSection";
+import { InsightSection } from "./report/InsightSection";
+import { ExecutionSection } from "./report/ExecutionSection";
 import { ClosingSection } from "./report/ClosingSection";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { TestPanel } from "./TestPanel";
@@ -54,77 +53,62 @@ export function WeeklyFeedbackReport({
           돌아가기
         </Button>
 
+        {/* Header (Weekly Overview 통합) */}
         <ScrollAnimation>
           <div className="mb-64">
             <ReportHeader
               weekRange={data.week_range}
-              integrity={data.integrity}
-              nextWeekFocus={data.next_week_focus}
-              narrative={data.weekly_overview.narrative}
-              title={data.weekly_overview.title}
+              integrityScore={data.integrity_score}
+              weeklyOverview={data.weekly_overview}
             />
           </div>
         </ScrollAnimation>
 
+        {/* Daily Life Report */}
         <ScrollAnimation delay={200}>
           <div className="mb-64">
-            <EmotionSection emotionOverview={data.emotion_overview} />
-          </div>
-        </ScrollAnimation>
-
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <WeeklyOverviewSection weeklyOverview={data.weekly_overview} />
-          </div>
-        </ScrollAnimation>
-
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <GrowthTrendsSection
-              integrity={data.integrity}
-              growthPoints={data.growth_points_top3}
-              adjustmentPoints={data.adjustment_points_top3}
+            <DailyLifeSection
+              dailyLifeReport={data.daily_life_report}
+              isPro={isPro}
             />
           </div>
         </ScrollAnimation>
 
+        {/* Emotion Report */}
         <ScrollAnimation delay={200}>
           <div className="mb-64">
-            <InsightReplaySection
-              coreInsights={data.core_insights}
-              metaQuestionsHighlight={data.meta_questions_highlight}
+            <EmotionSection emotionReport={data.emotion_report} isPro={isPro} />
+          </div>
+        </ScrollAnimation>
+
+        {/* Vision Report */}
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <VisionSection visionReport={data.vision_report} isPro={isPro} />
+          </div>
+        </ScrollAnimation>
+
+        {/* Insight Report */}
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <InsightSection insightReport={data.insight_report} isPro={isPro} />
+          </div>
+        </ScrollAnimation>
+
+        {/* Execution Report */}
+        <ScrollAnimation delay={200}>
+          <div className="mb-64">
+            <ExecutionSection
+              executionReport={data.execution_report}
+              isPro={isPro}
             />
           </div>
         </ScrollAnimation>
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <VisionVisualizationSection
-              visionSummary={data.vision_summary}
-              visionKeywordsTrend={data.vision_keywords_trend}
-              alignmentComment={data.alignment_comment}
-              reminderSentencesFeatured={data.reminder_sentences_featured}
-            />
-          </div>
-        </ScrollAnimation>
-
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <ExecutionReflectionSection
-              positives={data.positives_top3}
-              improvements={data.improvements_top3}
-              aiFeedbackSummary={data.ai_feedback_summary}
-            />
-          </div>
-        </ScrollAnimation>
-
+        {/* Closing Report */}
         <ScrollAnimation delay={200}>
           <div className="mb-12">
-            <ClosingSection
-              weeklyOneLiner={data.weekly_one_liner}
-              nextWeekObjective={data.next_week_objective}
-              callToAction={data.call_to_action}
-            />
+            <ClosingSection closingReport={data.closing_report} isPro={isPro} />
           </div>
         </ScrollAnimation>
 

@@ -1,9 +1,9 @@
 import { Card } from "../../../ui/card";
 import { AlertTriangle, Zap, Cloud, Sparkles } from "lucide-react";
-import type { WeeklyReportData } from "../types";
+import type { EmotionReport } from "@/types/weekly-feedback";
 
 type EmotionQuadrantAnalysisProps = {
-  emotionOverview: WeeklyReportData["emotion_overview"];
+  emotionReport: EmotionReport;
 };
 
 type EmotionQuadrant = {
@@ -17,9 +17,9 @@ type EmotionQuadrant = {
 };
 
 export function EmotionQuadrantAnalysis({
-  emotionOverview,
+  emotionReport,
 }: EmotionQuadrantAnalysisProps) {
-  if (!emotionOverview) return null;
+  if (!emotionReport) return null;
 
   const quadrants: EmotionQuadrant[] = [
     {
@@ -30,7 +30,7 @@ export function EmotionQuadrantAnalysis({
       bgGradient:
         "linear-gradient(135deg, rgba(184, 154, 122, 0.08) 0%, rgba(184, 154, 122, 0.03) 100%)",
       borderColor: "rgba(184, 154, 122, 0.2)",
-      triggers: emotionOverview.anxious_triggers,
+      triggers: emotionReport.anxious_triggers,
     },
     {
       id: "engaged",
@@ -40,7 +40,7 @@ export function EmotionQuadrantAnalysis({
       bgGradient:
         "linear-gradient(135deg, rgba(168, 187, 168, 0.08) 0%, rgba(168, 187, 168, 0.03) 100%)",
       borderColor: "rgba(168, 187, 168, 0.2)",
-      triggers: emotionOverview.engaged_triggers,
+      triggers: emotionReport.engaged_triggers,
     },
     {
       id: "sad",
@@ -50,7 +50,7 @@ export function EmotionQuadrantAnalysis({
       bgGradient:
         "linear-gradient(135deg, rgba(107, 122, 111, 0.08) 0%, rgba(107, 122, 111, 0.03) 100%)",
       borderColor: "rgba(107, 122, 111, 0.2)",
-      triggers: emotionOverview.sad_triggers,
+      triggers: emotionReport.sad_triggers,
     },
     {
       id: "calm",
@@ -60,7 +60,7 @@ export function EmotionQuadrantAnalysis({
       bgGradient:
         "linear-gradient(135deg, rgba(229, 185, 107, 0.08) 0%, rgba(229, 185, 107, 0.03) 100%)",
       borderColor: "rgba(229, 185, 107, 0.2)",
-      triggers: emotionOverview.calm_triggers,
+      triggers: emotionReport.calm_triggers,
     },
   ];
 

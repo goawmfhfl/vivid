@@ -1,15 +1,15 @@
 import { TrendingUp, Zap } from "lucide-react";
 import { Card } from "../../../ui/card";
-import type { WeeklyReportData } from "../types";
+import type { EmotionReport } from "@/types/weekly-feedback";
 
 type EmotionPatternAnalysisProps = {
-  emotionOverview: WeeklyReportData["emotion_overview"];
+  emotionReport: EmotionReport;
 };
 
 export function EmotionPatternAnalysis({
-  emotionOverview,
+  emotionReport,
 }: EmotionPatternAnalysisProps) {
-  if (!emotionOverview) return null;
+  if (!emotionReport) return null;
 
   return (
     <div className="space-y-4">
@@ -39,7 +39,7 @@ export function EmotionPatternAnalysis({
                 lineHeight: "1.6",
               }}
             >
-              {emotionOverview.valence_explanation}
+              {emotionReport.valence_explanation}
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export function EmotionPatternAnalysis({
                 lineHeight: "1.6",
               }}
             >
-              {emotionOverview.arousal_explanation}
+              {emotionReport.arousal_explanation}
             </p>
           </div>
         </div>
