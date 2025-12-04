@@ -112,17 +112,28 @@ export async function GET(request: NextRequest) {
             sendProgress // 진행 상황 콜백 전달
           );
 
-        // 생성된 데이터 확인
-        console.log("Generated weekly feedback:", {
-          hasSummaryReport: !!weeklyFeedback.summary_report,
-          summaryReportType: typeof weeklyFeedback.summary_report,
-          summaryReportKeys: weeklyFeedback.summary_report
-            ? Object.keys(weeklyFeedback.summary_report)
-            : null,
+        console.log("[generate-stream] 생성된 weeklyFeedback:", {
+          summary_report: !!weeklyFeedback.summary_report,
+          daily_life_report: !!weeklyFeedback.daily_life_report,
+          emotion_report: !!weeklyFeedback.emotion_report,
+          vision_report: !!weeklyFeedback.vision_report,
+          insight_report: !!weeklyFeedback.insight_report,
+          execution_report: !!weeklyFeedback.execution_report,
+          closing_report: !!weeklyFeedback.closing_report,
         });
 
         // 추적 정보 제거 (DB 저장 전)
         const cleanedFeedback = removeTrackingInfo(weeklyFeedback);
+
+        console.log("[generate-stream] cleanedFeedback:", {
+          summary_report: !!cleanedFeedback.summary_report,
+          daily_life_report: !!cleanedFeedback.daily_life_report,
+          emotion_report: !!cleanedFeedback.emotion_report,
+          vision_report: !!cleanedFeedback.vision_report,
+          insight_report: !!cleanedFeedback.insight_report,
+          execution_report: !!cleanedFeedback.execution_report,
+          closing_report: !!cleanedFeedback.closing_report,
+        });
 
         // 데이터 검증: 필수 필드 확인
         // summary_report가 null이거나 undefined인 경우만 에러 처리
@@ -130,14 +141,6 @@ export async function GET(request: NextRequest) {
           cleanedFeedback.summary_report === null ||
           cleanedFeedback.summary_report === undefined
         ) {
-          console.error("Summary report validation failed:", {
-            hasSummaryReport: !!cleanedFeedback.summary_report,
-            summaryReportType: typeof cleanedFeedback.summary_report,
-            weeklyFeedbackKeys: Object.keys(weeklyFeedback),
-            cleanedFeedbackKeys: Object.keys(cleanedFeedback),
-            weeklyFeedbackSummaryReport: weeklyFeedback.summary_report,
-            cleanedFeedbackSummaryReport: cleanedFeedback.summary_report,
-          });
           sendError("Summary report가 생성되지 않았습니다.");
           return;
         }

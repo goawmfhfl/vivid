@@ -206,6 +206,14 @@ async function generateSection<T>(
       );
     }
 
+    // 결과 구조 로깅 (디버깅용)
+    console.log(`[generateSection:${schema.name}] Final result structure:`, {
+      resultKeys: Object.keys(result || {}),
+      resultType: typeof result,
+      isArray: Array.isArray(result),
+      resultPreview: result ? JSON.stringify(result).substring(0, 200) : "null",
+    });
+
     // 캐시에 저장 (멤버십별로 구분)
     setCache(proCacheKey, result);
 
@@ -329,7 +337,15 @@ async function generateSummaryReport(
     throw new Error("Summary report data is missing from response");
   }
 
-  return response.summary_report;
+  const summaryReport = response.summary_report;
+  console.log(
+    "[generateSummaryReport] summary_report 추출 완료:",
+    !!summaryReport
+  );
+  if (!summaryReport) {
+    throw new Error("Summary report data is null or undefined");
+  }
+  return summaryReport;
 }
 
 /**
@@ -375,6 +391,50 @@ async function generateDailyLifeReport(
     progressCallback
   );
 
+  console.log("[generateDailyLifeReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasDailyLifeReport: response ? "daily_life_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateDailyLifeReport] response is null or undefined");
+    throw new Error("Daily life report response is null or undefined");
+  }
+
+  // response가 직접 DailyLifeReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("summary" in response || "daily_summaries_trend" in response) &&
+    !("daily_life_report" in response)
+  ) {
+    console.log(
+      "[generateDailyLifeReport] Response appears to be DailyLifeReport directly, using it"
+    );
+    return response as DailyLifeReport;
+  }
+
+  if (!response.daily_life_report) {
+    console.error(
+      "[generateDailyLifeReport] response.daily_life_report is missing",
+      {
+        response,
+        responseKeys: Object.keys(response || {}),
+        responseType: typeof response,
+        responseValues: Object.values(response || {}),
+        responseStringified: JSON.stringify(response, null, 2),
+      }
+    );
+    throw new Error("Daily life report data is missing from response");
+  }
+
+  console.log(
+    "[generateDailyLifeReport] daily_life_report 추출 완료:",
+    !!response.daily_life_report
+  );
   return response.daily_life_report;
 }
 
@@ -418,6 +478,52 @@ async function generateEmotionReport(
     progressCallback
   );
 
+  console.log("[generateEmotionReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasEmotionReport: response ? "emotion_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateEmotionReport] response is null or undefined");
+    throw new Error("Emotion report response is null or undefined");
+  }
+
+  // response가 직접 EmotionReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("dominant_emotion" in response ||
+      "valence_explanation" in response ||
+      "daily_emotions" in response) &&
+    !("emotion_report" in response)
+  ) {
+    console.log(
+      "[generateEmotionReport] Response appears to be EmotionReport directly, using it"
+    );
+    return response as EmotionReport;
+  }
+
+  if (!response.emotion_report) {
+    console.error(
+      "[generateEmotionReport] response.emotion_report is missing",
+      {
+        response,
+        responseKeys: Object.keys(response || {}),
+        responseType: typeof response,
+        responseValues: Object.values(response || {}),
+        responseStringified: JSON.stringify(response, null, 2),
+      }
+    );
+    throw new Error("Emotion report data is missing from response");
+  }
+
+  console.log(
+    "[generateEmotionReport] emotion_report 추출 완료:",
+    !!response.emotion_report
+  );
   return response.emotion_report;
 }
 
@@ -461,6 +567,47 @@ async function generateVisionReport(
     progressCallback
   );
 
+  console.log("[generateVisionReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasVisionReport: response ? "vision_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateVisionReport] response is null or undefined");
+    throw new Error("Vision report response is null or undefined");
+  }
+
+  // response가 직접 VisionReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("vision_summary" in response || "vision_consistency" in response) &&
+    !("vision_report" in response)
+  ) {
+    console.log(
+      "[generateVisionReport] Response appears to be VisionReport directly, using it"
+    );
+    return response as VisionReport;
+  }
+
+  if (!response.vision_report) {
+    console.error("[generateVisionReport] response.vision_report is missing", {
+      response,
+      responseKeys: Object.keys(response || {}),
+      responseType: typeof response,
+      responseValues: Object.values(response || {}),
+      responseStringified: JSON.stringify(response, null, 2),
+    });
+    throw new Error("Vision report data is missing from response");
+  }
+
+  console.log(
+    "[generateVisionReport] vision_report 추출 완료:",
+    !!response.vision_report
+  );
   return response.vision_report;
 }
 
@@ -504,6 +651,50 @@ async function generateInsightReport(
     progressCallback
   );
 
+  console.log("[generateInsightReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasInsightReport: response ? "insight_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateInsightReport] response is null or undefined");
+    throw new Error("Insight report response is null or undefined");
+  }
+
+  // response가 직접 InsightReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("core_insights" in response || "meta_questions_highlight" in response) &&
+    !("insight_report" in response)
+  ) {
+    console.log(
+      "[generateInsightReport] Response appears to be InsightReport directly, using it"
+    );
+    return response as InsightReport;
+  }
+
+  if (!response.insight_report) {
+    console.error(
+      "[generateInsightReport] response.insight_report is missing",
+      {
+        response,
+        responseKeys: Object.keys(response || {}),
+        responseType: typeof response,
+        responseValues: Object.values(response || {}),
+        responseStringified: JSON.stringify(response, null, 2),
+      }
+    );
+    throw new Error("Insight report data is missing from response");
+  }
+
+  console.log(
+    "[generateInsightReport] insight_report 추출 완료:",
+    !!response.insight_report
+  );
   return response.insight_report;
 }
 
@@ -548,6 +739,50 @@ async function generateExecutionReport(
     progressCallback
   );
 
+  console.log("[generateExecutionReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasExecutionReport: response ? "execution_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateExecutionReport] response is null or undefined");
+    throw new Error("Execution report response is null or undefined");
+  }
+
+  // response가 직접 ExecutionReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("positives_top3" in response || "improvements_top3" in response) &&
+    !("execution_report" in response)
+  ) {
+    console.log(
+      "[generateExecutionReport] Response appears to be ExecutionReport directly, using it"
+    );
+    return response as ExecutionReport;
+  }
+
+  if (!response.execution_report) {
+    console.error(
+      "[generateExecutionReport] response.execution_report is missing",
+      {
+        response,
+        responseKeys: Object.keys(response || {}),
+        responseType: typeof response,
+        responseValues: Object.values(response || {}),
+        responseStringified: JSON.stringify(response, null, 2),
+      }
+    );
+    throw new Error("Execution report data is missing from response");
+  }
+
+  console.log(
+    "[generateExecutionReport] execution_report 추출 완료:",
+    !!response.execution_report
+  );
   return response.execution_report;
 }
 
@@ -591,6 +826,50 @@ async function generateClosingReport(
     progressCallback
   );
 
+  console.log("[generateClosingReport] response received:", {
+    response,
+    responseKeys: response ? Object.keys(response) : [],
+    hasClosingReport: response ? "closing_report" in response : false,
+    responseType: typeof response,
+  });
+
+  if (!response) {
+    console.error("[generateClosingReport] response is null or undefined");
+    throw new Error("Closing report response is null or undefined");
+  }
+
+  // response가 직접 ClosingReport인 경우 처리
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response) &&
+    ("call_to_action" in response || "this_week_identity" in response) &&
+    !("closing_report" in response)
+  ) {
+    console.log(
+      "[generateClosingReport] Response appears to be ClosingReport directly, using it"
+    );
+    return response as ClosingReport;
+  }
+
+  if (!response.closing_report) {
+    console.error(
+      "[generateClosingReport] response.closing_report is missing",
+      {
+        response,
+        responseKeys: Object.keys(response || {}),
+        responseType: typeof response,
+        responseValues: Object.values(response || {}),
+        responseStringified: JSON.stringify(response, null, 2),
+      }
+    );
+    throw new Error("Closing report data is missing from response");
+  }
+
+  console.log(
+    "[generateClosingReport] closing_report 추출 완료:",
+    !!response.closing_report
+  );
   return response.closing_report;
 }
 
@@ -605,53 +884,180 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   progressCallback?: ProgressCallback
 ): Promise<WeeklyFeedback> {
   // 순차적으로 7개 섹션 생성 (각 섹션 생성 시점에 진행 상황 알림)
-  const summaryReport = await generateSummaryReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
+  console.log("[generateWeeklyFeedbackFromDailyWithProgress] 시작");
+
+  let summaryReport;
+  try {
+    summaryReport = await generateSummaryReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] summaryReport 생성 완료:",
+      !!summaryReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] summaryReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Summary report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 
   // summary_report가 제대로 생성되었는지 확인
   if (!summaryReport) {
     throw new Error("Summary report 생성에 실패했습니다.");
   }
-  const dailyLifeReport = await generateDailyLifeReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
-  const emotionReport = await generateEmotionReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
-  const visionReport = await generateVisionReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
-  const insightReport = await generateInsightReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
-  const executionReport = await generateExecutionReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
-  const closingReport = await generateClosingReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback
-  );
+
+  let dailyLifeReport;
+  try {
+    dailyLifeReport = await generateDailyLifeReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] dailyLifeReport 생성 완료:",
+      !!dailyLifeReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] dailyLifeReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Daily life report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  let emotionReport;
+  try {
+    emotionReport = await generateEmotionReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] emotionReport 생성 완료:",
+      !!emotionReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] emotionReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Emotion report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  let visionReport;
+  try {
+    visionReport = await generateVisionReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] visionReport 생성 완료:",
+      !!visionReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] visionReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Vision report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  let insightReport;
+  try {
+    insightReport = await generateInsightReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] insightReport 생성 완료:",
+      !!insightReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] insightReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Insight report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  let executionReport;
+  try {
+    executionReport = await generateExecutionReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] executionReport 생성 완료:",
+      !!executionReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] executionReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Execution report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+
+  let closingReport;
+  try {
+    closingReport = await generateClosingReport(
+      dailyFeedbacks,
+      range,
+      isPro,
+      progressCallback
+    );
+    console.log(
+      "[generateWeeklyFeedbackFromDailyWithProgress] closingReport 생성 완료:",
+      !!closingReport
+    );
+  } catch (error) {
+    console.error(
+      "[generateWeeklyFeedbackFromDailyWithProgress] closingReport 생성 실패:",
+      error
+    );
+    throw new Error(
+      `Closing report 생성에 실패했습니다: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {
@@ -665,6 +1071,19 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     closing_report: closingReport,
     is_ai_generated: true,
   };
+
+  console.log(
+    "[generateWeeklyFeedbackFromDailyWithProgress] 모든 섹션 생성 완료:",
+    {
+      summary_report: !!weeklyFeedback.summary_report,
+      daily_life_report: !!weeklyFeedback.daily_life_report,
+      emotion_report: !!weeklyFeedback.emotion_report,
+      vision_report: !!weeklyFeedback.vision_report,
+      insight_report: !!weeklyFeedback.insight_report,
+      execution_report: !!weeklyFeedback.execution_report,
+      closing_report: !!weeklyFeedback.closing_report,
+    }
+  );
 
   return weeklyFeedback;
 }

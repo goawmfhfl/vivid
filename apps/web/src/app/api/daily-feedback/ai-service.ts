@@ -53,8 +53,8 @@ function getOpenAIClient(): OpenAI {
   }
   return new OpenAI({
     apiKey,
-    timeout: 180000, // 180초(3분) 타임아웃
-    maxRetries: 1, // 재시도 최소화
+    timeout: 300000, // 300초(5분) 타임아웃
+    maxRetries: 0, // 재시도 최소화
   });
 }
 
@@ -77,6 +77,7 @@ async function generateReport<T>(
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);
+
   if (cachedResult) {
     console.log(`캐시에서 결과 반환 (${finalSchema.name}, Pro: ${isPro})`);
     return cachedResult;

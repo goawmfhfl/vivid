@@ -59,57 +59,73 @@ export function WeeklyFeedbackReport({
             <ReportHeader
               weekRange={data.week_range}
               summaryReport={data.summary_report}
-            />
-          </div>
-        </ScrollAnimation>
-
-        {/* Daily Life Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <DailyLifeSection
-              dailyLifeReport={data.daily_life_report}
               isPro={isPro}
             />
           </div>
         </ScrollAnimation>
 
-        {/* Emotion Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <EmotionSection emotionReport={data.emotion_report} isPro={isPro} />
-          </div>
-        </ScrollAnimation>
+        {data.daily_life_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <DailyLifeSection
+                dailyLifeReport={data.daily_life_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        {/* Vision Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <VisionSection visionReport={data.vision_report} isPro={isPro} />
-          </div>
-        </ScrollAnimation>
+        {data.emotion_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <EmotionSection
+                emotionReport={data.emotion_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        {/* Insight Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <InsightSection insightReport={data.insight_report} isPro={isPro} />
-          </div>
-        </ScrollAnimation>
+        {data.vision_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <VisionSection visionReport={data.vision_report} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        {/* Execution Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <ExecutionSection
-              executionReport={data.execution_report}
-              isPro={isPro}
-            />
-          </div>
-        </ScrollAnimation>
+        {data.insight_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <InsightSection
+                insightReport={data.insight_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        {/* Closing Report */}
-        <ScrollAnimation delay={200}>
-          <div className="mb-12">
-            <ClosingSection closingReport={data.closing_report} isPro={isPro} />
-          </div>
-        </ScrollAnimation>
+        {data.execution_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <ExecutionSection
+                executionReport={data.execution_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
+
+        {data.closing_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-12">
+              <ClosingSection
+                closingReport={data.closing_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
         {/* Bottom Action */}
         <div className="flex justify-center pt-4">

@@ -1,5 +1,12 @@
-import { CalendarDays, TrendingUp } from "lucide-react";
+import {
+  CalendarDays,
+  TrendingUp,
+  Sparkles,
+  Lock,
+  ArrowRight,
+} from "lucide-react";
 import type { SummaryReport } from "@/types/weekly-feedback";
+import { useRouter } from "next/navigation";
 
 type ReportHeaderProps = {
   weekRange: {
@@ -7,9 +14,15 @@ type ReportHeaderProps = {
     end: string; // "2025.11.03"
   };
   summaryReport: SummaryReport;
+  isPro?: boolean;
 };
 
-export function ReportHeader({ weekRange, summaryReport }: ReportHeaderProps) {
+export function ReportHeader({
+  weekRange,
+  summaryReport,
+  isPro = false,
+}: ReportHeaderProps) {
+  const router = useRouter();
   return (
     <div className="mb-8 sm:mb-10">
       {/* Main Header Card */}
@@ -34,7 +47,7 @@ export function ReportHeader({ weekRange, summaryReport }: ReportHeaderProps) {
         </div>
 
         {/* Summary */}
-        {summaryReport.summary && (
+        {summaryReport?.summary && (
           <div
             className="py-5 px-6 rounded-2xl mb-5"
             style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
@@ -63,52 +76,190 @@ export function ReportHeader({ weekRange, summaryReport }: ReportHeaderProps) {
         )}
 
         {/* Key Points */}
-        {summaryReport.key_points && summaryReport.key_points.length > 0 && (
+        {summaryReport?.key_points && summaryReport.key_points.length > 0 && (
           <div className="mb-5">
             <p
-              className="text-xs mb-2"
+              className="text-xs mb-3"
               style={{ opacity: 0.85, fontWeight: 500 }}
             >
               핵심 포인트
             </p>
-            <div className="flex flex-wrap gap-2">
+            <ul className="space-y-2">
               {summaryReport.key_points.map((point, idx) => (
-                <span
+                <li
                   key={idx}
-                  className="px-3 py-1 rounded-full text-xs"
-                  style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.25)",
-                    backdropFilter: "blur(10px)",
-                  }}
+                  className="flex items-start gap-2 text-sm"
+                  style={{ color: "rgba(255, 255, 255, 0.95)" }}
                 >
-                  {point}
-                </span>
+                  <span
+                    className="flex-shrink-0 mt-1"
+                    style={{
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    •
+                  </span>
+                  <span style={{ lineHeight: "1.6" }}>{point}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
 
-        {/* Trend Analysis (Pro 전용) */}
-        {summaryReport.trend_analysis && (
+        {/* Trend Analysis (Pro 전용) 또는 구독 유도 */}
+        {isPro && summaryReport?.trend_analysis ? (
           <div
-            className="py-4 px-5 rounded-xl"
-            style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+            className="py-5 px-6 rounded-2xl relative overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow:
+                "0 4px 20px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.4)",
+            }}
           >
-            <div className="flex items-start gap-3">
+            {/* 장식 요소 */}
+            <div
+              className="absolute top-0 right-0 w-32 h-32 opacity-10"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%)",
+              }}
+            />
+
+            <div className="flex items-start gap-4 relative z-10">
+              {/* 아이콘 */}
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                }}
+              >
+                <Sparkles className="w-5 h-5" style={{ opacity: 0.95 }} />
+              </div>
+
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <p
+                    className="text-xs font-semibold"
+                    style={{
+                      opacity: 0.95,
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    트렌드 분석
+                  </p>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.3)",
+                      color: "rgba(255, 255, 255, 0.95)",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    PRO
+                  </span>
+                </div>
                 <p
-                  className="text-xs mb-2"
-                  style={{ opacity: 0.85, fontWeight: 500 }}
+                  className="text-sm leading-relaxed whitespace-pre-line"
+                  style={{
+                    opacity: 0.98,
+                    fontWeight: 400,
+                    lineHeight: "1.7",
+                  }}
                 >
-                  트렌드 분석
-                </p>
-                <p className="text-sm font-medium leading-relaxed whitespace-pre-line">
-                  {summaryReport.trend_analysis}
+                  {summaryReport?.trend_analysis}
                 </p>
               </div>
             </div>
           </div>
-        )}
+        ) : !isPro ? (
+          <div
+            className="py-5 px-6 rounded-2xl relative overflow-hidden cursor-pointer transition-all hover:scale-[1.02]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
+              boxShadow:
+                "0 4px 20px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+            }}
+            onClick={() => router.push("/subscription")}
+          >
+            {/* 장식 요소 */}
+            <div
+              className="absolute top-0 right-0 w-40 h-40 opacity-5"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%)",
+              }}
+            />
+
+            <div className="flex items-start gap-4 relative z-10">
+              {/* 아이콘 */}
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.15) 100%)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                }}
+              >
+                <Lock className="w-5 h-5" style={{ opacity: 0.9 }} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <p
+                    className="text-xs font-semibold"
+                    style={{
+                      opacity: 0.95,
+                      fontWeight: 600,
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    트렌드 분석
+                  </p>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.25)",
+                      color: "rgba(255, 255, 255, 0.95)",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    PRO
+                  </span>
+                </div>
+                <p
+                  className="text-sm leading-relaxed mb-3"
+                  style={{
+                    opacity: 0.9,
+                    fontWeight: 400,
+                    lineHeight: "1.6",
+                  }}
+                >
+                  이번 주의 감정과 행동 패턴을 깊이 분석하고, 기록을 성장으로
+                  바꿔보세요.
+                </p>
+                <div
+                  className="flex items-center gap-2 text-xs font-semibold"
+                  style={{ opacity: 0.95 }}
+                >
+                  <span>Pro 멤버십으로 업그레이드</span>
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

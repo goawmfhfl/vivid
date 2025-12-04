@@ -51,10 +51,16 @@ export function ClosingSection({
           className="p-5 sm:p-6 mb-4"
           style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
         >
-          <p className="text-xs mb-2.5 sm:mb-3" style={{ color: COLORS.text.secondary }}>
+          <p
+            className="text-xs mb-2.5 sm:mb-3"
+            style={{ color: COLORS.text.secondary }}
+          >
             다음 주 방향
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: COLORS.text.primary }}
+          >
             {closingReport.call_to_action.next_week_objective}
           </p>
         </Card>
@@ -67,7 +73,10 @@ export function ClosingSection({
             className="p-5 sm:p-6 mb-4"
             style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
           >
-            <p className="text-xs mb-2.5 sm:mb-3" style={{ color: COLORS.text.secondary }}>
+            <p
+              className="text-xs mb-2.5 sm:mb-3"
+              style={{ color: COLORS.text.secondary }}
+            >
               다음 주 실행 계획
             </p>
             <ul className="space-y-2.5">
@@ -119,9 +128,9 @@ export function ClosingSection({
                   lineHeight: "1.5",
                 }}
               >
-                Pro 멤버십에서는 이번 주의 정체성 변화, 성장 스토리, 강점과 개선 영역을
-                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 정체성 지도를 함께
-                만들어보세요.
+                Pro 멤버십에서는 이번 주의 정체성 변화, 성장 스토리, 강점과 개선
+                영역을 시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 정체성
+                지도를 함께 만들어보세요.
               </p>
             </div>
           </div>
@@ -137,7 +146,10 @@ export function ClosingSection({
               className="p-5 sm:p-6"
               style={{ backgroundColor: "white", border: "1px solid #EFE9E3" }}
             >
-              <p className="text-xs mb-2.5 sm:mb-3" style={{ color: COLORS.text.secondary }}>
+              <p
+                className="text-xs mb-2.5 sm:mb-3"
+                style={{ color: COLORS.text.secondary }}
+              >
                 이번 주의 나는
               </p>
               {/* TODO: 정체성 시각화 */}
@@ -148,12 +160,21 @@ export function ClosingSection({
           {closingReport.growth_story && (
             <Card
               className="p-5 sm:p-6"
-              style={{ backgroundColor: "#F0F5F0", border: "1px solid #D5E3D5" }}
+              style={{
+                backgroundColor: "#F0F5F0",
+                border: "1px solid #D5E3D5",
+              }}
             >
-              <p className="text-xs mb-2.5 sm:mb-3" style={{ color: COLORS.text.secondary }}>
+              <p
+                className="text-xs mb-2.5 sm:mb-3"
+                style={{ color: COLORS.text.secondary }}
+              >
                 성장 스토리
               </p>
-              <p className="text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: COLORS.text.primary }}
+              >
                 {closingReport.growth_story}
               </p>
             </Card>
