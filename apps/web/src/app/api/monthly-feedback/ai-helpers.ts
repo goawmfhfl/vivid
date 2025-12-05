@@ -46,7 +46,7 @@ export async function generateSection<T>(
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
   // Pro 멤버십에 따라 모델 선택
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
+  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-5-nano";
   const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
@@ -136,45 +136,6 @@ export async function generateSection<T>(
       (quotaError as any).code = "INSUFFICIENT_QUOTA";
       (quotaError as any).status = 429;
       throw quotaError;
-    }
-
-    // 모델 관련 에러 처리 (Fallback)
-    if (
-      err?.message?.includes("model") ||
-      err?.code === "model_not_found" ||
-      err?.status === 404
-    ) {
-      // Fallback
-      const fallbackModel = isPro ? proModel : "gpt-5-nano";
-      const fallbackCompletion = await openai.chat.completions.create({
-        model: fallbackModel,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: schema.name,
-            schema: schema.schema,
-            strict: schema.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-      });
-
-      const fallbackContent = fallbackCompletion.choices[0]?.message?.content;
-      if (!fallbackContent) {
-        throw new Error(`No content from OpenAI fallback (${schema.name})`);
-      }
-
-      const parsed = JSON.parse(fallbackContent);
-      const result = parsed[sectionName] as T;
-      setCache(proCacheKey, result);
-      return result;
     }
 
     throw error;

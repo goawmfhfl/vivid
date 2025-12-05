@@ -48,7 +48,6 @@ const PRICING: Record<
   { input: number; inputCached: number; output: number }
 > = {
   "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 }, // 캐시된 입력: $0.25
-  "gpt-4o": { input: 2.5, inputCached: 2.5, output: 10.0 },
   "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
   "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
   "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },

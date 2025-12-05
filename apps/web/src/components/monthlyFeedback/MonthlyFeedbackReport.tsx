@@ -13,7 +13,6 @@ import { InsightSection } from "./report/InsightSection";
 import { ExecutionSection } from "./report/ExecutionSection";
 import { ClosingSection } from "./report/ClosingSection";
 import { COLORS, SPACING } from "@/lib/design-system";
-import { validateAllSectionsFrontend } from "@/utils/monthly-feedback-utils";
 import { TestPanel } from "./TestPanel";
 
 type MonthlyFeedbackReportProps = {
@@ -32,7 +31,6 @@ export function MonthlyFeedbackReport({
   const router = useRouter();
 
   // 각 영역별 데이터 존재 여부 체크
-  const sectionValidation = validateAllSectionsFrontend(data);
 
   const handleGoToAnalysis = () => {
     router.push("/analysis?tab=monthly");
@@ -69,7 +67,7 @@ export function MonthlyFeedbackReport({
         </ScrollAnimation>
 
         {/* Daily Life Report */}
-        {sectionValidation.daily_life_report && data.daily_life_report && (
+        {data?.daily_life_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <DailyLifeSection
@@ -81,7 +79,7 @@ export function MonthlyFeedbackReport({
         )}
 
         {/* Emotion Report */}
-        {sectionValidation.emotion_report && data.emotion_report && (
+        {data?.emotion_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <EmotionSection
@@ -93,7 +91,7 @@ export function MonthlyFeedbackReport({
         )}
 
         {/* Vision Report */}
-        {sectionValidation.vision_report && data.vision_report && (
+        {data?.vision_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <VisionSection visionReport={data.vision_report} isPro={isPro} />
@@ -102,7 +100,7 @@ export function MonthlyFeedbackReport({
         )}
 
         {/* Insight Report */}
-        {sectionValidation.insight_report && data.insight_report && (
+        {data?.insight_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <InsightSection
@@ -114,7 +112,7 @@ export function MonthlyFeedbackReport({
         )}
 
         {/* Execution Report */}
-        {sectionValidation.execution_report && data.execution_report && (
+        {data?.execution_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <ExecutionSection
@@ -126,7 +124,7 @@ export function MonthlyFeedbackReport({
         )}
 
         {/* Closing Report */}
-        {sectionValidation.closing_report && data.closing_report && (
+        {data?.closing_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-12">
               <ClosingSection

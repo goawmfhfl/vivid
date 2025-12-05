@@ -76,7 +76,7 @@ async function generateSection<T>(
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
   // Pro 멤버십에 따라 모델 선택
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
+  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-5-nano";
   const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
@@ -168,74 +168,6 @@ async function generateSection<T>(
         throw quotaError;
       }
 
-      // 모델 관련 에러 처리 (Fallback)
-      if (
-        err?.message?.includes("model") ||
-        err?.code === "model_not_found" ||
-        err?.status === 404
-      ) {
-        // Fallback
-        const fallbackStartTime = Date.now();
-        const fallbackModel = isPro ? proModel : "gpt-5-nano";
-
-        return openai.chat.completions
-          .create({
-            model: fallbackModel,
-            messages: [
-              {
-                role: "system",
-                content: enhancedSystemPrompt,
-              },
-              { role: "user", content: userPrompt },
-            ],
-            response_format: {
-              type: "json_schema",
-              json_schema: {
-                name: schema.name,
-                schema: schema.schema,
-                strict: schema.strict,
-              },
-            },
-            prompt_cache_key: promptCacheKey,
-          })
-          .then((completion) => {
-            const fallbackEndTime = Date.now();
-            const fallbackDuration_ms = fallbackEndTime - fallbackStartTime;
-
-            const content = completion.choices[0]?.message?.content;
-            if (!content) {
-              throw new Error(`No content from OpenAI (${schema.name})`);
-            }
-
-            const result = JSON.parse(content) as T;
-
-            // 캐시에 저장 (멤버십별로 구분)
-            setCache(proCacheKey, result);
-
-            // 추적 정보를 결과에 첨부 (테스트 환경에서만)
-            if (
-              process.env.NODE_ENV === "development" ||
-              process.env.NEXT_PUBLIC_NODE_ENV === "development"
-            ) {
-              const usage = completion.usage;
-              const cachedTokens =
-                (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-              (result as any).__tracking = {
-                name: schema.name,
-                model: fallbackModel,
-                duration_ms: fallbackDuration_ms,
-                usage: {
-                  prompt_tokens: usage?.prompt_tokens || 0,
-                  completion_tokens: usage?.completion_tokens || 0,
-                  total_tokens: usage?.total_tokens || 0,
-                  cached_tokens: cachedTokens,
-                },
-              };
-            }
-
-            return result;
-          });
-      }
       throw error;
     });
 }

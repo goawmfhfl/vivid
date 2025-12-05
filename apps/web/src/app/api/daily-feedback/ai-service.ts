@@ -87,7 +87,7 @@ async function generateReport<T>(
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
   // Pro 멤버십에 따라 모델 선택
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
+  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-5-nano";
   const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
@@ -160,79 +160,6 @@ async function generateReport<T>(
     return result;
   } catch (error: unknown) {
     const err = error as { message?: string; code?: string; status?: number };
-    if (
-      err?.message?.includes("model") ||
-      err?.code === "model_not_found" ||
-      err?.status === 404
-    ) {
-      // Fallback: Pro는 proModel, 일반은 gpt-5-nano
-      const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o"; // gpt-5 출시 시 변경 가능
-      const fallbackModel = isPro ? proModel : "gpt-5-nano";
-      const completion = await openai.chat.completions.create({
-        model: fallbackModel,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: finalSchema.name,
-            schema: finalSchema.schema,
-            strict: finalSchema.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-      });
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error(`No content from OpenAI (${finalSchema.name})`);
-      }
-
-      let result = JSON.parse(content) as T;
-
-      // 무료 멤버십인 경우 Pro 전용 필드를 null로 설정
-      if (!isPro && result && typeof result === "object") {
-        result = {
-          ...result,
-          // SummaryReport의 Pro 전용 필드
-          ...("trend_analysis" in result && { trend_analysis: null }),
-          // DailyReport의 Pro 전용 필드
-          ...("emotion_triggers" in result && { emotion_triggers: null }),
-          ...("behavioral_clues" in result && { behavioral_clues: null }),
-          // EmotionReport의 Pro 전용 필드
-          ...("ai_mood_valence" in result && { ai_mood_valence: null }),
-          ...("ai_mood_arousal" in result && { ai_mood_arousal: null }),
-          ...("emotion_events" in result && { emotion_events: null }),
-          // DreamReport의 Pro 전용 필드
-          ...("dream_goals" in result && { dream_goals: null }),
-          ...("dreamer_traits" in result && { dreamer_traits: null }),
-          // InsightReport의 Pro 전용 필드
-          ...("meta_question" in result && { meta_question: null }),
-          ...("insight_next_actions" in result && {
-            insight_next_actions: null,
-          }),
-          // FeedbackReport의 Pro 전용 필드
-          ...("ai_message" in result && { ai_message: null }),
-          ...("feedback_person_traits" in result && {
-            feedback_person_traits: null,
-          }),
-          // FinalReport의 Pro 전용 필드
-          ...("tomorrow_focus" in result && { tomorrow_focus: null }),
-          ...("growth_points" in result && { growth_points: null }),
-          ...("adjustment_points" in result && { adjustment_points: null }),
-        } as T;
-      }
-
-      // 캐시에 저장 (멤버십별로 구분)
-      setCache(proCacheKey, result);
-
-      return result;
-    }
     throw error;
   }
 }

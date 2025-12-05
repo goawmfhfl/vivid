@@ -27,16 +27,33 @@ export type MonthlyFeedbackNew = {
 };
 
 // ============================================
-// 1. Summary Report
+// 1. Summary Report (서버 스키마 기반)
 // ============================================
 export type SummaryReport = {
-  monthly_summary: string;
-  key_themes: KeyTheme[];
-  monthly_scores: MonthlyScores;
-  weekly_scores_trend: WeeklyScore[];
-  visualization: SummaryVisualization;
+  monthly_score: number; // 0-100
+  summary_title: string;
+  summary_description: string;
+  main_themes: string[]; // 최대 7개
+  main_themes_reason: string;
+  integrity_trend: "상승" | "하락" | "유지" | "불규칙" | null;
+  record_coverage_rate: number; // 0-1
+  integrity_average: number; // 0-10
+  life_balance_score: number; // 0-10
+  life_balance_reason: string;
+  life_balance_feedback: string;
+  execution_score: number; // 0-10
+  execution_reason: string;
+  execution_feedback: string;
+  rest_score: number; // 0-10
+  rest_reason: string;
+  rest_feedback: string;
+  relationship_score: number; // 0-10
+  relationship_reason: string;
+  relationship_feedback: string;
+  summary_ai_comment: string | null;
 };
 
+// 하위 호환성을 위한 레거시 타입들 (사용되지 않을 수 있음)
 export type KeyTheme = {
   theme: string;
   frequency: number;
@@ -104,80 +121,50 @@ export type SummaryVisualization = {
 };
 
 // ============================================
-// 2. Daily Life Report
+// 2. Daily Life Report (서버 스키마 기반)
 // ============================================
 export type DailyLifeReport = {
   summary: string;
-  daily_patterns: DailyPatterns;
-  visualization: DailyLifeVisualization;
+  daily_summaries_trend: DailySummariesTrend;
+  events_pattern: EventsPattern;
+  emotion_triggers_analysis: EmotionTriggersAnalysis;
+  behavioral_patterns: BehavioralPatterns;
+  keywords_analysis: KeywordsAnalysis;
+  daily_rhythm: DailyRhythm;
+  ai_comment: string | null;
 };
 
-export type DailyPatterns = {
+export type DailySummariesTrend = {
+  overall_narrative: string;
+  key_highlights: string[]; // 최대 5개
+};
+
+export type EventsPattern = {
   most_frequent_events: MostFrequentEvent[];
-  behavioral_patterns: BehavioralPatterns;
-  keyword_evolution: KeywordEvolution[];
-  emotion_triggers_summary: EmotionTriggersSummary;
+  event_categories: EventCategory[];
+  timing_patterns: TimingPattern[];
 };
 
 export type MostFrequentEvent = {
   event: string;
   frequency: number;
-  avg_emotion_score: number;
+  days: string[]; // YYYY-MM-DD 형식
   context: string;
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-    emotion_avg: number;
-    context?: string;
-  }>;
 };
 
-export type BehavioralPatterns = {
-  avoidance: PatternWithTrend;
-  routine_attempt: RoutineAttemptPattern;
-  planned_actions: PlannedActionsPattern;
-};
-
-export type PatternWithTrend = {
-  frequency: number;
-  common_triggers: string[];
-  typical_behaviors: string[];
-  week_trend: Array<{
-    week: number;
-    frequency: number;
-  }>;
-};
-
-export type RoutineAttemptPattern = {
-  frequency: number;
-  success_rate: number;
-  most_successful: string[];
-  least_successful: string[];
-  week_trend: Array<{
-    week: number;
-    frequency: number;
-    success_rate: number;
-  }>;
-};
-
-export type PlannedActionsPattern = {
-  frequency: number;
-  avg_emotion_score: number;
+export type EventCategory = {
+  category: string;
+  count: number;
   examples: string[];
-  week_trend: Array<{
-    week: number;
-    frequency: number;
-    emotion_avg: number;
-  }>;
 };
 
-export type KeywordEvolution = {
-  week: number;
-  top_keywords: string[];
-  dominant_theme: string;
+export type TimingPattern = {
+  time_range: string;
+  common_events: string[];
+  pattern_description: string;
 };
 
-export type EmotionTriggersSummary = {
+export type EmotionTriggersAnalysis = {
   summary: string;
   category_distribution: {
     self: CategoryDistribution;
@@ -185,86 +172,105 @@ export type EmotionTriggersSummary = {
     people: CategoryDistribution;
     environment: CategoryDistribution;
   };
-  week_evolution: Array<{
-    week: number;
-    self: number;
-    work: number;
-    people: number;
-    environment: number;
-  }>;
 };
 
 export type CategoryDistribution = {
   count: number;
-  percentage: number;
+  percentage: number; // 0-100
   top_triggers: string[];
+  insight: string | null;
+};
+
+export type BehavioralPatterns = {
+  summary: string;
+  pattern_distribution: {
+    planned: PatternDistributionItem;
+    impulsive: PatternDistributionItem;
+    routine_attempt: PatternDistributionItem;
+    avoidance: PatternDistributionItem;
+    routine_failure: PatternDistributionItem;
+  };
+  behavior_emotion_correlation: BehaviorEmotionCorrelation[];
+};
+
+export type PatternDistributionItem = {
+  count: number;
+  percentage: number; // 0-100
+  examples: string[];
+  insight: string | null;
+};
+
+export type BehaviorEmotionCorrelation = {
+  behavior: string;
+  associated_emotions: string[];
   insight: string;
 };
 
-export type DailyLifeVisualization = {
-  event_frequency_bar: {
-    type: "bar";
-    data: Array<{
-      event: string;
-      frequency: number;
-      emotion_avg: number;
-    }>;
-  };
-  behavior_pattern_radar: {
-    type: "radar";
-    data: Array<{
-      category: string;
-      value: number;
-      fullMark: number;
-    }>;
-  };
-  keyword_timeline: {
-    type: "line";
-    data: Array<{
-      week: string;
-      [key: string]: string | number;
-    }>;
-  };
-  routine_success_rate_area: {
-    type: "area";
-    data: Array<{
-      week: string;
-      success_rate: number;
-    }>;
-  };
-  emotion_triggers_pie: {
-    type: "pie";
-    data: Array<{
-      category: string;
-      value: number;
-      percentage: number;
-      color: string;
-    }>;
-  };
-  emotion_triggers_weekly_line: {
-    type: "line";
-    data: Array<{
-      week: string;
-      self: number;
-      work: number;
-      people: number;
-      environment: number;
-    }>;
-    keys: string[];
-  };
+export type KeywordsAnalysis = {
+  top_keywords: TopKeyword[];
+  keyword_categories: KeywordCategory[];
+};
+
+export type TopKeyword = {
+  keyword: string;
+  frequency: number;
+  days: string[]; // YYYY-MM-DD 형식
+  context: string;
+  sentiment: "positive" | "negative" | "neutral";
+};
+
+export type KeywordCategory = {
+  category: string;
+  keywords: string[];
+  count: number;
+};
+
+export type DailyRhythm = {
+  summary: string;
+  time_patterns: TimePattern[];
+};
+
+export type TimePattern = {
+  time_period: string;
+  common_activities: string[];
+  typical_emotions: string[];
+  pattern_description: string;
 };
 
 // ============================================
-// 3. Emotion Report
+// 3. Emotion Report (서버 스키마 기반)
 // ============================================
 export type EmotionReport = {
-  summary: string;
-  monthly_emotion_overview: MonthlyEmotionOverview;
-  weekly_emotion_evolution: WeeklyEmotionEvolution[];
-  emotion_pattern_changes: EmotionPatternChanges;
-  visualization: EmotionVisualization;
+  monthly_ai_mood_valence_avg: number | null;
+  monthly_ai_mood_arousal_avg: number | null;
+  emotion_quadrant_dominant:
+    | "몰입·설렘"
+    | "불안·초조"
+    | "슬픔·무기력"
+    | "안도·평온"
+    | null;
+  emotion_quadrant_distribution: EmotionQuadrantDistribution[];
+  emotion_quadrant_analysis_summary: string;
+  emotion_pattern_summary: string | null;
+  positive_triggers: string[];
+  negative_triggers: string[];
+  emotion_stability_score: number; // 0-10
+  emotion_stability_explanation: string;
+  emotion_stability_score_reason: string;
+  emotion_stability_praise: string | null;
+  emotion_stability_guidelines: string[];
+  emotion_stability_actions: string[];
+  emotion_ai_comment: string | null;
 };
 
+export type EmotionQuadrantDistribution = {
+  quadrant: "몰입·설렘" | "불안·초조" | "슬픔·무기력" | "안도·평온";
+  count: number;
+  ratio: number; // 0-1
+  explanation: string;
+};
+
+// 하위 호환성을 위한 레거시 타입들 (사용되지 않을 수 있음)
 export type MonthlyEmotionOverview = {
   dominant_quadrant: "몰입·설렘" | "불안·초조" | "슬픔·무기력" | "안도·평온";
   quadrant_distribution: {
@@ -364,480 +370,95 @@ export type EmotionVisualization = {
 };
 
 // ============================================
-// 4. Vision Report
+// 4. Vision Report (서버 스키마 기반)
 // ============================================
 export type VisionReport = {
+  vision_days_count: number;
+  vision_records_count: number;
+  vision_consistency_score: number; // 0-10
+  main_visions: MainVision[];
+  core_visions: CoreVision[];
+  vision_progress_comment: string | null;
+  vision_ai_feedbacks: string[]; // 최대 5개
+};
+
+export type MainVision = {
   summary: string;
-  vision_consistency: VisionConsistency;
-  vision_action_alignment: VisionActionAlignment;
-  visualization: VisionVisualization;
-};
-
-export type VisionConsistency = {
-  core_theme: string;
-  consistency_score: number;
-  theme_evolution: ThemeEvolution[];
-  vision_keywords_trend: VisionKeywordTrend[];
-  goal_categories: GoalCategory[];
-  dreamer_traits: DreamerTrait[];
-};
-
-export type ThemeEvolution = {
-  period: string;
-  theme: string;
-  key_phrases: string[];
-  summary: string;
-};
-
-export type VisionKeywordTrend = {
-  keyword: string;
   frequency: number;
-  trend: "increasing" | "decreasing" | "stable";
-  first_appeared: string;
-  last_appeared: string;
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-  }>;
-  context: string;
-  related_keywords: string[];
 };
 
-export type GoalCategory = {
-  category: string;
-  count: number;
-  percentage: number;
-  examples: string[];
-  progress_rate: number;
-  week_progress: Array<{
-    week: number;
-    progress: number;
-  }>;
-  insight: string;
-};
-
-export type DreamerTrait = {
-  trait: string;
-  frequency: number;
-  evidence: string;
-  insight: string;
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-  }>;
-};
-
-export type VisionActionAlignment = {
+export type CoreVision = {
   summary: string;
-  alignment_score: {
-    value: number;
-    description: string;
-  };
-  strong_alignments: Array<{
-    vision_area: string;
-    action_examples: string[];
-    alignment_score: number;
-  }>;
-  gaps: Array<{
-    vision_area: string;
-    gap_description: string;
-    suggested_actions: string[];
-  }>;
-};
-
-export type VisionVisualization = {
-  vision_keywords_timeline: {
-    type: "line";
-    data: Array<{
-      week: string;
-      [key: string]: string | number;
-    }>;
-  };
-  goal_progress_gauge: {
-    type: "gauge";
-    data: Array<{
-      category: string;
-      progress: number;
-      target: number;
-    }>;
-  };
-  dreamer_traits_bar: {
-    type: "bar";
-    data: Array<{
-      trait: string;
-      frequency: number;
-    }>;
-  };
-  vision_consistency_timeline: {
-    type: "timeline";
-    data: Array<{
-      phase: string;
-      theme: string;
-      key_phrases: string[];
-    }>;
-  };
-  goal_categories_pie: {
-    type: "pie";
-    data: Array<{
-      category: string;
-      value: number;
-      percentage: number;
-      color: string;
-    }>;
-  };
+  frequency: number; // 최소 1
 };
 
 // ============================================
-// 5. Insight Report
+// 5. Insight Report (서버 스키마 기반)
 // ============================================
 export type InsightReport = {
-  summary: string;
+  insight_days_count: number;
+  insight_records_count: number;
+  top_insights: TopInsight[];
   core_insights: CoreInsight[];
-  insight_categories: InsightCategory[];
-  meta_questions_evolution: MetaQuestionsEvolution[];
-  insight_action_alignment: InsightActionAlignment;
-  repeated_themes: RepeatedTheme[];
-  visualization: InsightVisualization;
+  insight_ai_comment: string | null;
+  insight_comprehensive_summary: string | null;
+};
+
+export type TopInsight = {
+  summary: string;
+  first_date: string | null; // YYYY-MM-DD 형식
+  last_date: string | null; // YYYY-MM-DD 형식
+  frequency: number;
 };
 
 export type CoreInsight = {
-  insight: string;
-  source: string;
-  category: string;
-  frequency: number;
-  impact_score: number;
-  first_appeared: string;
-  last_appeared: string;
-  related_actions: string[];
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-    context?: string;
-  }>;
-};
-
-export type InsightCategory = {
-  category: string;
-  count: number;
-  percentage: number;
-  avg_impact: number;
-  week_distribution: Array<{
-    week: number;
-    count: number;
-  }>;
-  examples: string[];
-  insight: string;
-};
-
-export type MetaQuestionsEvolution = {
-  week: number;
-  questions: string[];
-  question_type: string;
-  count: number;
-  dominant_theme: string;
-};
-
-export type InsightActionAlignment = {
   summary: string;
-  alignment_score: {
-    value: number;
-    description: string;
-  };
-  strong_connections: Array<{
-    insight: string;
-    action: string;
-    connection: string;
-    alignment_score: number;
-  }>;
-  weak_connections: Array<{
-    insight: string;
-    action: string;
-    connection: string;
-    alignment_score: number;
-    gap_reason?: string;
-  }>;
-};
-
-export type RepeatedTheme = {
-  theme: string;
-  total_count: number;
-  week_distribution: Array<{
-    week: number;
-    count: number;
-  }>;
-  insight: string;
-};
-
-export type InsightVisualization = {
-  insight_categories_pie: {
-    type: "pie";
-    data: Array<{
-      category: string;
-      value: number;
-      percentage: number;
-      color: string;
-    }>;
-  };
-  insight_impact_bar: {
-    type: "bar";
-    data: Array<{
-      insight: string;
-      impact: number;
-      frequency: number;
-    }>;
-  };
-  meta_questions_timeline: {
-    type: "line";
-    data: Array<{
-      week: string;
-      count: number;
-      type: string;
-    }>;
-  };
-  insight_frequency_wordcloud: {
-    type: "wordcloud";
-    data: Array<{
-      text: string;
-      size: number;
-      color: string;
-    }>;
-  };
-  insight_categories_weekly_area: {
-    type: "area";
-    data: Array<{
-      week: string;
-      [key: string]: string | number;
-    }>;
-    keys: string[];
-  };
+  explanation: string;
 };
 
 // ============================================
-// 6. Execution Report
+// 6. Execution Report (서버 스키마 기반)
 // ============================================
 export type ExecutionReport = {
+  feedback_days_count: number;
+  feedback_records_count: number;
+  recurring_positives: string[]; // 최대 10개
+  recurring_improvements: string[]; // 최대 10개
+  habit_scores: HabitScores;
+  core_feedbacks: CoreFeedback[];
+  recurring_improvements_with_frequency: RecurringImprovementWithFrequency[];
+  core_feedback_for_month: string;
+  feedback_ai_comment: string | null;
+};
+
+export type HabitScores = {
+  health: number; // 0-10
+  health_reason: string;
+  work: number; // 0-10
+  work_reason: string;
+  relationship: number; // 0-10
+  relationship_reason: string;
+  self_care: number; // 0-10
+  self_care_reason: string;
+};
+
+export type CoreFeedback = {
   summary: string;
-  feedback_patterns: FeedbackPatterns;
-  core_feedback_themes: CoreFeedbackTheme[];
-  improvement_action_alignment: ImprovementActionAlignment;
-  visualization: ExecutionVisualization;
+  frequency: number; // 최소 1
 };
 
-export type FeedbackPatterns = {
-  positives_count: number;
-  improvements_count: number;
-  execution_rate: number;
-  positives_trend: Array<{
-    week: number;
-    count: number;
-  }>;
-  improvements_trend: Array<{
-    week: number;
-    count: number;
-  }>;
-  feedback_categories: FeedbackCategory[];
-  person_traits: PersonTrait[];
-  improvement_alignment_score: number;
-};
-
-export type FeedbackCategory = {
-  category: string;
-  positives: number;
-  improvements: number;
-  total: number;
-  percentage: number;
-  examples: {
-    positives: string[];
-    improvements: string[];
-  };
-  week_evolution: Array<{
-    week: number;
-    positives: number;
-    improvements: number;
-  }>;
-};
-
-export type PersonTrait = {
-  trait: string;
-  frequency: number;
-  evidence: string;
-  context: string;
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-  }>;
-};
-
-export type CoreFeedbackTheme = {
-  theme: string;
-  frequency: number;
-  evidence: string[];
-  insight: string;
-  week_evolution: Array<{
-    week: number;
-    frequency: number;
-  }>;
-};
-
-export type ImprovementActionAlignment = {
+export type RecurringImprovementWithFrequency = {
   summary: string;
-  alignment_score: {
-    value: number;
-    description: string;
-  };
-  strong_connections: Array<{
-    feedback_theme: string;
-    improvement: string;
-    connection: string;
-    alignment_score: number;
-  }>;
-  weak_connections: Array<{
-    feedback_theme: string;
-    improvement: string;
-    connection: string;
-    alignment_score: number;
-    gap_reason?: string;
-  }>;
-};
-
-export type ExecutionVisualization = {
-  feedback_trend_line: {
-    type: "line";
-    data: Array<{
-      week: string;
-      positives: number;
-      improvements: number;
-    }>;
-  };
-  feedback_categories_bar: {
-    type: "bar";
-    data: Array<{
-      category: string;
-      positives: number;
-      improvements: number;
-    }>;
-  };
-  execution_rate_gauge: {
-    type: "gauge";
-    data: {
-      value: number;
-      target: number;
-      label: string;
-    };
-  };
-  person_traits_wordcloud: {
-    type: "wordcloud";
-    data: Array<{
-      text: string;
-      size: number;
-      color: string;
-    }>;
-  };
-  positives_improvements_pie: {
-    type: "pie";
-    data: Array<{
-      type: string;
-      value: number;
-      percentage: number;
-      color: string;
-    }>;
-  };
+  frequency: number; // 최소 1
 };
 
 // ============================================
-// 7. Closing Report
+// 7. Closing Report (서버 스키마 기반)
 // ============================================
 export type ClosingReport = {
-  monthly_one_liner: string;
-  this_month_identity: ThisMonthIdentity;
-  next_month_intention: NextMonthIntention;
-  visualization: ClosingVisualization;
-};
-
-export type ThisMonthIdentity = {
-  core_identity: string;
-  identity_evolution: IdentityEvolution[];
-  key_characteristics: KeyCharacteristic[];
-  strengths_highlight: StrengthHighlight[];
-  areas_of_awareness: AreaOfAwareness[];
-  growth_journey: GrowthJourney[];
-};
-
-export type IdentityEvolution = {
-  period: string;
-  identity: string;
-  key_phrases: string[];
-  dominant_emotion: string;
-  summary: string;
-};
-
-export type KeyCharacteristic = {
-  trait: string;
-  score: number;
-  evidence: string;
-  growth: string;
-  week_scores: Array<{
-    week: number;
-    score: number;
-  }>;
-};
-
-export type StrengthHighlight = {
-  strength: string;
-  description: string;
-  impact: string;
-};
-
-export type AreaOfAwareness = {
-  area: string;
-  description: string;
-  action_taken: string;
-};
-
-export type GrowthJourney = {
-  phase: string;
-  date_range: string;
-  description: string;
-  key_moment: string;
-  identity_shift: string;
-};
-
-export type NextMonthIntention = {
-  summary: string;
-  intention: string;
-  focus_areas: FocusArea[];
-};
-
-export type FocusArea = {
-  area: string;
-  reason: string;
-  suggested_actions: string[];
-  identity_shift: string;
-};
-
-export type ClosingVisualization = {
-  characteristics_radar: {
-    type: "radar";
-    data: Array<{
-      characteristic: string;
-      value: number;
-      fullMark: number;
-    }>;
-  };
-  growth_journey: {
-    type: "timeline";
-    data: Array<{
-      phase: string;
-      date_range: string;
-      description: string;
-      key_moment: string;
-    }>;
-  };
-  characteristics_growth_line: {
-    type: "line";
-    data: Array<{
-      week: string;
-      [key: string]: string | number;
-    }>;
-  };
+  monthly_title: string;
+  monthly_summary: string;
+  turning_points: string[]; // 최대 5개
+  next_month_focus: string;
+  ai_encouragement_message: string;
 };

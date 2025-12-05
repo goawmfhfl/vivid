@@ -33,15 +33,12 @@ export async function fetchMonthlyFeedbackList(
     // summary_report 복호화
     const decryptedSummaryReport = decryptJsonbFields(row.summary_report) as {
       summary_title?: string;
-      monthly_scores?: {
-        overall_score?: number;
-      };
+      monthly_score?: number;
     } | null;
 
     const title =
       decryptedSummaryReport?.summary_title || row.month_label || "";
-    const monthlyScore =
-      decryptedSummaryReport?.monthly_scores?.overall_score || 0;
+    const monthlyScore = decryptedSummaryReport?.monthly_score || 0;
     const dateRange = row.date_range as {
       start_date: string;
       end_date: string;

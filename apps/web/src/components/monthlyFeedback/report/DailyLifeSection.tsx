@@ -46,7 +46,6 @@ type DailyLifeSectionProps = {
 };
 
 const DAILY_LIFE_COLOR = "#A8BBA8";
-const DAILY_LIFE_COLOR_DARK = "#8FA38F";
 
 export function DailyLifeSection({
   dailyLifeReport,

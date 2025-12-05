@@ -1,8 +1,7 @@
 "use client";
 
 import { CalendarDays, TrendingUp, Sparkles, Lock } from "lucide-react";
-import type { SummaryReport } from "@/types/monthly-feedback";
-import { COLORS } from "@/lib/design-system";
+import type { SummaryReport } from "@/types/monthly-feedback-new";
 
 type MonthlyReportHeaderProps = {
   monthLabel: string;
@@ -25,6 +24,8 @@ export function MonthlyReportHeader({
     return dateStr.replace(/-/g, ".");
   };
 
+  console.log("[MonthlyReportHeader] summaryReport:", summaryReport);
+
   return (
     <div className="mb-8 sm:mb-10">
       {/* Main Header Card */}
@@ -44,7 +45,7 @@ export function MonthlyReportHeader({
             </p>
           </div>
           <h1 className="text-2xl sm:text-3xl mb-2 font-semibold">
-            {monthLabel}
+            {summaryReport?.summary_title || monthLabel}
           </h1>
           <p className="text-sm" style={{ opacity: 0.85 }}>
             {formatDate(dateRange.start_date)} –{" "}
@@ -52,8 +53,8 @@ export function MonthlyReportHeader({
           </p>
         </div>
 
-        {/* Monthly Summary */}
-        {summaryReport?.monthly_summary && (
+        {/* Monthly Summary Description */}
+        {summaryReport?.summary_description && (
           <div
             className="py-5 px-6 rounded-2xl mb-5"
             style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
@@ -74,16 +75,16 @@ export function MonthlyReportHeader({
                   className="text-sm leading-relaxed"
                   style={{ opacity: 0.95 }}
                 >
-                  {summaryReport.monthly_summary}
+                  {summaryReport.summary_description}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Key Themes */}
-        {Array.isArray(summaryReport?.key_themes) &&
-          summaryReport.key_themes.length > 0 && (
+        {/* Main Themes */}
+        {Array.isArray(summaryReport?.main_themes) &&
+          summaryReport.main_themes.length > 0 && (
             <div className="mb-5">
               <p
                 className="text-xs mb-3"
@@ -92,7 +93,7 @@ export function MonthlyReportHeader({
                 핵심 테마
               </p>
               <ul className="space-y-2">
-                {summaryReport.key_themes
+                {summaryReport.main_themes
                   .slice(0, isPro ? 10 : 5)
                   .map((theme, idx) => (
                     <li
@@ -109,25 +110,23 @@ export function MonthlyReportHeader({
                       >
                         •
                       </span>
-                      <span style={{ lineHeight: "1.6" }}>
-                        {theme.theme}: {theme.description}
-                      </span>
+                      <span style={{ lineHeight: "1.6" }}>{theme}</span>
                     </li>
                   ))}
               </ul>
-              {!isPro && summaryReport.key_themes.length > 5 && (
+              {!isPro && summaryReport.main_themes.length > 5 && (
                 <div className="mt-3 flex items-center gap-2 text-xs opacity-75">
                   <Lock className="w-3 h-3" />
                   <span>
-                    {summaryReport.key_themes.length - 5}개의 테마 더 보기
+                    {summaryReport.main_themes.length - 5}개의 테마 더 보기
                   </span>
                 </div>
               )}
             </div>
           )}
 
-        {/* Monthly Scores (Pro 전용 또는 요약) */}
-        {summaryReport?.monthly_scores && (
+        {/* Monthly Scores */}
+        {summaryReport && (
           <div
             className="py-5 px-6 rounded-2xl relative overflow-hidden"
             style={{
@@ -160,31 +159,39 @@ export function MonthlyReportHeader({
                   <div>
                     <p className="text-xs opacity-75">종합 점수</p>
                     <p className="text-lg font-semibold">
-                      {summaryReport.monthly_scores.overall_score.toFixed(1)}
+                      {summaryReport.monthly_score}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs opacity-75">일관성</p>
                     <p className="text-lg font-semibold">
-                      {summaryReport.monthly_scores.consistency_score.toFixed(
-                        1
-                      )}
+                      {summaryReport.integrity_average.toFixed(1)}
                     </p>
                   </div>
                   {isPro && (
                     <>
                       <div>
-                        <p className="text-xs opacity-75">성장</p>
+                        <p className="text-xs opacity-75">생활 밸런스</p>
                         <p className="text-lg font-semibold">
-                          {summaryReport.monthly_scores.growth_score.toFixed(1)}
+                          {summaryReport.life_balance_score}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs opacity-75">자기인식</p>
+                        <p className="text-xs opacity-75">실행력</p>
                         <p className="text-lg font-semibold">
-                          {summaryReport.monthly_scores.self_awareness_score.toFixed(
-                            1
-                          )}
+                          {summaryReport.execution_score}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs opacity-75">휴식/회복</p>
+                        <p className="text-lg font-semibold">
+                          {summaryReport.rest_score}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs opacity-75">관계/소통</p>
+                        <p className="text-lg font-semibold">
+                          {summaryReport.relationship_score}
                         </p>
                       </div>
                     </>
@@ -192,6 +199,21 @@ export function MonthlyReportHeader({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* AI Comment */}
+        {summaryReport?.summary_ai_comment && (
+          <div
+            className="mt-5 py-4 px-6 rounded-2xl"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          >
+            <p
+              className="text-sm leading-relaxed"
+              style={{ opacity: 0.95, fontStyle: "italic" }}
+            >
+              {summaryReport.summary_ai_comment}
+            </p>
           </div>
         )}
       </div>

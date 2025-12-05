@@ -84,7 +84,7 @@ async function generateSection<T>(
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
   // Pro 멤버십에 따라 모델 선택
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
+  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-5-nano";
   const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화

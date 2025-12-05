@@ -11,7 +11,9 @@ import {
   Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { InsightReport } from "@/types/monthly-feedback";
+import type { MonthlyInsightReport } from "@/types/monthly-feedback";
+
+type InsightReport = MonthlyInsightReport;
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
@@ -83,19 +85,47 @@ export function InsightSection({
                 <ul className="space-y-3">
                   {insightReport.core_insights
                     .slice(0, isPro ? 10 : 5)
-                    .map((insight, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-2 text-sm"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        <span
-                          className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: INSIGHT_COLOR }}
-                        />
-                        <span style={{ lineHeight: "1.6" }}>{insight}</span>
-                      </li>
-                    ))}
+                    .map((insight, idx) => {
+                      // core_insights가 객체인 경우 (월간 피드백)
+                      const insightSummary =
+                        typeof insight === "string"
+                          ? insight
+                          : insight.summary || "";
+                      const insightExplanation =
+                        typeof insight === "object" && insight.explanation
+                          ? insight.explanation
+                          : null;
+
+                      return (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-sm"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          <span
+                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: INSIGHT_COLOR }}
+                          />
+                          <div className="flex-1 space-y-1">
+                            <span style={{ lineHeight: "1.6" }}>
+                              {insightSummary}
+                            </span>
+                            {insightExplanation && (
+                              <p
+                                className="text-xs"
+                                style={{
+                                  color: COLORS.text.secondary,
+                                  lineHeight: "1.5",
+                                  marginTop: "0.25rem",
+                                }}
+                              >
+                                {insightExplanation}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
                 </ul>
               </div>
             </div>

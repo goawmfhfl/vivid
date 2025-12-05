@@ -209,36 +209,34 @@ export function TokenTestPanel() {
                 className="text-xs mt-1"
                 style={{ color: COLORS.text.secondary }}
               >
-                {["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model)
+                {["gpt-5-nano", "gpt-5-mini"].includes(model)
                   ? "최신 모델은 1.0으로 고정됩니다"
                   : "응답의 창의성/일관성 조절 (0.0~2.0)"}
                 <br />
-                {!["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model) &&
+                {!["gpt-5-nano", "gpt-5-mini"].includes(model) &&
                   "낮을수록 일관적, 높을수록 창의적"}
               </p>
             </div>
             <Input
               type="number"
               value={
-                ["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model)
+                ["gpt-5-nano", "gpt-5-mini"].includes(model)
                   ? "1.0"
                   : temperature
               }
               onChange={(e) => {
-                if (!["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model)) {
+                if (!["gpt-5-nano", "gpt-5-mini"].includes(model)) {
                   setTemperature(e.target.value);
                 }
               }}
               min="0"
               max="2"
               step="0.1"
-              disabled={["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model)}
+              disabled={["gpt-5-nano", "gpt-5-mini"].includes(model)}
               style={{
                 backgroundColor: COLORS.background.base,
                 border: `1px solid ${COLORS.border.light}`,
-                opacity: ["gpt-4o", "gpt-5-nano", "gpt-5-mini"].includes(model)
-                  ? 0.6
-                  : 1,
+                opacity: ["gpt-5-nano", "gpt-5-mini"].includes(model) ? 0.6 : 1,
               }}
             />
           </div>
