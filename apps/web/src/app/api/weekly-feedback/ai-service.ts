@@ -77,7 +77,7 @@ async function generateSection<T>(
 
   // Pro 멤버십에 따라 모델 선택
   const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
-  const model = isPro ? proModel : "gpt-4o-mini";
+  const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
   const enhancedSystemPrompt = isPro
@@ -85,8 +85,10 @@ async function generateSection<T>(
     : `${systemPrompt}\n\n[무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.]`;
 
   const startTime = Date.now();
-  try {
-    const completion = await openai.chat.completions.create({
+
+  // Promise를 반환하여 비동기 요청 시작
+  return openai.chat.completions
+    .create({
       model,
       messages: [
         {
@@ -104,98 +106,10 @@ async function generateSection<T>(
         },
       },
       prompt_cache_key: promptCacheKey,
-    });
-
-    const endTime = Date.now();
-    const duration_ms = endTime - startTime;
-
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error(`No content from OpenAI (${schema.name})`);
-    }
-
-    const result = JSON.parse(content) as T;
-
-    // 캐시에 저장 (멤버십별로 구분)
-    setCache(proCacheKey, result);
-
-    // 추적 정보를 결과에 첨부 (테스트 환경에서만)
-    if (
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_NODE_ENV === "development"
-    ) {
-      const usage = completion.usage;
-      const cachedTokens =
-        (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-      (result as any).__tracking = {
-        name: schema.name,
-        model,
-        duration_ms,
-        usage: {
-          prompt_tokens: usage?.prompt_tokens || 0,
-          completion_tokens: usage?.completion_tokens || 0,
-          total_tokens: usage?.total_tokens || 0,
-          cached_tokens: cachedTokens,
-        },
-      };
-    }
-
-    return result;
-  } catch (error: unknown) {
-    const err = error as {
-      message?: string;
-      code?: string;
-      status?: number;
-      type?: string;
-    };
-
-    // 429 에러 (쿼터 초과) 처리
-    if (
-      err?.status === 429 ||
-      err?.code === "insufficient_quota" ||
-      err?.type === "insufficient_quota" ||
-      err?.message?.includes("quota") ||
-      err?.message?.includes("429")
-    ) {
-      const quotaError = new Error(
-        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
-      );
-      (quotaError as any).code = "INSUFFICIENT_QUOTA";
-      (quotaError as any).status = 429;
-      throw quotaError;
-    }
-
-    // 모델 관련 에러 처리 (Fallback)
-    if (
-      err?.message?.includes("model") ||
-      err?.code === "model_not_found" ||
-      err?.status === 404
-    ) {
-      // Fallback
-      const fallbackStartTime = Date.now();
-      const fallbackModel = isPro ? proModel : "gpt-4o-mini";
-      const completion = await openai.chat.completions.create({
-        model: fallbackModel,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: schema.name,
-            schema: schema.schema,
-            strict: schema.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-      });
-
-      const fallbackEndTime = Date.now();
-      const fallbackDuration_ms = fallbackEndTime - fallbackStartTime;
+    })
+    .then((completion) => {
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
@@ -217,8 +131,8 @@ async function generateSection<T>(
           (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
         (result as any).__tracking = {
           name: schema.name,
-          model: fallbackModel,
-          duration_ms: fallbackDuration_ms,
+          model,
+          duration_ms,
           usage: {
             prompt_tokens: usage?.prompt_tokens || 0,
             completion_tokens: usage?.completion_tokens || 0,
@@ -229,9 +143,101 @@ async function generateSection<T>(
       }
 
       return result;
-    }
-    throw error;
-  }
+    })
+    .catch((error: unknown) => {
+      const err = error as {
+        message?: string;
+        code?: string;
+        status?: number;
+        type?: string;
+      };
+
+      // 429 에러 (쿼터 초과) 처리
+      if (
+        err?.status === 429 ||
+        err?.code === "insufficient_quota" ||
+        err?.type === "insufficient_quota" ||
+        err?.message?.includes("quota") ||
+        err?.message?.includes("429")
+      ) {
+        const quotaError = new Error(
+          `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
+        );
+        (quotaError as any).code = "INSUFFICIENT_QUOTA";
+        (quotaError as any).status = 429;
+        throw quotaError;
+      }
+
+      // 모델 관련 에러 처리 (Fallback)
+      if (
+        err?.message?.includes("model") ||
+        err?.code === "model_not_found" ||
+        err?.status === 404
+      ) {
+        // Fallback
+        const fallbackStartTime = Date.now();
+        const fallbackModel = isPro ? proModel : "gpt-5-nano";
+
+        return openai.chat.completions
+          .create({
+            model: fallbackModel,
+            messages: [
+              {
+                role: "system",
+                content: enhancedSystemPrompt,
+              },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: schema.name,
+                schema: schema.schema,
+                strict: schema.strict,
+              },
+            },
+            prompt_cache_key: promptCacheKey,
+          })
+          .then((completion) => {
+            const fallbackEndTime = Date.now();
+            const fallbackDuration_ms = fallbackEndTime - fallbackStartTime;
+
+            const content = completion.choices[0]?.message?.content;
+            if (!content) {
+              throw new Error(`No content from OpenAI (${schema.name})`);
+            }
+
+            const result = JSON.parse(content) as T;
+
+            // 캐시에 저장 (멤버십별로 구분)
+            setCache(proCacheKey, result);
+
+            // 추적 정보를 결과에 첨부 (테스트 환경에서만)
+            if (
+              process.env.NODE_ENV === "development" ||
+              process.env.NEXT_PUBLIC_NODE_ENV === "development"
+            ) {
+              const usage = completion.usage;
+              const cachedTokens =
+                (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
+              (result as any).__tracking = {
+                name: schema.name,
+                model: fallbackModel,
+                duration_ms: fallbackDuration_ms,
+                usage: {
+                  prompt_tokens: usage?.prompt_tokens || 0,
+                  completion_tokens: usage?.completion_tokens || 0,
+                  total_tokens: usage?.total_tokens || 0,
+                  cached_tokens: cachedTokens,
+                },
+              };
+            }
+
+            return result;
+          });
+      }
+      throw error;
+    });
 }
 
 /**
@@ -490,46 +496,32 @@ async function generateClosingReport(
 }
 
 /**
- * Daily Feedback 배열을 기반으로 주간 피드백 생성 (순차 처리)
- * 7개 섹션을 순차적으로 생성
+ * Daily Feedback 배열을 기반으로 주간 피드백 생성 (병렬 처리)
+ * 7개 섹션을 병렬로 생성 (Promise.all 사용)
  */
 export async function generateWeeklyFeedbackFromDaily(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean = false
 ): Promise<WeeklyFeedback> {
-  // 순차적으로 7개 섹션 생성
-  const summaryReport = await generateSummaryReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
-  const dailyLifeReport = await generateDailyLifeReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
-  const emotionReport = await generateEmotionReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
-  const visionReport = await generateVisionReport(dailyFeedbacks, range, isPro);
-  const insightReport = await generateInsightReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
-  const executionReport = await generateExecutionReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
-  const closingReport = await generateClosingReport(
-    dailyFeedbacks,
-    range,
-    isPro
-  );
+  // 7개 섹션을 병렬로 생성
+  const [
+    summaryReport,
+    dailyLifeReport,
+    emotionReport,
+    visionReport,
+    insightReport,
+    executionReport,
+    closingReport,
+  ] = await Promise.all([
+    generateSummaryReport(dailyFeedbacks, range, isPro),
+    generateDailyLifeReport(dailyFeedbacks, range, isPro),
+    generateEmotionReport(dailyFeedbacks, range, isPro),
+    generateVisionReport(dailyFeedbacks, range, isPro),
+    generateInsightReport(dailyFeedbacks, range, isPro),
+    generateExecutionReport(dailyFeedbacks, range, isPro),
+    generateClosingReport(dailyFeedbacks, range, isPro),
+  ]);
 
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {

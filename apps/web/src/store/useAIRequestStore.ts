@@ -49,7 +49,7 @@ const PRICING: Record<
 > = {
   "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 }, // 캐시된 입력: $0.25
   "gpt-4o": { input: 2.5, inputCached: 2.5, output: 10.0 },
-  "gpt-4o-mini": { input: 0.15, inputCached: 0.15, output: 0.6 },
+  "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
   "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
   "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
   "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
@@ -67,7 +67,7 @@ function calculateCost(
 ) {
   if (!usage) return undefined;
 
-  const modelPricing = PRICING[model] || PRICING["gpt-4o-mini"];
+  const modelPricing = PRICING[model] || PRICING["gpt-5-nano"];
 
   // 캐시된 토큰과 캐시되지 않은 토큰 구분
   const cachedTokens = usage.cached_tokens || 0;

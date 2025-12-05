@@ -85,7 +85,7 @@ async function generateSection<T>(
 
   // Pro 멤버십에 따라 모델 선택
   const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
-  const model = isPro ? proModel : "gpt-4o-mini";
+  const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
   const enhancedSystemPrompt = isPro
@@ -93,8 +93,10 @@ async function generateSection<T>(
     : `${systemPrompt}\n\n[무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.]`;
 
   const startTime = Date.now();
-  try {
-    const completion = await openai.chat.completions.create({
+
+  // Promise를 반환하여 비동기 요청 시작
+  return openai.chat.completions
+    .create({
       model,
       messages: [
         {
@@ -112,159 +114,162 @@ async function generateSection<T>(
         },
       },
       prompt_cache_key: promptCacheKey,
-    });
+    })
+    .then((completion) => {
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
 
-    const endTime = Date.now();
-    const duration_ms = endTime - startTime;
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error(`No content from OpenAI (${schema.name})`);
+      }
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error(`No content from OpenAI (${schema.name})`);
-    }
+      const parsed = JSON.parse(content);
 
-    const parsed = JSON.parse(content);
+      // 파싱된 결과에서 실제 데이터 추출
+      // OpenAI는 다양한 형태로 반환할 수 있음:
+      // 1. { "SummaryReportResponse": { summary_report: {...} } }
+      // 2. { "summary_report": {...} }
+      // 3. { "SummaryReportResponse": {...} } (직접 객체)
+      let result: T;
 
-    // 파싱된 결과에서 실제 데이터 추출
-    // OpenAI는 다양한 형태로 반환할 수 있음:
-    // 1. { "SummaryReportResponse": { summary_report: {...} } }
-    // 2. { "summary_report": {...} }
-    // 3. { "SummaryReportResponse": {...} } (직접 객체)
-    let result: T;
-
-    // parsed가 이미 직접 객체인 경우 (래퍼 없이)
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      !Array.isArray(parsed) &&
-      Object.keys(parsed).length > 0
-    ) {
-      const firstValue = Object.values(parsed)[0];
-
-      // 첫 번째 값이 객체인 경우
+      // parsed가 이미 직접 객체인 경우 (래퍼 없이)
       if (
-        firstValue !== null &&
-        firstValue !== undefined &&
-        typeof firstValue === "object" &&
-        !Array.isArray(firstValue)
+        typeof parsed === "object" &&
+        parsed !== null &&
+        !Array.isArray(parsed) &&
+        Object.keys(parsed).length > 0
       ) {
-        result = firstValue as T;
-      } else if (typeof firstValue === "string") {
-        // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
-        console.warn(
-          `[${schema.name}] First value is string, checking parsed structure:`,
-          {
-            parsed,
-            parsedKeys: Object.keys(parsed),
-            firstValue,
+        const firstValue = Object.values(parsed)[0];
+
+        // 첫 번째 값이 객체인 경우
+        if (
+          firstValue !== null &&
+          firstValue !== undefined &&
+          typeof firstValue === "object" &&
+          !Array.isArray(firstValue)
+        ) {
+          result = firstValue as T;
+        } else if (typeof firstValue === "string") {
+          // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
+          console.warn(
+            `[${schema.name}] First value is string, checking parsed structure:`,
+            {
+              parsed,
+              parsedKeys: Object.keys(parsed),
+              firstValue,
+            }
+          );
+
+          // parsed가 직접 원하는 구조인지 확인 (예: { summary_report: {...} })
+          // 또는 다른 키를 확인
+          const keys = Object.keys(parsed);
+          const objectValue = keys.find(
+            (key) =>
+              parsed[key] !== null &&
+              parsed[key] !== undefined &&
+              typeof parsed[key] === "object" &&
+              !Array.isArray(parsed[key])
+          );
+
+          if (objectValue) {
+            result = parsed[objectValue] as T;
+          } else {
+            // parsed 자체가 원하는 객체인 경우
+            result = parsed as T;
           }
-        );
-
-        // parsed가 직접 원하는 구조인지 확인 (예: { summary_report: {...} })
-        // 또는 다른 키를 확인
-        const keys = Object.keys(parsed);
-        const objectValue = keys.find(
-          (key) =>
-            parsed[key] !== null &&
-            parsed[key] !== undefined &&
-            typeof parsed[key] === "object" &&
-            !Array.isArray(parsed[key])
-        );
-
-        if (objectValue) {
-          result = parsed[objectValue] as T;
         } else {
-          // parsed 자체가 원하는 객체인 경우
+          // 그 외의 경우 parsed 자체를 사용
           result = parsed as T;
         }
       } else {
-        // 그 외의 경우 parsed 자체를 사용
+        // parsed가 배열이거나 null인 경우
         result = parsed as T;
       }
-    } else {
-      // parsed가 배열이거나 null인 경우
-      result = parsed as T;
-    }
 
-    // 결과 검증 및 로깅
-    if (
-      result === null ||
-      result === undefined ||
-      typeof result !== "object" ||
-      Array.isArray(result)
-    ) {
-      console.error(`generateSection: result is invalid for ${schema.name}`, {
+      // 결과 검증 및 로깅
+      if (
+        result === null ||
+        result === undefined ||
+        typeof result !== "object" ||
+        Array.isArray(result)
+      ) {
+        console.error(`generateSection: result is invalid for ${schema.name}`, {
+          resultType: typeof result,
+          result,
+          parsed,
+          parsedKeys: Object.keys(parsed || {}),
+          parsedValues: Object.values(parsed || {}),
+        });
+        throw new Error(
+          `Invalid response format for ${
+            schema.name
+          }: expected object but got ${typeof result}. This may indicate a schema mismatch.`
+        );
+      }
+
+      // 결과 구조 로깅 (디버깅용)
+      console.log(`[generateSection:${schema.name}] Final result structure:`, {
+        resultKeys: Object.keys(result || {}),
         resultType: typeof result,
-        result,
-        parsed,
-        parsedKeys: Object.keys(parsed || {}),
-        parsedValues: Object.values(parsed || {}),
+        isArray: Array.isArray(result),
+        resultPreview: result
+          ? JSON.stringify(result).substring(0, 200)
+          : "null",
       });
-      throw new Error(
-        `Invalid response format for ${
-          schema.name
-        }: expected object but got ${typeof result}. This may indicate a schema mismatch.`
-      );
-    }
 
-    // 결과 구조 로깅 (디버깅용)
-    console.log(`[generateSection:${schema.name}] Final result structure:`, {
-      resultKeys: Object.keys(result || {}),
-      resultType: typeof result,
-      isArray: Array.isArray(result),
-      resultPreview: result ? JSON.stringify(result).substring(0, 200) : "null",
-    });
+      // 캐시에 저장 (멤버십별로 구분)
+      setCache(proCacheKey, result);
 
-    // 캐시에 저장 (멤버십별로 구분)
-    setCache(proCacheKey, result);
+      // 추적 정보를 결과에 첨부 (테스트 환경에서만)
+      if (
+        process.env.NODE_ENV === "development" ||
+        process.env.NEXT_PUBLIC_NODE_ENV === "development"
+      ) {
+        const usage = completion.usage;
+        const cachedTokens =
+          (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
+        (result as any).__tracking = {
+          name: sectionName,
+          model,
+          duration_ms,
+          usage: {
+            prompt_tokens: usage?.prompt_tokens || 0,
+            completion_tokens: usage?.completion_tokens || 0,
+            total_tokens: usage?.total_tokens || 0,
+            cached_tokens: cachedTokens,
+          },
+        };
+      }
 
-    // 추적 정보를 결과에 첨부 (테스트 환경에서만)
-    if (
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_NODE_ENV === "development"
-    ) {
-      const usage = completion.usage;
-      const cachedTokens =
-        (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-      (result as any).__tracking = {
-        name: sectionName,
-        model,
-        duration_ms,
-        usage: {
-          prompt_tokens: usage?.prompt_tokens || 0,
-          completion_tokens: usage?.completion_tokens || 0,
-          total_tokens: usage?.total_tokens || 0,
-          cached_tokens: cachedTokens,
-        },
+      return result;
+    })
+    .catch((error: unknown) => {
+      const err = error as {
+        message?: string;
+        code?: string;
+        status?: number;
+        type?: string;
       };
-    }
 
-    return result;
-  } catch (error: unknown) {
-    const err = error as {
-      message?: string;
-      code?: string;
-      status?: number;
-      type?: string;
-    };
+      // 429 에러 (쿼터 초과) 처리
+      if (
+        err?.status === 429 ||
+        err?.code === "insufficient_quota" ||
+        err?.type === "insufficient_quota" ||
+        err?.message?.includes("quota") ||
+        err?.message?.includes("429")
+      ) {
+        const quotaError = new Error(
+          `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요.`
+        );
+        (quotaError as any).code = "INSUFFICIENT_QUOTA";
+        (quotaError as any).status = 429;
+        throw quotaError;
+      }
 
-    // 429 에러 (쿼터 초과) 처리
-    if (
-      err?.status === 429 ||
-      err?.code === "insufficient_quota" ||
-      err?.type === "insufficient_quota" ||
-      err?.message?.includes("quota") ||
-      err?.message?.includes("429")
-    ) {
-      const quotaError = new Error(
-        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요.`
-      );
-      (quotaError as any).code = "INSUFFICIENT_QUOTA";
-      (quotaError as any).status = 429;
-      throw quotaError;
-    }
-
-    throw error;
-  }
+      throw error;
+    });
 }
 
 /**
@@ -874,8 +879,8 @@ async function generateClosingReport(
 }
 
 /**
- * Daily Feedback 배열을 기반으로 주간 피드백 생성 (순차 처리 + 진행 상황 콜백)
- * 7개 섹션을 순차적으로 생성하며 각 섹션 생성 시점에 진행 상황을 콜백으로 전달
+ * Daily Feedback 배열을 기반으로 주간 피드백 생성 (병렬 처리 + 진행 상황 콜백)
+ * 7개 섹션을 병렬로 생성하며 각 섹션 완료 시점에 진행 상황을 콜백으로 전달
  */
 export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
@@ -883,181 +888,140 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   isPro: boolean = false,
   progressCallback?: ProgressCallback
 ): Promise<WeeklyFeedback> {
-  // 순차적으로 7개 섹션 생성 (각 섹션 생성 시점에 진행 상황 알림)
+  // 병렬로 7개 섹션 생성 (각 섹션 완료 시점에 진행 상황 알림)
   console.log("[generateWeeklyFeedbackFromDailyWithProgress] 시작");
 
-  let summaryReport;
-  try {
-    summaryReport = await generateSummaryReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  // 각 Promise에 완료 콜백 추가
+  const summaryPromise = generateSummaryReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(1, 7, "SummaryReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] summaryReport 생성 완료:",
-      !!summaryReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] summaryReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Summary report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  // summary_report가 제대로 생성되었는지 확인
-  if (!summaryReport) {
-    throw new Error("Summary report 생성에 실패했습니다.");
-  }
-
-  let dailyLifeReport;
-  try {
-    dailyLifeReport = await generateDailyLifeReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const dailyLifePromise = generateDailyLifeReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(2, 7, "DailyLifeReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] dailyLifeReport 생성 완료:",
-      !!dailyLifeReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] dailyLifeReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Daily life report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  let emotionReport;
-  try {
-    emotionReport = await generateEmotionReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const emotionPromise = generateEmotionReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(3, 7, "EmotionReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] emotionReport 생성 완료:",
-      !!emotionReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] emotionReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Emotion report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  let visionReport;
-  try {
-    visionReport = await generateVisionReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const visionPromise = generateVisionReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(4, 7, "VisionReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] visionReport 생성 완료:",
-      !!visionReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] visionReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Vision report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  let insightReport;
-  try {
-    insightReport = await generateInsightReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const insightPromise = generateInsightReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(5, 7, "InsightReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] insightReport 생성 완료:",
-      !!insightReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] insightReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Insight report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  let executionReport;
-  try {
-    executionReport = await generateExecutionReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const executionPromise = generateExecutionReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(6, 7, "ExecutionReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] executionReport 생성 완료:",
-      !!executionReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] executionReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Execution report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
 
-  let closingReport;
-  try {
-    closingReport = await generateClosingReport(
-      dailyFeedbacks,
-      range,
-      isPro,
-      progressCallback
-    );
+  const closingPromise = generateClosingReport(
+    dailyFeedbacks,
+    range,
+    isPro,
+    progressCallback
+  ).then((result) => {
+    if (progressCallback) {
+      progressCallback(7, 7, "ClosingReport");
+    }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] closingReport 생성 완료:",
-      !!closingReport
+      !!result
     );
-  } catch (error) {
-    console.error(
-      "[generateWeeklyFeedbackFromDailyWithProgress] closingReport 생성 실패:",
-      error
-    );
-    throw new Error(
-      `Closing report 생성에 실패했습니다: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+    return result;
+  });
+
+  // 모든 Promise를 병렬로 실행
+  const [
+    summaryReport,
+    dailyLifeReport,
+    emotionReport,
+    visionReport,
+    insightReport,
+    executionReport,
+    closingReport,
+  ] = await Promise.all([
+    summaryPromise,
+    dailyLifePromise,
+    emotionPromise,
+    visionPromise,
+    insightPromise,
+    executionPromise,
+    closingPromise,
+  ]);
 
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {

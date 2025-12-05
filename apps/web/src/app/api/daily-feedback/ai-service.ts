@@ -88,7 +88,7 @@ async function generateReport<T>(
 
   // Pro 멤버십에 따라 모델 선택
   const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o";
-  const model = isPro ? proModel : "gpt-4o-mini";
+  const model = isPro ? proModel : "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
   const enhancedSystemPrompt = isPro
@@ -165,9 +165,9 @@ async function generateReport<T>(
       err?.code === "model_not_found" ||
       err?.status === 404
     ) {
-      // Fallback: Pro는 proModel, 일반은 gpt-4o-mini
+      // Fallback: Pro는 proModel, 일반은 gpt-5-nano
       const proModel = process.env.OPENAI_PRO_MODEL || "gpt-4o"; // gpt-5 출시 시 변경 가능
-      const fallbackModel = isPro ? proModel : "gpt-4o-mini";
+      const fallbackModel = isPro ? proModel : "gpt-5-nano";
       const completion = await openai.chat.completions.create({
         model: fallbackModel,
         messages: [

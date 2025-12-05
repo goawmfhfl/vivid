@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
-      model = "gpt-4o-mini",
+      model = "gpt-5-nano",
       systemPrompt = "You are a helpful assistant.",
       userPrompt,
       temperature = 0.7,
@@ -35,17 +35,17 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now();
 
-    // 최신 모델(gpt-4o, gpt-4o-mini 등)은 max_completion_tokens 사용
+    // 최신 모델(gpt-4o, gpt-5-nano 등)은 max_completion_tokens 사용
     // 구형 모델은 max_tokens 사용
     const useMaxCompletionTokens = [
       "gpt-4o",
-      "gpt-4o-mini",
+      "gpt-5-nano",
       "gpt-5-mini",
     ].includes(model);
 
-    // 최신 모델(gpt-4o, gpt-4o-mini 등)은 temperature를 1.0으로만 지원
+    // 최신 모델(gpt-4o, gpt-5-nano 등)은 temperature를 1.0으로만 지원
     // temperature가 1.0이 아니면 1.0으로 고정
-    const modelsWithFixedTemperature = ["gpt-4o", "gpt-4o-mini", "gpt-5-mini"];
+    const modelsWithFixedTemperature = ["gpt-4o", "gpt-5-nano", "gpt-5-mini"];
     const finalTemperature = modelsWithFixedTemperature.includes(model)
       ? 1.0
       : temperature;
@@ -100,13 +100,13 @@ export async function POST(request: NextRequest) {
     > = {
       "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 }, // 캐시된 입력: $0.25
       "gpt-4o": { input: 2.5, inputCached: 2.5, output: 10.0 },
-      "gpt-4o-mini": { input: 0.15, inputCached: 0.15, output: 0.6 },
+      "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
       "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
       "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
       "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
     };
 
-    const modelPricing = pricing[model] || pricing["gpt-4o-mini"];
+    const modelPricing = pricing[model] || pricing["gpt-5-nano"];
 
     // 캐시된 토큰 정보 추출 (OpenAI API 응답에서 제공)
     const cachedTokens =

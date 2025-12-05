@@ -52,8 +52,8 @@ export async function generateMonthlyFeedbackFromDaily(
   );
   const openai = getOpenAIClient();
 
-  // 기본값을 gpt-5로 설정 (사용 불가능하면 gpt-4o-mini로 fallback)
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  // 기본값을 gpt-5로 설정 (사용 불가능하면 gpt-5-nano로 fallback)
+  const model = process.env.OPENAI_MODEL || "gpt-5-nano";
 
   // 캐시 키 생성
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_MONTHLY, prompt);
@@ -121,14 +121,14 @@ export async function generateMonthlyFeedbackFromDaily(
       return result;
     })
     .catch((error: unknown) => {
-      // gpt-5가 사용 불가능한 경우 gpt-4o-mini로 fallback
+      // gpt-5가 사용 불가능한 경우 gpt-5-nano로 fallback
       const err = error as {
         message?: string;
         code?: string;
         status?: number;
       };
       if (
-        model === "gpt-5" &&
+        model === "gpt-5-nano" &&
         (err?.message?.includes("model") ||
           err?.code === "model_not_found" ||
           err?.status === 404 ||
@@ -141,7 +141,7 @@ export async function generateMonthlyFeedbackFromDaily(
 
         return openai.chat.completions
           .create({
-            model: "gpt-4o-mini",
+            model: "gpt-5-nano",
             messages: [
               {
                 role: "system",
