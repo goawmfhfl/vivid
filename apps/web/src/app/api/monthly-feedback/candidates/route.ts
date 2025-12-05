@@ -5,7 +5,12 @@ import { getKSTDateString } from "@/lib/date-utils";
 
 /**
  * GET 핸들러: 월간 피드백 후보 조회
- * 월말에 AI가 생성되지 않은 월을 후보로 반환
+ *
+ * 📋 로직:
+ * 1. weekly_feedback 테이블을 조회하여 월별로 그룹화
+ * 2. 각 월에 2개 이상의 주간 피드백이 있는지 확인
+ * 3. is_ai_generated가 true인 월간 피드백이 있으면 제외
+ * 4. 클라이언트에서 마지막 일 조건으로 필터링
  */
 export async function GET(request: NextRequest) {
   try {
@@ -33,89 +38,105 @@ export async function GET(request: NextRequest) {
       "0"
     )}`;
 
-    // 최근 6개월 범위 계산 (더 넓은 범위로 후보를 반환하여 클라이언트에서 필터링 가능하도록)
-    // 현재 달부터 6개월 전까지
-    const monthsToCheck: string[] = [];
-    for (let i = 0; i < 6; i++) {
-      const monthDate = new Date(currentYear, currentMonthNum - i - 1, 1);
-      const monthStr = `${monthDate.getFullYear()}-${String(
-        monthDate.getMonth() + 1
-      ).padStart(2, "0")}`;
-      monthsToCheck.push(monthStr);
-    }
+    // weekly_feedback 테이블에서 모든 주간 피드백 조회 (최근 6개월 범위)
+    const sixMonthsAgo = new Date(currentYear, currentMonthNum - 6, 1);
+    const sixMonthsAgoString = getKSTDateString(sixMonthsAgo);
 
-    // 이미 생성된 월간 피드백 조회 (최근 3개월)
-    const { data: existingFeedbacks, error: fetchError } = await supabase
-      .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
-      .select("id, month")
+    const { data: weeklyFeedbacks, error: weeklyError } = await supabase
+      .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+      .select("id, week_start, week_end, user_id")
       .eq("user_id", userId)
-      .in("month", monthsToCheck)
-      .order("month", { ascending: false });
+      .gte("week_start", sixMonthsAgoString)
+      .order("week_start", { ascending: false });
 
-    if (fetchError) {
+    if (weeklyError) {
       throw new Error(
-        `Failed to fetch existing monthly feedbacks: ${fetchError.message}`
+        `Failed to fetch weekly feedbacks: ${weeklyError.message}`
       );
     }
 
-    const existingMonthsMap = new Map(
-      (existingFeedbacks || []).map((f) => [f.month, f.id])
+    // 월별로 그룹화하여 주간 피드백 개수 계산
+    const monthlyWeeklyCountMap = new Map<string, number>();
+
+    if (weeklyFeedbacks && weeklyFeedbacks.length > 0) {
+      for (const wf of weeklyFeedbacks) {
+        // week_start를 기준으로 월 추출 (YYYY-MM 형식)
+        const weekStartDate = new Date(wf.week_start);
+        const month = `${weekStartDate.getFullYear()}-${String(
+          weekStartDate.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+        const currentCount = monthlyWeeklyCountMap.get(month) || 0;
+        monthlyWeeklyCountMap.set(month, currentCount + 1);
+      }
+    }
+
+    // 이미 생성된 월간 피드백 조회 (is_ai_generated가 true인 것만)
+    const monthsWithWeeklyFeedbacks = Array.from(monthlyWeeklyCountMap.keys());
+
+    const { data: existingFeedbacks, error: monthlyError } = await supabase
+      .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
+      .select("id, month, is_ai_generated")
+      .eq("user_id", userId)
+      .in(
+        "month",
+        monthsWithWeeklyFeedbacks.length > 0 ? monthsWithWeeklyFeedbacks : [""]
+      )
+      .eq("is_ai_generated", true)
+      .order("month", { ascending: false });
+
+    if (monthlyError) {
+      throw new Error(
+        `Failed to fetch existing monthly feedbacks: ${monthlyError.message}`
+      );
+    }
+
+    // is_ai_generated가 true인 월들을 Set으로 저장
+    const generatedMonthsSet = new Set(
+      (existingFeedbacks || []).map((f) => f.month)
     );
 
-    // 해당 월의 기록 개수 조회를 위한 날짜 범위 계산
-    const getMonthDateRange = (month: string) => {
-      const [year, monthNum] = month.split("-").map(Number);
-      const startDate = new Date(year, monthNum - 1, 1);
-      const endDate = new Date(year, monthNum, 0);
-      return {
-        start: getKSTDateString(startDate),
-        end: getKSTDateString(endDate),
-      };
-    };
-
-    // 후보 월 목록 생성 (최근 3개월 중 생성되지 않은 모든 월)
+    // 후보 월 목록 생성
     const candidates: Array<{
       month: string;
       month_label: string;
       is_current: boolean;
       monthly_feedback_id: string | null;
-      record_count?: number;
-      weekly_feedback_count?: number; // weekly-feedback 개수 추가
+      weekly_feedback_count: number;
     }> = [];
 
-    // 최근 3개월 중 모든 월을 후보에 추가 (생성 여부와 관계없이)
-    // 클라이언트에서 referenceDate를 기준으로 필터링하므로, 여기서는 모든 후보를 반환
-    for (const month of monthsToCheck) {
-      const dateRange = getMonthDateRange(month);
+    // 주간 피드백이 2개 이상인 월만 후보에 추가
+    for (const [month, count] of monthlyWeeklyCountMap.entries()) {
+      // 조건 1: 주간 피드백이 2개 이상이어야 함
+      if (count < 2) {
+        continue;
+      }
 
-      // 기록 개수 조회 (daily-feedback)
-      const { count: recordCount } = await supabase
-        .from(API_ENDPOINTS.DAILY_FEEDBACK)
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("report_date", dateRange.start)
-        .lte("report_date", dateRange.end);
-
-      // weekly-feedback 개수 조회
-      const { count: weeklyFeedbackCount } = await supabase
-        .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("week_start", dateRange.start)
-        .lte("week_end", dateRange.end);
+      // 조건 2: is_ai_generated가 true인 월간 피드백이 있으면 제외
+      if (generatedMonthsSet.has(month)) {
+        continue;
+      }
 
       const [year, monthNum] = month.split("-");
-      const existingFeedbackId = existingMonthsMap.get(month);
 
+      // is_ai_generated가 true인 월은 이미 제외되었으므로,
+      // monthly_feedback_id는 항상 null입니다.
       candidates.push({
         month: month,
         month_label: `${year}년 ${monthNum}월`,
         is_current: month === currentMonth,
-        monthly_feedback_id: existingFeedbackId || null,
-        record_count: recordCount || 0,
-        weekly_feedback_count: weeklyFeedbackCount || 0,
+        monthly_feedback_id: null,
+        weekly_feedback_count: count,
       });
     }
+
+    // 최신 월부터 정렬
+    candidates.sort((a, b) => {
+      return (
+        new Date(b.month + "-01").getTime() -
+        new Date(a.month + "-01").getTime()
+      );
+    });
 
     return NextResponse.json(
       {

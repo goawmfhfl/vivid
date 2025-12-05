@@ -18,7 +18,6 @@ import {
 import { convertMonthlyFeedbackToPeriodSummary } from "./monthly-feedback-mapper";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { AppHeader } from "../common/AppHeader";
-import { MonthlyFeedbackTestPanel } from "../test/MonthlyFeedbackTestPanel";
 import { MonthlyCandidatesTestPanel } from "../test/MonthlyCandidatesTestPanel";
 
 /**
@@ -102,7 +101,6 @@ export function SummariesView() {
       {/* 테스트 패널 (프로덕션 환경이 아닐 때만 표시) */}
       {isTestMode && (
         <>
-          <MonthlyFeedbackTestPanel />
           <MonthlyCandidatesTestPanel />
         </>
       )}

@@ -51,6 +51,19 @@ interface WeeklyCandidatesDropdownState {
   setExpanded: (expanded: boolean) => void;
 }
 
+interface MonthlyFeedbackProgress {
+  month: string;
+  current: number;
+  total: number;
+  currentStep: string;
+}
+
+interface MonthlyCandidatesDropdownState {
+  isExpanded: boolean;
+  toggle: () => void;
+  setExpanded: (expanded: boolean) => void;
+}
+
 interface ModalStore {
   // Loading Modal
   loadingModal: LoadingModalState;
@@ -100,6 +113,20 @@ interface ModalStore {
   weeklyCandidatesDropdown: WeeklyCandidatesDropdownState;
   toggleWeeklyCandidatesDropdown: () => void;
   setWeeklyCandidatesDropdownExpanded: (expanded: boolean) => void;
+
+  // Monthly Feedback Progress (전역 상태)
+  monthlyFeedbackProgress: Record<string, MonthlyFeedbackProgress>; // month를 키로 사용
+  setMonthlyFeedbackProgress: (
+    month: string,
+    progress: MonthlyFeedbackProgress | null
+  ) => void;
+  clearMonthlyFeedbackProgress: (month: string) => void;
+  clearAllMonthlyFeedbackProgress: () => void;
+
+  // Monthly Candidates Dropdown (전역 상태)
+  monthlyCandidatesDropdown: MonthlyCandidatesDropdownState;
+  toggleMonthlyCandidatesDropdown: () => void;
+  setMonthlyCandidatesDropdownExpanded: (expanded: boolean) => void;
 }
 
 const defaultLoadingMessage = "처리 중입니다...";
@@ -321,6 +348,66 @@ export const useModalStore = create<ModalStore>((set) => ({
     set((state) => ({
       weeklyCandidatesDropdown: {
         ...state.weeklyCandidatesDropdown,
+        isExpanded: expanded,
+      },
+    })),
+
+  // Monthly Feedback Progress 초기 상태
+  monthlyFeedbackProgress: {},
+
+  setMonthlyFeedbackProgress: (month, progress) =>
+    set((state) => {
+      if (progress === null) {
+        const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
+        return { monthlyFeedbackProgress: rest };
+      }
+      return {
+        monthlyFeedbackProgress: {
+          ...state.monthlyFeedbackProgress,
+          [month]: progress,
+        },
+      };
+    }),
+
+  clearMonthlyFeedbackProgress: (month) =>
+    set((state) => {
+      const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
+      return { monthlyFeedbackProgress: rest };
+    }),
+
+  clearAllMonthlyFeedbackProgress: () => set({ monthlyFeedbackProgress: {} }),
+
+  // Monthly Candidates Dropdown 초기 상태
+  monthlyCandidatesDropdown: {
+    isExpanded: false,
+    toggle: () =>
+      set((state) => ({
+        monthlyCandidatesDropdown: {
+          ...state.monthlyCandidatesDropdown,
+          isExpanded: !state.monthlyCandidatesDropdown.isExpanded,
+        },
+      })),
+    setExpanded: (expanded) =>
+      set((state) => ({
+        monthlyCandidatesDropdown: {
+          ...state.monthlyCandidatesDropdown,
+          isExpanded: expanded,
+        },
+      })),
+  },
+
+  toggleMonthlyCandidatesDropdown: () =>
+    set((state) => ({
+      monthlyCandidatesDropdown: {
+        ...state.monthlyCandidatesDropdown,
+        isExpanded: !state.monthlyCandidatesDropdown.isExpanded,
+      },
+    })),
+
+  setMonthlyCandidatesDropdownExpanded: (expanded) =>
+    set((state) => ({
+      monthlyCandidatesDropdown: {
+        ...state.monthlyCandidatesDropdown,
         isExpanded: expanded,
       },
     })),

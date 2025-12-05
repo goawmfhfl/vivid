@@ -110,7 +110,9 @@ export function getWeekEndISO(referenceDate: Date): string {
  * 1. 일요일이 지난 주만 포함: 해당 주의 일요일이 현재 날짜(KST)보다 작거나 같아야 함
  *    ⏰ 일요일 오전 12시(00:00:00 KST)가 되면 그때부터 생성 대상이 됨
  * 2. weekly_feedback_id가 null인 주만 포함 (아직 생성되지 않은 주)
- * 3. 기록이 있는 주만 포함 (record_count > 0)
+ * 3. daily_feedback이 있는 주만 포함 (record_count > 0)
+ *    - record_count는 해당 주의 daily_feedback 개수를 의미
+ *    - 하나라도 있으면 (>= 1) 주간 피드백 생성 가능
  *
  * 📅 주간 범위: 월요일 ~ 일요일
  * 📌 기준 요일: 일요일
@@ -126,20 +128,23 @@ export function getWeekEndISO(referenceDate: Date): string {
  *   { week_start: "2025-11-17", weekly_feedback_id: null, record_count: 3 }
  *     → 이번주 일요일: 2025-11-23
  *     → 2025-11-23 > 2025-11-17 (아직 안 지남)
- *     → ❌ 제외
+ *     → record_count: 3 (daily_feedback 3개)
+ *     → ❌ 제외 (일요일이 아직 안 지남)
  *
- *   { week_start: "2025-11-10", weekly_feedback_id: null, record_count: 19 }
+ *   { week_start: "2025-11-10", weekly_feedback_id: null, record_count: 5 }
  *     → 해당 주 일요일: 2025-11-16
  *     → 2025-11-16 <= 2025-11-17 (이미 지남)
+ *     → record_count: 5 (daily_feedback 5개)
  *     → ✅ 포함
  *
- *   { week_start: "2025-11-03", weekly_feedback_id: 3, record_count: 21 }
- *     → weekly_feedback_id가 있음
+ *   { week_start: "2025-11-03", weekly_feedback_id: 3, record_count: 7 }
+ *     → weekly_feedback_id가 있음 (이미 생성됨)
  *     → ❌ 제외
  *
- *   { week_start: "2025-10-27", weekly_feedback_id: null, record_count: 17 }
+ *   { week_start: "2025-10-27", weekly_feedback_id: null, record_count: 1 }
  *     → 해당 주 일요일: 2025-11-02
  *     → 2025-11-02 <= 2025-11-17 (이미 지남)
+ *     → record_count: 1 (daily_feedback 1개, 하나라도 있으면 생성 가능)
  *     → ✅ 포함
  * ]
  *
@@ -152,11 +157,12 @@ export function getWeekEndISO(referenceDate: Date): string {
  *
  * 🔄 생성 후 동작:
  * 1. 사용자가 "생성하기" 버튼 클릭
- * 2. weekly_feedbacks 테이블에 데이터 저장됨
- * 3. weekly_candidates 뷰/테이블의 weekly_feedback_id가 자동 업데이트됨
- * 4. 쿼리 무효화로 새로운 데이터 가져옴
- * 5. weekly_feedback_id가 null이 아니므로 필터링 조건에서 제외됨
- * 6. 결과: 해당 주가 후보 목록에서 사라짐 ✅
+ * 2. 해당 주의 daily_feedback 데이터를 기반으로 주간 피드백 생성
+ * 3. weekly_feedbacks 테이블에 데이터 저장됨
+ * 4. weekly_candidates 뷰의 weekly_feedback_id가 자동으로 업데이트됨 (LEFT JOIN)
+ * 5. 쿼리 무효화로 새로운 데이터 가져옴
+ * 6. weekly_feedback_id가 null이 아니므로 필터링 조건에서 제외됨
+ * 7. 결과: 해당 주가 후보 목록에서 사라짐 ✅
  *
  * @param candidates 전체 후보 목록
  * @param referenceDate 기준 날짜 (기본값: 오늘, KST 기준)
@@ -175,7 +181,8 @@ export function filterWeeklyCandidatesForCreation(
 
   // Step 3: 모든 후보를 하나씩 확인
   for (const candidate of candidates) {
-    // 조건 1: weekly_feedback_id가 null이고 기록이 있는 경우만 확인
+    // 조건 1: weekly_feedback_id가 null이고 daily_feedback이 있는 경우만 확인
+    // record_count는 해당 주의 daily_feedback 개수 (하나라도 있으면 >= 1)
     if (candidate.weekly_feedback_id === null && candidate.record_count > 0) {
       // candidate.week_start는 월요일 (예: "2025-11-17")
       // KST 시간대로 파싱 (T00:00:00+09:00는 KST 오전 0시를 의미)

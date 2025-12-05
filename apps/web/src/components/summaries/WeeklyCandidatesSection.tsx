@@ -107,7 +107,7 @@ export function WeeklyCandidatesSection() {
         sectionNames.forEach((name) => {
           const id = addRequest({
             name,
-            model: "gpt-5-mini", // 기본 모델 (실제로는 응답에서 확인)
+            model: "gpt-5-nano", // 기본 모델 (실제로는 응답에서 확인)
           });
           requestIds.push(id);
         });
@@ -400,7 +400,7 @@ export function WeeklyCandidatesSection() {
                         marginTop: "2px",
                       }}
                     >
-                      {candidate.record_count}개의 기록
+                      {candidate.record_count}개의 일일 피드백
                     </p>
                   </div>
                 </div>
