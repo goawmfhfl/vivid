@@ -5,7 +5,6 @@ import {
   useGetMonthlyFeedbackById,
 } from "@/hooks/useGetMonthlyFeedback";
 import { MonthlyFeedbackReport } from "./MonthlyFeedbackReport";
-import { mapMonthlyFeedbackToReportData } from "./monthly-feedback-mapper";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 
@@ -42,8 +41,6 @@ export function MonthlyFeedbackView({
   const isLoading = isValidId ? isLoadingById : isLoadingByMonth;
   const error = isValidId ? errorById : errorByMonth;
   const refetch = isValidId ? refetchById : refetchByMonth;
-
-  const view = data ? mapMonthlyFeedbackToReportData(data) : null;
 
   if (isLoading) {
     return (
@@ -97,7 +94,7 @@ export function MonthlyFeedbackView({
     );
   }
 
-  if (!view) {
+  if (!data) {
     return (
       <div
         className="min-h-screen pb-24"
@@ -129,5 +126,5 @@ export function MonthlyFeedbackView({
     );
   }
 
-  return <MonthlyFeedbackReport data={view} onBack={onBack} />;
+  return <MonthlyFeedbackReport data={data} onBack={onBack} />;
 }

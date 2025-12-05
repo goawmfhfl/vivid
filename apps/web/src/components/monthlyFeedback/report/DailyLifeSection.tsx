@@ -14,7 +14,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { DailyLifeReport } from "@/types/monthly-feedback-new";
+import type { DailyLifeReport } from "@/types/monthly-feedback";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
@@ -40,7 +40,7 @@ import {
   Legend,
 } from "recharts";
 
-type DailyLifeSectionNewProps = {
+type DailyLifeSectionProps = {
   dailyLifeReport: DailyLifeReport;
   isPro?: boolean;
 };
@@ -48,10 +48,10 @@ type DailyLifeSectionNewProps = {
 const DAILY_LIFE_COLOR = "#A8BBA8";
 const DAILY_LIFE_COLOR_DARK = "#8FA38F";
 
-export function DailyLifeSectionNew({
+export function DailyLifeSection({
   dailyLifeReport,
   isPro = false,
-}: DailyLifeSectionNewProps) {
+}: DailyLifeSectionProps) {
   const router = useRouter();
 
   if (!dailyLifeReport) {

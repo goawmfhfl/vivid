@@ -56,18 +56,63 @@ export async function GET(request: NextRequest) {
     }
 
     // 월별로 그룹화하여 주간 피드백 개수 계산
+    // fetchWeeklyFeedbacksByMonth와 동일한 로직을 사용하여 카운트
+    // 주간 피드백이 해당 월과 겹치면 해당 월로 카운트
+    // 예: 10월 28일(월) ~ 11월 3일(일) 주간 피드백은
+    //     - 10월 조회 시: week_start="2025-10-28" <= "2025-10-31" ✅ AND week_end="2025-11-03" >= "2025-10-01" ✅ → 포함
+    //     - 11월 조회 시: week_start="2025-10-28" <= "2025-11-30" ✅ AND week_end="2025-11-03" >= "2025-11-01" ✅ → 포함
+    //     따라서 두 월 모두에 카운트되어야 함
     const monthlyWeeklyCountMap = new Map<string, number>();
 
     if (weeklyFeedbacks && weeklyFeedbacks.length > 0) {
+      // 각 월별로 해당 월과 겹치는 주간 피드백 개수 계산
+      const monthsToCheck = new Set<string>();
+
+      // 모든 주간 피드백의 week_start와 week_end를 확인하여 관련된 월 추출
       for (const wf of weeklyFeedbacks) {
-        // week_start를 기준으로 월 추출 (YYYY-MM 형식)
         const weekStartDate = new Date(wf.week_start);
-        const month = `${weekStartDate.getFullYear()}-${String(
+        const weekEndDate = new Date(wf.week_end);
+
+        // week_start가 속한 월
+        const startMonth = `${weekStartDate.getFullYear()}-${String(
           weekStartDate.getMonth() + 1
         ).padStart(2, "0")}`;
 
-        const currentCount = monthlyWeeklyCountMap.get(month) || 0;
-        monthlyWeeklyCountMap.set(month, currentCount + 1);
+        // week_end가 속한 월
+        const endMonth = `${weekEndDate.getFullYear()}-${String(
+          weekEndDate.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+        monthsToCheck.add(startMonth);
+        if (startMonth !== endMonth) {
+          monthsToCheck.add(endMonth);
+        }
+      }
+
+      // 각 월별로 해당 월과 겹치는 주간 피드백 개수 계산
+      for (const month of monthsToCheck) {
+        const [year, monthNum] = month.split("-").map(Number);
+        const monthStartDate = new Date(year, monthNum - 1, 1);
+        const monthEndDate = new Date(year, monthNum, 0); // 다음 달 0일 = 이번 달 마지막 날
+
+        const monthStartString = getKSTDateString(monthStartDate);
+        const monthEndString = getKSTDateString(monthEndDate);
+
+        // 해당 월과 겹치는 주간 피드백 개수 계산
+        // 조건: week_start <= monthEndString AND week_end >= monthStartString
+        let count = 0;
+        for (const wf of weeklyFeedbacks) {
+          if (
+            wf.week_start <= monthEndString &&
+            wf.week_end >= monthStartString
+          ) {
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          monthlyWeeklyCountMap.set(month, count);
+        }
       }
     }
 

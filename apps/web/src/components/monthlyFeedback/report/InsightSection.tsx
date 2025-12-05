@@ -11,11 +11,11 @@ import {
   Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { InsightReport } from "@/types/monthly-feedback-new";
+import type { InsightReport } from "@/types/monthly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
-type InsightSectionNewProps = {
+type InsightSectionProps = {
   insightReport: InsightReport;
   isPro?: boolean;
 };
@@ -23,10 +23,10 @@ type InsightSectionNewProps = {
 const INSIGHT_COLOR = "#E5B96B";
 const INSIGHT_COLOR_DARK = "#D4A85A";
 
-export function InsightSectionNew({
+export function InsightSection({
   insightReport,
   isPro = false,
-}: InsightSectionNewProps) {
+}: InsightSectionProps) {
   const router = useRouter();
 
   if (!insightReport) {

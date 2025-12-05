@@ -1,11 +1,12 @@
 import type {
-  SummaryOverview,
-  EmotionOverview,
-  InsightOverview,
-  FeedbackOverview,
-  VisionOverview,
-  ConclusionOverview,
-} from "@/types/monthly-feedback";
+  SummaryReport,
+  DailyLifeReport,
+  EmotionReport,
+  VisionReport,
+  InsightReport,
+  ExecutionReport,
+  ClosingReport,
+} from "@/types/weekly-feedback";
 
 // Monthly Report Data Type (UI용)
 export type MonthlyReportData = {
@@ -20,10 +21,11 @@ export type MonthlyReportData = {
   recorded_days: number;
 
   // 섹션들
-  summary_overview: SummaryOverview;
-  emotion_overview: EmotionOverview;
-  insight_overview: InsightOverview;
-  feedback_overview: FeedbackOverview;
-  vision_overview: VisionOverview;
-  conclusion_overview: ConclusionOverview;
+  summary_report: SummaryReport;
+  daily_life_report: DailyLifeReport;
+  emotion_report: EmotionReport;
+  insight_report: InsightReport;
+  execution_report: ExecutionReport;
+  vision_report: VisionReport;
+  closing_report: ClosingReport;
 };

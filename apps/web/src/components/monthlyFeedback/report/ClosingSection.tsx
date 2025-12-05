@@ -12,19 +12,19 @@ import {
   Zap,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { ClosingReport } from "@/types/monthly-feedback-new";
+import type { ClosingReport } from "@/types/monthly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
-type ClosingSectionNewProps = {
+type ClosingSectionProps = {
   closingReport: ClosingReport;
   isPro?: boolean;
 };
 
-export function ClosingSectionNew({
+export function ClosingSection({
   closingReport,
   isPro = false,
-}: ClosingSectionNewProps) {
+}: ClosingSectionProps) {
   const router = useRouter();
 
   if (!closingReport) {

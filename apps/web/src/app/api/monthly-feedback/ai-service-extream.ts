@@ -1,5 +1,5 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
-import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import type {
   SummaryReport,
   DailyLifeReport,
@@ -8,7 +8,7 @@ import type {
   InsightReport,
   ExecutionReport,
   ClosingReport,
-} from "@/types/monthly-feedback-new";
+} from "@/types/weekly-feedback";
 
 /**
  * 진행 상황 콜백 타입
@@ -30,7 +30,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback
-): Promise<MonthlyFeedbackNew> {
+): Promise<MonthlyFeedback> {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
@@ -61,7 +61,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
     generateClosingReport(weeklyFeedbacks, month, isPro, progressCallback, 7),
   ]);
 
-  const monthlyFeedback: MonthlyFeedbackNew = {
+  const monthlyFeedback: MonthlyFeedback = {
     month,
     month_label: monthLabel,
     date_range: dateRange,

@@ -1,16 +1,16 @@
 "use client";
 
-import type { SummaryReport } from "@/types/monthly-feedback-new";
+import type { SummaryReport } from "@/types/monthly-feedback";
 
-type SummarySectionNewProps = {
+type SummarySectionProps = {
   summaryReport: SummaryReport;
   isPro?: boolean;
 };
 
-export function SummarySectionNew({
+export function SummarySection({
   summaryReport,
   isPro = false,
-}: SummarySectionNewProps) {
+}: SummarySectionProps) {
   // TODO: Summary Section 구현 필요
   return (
     <div>

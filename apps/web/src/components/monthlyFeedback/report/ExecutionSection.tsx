@@ -13,21 +13,21 @@ import {
   Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { ExecutionReport } from "@/types/monthly-feedback-new";
+import type { ExecutionReport } from "@/types/monthly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
-type ExecutionSectionNewProps = {
+type ExecutionSectionProps = {
   executionReport: ExecutionReport;
   isPro?: boolean;
 };
 
 const EXECUTION_COLOR = COLORS.brand.primary; // #6B7A6F
 
-export function ExecutionSectionNew({
+export function ExecutionSection({
   executionReport,
   isPro = false,
-}: ExecutionSectionNewProps) {
+}: ExecutionSectionProps) {
   const router = useRouter();
 
   if (!executionReport) {

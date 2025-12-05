@@ -3,7 +3,7 @@ import type {
   MonthlyFeedback,
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
-import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 import { API_ENDPOINTS } from "@/constants";
@@ -250,12 +250,17 @@ export async function fetchWeeklyFeedbacksByMonth(
   startDate: string,
   endDate: string
 ): Promise<WeeklyFeedback[]> {
+  // 주간 피드백이 해당 월과 겹치는 경우 모두 포함
+  // 조건: week_start <= endDate AND week_end >= startDate
+  // 예: 11월 조회 시 (startDate="2025-11-01", endDate="2025-11-30")
+  //   - 10월 28일(월) ~ 11월 3일(일): week_start="2025-10-28" <= "2025-11-30" ✅ AND week_end="2025-11-03" >= "2025-11-01" ✅ → 포함
+  //   - 11월 4일(월) ~ 11월 10일(일): week_start="2025-11-04" <= "2025-11-30" ✅ AND week_end="2025-11-10" >= "2025-11-01" ✅ → 포함
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select("*")
     .eq("user_id", userId)
-    .gte("week_start", startDate)
-    .lte("week_end", endDate)
+    .lte("week_start", endDate) // week_start가 월의 마지막 날보다 작거나 같아야 함
+    .gte("week_end", startDate) // week_end가 월의 첫 날보다 크거나 같아야 함
     .order("week_start", { ascending: true });
 
   if (error) {

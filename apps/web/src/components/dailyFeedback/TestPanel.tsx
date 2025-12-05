@@ -12,6 +12,8 @@ import {
   Code,
   Info,
   GripVertical,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import type { DailyReportData } from "./types";
@@ -374,46 +376,54 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   return (
     <div
       ref={panelRef}
-      className="fixed z-50"
+      className="fixed z-50 transition-all duration-300 ease-in-out"
       style={{
         top: position.y || 80,
         right: position.x === 0 ? 16 : "auto",
         left: position.x > 0 ? position.x : "auto",
-        maxWidth: selectedSection ? "600px" : "400px",
-        width: "calc(100vw - 2rem)",
-        maxHeight: "calc(100vh - 8rem)",
+        maxWidth: selectedSection ? "600px" : isExpanded ? "400px" : "280px",
+        width: isExpanded ? "calc(100vw - 2rem)" : "auto",
+        maxHeight: isExpanded ? "calc(100vh - 8rem)" : "auto",
         color: COLORS.text.primary,
         userSelect: isDragging ? "none" : "auto",
       }}
     >
       <Card
+        className="transition-all duration-300 ease-in-out"
         style={{
           backgroundColor: COLORS.background.card,
           border: `2px solid ${
             isPro ? COLORS.brand.primary : COLORS.border.light
           }`,
           boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+          overflow: "hidden",
         }}
       >
-        <div className="p-4">
-          {/* 헤더 */}
+        <div
+          className="transition-all duration-300 ease-in-out"
+          style={{
+            padding: isExpanded ? "1rem" : "0.5rem 0.75rem",
+          }}
+        >
+          {/* 헤더 - 접었을 때도 작게 표시 */}
           <div
-            className="flex items-center justify-between mb-3"
+            className="flex items-center justify-between"
             onMouseDown={handleMouseDown}
             style={{
               cursor: isDragging ? "grabbing" : "grab",
+              marginBottom: isExpanded ? "0.75rem" : "0",
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <GripVertical
-                className="w-4 h-4"
+                className="w-3 h-3 flex-shrink-0"
                 style={{
                   color: COLORS.text.muted,
                   opacity: 0.6,
                 }}
               />
               <div
-                className="w-2 h-2 rounded-full"
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                 style={{
                   backgroundColor: isPro
                     ? COLORS.brand.primary
@@ -421,54 +431,62 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                 }}
               />
               <span
+                className="truncate"
                 style={{
-                  fontSize: "0.875rem",
+                  fontSize: isExpanded ? "0.875rem" : "0.75rem",
                   fontWeight: "600",
                   color: COLORS.text.primary,
                 }}
               >
-                테스트 패널 (Dev Only)
+                {isExpanded ? "테스트 패널 (Dev Only) - 일일" : "일일 테스트"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFullData(!showFullData)}
-                style={{
-                  padding: "0.25rem 0.5rem",
-                  fontSize: "0.75rem",
-                  color: showFullData
-                    ? COLORS.brand.primary
-                    : COLORS.text.primary,
-                }}
-                title="전체 데이터 구조 보기"
-              >
-                <Code className="w-3 h-3" style={{ color: "inherit" }} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDataPreview(!showDataPreview)}
-                style={{
-                  padding: "0.25rem 0.5rem",
-                  fontSize: "0.75rem",
-                  color: showDataPreview
-                    ? COLORS.brand.primary
-                    : COLORS.text.primary,
-                }}
-                title={
-                  showDataPreview
-                    ? "데이터 미리보기 숨기기"
-                    : "데이터 미리보기 보기"
-                }
-              >
-                {showDataPreview ? (
-                  <EyeOff className="w-3 h-3" style={{ color: "inherit" }} />
-                ) : (
-                  <Eye className="w-3 h-3" style={{ color: "inherit" }} />
-                )}
-              </Button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {isExpanded && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullData(!showFullData)}
+                    style={{
+                      padding: "0.25rem 0.5rem",
+                      fontSize: "0.75rem",
+                      color: showFullData
+                        ? COLORS.brand.primary
+                        : COLORS.text.primary,
+                    }}
+                    title="전체 데이터 구조 보기"
+                  >
+                    <Code className="w-3 h-3" style={{ color: "inherit" }} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDataPreview(!showDataPreview)}
+                    style={{
+                      padding: "0.25rem 0.5rem",
+                      fontSize: "0.75rem",
+                      color: showDataPreview
+                        ? COLORS.brand.primary
+                        : COLORS.text.primary,
+                    }}
+                    title={
+                      showDataPreview
+                        ? "데이터 미리보기 숨기기"
+                        : "데이터 미리보기 보기"
+                    }
+                  >
+                    {showDataPreview ? (
+                      <EyeOff
+                        className="w-3 h-3"
+                        style={{ color: "inherit" }}
+                      />
+                    ) : (
+                      <Eye className="w-3 h-3" style={{ color: "inherit" }} />
+                    )}
+                  </Button>
+                </>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -481,46 +499,103 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                   fontSize: "0.75rem",
                   color: COLORS.text.primary,
                 }}
+                title={isExpanded ? "접기" : "펼치기"}
               >
-                {isExpanded ? "접기" : "펼치기"}
+                {isExpanded ? (
+                  <ChevronUp className="w-3 h-3" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
               </Button>
             </div>
           </div>
 
-          {/* Pro/Free 토글 */}
-          <div
-            className="mb-3 p-2 rounded"
-            style={{ backgroundColor: COLORS.background.hover }}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  color: COLORS.text.secondary,
-                  fontWeight: "500",
-                }}
-              >
-                멤버십 모드
-              </span>
-              <Button
-                size="sm"
-                onClick={() => onTogglePro(!isPro)}
-                style={{
-                  backgroundColor: isPro
-                    ? COLORS.brand.primary
-                    : COLORS.border.light,
-                  color: isPro ? "white" : COLORS.text.primary,
-                  fontSize: "0.75rem",
-                  padding: "0.25rem 0.75rem",
-                }}
-              >
-                {isPro ? "Pro" : "Free"}
-              </Button>
+          {/* 접었을 때 간단한 정보만 표시 */}
+          {!isExpanded && (
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center justify-between">
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    color: COLORS.text.secondary,
+                  }}
+                >
+                  멤버십:
+                </span>
+                <Button
+                  size="sm"
+                  onClick={() => onTogglePro(!isPro)}
+                  style={{
+                    backgroundColor: isPro
+                      ? COLORS.brand.primary
+                      : COLORS.border.light,
+                    color: isPro ? "white" : COLORS.text.primary,
+                    fontSize: "0.65rem",
+                    padding: "0.125rem 0.5rem",
+                    height: "auto",
+                  }}
+                >
+                  {isPro ? "Pro" : "Free"}
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    color: COLORS.text.secondary,
+                  }}
+                >
+                  섹션:
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    color: COLORS.text.primary,
+                    fontWeight: "600",
+                  }}
+                >
+                  {sections.filter((s) => s.hasData).length}/{sections.length}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* 전체 데이터 구조 보기 */}
-          {showFullData && (
+          {/* Pro/Free 토글 - 펼쳤을 때만 표시 */}
+          {isExpanded && (
+            <div
+              className="mb-3 p-2 rounded transition-all duration-200"
+              style={{ backgroundColor: COLORS.background.hover }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span
+                  style={{
+                    fontSize: "0.75rem",
+                    color: COLORS.text.secondary,
+                    fontWeight: "500",
+                  }}
+                >
+                  멤버십 모드
+                </span>
+                <Button
+                  size="sm"
+                  onClick={() => onTogglePro(!isPro)}
+                  style={{
+                    backgroundColor: isPro
+                      ? COLORS.brand.primary
+                      : COLORS.border.light,
+                    color: isPro ? "white" : COLORS.text.primary,
+                    fontSize: "0.75rem",
+                    padding: "0.25rem 0.75rem",
+                  }}
+                >
+                  {isPro ? "Pro" : "Free"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* 전체 데이터 구조 보기 - 펼쳤을 때만 표시 */}
+          {isExpanded && showFullData && (
             <div
               className="mb-3 p-3 rounded text-xs overflow-auto"
               style={{
@@ -543,8 +618,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
             </div>
           )}
 
-          {/* 섹션 상세 정보 */}
-          {selectedSectionData && (
+          {/* 섹션 상세 정보 - 펼쳤을 때만 표시 */}
+          {isExpanded && selectedSectionData && (
             <div
               className="mb-3 p-3 rounded"
               style={{
@@ -703,17 +778,17 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
             </div>
           )}
 
-          {/* 섹션별 상태 */}
+          {/* 섹션 리스트 - 펼쳤을 때만 표시 */}
           {isExpanded && !selectedSection && (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="space-y-1.5">
               {sections.map((section) => (
                 <div
                   key={section.name}
-                  className="p-2 rounded cursor-pointer transition-colors"
+                  className="p-2 rounded cursor-pointer transition-all duration-150 hover:opacity-80"
                   style={{
                     backgroundColor: section.hasData
-                      ? COLORS.background.base
-                      : COLORS.background.hover,
+                      ? COLORS.background.hover
+                      : COLORS.background.base,
                     border: `1px solid ${
                       section.hasData
                         ? COLORS.border.light
@@ -721,116 +796,65 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                     }`,
                   }}
                   onClick={() => setSelectedSection(section.name)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      COLORS.background.hover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = section.hasData
-                      ? COLORS.background.base
-                      : COLORS.background.hover;
-                  }}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       {section.hasData ? (
                         <CheckCircle2
-                          className="w-4 h-4 flex-shrink-0"
+                          className="w-3.5 h-3.5 flex-shrink-0"
                           style={{ color: COLORS.status.success }}
                         />
                       ) : (
                         <XCircle
-                          className="w-4 h-4 flex-shrink-0"
+                          className="w-3.5 h-3.5 flex-shrink-0"
                           style={{ color: COLORS.status.error }}
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <span
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                            color: COLORS.text.primary,
-                          }}
-                        >
-                          {section.name}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2">
                           <span
                             style={{
-                              fontSize: "0.65rem",
-                              color: COLORS.text.secondary,
-                              fontWeight: "500",
+                              fontSize: "0.8rem",
+                              fontWeight: "600",
+                              color: COLORS.text.primary,
                             }}
                           >
-                            {section.component}
+                            {section.name}
                           </span>
-                          {section.proFields.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              {section.proFields.map((field, idx) => (
-                                <div
-                                  key={idx}
-                                  className="w-2 h-2 rounded-full border"
-                                  style={{
-                                    backgroundColor: getFieldValue(field.path)
-                                      ? COLORS.brand.primary
-                                      : COLORS.background.base,
-                                    borderColor: getFieldValue(field.path)
-                                      ? COLORS.brand.primary
-                                      : COLORS.border.light,
-                                  }}
-                                  title={field.name}
-                                />
-                              ))}
-                            </div>
+                          {section.proFields.some((f) =>
+                            getFieldValue(f.path)
+                          ) && (
+                            <span
+                              className="px-1 rounded text-xs"
+                              style={{
+                                backgroundColor: COLORS.brand.primary,
+                                color: "white",
+                                fontSize: "0.65rem",
+                              }}
+                            >
+                              Pro
+                            </span>
                           )}
                         </div>
+                        <p
+                          className="truncate"
+                          style={{
+                            fontSize: "0.7rem",
+                            color: COLORS.text.tertiary,
+                            marginTop: "0.125rem",
+                          }}
+                        >
+                          {section.description}
+                        </p>
                       </div>
-                      <ChevronRight
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: COLORS.text.secondary }}
-                      />
                     </div>
+                    <ChevronRight
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: COLORS.text.muted }}
+                    />
                   </div>
-                  {showDataPreview && section.hasData && (
-                    <div
-                      className="mt-1 pl-6 text-xs"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "0.65rem",
-                          color: COLORS.text.primary,
-                          fontWeight: "500",
-                        }}
-                      >
-                        {section.description}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.6rem",
-                          color: COLORS.text.secondary,
-                          fontFamily: "monospace",
-                          marginTop: "0.25rem",
-                          fontWeight: "500",
-                        }}
-                      >
-                        조건: {section.condition}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* 요약 정보 */}
-          {!isExpanded && !selectedSection && (
-            <div
-              className="text-xs font-medium"
-              style={{ color: COLORS.text.secondary }}
-            >
-              {sections.filter((s) => s.hasData).length} / {sections.length}{" "}
-              섹션 활성화
             </div>
           )}
         </div>

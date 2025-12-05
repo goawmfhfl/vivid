@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { EmotionReport } from "@/types/monthly-feedback-new";
+import type { EmotionReport } from "@/types/monthly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
@@ -35,7 +35,7 @@ import {
   Line,
 } from "recharts";
 
-type EmotionSectionNewProps = {
+type EmotionSectionProps = {
   emotionReport: EmotionReport;
   isPro?: boolean;
 };
@@ -43,10 +43,10 @@ type EmotionSectionNewProps = {
 const EMOTION_COLOR = "#B89A7A";
 const EMOTION_COLOR_DARK = "#A78A6A";
 
-export function EmotionSectionNew({
+export function EmotionSection({
   emotionReport,
   isPro = false,
-}: EmotionSectionNewProps) {
+}: EmotionSectionProps) {
   const router = useRouter();
 
   if (!emotionReport) {

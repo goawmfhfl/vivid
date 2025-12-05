@@ -9,7 +9,7 @@ import { generateMonthlyFeedbackFromWeeklyWithProgress } from "../ai-service-ext
 import type { MonthlyFeedbackGenerateRequest } from "../types";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
-import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 
 // Next.js API Route 타임아웃 설정 (최대 5분)
 export const maxDuration = 300;
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      const sendComplete = (data: MonthlyFeedbackNew & { id: string }) => {
+      const sendComplete = (data: MonthlyFeedback & { id: string }) => {
         if (isClosed) return;
         isClosed = true;
         const result = JSON.stringify({

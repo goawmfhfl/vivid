@@ -1,12 +1,12 @@
-import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 
 /**
  * 각 영역별로 데이터 존재 여부 체크
  * null이 아니고 undefined가 아닌 경우만 true 반환
  */
 export function hasSectionData(
-  data: MonthlyFeedbackNew,
-  sectionName: keyof MonthlyFeedbackNew
+  data: MonthlyFeedback,
+  sectionName: keyof MonthlyFeedback
 ): boolean {
   const sectionData = data[sectionName];
   return sectionData !== null && sectionData !== undefined;
@@ -15,7 +15,7 @@ export function hasSectionData(
 /**
  * 모든 영역별 데이터 존재 여부 체크
  */
-export function validateAllSectionsFrontend(data: MonthlyFeedbackNew): {
+export function validateAllSectionsFrontend(data: MonthlyFeedback): {
   summary_report: boolean;
   daily_life_report: boolean;
   emotion_report: boolean;

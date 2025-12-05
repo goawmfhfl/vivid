@@ -10,11 +10,11 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { VisionReport } from "@/types/monthly-feedback-new";
+import type { VisionReport } from "@/types/monthly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
-type VisionSectionNewProps = {
+type VisionSectionProps = {
   visionReport: VisionReport;
   isPro?: boolean;
 };
@@ -22,10 +22,10 @@ type VisionSectionNewProps = {
 const VISION_COLOR = "#A3BFD9";
 const VISION_COLOR_DARK = "#8FA8C7";
 
-export function VisionSectionNew({
+export function VisionSection({
   visionReport,
   isPro = false,
-}: VisionSectionNewProps) {
+}: VisionSectionProps) {
   const router = useRouter();
 
   if (!visionReport) {

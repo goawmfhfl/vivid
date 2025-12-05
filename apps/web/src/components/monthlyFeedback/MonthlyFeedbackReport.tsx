@@ -4,35 +4,36 @@ import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
-import type { MonthlyReportData } from "./report/types";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
-import { SummaryOverviewSection } from "./report/SummaryOverviewSection";
-import { EmotionOverviewSection } from "./report/EmotionOverviewSection";
-import { InsightOverviewSection } from "./report/InsightOverviewSection";
-import { FeedbackOverviewSection } from "./report/FeedbackOverviewSection";
-import { VisionOverviewSection } from "./report/VisionOverviewSection";
-import { ConclusionSection } from "./report/ConclusionSection";
-import {
-  SECTION_COLORS,
-  TYPOGRAPHY,
-  SPACING,
-  COLORS,
-} from "@/lib/design-system";
-
-// 타입 재export
-export type { MonthlyReportData } from "./report/types";
+import { SummarySection } from "./report/SummarySection";
+import { DailyLifeSection } from "./report/DailyLifeSection";
+import { EmotionSection } from "./report/EmotionSection";
+import { VisionSection } from "./report/VisionSection";
+import { InsightSection } from "./report/InsightSection";
+import { ExecutionSection } from "./report/ExecutionSection";
+import { ClosingSection } from "./report/ClosingSection";
+import { COLORS, SPACING } from "@/lib/design-system";
+import { validateAllSectionsFrontend } from "@/utils/monthly-feedback-utils";
+import { TestPanel } from "./TestPanel";
 
 type MonthlyFeedbackReportProps = {
-  data: MonthlyReportData;
+  data: MonthlyFeedback;
   onBack: () => void;
+  isPro?: boolean;
+  onTogglePro?: () => void;
 };
 
 export function MonthlyFeedbackReport({
   data,
   onBack,
+  isPro = false,
+  onTogglePro = () => {},
 }: MonthlyFeedbackReportProps) {
   const router = useRouter();
-  const colors = SECTION_COLORS.conclusion;
+
+  // 각 영역별 데이터 존재 여부 체크
+  const sectionValidation = validateAllSectionsFrontend(data);
 
   const handleGoToAnalysis = () => {
     router.push("/analysis?tab=monthly");
@@ -40,11 +41,11 @@ export function MonthlyFeedbackReport({
 
   return (
     <div
-      className="min-h-screen pb-24 overflow-x-hidden"
+      className="min-h-screen pb-24"
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div
-        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding} w-full max-w-full`}
+        className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
       >
         <Button
           variant="ghost"
@@ -56,79 +57,105 @@ export function MonthlyFeedbackReport({
           돌아가기
         </Button>
 
+        {/* Header (Summary Report) */}
         <ScrollAnimation>
           <div className="mb-64">
             <MonthlyReportHeader
-              month_label={data.month_label}
-              date_range={data.date_range}
-              summary_overview={data.summary_overview}
+              monthLabel={data.month_label}
+              dateRange={data.date_range}
+              summaryReport={data.summary_report}
+              isPro={isPro}
             />
           </div>
         </ScrollAnimation>
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <SummaryOverviewSection summary_overview={data.summary_overview} />
-          </div>
-        </ScrollAnimation>
+        {/* Daily Life Report */}
+        {sectionValidation.daily_life_report && data.daily_life_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <DailyLifeSection
+                dailyLifeReport={data.daily_life_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <EmotionOverviewSection emotion_overview={data.emotion_overview} />
-          </div>
-        </ScrollAnimation>
+        {/* Emotion Report */}
+        {sectionValidation.emotion_report && data.emotion_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <EmotionSection
+                emotionReport={data.emotion_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <InsightOverviewSection insight_overview={data.insight_overview} />
-          </div>
-        </ScrollAnimation>
+        {/* Vision Report */}
+        {sectionValidation.vision_report && data.vision_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <VisionSection visionReport={data.vision_report} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <FeedbackOverviewSection
-              feedback_overview={data.feedback_overview}
-            />
-          </div>
-        </ScrollAnimation>
+        {/* Insight Report */}
+        {sectionValidation.insight_report && data.insight_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <InsightSection
+                insightReport={data.insight_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <VisionOverviewSection vision_overview={data.vision_overview} />
-          </div>
-        </ScrollAnimation>
+        {/* Execution Report */}
+        {sectionValidation.execution_report && data.execution_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-64">
+              <ExecutionSection
+                executionReport={data.execution_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        <ScrollAnimation delay={200}>
-          <div className="mb-64">
-            <ConclusionSection conclusion_overview={data.conclusion_overview} />
-          </div>
-        </ScrollAnimation>
+        {/* Closing Report */}
+        {sectionValidation.closing_report && data.closing_report && (
+          <ScrollAnimation delay={200}>
+            <div className="mb-12">
+              <ClosingSection
+                closingReport={data.closing_report}
+                isPro={isPro}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
 
-        {/* 월간 분석으로 돌아가기 버튼 */}
-        <ScrollAnimation delay={200}>
-          <div className="mt-16 mb-8 flex justify-center">
-            <Button
-              onClick={handleGoToAnalysis}
-              className="px-8 py-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105"
-              style={{
-                background: colors.gradient,
-                color: "white",
-                boxShadow: `0 4px 16px ${colors.primary}30`,
-                border: "none",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <BarChart3 className="w-5 h-5" />
-                <span
-                  className={`${TYPOGRAPHY.body.fontSize} ${TYPOGRAPHY.body.fontWeight}`}
-                >
-                  월간 분석으로 돌아가기
-                </span>
-              </div>
-            </Button>
-          </div>
-        </ScrollAnimation>
+        {/* Bottom Action */}
+        <div className="flex justify-center pt-4">
+          <Button
+            onClick={handleGoToAnalysis}
+            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
+            style={{
+              backgroundColor: "#6B7A6F",
+              color: "white",
+            }}
+          >
+            <BarChart3 className="w-4 h-4" />
+            분석 페이지로 이동
+          </Button>
+        </div>
       </div>
+
+      {/* TestPanel 추가 */}
+      <TestPanel view={data} isPro={isPro} onTogglePro={onTogglePro} />
     </div>
   );
 }
