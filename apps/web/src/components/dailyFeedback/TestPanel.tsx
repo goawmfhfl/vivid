@@ -10,12 +10,11 @@ import {
   EyeOff,
   ChevronRight,
   Code,
-  Info,
   GripVertical,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import type { DailyReportData } from "./types";
 
 interface TestPanelProps {

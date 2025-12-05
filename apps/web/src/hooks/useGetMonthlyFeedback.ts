@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
-import type { MonthlyFeedback } from "@/types/monthly-feedback";
+import type {
+  MonthlyFeedback,
+  MonthlyFeedbackListItem,
+} from "@/types/monthly-feedback";
 
 /**
  * 월간 피드백 조회 (month 기반)
@@ -24,7 +27,7 @@ export function useGetMonthlyFeedback(month: string | null) {
 
       const result = await response.json();
       const monthlyFeedback = result.data.find(
-        (item: MonthlyFeedback) => item.month === month
+        (item: MonthlyFeedbackListItem) => item.month === month
       );
 
       if (!monthlyFeedback) {
@@ -74,7 +77,7 @@ export function useGetMonthlyFeedbackById(id: string | null) {
  * 월간 피드백 리스트 조회
  */
 export function useGetMonthlyFeedbackList(enabled: boolean = true) {
-  return useQuery({
+  return useQuery<MonthlyFeedbackListItem[]>({
     queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "list"],
     queryFn: async () => {
       const userId = await getCurrentUserId();
@@ -86,7 +89,7 @@ export function useGetMonthlyFeedbackList(enabled: boolean = true) {
       }
 
       const result = await response.json();
-      return result.data;
+      return result.data as MonthlyFeedbackListItem[];
     },
     enabled, // enabled 파라미터로 조건부 조회 제어
   });

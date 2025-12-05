@@ -6,7 +6,6 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
-import { SummarySection } from "./report/SummarySection";
 import { DailyLifeSection } from "./report/DailyLifeSection";
 import { EmotionSection } from "./report/EmotionSection";
 import { VisionSection } from "./report/VisionSection";

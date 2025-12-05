@@ -202,22 +202,27 @@ export function encryptMonthlyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: encryptJsonbFields(
-      feedback.summary_overview as JsonbValue
-    ),
-    emotion_overview: encryptJsonbFields(
-      feedback.emotion_overview as JsonbValue
-    ),
-    insight_overview: encryptJsonbFields(
-      feedback.insight_overview as JsonbValue
-    ),
-    feedback_overview: encryptJsonbFields(
-      feedback.feedback_overview as JsonbValue
-    ),
-    vision_overview: encryptJsonbFields(feedback.vision_overview as JsonbValue),
-    conclusion_overview: encryptJsonbFields(
-      feedback.conclusion_overview as JsonbValue
-    ),
+    summary_report: feedback.summary_report
+      ? encryptJsonbFields(feedback.summary_report as JsonbValue)
+      : null,
+    daily_life_report: feedback.daily_life_report
+      ? encryptJsonbFields(feedback.daily_life_report as JsonbValue)
+      : null,
+    emotion_report: feedback.emotion_report
+      ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
+      : null,
+    insight_report: feedback.insight_report
+      ? encryptJsonbFields(feedback.insight_report as JsonbValue)
+      : null,
+    execution_report: feedback.execution_report
+      ? encryptJsonbFields(feedback.execution_report as JsonbValue)
+      : null,
+    vision_report: feedback.vision_report
+      ? encryptJsonbFields(feedback.vision_report as JsonbValue)
+      : null,
+    closing_report: feedback.closing_report
+      ? encryptJsonbFields(feedback.closing_report as JsonbValue)
+      : null,
   };
 }
 
@@ -229,22 +234,27 @@ export function decryptMonthlyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    summary_overview: decryptJsonbFields(
-      feedback.summary_overview as JsonbValue
-    ),
-    emotion_overview: decryptJsonbFields(
-      feedback.emotion_overview as JsonbValue
-    ),
-    insight_overview: decryptJsonbFields(
-      feedback.insight_overview as JsonbValue
-    ),
-    feedback_overview: decryptJsonbFields(
-      feedback.feedback_overview as JsonbValue
-    ),
-    vision_overview: decryptJsonbFields(feedback.vision_overview as JsonbValue),
-    conclusion_overview: decryptJsonbFields(
-      feedback.conclusion_overview as JsonbValue
-    ),
+    summary_report: feedback.summary_report
+      ? decryptJsonbFields(feedback.summary_report as JsonbValue)
+      : null,
+    daily_life_report: feedback.daily_life_report
+      ? decryptJsonbFields(feedback.daily_life_report as JsonbValue)
+      : null,
+    emotion_report: feedback.emotion_report
+      ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
+      : null,
+    insight_report: feedback.insight_report
+      ? decryptJsonbFields(feedback.insight_report as JsonbValue)
+      : null,
+    execution_report: feedback.execution_report
+      ? decryptJsonbFields(feedback.execution_report as JsonbValue)
+      : null,
+    vision_report: feedback.vision_report
+      ? decryptJsonbFields(feedback.vision_report as JsonbValue)
+      : null,
+    closing_report: feedback.closing_report
+      ? decryptJsonbFields(feedback.closing_report as JsonbValue)
+      : null,
   };
 }
 
