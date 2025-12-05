@@ -20,7 +20,7 @@ export const MonthlyReportSchema = {
       recorded_days: { type: "integer", minimum: 0 },
 
       // 1. 월간 요약 섹션
-      summary_overview: {
+      summary_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -109,7 +109,7 @@ export const MonthlyReportSchema = {
       },
 
       // 2. 감정 섹션
-      emotion_overview: {
+      emotion_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -217,7 +217,7 @@ export const MonthlyReportSchema = {
       },
 
       // 4. 인사이트 섹션
-      insight_overview: {
+      insight_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -283,7 +283,7 @@ export const MonthlyReportSchema = {
       },
 
       // 5. 피드백 섹션
-      feedback_overview: {
+      execution_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -390,7 +390,7 @@ export const MonthlyReportSchema = {
       },
 
       // 6. 시각화(비전) 섹션
-      vision_overview: {
+      vision_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -453,7 +453,7 @@ export const MonthlyReportSchema = {
       },
 
       // 7. 마무리 섹션
-      conclusion_overview: {
+      closing_report: {
         type: "object",
         additionalProperties: false,
         properties: {
@@ -483,12 +483,12 @@ export const MonthlyReportSchema = {
       "date_range",
       "total_days",
       "recorded_days",
-      "summary_overview",
-      "emotion_overview",
-      "insight_overview",
-      "feedback_overview",
-      "vision_overview",
-      "conclusion_overview",
+      "summary_report",
+      "emotion_report",
+      "insight_report",
+      "execution_report",
+      "vision_report",
+      "closing_report",
     ],
   },
   strict: true,
@@ -553,7 +553,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[2. summary_overview (월간 요약)]
+[2. summary_report (월간 요약)]
 
 - monthly_score:
 
@@ -561,7 +561,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 기준 예시:
 
-    - 기록 커버리지, summary_overview.integrity_average, 감정 안정성, 실행력 등을 종합적으로 반영
+    - 기록 커버리지, summary_report.integrity_average, 감정 안정성, 실행력 등을 종합적으로 반영
 
     - 매우 힘들었지만 꾸준히 버틴 달은 점수가 높을 수 있습니다. "성공"이 아니라 "정직하게 살아낸 정도"를 점수로 표현합니다.
 
@@ -629,11 +629,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[3. emotion_overview (감정 섹션)]
+[3. emotion_report (감정 섹션)]
 
 1) monthly_ai_mood_valence_avg, monthly_ai_mood_arousal_avg
 
-- daily_reports.emotion_overview.ai_mood_valence / ai_mood_arousal 의 평균을 계산합니다.
+- daily_reports.emotion_report.ai_mood_valence / ai_mood_arousal 의 평균을 계산합니다.
 
 - null 이 아닌 값만 대상으로 평균을 냅니다.
 
@@ -769,11 +769,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[5. insight_overview (인사이트 섹션)]
+[5. insight_report (인사이트 섹션)]
 
 - insight_days_count:
 
-  - categorized_records 또는 daily_reports.insight_overview.core_insight 를 기준으로,
+  - categorized_records 또는 daily_reports.insight_report.core_insight 를 기준으로,
 
     인사이트가 있었던 날짜 수를 센 값입니다.
 
@@ -844,11 +844,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[5. feedback_overview (피드백 섹션)]
+[5. execution_report (피드백 섹션)]
 
 - feedback_days_count, feedback_records_count:
 
-  - categorized_records.feedbacks 또는 daily_reports.feedback_overview 를 기준으로 계산합니다.
+  - categorized_records.feedbacks 또는 daily_reports.execution_report 를 기준으로 계산합니다.
 
 - recurring_positives / recurring_improvements:
 
@@ -856,7 +856,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - habit_scores.health / work / relationship / self_care:
 
-  - daily_reports.meta_overview, feedback_overview 내용,
+  - daily_reports.meta_overview, execution_report 내용,
 
     운동/휴식/관계/자기 돌봄 관련 기록을 참고하여 0~10 점으로 평가합니다.
 
@@ -944,7 +944,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[6. vision_overview (시각화/비전 섹션)]
+[6. vision_report (시각화/비전 섹션)]
 
 - vision_days_count, vision_records_count:
 
@@ -1023,13 +1023,13 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 --------------------------------
 
-[7. conclusion_overview (마무리 섹션)]
+[7. closing_report (마무리 섹션)]
 
 - monthly_title:
 
   - 이 달을 상징하는 제목을 만듭니다.
 
-  - summary_overview.summary_title 과 다르게, 조금 더 감성적으로 표현해도 좋습니다.
+  - summary_report.summary_title 과 다르게, 조금 더 감성적으로 표현해도 좋습니다.
 
 - monthly_summary:
 
@@ -1067,7 +1067,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - "없는데도 있는 것처럼" 꾸며내지 마세요.
 
-- 대신 conclusion_overview 와 summary_overview 에서,
+- 대신 closing_report 와 summary_report 에서,
 
   "이번 달은 기록이 적어서 패턴을 읽기 어려웠다" 는 점을 솔직하고 부드럽게 언급할 수 있습니다.
 

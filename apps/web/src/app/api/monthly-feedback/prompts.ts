@@ -39,8 +39,8 @@ export function buildMonthlyFeedbackPrompt(
   prompt += `- date_range: ${dateRange.start_date} ~ ${dateRange.end_date}\n`;
   prompt += `- total_days: ${totalDays}\n`;
   prompt += `- recorded_days: ${recordedDays}\n`;
-  prompt += `- record_coverage_rate (summary_overview에 포함): ${recordCoverageRate}\n`;
-  prompt += `- integrity_average (summary_overview에 포함): 일별 피드백의 narrative_overview.integrity_score 평균값을 계산하여 summary_overview에 포함하세요.\n\n`;
+  prompt += `- record_coverage_rate (summary_report에 포함): ${recordCoverageRate}\n`;
+  prompt += `- integrity_average (summary_report에 포함): 일별 피드백의 narrative_overview.integrity_score 평균값을 계산하여 summary_report에 포함하세요.\n\n`;
 
   // 일별 피드백 데이터 정리
   prompt += `=== 일별 피드백 데이터 ===\n`;
@@ -71,7 +71,10 @@ export function buildMonthlyFeedbackPrompt(
       prompt += `\n[일일 피드백 ${idx + 1}]\n`;
 
       // integrity_score
-      if (feedback.narrative_overview?.integrity_score !== null && feedback.narrative_overview?.integrity_score !== undefined) {
+      if (
+        feedback.narrative_overview?.integrity_score !== null &&
+        feedback.narrative_overview?.integrity_score !== undefined
+      ) {
         prompt += `통합 점수: ${feedback.narrative_overview.integrity_score}/10\n`;
       }
 
@@ -88,7 +91,10 @@ export function buildMonthlyFeedbackPrompt(
         if (narrative.narrative) {
           prompt += `이야기: ${narrative.narrative.substring(0, 200)}...\n`;
         }
-        if (Array.isArray(narrative.keywords) && narrative.keywords.length > 0) {
+        if (
+          Array.isArray(narrative.keywords) &&
+          narrative.keywords.length > 0
+        ) {
           prompt += `키워드: ${narrative.keywords.join(", ")}\n`;
         }
       }
@@ -148,7 +154,10 @@ export function buildMonthlyFeedbackPrompt(
             150
           )}...\n`;
         }
-        if (Array.isArray(vision.vision_keywords) && vision.vision_keywords.length > 0) {
+        if (
+          Array.isArray(vision.vision_keywords) &&
+          vision.vision_keywords.length > 0
+        ) {
           prompt += `시각화 키워드: ${vision.vision_keywords.join(", ")}\n`;
         }
         if (vision.reminder_sentence) {
@@ -166,10 +175,16 @@ export function buildMonthlyFeedbackPrompt(
         if (feedbackData.core_feedback) {
           prompt += `핵심 피드백: ${feedbackData.core_feedback}\n`;
         }
-        if (Array.isArray(feedbackData.positives) && feedbackData.positives.length > 0) {
+        if (
+          Array.isArray(feedbackData.positives) &&
+          feedbackData.positives.length > 0
+        ) {
           prompt += `긍정적 측면: ${feedbackData.positives.join(", ")}\n`;
         }
-        if (Array.isArray(feedbackData.improvements) && feedbackData.improvements.length > 0) {
+        if (
+          Array.isArray(feedbackData.improvements) &&
+          feedbackData.improvements.length > 0
+        ) {
           prompt += `개선점: ${feedbackData.improvements.join(", ")}\n`;
         }
       }
@@ -207,7 +222,10 @@ export function buildMonthlyFeedbackPrompt(
           records.feedbacks.length > 3 ? "..." : ""
         }\n`;
       }
-      if (Array.isArray(records.visualizings) && records.visualizings.length > 0) {
+      if (
+        Array.isArray(records.visualizings) &&
+        records.visualizings.length > 0
+      ) {
         prompt += `- 시각화: ${records.visualizings.slice(0, 3).join(", ")}${
           records.visualizings.length > 3 ? "..." : ""
         }\n`;
@@ -220,7 +238,7 @@ export function buildMonthlyFeedbackPrompt(
     });
   }
 
-  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 summary_overview, emotion_overview, insight_overview, feedback_overview, vision_overview, conclusion_overview를 작성하세요.\n`;
+  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 summary_report, emotion_report, insight_report, execution_report, vision_report, closing_report를 작성하세요.\n`;
 
   return prompt;
 }

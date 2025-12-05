@@ -55,7 +55,7 @@ export async function fetchMonthlyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select(
-      "id, month, month_label, date_range, recorded_days, summary_overview, is_ai_generated, created_at"
+      "id, month, month_label, date_range, recorded_days, summary_report, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("month", { ascending: false });
@@ -65,8 +65,8 @@ export async function fetchMonthlyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    // summary_overview 복호화
-    const decryptedOverview = decryptJsonbFields(row.summary_overview) as {
+    // summary_report 복호화
+    const decryptedOverview = decryptJsonbFields(row.summary_report) as {
       summary_title?: string;
       monthly_score?: number;
     } | null;
@@ -128,17 +128,13 @@ export async function fetchMonthlyFeedbackByMonth(
     date_range: data.date_range as MonthlyFeedback["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    summary_overview:
-      data.summary_overview as MonthlyFeedback["summary_overview"],
-    emotion_overview:
-      data.emotion_overview as MonthlyFeedback["emotion_overview"],
-    insight_overview:
-      data.insight_overview as MonthlyFeedback["insight_overview"],
-    feedback_overview:
-      data.feedback_overview as MonthlyFeedback["feedback_overview"],
-    vision_overview: data.vision_overview as MonthlyFeedback["vision_overview"],
-    conclusion_overview:
-      data.conclusion_overview as MonthlyFeedback["conclusion_overview"],
+    summary_report: data.summary_report as MonthlyFeedback["summary_report"],
+    emotion_report: data.emotion_report as MonthlyFeedback["emotion_report"],
+    insight_report: data.insight_report as MonthlyFeedback["insight_report"],
+    execution_report:
+      data.execution_report as MonthlyFeedback["execution_report"],
+    vision_report: data.vision_report as MonthlyFeedback["vision_report"],
+    closing_report: data.closing_report as MonthlyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -183,17 +179,13 @@ export async function fetchMonthlyFeedbackDetail(
     date_range: data.date_range as MonthlyFeedback["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    summary_overview:
-      data.summary_overview as MonthlyFeedback["summary_overview"],
-    emotion_overview:
-      data.emotion_overview as MonthlyFeedback["emotion_overview"],
-    insight_overview:
-      data.insight_overview as MonthlyFeedback["insight_overview"],
-    feedback_overview:
-      data.feedback_overview as MonthlyFeedback["feedback_overview"],
-    vision_overview: data.vision_overview as MonthlyFeedback["vision_overview"],
-    conclusion_overview:
-      data.conclusion_overview as MonthlyFeedback["conclusion_overview"],
+    summary_report: data.summary_report as MonthlyFeedback["summary_report"],
+    emotion_report: data.emotion_report as MonthlyFeedback["emotion_report"],
+    insight_report: data.insight_report as MonthlyFeedback["insight_report"],
+    execution_report:
+      data.execution_report as MonthlyFeedback["execution_report"],
+    vision_report: data.vision_report as MonthlyFeedback["vision_report"],
+    closing_report: data.closing_report as MonthlyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -225,12 +217,12 @@ export async function saveMonthlyFeedback(
         date_range: encryptedFeedback.date_range,
         total_days: encryptedFeedback.total_days,
         recorded_days: encryptedFeedback.recorded_days,
-        summary_overview: encryptedFeedback.summary_overview,
-        emotion_overview: encryptedFeedback.emotion_overview,
-        insight_overview: encryptedFeedback.insight_overview,
-        feedback_overview: encryptedFeedback.feedback_overview,
-        vision_overview: encryptedFeedback.vision_overview,
-        conclusion_overview: encryptedFeedback.conclusion_overview,
+        summary_report: encryptedFeedback.summary_report,
+        emotion_report: encryptedFeedback.emotion_report,
+        insight_report: encryptedFeedback.insight_report,
+        execution_report: encryptedFeedback.execution_report,
+        vision_report: encryptedFeedback.vision_report,
+        closing_report: encryptedFeedback.closing_report,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,month" }

@@ -12,18 +12,18 @@ export type MonthlyFeedback = {
   recorded_days: number;
 
   // 섹션들
-  summary_overview: SummaryOverview;
-  emotion_overview: EmotionOverview;
-  insight_overview: InsightOverview;
-  feedback_overview: FeedbackOverview;
-  vision_overview: VisionOverview;
-  conclusion_overview: ConclusionOverview;
+  summary_report: SummaryReport;
+  emotion_report: EmotionReport;
+  insight_report: InsightReport;
+  execution_report: ExecutionReport;
+  vision_report: VisionReport;
+  closing_report: ClosingReport;
 
   is_ai_generated?: boolean;
   created_at?: string;
 };
 
-export type SummaryOverview = {
+export type SummaryReport = {
   monthly_score: number; // 0-100
   summary_title: string;
   summary_description: string;
@@ -47,7 +47,7 @@ export type SummaryOverview = {
   summary_ai_comment: string | null;
 };
 
-export type EmotionOverview = {
+export type EmotionReport = {
   monthly_ai_mood_valence_avg: number | null;
   monthly_ai_mood_arousal_avg: number | null;
   emotion_quadrant_dominant:
@@ -77,7 +77,7 @@ export type EmotionQuadrantDistribution = {
   explanation: string; // 해당 사분면이 이 비율을 차지하는 이유에 대한 설명
 };
 
-export type InsightOverview = {
+export type InsightReport = {
   insight_days_count: number;
   insight_records_count: number;
   top_insights: TopInsight[]; // 최대 20개
@@ -98,7 +98,7 @@ export type CoreInsight = {
   explanation: string; // 이 인사이트가 핵심인 이유 설명
 };
 
-export type FeedbackOverview = {
+export type ExecutionReport = {
   feedback_days_count: number;
   feedback_records_count: number;
   recurring_positives: string[]; // 최대 10개
@@ -131,7 +131,7 @@ export type RecurringImprovement = {
   frequency: number; // 등장 횟수
 };
 
-export type VisionOverview = {
+export type VisionReport = {
   vision_days_count: number;
   vision_records_count: number;
   vision_consistency_score: number; // 0-10
@@ -146,7 +146,7 @@ export type MainVision = {
   frequency: number;
 };
 
-export type ConclusionOverview = {
+export type ClosingReport = {
   monthly_title: string;
   monthly_summary: string;
   turning_points: string[]; // 최대 5개
