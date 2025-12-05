@@ -11,20 +11,14 @@ import {
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { InsightReport } from "@/types/weekly-feedback";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LabelList,
   Legend,
 } from "recharts";
 

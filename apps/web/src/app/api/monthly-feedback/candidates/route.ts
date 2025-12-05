@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
       is_current: boolean;
       monthly_feedback_id: string | null;
       record_count?: number;
+      weekly_feedback_count?: number; // weekly-feedback 개수 추가
     }> = [];
 
     // 최근 3개월 중 모든 월을 후보에 추가 (생성 여부와 관계없이)
@@ -87,13 +88,21 @@ export async function GET(request: NextRequest) {
     for (const month of monthsToCheck) {
       const dateRange = getMonthDateRange(month);
 
-      // 기록 개수 조회
+      // 기록 개수 조회 (daily-feedback)
       const { count: recordCount } = await supabase
         .from(API_ENDPOINTS.DAILY_FEEDBACK)
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
         .gte("report_date", dateRange.start)
         .lte("report_date", dateRange.end);
+
+      // weekly-feedback 개수 조회
+      const { count: weeklyFeedbackCount } = await supabase
+        .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("week_start", dateRange.start)
+        .lte("week_end", dateRange.end);
 
       const [year, monthNum] = month.split("-");
       const existingFeedbackId = existingMonthsMap.get(month);
@@ -104,6 +113,7 @@ export async function GET(request: NextRequest) {
         is_current: month === currentMonth,
         monthly_feedback_id: existingFeedbackId || null,
         record_count: recordCount || 0,
+        weekly_feedback_count: weeklyFeedbackCount || 0,
       });
     }
 

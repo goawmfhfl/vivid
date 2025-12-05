@@ -3,7 +3,6 @@ import {
   Sparkles,
   Lock,
   ArrowRight,
-  User,
   TrendingUp,
   Star,
   Target,

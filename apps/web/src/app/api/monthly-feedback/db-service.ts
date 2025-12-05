@@ -3,12 +3,15 @@ import type {
   MonthlyFeedback,
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import type { WeeklyFeedback } from "@/types/weekly-feedback";
 import { API_ENDPOINTS } from "@/constants";
 import {
   encryptMonthlyFeedback,
   decryptMonthlyFeedback,
   decryptJsonbFields,
+  decryptWeeklyFeedback,
 } from "@/lib/jsonb-encryption";
 
 /**
@@ -244,4 +247,105 @@ export async function saveMonthlyFeedback(
   }
 
   return String(data.id);
+}
+
+/**
+ * 날짜 범위로 weekly-feedback 조회 (월간용)
+ */
+export async function fetchWeeklyFeedbacksByMonth(
+  supabase: SupabaseClient,
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<WeeklyFeedback[]> {
+  const { data, error } = await supabase
+    .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+    .select("*")
+    .eq("user_id", userId)
+    .gte("week_start", startDate)
+    .lte("week_end", endDate)
+    .order("week_start", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to fetch weekly feedbacks: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
+  return data.map((row) => {
+    const rawFeedback = {
+      id: String(row.id),
+      week_range: {
+        start: row.week_start,
+        end: row.week_end,
+        timezone: row.timezone || "Asia/Seoul",
+      },
+      summary_report: row.summary_report as WeeklyFeedback["summary_report"],
+      daily_life_report:
+        row.daily_life_report as WeeklyFeedback["daily_life_report"],
+      emotion_report:
+        (row.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
+      vision_report: row.vision_report as WeeklyFeedback["vision_report"],
+      insight_report: row.insight_report as WeeklyFeedback["insight_report"],
+      execution_report:
+        row.execution_report as WeeklyFeedback["execution_report"],
+      closing_report: row.closing_report as WeeklyFeedback["closing_report"],
+      is_ai_generated: row.is_ai_generated ?? undefined,
+      created_at: row.created_at ?? undefined,
+    };
+
+    // 복호화 처리
+    return decryptWeeklyFeedback(
+      rawFeedback as unknown as { [key: string]: unknown }
+    ) as unknown as WeeklyFeedback;
+  });
+}
+
+/**
+ * 각 영역별로 데이터 존재 여부 체크 (2개 이상)
+ */
+export function validateSectionData(
+  weeklyFeedbacks: WeeklyFeedback[],
+  sectionName: keyof WeeklyFeedback
+): boolean {
+  if (weeklyFeedbacks.length < 2) {
+    return false;
+  }
+
+  const validDataCount = weeklyFeedbacks.filter((feedback) => {
+    const sectionData = feedback[sectionName];
+    // null이 아니고 undefined가 아닌 경우만 카운트
+    return sectionData !== null && sectionData !== undefined;
+  }).length;
+
+  return validDataCount >= 2;
+}
+
+/**
+ * 모든 영역별 데이터 존재 여부 체크
+ */
+export function validateAllSections(weeklyFeedbacks: WeeklyFeedback[]): {
+  summary_report: boolean;
+  daily_life_report: boolean;
+  emotion_report: boolean;
+  vision_report: boolean;
+  insight_report: boolean;
+  execution_report: boolean;
+  closing_report: boolean;
+} {
+  return {
+    summary_report: validateSectionData(weeklyFeedbacks, "summary_report"),
+    daily_life_report: validateSectionData(
+      weeklyFeedbacks,
+      "daily_life_report"
+    ),
+    emotion_report: validateSectionData(weeklyFeedbacks, "emotion_report"),
+    vision_report: validateSectionData(weeklyFeedbacks, "vision_report"),
+    insight_report: validateSectionData(weeklyFeedbacks, "insight_report"),
+    execution_report: validateSectionData(weeklyFeedbacks, "execution_report"),
+    closing_report: validateSectionData(weeklyFeedbacks, "closing_report"),
+  };
 }

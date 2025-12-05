@@ -43,6 +43,7 @@ export function isLastDayOfMonth(referenceDate: Date = new Date()): boolean {
  *    ⏰ 마지막 일 오전 12시(00:00:00 KST)가 되면 그때부터 생성 대상이 됨
  * 2. monthly_feedback_id가 null인 월만 포함 (아직 생성되지 않은 월)
  * 3. 기록이 있는 월만 포함 (record_count > 0)
+ * 4. weekly-feedback이 2개 이상인 월만 포함 (weekly_feedback_count >= 2)
  *
  * 📅 월간 범위: 1일 ~ 마지막 일
  * 📌 기준 날짜: 매달 마지막 일
@@ -55,17 +56,19 @@ export function isLastDayOfMonth(referenceDate: Date = new Date()): boolean {
  *
  * 후보 데이터:
  * [
- *   { month: "2025-11", monthly_feedback_id: null, record_count: 24 }
+ *   { month: "2025-11", monthly_feedback_id: null, record_count: 24, weekly_feedback_count: 3 }
  *     → 11월 마지막 일: 2025-11-30
  *     → 기준 날짜: 2025-11-30
  *     → 2025-11-30 === 2025-11-30 (마지막 일)
+ *     → weekly_feedback_count: 3 >= 2 ✅
  *     → ✅ 포함
  *
- *   { month: "2025-10", monthly_feedback_id: null, record_count: 20 }
+ *   { month: "2025-10", monthly_feedback_id: null, record_count: 20, weekly_feedback_count: 1 }
  *     → 10월 마지막 일: 2025-10-31
  *     → 기준 날짜: 2025-11-30
  *     → 2025-10-31 < 2025-11-30 (이미 지남)
- *     → ✅ 포함 (지난 달이 아직 생성되지 않은 경우)
+ *     → weekly_feedback_count: 1 < 2 ❌
+ *     → ❌ 제외 (weekly-feedback이 2개 미만)
  *
  *   { month: "2025-12", monthly_feedback_id: null, record_count: 0 }
  *     → 12월 마지막 일: 2025-12-31
@@ -73,12 +76,12 @@ export function isLastDayOfMonth(referenceDate: Date = new Date()): boolean {
  *     → 2025-12-31 > 2025-11-30 (아직 안 지남)
  *     → ❌ 제외
  *
- *   { month: "2025-11", monthly_feedback_id: "123", record_count: 24 }
+ *   { month: "2025-11", monthly_feedback_id: "123", record_count: 24, weekly_feedback_count: 3 }
  *     → monthly_feedback_id가 있음
  *     → ❌ 제외
  * ]
  *
- * 결과: [2025-11, 2025-10] (2개)
+ * 결과: [2025-11] (1개)
  *
  * 🔄 기준 날짜가 2025-12-01 (12월 1일)이 되면:
  * - 11월 마지막 일: 2025-11-30 < 2025-12-01 (이미 지남) → ✅ 포함
@@ -133,7 +136,13 @@ export function filterMonthlyCandidatesForCreation(
       //   - "2025-12-31" <= "2025-11-30" → false (아직 안 지남) → ❌ 제외
       if (candidateLastDayString <= referenceKSTDateString) {
         // 조건 3: 기록이 있는 경우만 포함 (record_count가 0보다 큰 경우)
-        if (candidate.record_count && candidate.record_count > 0) {
+        // 조건 4: weekly-feedback이 2개 이상인 경우만 포함
+        if (
+          candidate.record_count &&
+          candidate.record_count > 0 &&
+          candidate.weekly_feedback_count !== undefined &&
+          candidate.weekly_feedback_count >= 2
+        ) {
           filtered.push(candidate);
         }
       }
