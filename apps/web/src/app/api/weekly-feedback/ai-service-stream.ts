@@ -589,7 +589,7 @@ async function generateVisionReport(
     typeof response === "object" &&
     response !== null &&
     !Array.isArray(response) &&
-    ("vision_summary" in response || "vision_consistency" in response) &&
+    "vision_summary" in response &&
     !("vision_report" in response)
   ) {
     console.log(

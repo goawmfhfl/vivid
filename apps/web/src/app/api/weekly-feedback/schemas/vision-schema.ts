@@ -11,22 +11,6 @@ export function getVisionReportSchema(isPro: boolean) {
         type: "string",
         maxLength: isPro ? 400 : 200,
       },
-      vision_consistency: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          summary: {
-            type: "string",
-            maxLength: isPro ? 300 : 200,
-          },
-          core_theme: { type: "string" },
-          evolution: {
-            type: "string",
-            maxLength: isPro ? 300 : 200,
-          },
-        },
-        required: ["summary", "core_theme", "evolution"],
-      },
       vision_keywords_trend: {
         type: "array",
         items: {
@@ -312,7 +296,6 @@ export function getVisionReportSchema(isPro: boolean) {
     required: isPro
       ? [
           "vision_summary",
-          "vision_consistency",
           "vision_keywords_trend",
           "goals_pattern",
           "self_vision_alignment",
@@ -323,7 +306,6 @@ export function getVisionReportSchema(isPro: boolean) {
         ]
       : [
           "vision_summary",
-          "vision_consistency",
           "vision_keywords_trend",
           "goals_pattern",
           "self_vision_alignment",

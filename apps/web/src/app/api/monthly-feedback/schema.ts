@@ -44,7 +44,6 @@ export const MonthlyReportSchema = {
             ],
           },
           record_coverage_rate: { type: "number", minimum: 0, maximum: 1 },
-          integrity_average: { type: "number", minimum: 0, maximum: 10 },
           life_balance_score: { type: "integer", minimum: 0, maximum: 10 },
           life_balance_reason: {
             type: "string",
@@ -91,7 +90,6 @@ export const MonthlyReportSchema = {
           "main_themes_reason",
           "integrity_trend",
           "record_coverage_rate",
-          "integrity_average",
           "life_balance_score",
           "life_balance_reason",
           "life_balance_feedback",
@@ -173,12 +171,6 @@ export const MonthlyReportSchema = {
             type: "string",
             description: "왜 그 점수인지 월간 데이터 분석 기반 설명",
           },
-          emotion_stability_praise: {
-            type: "string",
-            nullable: true,
-            description:
-              "점수가 7점 이상인 경우 칭찬 메시지 (7점 미만이면 null)",
-          },
           emotion_stability_guidelines: {
             type: "array",
             items: { type: "string" },
@@ -209,7 +201,6 @@ export const MonthlyReportSchema = {
           "emotion_stability_score",
           "emotion_stability_explanation",
           "emotion_stability_score_reason",
-          "emotion_stability_praise",
           "emotion_stability_guidelines",
           "emotion_stability_actions",
           "emotion_ai_comment",
@@ -799,11 +790,6 @@ export const MonthlyReportSchema = {
         properties: {
           vision_days_count: { type: "integer", minimum: 0 },
           vision_records_count: { type: "integer", minimum: 0 },
-          vision_consistency_score: {
-            type: "integer",
-            minimum: 0,
-            maximum: 10,
-          },
           main_visions: {
             type: "array",
             minItems: 0,
@@ -847,7 +833,6 @@ export const MonthlyReportSchema = {
         required: [
           "vision_days_count",
           "vision_records_count",
-          "vision_consistency_score",
           "main_visions",
           "core_visions",
           "vision_progress_comment",
@@ -949,12 +934,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - record_coverage_rate = recorded_days / total_days (소수 둘째 자리까지 반올림, 예: 0.73).
 
-3) integrity_average
-
-- daily_reports.narrative_overview.integrity_score 의 평균값을 계산합니다.
-
-- 소수 둘째 자리까지 반올림합니다.
-
 --------------------------------
 
 [2. summary_report (월간 요약)]
@@ -965,7 +944,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 기준 예시:
 
-    - 기록 커버리지, summary_report.integrity_average, 감정 안정성, 실행력 등을 종합적으로 반영
+    - 기록 커버리지, 감정 안정성, 실행력 등을 종합적으로 반영
 
     - 매우 힘들었지만 꾸준히 버틴 달은 점수가 높을 수 있습니다. "성공"이 아니라 "정직하게 살아낸 정도"를 점수로 표현합니다.
 
@@ -1134,16 +1113,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
   - 점수가 낮은 경우(7점 미만): 불안정한 패턴의 구체적인 원인을 분석하여 설명합니다.
 
   - 점수가 높은 경우(7점 이상): 안정성을 유지한 구체적인 요인을 분석하여 설명합니다.
-
-- emotion_stability_praise:
-
-  - 점수가 7점 이상인 경우 반드시 칭찬 메시지를 제공합니다 (7점 미만이면 null).
-
-  - 칭찬 메시지는 구체적이고 격려하는 톤으로 작성합니다.
-
-  - 실제 데이터에서 발견한 긍정적인 패턴을 언급합니다.
-
-  - 예: "이번 달 감정 안정성이 높게 유지되었습니다! 특히 주말 휴식(8일)과 규칙적인 운동 루틴(주 3회)이 감정의 안정성에 큰 도움이 되었네요. 안도·평온 상태가 45%를 차지한 것은 평소 루틴 관리가 잘 되고 있다는 신호입니다. 이런 패턴을 지속하면 더욱 안정적인 감정 상태를 유지할 수 있을 것 같습니다."
 
 - emotion_stability_guidelines:
 
@@ -1354,10 +1323,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - categorized_records.visualizings 를 기준으로, 시각화/비전 관련 기록이 있는 날짜 수/문장 수를 계산합니다.
 
-- vision_consistency_score:
-
-  - 0~10 점으로, 한 달 동안 비전을 얼마나 자주 떠올리고 유지했는지 평가합니다.
-
 - main_visions:
 
   - 한 달 동안 반복해서 등장한 비전/목표를 최대 10개까지 정리합니다.
@@ -1414,8 +1379,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
 비전/시각화 기록이 거의 없다면:
 
 - vision_days_count, vision_records_count 는 0
-
-- vision_consistency_score 는 0
 
 - main_visions, core_visions 는 []
 

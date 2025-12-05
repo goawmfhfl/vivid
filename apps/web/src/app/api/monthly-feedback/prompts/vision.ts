@@ -24,15 +24,6 @@ export function buildVisionReportPrompt(
       if (vr.vision_summary) {
         prompt += `비전 요약: ${vr.vision_summary}\n`;
       }
-      if (vr.vision_consistency?.summary) {
-        prompt += `비전 일관성: ${vr.vision_consistency.summary}\n`;
-      }
-      if (vr.vision_consistency?.core_theme) {
-        prompt += `핵심 테마: ${vr.vision_consistency.core_theme}\n`;
-      }
-      if (vr.vision_consistency?.evolution) {
-        prompt += `비전 진화: ${vr.vision_consistency.evolution}\n`;
-      }
       if (vr.vision_keywords_trend.length > 0) {
         prompt += `비전 키워드 트렌드: ${vr.vision_keywords_trend
           .map((k) => `${k.keyword} (${k.days}일)`)
@@ -74,7 +65,6 @@ export function buildVisionReportPrompt(
 
   prompt += `\n위 주간 비전 리포트들을 종합하여 월간 비전 리포트(vision_report)를 생성하세요.
 - vision_days_count, vision_records_count: 비전 관련 기록이 있는 날짜 수/문장 수 계산
-- vision_consistency_score: 한 달 동안 비전을 얼마나 자주 떠올리고 유지했는지 0~10 점으로 평가
 - main_visions: 한 달 동안 반복해서 등장한 비전/목표를 최대 10개까지 정리 (summary, frequency 포함)
 - core_visions: 이번 달의 핵심 비전을 최대 7개까지 선별 (summary, frequency 포함, 최소 2회 이상)
 - vision_progress_comment: 비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리

@@ -261,11 +261,6 @@ export type EmotionReport = {
 // ============================================
 export type VisionReport = {
   vision_summary: string;
-  vision_consistency: {
-    summary: string;
-    core_theme: string;
-    evolution: string;
-  };
   vision_keywords_trend: Array<{
     keyword: string;
     days: number;

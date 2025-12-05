@@ -46,7 +46,6 @@ export function mapMonthlyFeedbackToReportData(
     record_coverage_rate: toNumber(
       feedback.summary_overview.record_coverage_rate
     ),
-    integrity_average: toNumber(feedback.summary_overview.integrity_average),
     life_balance_score: toNumber(feedback.summary_overview.life_balance_score),
     execution_score: toNumber(feedback.summary_overview.execution_score),
     rest_score: toNumber(feedback.summary_overview.rest_score),

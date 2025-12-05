@@ -206,11 +206,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
-          name: "vision_consistency",
-          path: "view.vision_report.vision_consistency",
-          isPro: true,
-        },
-        {
           name: "vision_keywords_trend",
           path: "view.vision_report.vision_keywords_trend",
           isPro: true,

@@ -78,7 +78,7 @@ export function DailyLifeSection({
       {/* Summary - 모든 사용자 */}
       {dailyLifeReport.summary && (
         <Card
-          className="p-5 sm:p-6 mb-4"
+          className="mb-4 overflow-hidden"
           style={{
             background:
               "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -86,30 +86,37 @@ export function DailyLifeSection({
             borderRadius: "16px",
           }}
         >
-          <div className="flex items-start gap-3 mb-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#E8F0E8" }}
-            >
-              <BookOpen
-                className="w-4 h-4"
-                style={{ color: DAILY_LIFE_COLOR }}
-              />
-            </div>
-            <div className="flex-1">
+          {/* 헤더 */}
+          <div
+            className="p-5 sm:p-6 pb-4 border-b"
+            style={{ borderColor: "rgba(168, 187, 168, 0.2)" }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "#E8F0E8" }}
+              >
+                <BookOpen
+                  className="w-4 h-4"
+                  style={{ color: DAILY_LIFE_COLOR }}
+                />
+              </div>
               <p
-                className="text-xs mb-2 font-semibold"
+                className="text-xs font-semibold"
                 style={{ color: COLORS.text.secondary }}
               >
                 요약
               </p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-              >
-                {dailyLifeReport.summary}
-              </p>
             </div>
+          </div>
+          {/* 바디 */}
+          <div className="p-5 sm:p-6 pt-4">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+            >
+              {dailyLifeReport.summary}
+            </p>
           </div>
         </Card>
       )}
@@ -121,7 +128,7 @@ export function DailyLifeSection({
           {dailyLifeReport.daily_patterns?.most_frequent_events &&
             dailyLifeReport.daily_patterns.most_frequent_events.length > 0 && (
               <Card
-                className="p-5 sm:p-6 relative overflow-hidden group"
+                className="relative overflow-hidden group"
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -129,23 +136,32 @@ export function DailyLifeSection({
                   borderRadius: "16px",
                 }}
               >
-                <div className="flex items-start gap-3 mb-4">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
-                    }}
-                  >
-                    <Calendar className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
+                {/* 헤더 */}
+                <div
+                  className="p-5 sm:p-6 pb-4 border-b"
+                  style={{ borderColor: "rgba(168, 187, 168, 0.2)" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                      }}
+                    >
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
                     <p
-                      className="text-xs mb-3 font-semibold"
+                      className="text-xs font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
                       가장 자주 발생한 이벤트
                     </p>
+                  </div>
+                </div>
+                {/* 바디 */}
+                <div className="p-5 sm:p-6 pt-4">
+                  <div className="flex-1">
                     <div className="space-y-3">
                       {dailyLifeReport.daily_patterns.most_frequent_events.map(
                         (event, idx) => (
@@ -236,7 +252,7 @@ export function DailyLifeSection({
           {/* Behavioral Patterns */}
           {dailyLifeReport.daily_patterns?.behavioral_patterns && (
             <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
+              className="relative overflow-hidden group"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(168, 187, 168, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -244,24 +260,32 @@ export function DailyLifeSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
-                  }}
-                >
-                  <Brain className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* 헤더 */}
+              <div
+                className="p-5 sm:p-6 pb-4 border-b"
+                style={{ borderColor: "rgba(168, 187, 168, 0.2)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A8BBA8 0%, #8FA38F 100%)",
+                    }}
+                  >
+                    <Brain className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     행동 패턴 분석
                   </p>
-
+                </div>
+              </div>
+              {/* 바디 */}
+              <div className="p-5 sm:p-6 pt-4">
+                <div className="flex-1">
                   {/* Avoidance */}
                   {dailyLifeReport.daily_patterns.behavioral_patterns
                     .avoidance && (
@@ -767,33 +791,133 @@ export function DailyLifeSection({
                   >
                     감정 트리거 분포
                   </p>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={
-                          dailyLifeReport.visualization.emotion_triggers_pie
-                            .data
-                        }
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percentage }) =>
-                          `${name}: ${percentage}%`
-                        }
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {dailyLifeReport.visualization.emotion_triggers_pie.data.map(
-                          (entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          )
-                        )}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <div
+                    className="relative"
+                    style={{ width: "100%", maxWidth: "600px" }}
+                  >
+                    {/* 모바일용 작은 차트 */}
+                    <div className="block md:hidden">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <Pie
+                            data={
+                              dailyLifeReport.visualization.emotion_triggers_pie
+                                .data
+                            }
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percentage }) =>
+                              percentage ? `${percentage}%` : ""
+                            }
+                            outerRadius={70}
+                            innerRadius={0}
+                            paddingAngle={3}
+                            dataKey="value"
+                            style={
+                              {
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                fill: COLORS.text.primary,
+                              } as React.CSSProperties
+                            }
+                          >
+                            {dailyLifeReport.visualization.emotion_triggers_pie.data.map(
+                              (entry, index) => (
+                                <Cell
+                                  key={`cell-mobile-${index}`}
+                                  fill={entry.color || DAILY_LIFE_COLOR}
+                                />
+                              )
+                            )}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: COLORS.background.card,
+                              border: `1px solid ${COLORS.border.light}`,
+                              borderRadius: "12px",
+                              padding: "6px 10px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                              fontSize: "11px",
+                            }}
+                            labelStyle={{
+                              color: COLORS.text.primary,
+                              fontWeight: "bold",
+                              marginBottom: "4px",
+                              fontSize: "11px",
+                            }}
+                          />
+                          <Legend
+                            wrapperStyle={{
+                              fontSize: "10px",
+                              paddingTop: "10px",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* 데스크톱용 큰 차트 */}
+                    <div className="hidden md:block">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={
+                              dailyLifeReport.visualization.emotion_triggers_pie
+                                .data
+                            }
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percentage }) =>
+                              `${name}: ${percentage}%`
+                            }
+                            outerRadius={100}
+                            innerRadius={0}
+                            paddingAngle={4}
+                            dataKey="value"
+                            style={
+                              {
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                fill: COLORS.text.primary,
+                              } as React.CSSProperties
+                            }
+                          >
+                            {dailyLifeReport.visualization.emotion_triggers_pie.data.map(
+                              (entry, index) => (
+                                <Cell
+                                  key={`cell-desktop-${index}`}
+                                  fill={entry.color || DAILY_LIFE_COLOR}
+                                />
+                              )
+                            )}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: COLORS.background.card,
+                              border: `1px solid ${COLORS.border.light}`,
+                              borderRadius: "12px",
+                              padding: "8px 12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            }}
+                            labelStyle={{
+                              color: COLORS.text.primary,
+                              fontWeight: "bold",
+                              marginBottom: "4px",
+                              fontSize: "12px",
+                            }}
+                          />
+                          <Legend
+                            wrapperStyle={{
+                              fontSize: "11px",
+                              paddingTop: "10px",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </Card>
               )}
             </div>

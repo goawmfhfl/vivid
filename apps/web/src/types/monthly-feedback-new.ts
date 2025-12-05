@@ -37,7 +37,6 @@ export type SummaryReport = {
   main_themes_reason: string;
   integrity_trend: "상승" | "하락" | "유지" | "불규칙" | null;
   record_coverage_rate: number; // 0-1
-  integrity_average: number; // 0-10
   life_balance_score: number; // 0-10
   life_balance_reason: string;
   life_balance_feedback: string;
@@ -70,7 +69,6 @@ export type WeekEvolution = {
 
 export type MonthlyScores = {
   overall_score: number;
-  consistency_score: number;
   growth_score: number;
   self_awareness_score: number;
   emotional_stability_score: number;
@@ -81,7 +79,6 @@ export type MonthlyScores = {
 export type WeeklyScore = {
   week: number;
   overall_score: number;
-  consistency_score: number;
   growth_score: number;
   self_awareness_score: number;
   emotional_stability_score: number;
@@ -103,7 +100,6 @@ export type SummaryVisualization = {
     data: Array<{
       week: string;
       overall: number;
-      consistency: number;
       growth: number;
       self_awareness: number;
     }>;
@@ -257,7 +253,6 @@ export type EmotionReport = {
   emotion_stability_score: number; // 0-10
   emotion_stability_explanation: string;
   emotion_stability_score_reason: string;
-  emotion_stability_praise: string | null;
   emotion_stability_guidelines: string[];
   emotion_stability_actions: string[];
   emotion_ai_comment: string | null;
@@ -375,7 +370,6 @@ export type EmotionVisualization = {
 export type VisionReport = {
   vision_days_count: number;
   vision_records_count: number;
-  vision_consistency_score: number; // 0-10
   main_visions: MainVision[];
   core_visions: CoreVision[];
   vision_progress_comment: string | null;

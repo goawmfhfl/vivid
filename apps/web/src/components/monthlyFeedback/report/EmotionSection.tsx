@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Heart,
   Lock,
@@ -7,21 +8,15 @@ import {
   TrendingUp,
   Zap,
   Sparkles,
-  AlertCircle,
+  AlertTriangle,
+  Cloud,
   Smile,
+  AlertCircle,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
 
 type EmotionSectionProps = {
   emotionReport: EmotionReport;
@@ -30,15 +25,26 @@ type EmotionSectionProps = {
 
 const EMOTION_COLOR = "#B89A7A";
 
-// 감정 사분면 색상 매핑
-const QUADRANT_COLORS: Record<
+// 감정 사분면 아이콘 매핑 (주간 리포트와 동일)
+const QUADRANT_ICONS: Record<
+  "몰입·설렘" | "불안·초조" | "슬픔·무기력" | "안도·평온",
+  React.ReactNode
+> = {
+  "불안·초조": <AlertTriangle className="w-4 h-4" />,
+  "몰입·설렘": <Zap className="w-4 h-4" />,
+  "슬픔·무기력": <Cloud className="w-4 h-4" />,
+  "안도·평온": <Sparkles className="w-4 h-4" />,
+};
+
+// 감정 사분면 제목 매핑
+const QUADRANT_TITLES: Record<
   "몰입·설렘" | "불안·초조" | "슬픔·무기력" | "안도·평온",
   string
 > = {
-  "몰입·설렘": "#FF6B6B",
-  "불안·초조": "#FFA500",
-  "슬픔·무기력": "#4ECDC4",
-  "안도·평온": "#95E1D3",
+  "불안·초조": "불안·초조를 느끼는 상황",
+  "몰입·설렘": "몰입·설렘을 느끼는 상황",
+  "슬픔·무기력": "슬픔·무기력을 느끼는 상황",
+  "안도·평온": "안도·평온을 느끼는 상황",
 };
 
 export function EmotionSection({
@@ -53,15 +59,37 @@ export function EmotionSection({
     return null;
   }
 
-  // Pie Chart 데이터 준비
-  const pieChartData =
+  // 사분면 데이터 준비 및 정렬 (주간 리포트와 동일한 순서)
+  const quadrantOrder: Array<
+    "불안·초조" | "몰입·설렘" | "슬픔·무기력" | "안도·평온"
+  > = ["불안·초조", "몰입·설렘", "슬픔·무기력", "안도·평온"];
+
+  const quadrantData =
     emotionReport.emotion_quadrant_distribution?.map((item) => ({
-      name: item.quadrant,
-      value: item.ratio * 100,
-      count: item.count,
-      explanation: item.explanation,
-      color: QUADRANT_COLORS[item.quadrant] || EMOTION_COLOR,
+      ...item,
+      ratio: item.ratio * 100,
+      icon: QUADRANT_ICONS[item.quadrant],
+      title: QUADRANT_TITLES[item.quadrant],
     })) || [];
+
+  // 순서대로 정렬 - 4개 사분면 모두 포함 (데이터가 없어도 0%로 표시)
+  const sortedQuadrantData = quadrantOrder.map((quadrant) => {
+    const existingData = quadrantData.find(
+      (item) => item.quadrant === quadrant
+    );
+    if (existingData) {
+      return existingData;
+    }
+    // 데이터가 없으면 기본값 반환
+    return {
+      quadrant,
+      count: 0,
+      ratio: 0,
+      explanation: "해당 데이터에 대한 정보는 없었습니다.",
+      icon: QUADRANT_ICONS[quadrant],
+      title: QUADRANT_TITLES[quadrant],
+    };
+  });
 
   return (
     <div className="mb-10 sm:mb-12">
@@ -80,10 +108,13 @@ export function EmotionSection({
         </h2>
       </div>
 
-      {/* 감정 사분면 분석 요약 */}
-      {emotionReport.emotion_quadrant_analysis_summary && (
+      {/* 감정 분석 통합 카드 */}
+      {(emotionReport.emotion_quadrant_analysis_summary ||
+        emotionReport.emotion_quadrant_dominant ||
+        emotionReport.emotion_stability_score !== undefined ||
+        emotionReport.emotion_pattern_summary) && (
         <Card
-          className="p-5 sm:p-6 mb-4"
+          className="mb-4 overflow-hidden"
           style={{
             background:
               "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -91,239 +122,164 @@ export function EmotionSection({
             borderRadius: "16px",
           }}
         >
-          <div className="flex items-start gap-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F5E6D3" }}
-            >
-              <Heart className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
-            </div>
-            <div className="flex-1">
-              <p
-                className="text-xs mb-2 font-semibold"
-                style={{ color: COLORS.text.secondary }}
-              >
-                감정 분석 요약
-              </p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-              >
-                {emotionReport.emotion_quadrant_analysis_summary}
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* 주요 감정 영역 및 분포 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {/* 주요 감정 영역 */}
-        {emotionReport.emotion_quadrant_dominant && (
-          <Card
-            className="p-5 sm:p-6"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-              border: "1px solid #E6D5C3",
-              borderRadius: "16px",
-            }}
+          {/* 헤더 */}
+          <div
+            className="p-5 sm:p-6 pb-4 border-b"
+            style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
           >
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-3">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: "#F5E6D3" }}
               >
-                <TrendingUp
-                  className="w-4 h-4"
-                  style={{ color: EMOTION_COLOR }}
-                />
+                <Heart className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
               </div>
-              <div className="flex-1">
+              <p
+                className="text-sm font-semibold uppercase tracking-wide"
+                style={{ color: COLORS.text.secondary }}
+              >
+                감정 분석 요약
+              </p>
+            </div>
+          </div>
+          {/* 바디 */}
+          <div className="p-5 sm:p-6 pt-4 space-y-6">
+            {/* 감정 분석 요약 */}
+            {emotionReport.emotion_quadrant_analysis_summary && (
+              <div>
                 <p
-                  className="text-xs mb-2 font-semibold"
+                  className="text-base sm:text-lg leading-relaxed"
+                  style={{ color: COLORS.text.primary, lineHeight: "1.8" }}
+                >
+                  {emotionReport.emotion_quadrant_analysis_summary}
+                </p>
+              </div>
+            )}
+
+            {/* 주요 감정 영역 */}
+            {emotionReport.emotion_quadrant_dominant && (
+              <div>
+                <p
+                  className="text-sm mb-2 font-semibold uppercase tracking-wide"
                   style={{ color: COLORS.text.secondary }}
                 >
                   주요 감정 영역
                 </p>
                 <p
-                  className="text-lg font-semibold"
+                  className="text-xl sm:text-2xl font-bold mb-1"
                   style={{ color: COLORS.text.primary }}
                 >
                   {emotionReport.emotion_quadrant_dominant}
                 </p>
               </div>
-            </div>
-          </Card>
-        )}
+            )}
 
-        {/* 감정 안정성 점수 */}
-        {emotionReport.emotion_stability_score !== undefined && (
-          <Card
-            className="p-5 sm:p-6"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-              border: "1px solid #E6D5C3",
-              borderRadius: "16px",
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#F5E6D3" }}
-              >
-                <Sparkles
-                  className="w-4 h-4"
-                  style={{ color: EMOTION_COLOR }}
-                />
-              </div>
-              <div className="flex-1">
+            {/* 감정 패턴 요약 */}
+            {emotionReport.emotion_pattern_summary && (
+              <div>
                 <p
-                  className="text-xs mb-2 font-semibold"
+                  className="text-sm mb-3 font-semibold uppercase tracking-wide"
                   style={{ color: COLORS.text.secondary }}
                 >
-                  감정 안정성 점수
+                  감정 패턴 요약
                 </p>
                 <p
-                  className="text-2xl font-bold"
-                  style={{ color: EMOTION_COLOR }}
+                  className="text-base sm:text-lg leading-relaxed"
+                  style={{ color: COLORS.text.primary, lineHeight: "1.8" }}
                 >
-                  {emotionReport.emotion_stability_score}/10
+                  {emotionReport.emotion_pattern_summary}
                 </p>
-                {emotionReport.emotion_stability_explanation && (
-                  <p
-                    className="text-xs mt-2 leading-relaxed"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    {emotionReport.emotion_stability_explanation}
-                  </p>
-                )}
               </div>
-            </div>
-          </Card>
-        )}
-      </div>
-
-      {/* 감정 패턴 요약 */}
-      {emotionReport.emotion_pattern_summary && (
-        <Card
-          className="p-5 sm:p-6 mb-4"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-            border: "1px solid #E6D5C3",
-            borderRadius: "16px",
-          }}
-        >
-          <div className="flex items-start gap-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F5E6D3" }}
-            >
-              <Zap className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
-            </div>
-            <div className="flex-1">
-              <p
-                className="text-xs mb-2 font-semibold"
-                style={{ color: COLORS.text.secondary }}
-              >
-                감정 패턴 요약
-              </p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-              >
-                {emotionReport.emotion_pattern_summary}
-              </p>
-            </div>
+            )}
           </div>
         </Card>
       )}
 
-      {/* 감정 사분면 분포 차트 */}
-      {pieChartData.length > 0 && (
-        <Card
-          className="p-5 sm:p-6 mb-4"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-            border: "1px solid #E6D5C3",
-            borderRadius: "16px",
-          }}
-        >
-          <p
-            className="text-xs mb-4 font-semibold"
-            style={{ color: COLORS.text.secondary }}
+      {/* 감정 사분면 분포 - 카드 */}
+      {sortedQuadrantData.length > 0 && (
+        <div className="mb-10 sm:mb-12">
+          <h3
+            className="text-xl sm:text-2xl font-semibold mb-6"
+            style={{ color: COLORS.text.primary }}
           >
             감정 사분면 분포
-          </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={pieChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number, name: string, props: any) => [
-                  `${value.toFixed(1)}% (${props.payload.count}회)`,
-                  name,
-                ]}
-                contentStyle={{
-                  backgroundColor: COLORS.background.card,
-                  border: `1px solid ${COLORS.border.light}`,
-                  borderRadius: "12px",
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          </h3>
 
-          {/* 사분면별 설명 */}
-          <div className="mt-4 space-y-2">
-            {emotionReport.emotion_quadrant_distribution.map((item, idx) => (
-              <div
+          {/* 감정 사분면 분포 카드 */}
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
+            {sortedQuadrantData.map((item, idx) => (
+              <Card
                 key={idx}
-                className="p-3 rounded-lg"
+                className="p-4 sm:p-5 transition-all duration-300 hover:shadow-lg"
                 style={{
-                  backgroundColor: "#F5E6D3",
-                  border: "1px solid #E6D5C3",
+                  background:
+                    "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid rgba(184, 154, 122, 0.2)",
+                  borderRadius: "12px",
+                  position: "relative",
+                  overflow: "hidden",
                 }}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <p
-                    className="text-xs font-semibold"
+                {/* 헤더 */}
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-110 flex-shrink-0"
+                    style={{
+                      backgroundColor: "rgba(139, 111, 71, 0.15)",
+                      color: "#8B6F47",
+                    }}
+                  >
+                    {item.icon}
+                  </div>
+                  <h4
+                    className="text-xs sm:text-sm font-semibold flex-1 leading-tight"
                     style={{ color: COLORS.text.primary }}
                   >
-                    {item.quadrant}
-                  </p>
-                  <span
-                    className="text-xs font-medium"
-                    style={{ color: EMOTION_COLOR }}
-                  >
-                    {(item.ratio * 100).toFixed(1)}% ({item.count}회)
-                  </span>
+                    {item.title}
+                  </h4>
                 </div>
-                <p
-                  className="text-xs leading-relaxed"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  {item.explanation}
-                </p>
-              </div>
+
+                {/* 비율 및 설명 */}
+                <div className="space-y-2 sm:space-y-3">
+                  {/* 비율 표시 */}
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className="text-base sm:text-lg font-semibold"
+                      style={{ color: "#8B6F47" }}
+                    >
+                      {item.ratio.toFixed(1)}%
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: COLORS.text.muted }}
+                    >
+                      ({item.count}회)
+                    </span>
+                  </div>
+
+                  {/* 설명 */}
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div
+                      className="w-1.5 h-1.5 rounded-full mt-1.5 sm:mt-2 flex-shrink-0"
+                      style={{ backgroundColor: "#8B6F47" }}
+                    />
+                    <p
+                      className="text-xs sm:text-sm leading-relaxed flex-1"
+                      style={{
+                        color:
+                          item.count === 0
+                            ? COLORS.text.muted
+                            : COLORS.text.primary,
+                      }}
+                    >
+                      {item.explanation}
+                    </p>
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
-        </Card>
+        </div>
       )}
 
       {/* 감정 트리거 */}
@@ -332,7 +288,7 @@ export function EmotionSection({
         {emotionReport.positive_triggers &&
           emotionReport.positive_triggers.length > 0 && (
             <Card
-              className="p-5 sm:p-6"
+              className="overflow-hidden"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -340,20 +296,32 @@ export function EmotionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#F5E6D3" }}
-                >
-                  <Smile className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
-                </div>
-                <div className="flex-1">
+              {/* 헤더 */}
+              <div
+                className="p-5 sm:p-6 pb-4 border-b"
+                style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "#F5E6D3" }}
+                  >
+                    <Smile
+                      className="w-4 h-4"
+                      style={{ color: EMOTION_COLOR }}
+                    />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     긍정 감정 트리거
                   </p>
+                </div>
+              </div>
+              {/* 바디 */}
+              <div className="p-5 sm:p-6 pt-4">
+                <div className="flex-1">
                   <ul className="space-y-2">
                     {emotionReport.positive_triggers
                       .slice(0, isPro ? 10 : 5)
@@ -388,7 +356,7 @@ export function EmotionSection({
         {emotionReport.negative_triggers &&
           emotionReport.negative_triggers.length > 0 && (
             <Card
-              className="p-5 sm:p-6"
+              className="overflow-hidden"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -396,23 +364,32 @@ export function EmotionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#F5E6D3" }}
-                >
-                  <AlertCircle
-                    className="w-4 h-4"
-                    style={{ color: EMOTION_COLOR }}
-                  />
-                </div>
-                <div className="flex-1">
+              {/* 헤더 */}
+              <div
+                className="p-5 sm:p-6 pb-4 border-b"
+                style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "#F5E6D3" }}
+                  >
+                    <AlertCircle
+                      className="w-4 h-4"
+                      style={{ color: EMOTION_COLOR }}
+                    />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     부정 감정 트리거
                   </p>
+                </div>
+              </div>
+              {/* 바디 */}
+              <div className="p-5 sm:p-6 pt-4">
+                <div className="flex-1">
                   <ul className="space-y-2">
                     {emotionReport.negative_triggers
                       .slice(0, isPro ? 10 : 5)
@@ -445,59 +422,25 @@ export function EmotionSection({
       </div>
 
       {/* 감정 안정성 상세 정보 */}
-      {isPro && (
-        <div className="space-y-4 mb-4">
-          {/* 감정 안정성 점수 이유 */}
-          {emotionReport.emotion_stability_score_reason && (
-            <Card
-              className="p-5 sm:p-6"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #E6D5C3",
-                borderRadius: "16px",
-              }}
+      {isPro &&
+        (emotionReport.emotion_stability_score !== undefined ||
+          (emotionReport.emotion_stability_guidelines &&
+            emotionReport.emotion_stability_guidelines.length > 0)) && (
+          <Card
+            className="mb-4 overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #E6D5C3",
+              borderRadius: "16px",
+            }}
+          >
+            {/* 헤더 */}
+            <div
+              className="p-5 sm:p-6 pb-4 border-b"
+              style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
             >
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "#F5E6D3" }}
-                >
-                  <TrendingUp
-                    className="w-4 h-4"
-                    style={{ color: EMOTION_COLOR }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-xs mb-2 font-semibold"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    감정 안정성 점수 분석
-                  </p>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                  >
-                    {emotionReport.emotion_stability_score_reason}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* 칭찬 메시지 */}
-          {emotionReport.emotion_stability_praise && (
-            <Card
-              className="p-5 sm:p-6"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(184, 154, 122, 0.15) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "2px solid #E6D5C3",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3">
+              <div className="flex items-center gap-3">
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: "#F5E6D3" }}
@@ -507,46 +450,51 @@ export function EmotionSection({
                     style={{ color: EMOTION_COLOR }}
                   />
                 </div>
-                <div className="flex-1">
+                <p
+                  className="text-sm font-semibold uppercase tracking-wide"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  감정 안정성 분석
+                </p>
+              </div>
+            </div>
+            {/* 바디 */}
+            <div className="p-5 sm:p-6 pt-4 space-y-6">
+              {/* 감정 안정성 점수 */}
+              {emotionReport.emotion_stability_score !== undefined && (
+                <div>
                   <p
-                    className="text-xs mb-2 font-semibold"
+                    className="text-sm mb-2 font-semibold uppercase tracking-wide"
                     style={{ color: COLORS.text.secondary }}
                   >
-                    잘하고 있어요!
+                    감정 안정성 점수
                   </p>
                   <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                    className="text-3xl sm:text-4xl font-bold mb-2"
+                    style={{ color: EMOTION_COLOR }}
                   >
-                    {emotionReport.emotion_stability_praise}
+                    {emotionReport.emotion_stability_score}/10
                   </p>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* 가이드라인 */}
-          {emotionReport.emotion_stability_guidelines &&
-            emotionReport.emotion_stability_guidelines.length > 0 && (
-              <Card
-                className="p-5 sm:p-6"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #E6D5C3",
-                  borderRadius: "16px",
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "#F5E6D3" }}
-                  >
-                    <Zap className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
-                  </div>
-                  <div className="flex-1">
+                  {emotionReport.emotion_stability_explanation && (
                     <p
-                      className="text-xs mb-3 font-semibold"
+                      className="text-sm mt-2 leading-relaxed"
+                      style={{
+                        color: COLORS.text.secondary,
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      {emotionReport.emotion_stability_explanation}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 가이드라인 */}
+              {emotionReport.emotion_stability_guidelines &&
+                emotionReport.emotion_stability_guidelines.length > 0 && (
+                  <div>
+                    <p
+                      className="text-sm mb-3 font-semibold uppercase tracking-wide"
                       style={{ color: COLORS.text.secondary }}
                     >
                       감정 안정성 향상 가이드라인
@@ -571,67 +519,73 @@ export function EmotionSection({
                       )}
                     </ul>
                   </div>
-                </div>
-              </Card>
-            )}
+                )}
+            </div>
+          </Card>
+        )}
 
-          {/* 행동 제안 */}
-          {emotionReport.emotion_stability_actions &&
-            emotionReport.emotion_stability_actions.length > 0 && (
-              <Card
-                className="p-5 sm:p-6"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #E6D5C3",
-                  borderRadius: "16px",
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: "#F5E6D3" }}
-                  >
-                    <Heart
-                      className="w-4 h-4"
-                      style={{ color: EMOTION_COLOR }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      실천 가능한 행동 제안
-                    </p>
-                    <ul className="space-y-2">
-                      {emotionReport.emotion_stability_actions.map(
-                        (action, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2 text-sm"
-                            style={{ color: COLORS.text.primary }}
-                          >
-                            <span
-                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                              style={{ backgroundColor: "#8B6F47" }}
-                            />
-                            <span style={{ lineHeight: "1.6" }}>{action}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
+      {/* 행동 제안 */}
+      {isPro &&
+        emotionReport.emotion_stability_actions &&
+        emotionReport.emotion_stability_actions.length > 0 && (
+          <Card
+            className="mb-4 overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #E6D5C3",
+              borderRadius: "16px",
+            }}
+          >
+            {/* 헤더 */}
+            <div
+              className="p-5 sm:p-6 pb-4 border-b"
+              style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "#F5E6D3" }}
+                >
+                  <Heart className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
                 </div>
-              </Card>
-            )}
-        </div>
-      )}
+                <p
+                  className="text-sm font-semibold uppercase tracking-wide"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  실천 가능한 행동 제안
+                </p>
+              </div>
+            </div>
+            {/* 바디 */}
+            <div className="p-5 sm:p-6 pt-4">
+              <div className="flex-1">
+                <ul className="space-y-2">
+                  {emotionReport.emotion_stability_actions.map(
+                    (action, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 text-sm"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        <span
+                          className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: "#8B6F47" }}
+                        />
+                        <span style={{ lineHeight: "1.6" }}>{action}</span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        )}
 
       {/* AI 코멘트 */}
       {emotionReport.emotion_ai_comment && (
         <Card
-          className="p-5 sm:p-6 mb-4"
+          className="mb-4 overflow-hidden"
           style={{
             background:
               "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -639,27 +593,37 @@ export function EmotionSection({
             borderRadius: "16px",
           }}
         >
-          <div className="flex items-start gap-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: "#F5E6D3" }}
-            >
-              <Sparkles className="w-4 h-4" style={{ color: EMOTION_COLOR }} />
-            </div>
-            <div className="flex-1">
+          {/* 헤더 */}
+          <div
+            className="p-5 sm:p-6 pb-4 border-b"
+            style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "#F5E6D3" }}
+              >
+                <Sparkles
+                  className="w-4 h-4"
+                  style={{ color: EMOTION_COLOR }}
+                />
+              </div>
               <p
-                className="text-xs mb-2 font-semibold"
+                className="text-xs font-semibold"
                 style={{ color: COLORS.text.secondary }}
               >
                 AI 코멘트
               </p>
-              <p
-                className="text-sm leading-relaxed italic"
-                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-              >
-                {emotionReport.emotion_ai_comment}
-              </p>
             </div>
+          </div>
+          {/* 바디 */}
+          <div className="p-5 sm:p-6 pt-4">
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+            >
+              {emotionReport.emotion_ai_comment}
+            </p>
           </div>
         </Card>
       )}

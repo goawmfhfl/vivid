@@ -54,101 +54,107 @@ export function MonthlyFeedbackReport({
           돌아가기
         </Button>
 
-        {/* Header (Summary Report) */}
-        <ScrollAnimation>
-          <div className="mb-64">
+        {/* Header Section - 명확히 분리된 헤더 영역 */}
+        <section className="mb-16 sm:mb-20">
+          <ScrollAnimation>
             <MonthlyReportHeader
               monthLabel={data.month_label}
               dateRange={data.date_range}
               summaryReport={data.summary_report}
               isPro={isPro}
             />
+          </ScrollAnimation>
+        </section>
+
+        {/* Body Section - 명확히 분리된 바디 영역 */}
+        <section className="max-w-3xl mx-auto px-4 py-6">
+          {/* Daily Life Report */}
+          {data?.daily_life_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-64">
+                <DailyLifeSection
+                  dailyLifeReport={data.daily_life_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Emotion Report */}
+          {data?.emotion_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-64">
+                <EmotionSection
+                  emotionReport={data.emotion_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Vision Report */}
+          {data?.vision_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-64">
+                <VisionSection
+                  visionReport={data.vision_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Insight Report */}
+          {data?.insight_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-64">
+                <InsightSection
+                  insightReport={data.insight_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Execution Report */}
+          {data?.execution_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-64">
+                <ExecutionSection
+                  executionReport={data.execution_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Closing Report */}
+          {data?.closing_report && (
+            <ScrollAnimation delay={200}>
+              <div className="mb-12">
+                <ClosingSection
+                  closingReport={data.closing_report}
+                  isPro={isPro}
+                />
+              </div>
+            </ScrollAnimation>
+          )}
+
+          {/* Bottom Action */}
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={handleGoToAnalysis}
+              className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
+              style={{
+                backgroundColor: "#6B7A6F",
+                color: "white",
+              }}
+            >
+              <BarChart3 className="w-4 h-4" />
+              분석 페이지로 이동
+            </Button>
           </div>
-        </ScrollAnimation>
-
-        {/* Daily Life Report */}
-        {data?.daily_life_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-64">
-              <DailyLifeSection
-                dailyLifeReport={data.daily_life_report}
-                isPro={isPro}
-              />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Emotion Report */}
-        {data?.emotion_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-64">
-              <EmotionSection
-                emotionReport={data.emotion_report}
-                isPro={isPro}
-              />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Vision Report */}
-        {data?.vision_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-64">
-              <VisionSection visionReport={data.vision_report} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Insight Report */}
-        {data?.insight_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-64">
-              <InsightSection
-                insightReport={data.insight_report}
-                isPro={isPro}
-              />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Execution Report */}
-        {data?.execution_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-64">
-              <ExecutionSection
-                executionReport={data.execution_report}
-                isPro={isPro}
-              />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Closing Report */}
-        {data?.closing_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-12">
-              <ClosingSection
-                closingReport={data.closing_report}
-                isPro={isPro}
-              />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {/* Bottom Action */}
-        <div className="flex justify-center pt-4">
-          <Button
-            onClick={handleGoToAnalysis}
-            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
-            style={{
-              backgroundColor: "#6B7A6F",
-              color: "white",
-            }}
-          >
-            <BarChart3 className="w-4 h-4" />
-            분석 페이지로 이동
-          </Button>
-        </div>
+        </section>
       </div>
 
       {/* TestPanel 추가 */}

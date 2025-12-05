@@ -137,9 +137,9 @@ export function VisionSection({
                   lineHeight: "1.6",
                 }}
               >
-                Pro 멤버십에서는 이번 주의 비전 일관성, 목표 패턴, 정체성 정렬을
-                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 비전 지도를
-                함께 만들어보세요.
+                Pro 멤버십에서는 이번 주의 목표 패턴, 정체성 정렬을 시각화해
+                드립니다. 기록을 성장으로 바꾸는 당신만의 비전 지도를 함께
+                만들어보세요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
                 <span style={{ color: COLORS.brand.primary }}>
@@ -155,82 +155,6 @@ export function VisionSection({
       {/* Pro 모드: 상세 분석 표시 */}
       {isPro && (
         <div className="space-y-6">
-          {/* Vision Consistency */}
-          {visionReport.vision_consistency && (
-            <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #C5D5E5",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    비전 일관성
-                  </p>
-                  {visionReport.vision_consistency.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.vision_consistency.summary}
-                    </p>
-                  )}
-                  {visionReport.vision_consistency.core_theme && (
-                    <div className="mb-3">
-                      <p
-                        className="text-xs font-medium mb-2"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        핵심 테마
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {visionReport.vision_consistency.core_theme}
-                      </p>
-                    </div>
-                  )}
-                  {visionReport.vision_consistency.evolution && (
-                    <div>
-                      <p
-                        className="text-xs font-medium mb-2"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        진화 과정
-                      </p>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{
-                          color: COLORS.text.primary,
-                          lineHeight: "1.7",
-                        }}
-                      >
-                        {visionReport.vision_consistency.evolution}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          )}
-
           {/* Vision Keywords Trend */}
           {visionReport.vision_keywords_trend &&
             visionReport.vision_keywords_trend.length > 0 && (

@@ -169,11 +169,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
-          name: "emotion_stability_praise",
-          path: "view.emotion_report.emotion_stability_praise",
-          isPro: true,
-        },
-        {
           name: "emotion_stability_guidelines",
           path: "view.emotion_report.emotion_stability_guidelines",
           isPro: true,
@@ -194,17 +189,12 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Vision",
       component: "VisionSection",
-      description: "월간 비전 일관성, 비전 키워드 트렌드",
+      description: "월간 비전 키워드 트렌드",
       fields: [
         {
           name: "summary",
           path: "view.vision_report.summary",
           isPro: false,
-        },
-        {
-          name: "vision_consistency",
-          path: "view.vision_report.vision_consistency",
-          isPro: true,
         },
       ],
       condition: "vision_report.summary !== ''",
