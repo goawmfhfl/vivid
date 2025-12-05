@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
-import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
 import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
@@ -15,7 +14,6 @@ import { getCurrentUserId } from "@/hooks/useCurrentUser";
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
-  const createWeeklyFeedback = useCreateWeeklyFeedback();
   const queryClient = useQueryClient();
   const { addRequest, updateRequest, requests, openModal } =
     useAIRequestStore();

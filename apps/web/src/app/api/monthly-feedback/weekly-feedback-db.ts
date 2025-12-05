@@ -4,7 +4,49 @@ import { API_ENDPOINTS } from "@/constants";
 import { decryptWeeklyFeedback } from "@/lib/jsonb-encryption";
 
 /**
+ * 주간 피드백이 특정 월에 속한 일수를 계산
+ * @param weekStart 주간 피드백 시작일 (YYYY-MM-DD)
+ * @param weekEnd 주간 피드백 종료일 (YYYY-MM-DD)
+ * @param monthStart 월 시작일 (YYYY-MM-DD)
+ * @param monthEnd 월 종료일 (YYYY-MM-DD)
+ * @returns 해당 월에 속한 일수
+ */
+function calculateDaysInMonth(
+  weekStart: string,
+  weekEnd: string,
+  monthStart: string,
+  monthEnd: string
+): number {
+  const weekStartDate = new Date(weekStart);
+  const weekEndDate = new Date(weekEnd);
+  const monthStartDate = new Date(monthStart);
+  const monthEndDate = new Date(monthEnd);
+
+  // 주간 피드백과 월의 교집합 구하기
+  const overlapStart =
+    weekStartDate > monthStartDate ? weekStartDate : monthStartDate;
+  const overlapEnd = weekEndDate < monthEndDate ? weekEndDate : monthEndDate;
+
+  // 교집합이 없으면 0 반환
+  if (overlapStart > overlapEnd) {
+    return 0;
+  }
+
+  // 일수 계산 (포함 계산이므로 +1)
+  const diffTime = overlapEnd.getTime() - overlapStart.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+  return diffDays;
+}
+
+/**
  * 날짜 범위로 weekly-feedback 조회 (월간용)
+ *
+ * 📋 필터링 기준:
+ * - 해당 주의 과반수(4일 이상)가 포함된 달로 편입
+ * - 예: 10월 27일~11월 2일 주간 피드백은
+ *   - 10월: 4일 (10/27, 10/28, 10/29, 10/30, 10/31) → 포함 ✅
+ *   - 11월: 3일 (11/1, 11/2) → 제외 ❌
  */
 export async function fetchWeeklyFeedbacksByMonth(
   supabase: SupabaseClient,
@@ -12,11 +54,8 @@ export async function fetchWeeklyFeedbacksByMonth(
   startDate: string,
   endDate: string
 ): Promise<WeeklyFeedback[]> {
-  // 주간 피드백이 해당 월과 겹치는 경우 모두 포함
+  // 1단계: 주간 피드백이 해당 월과 겹치는 경우 모두 조회
   // 조건: week_start <= endDate AND week_end >= startDate
-  // 예: 11월 조회 시 (startDate="2025-11-01", endDate="2025-11-30")
-  //   - 10월 28일(월) ~ 11월 3일(일): week_start="2025-10-28" <= "2025-11-30" ✅ AND week_end="2025-11-03" >= "2025-11-01" ✅ → 포함
-  //   - 11월 4일(월) ~ 11월 10일(일): week_start="2025-11-04" <= "2025-11-30" ✅ AND week_end="2025-11-10" >= "2025-11-01" ✅ → 포함
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select("*")
@@ -33,8 +72,21 @@ export async function fetchWeeklyFeedbacksByMonth(
     return [];
   }
 
+  // 2단계: 각 주간 피드백에 대해 해당 월에 속한 일수 계산
+  // 과반수(4일 이상)가 포함된 경우만 필터링
+  const filteredData = data.filter((row) => {
+    const daysInMonth = calculateDaysInMonth(
+      row.week_start,
+      row.week_end,
+      startDate,
+      endDate
+    );
+    // 4일 이상이면 포함
+    return daysInMonth >= 4;
+  });
+
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
-  return data.map((row) => {
+  return filteredData.map((row) => {
     const rawFeedback = {
       id: String(row.id),
       week_range: {

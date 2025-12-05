@@ -1,0 +1,40 @@
+import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { ProgressCallback } from "../types";
+import { getSectionSchema } from "../schema-helpers";
+import { generateSection } from "../ai-helpers";
+import { SYSTEM_PROMPT_CLOSING } from "../system-prompts";
+import { generateCacheKey } from "../../utils/cache";
+import { buildClosingReportPrompt } from "../prompts/closing";
+
+/**
+ * Closing Report 생성
+ */
+export async function generateClosingReport(
+  weeklyFeedbacks: WeeklyFeedback[],
+  month: string,
+  dateRange: { start_date: string; end_date: string },
+  isPro: boolean,
+  progressCallback?: ProgressCallback,
+  step: number = 7
+): Promise<any> {
+  if (progressCallback) {
+    progressCallback(step, 7, "closing_report");
+  }
+
+  const schema = getSectionSchema("closing_report");
+  const userPrompt = buildClosingReportPrompt(
+    weeklyFeedbacks,
+    month,
+    dateRange
+  );
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, userPrompt);
+
+  return generateSection<any>(
+    SYSTEM_PROMPT_CLOSING,
+    userPrompt,
+    schema,
+    cacheKey,
+    isPro,
+    "closing_report"
+  );
+}

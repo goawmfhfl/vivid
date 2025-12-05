@@ -55,13 +55,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    /**
+     * 주간 피드백이 특정 월에 속한 일수를 계산
+     */
+    const calculateDaysInMonth = (
+      weekStart: string,
+      weekEnd: string,
+      monthStart: string,
+      monthEnd: string
+    ): number => {
+      const weekStartDate = new Date(weekStart);
+      const weekEndDate = new Date(weekEnd);
+      const monthStartDate = new Date(monthStart);
+      const monthEndDate = new Date(monthEnd);
+
+      // 주간 피드백과 월의 교집합 구하기
+      const overlapStart =
+        weekStartDate > monthStartDate ? weekStartDate : monthStartDate;
+      const overlapEnd =
+        weekEndDate < monthEndDate ? weekEndDate : monthEndDate;
+
+      // 교집합이 없으면 0 반환
+      if (overlapStart > overlapEnd) {
+        return 0;
+      }
+
+      // 일수 계산 (포함 계산이므로 +1)
+      const diffTime = overlapEnd.getTime() - overlapStart.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      return diffDays;
+    };
+
     // 월별로 그룹화하여 주간 피드백 개수 계산
     // fetchWeeklyFeedbacksByMonth와 동일한 로직을 사용하여 카운트
-    // 주간 피드백이 해당 월과 겹치면 해당 월로 카운트
-    // 예: 10월 28일(월) ~ 11월 3일(일) 주간 피드백은
-    //     - 10월 조회 시: week_start="2025-10-28" <= "2025-10-31" ✅ AND week_end="2025-11-03" >= "2025-10-01" ✅ → 포함
-    //     - 11월 조회 시: week_start="2025-10-28" <= "2025-11-30" ✅ AND week_end="2025-11-03" >= "2025-11-01" ✅ → 포함
-    //     따라서 두 월 모두에 카운트되어야 함
+    // 📋 필터링 기준: 해당 주의 과반수(4일 이상)가 포함된 달로 편입
+    // 예: 10월 27일~11월 2일 주간 피드백은
+    //   - 10월: 4일 이상 → 포함 ✅
+    //   - 11월: 3일 → 제외 ❌
     const monthlyWeeklyCountMap = new Map<string, number>();
 
     if (weeklyFeedbacks && weeklyFeedbacks.length > 0) {
@@ -89,7 +120,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // 각 월별로 해당 월과 겹치는 주간 피드백 개수 계산
+      // 각 월별로 해당 월에 과반수(4일 이상)가 포함된 주간 피드백 개수 계산
       for (const month of monthsToCheck) {
         const [year, monthNum] = month.split("-").map(Number);
         const monthStartDate = new Date(year, monthNum - 1, 1);
@@ -98,15 +129,25 @@ export async function GET(request: NextRequest) {
         const monthStartString = getKSTDateString(monthStartDate);
         const monthEndString = getKSTDateString(monthEndDate);
 
-        // 해당 월과 겹치는 주간 피드백 개수 계산
-        // 조건: week_start <= monthEndString AND week_end >= monthStartString
+        // 해당 월에 과반수(4일 이상)가 포함된 주간 피드백 개수 계산
         let count = 0;
         for (const wf of weeklyFeedbacks) {
+          // 먼저 겹치는지 확인
           if (
             wf.week_start <= monthEndString &&
             wf.week_end >= monthStartString
           ) {
-            count++;
+            // 해당 월에 속한 일수 계산
+            const daysInMonth = calculateDaysInMonth(
+              wf.week_start,
+              wf.week_end,
+              monthStartString,
+              monthEndString
+            );
+            // 4일 이상이면 카운트
+            if (daysInMonth >= 4) {
+              count++;
+            }
           }
         }
 

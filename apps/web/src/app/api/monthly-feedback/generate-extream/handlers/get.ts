@@ -95,8 +95,6 @@ export async function handleGenerateMonthlyFeedback(
       dateRange.end_date
     );
 
-    console.log("[generate-extream] weeklyFeedbacks:", weeklyFeedbacks);
-
     // 최소 2개 이상의 weekly-feedback이 있어야 함
     if (weeklyFeedbacks.length < 2) {
       sendError(
@@ -107,20 +105,6 @@ export async function handleGenerateMonthlyFeedback(
 
     // 2️⃣ 각 영역별 데이터 존재 여부 검증 (2개 이상)
     const sectionValidation = validateAllSections(weeklyFeedbacks);
-
-    // 검증 실패한 영역이 있으면 에러
-    const failedSections = Object.entries(sectionValidation)
-      .filter(([_, isValid]) => !isValid)
-      .map(([section]) => section);
-
-    if (failedSections.length > 0) {
-      sendError(
-        `다음 영역들이 2개 이상의 데이터를 가지고 있지 않습니다: ${failedSections.join(
-          ", "
-        )}`
-      );
-      return;
-    }
 
     // 3️⃣ AI 요청: Monthly Feedback 생성 (진행 상황 콜백 포함)
     const monthlyFeedback = await generateMonthlyFeedbackFromWeeklyWithProgress(
