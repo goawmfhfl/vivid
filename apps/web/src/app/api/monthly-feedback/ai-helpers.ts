@@ -75,7 +75,6 @@ export async function generateSection<T>(
         },
       },
       prompt_cache_key: promptCacheKey,
-      temperature: 0.3,
     });
 
     const endTime = Date.now();
@@ -165,7 +164,6 @@ export async function generateSection<T>(
           },
         },
         prompt_cache_key: promptCacheKey,
-        temperature: 0.3,
       });
 
       const fallbackContent = fallbackCompletion.choices[0]?.message?.content;

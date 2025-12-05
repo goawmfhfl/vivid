@@ -216,6 +216,409 @@ export const MonthlyReportSchema = {
         ],
       },
 
+      // 3. 일상 생활 섹션
+      daily_life_report: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          summary: { type: "string" },
+          daily_summaries_trend: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              overall_narrative: { type: "string" },
+              key_highlights: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 0,
+                maxItems: 5,
+              },
+            },
+            required: ["overall_narrative", "key_highlights"],
+          },
+          events_pattern: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              most_frequent_events: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    event: { type: "string" },
+                    frequency: { type: "integer", minimum: 0 },
+                    days: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+                      },
+                    },
+                    context: { type: "string" },
+                  },
+                  required: ["event", "frequency", "days", "context"],
+                },
+                minItems: 0,
+                maxItems: 10,
+              },
+              event_categories: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    category: { type: "string" },
+                    count: { type: "integer", minimum: 0 },
+                    examples: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["category", "count", "examples"],
+                },
+                minItems: 0,
+                maxItems: 10,
+              },
+              timing_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    time_range: { type: "string" },
+                    common_events: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    pattern_description: { type: "string" },
+                  },
+                  required: [
+                    "time_range",
+                    "common_events",
+                    "pattern_description",
+                  ],
+                },
+                minItems: 0,
+                maxItems: 5,
+              },
+            },
+            required: [
+              "most_frequent_events",
+              "event_categories",
+              "timing_patterns",
+            ],
+          },
+          emotion_triggers_analysis: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              summary: { type: "string" },
+              category_distribution: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  self: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      top_triggers: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: [
+                      "count",
+                      "percentage",
+                      "top_triggers",
+                      "insight",
+                    ],
+                  },
+                  work: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      top_triggers: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: [
+                      "count",
+                      "percentage",
+                      "top_triggers",
+                      "insight",
+                    ],
+                  },
+                  people: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      top_triggers: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: [
+                      "count",
+                      "percentage",
+                      "top_triggers",
+                      "insight",
+                    ],
+                  },
+                  environment: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      top_triggers: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: [
+                      "count",
+                      "percentage",
+                      "top_triggers",
+                      "insight",
+                    ],
+                  },
+                },
+                required: ["self", "work", "people", "environment"],
+              },
+            },
+            required: ["summary", "category_distribution"],
+          },
+          behavioral_patterns: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              summary: { type: "string" },
+              pattern_distribution: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  planned: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: ["count", "percentage", "examples", "insight"],
+                  },
+                  impulsive: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: ["count", "percentage", "examples", "insight"],
+                  },
+                  routine_attempt: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: ["count", "percentage", "examples", "insight"],
+                  },
+                  avoidance: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: ["count", "percentage", "examples", "insight"],
+                  },
+                  routine_failure: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      count: { type: "integer", minimum: 0 },
+                      percentage: { type: "number", minimum: 0, maximum: 100 },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                      insight: { type: "string", nullable: true },
+                    },
+                    required: ["count", "percentage", "examples", "insight"],
+                  },
+                },
+                required: [
+                  "planned",
+                  "impulsive",
+                  "routine_attempt",
+                  "avoidance",
+                  "routine_failure",
+                ],
+              },
+              behavior_emotion_correlation: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    behavior: { type: "string" },
+                    associated_emotions: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    insight: { type: "string" },
+                  },
+                  required: ["behavior", "associated_emotions", "insight"],
+                },
+                minItems: 0,
+                maxItems: 5,
+              },
+            },
+            required: [
+              "summary",
+              "pattern_distribution",
+              "behavior_emotion_correlation",
+            ],
+          },
+          keywords_analysis: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              top_keywords: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    keyword: { type: "string" },
+                    frequency: { type: "integer", minimum: 0 },
+                    days: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+                      },
+                    },
+                    context: { type: "string" },
+                    sentiment: {
+                      type: "string",
+                      enum: ["positive", "negative", "neutral"],
+                    },
+                  },
+                  required: [
+                    "keyword",
+                    "frequency",
+                    "days",
+                    "context",
+                    "sentiment",
+                  ],
+                },
+                minItems: 0,
+                maxItems: 15,
+              },
+              keyword_categories: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    category: { type: "string" },
+                    keywords: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    count: { type: "integer", minimum: 0 },
+                  },
+                  required: ["category", "keywords", "count"],
+                },
+                minItems: 0,
+                maxItems: 10,
+              },
+            },
+            required: ["top_keywords", "keyword_categories"],
+          },
+          daily_rhythm: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              summary: { type: "string" },
+              time_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    time_period: { type: "string" },
+                    common_activities: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    typical_emotions: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    pattern_description: { type: "string" },
+                  },
+                  required: [
+                    "time_period",
+                    "common_activities",
+                    "typical_emotions",
+                    "pattern_description",
+                  ],
+                },
+                minItems: 0,
+                maxItems: 5,
+              },
+            },
+            required: ["summary", "time_patterns"],
+          },
+          ai_comment: { type: "string", nullable: true },
+        },
+        required: [
+          "summary",
+          "daily_summaries_trend",
+          "events_pattern",
+          "emotion_triggers_analysis",
+          "behavioral_patterns",
+          "keywords_analysis",
+          "daily_rhythm",
+          "ai_comment",
+        ],
+      },
+
       // 4. 인사이트 섹션
       insight_report: {
         type: "object",
@@ -484,6 +887,7 @@ export const MonthlyReportSchema = {
       "total_days",
       "recorded_days",
       "summary_report",
+      "daily_life_report",
       "emotion_report",
       "insight_report",
       "execution_report",
