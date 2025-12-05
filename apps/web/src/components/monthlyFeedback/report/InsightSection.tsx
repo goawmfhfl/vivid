@@ -4,19 +4,18 @@ import {
   Lightbulb,
   Lock,
   TrendingUp,
-  BarChart3,
-  Target,
-  Sparkles,
   ArrowRight,
-  Star,
+  Calendar,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { MonthlyInsightReport } from "@/types/monthly-feedback";
+import { COLORS, SPACING } from "@/lib/design-system";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type InsightReport = MonthlyInsightReport;
-import { COLORS } from "@/lib/design-system";
-import { useRouter } from "next/navigation";
-
 type InsightSectionProps = {
   insightReport: InsightReport;
   isPro?: boolean;
@@ -36,7 +35,8 @@ export function InsightSection({
   }
 
   return (
-    <div className="mb-10 sm:mb-12">
+    <div className={cn(SPACING.section.marginBottom)}>
+      {/* 헤더 */}
       <div className="flex items-center gap-2 mb-4 sm:mb-5">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -54,14 +54,97 @@ export function InsightSection({
         </h2>
       </div>
 
-      {/* Core Insights - 모든 사용자 */}
+      {/* 통계 정보 - Pro 전용 */}
+      {isPro &&
+        (insightReport.insight_days_count !== undefined ||
+          insightReport.insight_records_count !== undefined) && (
+          <Card
+            className={cn(SPACING.card.padding, "mb-4")}
+            style={{
+              backgroundColor: COLORS.background.card,
+              border: `1px solid ${COLORS.border.light}`,
+              borderRadius: "16px",
+            }}
+          >
+            <div className="flex items-center gap-4">
+              {insightReport.insight_days_count !== undefined && (
+                <div className="flex items-center gap-2">
+                  <Calendar
+                    className="w-4 h-4"
+                    style={{ color: INSIGHT_COLOR }}
+                  />
+                  <span
+                    className="text-xs"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    기록한 날: {insightReport.insight_days_count}일
+                  </span>
+                </div>
+              )}
+              {insightReport.insight_records_count !== undefined && (
+                <div className="flex items-center gap-2">
+                  <FileText
+                    className="w-4 h-4"
+                    style={{ color: INSIGHT_COLOR }}
+                  />
+                  <span
+                    className="text-xs"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    총 인사이트: {insightReport.insight_records_count}개
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
+      {/* 종합 인사이트 요약 - Pro 전용 */}
+      {isPro && insightReport.insight_comprehensive_summary && (
+        <Card
+          className={cn(SPACING.card.padding, "mb-4")}
+          style={{
+            backgroundColor: COLORS.background.card,
+            border: `1px solid ${COLORS.border.light}`,
+            borderRadius: "16px",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "#F5E6C8" }}
+            >
+              <Sparkles className="w-4 h-4" style={{ color: INSIGHT_COLOR }} />
+            </div>
+            <div className="flex-1">
+              <p
+                className="text-xs mb-2 font-semibold"
+                style={{ color: COLORS.text.secondary }}
+              >
+                종합 인사이트 분석
+              </p>
+              <p
+                className="text-sm leading-relaxed"
+                style={{
+                  color: COLORS.text.primary,
+                  lineHeight: "1.6",
+                }}
+              >
+                {insightReport.insight_comprehensive_summary}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Core Insights - 모든 사용자 (최대 3개) */}
       {Array.isArray(insightReport.core_insights) &&
         insightReport.core_insights.length > 0 && (
           <Card
-            className="p-5 sm:p-6 mb-4"
+            className={cn(SPACING.card.padding, "mb-4")}
             style={{
               backgroundColor: COLORS.background.card,
-              border: "1px solid #E6E4DE",
+              border: `1px solid ${COLORS.border.light}`,
               borderRadius: "16px",
             }}
           >
@@ -83,67 +166,67 @@ export function InsightSection({
                   핵심 인사이트
                 </p>
                 <ul className="space-y-3">
-                  {insightReport.core_insights
-                    .slice(0, isPro ? 10 : 5)
-                    .map((insight, idx) => {
-                      // core_insights가 객체인 경우 (월간 피드백)
-                      const insightSummary =
-                        typeof insight === "string"
-                          ? insight
-                          : insight.summary || "";
-                      const insightExplanation =
-                        typeof insight === "object" && insight.explanation
-                          ? insight.explanation
-                          : null;
+                  {insightReport.core_insights.map((insight, idx) => {
+                    // core_insights가 객체인 경우 (월간 피드백)
+                    const insightSummary =
+                      typeof insight === "string"
+                        ? insight
+                        : insight.summary || "";
+                    const insightExplanation =
+                      typeof insight === "object" && insight.explanation
+                        ? insight.explanation
+                        : null;
 
-                      return (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          <span
-                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: INSIGHT_COLOR }}
-                          />
-                          <div className="flex-1 space-y-1">
-                            <span style={{ lineHeight: "1.6" }}>
-                              {insightSummary}
-                            </span>
-                            {insightExplanation && (
-                              <p
-                                className="text-xs"
-                                style={{
-                                  color: COLORS.text.secondary,
-                                  lineHeight: "1.5",
-                                  marginTop: "0.25rem",
-                                }}
-                              >
-                                {insightExplanation}
-                              </p>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
+                    return (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 text-sm"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        <span
+                          className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: INSIGHT_COLOR }}
+                        />
+                        <div className="flex-1 space-y-1">
+                          <span style={{ lineHeight: "1.6" }}>
+                            {insightSummary}
+                          </span>
+                          {insightExplanation && (
+                            <p
+                              className="text-xs"
+                              style={{
+                                color: COLORS.text.secondary,
+                                lineHeight: "1.5",
+                                marginTop: "0.25rem",
+                              }}
+                            >
+                              {insightExplanation}
+                            </p>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
           </Card>
         )}
 
-      {/* Pro 전용 섹션들 */}
+      {/* Top Insights - Pro 전용 */}
       {isPro ? (
         <div className="space-y-4">
-          {/* Pattern Discoveries */}
-          {insightReport.pattern_discoveries &&
-            insightReport.pattern_discoveries.length > 0 && (
+          {insightReport.top_insights &&
+            insightReport.top_insights.length > 0 && (
               <Card
-                className="p-5 sm:p-6 relative overflow-hidden group"
+                className={cn(
+                  SPACING.card.padding,
+                  "relative overflow-hidden group"
+                )}
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #E6D5C3",
+                  border: `1px solid ${COLORS.border.light}`,
                   borderRadius: "16px",
                 }}
               >
@@ -161,104 +244,130 @@ export function InsightSection({
                       className="text-xs mb-3 font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      패턴 발견
+                      주요 인사이트
                     </p>
                     <div className="space-y-3">
-                      {insightReport.pattern_discoveries.map((pattern, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-lg"
-                          style={{
-                            backgroundColor: "#F5E6C8",
-                            border: "1px solid #E6D5C3",
-                          }}
-                        >
-                          <p
-                            className="text-sm font-medium mb-1"
-                            style={{ color: COLORS.text.primary }}
+                      {insightReport.top_insights
+                        .slice(0, 10)
+                        .map((insight, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-lg"
+                            style={{
+                              backgroundColor: "#F5E6C8",
+                              border: `1px solid ${COLORS.border.light}`,
+                            }}
                           >
-                            {pattern.pattern_name}
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: COLORS.text.secondary }}
-                          >
-                            {pattern.description}
-                          </p>
-                        </div>
-                      ))}
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <p
+                                className="text-sm font-medium flex-1"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {insight.summary}
+                              </p>
+                              {insight.frequency > 0 && (
+                                <span
+                                  className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                                  style={{
+                                    backgroundColor: "rgba(229, 185, 107, 0.2)",
+                                    color: INSIGHT_COLOR_DARK,
+                                  }}
+                                >
+                                  {insight.frequency}회
+                                </span>
+                              )}
+                            </div>
+                            {(insight.first_date || insight.last_date) && (
+                              <div className="flex items-center gap-2 mt-1">
+                                {insight.first_date && (
+                                  <span
+                                    className="text-[10px]"
+                                    style={{ color: COLORS.text.tertiary }}
+                                  >
+                                    시작: {insight.first_date}
+                                  </span>
+                                )}
+                                {insight.first_date &&
+                                  insight.last_date &&
+                                  insight.first_date !== insight.last_date && (
+                                    <span
+                                      className="text-[10px]"
+                                      style={{ color: COLORS.text.tertiary }}
+                                    >
+                                      ·
+                                    </span>
+                                  )}
+                                {insight.last_date &&
+                                  insight.first_date !== insight.last_date && (
+                                    <span
+                                      className="text-[10px]"
+                                      style={{ color: COLORS.text.tertiary }}
+                                    >
+                                      마지막: {insight.last_date}
+                                    </span>
+                                  )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                     </div>
                   </div>
                 </div>
               </Card>
             )}
 
-          {/* Growth Areas */}
-          {insightReport.growth_areas &&
-            insightReport.growth_areas.length > 0 && (
-              <Card
-                className="p-5 sm:p-6 relative overflow-hidden group"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(229, 185, 107, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #E6D5C3",
-                  borderRadius: "16px",
-                }}
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+          {/* AI 코멘트 */}
+          {insightReport.insight_ai_comment && (
+            <Card
+              className={cn(SPACING.card.padding)}
+              style={{
+                backgroundColor: COLORS.background.card,
+                border: `1px solid ${COLORS.border.light}`,
+                borderRadius: "16px",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "#F5E6C8" }}
+                >
+                  <Sparkles
+                    className="w-4 h-4"
+                    style={{ color: INSIGHT_COLOR }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className="text-xs mb-2 font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    AI 코멘트
+                  </p>
+                  <p
+                    className="text-sm leading-relaxed"
                     style={{
-                      background: `linear-gradient(135deg, ${INSIGHT_COLOR} 0%, ${INSIGHT_COLOR_DARK} 100%)`,
+                      color: COLORS.text.primary,
+                      lineHeight: "1.6",
                     }}
                   >
-                    <Star className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      성장 영역
-                    </p>
-                    <div className="space-y-3">
-                      {insightReport.growth_areas.map((area, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-lg"
-                          style={{
-                            backgroundColor: "#F5E6C8",
-                            border: "1px solid #E6D5C3",
-                          }}
-                        >
-                          <p
-                            className="text-sm font-medium mb-1"
-                            style={{ color: COLORS.text.primary }}
-                          >
-                            {area.area_name}
-                          </p>
-                          <p
-                            className="text-xs"
-                            style={{ color: COLORS.text.secondary }}
-                          >
-                            {area.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                    {insightReport.insight_ai_comment}
+                  </p>
                 </div>
-              </Card>
-            )}
+              </div>
+            </Card>
+          )}
         </div>
       ) : (
         /* Free 모드: Pro 업그레이드 유도 */
         <Card
-          className="p-5 sm:p-6 cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group"
+          className={cn(
+            SPACING.card.padding,
+            "cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group"
+          )}
           style={{
             background:
               "linear-gradient(135deg, rgba(229, 185, 107, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
-            border: "1px solid #E6D5C3",
+            border: `1px solid ${COLORS.border.light}`,
             borderRadius: "16px",
           }}
           onClick={() => router.push("/subscription")}
@@ -309,8 +418,8 @@ export function InsightSection({
                   lineHeight: "1.6",
                 }}
               >
-                Pro 멤버십에서는 이번 달의 패턴 발견, 성장 영역, 변화 추세를
-                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 인사이트
+                Pro 멤버십에서는 이번 달의 주요 인사이트, 종합 분석, 통계 정보를
+                확인할 수 있습니다. 기록을 성장으로 바꾸는 당신만의 인사이트
                 지도를 함께 만들어보세요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">

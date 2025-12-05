@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   useGetMonthlyFeedback,
   useGetMonthlyFeedbackById,
 } from "@/hooks/useGetMonthlyFeedback";
+import { useSubscription } from "@/hooks/useSubscription";
 import { MonthlyFeedbackReport } from "./MonthlyFeedbackReport";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
@@ -41,6 +43,12 @@ export function MonthlyFeedbackView({
   const isLoading = isValidId ? isLoadingById : isLoadingByMonth;
   const error = isValidId ? errorById : errorByMonth;
   const refetch = isValidId ? refetchById : refetchByMonth;
+
+  const { isPro: subscriptionIsPro } = useSubscription();
+  const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
+
+  // 테스트 모드가 활성화되어 있으면 테스트 값을 사용, 아니면 실제 구독 상태 사용
+  const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
 
   if (isLoading) {
     return (
@@ -126,5 +134,12 @@ export function MonthlyFeedbackView({
     );
   }
 
-  return <MonthlyFeedbackReport data={data} onBack={onBack} />;
+  return (
+    <MonthlyFeedbackReport
+      data={data}
+      onBack={onBack}
+      isPro={isPro}
+      onTogglePro={(newIsPro) => setTestIsPro(newIsPro)}
+    />
+  );
 }

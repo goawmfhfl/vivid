@@ -19,7 +19,7 @@ type MonthlyFeedbackReportProps = {
   data: MonthlyFeedback;
   onBack: () => void;
   isPro?: boolean;
-  onTogglePro?: () => void;
+  onTogglePro?: (isPro: boolean) => void;
 };
 
 export function MonthlyFeedbackReport({

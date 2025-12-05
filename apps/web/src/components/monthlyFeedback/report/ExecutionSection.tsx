@@ -2,18 +2,19 @@
 
 import {
   CheckCircle2,
-  XCircle,
   Lock,
-  BarChart3,
   TrendingUp,
-  User,
-  Target,
-  Sparkles,
   ArrowRight,
   Star,
+  Heart,
+  Briefcase,
+  Users,
+  Sparkles,
+  Target,
+  MessageSquare,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { ExecutionReport } from "@/types/monthly-feedback";
+import type { ExecutionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +24,30 @@ type ExecutionSectionProps = {
 };
 
 const EXECUTION_COLOR = COLORS.brand.primary; // #6B7A6F
+
+// 습관 카테고리별 아이콘과 라벨
+const HABIT_CATEGORIES = {
+  health: {
+    icon: Heart,
+    label: "건강",
+    color: "#EF4444",
+  },
+  work: {
+    icon: Briefcase,
+    label: "업무",
+    color: "#3B82F6",
+  },
+  relationship: {
+    icon: Users,
+    label: "관계",
+    color: "#8B5CF6",
+  },
+  self_care: {
+    icon: Sparkles,
+    label: "자기계발",
+    color: "#F59E0B",
+  },
+} as const;
 
 export function ExecutionSection({
   executionReport,
@@ -51,9 +76,9 @@ export function ExecutionSection({
         </h2>
       </div>
 
-      {/* Positives Top 3 - 모든 사용자 */}
-      {Array.isArray(executionReport.positives_top3) &&
-        executionReport.positives_top3.length > 0 && (
+      {/* Recurring Positives - 모든 사용자 */}
+      {Array.isArray(executionReport.recurring_positives) &&
+        executionReport.recurring_positives.length > 0 && (
           <Card
             className="p-5 sm:p-6 mb-4"
             style={{
@@ -74,22 +99,24 @@ export function ExecutionSection({
                   className="text-xs mb-2 font-semibold"
                   style={{ color: COLORS.text.secondary }}
                 >
-                  잘한 점 Top 3
+                  반복되는 잘한 점
                 </p>
                 <ul className="space-y-2">
-                  {executionReport.positives_top3.map((positive, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 text-sm"
-                      style={{ color: COLORS.text.primary }}
-                    >
-                      <span
-                        className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: EXECUTION_COLOR }}
-                      />
-                      <span style={{ lineHeight: "1.6" }}>{positive}</span>
-                    </li>
-                  ))}
+                  {executionReport.recurring_positives
+                    .slice(0, isPro ? 10 : 5)
+                    .map((positive, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 text-sm"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        <span
+                          className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: EXECUTION_COLOR }}
+                        />
+                        <span style={{ lineHeight: "1.6" }}>{positive}</span>
+                      </li>
+                    ))}
                 </ul>
               </div>
             </div>
@@ -99,9 +126,132 @@ export function ExecutionSection({
       {/* Pro 전용 섹션들 */}
       {isPro ? (
         <div className="space-y-4">
-          {/* Improvement Areas */}
-          {Array.isArray(executionReport.improvement_areas) &&
-            executionReport.improvement_areas.length > 0 && (
+          {/* Core Feedback for Month */}
+          {executionReport.core_feedback_for_month && (
+            <Card
+              className="p-5 sm:p-6 relative overflow-hidden group"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #D5E3D5",
+                borderRadius: "16px",
+              }}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${COLORS.brand.dark} 100%)`,
+                  }}
+                >
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className="text-xs mb-3 font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    이번 달 핵심 피드백
+                  </p>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {executionReport.core_feedback_for_month}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Habit Scores */}
+          {executionReport.habit_scores && (
+            <Card
+              className="p-5 sm:p-6 relative overflow-hidden group"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #D5E3D5",
+                borderRadius: "16px",
+              }}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${COLORS.brand.dark} 100%)`,
+                  }}
+                >
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className="text-xs mb-3 font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    습관 점수
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(
+                      ["health", "work", "relationship", "self_care"] as const
+                    ).map((category) => {
+                      const categoryInfo = HABIT_CATEGORIES[category];
+                      const score = executionReport.habit_scores[category];
+                      const reason = executionReport.habit_scores[
+                        `${category}_reason` as keyof typeof executionReport.habit_scores
+                      ] as string | undefined;
+
+                      if (score === undefined) return null;
+
+                      const Icon = categoryInfo.icon;
+
+                      return (
+                        <div
+                          key={category}
+                          className="p-3 rounded-lg"
+                          style={{
+                            backgroundColor: "#FAFAF8",
+                            border: "1px solid #EFE9E3",
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Icon
+                              className="w-4 h-4"
+                              style={{ color: categoryInfo.color }}
+                            />
+                            <span
+                              className="text-xs font-semibold"
+                              style={{ color: COLORS.text.primary }}
+                            >
+                              {categoryInfo.label}
+                            </span>
+                            <span
+                              className="ml-auto text-sm font-bold"
+                              style={{ color: EXECUTION_COLOR }}
+                            >
+                              {score}/10
+                            </span>
+                          </div>
+                          {reason && (
+                            <p
+                              className="text-xs mt-1"
+                              style={{ color: COLORS.text.secondary }}
+                            >
+                              {reason}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Core Feedbacks */}
+          {Array.isArray(executionReport.core_feedbacks) &&
+            executionReport.core_feedbacks.length > 0 && (
               <Card
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
@@ -125,20 +275,32 @@ export function ExecutionSection({
                       className="text-xs mb-3 font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      개선 영역
+                      핵심 피드백
                     </p>
                     <ul className="space-y-2">
-                      {executionReport.improvement_areas.map((area, idx) => (
+                      {executionReport.core_feedbacks.map((feedback, idx) => (
                         <li
                           key={idx}
                           className="flex items-start gap-2 text-sm"
                           style={{ color: COLORS.text.primary }}
                         >
-                          <span
-                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: EXECUTION_COLOR }}
+                          <CheckCircle2
+                            className="w-4 h-4 flex-shrink-0 mt-0.5"
+                            style={{ color: EXECUTION_COLOR }}
                           />
-                          <span style={{ lineHeight: "1.6" }}>{area}</span>
+                          <div className="flex-1">
+                            <span style={{ lineHeight: "1.6" }}>
+                              {feedback.summary}
+                            </span>
+                            {feedback.frequency > 1 && (
+                              <span
+                                className="ml-2 text-xs"
+                                style={{ color: COLORS.text.muted }}
+                              >
+                                ({feedback.frequency}회)
+                              </span>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -147,9 +309,12 @@ export function ExecutionSection({
               </Card>
             )}
 
-          {/* Action Items */}
-          {Array.isArray(executionReport.action_items) &&
-            executionReport.action_items.length > 0 && (
+          {/* Recurring Improvements with Frequency */}
+          {Array.isArray(
+            executionReport.recurring_improvements_with_frequency
+          ) &&
+            executionReport.recurring_improvements_with_frequency.length >
+              0 && (
               <Card
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
@@ -166,34 +331,86 @@ export function ExecutionSection({
                       background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${COLORS.brand.dark} 100%)`,
                     }}
                   >
-                    <CheckCircle2 className="w-5 h-5 text-white" />
+                    <TrendingUp className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
                     <p
                       className="text-xs mb-3 font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      실행 계획
+                      개선이 필요한 영역
                     </p>
                     <ul className="space-y-2">
-                      {executionReport.action_items.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          <CheckCircle2
-                            className="w-4 h-4 flex-shrink-0 mt-0.5"
-                            style={{ color: EXECUTION_COLOR }}
-                          />
-                          <span style={{ lineHeight: "1.6" }}>{item}</span>
-                        </li>
-                      ))}
+                      {executionReport.recurring_improvements_with_frequency.map(
+                        (improvement, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-sm"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: EXECUTION_COLOR }}
+                            />
+                            <div className="flex-1">
+                              <span style={{ lineHeight: "1.6" }}>
+                                {improvement.summary}
+                              </span>
+                              {improvement.frequency > 1 && (
+                                <span
+                                  className="ml-2 text-xs"
+                                  style={{ color: COLORS.text.muted }}
+                                >
+                                  ({improvement.frequency}회)
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 </div>
               </Card>
             )}
+
+          {/* AI Comment */}
+          {executionReport.feedback_ai_comment && (
+            <Card
+              className="p-5 sm:p-6 relative overflow-hidden group"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #D5E3D5",
+                borderRadius: "16px",
+              }}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    background: `linear-gradient(135deg, ${EXECUTION_COLOR} 0%, ${COLORS.brand.dark} 100%)`,
+                  }}
+                >
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className="text-xs mb-3 font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    AI 종합 코멘트
+                  </p>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {executionReport.feedback_ai_comment}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
       ) : (
         /* Free 모드: Pro 업그레이드 유도 */
@@ -253,7 +470,7 @@ export function ExecutionSection({
                   lineHeight: "1.6",
                 }}
               >
-                Pro 멤버십에서는 이번 달의 개선 영역, 실행 계획, 성장 지표를
+                Pro 멤버십에서는 이번 달의 습관 점수, 핵심 피드백, 개선 영역을
                 시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를
                 함께 만들어보세요.
               </p>

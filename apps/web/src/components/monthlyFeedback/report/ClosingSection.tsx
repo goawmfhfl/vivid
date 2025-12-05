@@ -1,18 +1,8 @@
 "use client";
 
-import {
-  CheckCircle2,
-  Sparkles,
-  Lock,
-  ArrowRight,
-  TrendingUp,
-  Star,
-  Target,
-  BarChart3,
-  Zap,
-} from "lucide-react";
+import { Sparkles, Lock, ArrowRight, Star, TrendingUp } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { ClosingReport } from "@/types/monthly-feedback";
+import type { ClosingReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +10,8 @@ type ClosingSectionProps = {
   closingReport: ClosingReport;
   isPro?: boolean;
 };
+
+const CLOSING_COLOR = "#6B7A6F";
 
 export function ClosingSection({
   closingReport,
@@ -36,7 +28,7 @@ export function ClosingSection({
       <div className="flex items-center gap-2 mb-4 sm:mb-5">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#6B7A6F" }}
+          style={{ backgroundColor: CLOSING_COLOR }}
         >
           <Sparkles className="w-4 h-4 text-white" />
         </div>
@@ -48,8 +40,8 @@ export function ClosingSection({
         </h2>
       </div>
 
-      {/* Monthly One-Liner - Main Conclusion */}
-      {closingReport.call_to_action?.monthly_one_liner && (
+      {/* Monthly Title - Main Conclusion */}
+      {closingReport.monthly_title && (
         <Card
           className="p-6 sm:p-8 mb-4"
           style={{
@@ -60,15 +52,103 @@ export function ClosingSection({
           }}
         >
           <p className="text-base sm:text-lg leading-relaxed text-center">
-            &ldquo;{closingReport.call_to_action.monthly_one_liner}&rdquo;
+            &ldquo;{closingReport.monthly_title}&rdquo;
           </p>
         </Card>
       )}
 
-      {/* Next Month Objective and Actions - Combined */}
-      {(closingReport.call_to_action?.next_month_objective ||
-        (Array.isArray(closingReport.call_to_action?.actions) &&
-          closingReport.call_to_action.actions.length > 0)) && (
+      {/* Monthly Summary */}
+      {closingReport.monthly_summary && (
+        <Card
+          className="p-5 sm:p-6 mb-4"
+          style={{
+            backgroundColor: COLORS.background.card,
+            border: "1px solid #E6E4DE",
+            borderRadius: "16px",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "rgba(107, 122, 111, 0.1)" }}
+            >
+              <Sparkles className="w-4 h-4" style={{ color: CLOSING_COLOR }} />
+            </div>
+            <div className="flex-1">
+              <p
+                className="text-xs mb-2 font-semibold"
+                style={{ color: COLORS.text.secondary }}
+              >
+                이번 달 요약
+              </p>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+              >
+                {closingReport.monthly_summary}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Turning Points */}
+      {Array.isArray(closingReport.turning_points) &&
+        closingReport.turning_points.length > 0 && (
+          <Card
+            className="p-5 sm:p-6 mb-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #D5E3D5",
+              borderRadius: "16px",
+            }}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "rgba(107, 122, 111, 0.15)" }}
+              >
+                <TrendingUp
+                  className="w-4 h-4"
+                  style={{ color: CLOSING_COLOR }}
+                />
+              </div>
+              <div className="flex-1">
+                <p
+                  className="text-xs mb-3 font-semibold"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  이번 달의 전환점
+                </p>
+                <ul className="space-y-2.5">
+                  {closingReport.turning_points.map((point, index) => (
+                    <li key={index} className="flex items-start gap-2.5">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{
+                          backgroundColor: CLOSING_COLOR,
+                          color: "white",
+                        }}
+                      >
+                        <Star className="w-3 h-3 fill-white" />
+                      </div>
+                      <p
+                        className="text-sm leading-relaxed flex-1"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {point}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Card>
+        )}
+
+      {/* Next Month Focus */}
+      {closingReport.next_month_focus && (
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
@@ -78,57 +158,66 @@ export function ClosingSection({
             borderRadius: "16px",
           }}
         >
-          {closingReport.call_to_action?.next_month_objective && (
-            <div className="mb-4">
+          <div className="flex items-start gap-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "rgba(107, 122, 111, 0.15)" }}
+            >
+              <ArrowRight
+                className="w-4 h-4"
+                style={{ color: CLOSING_COLOR }}
+              />
+            </div>
+            <div className="flex-1">
               <p
                 className="text-xs mb-2.5 sm:mb-3 font-semibold"
                 style={{ color: COLORS.text.secondary }}
               >
-                다음 달 방향
+                다음 달 집중점
               </p>
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: COLORS.text.primary }}
               >
-                {closingReport.call_to_action.next_month_objective}
+                {closingReport.next_month_focus}
               </p>
             </div>
-          )}
-          {Array.isArray(closingReport.call_to_action?.actions) &&
-            closingReport.call_to_action.actions.length > 0 && (
-              <div>
-                <p
-                  className="text-xs mb-2.5 sm:mb-3 font-semibold"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  다음 달 실행 계획
-                </p>
-                <ul className="space-y-2.5">
-                  {closingReport.call_to_action.actions.map((action, index) => (
-                    <li key={index} className="flex items-start gap-2.5">
-                      <div
-                        className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5"
-                        style={{
-                          borderColor: "#6B7A6F",
-                          backgroundColor: "white",
-                        }}
-                      >
-                        <CheckCircle2
-                          className="w-3 h-3"
-                          style={{ color: "#6B7A6F" }}
-                        />
-                      </div>
-                      <p
-                        className="text-sm leading-relaxed"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {action}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          </div>
+        </Card>
+      )}
+
+      {/* AI Encouragement Message */}
+      {closingReport.ai_encouragement_message && (
+        <Card
+          className="p-5 sm:p-6 mb-4"
+          style={{
+            backgroundColor: COLORS.background.card,
+            border: "1px solid #E6E4DE",
+            borderRadius: "16px",
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: "rgba(107, 122, 111, 0.1)" }}
+            >
+              <Sparkles className="w-4 h-4" style={{ color: CLOSING_COLOR }} />
+            </div>
+            <div className="flex-1">
+              <p
+                className="text-xs mb-2 font-semibold"
+                style={{ color: COLORS.text.secondary }}
+              >
+                AI의 격려 메시지
+              </p>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+              >
+                {closingReport.ai_encouragement_message}
+              </p>
+            </div>
+          </div>
         </Card>
       )}
 
@@ -161,7 +250,7 @@ export function ClosingSection({
                 border: "1px solid rgba(107, 122, 111, 0.3)",
               }}
             >
-              <Lock className="w-5 h-5" style={{ color: "#6B7A6F" }} />
+              <Lock className="w-5 h-5" style={{ color: CLOSING_COLOR }} />
             </div>
 
             <div className="flex-1">
@@ -176,7 +265,7 @@ export function ClosingSection({
                   className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                   style={{
                     backgroundColor: "rgba(107, 122, 111, 0.2)",
-                    color: "#6B7A6F",
+                    color: CLOSING_COLOR,
                     letterSpacing: "0.5px",
                   }}
                 >
@@ -198,7 +287,10 @@ export function ClosingSection({
                 <span style={{ color: COLORS.brand.primary }}>
                   Pro 멤버십으로 업그레이드
                 </span>
-                <ArrowRight className="w-4 h-4" style={{ color: "#6B7A6F" }} />
+                <ArrowRight
+                  className="w-4 h-4"
+                  style={{ color: CLOSING_COLOR }}
+                />
               </div>
             </div>
           </div>

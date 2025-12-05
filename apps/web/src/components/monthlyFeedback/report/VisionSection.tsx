@@ -7,10 +7,10 @@ import {
   TrendingUp,
   Lightbulb,
   Sparkles,
-  BarChart3,
+  CheckCircle2,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { VisionReport } from "@/types/monthly-feedback";
+import type { VisionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
@@ -20,7 +20,6 @@ type VisionSectionProps = {
 };
 
 const VISION_COLOR = "#A3BFD9";
-const VISION_COLOR_DARK = "#8FA8C7";
 
 export function VisionSection({
   visionReport,
@@ -49,8 +48,8 @@ export function VisionSection({
         </h2>
       </div>
 
-      {/* Summary - 모든 사용자 */}
-      {visionReport.summary && (
+      {/* 비전 진행 상황 요약 - 모든 사용자 */}
+      {visionReport.vision_progress_comment && (
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
@@ -59,7 +58,7 @@ export function VisionSection({
             borderRadius: "16px",
           }}
         >
-          <div className="flex items-start gap-3 mb-3">
+          <div className="flex items-start gap-3">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: "#E8F0F8" }}
@@ -71,13 +70,13 @@ export function VisionSection({
                 className="text-xs mb-2 font-semibold"
                 style={{ color: COLORS.text.secondary }}
               >
-                비전 요약
+                비전 진행 상황
               </p>
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
               >
-                {visionReport.summary}
+                {visionReport.vision_progress_comment}
               </p>
             </div>
           </div>
@@ -87,133 +86,58 @@ export function VisionSection({
       {/* Pro 전용 섹션들 */}
       {isPro ? (
         <div className="space-y-4">
-          {/* Vision Consistency */}
-          {visionReport.vision_consistency && (
-            <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #C5D5E5",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
+          {/* 비전 일관성 점수 */}
+          <Card
+            className="p-5 sm:p-6 relative overflow-hidden group"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+              border: "1px solid #C5D5E5",
+              borderRadius: "16px",
+            }}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                }}
+              >
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p
+                  className="text-xs mb-3 font-semibold"
+                  style={{ color: COLORS.text.secondary }}
                 >
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+                  비전 일관성 점수
+                </p>
+                <div className="flex items-baseline gap-2 mb-2">
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-3xl font-bold"
+                    style={{ color: VISION_COLOR }}
+                  >
+                    {visionReport.vision_consistency_score.toFixed(1)}
+                  </p>
+                  <p
+                    className="text-sm"
                     style={{ color: COLORS.text.secondary }}
                   >
-                    비전 일관성
+                    /10
                   </p>
-
-                  {visionReport.vision_consistency.core_theme && (
-                    <div className="mb-3 p-3 rounded-lg bg-gray-50">
-                      <p
-                        className="text-xs font-medium mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        핵심 테마
-                      </p>
-                      <p
-                        className="text-base font-semibold"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {visionReport.vision_consistency.core_theme}
-                      </p>
-                    </div>
-                  )}
-
-                  {visionReport.vision_consistency.consistency_score !==
-                    undefined && (
-                    <div className="mb-3 p-3 rounded-lg bg-gray-50">
-                      <p
-                        className="text-xs font-medium mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        일관성 점수
-                      </p>
-                      <p
-                        className="text-2xl font-bold"
-                        style={{ color: VISION_COLOR }}
-                      >
-                        {visionReport.vision_consistency.consistency_score.toFixed(
-                          1
-                        )}
-                        /10
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Theme Evolution */}
-                  {visionReport.vision_consistency.theme_evolution &&
-                    visionReport.vision_consistency.theme_evolution.length >
-                      0 && (
-                      <div className="space-y-3">
-                        {visionReport.vision_consistency.theme_evolution.map(
-                          (evolution, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-lg"
-                              style={{
-                                backgroundColor: "#F0F5F8",
-                                border: "1px solid #E0E5E8",
-                              }}
-                            >
-                              <p
-                                className="text-sm font-medium mb-1"
-                                style={{ color: COLORS.text.primary }}
-                              >
-                                {evolution.period}
-                              </p>
-                              <p
-                                className="text-xs mb-2"
-                                style={{ color: COLORS.text.secondary }}
-                              >
-                                {evolution.theme}
-                              </p>
-                              {evolution.key_phrases &&
-                                evolution.key_phrases.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {evolution.key_phrases.map(
-                                      (phrase, pIdx) => (
-                                        <span
-                                          key={pIdx}
-                                          className="px-2 py-0.5 rounded text-xs"
-                                          style={{
-                                            backgroundColor: "#E8F0F8",
-                                            color: "#5A7A9A",
-                                          }}
-                                        >
-                                          {phrase}
-                                        </span>
-                                      )
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
                 </div>
+                <p className="text-xs" style={{ color: COLORS.text.secondary }}>
+                  비전 기록 일수: {visionReport.vision_days_count}일 (
+                  {visionReport.vision_records_count}개 기록)
+                </p>
               </div>
-            </Card>
-          )}
+            </div>
+          </Card>
 
-          {/* Vision Keywords Trend */}
-          {visionReport.vision_consistency?.vision_keywords_trend &&
-            visionReport.vision_consistency.vision_keywords_trend.length >
-              0 && (
+          {/* 핵심 비전 (Core Visions) */}
+          {visionReport.core_visions &&
+            visionReport.core_visions.length > 0 && (
               <Card
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
@@ -231,74 +155,174 @@ export function VisionSection({
                         "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                     }}
                   >
-                    <Lightbulb className="w-5 h-5 text-white" />
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
                     <p
                       className="text-xs mb-3 font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      비전 키워드 트렌드
+                      핵심 비전 ({visionReport.core_visions.length}개)
                     </p>
                     <div className="space-y-3">
-                      {visionReport.vision_consistency.vision_keywords_trend
-                        .slice(0, isPro ? 10 : 5)
-                        .map((keyword, idx) => (
-                          <div
-                            key={idx}
-                            className="p-3 rounded-lg"
-                            style={{
-                              backgroundColor: "#FAFAF8",
-                              border: "1px solid #EFE9E3",
-                            }}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span
-                                className="text-sm font-semibold"
+                      {visionReport.core_visions.map((vision, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg"
+                          style={{
+                            backgroundColor: "#F0F5F8",
+                            border: "1px solid #E0E5E8",
+                          }}
+                        >
+                          <div className="flex items-start gap-2">
+                            <CheckCircle2
+                              className="w-4 h-4 mt-0.5 flex-shrink-0"
+                              style={{ color: VISION_COLOR }}
+                            />
+                            <div className="flex-1">
+                              <p
+                                className="text-sm font-medium mb-1"
                                 style={{ color: COLORS.text.primary }}
                               >
-                                {keyword.keyword}
-                              </span>
-                              <span
-                                className="px-2 py-0.5 rounded text-xs"
-                                style={{
-                                  backgroundColor: "#E8F0F8",
-                                  color: "#5A7A9A",
-                                }}
-                              >
-                                {keyword.frequency}회
-                              </span>
-                            </div>
-                            {keyword.context && (
-                              <p
-                                className="text-xs mb-2"
-                                style={{ color: COLORS.text.secondary }}
-                              >
-                                {keyword.context}
+                                {vision.summary}
                               </p>
-                            )}
-                            {keyword.related_keywords &&
-                              keyword.related_keywords.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                  {keyword.related_keywords.map(
-                                    (related, rIdx) => (
-                                      <span
-                                        key={rIdx}
-                                        className="px-2 py-0.5 rounded text-xs"
-                                        style={{
-                                          backgroundColor: "#E8F0F8",
-                                          color: "#5A7A9A",
-                                        }}
-                                      >
-                                        {related}
-                                      </span>
-                                    )
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="px-2 py-0.5 rounded text-xs"
+                                  style={{
+                                    backgroundColor: "#E8F0F8",
+                                    color: "#5A7A9A",
+                                  }}
+                                >
+                                  {vision.frequency}회 언급
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        ))}
+                        </div>
+                      ))}
                     </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+          {/* 주요 비전 (Main Visions) - 핵심 비전 외의 추가 비전들 */}
+          {visionReport.main_visions &&
+            visionReport.main_visions.length > 0 && (
+              <Card
+                className="p-5 sm:p-6 relative overflow-hidden group"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(163, 191, 217, 0.05) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #D5E3E5",
+                  borderRadius: "16px",
+                }}
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(163, 191, 217, 0.3) 0%, rgba(163, 191, 217, 0.15) 100%)",
+                    }}
+                  >
+                    <Lightbulb
+                      className="w-5 h-5"
+                      style={{ color: VISION_COLOR }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p
+                      className="text-xs mb-3 font-semibold"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      주요 비전 ({visionReport.main_visions.length}개)
+                    </p>
+                    <div className="space-y-2">
+                      {visionReport.main_visions.map((vision, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-lg"
+                          style={{
+                            backgroundColor: "#FAFAF8",
+                            border: "1px solid #EFE9E3",
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p
+                              className="text-sm"
+                              style={{ color: COLORS.text.primary }}
+                            >
+                              {vision.summary}
+                            </p>
+                            <span
+                              className="px-2 py-0.5 rounded text-xs ml-2 flex-shrink-0"
+                              style={{
+                                backgroundColor: "#E8F0F8",
+                                color: "#5A7A9A",
+                              }}
+                            >
+                              {vision.frequency}회
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+          {/* AI 피드백 */}
+          {visionReport.vision_ai_feedbacks &&
+            visionReport.vision_ai_feedbacks.length > 0 && (
+              <Card
+                className="p-5 sm:p-6 relative overflow-hidden group"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(163, 191, 217, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #D5E3D5",
+                  borderRadius: "16px",
+                }}
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(163, 191, 217, 0.3) 0%, rgba(163, 191, 217, 0.15) 100%)",
+                    }}
+                  >
+                    <Sparkles
+                      className="w-5 h-5"
+                      style={{ color: VISION_COLOR }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <p
+                      className="text-xs mb-3 font-semibold"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      AI 비전 피드백
+                    </p>
+                    <ul className="space-y-2">
+                      {visionReport.vision_ai_feedbacks.map((feedback, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          <span
+                            className="text-xs mt-1 flex-shrink-0"
+                            style={{ color: VISION_COLOR }}
+                          >
+                            •
+                          </span>
+                          <p className="text-sm leading-relaxed">{feedback}</p>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </Card>
@@ -362,9 +386,9 @@ export function VisionSection({
                   lineHeight: "1.6",
                 }}
               >
-                Pro 멤버십에서는 이번 달의 비전 일관성, 목표 패턴, 정체성 정렬을
-                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 비전 지도를
-                함께 만들어보세요.
+                Pro 멤버십에서는 이번 달의 비전 일관성 점수, 핵심 비전 분석, AI
+                피드백을 확인할 수 있습니다. 기록을 성장으로 바꾸는 당신만의
+                비전 지도를 함께 만들어보세요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
                 <span style={{ color: COLORS.brand.primary }}>
