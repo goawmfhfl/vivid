@@ -220,8 +220,7 @@ function removeTrackingInfo(report: any): any {
     ) {
       // __tracking이 있는 경우에만 제거
       if ("__tracking" in cleaned[key]) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { __tracking, ...rest } = cleaned[key];
+        const { __tracking: _, ...rest } = cleaned[key];
         cleaned[key] = rest;
       }
       // __tracking이 없으면 그대로 유지

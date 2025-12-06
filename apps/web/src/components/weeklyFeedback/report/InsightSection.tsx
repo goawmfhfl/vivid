@@ -6,6 +6,7 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  TrendingUp,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { InsightReport } from "@/types/weekly-feedback";

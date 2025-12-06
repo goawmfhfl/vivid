@@ -5,6 +5,9 @@ import {
   Lightbulb,
   Sparkles,
   Zap,
+  BarChart3,
+  Star,
+  CheckCircle2,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { VisionReport } from "@/types/weekly-feedback";

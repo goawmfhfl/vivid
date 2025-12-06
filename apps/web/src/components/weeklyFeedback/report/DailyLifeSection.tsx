@@ -6,6 +6,9 @@ import {
   Heart,
   Brain,
   ArrowRight,
+  Clock,
+  Lightbulb,
+  Target,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { DailyLifeReport } from "@/types/weekly-feedback";

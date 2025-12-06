@@ -7,6 +7,8 @@ import {
   Target,
   Sparkles,
   ArrowRight,
+  TrendingUp,
+  Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { ExecutionReport } from "@/types/weekly-feedback";

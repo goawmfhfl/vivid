@@ -18,8 +18,8 @@ export function extractUsageInfo(completion: any) {
 
   // OpenAI API 응답에서 캐시된 토큰 정보 추출
   // prompt_tokens_details는 선택적 필드이며, cached_tokens를 포함할 수 있음
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cachedTokens =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
 
   return {

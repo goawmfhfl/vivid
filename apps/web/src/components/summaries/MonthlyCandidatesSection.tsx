@@ -133,7 +133,7 @@ export function MonthlyCandidatesSection({
         if (esToClose && esToClose.readyState !== EventSource.CLOSED) {
           esToClose.close();
         }
-      } catch (e) {
+      } catch {
         // 무시
       }
       currentEsRef.current = null;
