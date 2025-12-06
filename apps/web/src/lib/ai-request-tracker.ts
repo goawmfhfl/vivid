@@ -11,12 +11,14 @@ const isDevelopment =
 /**
  * OpenAI completion 응답에서 사용량 정보 추출
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractUsageInfo(completion: any) {
   const usage = completion.usage;
   if (!usage) return null;
 
   // OpenAI API 응답에서 캐시된 토큰 정보 추출
   // prompt_tokens_details는 선택적 필드이며, cached_tokens를 포함할 수 있음
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cachedTokens =
     (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
 

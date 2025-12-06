@@ -129,5 +129,6 @@ export async function debugSupabaseConnection() {
 
 // 브라우저 콘솔에서 직접 사용할 수 있도록 전역 함수로 등록
 if (typeof window !== "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).debugSupabase = debugSupabaseConnection;
 }
