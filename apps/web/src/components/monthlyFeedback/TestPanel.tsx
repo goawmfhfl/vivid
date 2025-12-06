@@ -41,7 +41,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
 
   // 개발 환경 체크 (프로덕션에서는 숨김)
   const isDev = process.env.NODE_ENV === "development";
-  if (!isDev) return null;
 
   // 섹션별 상세 정보 정의
   const sectionDefinitions = [
@@ -349,6 +348,9 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, dragStart]);
+
+  // 개발 환경 체크 (프로덕션에서는 숨김)
+  if (!isDev) return null;
 
   return (
     <div

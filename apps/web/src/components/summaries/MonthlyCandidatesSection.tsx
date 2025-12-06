@@ -33,7 +33,7 @@ export function MonthlyCandidatesSection({
   }, [candidates, referenceDate]);
 
   const handleCreateFeedback = async (month: string) => {
-    let currentEsRef: { current: EventSource | null } = { current: null };
+    const currentEsRef: { current: EventSource | null } = { current: null };
 
     try {
       const userId = await getCurrentUserId();

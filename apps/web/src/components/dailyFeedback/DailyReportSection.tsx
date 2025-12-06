@@ -255,8 +255,8 @@ export function DailyReportSection({ view, isPro = false }: SectionProps) {
                     }}
                   >
                     Pro 멤버십에서는 오늘의 감정을 만든 사건·사람·상황을
-                    카테고리별로 정리해 드립니다. "나는 왜 이렇게 느꼈을까?" 그
-                    답을 패턴으로 발견해보세요.
+                    카테고리별로 정리해 드립니다. &quot;나는 왜 이렇게
+                    느꼈을까?&quot; 그 답을 패턴으로 발견해보세요.
                   </p>
                 </div>
               </div>

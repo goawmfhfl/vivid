@@ -74,7 +74,7 @@ export function WeeklyCandidatesSection() {
 
   const handleCreateFeedback = async (weekStart: string) => {
     setGeneratingWeek(weekStart);
-    let currentEsRef: { current: EventSource | null } = { current: null };
+    const currentEsRef: { current: EventSource | null } = { current: null };
 
     try {
       const weekEnd = getWeekEnd(weekStart);
