@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -10,7 +10,7 @@ import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
 import { CircularProgress } from "./ui/CircularProgress";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
@@ -109,7 +109,6 @@ export function Home() {
       }
 
       setIsGenerating(true);
-      let currentEs: EventSource | null = null;
 
       const sectionNames = [
         "SummaryReport",
@@ -152,7 +151,7 @@ export function Home() {
               if (es && es.readyState !== EventSource.CLOSED) {
                 es.close();
               }
-            } catch (e) {
+            } catch {
               // 무시
             }
             currentEsRef.current = null;
@@ -235,7 +234,7 @@ export function Home() {
           ) {
             currentEsRef.current.close();
           }
-        } catch (e) {
+        } catch {
           // 무시
         }
         currentEsRef.current = null;

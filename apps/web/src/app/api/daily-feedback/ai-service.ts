@@ -159,7 +159,6 @@ async function generateReport<T>(
 
     return result;
   } catch (error: unknown) {
-    const err = error as { message?: string; code?: string; status?: number };
     throw error;
   }
 }

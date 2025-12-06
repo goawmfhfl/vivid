@@ -2,9 +2,9 @@
 
 import { BaseModal } from "./BaseModal";
 import { useAIRequestStore } from "@/store/useAIRequestStore";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { X, Clock, DollarSign, Zap } from "lucide-react";
+import { X, Clock, DollarSign } from "lucide-react";
 
 export function AICostModal() {
   const { requests, isOpen, closeModal, clearRequests } = useAIRequestStore();

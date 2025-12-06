@@ -131,7 +131,7 @@ export function WeeklyCandidatesSection() {
             if (es && es.readyState !== EventSource.CLOSED) {
               es.close();
             }
-          } catch (e) {
+          } catch {
             // 무시
           }
           currentEsRef.current = null;
@@ -166,16 +166,18 @@ export function WeeklyCandidatesSection() {
                 const tracking = Array.isArray(data.data.__tracking)
                   ? data.data.__tracking
                   : [data.data.__tracking];
-                tracking.forEach((t: any, index: number) => {
-                  if (requestIds[index]) {
-                    updateRequest(requestIds[index], {
-                      model: t.model,
-                      endTime: Date.now(),
-                      duration_ms: t.duration_ms,
-                      usage: t.usage,
-                    });
+                tracking.forEach(
+                  (t: { model?: string; tokens?: number }, index: number) => {
+                    if (requestIds[index]) {
+                      updateRequest(requestIds[index], {
+                        model: t.model,
+                        endTime: Date.now(),
+                        duration_ms: t.duration_ms,
+                        usage: t.usage,
+                      });
+                    }
                   }
-                });
+                );
               }
 
               queryClient.invalidateQueries({
@@ -231,7 +233,7 @@ export function WeeklyCandidatesSection() {
         if (esToClose && esToClose.readyState !== EventSource.CLOSED) {
           esToClose.close();
         }
-      } catch (e) {
+      } catch {
         // 무시
       }
       currentEsRef.current = null;

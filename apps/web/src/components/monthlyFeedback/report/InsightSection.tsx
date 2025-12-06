@@ -435,8 +435,11 @@ export function InsightSection({
                               formatter={(
                                 value: number,
                                 name: string,
-                                props: any
-                              ) => [`${value}회`, props.payload.fullName]}
+                                props: { payload?: { fullName?: string } }
+                              ) => [
+                                `${value}회`,
+                                props.payload?.fullName || "",
+                              ]}
                             />
                             <Bar
                               dataKey="frequency"

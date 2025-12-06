@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getServiceSupabase();
+    getServiceSupabase();
 
     // Authorization 헤더에서 토큰 추출
     const authHeader = request.headers.get("authorization");

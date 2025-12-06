@@ -1,4 +1,4 @@
-import { Lightbulb, Sparkles, Lock, TrendingUp } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 

@@ -104,7 +104,7 @@ export async function handleGenerateMonthlyFeedback(
     }
 
     // 2️⃣ 각 영역별 데이터 존재 여부 검증 (2개 이상)
-    const sectionValidation = validateAllSections(weeklyFeedbacks);
+    validateAllSections(weeklyFeedbacks);
 
     // 3️⃣ AI 요청: Monthly Feedback 생성 (진행 상황 콜백 포함)
     const monthlyFeedback = await generateMonthlyFeedbackFromWeeklyWithProgress(

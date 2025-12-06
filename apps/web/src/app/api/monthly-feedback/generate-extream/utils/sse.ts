@@ -26,7 +26,7 @@ export class SSEStreamHelper {
         sectionName,
       });
       this.controller.enqueue(this.encoder.encode(`data: ${data}\n\n`));
-    } catch (error) {
+    } catch {
       this.isClosed = true;
       console.warn("Cannot send progress: controller is closed");
     }

@@ -4,7 +4,7 @@ import { Lightbulb } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
-export function HeaderSection({ view, isPro = false }: SectionProps) {
+export function HeaderSection({ view }: SectionProps) {
   return (
     <div className="mb-10">
       <div

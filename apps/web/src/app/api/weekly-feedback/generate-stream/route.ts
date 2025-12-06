@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchDailyFeedbacksByRange, saveWeeklyFeedback } from "../db-service";
 import { generateWeeklyFeedbackFromDailyWithProgress } from "../ai-service-stream";
-import type { WeeklyFeedbackGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 
@@ -42,7 +41,7 @@ export async function GET(request: NextRequest) {
             sectionName,
           });
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-        } catch (error) {
+        } catch {
           // 컨트롤러가 닫혀있으면 무시
           isClosed = true;
           console.warn("Cannot send progress: controller is closed");
@@ -195,6 +194,7 @@ function removeTrackingInfo(feedback: any): WeeklyFeedback {
       if (typeof cleaned[key] === "object") {
         // __tracking이 있는 경우에만 제거
         if ("__tracking" in cleaned[key]) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { __tracking, ...rest } = cleaned[key];
           cleaned[key] = rest;
         }

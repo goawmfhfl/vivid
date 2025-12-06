@@ -102,6 +102,7 @@ export function mapMonthlyFeedbackToReportData(
     summary_report: summaryReport,
     daily_life_report: feedback.daily_life_report,
     emotion_report: emotionReport,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     insight_report: insightReport as any, // MonthlyInsightReport와 InsightReport 타입 차이로 인한 임시 타입 단언
     execution_report: feedback.execution_report,
     vision_report: feedback.vision_report,

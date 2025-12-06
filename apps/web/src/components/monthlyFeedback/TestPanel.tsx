@@ -262,6 +262,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   // 필드 값 가져오기 헬퍼 함수
   const getFieldValue = (path: string) => {
     const parts = path.split(".");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = view;
     for (const part of parts) {
       if (value === null || value === undefined) return undefined;

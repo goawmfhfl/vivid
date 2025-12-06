@@ -2,12 +2,8 @@ import {
   Target,
   Lock,
   ArrowRight,
-  TrendingUp,
   Lightbulb,
   Sparkles,
-  CheckCircle2,
-  BarChart3,
-  Star,
   Zap,
 } from "lucide-react";
 import { Card } from "../../ui/card";

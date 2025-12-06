@@ -1,10 +1,5 @@
 import OpenAI from "openai";
-import {
-  generateCacheKey,
-  getFromCache,
-  setCache,
-  generatePromptCacheKey,
-} from "../utils/cache";
+import { getFromCache, setCache, generatePromptCacheKey } from "../utils/cache";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)

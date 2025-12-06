@@ -3,16 +3,14 @@ import {
   XCircle,
   Lock,
   BarChart3,
-  TrendingUp,
   User,
   Target,
   Sparkles,
   ArrowRight,
-  Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { ExecutionReport } from "@/types/weekly-feedback";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
   PieChart,
@@ -48,7 +46,17 @@ const EXECUTION_COLORS = [
 ];
 
 // 모던한 차트 스타일을 위한 커스텀 컴포넌트
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    payload?: { category?: string; color?: string };
+    name?: string;
+    value?: number;
+  }>;
+}) => {
   if (active && payload && payload.length) {
     return (
       <div
@@ -92,8 +100,14 @@ const CustomLabel = ({
   innerRadius,
   outerRadius,
   percent,
-  payload,
-}: any) => {
+}: {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent: number;
+}) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);

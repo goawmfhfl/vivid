@@ -10,7 +10,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { COLORS } from "@/lib/design-system";
 import type { SummaryReport } from "@/types/monthly-feedback-new";
 import { useCountUp } from "@/hooks/useCountUp";
 

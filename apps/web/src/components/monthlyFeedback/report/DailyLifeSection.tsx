@@ -7,15 +7,11 @@ import {
   Calendar,
   Heart,
   Brain,
-  Clock,
-  Sparkles,
   ArrowRight,
-  Target,
-  Lightbulb,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { DailyLifeReport } from "@/types/monthly-feedback-new";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
   BarChart,
@@ -25,13 +21,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  LineChart,
-  Line,
   AreaChart,
   Area,
   PieChart,
@@ -643,9 +632,11 @@ export function DailyLifeSection({
           )}
 
           {/* Visualization Charts */}
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(dailyLifeReport as any).visualization && (
             <div className="space-y-4">
               {/* Event Frequency Bar Chart */}
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(dailyLifeReport as any).visualization.event_frequency_bar && (
                 <Card
                   className="p-5 sm:p-6"
@@ -665,6 +656,7 @@ export function DailyLifeSection({
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (dailyLifeReport as any).visualization
                           .event_frequency_bar.data
                       }
@@ -701,6 +693,7 @@ export function DailyLifeSection({
               )}
 
               {/* Routine Success Rate Area Chart */}
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(dailyLifeReport as any).visualization
                 .routine_success_rate_area && (
                 <Card
@@ -721,6 +714,7 @@ export function DailyLifeSection({
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart
                       data={
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (dailyLifeReport as any).visualization
                           .routine_success_rate_area.data
                       }
@@ -763,6 +757,7 @@ export function DailyLifeSection({
               )}
 
               {/* Emotion Triggers Pie Chart */}
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(dailyLifeReport as any).visualization.emotion_triggers_pie && (
                 <Card
                   className="p-5 sm:p-6"
@@ -789,13 +784,16 @@ export function DailyLifeSection({
                         <PieChart>
                           <Pie
                             data={
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (dailyLifeReport as any).visualization
                                 .emotion_triggers_pie.data
                             }
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={(props: any) => {
+                            label={(props: {
+                              payload?: { percentage?: number };
+                            }) => {
                               const percentage = props.payload?.percentage;
                               return percentage ? `${percentage}%` : "";
                             }}
@@ -811,9 +809,11 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {(
                               dailyLifeReport as any
                             ).visualization.emotion_triggers_pie.data.map(
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (entry: any, index: number) => (
                                 <Cell
                                   key={`cell-mobile-${index}`}
@@ -854,13 +854,17 @@ export function DailyLifeSection({
                         <PieChart>
                           <Pie
                             data={
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (dailyLifeReport as any).visualization
                                 .emotion_triggers_pie.data
                             }
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={(props: any) => {
+                            label={(props: {
+                              name?: string;
+                              payload?: { percentage?: number };
+                            }) => {
                               const name = props.name;
                               const percentage = props.payload?.percentage;
                               return percentage
@@ -879,9 +883,11 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {(
                               dailyLifeReport as any
                             ).visualization.emotion_triggers_pie.data.map(
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (entry: any, index: number) => (
                                 <Cell
                                   key={`cell-desktop-${index}`}

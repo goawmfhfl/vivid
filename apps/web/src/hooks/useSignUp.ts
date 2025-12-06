@@ -190,7 +190,7 @@ export const useSignUp = (isSocialOnboarding = false) => {
 
   return useMutation({
     mutationFn: signUpUser,
-    onSuccess: (data) => {
+    onSuccess: () => {
       if (isSocialOnboarding) {
         // 소셜 로그인 완료 케이스: 홈으로 이동
         router.push("/");

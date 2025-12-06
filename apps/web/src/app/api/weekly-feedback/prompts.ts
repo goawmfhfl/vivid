@@ -1,5 +1,4 @@
 import type { DailyFeedbackForWeekly } from "./types";
-import { getKSTDateString } from "@/lib/date-utils";
 
 /**
  * 날짜 포맷 변환: YYYY-MM-DD -> 11/24월 형식
@@ -76,7 +75,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (Array.isArray(triggers.people) && triggers.people.length > 0) {
         prompt += `[감정 트리거-사람] ${triggers.people.join(", ")}\n`;
       }
-      if (Array.isArray(triggers.environment) && triggers.environment.length > 0) {
+      if (
+        Array.isArray(triggers.environment) &&
+        triggers.environment.length > 0
+      ) {
         prompt += `[감정 트리거-환경] ${triggers.environment.join(", ")}\n`;
       }
     }
@@ -85,10 +87,16 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (Array.isArray(clues.avoidance) && clues.avoidance.length > 0) {
         prompt += `[회피 행동] ${clues.avoidance.join(", ")}\n`;
       }
-      if (Array.isArray(clues.routine_attempt) && clues.routine_attempt.length > 0) {
+      if (
+        Array.isArray(clues.routine_attempt) &&
+        clues.routine_attempt.length > 0
+      ) {
         prompt += `[루틴 시도] ${clues.routine_attempt.join(", ")}\n`;
       }
-      if (Array.isArray(clues.routine_failure) && clues.routine_failure.length > 0) {
+      if (
+        Array.isArray(clues.routine_failure) &&
+        clues.routine_failure.length > 0
+      ) {
         prompt += `[루틴 실패] ${clues.routine_failure.join(", ")}\n`;
       }
       if (Array.isArray(clues.impulsive) && clues.impulsive.length > 0) {
@@ -108,7 +116,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (emotion.ai_mood_arousal !== null) {
         prompt += `[감정 각성-에너지] ${emotion.ai_mood_arousal}\n`;
       }
-      if (Array.isArray(emotion.emotion_curve) && emotion.emotion_curve.length > 0) {
+      if (
+        Array.isArray(emotion.emotion_curve) &&
+        emotion.emotion_curve.length > 0
+      ) {
         prompt += `[감정 곡선] ${emotion.emotion_curve.join(" → ")}\n`;
       }
       if (emotion.dominant_emotion) {
@@ -120,7 +131,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (emotion.emotion_quadrant_explanation) {
         prompt += `[감정 사분면 설명] ${emotion.emotion_quadrant_explanation}\n`;
       }
-      if (Array.isArray(emotion.emotion_timeline) && emotion.emotion_timeline.length > 0) {
+      if (
+        Array.isArray(emotion.emotion_timeline) &&
+        emotion.emotion_timeline.length > 0
+      ) {
         prompt += `[감정 타임라인] ${emotion.emotion_timeline.join(", ")}\n`;
       }
     }
@@ -147,7 +161,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (dream.vision_self) {
         prompt += `[비전 자기] ${dream.vision_self}\n`;
       }
-      if (Array.isArray(dream.vision_keywords) && dream.vision_keywords.length > 0) {
+      if (
+        Array.isArray(dream.vision_keywords) &&
+        dream.vision_keywords.length > 0
+      ) {
         prompt += `[비전 키워드] ${dream.vision_keywords.join(", ")}\n`;
       }
       if (dream.vision_ai_feedback) {
@@ -156,7 +173,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (Array.isArray(dream.dream_goals) && dream.dream_goals.length > 0) {
         prompt += `[꿈 목표] ${dream.dream_goals.join(", ")}\n`;
       }
-      if (Array.isArray(dream.dreamer_traits) && dream.dreamer_traits.length > 0) {
+      if (
+        Array.isArray(dream.dreamer_traits) &&
+        dream.dreamer_traits.length > 0
+      ) {
         prompt += `[꿈꾸는 사람의 특징] ${dream.dreamer_traits.join(", ")}\n`;
       }
     }
@@ -164,7 +184,10 @@ export function buildUnifiedWeeklyFeedbackPrompt(
     // Insight Report 데이터
     if (feedback.insight_report) {
       const insight = feedback.insight_report;
-      if (Array.isArray(insight.core_insights) && insight.core_insights.length > 0) {
+      if (
+        Array.isArray(insight.core_insights) &&
+        insight.core_insights.length > 0
+      ) {
         prompt += `[핵심 인사이트]\n`;
         insight.core_insights.forEach((item, i) => {
           prompt += `  ${i + 1}. ${item.insight} (출처: ${item.source})\n`;
@@ -195,10 +218,16 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       if (feedbackData.core_feedback) {
         prompt += `[핵심 피드백] ${feedbackData.core_feedback}\n`;
       }
-      if (Array.isArray(feedbackData.positives) && feedbackData.positives.length > 0) {
+      if (
+        Array.isArray(feedbackData.positives) &&
+        feedbackData.positives.length > 0
+      ) {
         prompt += `[긍정적 측면] ${feedbackData.positives.join(", ")}\n`;
       }
-      if (Array.isArray(feedbackData.improvements) && feedbackData.improvements.length > 0) {
+      if (
+        Array.isArray(feedbackData.improvements) &&
+        feedbackData.improvements.length > 0
+      ) {
         prompt += `[개선점] ${feedbackData.improvements.join(", ")}\n`;
       }
       if (feedbackData.ai_message) {
@@ -301,7 +330,10 @@ export function buildDailyLifePrompt(
       if (Array.isArray(triggers.people) && triggers.people.length > 0) {
         prompt += `감정 트리거 (사람): ${triggers.people.join(", ")}\n`;
       }
-      if (Array.isArray(triggers.environment) && triggers.environment.length > 0) {
+      if (
+        Array.isArray(triggers.environment) &&
+        triggers.environment.length > 0
+      ) {
         prompt += `감정 트리거 (환경): ${triggers.environment.join(", ")}\n`;
       }
     }
@@ -310,10 +342,16 @@ export function buildDailyLifePrompt(
       if (Array.isArray(clues.avoidance) && clues.avoidance.length > 0) {
         prompt += `회피 행동: ${clues.avoidance.join(", ")}\n`;
       }
-      if (Array.isArray(clues.routine_attempt) && clues.routine_attempt.length > 0) {
+      if (
+        Array.isArray(clues.routine_attempt) &&
+        clues.routine_attempt.length > 0
+      ) {
         prompt += `루틴 시도: ${clues.routine_attempt.join(", ")}\n`;
       }
-      if (Array.isArray(clues.routine_failure) && clues.routine_failure.length > 0) {
+      if (
+        Array.isArray(clues.routine_failure) &&
+        clues.routine_failure.length > 0
+      ) {
         prompt += `루틴 실패: ${clues.routine_failure.join(", ")}\n`;
       }
       if (Array.isArray(clues.impulsive) && clues.impulsive.length > 0) {
@@ -346,7 +384,10 @@ export function buildEmotionPrompt(
       if (emotion.ai_mood_arousal !== null) {
         prompt += `감정 각성-에너지 (Arousal): ${emotion.ai_mood_arousal}\n`;
       }
-      if (Array.isArray(emotion.emotion_curve) && emotion.emotion_curve.length > 0) {
+      if (
+        Array.isArray(emotion.emotion_curve) &&
+        emotion.emotion_curve.length > 0
+      ) {
         prompt += `감정 곡선: ${emotion.emotion_curve.join(" → ")}\n`;
       }
       if (emotion.dominant_emotion) {
@@ -358,7 +399,10 @@ export function buildEmotionPrompt(
       if (emotion.emotion_quadrant_explanation) {
         prompt += `감정 사분면 설명: ${emotion.emotion_quadrant_explanation}\n`;
       }
-      if (Array.isArray(emotion.emotion_timeline) && emotion.emotion_timeline.length > 0) {
+      if (
+        Array.isArray(emotion.emotion_timeline) &&
+        emotion.emotion_timeline.length > 0
+      ) {
         prompt += `감정 타임라인: ${emotion.emotion_timeline.join(", ")}\n`;
       }
     }
@@ -401,7 +445,10 @@ export function buildVisionPrompt(
       if (dream.vision_self) {
         prompt += `비전 자기: ${dream.vision_self}\n`;
       }
-      if (Array.isArray(dream.vision_keywords) && dream.vision_keywords.length > 0) {
+      if (
+        Array.isArray(dream.vision_keywords) &&
+        dream.vision_keywords.length > 0
+      ) {
         prompt += `비전 키워드: ${dream.vision_keywords.join(", ")}\n`;
       }
       if (dream.vision_ai_feedback) {
@@ -410,7 +457,10 @@ export function buildVisionPrompt(
       if (Array.isArray(dream.dream_goals) && dream.dream_goals.length > 0) {
         prompt += `꿈 목표: ${dream.dream_goals.join(", ")}\n`;
       }
-      if (Array.isArray(dream.dreamer_traits) && dream.dreamer_traits.length > 0) {
+      if (
+        Array.isArray(dream.dreamer_traits) &&
+        dream.dreamer_traits.length > 0
+      ) {
         prompt += `꿈꾸는 사람의 특징: ${dream.dreamer_traits.join(", ")}\n`;
       }
     }
@@ -431,7 +481,10 @@ export function buildInsightPrompt(
 
     if (feedback.insight_report) {
       const insight = feedback.insight_report;
-      if (Array.isArray(insight.core_insights) && insight.core_insights.length > 0) {
+      if (
+        Array.isArray(insight.core_insights) &&
+        insight.core_insights.length > 0
+      ) {
         prompt += `핵심 인사이트:\n`;
         insight.core_insights.forEach((item, i) => {
           prompt += `  ${i + 1}. ${item.insight} (출처: ${item.source})\n`;
@@ -475,10 +528,16 @@ export function buildExecutionPrompt(
       if (feedbackData.core_feedback) {
         prompt += `핵심 피드백: ${feedbackData.core_feedback}\n`;
       }
-      if (Array.isArray(feedbackData.positives) && feedbackData.positives.length > 0) {
+      if (
+        Array.isArray(feedbackData.positives) &&
+        feedbackData.positives.length > 0
+      ) {
         prompt += `긍정적 측면: ${feedbackData.positives.join(", ")}\n`;
       }
-      if (Array.isArray(feedbackData.improvements) && feedbackData.improvements.length > 0) {
+      if (
+        Array.isArray(feedbackData.improvements) &&
+        feedbackData.improvements.length > 0
+      ) {
         prompt += `개선점: ${feedbackData.improvements.join(", ")}\n`;
       }
       if (feedbackData.ai_message) {

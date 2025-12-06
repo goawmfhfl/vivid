@@ -44,8 +44,6 @@ export async function trackAIRequest<T>(
 
   // 동적 import로 클라이언트 사이드 코드와 분리
   // 서버 사이드에서는 직접 호출하지 않음
-  const startTime = Date.now();
-  const requestId: string | null = null;
 
   try {
     // 요청 시작 추적 (서버 사이드에서는 스토어를 직접 사용할 수 없으므로

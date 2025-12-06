@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Target,
-  Lock,
-  ArrowRight,
-  TrendingUp,
-  Lightbulb,
-  Sparkles,
-  CheckCircle2,
-  Calendar,
-  BarChart3,
-} from "lucide-react";
+import { Target, Lock, ArrowRight, Lightbulb, Sparkles } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { VisionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
@@ -232,7 +222,10 @@ export function VisionSection({
                             props: any
                           ) => [
                             `${value}회`,
-                            props.payload?.fullName || name || "",
+                            (props.payload as { fullName?: string })
+                              ?.fullName ||
+                              name ||
+                              "",
                           ]}
                         />
                         <Bar
@@ -422,8 +415,9 @@ export function VisionSection({
                                   paddingAngle={3}
                                   dataKey="value"
                                   label={(props: any) => {
-                                    const percentage =
-                                      props.payload?.percentage;
+                                    const percentage = (
+                                      props.payload as { percentage?: number }
+                                    )?.percentage;
                                     return percentage ? `${percentage}%` : "";
                                   }}
                                   labelLine={false}
@@ -468,7 +462,10 @@ export function VisionSection({
                                 props: any
                               ) => [
                                 `${value}회`,
-                                props.payload?.fullName || name || "",
+                                (props.payload as { fullName?: string })
+                                  ?.fullName ||
+                                  name ||
+                                  "",
                               ]}
                             />
                           </PieChart>
@@ -548,7 +545,10 @@ export function VisionSection({
                                 props: any
                               ) => [
                                 `${value}회`,
-                                props.payload?.fullName || name || "",
+                                (props.payload as { fullName?: string })
+                                  ?.fullName ||
+                                  name ||
+                                  "",
                               ]}
                             />
                           </PieChart>

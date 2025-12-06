@@ -261,6 +261,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   // 필드 값 가져오기 헬퍼
   const getFieldValue = (path: string) => {
     const parts = path.split(".");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = view;
     for (const part of parts.slice(1)) {
       value = value?.[part];
@@ -747,7 +748,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                           {field.path}
                         </span>
                       </div>
-                      {(field as any).description && (
+                      {"description" in field && field.description && (
                         <p
                           className="text-xs mt-1 pl-5"
                           style={{
@@ -755,7 +756,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
                             fontStyle: "italic",
                           }}
                         >
-                          {(field as any).description}
+                          {field.description}
                         </p>
                       )}
                       {showDataPreview && (

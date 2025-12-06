@@ -274,6 +274,7 @@ export const useModalStore = create<ModalStore>((set) => ({
   setWeeklyFeedbackProgress: (weekStart, progress) =>
     set((state) => {
       if (progress === null) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
         return { weeklyFeedbackProgress: rest };
       }
@@ -287,6 +288,7 @@ export const useModalStore = create<ModalStore>((set) => ({
 
   clearWeeklyFeedbackProgress: (weekStart) =>
     set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
       return { weeklyFeedbackProgress: rest };
     }),
@@ -298,6 +300,7 @@ export const useModalStore = create<ModalStore>((set) => ({
   setDailyFeedbackProgress: (date, progress) =>
     set((state) => {
       if (progress === null) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [date]: _, ...rest } = state.dailyFeedbackProgress;
         return { dailyFeedbackProgress: rest };
       }
@@ -311,6 +314,7 @@ export const useModalStore = create<ModalStore>((set) => ({
 
   clearDailyFeedbackProgress: (date) =>
     set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [date]: _, ...rest } = state.dailyFeedbackProgress;
       return { dailyFeedbackProgress: rest };
     }),
@@ -358,6 +362,7 @@ export const useModalStore = create<ModalStore>((set) => ({
   setMonthlyFeedbackProgress: (month, progress) =>
     set((state) => {
       if (progress === null) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
         return { monthlyFeedbackProgress: rest };
       }
@@ -371,6 +376,7 @@ export const useModalStore = create<ModalStore>((set) => ({
 
   clearMonthlyFeedbackProgress: (month) =>
     set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
       return { monthlyFeedbackProgress: rest };
     }),

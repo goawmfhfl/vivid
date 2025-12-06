@@ -94,7 +94,7 @@ function calculateCost(
   };
 }
 
-export const useAIRequestStore = create<AIRequestStore>((set, get) => ({
+export const useAIRequestStore = create<AIRequestStore>((set) => ({
   requests: [],
   isOpen: false,
 

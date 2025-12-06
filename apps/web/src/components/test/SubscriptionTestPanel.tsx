@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import { QUERY_KEYS } from "@/constants";
-import { TYPOGRAPHY, COLORS, SPACING } from "@/lib/design-system";
+import { TYPOGRAPHY, COLORS } from "@/lib/design-system";
 import { supabase } from "@/lib/supabase";
 
 /**

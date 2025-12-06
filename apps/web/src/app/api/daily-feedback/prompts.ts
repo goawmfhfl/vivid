@@ -1,13 +1,4 @@
 import type { Record } from "./types";
-import type {
-  SummaryReport,
-  DailyReport,
-  EmotionReport,
-  DreamReport,
-  InsightReport,
-  FeedbackReport,
-  FinalReport,
-} from "@/types/daily-feedback";
 
 /**
  * 전체 요약 리포트 프롬프트 생성
@@ -370,7 +361,8 @@ export function buildFinalPrompt(
     prompt += "=== 전체 요약 ===\n";
     prompt += `요약: ${summaryReport.summary || "없음"}\n`;
     prompt += `핵심 포인트: ${
-      Array.isArray(summaryReport.key_points) && summaryReport.key_points.length > 0
+      Array.isArray(summaryReport.key_points) &&
+      summaryReport.key_points.length > 0
         ? summaryReport.key_points.join(", ")
         : "없음"
     }\n`;
@@ -381,7 +373,8 @@ export function buildFinalPrompt(
     prompt += "=== 일상 리포트 ===\n";
     prompt += `요약: ${dailyReport.summary || "없음"}\n`;
     prompt += `오늘 있었던 일: ${
-      Array.isArray(dailyReport.daily_events) && dailyReport.daily_events.length > 0
+      Array.isArray(dailyReport.daily_events) &&
+      dailyReport.daily_events.length > 0
         ? dailyReport.daily_events.join(", ")
         : "없음"
     }\n`;
@@ -396,7 +389,8 @@ export function buildFinalPrompt(
   if (emotionReport) {
     prompt += "=== 감정 리포트 ===\n";
     prompt += `감정 흐름: ${
-      Array.isArray(emotionReport.emotion_curve) && emotionReport.emotion_curve.length > 0
+      Array.isArray(emotionReport.emotion_curve) &&
+      emotionReport.emotion_curve.length > 0
         ? emotionReport.emotion_curve.join(" → ")
         : "없음"
     }\n`;
@@ -416,7 +410,8 @@ export function buildFinalPrompt(
   if (insightReport) {
     prompt += "=== 인사이트 리포트 ===\n";
     prompt += `핵심 인사이트: ${
-      Array.isArray(insightReport.core_insights) && insightReport.core_insights.length > 0
+      Array.isArray(insightReport.core_insights) &&
+      insightReport.core_insights.length > 0
         ? insightReport.core_insights.map((i) => i.insight).join(", ")
         : "없음"
     }\n`;

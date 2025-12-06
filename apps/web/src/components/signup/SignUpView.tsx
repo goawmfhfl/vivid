@@ -341,7 +341,7 @@ export function SignUpView({
                 <AdditionalInfoStep
                   birthYear={formData.birthYear}
                   gender={formData.gender}
-                  recordTypes={formData.recordTypes as any}
+                  recordTypes={formData.recordTypes as string[]}
                   birthYearError={errors.birthYear}
                   genderError={errors.gender}
                   onBirthYearChange={(value) => {

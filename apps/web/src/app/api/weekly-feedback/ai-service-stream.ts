@@ -68,8 +68,7 @@ async function generateSection<T>(
   schema: { name: string; schema: any; strict: boolean },
   cacheKey: string,
   isPro: boolean,
-  sectionName: string,
-  progressCallback?: ProgressCallback
+  sectionName: string
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;

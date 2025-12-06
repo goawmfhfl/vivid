@@ -5,7 +5,6 @@ import {
   Heart,
   Lock,
   ArrowRight,
-  TrendingUp,
   Zap,
   Sparkles,
   AlertTriangle,
@@ -15,7 +14,7 @@ import {
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
 type EmotionSectionProps = {

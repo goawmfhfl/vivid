@@ -56,6 +56,7 @@ function removeTrackingInfo(feedback: any): WeeklyFeedback {
 
   for (const key of sections) {
     if (cleaned[key] && typeof cleaned[key] === "object") {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { __tracking, ...rest } = cleaned[key];
       cleaned[key] = rest;
     }

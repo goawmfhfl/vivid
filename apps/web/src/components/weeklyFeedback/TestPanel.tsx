@@ -414,6 +414,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     // `?.`가 있으면 옵셔널로 처리, 없으면 일반 접근
     const parts = pathWithoutView.split(/\?\.|\./).filter(Boolean);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = view;
     for (const part of parts) {
       // 모든 접근에 옵셔널 체이닝 사용 (null/undefined 안전)

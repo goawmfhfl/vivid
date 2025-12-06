@@ -1,5 +1,3 @@
-import { COLORS } from "@/lib/design-system";
-
 interface PostItLabelProps {
   stepNumber: number;
   label: string;

@@ -1,7 +1,5 @@
 "use client";
 
-import { COLORS } from "@/lib/design-system";
-
 interface CircularProgressProps {
   percentage: number;
   size?: number;

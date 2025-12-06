@@ -5,15 +5,11 @@ import {
   Calendar,
   Heart,
   Brain,
-  Clock,
-  Sparkles,
   ArrowRight,
-  Target,
-  Lightbulb,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { DailyLifeReport } from "@/types/weekly-feedback";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
 type DailyLifeSectionProps = {

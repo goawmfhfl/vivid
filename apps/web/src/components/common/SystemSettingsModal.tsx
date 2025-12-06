@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase";
@@ -150,7 +150,7 @@ export function SystemSettingsModal({
           backgroundPosition: "0 2px, 0 0",
           filter: "contrast(1.02) brightness(1.01)",
         }}
-        onInteractOutside={(e) => {
+        onInteractOutside={() => {
           // 오버레이 클릭 시 모달 닫기
           onClose();
         }}
@@ -300,7 +300,10 @@ export function SystemSettingsModal({
                   {!isPro && (
                     <span
                       className="ml-2"
-                      style={{ color: COLORS.brand.primary, fontSize: "0.75rem" }}
+                      style={{
+                        color: COLORS.brand.primary,
+                        fontSize: "0.75rem",
+                      }}
                     >
                       (Pro 멤버십: 5개까지 가능)
                     </span>

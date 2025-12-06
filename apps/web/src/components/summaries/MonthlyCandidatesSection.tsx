@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
@@ -74,7 +74,7 @@ export function MonthlyCandidatesSection({
             if (es && es.readyState !== EventSource.CLOSED) {
               es.close();
             }
-          } catch (e) {
+          } catch {
             // 무시
           }
           currentEsRef.current = null;

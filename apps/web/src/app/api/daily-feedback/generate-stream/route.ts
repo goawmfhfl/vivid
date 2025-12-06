@@ -3,7 +3,6 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchRecordsByDate, saveDailyReport } from "../db-service";
 import { generateAllReportsWithProgress } from "../ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
-import type { DailyFeedbackRequest } from "../types";
 
 // Next.js API Route 타임아웃 설정 (최대 3분)
 export const maxDuration = 180;
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
             tracking, // 추적 정보도 함께 전송
           });
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-        } catch (error) {
+        } catch {
           // 컨트롤러가 닫혀있으면 무시
           isClosed = true;
           console.warn("Cannot send progress: controller is closed");
@@ -221,6 +220,7 @@ function removeTrackingInfo(report: any): any {
     ) {
       // __tracking이 있는 경우에만 제거
       if ("__tracking" in cleaned[key]) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { __tracking, ...rest } = cleaned[key];
         cleaned[key] = rest;
       }
