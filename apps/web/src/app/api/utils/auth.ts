@@ -45,23 +45,43 @@ export async function getAuthenticatedUserIdFromCookie(): Promise<string> {
   // Next.js의 cookies()를 통해 클라이언트의 쿠키 읽기
   const cookieStore = await cookies();
 
-  // Supabase 클라이언트 생성 (쿠키 기반 인증)
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
-      },
-    },
-  });
+  // Supabase 인증 토큰 쿠키 찾기 (일반적인 쿠키 이름 패턴)
+  // Supabase는 여러 쿠키를 사용하므로, access_token을 포함한 쿠키를 찾습니다
+  const supabaseUrlMatch = supabaseUrl.match(/https?:\/\/([^.]+)/);
+  const projectRef = supabaseUrlMatch ? supabaseUrlMatch[1].split('.')[0] : '';
+  
+  // Supabase 쿠키 이름 패턴: sb-<project-ref>-auth-token 또는 sb-<project-ref>-auth-token-code-verifier 등
+  const authTokenCookie = cookieStore.get(`sb-${projectRef}-auth-token`);
+  
+  if (!authTokenCookie?.value) {
+    throw new Error("Unauthorized: Missing authentication cookie");
+  }
 
-  // 쿠키에서 사용자 정보 가져오기
+  // 쿠키 값에서 access_token 추출 (JSON 파싱)
+  let accessToken: string | null = null;
+  try {
+    const cookieData = JSON.parse(authTokenCookie.value);
+    accessToken = cookieData?.access_token || null;
+  } catch {
+    // 쿠키가 JSON 형식이 아닌 경우, 직접 토큰 값일 수 있음
+    accessToken = authTokenCookie.value;
+  }
+
+  if (!accessToken) {
+    throw new Error("Unauthorized: Invalid authentication cookie format");
+  }
+
+  // Supabase 클라이언트 생성
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  // 토큰으로 사용자 정보 가져오기
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser(accessToken);
 
   if (error || !user) {
-    throw new Error("Unauthorized: Invalid or missing authentication cookie");
+    throw new Error("Unauthorized: Invalid or expired authentication token");
   }
 
   return user.id;

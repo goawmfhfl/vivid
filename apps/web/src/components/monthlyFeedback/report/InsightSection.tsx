@@ -11,7 +11,7 @@ import {
   Target,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { MonthlyInsightReport } from "@/types/monthly-feedback";
+import type { InsightReport } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ import {
   LabelList,
 } from "recharts";
 
-type InsightReport = MonthlyInsightReport;
+// InsightReport는 이미 import됨
 type InsightSectionProps = {
   insightReport: InsightReport;
   isPro?: boolean;

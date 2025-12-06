@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
+import type { InsightReport } from "@/types/monthly-feedback-new";
 import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
 import { DailyLifeSection } from "./report/DailyLifeSection";
 import { EmotionSection } from "./report/EmotionSection";
@@ -109,7 +110,7 @@ export function MonthlyFeedbackReport({
             <ScrollAnimation delay={200}>
               <div className="mb-64">
                 <InsightSection
-                  insightReport={data.insight_report}
+                  insightReport={data.insight_report as unknown as InsightReport}
                   isPro={isPro}
                 />
               </div>

@@ -12,10 +12,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { WeeklyReportData } from "./types";
+
+type IntegrityData = {
+  average: number;
+  min: number;
+  max: number;
+  daily_scores?: Array<{
+    date: string;
+    weekday: string;
+    score: number;
+  }>;
+};
 
 type GrowthTrendsSectionProps = {
-  integrity: WeeklyReportData["integrity"];
+  integrity: IntegrityData;
   growthPoints: string[];
   adjustmentPoints: string[];
 };

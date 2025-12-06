@@ -4,10 +4,19 @@ import { Lightbulb, Sparkles } from "lucide-react";
 import { Card } from "../../ui/card";
 import { ScrollingKeywords } from "../../ui/ScrollingKeywords";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { WeeklyReportData } from "./types";
+
+type WeeklyOverview = {
+  title?: string;
+  top_keywords?: string[];
+  repeated_themes: Array<{
+    theme: string;
+    count: number;
+  }>;
+  ai_overall_comment: string;
+};
 
 type WeeklyOverviewSectionProps = {
-  weeklyOverview: WeeklyReportData["weekly_overview"];
+  weeklyOverview: WeeklyOverview;
 };
 
 // 개별 테마 항목 컴포넌트 (애니메이션을 위해 분리)

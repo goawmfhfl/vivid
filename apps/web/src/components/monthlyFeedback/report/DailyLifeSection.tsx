@@ -14,7 +14,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { DailyLifeReport } from "@/types/monthly-feedback";
+import type { DailyLifeReport } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
@@ -125,8 +125,8 @@ export function DailyLifeSection({
       {isPro ? (
         <div className="space-y-4">
           {/* Most Frequent Events */}
-          {dailyLifeReport.daily_patterns?.most_frequent_events &&
-            dailyLifeReport.daily_patterns.most_frequent_events.length > 0 && (
+          {dailyLifeReport.events_pattern?.most_frequent_events &&
+            dailyLifeReport.events_pattern.most_frequent_events.length > 0 && (
               <Card
                 className="relative overflow-hidden group"
                 style={{
@@ -163,7 +163,7 @@ export function DailyLifeSection({
                 <div className="p-5 sm:p-6 pt-4">
                   <div className="flex-1">
                     <div className="space-y-3">
-                      {dailyLifeReport.daily_patterns.most_frequent_events.map(
+                      {dailyLifeReport.events_pattern.most_frequent_events.map(
                         (event, idx) => (
                           <div
                             key={idx}
@@ -190,17 +190,6 @@ export function DailyLifeSection({
                                 >
                                   {event.frequency}회
                                 </span>
-                                {event.avg_emotion_score && (
-                                  <span
-                                    className="px-2 py-0.5 rounded-full text-xs"
-                                    style={{
-                                      backgroundColor: "#E8F0E8",
-                                      color: "#6B7A6F",
-                                    }}
-                                  >
-                                    감정 {event.avg_emotion_score.toFixed(1)}
-                                  </span>
-                                )}
                               </div>
                             </div>
                             {event.context && (
@@ -211,35 +200,6 @@ export function DailyLifeSection({
                                 {event.context}
                               </p>
                             )}
-                            {/* Week Evolution */}
-                            {isPro &&
-                              event.week_evolution &&
-                              event.week_evolution.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                  <p
-                                    className="text-xs mb-1 font-medium"
-                                    style={{ color: COLORS.text.secondary }}
-                                  >
-                                    주간 변화
-                                  </p>
-                                  <div className="flex gap-2 flex-wrap">
-                                    {event.week_evolution.map(
-                                      (week, weekIdx) => (
-                                        <div
-                                          key={weekIdx}
-                                          className="px-2 py-1 rounded text-xs"
-                                          style={{
-                                            backgroundColor: "#E8F0E8",
-                                            color: "#6B7A6F",
-                                          }}
-                                        >
-                                          {week.week}주: {week.frequency}회
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-                              )}
                           </div>
                         )
                       )}
@@ -250,7 +210,7 @@ export function DailyLifeSection({
             )}
 
           {/* Behavioral Patterns */}
-          {dailyLifeReport.daily_patterns?.behavioral_patterns && (
+          {dailyLifeReport.behavioral_patterns && (
             <Card
               className="relative overflow-hidden group"
               style={{
@@ -287,8 +247,8 @@ export function DailyLifeSection({
               <div className="p-5 sm:p-6 pt-4">
                 <div className="flex-1">
                   {/* Avoidance */}
-                  {dailyLifeReport.daily_patterns.behavioral_patterns
-                    .avoidance && (
+                  {dailyLifeReport.behavioral_patterns?.pattern_distribution
+                    ?.avoidance && (
                     <div className="mb-4 p-3 rounded-lg bg-gray-50">
                       <div className="flex items-center justify-between mb-2">
                         <p
@@ -305,19 +265,19 @@ export function DailyLifeSection({
                           }}
                         >
                           {
-                            dailyLifeReport.daily_patterns.behavioral_patterns
-                              .avoidance.frequency
+                            dailyLifeReport.behavioral_patterns
+                              .pattern_distribution.avoidance.count
                           }
                           회
                         </span>
                       </div>
-                      {dailyLifeReport.daily_patterns.behavioral_patterns
-                        .avoidance.common_triggers &&
-                        dailyLifeReport.daily_patterns.behavioral_patterns
-                          .avoidance.common_triggers.length > 0 && (
+                      {dailyLifeReport.behavioral_patterns.pattern_distribution
+                        .avoidance.examples &&
+                        dailyLifeReport.behavioral_patterns.pattern_distribution
+                          .avoidance.examples.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
-                            {dailyLifeReport.daily_patterns.behavioral_patterns.avoidance.common_triggers.map(
-                              (trigger, idx) => (
+                            {dailyLifeReport.behavioral_patterns.pattern_distribution.avoidance.examples.map(
+                              (example, idx) => (
                                 <span
                                   key={idx}
                                   className="px-2 py-0.5 rounded text-xs"
@@ -326,7 +286,7 @@ export function DailyLifeSection({
                                     color: "#6B7A6F",
                                   }}
                                 >
-                                  {trigger}
+                                  {example}
                                 </span>
                               )
                             )}
@@ -336,8 +296,8 @@ export function DailyLifeSection({
                   )}
 
                   {/* Routine Attempt */}
-                  {dailyLifeReport.daily_patterns.behavioral_patterns
-                    .routine_attempt && (
+                  {dailyLifeReport.behavioral_patterns?.pattern_distribution
+                    ?.routine_attempt && (
                     <div className="mb-4 p-3 rounded-lg bg-gray-50">
                       <div className="flex items-center justify-between mb-2">
                         <p
@@ -355,8 +315,8 @@ export function DailyLifeSection({
                             }}
                           >
                             {
-                              dailyLifeReport.daily_patterns.behavioral_patterns
-                                .routine_attempt.frequency
+                              dailyLifeReport.behavioral_patterns
+                                .pattern_distribution.routine_attempt.count
                             }
                             회
                           </span>
@@ -367,28 +327,27 @@ export function DailyLifeSection({
                               color: "#6B7A6F",
                             }}
                           >
-                            성공률{" "}
-                            {(
-                              dailyLifeReport.daily_patterns.behavioral_patterns
-                                .routine_attempt.success_rate * 100
-                            ).toFixed(0)}
+                            비율{" "}
+                            {dailyLifeReport.behavioral_patterns.pattern_distribution.routine_attempt.percentage.toFixed(
+                              0
+                            )}
                             %
                           </span>
                         </div>
                       </div>
-                      {dailyLifeReport.daily_patterns.behavioral_patterns
-                        .routine_attempt.most_successful &&
-                        dailyLifeReport.daily_patterns.behavioral_patterns
-                          .routine_attempt.most_successful.length > 0 && (
+                      {dailyLifeReport.behavioral_patterns.pattern_distribution
+                        .routine_attempt.examples &&
+                        dailyLifeReport.behavioral_patterns.pattern_distribution
+                          .routine_attempt.examples.length > 0 && (
                           <div className="mt-2">
                             <p
                               className="text-xs mb-1 font-medium"
                               style={{ color: COLORS.text.secondary }}
                             >
-                              가장 성공한 루틴
+                              루틴 예시
                             </p>
                             <div className="flex flex-wrap gap-1.5">
-                              {dailyLifeReport.daily_patterns.behavioral_patterns.routine_attempt.most_successful.map(
+                              {dailyLifeReport.behavioral_patterns.pattern_distribution.routine_attempt.examples.map(
                                 (routine, idx) => (
                                   <span
                                     key={idx}
@@ -409,8 +368,8 @@ export function DailyLifeSection({
                   )}
 
                   {/* Planned Actions */}
-                  {dailyLifeReport.daily_patterns.behavioral_patterns
-                    .planned_actions && (
+                  {dailyLifeReport.behavioral_patterns?.pattern_distribution
+                    ?.planned && (
                     <div className="p-3 rounded-lg bg-gray-50">
                       <div className="flex items-center justify-between mb-2">
                         <p
@@ -427,18 +386,18 @@ export function DailyLifeSection({
                           }}
                         >
                           {
-                            dailyLifeReport.daily_patterns.behavioral_patterns
-                              .planned_actions.frequency
+                            dailyLifeReport.behavioral_patterns
+                              .pattern_distribution.planned.count
                           }
                           회
                         </span>
                       </div>
-                      {dailyLifeReport.daily_patterns.behavioral_patterns
-                        .planned_actions.examples &&
-                        dailyLifeReport.daily_patterns.behavioral_patterns
-                          .planned_actions.examples.length > 0 && (
+                      {dailyLifeReport.behavioral_patterns.pattern_distribution
+                        .planned.examples &&
+                        dailyLifeReport.behavioral_patterns.pattern_distribution
+                          .planned.examples.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-2">
-                            {dailyLifeReport.daily_patterns.behavioral_patterns.planned_actions.examples.map(
+                            {dailyLifeReport.behavioral_patterns.pattern_distribution.planned.examples.map(
                               (example, idx) => (
                                 <span
                                   key={idx}
@@ -461,9 +420,9 @@ export function DailyLifeSection({
             </Card>
           )}
 
-          {/* Keyword Evolution */}
-          {dailyLifeReport.daily_patterns?.keyword_evolution &&
-            dailyLifeReport.daily_patterns.keyword_evolution.length > 0 && (
+          {/* Top Keywords */}
+          {dailyLifeReport.keywords_analysis?.top_keywords &&
+            dailyLifeReport.keywords_analysis.top_keywords.length > 0 && (
               <Card
                 className="p-5 sm:p-6 relative overflow-hidden group"
                 style={{
@@ -488,11 +447,11 @@ export function DailyLifeSection({
                       className="text-xs mb-3 font-semibold"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      키워드 진화
+                      주요 키워드
                     </p>
                     <div className="space-y-3">
-                      {dailyLifeReport.daily_patterns.keyword_evolution.map(
-                        (evolution, idx) => (
+                      {dailyLifeReport.keywords_analysis.top_keywords.map(
+                        (keywordItem, idx) => (
                           <div
                             key={idx}
                             className="p-3 rounded-lg"
@@ -506,28 +465,59 @@ export function DailyLifeSection({
                                 className="text-sm font-medium"
                                 style={{ color: COLORS.text.primary }}
                               >
-                                {evolution.week}주차
+                                {keywordItem.keyword}
                               </p>
+                              <span
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                                style={{
+                                  backgroundColor: "#E8EFE8",
+                                  color: "#6B7A6F",
+                                }}
+                              >
+                                {keywordItem.frequency}회
+                              </span>
                             </div>
-                            <p
-                              className="text-xs mb-2 font-medium"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              {evolution.dominant_theme}
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {evolution.top_keywords.map((keyword, keyIdx) => (
-                                <span
-                                  key={keyIdx}
-                                  className="px-2 py-0.5 rounded text-xs"
-                                  style={{
-                                    backgroundColor: "#E8F0E8",
-                                    color: "#6B7A6F",
-                                  }}
-                                >
-                                  {keyword}
-                                </span>
-                              ))}
+                            {keywordItem.context && (
+                              <p
+                                className="text-xs mb-2"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {keywordItem.context}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span
+                                className="px-2 py-0.5 rounded text-xs"
+                                style={{
+                                  backgroundColor:
+                                    keywordItem.sentiment === "positive"
+                                      ? "#E8F5E9"
+                                      : keywordItem.sentiment === "negative"
+                                      ? "#FFEBEE"
+                                      : "#F5F5F5",
+                                  color:
+                                    keywordItem.sentiment === "positive"
+                                      ? "#4CAF50"
+                                      : keywordItem.sentiment === "negative"
+                                      ? "#F44336"
+                                      : "#757575",
+                                }}
+                              >
+                                {keywordItem.sentiment === "positive"
+                                  ? "긍정"
+                                  : keywordItem.sentiment === "negative"
+                                  ? "부정"
+                                  : "중립"}
+                              </span>
+                              {keywordItem.days &&
+                                keywordItem.days.length > 0 && (
+                                  <span
+                                    className="text-xs"
+                                    style={{ color: COLORS.text.secondary }}
+                                  >
+                                    {keywordItem.days.length}일 기록
+                                  </span>
+                                )}
                             </div>
                           </div>
                         )
@@ -539,7 +529,7 @@ export function DailyLifeSection({
             )}
 
           {/* Emotion Triggers Summary */}
-          {dailyLifeReport.daily_patterns?.emotion_triggers_summary && (
+          {dailyLifeReport.emotion_triggers_analysis && (
             <Card
               className="p-5 sm:p-6 relative overflow-hidden group"
               style={{
@@ -567,25 +557,21 @@ export function DailyLifeSection({
                     감정 트리거 분석
                   </p>
 
-                  {dailyLifeReport.daily_patterns.emotion_triggers_summary
-                    .summary && (
+                  {dailyLifeReport.emotion_triggers_analysis.summary && (
                     <p
                       className="text-sm leading-relaxed mb-4"
                       style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
                     >
-                      {
-                        dailyLifeReport.daily_patterns.emotion_triggers_summary
-                          .summary
-                      }
+                      {dailyLifeReport.emotion_triggers_analysis.summary}
                     </p>
                   )}
 
                   {/* Category Distribution */}
-                  {dailyLifeReport.daily_patterns.emotion_triggers_summary
+                  {dailyLifeReport.emotion_triggers_analysis
                     .category_distribution && (
                     <div className="grid grid-cols-2 gap-3">
                       {Object.entries(
-                        dailyLifeReport.daily_patterns.emotion_triggers_summary
+                        dailyLifeReport.emotion_triggers_analysis
                           .category_distribution
                       ).map(([category, data]) => (
                         <div
@@ -657,10 +643,10 @@ export function DailyLifeSection({
           )}
 
           {/* Visualization Charts */}
-          {dailyLifeReport.visualization && (
+          {(dailyLifeReport as any).visualization && (
             <div className="space-y-4">
               {/* Event Frequency Bar Chart */}
-              {dailyLifeReport.visualization.event_frequency_bar && (
+              {(dailyLifeReport as any).visualization.event_frequency_bar && (
                 <Card
                   className="p-5 sm:p-6"
                   style={{
@@ -679,7 +665,8 @@ export function DailyLifeSection({
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={
-                        dailyLifeReport.visualization.event_frequency_bar.data
+                        (dailyLifeReport as any).visualization
+                          .event_frequency_bar.data
                       }
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#E0E5E0" />
@@ -714,7 +701,8 @@ export function DailyLifeSection({
               )}
 
               {/* Routine Success Rate Area Chart */}
-              {dailyLifeReport.visualization.routine_success_rate_area && (
+              {(dailyLifeReport as any).visualization
+                .routine_success_rate_area && (
                 <Card
                   className="p-5 sm:p-6"
                   style={{
@@ -733,8 +721,8 @@ export function DailyLifeSection({
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart
                       data={
-                        dailyLifeReport.visualization.routine_success_rate_area
-                          .data
+                        (dailyLifeReport as any).visualization
+                          .routine_success_rate_area.data
                       }
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#E0E5E0" />
@@ -775,7 +763,7 @@ export function DailyLifeSection({
               )}
 
               {/* Emotion Triggers Pie Chart */}
-              {dailyLifeReport.visualization.emotion_triggers_pie && (
+              {(dailyLifeReport as any).visualization.emotion_triggers_pie && (
                 <Card
                   className="p-5 sm:p-6"
                   style={{
@@ -801,15 +789,16 @@ export function DailyLifeSection({
                         <PieChart>
                           <Pie
                             data={
-                              dailyLifeReport.visualization.emotion_triggers_pie
-                                .data
+                              (dailyLifeReport as any).visualization
+                                .emotion_triggers_pie.data
                             }
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percentage }) =>
-                              percentage ? `${percentage}%` : ""
-                            }
+                            label={(props: any) => {
+                              const percentage = props.payload?.percentage;
+                              return percentage ? `${percentage}%` : "";
+                            }}
                             outerRadius={70}
                             innerRadius={0}
                             paddingAngle={3}
@@ -822,8 +811,10 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
-                            {dailyLifeReport.visualization.emotion_triggers_pie.data.map(
-                              (entry, index) => (
+                            {(
+                              dailyLifeReport as any
+                            ).visualization.emotion_triggers_pie.data.map(
+                              (entry: any, index: number) => (
                                 <Cell
                                   key={`cell-mobile-${index}`}
                                   fill={entry.color || DAILY_LIFE_COLOR}
@@ -863,15 +854,19 @@ export function DailyLifeSection({
                         <PieChart>
                           <Pie
                             data={
-                              dailyLifeReport.visualization.emotion_triggers_pie
-                                .data
+                              (dailyLifeReport as any).visualization
+                                .emotion_triggers_pie.data
                             }
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percentage }) =>
-                              `${name}: ${percentage}%`
-                            }
+                            label={(props: any) => {
+                              const name = props.name;
+                              const percentage = props.payload?.percentage;
+                              return percentage
+                                ? `${name}: ${percentage}%`
+                                : "";
+                            }}
                             outerRadius={100}
                             innerRadius={0}
                             paddingAngle={4}
@@ -884,8 +879,10 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
-                            {dailyLifeReport.visualization.emotion_triggers_pie.data.map(
-                              (entry, index) => (
+                            {(
+                              dailyLifeReport as any
+                            ).visualization.emotion_triggers_pie.data.map(
+                              (entry: any, index: number) => (
                                 <Cell
                                   key={`cell-desktop-${index}`}
                                   fill={entry.color || DAILY_LIFE_COLOR}

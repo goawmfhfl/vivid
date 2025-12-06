@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import {
-  categorizeRecords,
-  generateDailyReport,
-} from "@/app/api/daily-feedback/ai-service";
+import { generateAllReports } from "@/app/api/daily-feedback/ai-service";
 import {
   fetchRecordsByDate,
   saveDailyReport,
@@ -71,11 +68,27 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // AI 카테고리화
-        const categorized = await categorizeRecords(records, dateStr);
+        // 요일 계산
+        const dateObj = new Date(`${dateStr}T00:00:00+09:00`);
+        const dayOfWeek = dateObj.toLocaleDateString("ko-KR", {
+          weekday: "long",
+          timeZone: "Asia/Seoul",
+        });
 
         // AI 리포트 생성
-        const report = await generateDailyReport(categorized, dateStr, records);
+        const allReports = await generateAllReports(
+          records,
+          dateStr,
+          dayOfWeek,
+          false // isPro는 기본값 false로 설정
+        );
+
+        // DailyReportResponse 형식으로 변환
+        const report = {
+          date: dateStr,
+          day_of_week: dayOfWeek,
+          ...allReports,
+        };
 
         // DB 저장
         const savedFeedback = await saveDailyReport(supabase, userId, report);

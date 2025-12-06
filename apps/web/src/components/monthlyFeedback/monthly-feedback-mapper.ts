@@ -39,50 +39,52 @@ function toNumberOrNull(value: unknown): number | null {
 export function mapMonthlyFeedbackToReportData(
   feedback: MonthlyFeedback
 ): MonthlyReportData {
-  // summary_overview 숫자 필드 변환
-  const summaryOverview = {
-    ...feedback.summary_overview,
-    monthly_score: toNumber(feedback.summary_overview.monthly_score),
+  // summary_report 숫자 필드 변환
+  const summaryReport = {
+    ...feedback.summary_report,
+    monthly_score: toNumber(feedback.summary_report.monthly_score),
     record_coverage_rate: toNumber(
-      feedback.summary_overview.record_coverage_rate
+      feedback.summary_report.record_coverage_rate
     ),
-    life_balance_score: toNumber(feedback.summary_overview.life_balance_score),
-    execution_score: toNumber(feedback.summary_overview.execution_score),
-    rest_score: toNumber(feedback.summary_overview.rest_score),
-    relationship_score: toNumber(feedback.summary_overview.relationship_score),
+    life_balance_score: toNumber(feedback.summary_report.life_balance_score),
+    execution_score: toNumber(feedback.summary_report.execution_score),
+    rest_score: toNumber(feedback.summary_report.rest_score),
+    relationship_score: toNumber(feedback.summary_report.relationship_score),
   };
 
-  // emotion_overview 숫자 필드 변환
-  const emotionOverview = {
-    ...feedback.emotion_overview,
+  // emotion_report 숫자 필드 변환
+  const emotionReport = {
+    ...feedback.emotion_report,
     monthly_ai_mood_valence_avg: toNumberOrNull(
-      feedback.emotion_overview.monthly_ai_mood_valence_avg
+      feedback.emotion_report.monthly_ai_mood_valence_avg
     ),
     monthly_ai_mood_arousal_avg: toNumberOrNull(
-      feedback.emotion_overview.monthly_ai_mood_arousal_avg
+      feedback.emotion_report.monthly_ai_mood_arousal_avg
     ),
     emotion_stability_score: toNumber(
-      feedback.emotion_overview.emotion_stability_score
+      feedback.emotion_report.emotion_stability_score
     ),
     emotion_quadrant_distribution:
-      feedback.emotion_overview.emotion_quadrant_distribution.map((item) => ({
+      feedback.emotion_report.emotion_quadrant_distribution.map((item) => ({
         ...item,
         count: toNumber(item.count),
         ratio: toNumber(item.ratio),
       })),
   };
 
-  // insight_overview 숫자 필드 변환
-  const insightOverview = {
-    ...feedback.insight_overview,
-    insight_days_count: toNumber(feedback.insight_overview.insight_days_count),
+  // insight_report 숫자 필드 변환
+  const insightReport = {
+    ...feedback.insight_report,
+    insight_days_count: toNumber(feedback.insight_report.insight_days_count),
     insight_records_count: toNumber(
-      feedback.insight_overview.insight_records_count
+      feedback.insight_report.insight_records_count
     ),
-    top_insights: feedback.insight_overview.top_insights.map((item) => ({
+    top_insights: feedback.insight_report.top_insights.map((item) => ({
       ...item,
       frequency: toNumber(item.frequency),
     })),
+    // core_insights는 MonthlyInsightReport 타입이므로 그대로 유지
+    core_insights: feedback.insight_report.core_insights,
   };
 
   return {
@@ -97,11 +99,12 @@ export function mapMonthlyFeedbackToReportData(
     recorded_days: toNumber(feedback.recorded_days),
 
     // 섹션들
-    summary_overview: summaryOverview,
-    emotion_overview: emotionOverview,
-    insight_overview: insightOverview,
-    feedback_overview: feedback.feedback_overview,
-    vision_overview: feedback.vision_overview,
-    conclusion_overview: feedback.conclusion_overview,
+    summary_report: summaryReport,
+    daily_life_report: feedback.daily_life_report,
+    emotion_report: emotionReport,
+    insight_report: insightReport as any, // MonthlyInsightReport와 InsightReport 타입 차이로 인한 임시 타입 단언
+    execution_report: feedback.execution_report,
+    vision_report: feedback.vision_report,
+    closing_report: feedback.closing_report,
   };
 }

@@ -6,7 +6,7 @@ import type {
   InsightReport,
   ExecutionReport,
   ClosingReport,
-} from "@/types/weekly-feedback";
+} from "@/types/monthly-feedback-new";
 
 // Monthly Report Data Type (UI용)
 export type MonthlyReportData = {

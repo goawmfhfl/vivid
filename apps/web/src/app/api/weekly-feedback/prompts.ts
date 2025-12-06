@@ -99,9 +99,9 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       }
     }
 
-    // Emotion Overview 데이터
-    if (feedback.emotion_overview) {
-      const emotion = feedback.emotion_overview;
+    // Emotion Report 데이터
+    if (feedback.emotion_report) {
+      const emotion = feedback.emotion_report;
       if (emotion.ai_mood_valence !== null) {
         prompt += `[감정 쾌-불쾌] ${emotion.ai_mood_valence}\n`;
       }
