@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import type { ExtendedUsage } from "../../types";
 
 /**
  * POST /api/test/token-test
@@ -104,8 +105,9 @@ export async function POST(request: NextRequest) {
     const modelPricing = pricing[model] || pricing["gpt-5-nano"];
 
     // 캐시된 토큰 정보 추출 (OpenAI API 응답에서 제공)
+    const extendedUsage = usage as ExtendedUsage;
     const cachedTokens =
-      (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
+      extendedUsage?.prompt_tokens_details?.cached_tokens || 0;
     const nonCachedTokens = (usage?.prompt_tokens || 0) - cachedTokens;
 
     // 캐시된 입력과 캐시되지 않은 입력 비용 계산

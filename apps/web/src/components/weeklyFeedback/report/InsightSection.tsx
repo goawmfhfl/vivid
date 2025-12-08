@@ -89,27 +89,15 @@ const CustomTooltip = ({
   return null;
 };
 
-const CustomLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
-}) => {
+const CustomLabel = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+
+  if (!midAngle || !percent || percent < 0.05) return null; // midAngle이나 percent가 없거나 5% 미만은 라벨 숨김
+
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  if (percent < 0.05) return null; // 5% 미만은 라벨 숨김
 
   return (
     <text
@@ -444,7 +432,8 @@ export function InsightSection({
                                         fontWeight: 500,
                                       }}
                                     >
-                                      {entry.payload?.category || value}
+                                      {(entry?.payload as { category?: string })
+                                        ?.category || value}
                                     </span>
                                   )}
                                 />

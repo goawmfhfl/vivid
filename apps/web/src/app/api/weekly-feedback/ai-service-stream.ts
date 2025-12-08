@@ -74,7 +74,8 @@ async function generateSection<T>(
   schema: ReportSchema,
   cacheKey: string,
   isPro: boolean,
-  sectionName: string
+  sectionName: string,
+  progressCallback?: ProgressCallback
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
@@ -225,6 +226,11 @@ async function generateSection<T>(
 
       // 캐시에 저장 (멤버십별로 구분)
       setCache(proCacheKey, result);
+
+      // 진행 상황 알림
+      if (progressCallback) {
+        progressCallback(0, 0, sectionName);
+      }
 
       // 추적 정보를 결과에 첨부 (테스트 환경에서만)
       if (

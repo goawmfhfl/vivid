@@ -4,6 +4,7 @@ import { fetchDailyFeedbacksByRange, saveWeeklyFeedback } from "../db-service";
 import { generateWeeklyFeedbackFromDailyWithProgress } from "../ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { WithTracking } from "../../types";
 
 // Next.js API Route 타임아웃 설정 (최대 3분)
 export const maxDuration = 180;
@@ -176,9 +177,9 @@ export async function GET(request: NextRequest) {
  * 추적 정보 제거 (DB 저장 전)
  */
 function removeTrackingInfo(
-  feedback: import("../types").WithTracking<WeeklyFeedback>
+  feedback: WithTracking<WeeklyFeedback>
 ): WeeklyFeedback {
-  const cleaned = { ...feedback };
+  const cleaned = { ...feedback } as Record<string, unknown>;
 
   const sections = [
     "summary_report",
@@ -196,8 +197,10 @@ function removeTrackingInfo(
       if (typeof cleaned[key] === "object") {
         // __tracking이 있는 경우에만 제거
         if ("__tracking" in cleaned[key]) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { __tracking, ...rest } = cleaned[key];
+          const { __tracking: _, ...rest } = cleaned[key] as Record<
+            string,
+            unknown
+          > & { __tracking?: unknown };
           cleaned[key] = rest;
         }
         // __tracking이 없으면 그대로 유지

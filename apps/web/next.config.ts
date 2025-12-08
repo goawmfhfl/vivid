@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Monorepo에서 올바른 root 경로 설정
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

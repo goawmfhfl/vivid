@@ -40,13 +40,7 @@ import {
   setCache,
   generatePromptCacheKey,
 } from "../utils/cache";
-import type {
-  Schema,
-  ReportSchema,
-  ExtendedUsage,
-  WithTracking,
-  ApiError,
-} from "../types";
+import type { Schema, ReportSchema } from "../types";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)

@@ -3,7 +3,7 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchRecordsByDate, saveDailyReport } from "../db-service";
 import { generateAllReportsWithProgress } from "../ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
-import type { TrackingInfo, WithTracking } from "../../types";
+import type { TrackingInfo } from "../../types";
 
 // Next.js API Route 타임아웃 설정 (최대 3분)
 export const maxDuration = 180;
@@ -211,7 +211,7 @@ function extractTrackingInfo(report: Record<string, unknown>): TrackingInfo[] {
  * 추적 정보 제거 (DB 저장 전)
  */
 function removeTrackingInfo<T extends Record<string, unknown>>(report: T): T {
-  const cleaned = { ...report } as Record<string, unknown>;
+  const cleaned = { ...report } as T;
 
   const sections = [
     "summary_report",

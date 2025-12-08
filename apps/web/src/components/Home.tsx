@@ -245,7 +245,7 @@ export function Home() {
             }
           };
 
-          es.onerror = (event) => {
+          es.onerror = (_event) => {
             cleanup();
             clearDailyFeedbackProgress(todayIso);
 

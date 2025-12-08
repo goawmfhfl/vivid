@@ -11,6 +11,19 @@ import {
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { DailyLifeReport } from "@/types/monthly-feedback-new";
+
+// visualization 필드를 포함한 확장 타입
+type DailyLifeReportWithVisualization = DailyLifeReport & {
+  visualization?: {
+    emotion_triggers_pie?: {
+      data: Array<{
+        name: string;
+        value: number;
+        color?: string;
+      }>;
+    };
+  };
+};
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 import {
@@ -809,12 +822,10 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {(
-                              dailyLifeReport as any
-                            ).visualization.emotion_triggers_pie.data.map(
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              (entry: any, index: number) => (
+                              dailyLifeReport as DailyLifeReportWithVisualization
+                            ).visualization?.emotion_triggers_pie?.data.map(
+                              (entry, index: number) => (
                                 <Cell
                                   key={`cell-mobile-${index}`}
                                   fill={entry.color || DAILY_LIFE_COLOR}
@@ -883,12 +894,10 @@ export function DailyLifeSection({
                               } as React.CSSProperties
                             }
                           >
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {(
-                              dailyLifeReport as any
-                            ).visualization.emotion_triggers_pie.data.map(
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              (entry: any, index: number) => (
+                              dailyLifeReport as DailyLifeReportWithVisualization
+                            ).visualization?.emotion_triggers_pie?.data.map(
+                              (entry, index: number) => (
                                 <Cell
                                   key={`cell-desktop-${index}`}
                                   fill={entry.color || DAILY_LIFE_COLOR}

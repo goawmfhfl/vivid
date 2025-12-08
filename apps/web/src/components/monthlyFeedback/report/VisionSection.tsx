@@ -219,10 +219,10 @@ export function VisionSection({
                           formatter={(
                             value: number,
                             name: string,
-                            props: any
+                            entry?: { payload?: { fullName?: string } }
                           ) => [
                             `${value}회`,
-                            (props.payload as { fullName?: string })
+                            (entry?.payload as { fullName?: string })
                               ?.fullName ||
                               name ||
                               "",
@@ -414,7 +414,12 @@ export function VisionSection({
                                   outerRadius={70}
                                   paddingAngle={3}
                                   dataKey="value"
-                                  label={(props: any) => {
+                                  label={(props: {
+                                    payload?: {
+                                      name?: string;
+                                      percentage?: number;
+                                    };
+                                  }) => {
                                     const name =
                                       (props.payload as { name?: string })
                                         ?.name || "";
@@ -463,10 +468,10 @@ export function VisionSection({
                               formatter={(
                                 value: number,
                                 name: string,
-                                props: any
+                                entry?: { payload?: { fullName?: string } }
                               ) => [
                                 `${value}회`,
-                                (props.payload as { fullName?: string })
+                                (entry?.payload as { fullName?: string })
                                   ?.fullName ||
                                   name ||
                                   "",
@@ -536,10 +541,10 @@ export function VisionSection({
                               formatter={(
                                 value: number,
                                 name: string,
-                                props: any
+                                entry?: { payload?: { fullName?: string } }
                               ) => [
                                 `${value}회`,
-                                (props.payload as { fullName?: string })
+                                (entry?.payload as { fullName?: string })
                                   ?.fullName ||
                                   name ||
                                   "",

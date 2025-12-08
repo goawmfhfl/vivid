@@ -6,13 +6,13 @@ import type { WeeklyFeedbackGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 
-import type { TrackingInfo } from "../types";
+import type { TrackingInfo, WithTracking } from "../../types";
 
 /**
  * 추적 정보 추출 (테스트 환경용)
  */
 function extractTrackingInfo(
-  feedback: Record<string, import("../types").WithTracking<unknown>>
+  feedback: Record<string, unknown>
 ): TrackingInfo[] {
   const tracking: TrackingInfo[] = [];
 
@@ -28,8 +28,15 @@ function extractTrackingInfo(
   ];
 
   for (const section of sections) {
-    const sectionData = feedback[section.key];
-    if (sectionData?.__tracking) {
+    const sectionData = feedback[section.key] as
+      | WithTracking<unknown>
+      | undefined;
+    if (
+      sectionData &&
+      typeof sectionData === "object" &&
+      "__tracking" in sectionData &&
+      sectionData.__tracking
+    ) {
       tracking.push({
         name: sectionData.__tracking.name || section.name,
         model: sectionData.__tracking.model,
@@ -42,15 +49,15 @@ function extractTrackingInfo(
   return tracking;
 }
 
-import type { ApiError } from "../types";
+import type { ApiError } from "../../types";
 
 /**
  * 추적 정보 제거 (DB 저장 전)
  */
 function removeTrackingInfo(
-  feedback: import("../types").WithTracking<WeeklyFeedback>
+  feedback: WithTracking<WeeklyFeedback>
 ): WeeklyFeedback {
-  const cleaned = { ...feedback };
+  const cleaned = { ...feedback } as Record<string, unknown>;
 
   const sections = [
     "summary_report",
@@ -64,8 +71,10 @@ function removeTrackingInfo(
 
   for (const key of sections) {
     if (cleaned[key] && typeof cleaned[key] === "object") {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { __tracking, ...rest } = cleaned[key];
+      const { __tracking: _, ...rest } = cleaned[key] as Record<
+        string,
+        unknown
+      > & { __tracking?: unknown };
       cleaned[key] = rest;
     }
   }

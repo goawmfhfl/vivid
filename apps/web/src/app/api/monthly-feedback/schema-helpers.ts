@@ -29,13 +29,6 @@ export function getSectionSchema(sectionName: string, isPro: boolean = false) {
         "this_month_identity"
       );
 
-      if (!isPro) {
-        // Pro가 아니면 this_month_identity 제거
-        if (hasThisMonthIdentity) {
-          delete props.this_month_identity;
-        }
-      }
-
       // required 배열도 조정
       if (schemaCopy.required && Array.isArray(schemaCopy.required)) {
         if (isPro) {

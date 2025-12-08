@@ -6,6 +6,7 @@ import type {
   WeeklyFeedbackListItem,
   WeeklyFeedbackGenerateRequest,
 } from "@/types/weekly-feedback";
+import type { TrackingInfo } from "@/app/api/types";
 
 /**
  * 주간 피드백 리스트 조회
@@ -45,7 +46,7 @@ const fetchWeeklyFeedbackDetail = async (
  */
 const createWeeklyFeedback = async (
   params: Omit<WeeklyFeedbackGenerateRequest, "userId">
-): Promise<WeeklyFeedback & { __tracking?: any[] }> => {
+): Promise<WeeklyFeedback & { __tracking?: TrackingInfo[] }> => {
   const userId = await getCurrentUserId();
   const res = await fetch("/api/weekly-feedback/generate", {
     method: "POST",
