@@ -14,12 +14,11 @@ export interface ScrollingKeywordsProps {
   containerClassName?: string;
   /** 키워드 래퍼에 추가할 클래스명 */
   wrapperClassName?: string;
-  /** 키워드 반복 횟수 (무한 루프를 위한 복제, 기본값: 2) */
-  repeatCount?: number;
 }
 
 /**
  * 키워드들이 오른쪽에서 왼쪽으로 자동 스크롤되는 재사용 가능한 컴포넌트
+ * 끊기지 않는 자연스러운 무한 루프 애니메이션
  */
 export function ScrollingKeywords({
   keywords,
@@ -28,16 +27,15 @@ export function ScrollingKeywords({
   badgeStyle,
   containerClassName = "",
   wrapperClassName = "",
-  repeatCount = 2,
 }: ScrollingKeywordsProps) {
   if (!keywords || keywords.length === 0) {
     return null;
   }
 
-  // 키워드를 반복하여 무한 루프 효과 생성
-  const repeatedKeywords = Array(repeatCount)
-    .fill(null)
-    .flatMap(() => keywords);
+  // 키워드를 3번 반복하여 끊기지 않는 무한 루프 효과 생성
+  // 첫 번째 세트가 화면을 벗어날 때 두 번째 세트가 들어오고,
+  // 두 번째 세트가 벗어날 때 세 번째 세트가 들어와서 자연스럽게 연결됨
+  const repeatedKeywords = [...keywords, ...keywords, ...keywords];
 
   // 기본 배지 스타일
   const defaultBadgeStyle: React.CSSProperties = {
@@ -50,6 +48,10 @@ export function ScrollingKeywords({
     ...badgeStyle,
   };
 
+  // 각 키워드 세트의 너비를 계산 (대략적인 값)
+  // 실제로는 각 배지의 너비 + gap을 합산해야 하지만, 애니메이션을 위해 50% 이동
+  const singleSetWidth = 100 / 3; // 3개 세트이므로 각 세트는 33.33%
+
   return (
     <div
       className={`overflow-hidden pb-2 ${containerClassName}`}
@@ -60,7 +62,7 @@ export function ScrollingKeywords({
         style={{
           width: "max-content",
           gap,
-          animation: `scroll-horizontal ${duration}s linear infinite`,
+          animation: `scroll-horizontal-smooth ${duration}s linear infinite`,
         }}
       >
         {repeatedKeywords.map((keyword, index) => (
@@ -72,4 +74,3 @@ export function ScrollingKeywords({
     </div>
   );
 }
-

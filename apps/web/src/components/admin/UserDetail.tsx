@@ -37,6 +37,7 @@ export function UserDetail({ userId }: UserDetailProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
   const [editData, setEditData] = useState({
     name: "",
     phone: "",
@@ -96,6 +97,47 @@ export function UserDetail({ userId }: UserDetailProps) {
       setIsEditing(false);
     } catch (err) {
       alert(err instanceof Error ? err.message : "수정 실패");
+    }
+  };
+
+  const handleCreateSubscription = async () => {
+    if (!user) return;
+
+    // 구독 정보가 이미 있으면 구독 관리 페이지로 이동
+    if (user.subscription) {
+      router.push(`/admin/subscriptions?userId=${user.id}`);
+      return;
+    }
+
+    // 구독 정보가 없으면 바로 생성
+    setIsCreatingSubscription(true);
+    try {
+      const response = await adminApiFetch("/api/admin/subscriptions", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: user.id,
+          plan: "free",
+          status: "active",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "구독 생성에 실패했습니다.");
+      }
+
+      // 유저 정보 다시 불러오기
+      const userResponse = await adminApiFetch(`/api/admin/users/${userId}`);
+      if (userResponse.ok) {
+        const userData: UserDetail = await userResponse.json();
+        setUser(userData);
+      }
+
+      alert("구독이 성공적으로 생성되었습니다.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "구독 생성 실패");
+    } finally {
+      setIsCreatingSubscription(false);
     }
   };
 
@@ -570,16 +612,15 @@ export function UserDetail({ userId }: UserDetailProps) {
                 구독 정보가 없습니다.
               </p>
               <button
-                onClick={() =>
-                  router.push(`/admin/subscriptions?userId=${user.id}`)
-                }
-                className="text-sm px-4 py-2 rounded-lg"
+                onClick={handleCreateSubscription}
+                disabled={isCreatingSubscription}
+                className="text-sm px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                 style={{
                   backgroundColor: COLORS.brand.primary,
                   color: COLORS.text.white,
                 }}
               >
-                구독 생성
+                {isCreatingSubscription ? "생성 중..." : "구독 생성"}
               </button>
             </div>
           )}

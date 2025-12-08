@@ -6,7 +6,7 @@ import {
   DreamReportSchema,
   InsightReportSchema,
   getFeedbackReportSchema,
-  FinalReportSchema,
+  getFinalReportSchema,
   SYSTEM_PROMPT_SUMMARY,
   SYSTEM_PROMPT_DAILY,
   SYSTEM_PROMPT_EMOTION,
@@ -536,7 +536,7 @@ async function generateFinalReport(
   return generateSection<FinalReport>(
     SYSTEM_PROMPT_FINAL,
     prompt,
-    FinalReportSchema,
+    getFinalReportSchema(isPro),
     cacheKey,
     isPro,
     "final_report",

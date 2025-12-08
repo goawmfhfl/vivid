@@ -60,7 +60,12 @@ export function mapDailyFeedbackRowToReport(
   const visionSummary = dreamReport?.summary ?? "";
   const visionSelf = dreamReport?.vision_self ?? "";
   const visionKeywords = dreamReport?.vision_keywords ?? [];
-  const visionAiFeedback = dreamReport?.vision_ai_feedback ?? null;
+  // vision_ai_feedback이 배열이 아니면 빈 배열로 처리 (하위 호환성)
+  const visionAiFeedback = Array.isArray(dreamReport?.vision_ai_feedback)
+    ? dreamReport.vision_ai_feedback
+    : dreamReport?.vision_ai_feedback
+    ? [dreamReport.vision_ai_feedback] // 문자열인 경우 배열로 변환 (하위 호환성)
+    : [];
   const dreamGoals = dreamReport?.dream_goals ?? null;
   const dreamerTraits = dreamReport?.dreamer_traits ?? null;
 

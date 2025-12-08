@@ -77,10 +77,10 @@ export type DailyReportData = {
   vision_summary: string;
   /** 자기 평가 */
   vision_self: string;
-  /** 시각화 키워드 배열 */
+  /** 시각화 키워드 배열 (6~10개 필수) */
   vision_keywords: string[];
-  /** AI 피드백 */
-  vision_ai_feedback: string | null;
+  /** AI 피드백 배열 (3개 요소) */
+  vision_ai_feedback: string[];
   /** 시각화를 통해 이루고 싶은 꿈 목표 리스트 (Pro 전용) */
   dream_goals: string[] | null;
   /** 이런 꿈을 꾸는 사람들의 특징 리스트 (Pro 전용) */

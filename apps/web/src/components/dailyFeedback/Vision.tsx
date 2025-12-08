@@ -4,20 +4,10 @@ import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 
 export function VisionSection({ view, isPro = false }: SectionProps) {
-  // vision_ai_feedback을 리스트로 파싱 ("핵심 3단: 1) ..., 2) ..., 3) ...")
-  const feedbackItems = (() => {
-    const raw = view.vision_ai_feedback ?? "";
-    if (!raw) return [] as string[];
-    const body = raw.replace(/^핵심\s*3단\s*:\s*/i, "");
-    const byPattern = Array.from(body.matchAll(/\d+\)\s*([^,]+?)(?:,|$)/g)).map(
-      (m) => m[1].trim()
-    );
-    if (byPattern.length > 0) return byPattern;
-    return body
-      .split(",")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-  })();
+  // vision_ai_feedback은 이미 배열 형태 (3개 요소)
+  const feedbackItems = Array.isArray(view.vision_ai_feedback)
+    ? view.vision_ai_feedback
+    : [];
 
   return (
     <div className="mb-12">

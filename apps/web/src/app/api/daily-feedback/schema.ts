@@ -22,11 +22,7 @@ export function getSummaryReportSchema(isPro: boolean) {
         // Pro 전용 필드 (무료 멤버십에서는 null로 처리됨)
         trend_analysis: { type: "string", nullable: true },
       },
-      required: [
-        "summary",
-        "key_points",
-        "trend_analysis",
-      ],
+      required: ["summary", "key_points", "trend_analysis"],
       additionalProperties: false,
     },
     strict: true,
@@ -223,10 +219,15 @@ export const DreamReportSchema = {
       vision_keywords: {
         type: "array",
         items: { type: "string" },
-        minItems: 0,
+        minItems: 6,
         maxItems: 10,
       },
-      vision_ai_feedback: { type: "string", nullable: true },
+      vision_ai_feedback: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 3,
+        maxItems: 3,
+      },
       // Pro 전용: 시각화를 통해 이루고 싶은 꿈 목표 리스트
       dream_goals: {
         type: "array",
@@ -358,38 +359,45 @@ export function getFeedbackReportSchema(isPro: boolean) {
 // 기본 스키마 (일반 사용자용, 하위 호환성)
 export const FeedbackReportSchema = getFeedbackReportSchema(false);
 
-export const FinalReportSchema = {
-  name: "FinalReport",
-  schema: {
-    type: "object",
-    properties: {
-      closing_message: { type: "string", maxLength: 400 },
-      tomorrow_focus: { type: "string", nullable: true }, // Pro 전용 필드
-      growth_points: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 0,
-        maxItems: 6,
-        nullable: true,
-      }, // Pro 전용 필드
-      adjustment_points: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 0,
-        maxItems: 6,
-        nullable: true,
-      }, // Pro 전용 필드
+export function getFinalReportSchema(isPro: boolean) {
+  return {
+    name: "FinalReport",
+    schema: {
+      type: "object",
+      properties: {
+        closing_message: { type: "string", maxLength: 400 },
+        tomorrow_focus: { type: "string", nullable: true }, // Pro 전용 필드
+        growth_points: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: 6,
+          nullable: true,
+        }, // Pro 전용 필드
+        adjustment_points: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 0,
+          maxItems: 6,
+          nullable: true,
+        }, // Pro 전용 필드
+      },
+      required: isPro
+        ? [
+            "closing_message",
+            "tomorrow_focus",
+            "growth_points",
+            "adjustment_points",
+          ]
+        : ["closing_message"],
+      additionalProperties: false,
     },
-    required: [
-      "closing_message",
-      "tomorrow_focus",
-      "growth_points",
-      "adjustment_points",
-    ],
-    additionalProperties: false,
-  },
-  strict: true,
-} as const;
+    strict: true,
+  } as const;
+}
+
+// 기본 스키마 (일반 사용자용, 하위 호환성)
+export const FinalReportSchema = getFinalReportSchema(false);
 
 // 시스템 프롬프트
 export const SYSTEM_PROMPT_SUMMARY = `
@@ -458,8 +466,8 @@ export const SYSTEM_PROMPT_DREAM = `
 
 규칙:
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
-- vision_keywords는 최대 10개까지 추출합니다.
-- vision_ai_feedback는 "핵심 3단: 1) ..., 2) ..., 3) ..." 형식으로 작성하거나 null로 둡니다.
+- vision_keywords는 6~10개 필수로 추출합니다.
+- vision_ai_feedback는 3개 요소의 배열로 반환합니다. 각 요소는 핵심 피드백 한 문장입니다.
 - 꿈/목표 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
 
 [멤버십별 차별화]
@@ -499,11 +507,15 @@ export const SYSTEM_PROMPT_FINAL = `
 규칙:
 - 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
 - closing_message는 공백 포함 400자 이내로 하루를 정리하는 멘트를 작성합니다.
-- tomorrow_focus는 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하거나 null로 둡니다. (Pro 전용 필드)
-- growth_points, adjustment_points는 성장/조정 포인트를 리스트 형식으로 정리합니다 (각 0~6개). (Pro 전용 필드)
 - 모든 타입의 리포트를 종합하여 균형있게 분석합니다.
 
 [멤버십별 차별화]
-- Pro 멤버십: 상세하고 깊이 있는 최종 리포트를 생성하세요. tomorrow_focus, growth_points, adjustment_points에 리스트 형태의 포인트를 충분히 포함하세요.
-- 무료 멤버십: 간단하게 핵심만 알려주세요. tomorrow_focus, growth_points, adjustment_points는 null로 설정하세요.
+- Pro 멤버십: 
+  * tomorrow_focus는 반드시 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하세요. 최소 3개 이상의 포인트를 포함하세요.
+  * growth_points는 성장 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
+  * adjustment_points는 조정 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
+  * 상세하고 깊이 있는 최종 리포트를 생성하세요.
+- 무료 멤버십: 
+  * tomorrow_focus, growth_points, adjustment_points는 반드시 null로 설정하세요.
+  * 간단하게 핵심만 알려주세요.
 `;

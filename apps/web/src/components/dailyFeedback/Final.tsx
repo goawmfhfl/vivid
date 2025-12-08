@@ -170,48 +170,51 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
           </div>
         </Card>
       )}
-      <Card
-        className="p-6"
-        style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p
-              className="text-xs"
-              style={{
-                opacity: 0.9,
-                marginBottom: "0.5rem",
-              }}
-            >
-              내일의 포커스
-            </p>
-            {focusItems.length > 0 ? (
-              <ul className="space-y-2">
-                {focusItems.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm font-semibold"
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        border: "1px solid rgba(255, 255, 255, 0.35)",
-                      }}
-                    >
-                      {idx + 1}
-                    </span>
-                    <span className="text-sm" style={{ lineHeight: "1.6" }}>
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm" style={{ lineHeight: "1.6" }}>
-                {view.tomorrow_focus}
+      {/* 내일의 포커스 (Pro 전용) */}
+      {isPro && (
+        <Card
+          className="p-6"
+          style={{ backgroundColor: "#8FA894", color: "white", border: "none" }}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p
+                className="text-xs"
+                style={{
+                  opacity: 0.9,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                내일의 포커스
               </p>
-            )}
+              {focusItems.length > 0 ? (
+                <ul className="space-y-2">
+                  {focusItems.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm font-semibold"
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          border: "1px solid rgba(255, 255, 255, 0.35)",
+                        }}
+                      >
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm" style={{ lineHeight: "1.6" }}>
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm" style={{ lineHeight: "1.6" }}>
+                  {view.tomorrow_focus}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

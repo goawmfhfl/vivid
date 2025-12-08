@@ -41,7 +41,7 @@ export interface VisionOverview {
   vision_summary: string | null;
   vision_self: string | null;
   vision_keywords: string[];
-  vision_ai_feedback: string | null;
+  vision_ai_feedback: string[];
 }
 
 // Feedback Overview 섹션
@@ -114,8 +114,8 @@ export interface EmotionReport {
 export interface DreamReport {
   summary: string; // 꿈/목표 요약 (일반: 150자 이내, Pro: 250자 이내)
   vision_self: string; // 자기 평가 (나의 상태와 태도에 대한 짧은 메모, 200자 이내)
-  vision_keywords: string[]; // 키워드 (최대 10개, 나의 비전을 잘 나타내는 단어)
-  vision_ai_feedback: string | null; // AI 피드백 (핵심 3단 형식)
+  vision_keywords: string[]; // 키워드 (6~10개 필수, 나의 비전을 잘 나타내는 단어)
+  vision_ai_feedback: string[]; // AI 피드백 배열 (3개 요소)
   // Pro 전용 필드
   dream_goals?: string[] | null; // 시각화를 통해 이루고 싶은 구체적인 꿈/목표 리스트 (각 항목 1문장, 최대 5개)
   dreamer_traits?: string[] | null; // 이런 꿈을 꾸는 사람들의 특징 리스트 (각 항목 1문장, 최대 5개)

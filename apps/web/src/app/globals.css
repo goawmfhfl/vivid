@@ -61,6 +61,16 @@ select {
   }
 }
 
+/* 끊기지 않는 부드러운 스크롤 애니메이션 */
+@keyframes scroll-horizontal-smooth {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
 .vision-keywords-scroll {
   animation: scroll-horizontal 30s linear infinite;
 }
