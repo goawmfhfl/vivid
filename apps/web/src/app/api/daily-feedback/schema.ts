@@ -360,7 +360,6 @@ export function getFeedbackReportSchema(isPro: boolean) {
 export const FeedbackReportSchema = getFeedbackReportSchema(false);
 
 export function getFinalReportSchema(isPro: boolean) {
-  // OpenAI structured output은 required에 properties의 모든 키가 포함되어야 함
   const schema = {
     type: "object" as const,
     properties: {
@@ -368,7 +367,7 @@ export function getFinalReportSchema(isPro: boolean) {
       tomorrow_focus: {
         type: "array" as const,
         items: { type: "string" as const },
-        minItems: 3,
+        minItems: isPro ? 3 : 0,
         maxItems: 5,
         nullable: true,
       }, // Pro 전용 필드 (3~5개 배열)
@@ -387,12 +386,15 @@ export function getFinalReportSchema(isPro: boolean) {
         nullable: true,
       }, // Pro 전용 필드
     },
-    required: [
-      "closing_message",
-      "tomorrow_focus",
-      "growth_points",
-      "adjustment_points",
-    ],
+    // Pro일 때는 모든 필드 required, Free일 때는 closing_message만 required
+    required: isPro
+      ? [
+          "closing_message",
+          "tomorrow_focus",
+          "growth_points",
+          "adjustment_points",
+        ]
+      : ["closing_message"],
     additionalProperties: false,
   };
 

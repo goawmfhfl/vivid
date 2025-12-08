@@ -48,10 +48,6 @@ export function ScrollingKeywords({
     ...badgeStyle,
   };
 
-  // 각 키워드 세트의 너비를 계산 (대략적인 값)
-  // 실제로는 각 배지의 너비 + gap을 합산해야 하지만, 애니메이션을 위해 50% 이동
-  const singleSetWidth = 100 / 3; // 3개 세트이므로 각 세트는 33.33%
-
   return (
     <div
       className={`overflow-hidden pb-2 ${containerClassName}`}
