@@ -390,54 +390,123 @@ export function UserDetail({ userId }: UserDetailProps) {
             ...CARD_STYLES.default,
           }}
         >
-          <h2
-            className="text-xl font-semibold mb-4"
-            style={{ color: COLORS.text.primary }}
-          >
-            구독 정보
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: COLORS.text.primary }}
+            >
+              구독 정보
+            </h2>
+            {user.subscription && (
+              <button
+                onClick={() =>
+                  router.push(`/admin/subscriptions?userId=${user.id}`)
+                }
+                className="text-sm px-3 py-1 rounded-lg"
+                style={{
+                  backgroundColor: COLORS.brand.light,
+                  color: COLORS.brand.primary,
+                }}
+              >
+                수정
+              </button>
+            )}
+          </div>
           {user.subscription ? (
-            <div className="space-y-3">
-              <div>
-                <label
-                  className="text-sm font-medium"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  플랜
-                </label>
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.subscription.plan === "pro" ? "Pro" : "Free"}
-                </p>
+            <div className="space-y-4">
+              <div
+                className="flex items-center justify-between p-3 rounded-lg"
+                style={{ backgroundColor: COLORS.background.hover }}
+              >
+                <div>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    플랜
+                  </label>
+                  <span
+                    className="px-3 py-1 rounded-lg text-sm font-semibold"
+                    style={{
+                      backgroundColor:
+                        user.subscription.plan === "pro"
+                          ? COLORS.brand.light
+                          : COLORS.background.card,
+                      color:
+                        user.subscription.plan === "pro"
+                          ? COLORS.brand.primary
+                          : COLORS.text.secondary,
+                    }}
+                  >
+                    {user.subscription.plan === "pro" ? "Pro" : "Free"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <label
-                  className="text-sm font-medium"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  상태
-                </label>
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.subscription.status}
-                </p>
-              </div>
-              <div>
-                <label
-                  className="text-sm font-medium"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  만료일
-                </label>
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.subscription.expires_at
-                    ? new Date(user.subscription.expires_at).toLocaleDateString(
-                        "ko-KR"
-                      )
-                    : "-"}
-                </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    상태
+                  </label>
+                  <span
+                    className="px-2 py-1 rounded text-xs font-medium"
+                    style={{
+                      backgroundColor:
+                        user.subscription.status === "active"
+                          ? COLORS.status.success + "20"
+                          : COLORS.status.error + "20",
+                      color:
+                        user.subscription.status === "active"
+                          ? COLORS.status.success
+                          : COLORS.status.error,
+                    }}
+                  >
+                    {user.subscription.status === "active"
+                      ? "활성"
+                      : user.subscription.status === "canceled"
+                      ? "취소됨"
+                      : user.subscription.status === "expired"
+                      ? "만료됨"
+                      : "연체"}
+                  </span>
+                </div>
+                <div>
+                  <label
+                    className="text-xs font-medium block mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    만료일
+                  </label>
+                  <p className="text-sm" style={{ color: COLORS.text.primary }}>
+                    {user.subscription.expires_at
+                      ? new Date(
+                          user.subscription.expires_at
+                        ).toLocaleDateString("ko-KR")
+                      : "-"}
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
-            <p style={{ color: COLORS.text.muted }}>구독 정보가 없습니다.</p>
+            <div className="text-center py-8">
+              <p className="text-sm mb-3" style={{ color: COLORS.text.muted }}>
+                구독 정보가 없습니다.
+              </p>
+              <button
+                onClick={() =>
+                  router.push(`/admin/subscriptions?userId=${user.id}`)
+                }
+                className="text-sm px-4 py-2 rounded-lg"
+                style={{
+                  backgroundColor: COLORS.brand.primary,
+                  color: COLORS.text.white,
+                }}
+              >
+                구독 생성
+              </button>
+            </div>
           )}
         </div>
 
@@ -456,8 +525,14 @@ export function UserDetail({ userId }: UserDetailProps) {
           </h2>
           {user.stats ? (
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+              <div
+                className="p-4 rounded-lg"
+                style={{ backgroundColor: COLORS.background.hover }}
+              >
+                <p
+                  className="text-xs font-medium mb-1"
+                  style={{ color: COLORS.text.secondary }}
+                >
                   Records
                 </p>
                 <p
@@ -467,8 +542,14 @@ export function UserDetail({ userId }: UserDetailProps) {
                   {user.stats.records_count.toLocaleString()}
                 </p>
               </div>
-              <div>
-                <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+              <div
+                className="p-4 rounded-lg"
+                style={{ backgroundColor: COLORS.background.hover }}
+              >
+                <p
+                  className="text-xs font-medium mb-1"
+                  style={{ color: COLORS.text.secondary }}
+                >
                   Daily Feedback
                 </p>
                 <p
@@ -478,8 +559,14 @@ export function UserDetail({ userId }: UserDetailProps) {
                   {user.stats.daily_feedback_count.toLocaleString()}
                 </p>
               </div>
-              <div>
-                <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+              <div
+                className="p-4 rounded-lg"
+                style={{ backgroundColor: COLORS.background.hover }}
+              >
+                <p
+                  className="text-xs font-medium mb-1"
+                  style={{ color: COLORS.text.secondary }}
+                >
                   Weekly Feedback
                 </p>
                 <p
@@ -489,8 +576,14 @@ export function UserDetail({ userId }: UserDetailProps) {
                   {user.stats.weekly_feedback_count.toLocaleString()}
                 </p>
               </div>
-              <div>
-                <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+              <div
+                className="p-4 rounded-lg"
+                style={{ backgroundColor: COLORS.background.hover }}
+              >
+                <p
+                  className="text-xs font-medium mb-1"
+                  style={{ color: COLORS.text.secondary }}
+                >
                   Monthly Feedback
                 </p>
                 <p
@@ -502,7 +595,11 @@ export function UserDetail({ userId }: UserDetailProps) {
               </div>
             </div>
           ) : (
-            <p style={{ color: COLORS.text.muted }}>통계 정보가 없습니다.</p>
+            <div className="text-center py-8">
+              <p className="text-sm" style={{ color: COLORS.text.muted }}>
+                통계 정보가 없습니다.
+              </p>
+            </div>
           )}
         </div>
 
@@ -514,17 +611,32 @@ export function UserDetail({ userId }: UserDetailProps) {
               ...CARD_STYLES.default,
             }}
           >
-            <h2
-              className="text-xl font-semibold mb-4"
-              style={{ color: COLORS.text.primary }}
-            >
-              AI 사용량 통계
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-semibold"
+                style={{ color: COLORS.text.primary }}
+              >
+                AI 사용량 통계
+              </h2>
+              <button
+                onClick={() => router.push(`/admin/ai-usage/${userId}`)}
+                className="text-sm px-3 py-1 rounded-lg"
+                style={{
+                  backgroundColor: COLORS.brand.light,
+                  color: COLORS.brand.primary,
+                }}
+              >
+                상세 보기
+              </button>
+            </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div
+                  className="p-4 rounded-lg"
+                  style={{ backgroundColor: COLORS.background.hover }}
+                >
                   <p
-                    className="text-sm"
+                    className="text-xs font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
                     총 요청 수
@@ -536,9 +648,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                     {aiStats.total_requests.toLocaleString()}
                   </p>
                 </div>
-                <div>
+                <div
+                  className="p-4 rounded-lg"
+                  style={{ backgroundColor: COLORS.background.hover }}
+                >
                   <p
-                    className="text-sm"
+                    className="text-xs font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
                     총 토큰
@@ -550,9 +665,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                     {aiStats.total_tokens.toLocaleString()}
                   </p>
                 </div>
-                <div>
+                <div
+                  className="p-4 rounded-lg"
+                  style={{ backgroundColor: COLORS.background.hover }}
+                >
                   <p
-                    className="text-sm"
+                    className="text-xs font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
                     총 비용 (USD)
@@ -564,9 +682,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                     ${aiStats.total_cost_usd.toFixed(2)}
                   </p>
                 </div>
-                <div>
+                <div
+                  className="p-4 rounded-lg"
+                  style={{ backgroundColor: COLORS.background.hover }}
+                >
                   <p
-                    className="text-sm"
+                    className="text-xs font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
                     총 비용 (KRW)

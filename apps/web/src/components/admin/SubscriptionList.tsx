@@ -258,7 +258,7 @@ export function SubscriptionList() {
                 {subscriptions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-4 py-12 text-center"
                       style={{ color: COLORS.text.secondary }}
                     >
@@ -414,6 +414,31 @@ export function SubscriptionList() {
                               : "-"}
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col">
+                          <span
+                            className="text-xs"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            {sub.updated_at
+                              ? new Date(sub.updated_at).toLocaleDateString(
+                                  "ko-KR"
+                                )
+                              : "-"}
+                          </span>
+                          <span
+                            className="text-xs"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            {sub.updated_at
+                              ? new Date(sub.updated_at).toLocaleTimeString(
+                                  "ko-KR",
+                                  { hour: "2-digit", minute: "2-digit" }
+                                )
+                              : ""}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         {isEditing === sub.user_id ? (

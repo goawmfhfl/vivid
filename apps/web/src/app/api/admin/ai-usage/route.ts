@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
       tokens: number;
       cost_usd: number;
       cost_krw: number;
+      avg_duration_ms: number;
     }
 
     interface TypeStats {
@@ -80,6 +81,7 @@ export async function GET(request: NextRequest) {
       tokens: number;
       cost_usd: number;
       cost_krw: number;
+      avg_duration_ms: number;
     }
 
     interface DailyStats {
@@ -88,10 +90,12 @@ export async function GET(request: NextRequest) {
       tokens: number;
       cost_usd: number;
       cost_krw: number;
+      avg_duration_ms: number;
     }
 
     // 모델별 집계
     const modelMap = new Map<string, ModelStats>();
+    const modelDurationMap = new Map<string, number[]>();
     requests.forEach((req) => {
       const model = req.model;
       if (!modelMap.has(model)) {
@@ -101,17 +105,31 @@ export async function GET(request: NextRequest) {
           tokens: 0,
           cost_usd: 0,
           cost_krw: 0,
+          avg_duration_ms: 0,
         });
+        modelDurationMap.set(model, []);
       }
       const stats = modelMap.get(model)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);
       stats.cost_krw += Number(req.cost_krw || 0);
+      if (req.duration_ms) {
+        modelDurationMap.get(model)?.push(req.duration_ms);
+      }
+    });
+    // 평균 duration 계산
+    modelMap.forEach((stats, model) => {
+      const durations = modelDurationMap.get(model) || [];
+      if (durations.length > 0) {
+        stats.avg_duration_ms =
+          durations.reduce((a, b) => a + b, 0) / durations.length;
+      }
     });
 
     // 타입별 집계
     const typeMap = new Map<string, TypeStats>();
+    const typeDurationMap = new Map<string, number[]>();
     requests.forEach((req) => {
       const type = req.request_type;
       if (!typeMap.has(type)) {
@@ -121,17 +139,31 @@ export async function GET(request: NextRequest) {
           tokens: 0,
           cost_usd: 0,
           cost_krw: 0,
+          avg_duration_ms: 0,
         });
+        typeDurationMap.set(type, []);
       }
       const stats = typeMap.get(type)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);
       stats.cost_krw += Number(req.cost_krw || 0);
+      if (req.duration_ms) {
+        typeDurationMap.get(type)?.push(req.duration_ms);
+      }
+    });
+    // 평균 duration 계산
+    typeMap.forEach((stats, type) => {
+      const durations = typeDurationMap.get(type) || [];
+      if (durations.length > 0) {
+        stats.avg_duration_ms =
+          durations.reduce((a, b) => a + b, 0) / durations.length;
+      }
     });
 
     // 일별 트렌드
     const dailyMap = new Map<string, DailyStats>();
+    const dailyDurationMap = new Map<string, number[]>();
     requests.forEach((req) => {
       const date = new Date(req.created_at).toISOString().split("T")[0];
       if (!dailyMap.has(date)) {
@@ -141,13 +173,26 @@ export async function GET(request: NextRequest) {
           tokens: 0,
           cost_usd: 0,
           cost_krw: 0,
+          avg_duration_ms: 0,
         });
+        dailyDurationMap.set(date, []);
       }
       const stats = dailyMap.get(date)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);
       stats.cost_krw += Number(req.cost_krw || 0);
+      if (req.duration_ms) {
+        dailyDurationMap.get(date)?.push(req.duration_ms);
+      }
+    });
+    // 평균 duration 계산
+    dailyMap.forEach((stats, date) => {
+      const durations = dailyDurationMap.get(date) || [];
+      if (durations.length > 0) {
+        stats.avg_duration_ms =
+          durations.reduce((a, b) => a + b, 0) / durations.length;
+      }
     });
 
     // 유저별 비용 상위 10명

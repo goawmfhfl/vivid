@@ -23,15 +23,10 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceSupabase();
     const offset = (page - 1) * limit;
 
+    // 구독 목록 조회
     let query = supabase
       .from("subscriptions")
-      .select(
-        `
-        *,
-        profiles(id, email, name)
-      `,
-        { count: "exact" }
-      )
+      .select("*", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -53,26 +48,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 프로필 정보 별도 조회
+    const userIds = subscriptions?.map((sub) => sub.user_id) || [];
+    const userMap = new Map();
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, email, name")
+        .in("id", userIds);
+
+      profiles?.forEach((profile) => {
+        userMap.set(profile.id, profile);
+      });
+    }
+
     return NextResponse.json({
       subscriptions:
-        subscriptions?.map((sub) => ({
-          id: sub.id,
-          user_id: sub.user_id,
-          user: sub.profiles
-            ? {
-                id: sub.profiles.id,
-                email: sub.profiles.email,
-                name: sub.profiles.name,
-              }
-            : null,
-          plan: sub.plan,
-          status: sub.status,
-          expires_at: sub.expires_at,
-          started_at: sub.started_at,
-          canceled_at: sub.canceled_at,
-          created_at: sub.created_at,
-          updated_at: sub.updated_at,
-        })) || [],
+        subscriptions?.map((sub) => {
+          const profile = userMap.get(sub.user_id);
+          return {
+            id: sub.id,
+            user_id: sub.user_id,
+            user: profile
+              ? {
+                  id: profile.id,
+                  email: profile.email,
+                  name: profile.name,
+                }
+              : null,
+            plan: sub.plan,
+            status: sub.status,
+            expires_at: sub.expires_at,
+            started_at: sub.started_at,
+            canceled_at: sub.canceled_at,
+            created_at: sub.created_at,
+            updated_at: sub.updated_at,
+          };
+        }) || [],
       pagination: {
         page,
         limit,

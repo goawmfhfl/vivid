@@ -156,6 +156,12 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                     className="px-4 py-3 text-left text-sm font-semibold"
                     style={{ color: COLORS.text.primary }}
                   >
+                    소요 시간
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-semibold"
+                    style={{ color: COLORS.text.primary }}
+                  >
                     상태
                   </th>
                 </tr>
@@ -212,6 +218,15 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           ₩{detail.cost_krw.toLocaleString()}
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span style={{ color: COLORS.text.secondary }}>
+                        {detail.duration_ms
+                          ? detail.duration_ms < 1000
+                            ? `${detail.duration_ms}ms`
+                            : `${(detail.duration_ms / 1000).toFixed(2)}s`
+                          : "-"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <span

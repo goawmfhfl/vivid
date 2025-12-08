@@ -57,6 +57,7 @@ export interface AIUsageStats {
     tokens: number;
     cost_usd: number;
     cost_krw: number;
+    avg_duration_ms?: number;
   }>;
   by_type: Array<{
     request_type: string;
@@ -64,6 +65,7 @@ export interface AIUsageStats {
     tokens: number;
     cost_usd: number;
     cost_krw: number;
+    avg_duration_ms?: number;
   }>;
   daily_trend: Array<{
     date: string;
@@ -71,6 +73,7 @@ export interface AIUsageStats {
     tokens: number;
     cost_usd: number;
     cost_krw: number;
+    avg_duration_ms?: number;
   }>;
 }
 

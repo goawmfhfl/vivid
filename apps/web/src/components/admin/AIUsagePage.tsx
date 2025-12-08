@@ -42,20 +42,38 @@ interface ExtendedAIUsageStats extends AIUsageStats {
 }
 
 interface OpenAICreditInfo {
-  subscription: {
-    hasPaymentMethod: boolean;
-    softLimit: number;
-    hardLimit: number;
-    systemHardLimit: number;
-  } | null;
-  creditGrants: {
-    totalAvailable: number;
-    grants: Array<unknown>;
-  } | null;
-  usage: {
-    totalUsage: number;
-    dailyCosts: Array<unknown>;
-  } | null;
+  trackedUsage: {
+    total: {
+      cost_usd: number;
+      cost_krw: number;
+      tokens: number;
+      requests: number;
+    };
+    today: {
+      cost_usd: number;
+      cost_krw: number;
+      tokens: number;
+      requests: number;
+    };
+    thisWeek: {
+      cost_usd: number;
+      cost_krw: number;
+      tokens: number;
+      requests: number;
+    };
+    thisMonth: {
+      cost_usd: number;
+      cost_krw: number;
+      tokens: number;
+      requests: number;
+    };
+    dailyTrend: Array<{ date: string; cost_usd: number }>;
+  };
+  openaiApiAccess: {
+    available: boolean;
+    reason: string;
+    note: string;
+  };
   apiKeyConfigured: boolean;
   apiKeyPrefix: string;
   error?: string;
@@ -105,9 +123,18 @@ export function AIUsagePage() {
           const errorData = await response.json().catch(() => ({}));
           console.error("크레딧 정보 조회 실패:", response.status, errorData);
           setCreditInfo({
-            subscription: null,
-            creditGrants: null,
-            usage: null,
+            trackedUsage: {
+              total: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+              today: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+              thisWeek: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+              thisMonth: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+              dailyTrend: [],
+            },
+            openaiApiAccess: {
+              available: false,
+              reason: "API 조회 실패",
+              note: "",
+            },
             apiKeyConfigured: false,
             apiKeyPrefix: "",
             error: errorData.error || "크레딧 정보를 불러올 수 없습니다.",
@@ -116,9 +143,18 @@ export function AIUsagePage() {
       } catch (err) {
         console.error("크레딧 정보 조회 실패:", err);
         setCreditInfo({
-          subscription: null,
-          creditGrants: null,
-          usage: null,
+          trackedUsage: {
+            total: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+            today: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+            thisWeek: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+            thisMonth: { cost_usd: 0, cost_krw: 0, tokens: 0, requests: 0 },
+            dailyTrend: [],
+          },
+          openaiApiAccess: {
+            available: false,
+            reason: "API 조회 실패",
+            note: "",
+          },
           apiKeyConfigured: false,
           apiKeyPrefix: "",
           error: err instanceof Error ? err.message : "알 수 없는 오류",
@@ -186,7 +222,7 @@ export function AIUsagePage() {
         </select>
       </div>
 
-      {/* OpenAI 크레딧 정보 섹션 */}
+      {/* AI 사용량 추적 정보 섹션 */}
       {creditInfo && (
         <div
           className="rounded-xl p-6"
@@ -201,7 +237,7 @@ export function AIUsagePage() {
               className="text-xl font-semibold"
               style={{ color: COLORS.text.primary }}
             >
-              OpenAI 크레딧 정보
+              AI 사용량 추적 정보
             </h2>
             {isCreditLoading && (
               <div
@@ -216,36 +252,52 @@ export function AIUsagePage() {
               <p style={{ color: COLORS.status.error }} className="mb-2">
                 {creditInfo.error}
               </p>
-              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
-                OpenAI API 키에 billing API 접근 권한이 필요합니다.
-              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {creditInfo.creditGrants && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div>
                   <p
                     className="text-sm font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
-                    크레딧 잔액
+                    오늘 사용량
                   </p>
                   <p
                     className="text-2xl font-bold"
                     style={{ color: COLORS.brand.primary }}
                   >
-                    ${creditInfo.creditGrants.totalAvailable.toFixed(2)}
+                    ${creditInfo.trackedUsage.today.cost_usd.toFixed(4)}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
-                    {creditInfo.creditGrants.grants.length}개의 크레딧
+                    {creditInfo.trackedUsage.today.requests}개 요청
                   </p>
                 </div>
-              )}
 
-              {creditInfo.usage && (
+                <div>
+                  <p
+                    className="text-sm font-medium mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    이번 주 사용량
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    ${creditInfo.trackedUsage.thisWeek.cost_usd.toFixed(4)}
+                  </p>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    {creditInfo.trackedUsage.thisWeek.requests}개 요청
+                  </p>
+                </div>
+
                 <div>
                   <p
                     className="text-sm font-medium mb-1"
@@ -257,115 +309,89 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ${(creditInfo.usage.totalUsage / 100).toFixed(2)}
+                    ${creditInfo.trackedUsage.thisMonth.cost_usd.toFixed(4)}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
-                    실제 OpenAI 사용량
+                    {creditInfo.trackedUsage.thisMonth.requests}개 요청
                   </p>
                 </div>
-              )}
 
-              {creditInfo.subscription && (
-                <>
-                  <div>
-                    <p
-                      className="text-sm font-medium mb-1"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      소프트 리밋
-                    </p>
-                    <p
-                      className="text-2xl font-bold"
-                      style={{ color: COLORS.text.primary }}
-                    >
-                      ${creditInfo.subscription.softLimit.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p
-                      className="text-sm font-medium mb-1"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      하드 리밋
-                    </p>
-                    <p
-                      className="text-2xl font-bold"
-                      style={{ color: COLORS.text.primary }}
-                    >
-                      ${creditInfo.subscription.hardLimit.toFixed(2)}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {creditInfo.creditGrants && creditInfo.usage && (
                 <div>
                   <p
                     className="text-sm font-medium mb-1"
                     style={{ color: COLORS.text.secondary }}
                   >
-                    예상 잔액
+                    전체 사용량
                   </p>
                   <p
                     className="text-2xl font-bold"
-                    style={{
-                      color:
-                        creditInfo.creditGrants.totalAvailable -
-                          creditInfo.usage.totalUsage / 100 >
-                        0
-                          ? COLORS.status.success
-                          : COLORS.status.warning,
-                    }}
+                    style={{ color: COLORS.text.primary }}
                   >
-                    $
-                    {(
-                      creditInfo.creditGrants.totalAvailable -
-                      creditInfo.usage.totalUsage / 100
-                    ).toFixed(2)}
+                    ${creditInfo.trackedUsage.total.cost_usd.toFixed(4)}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
-                    크레딧 - 사용량
+                    {creditInfo.trackedUsage.total.requests}개 요청
+                  </p>
+                </div>
+              </div>
+
+              {/* OpenAI API 접근 불가 안내 */}
+              {!creditInfo.openaiApiAccess.available && (
+                <div
+                  className="p-4 rounded-lg mb-4"
+                  style={{
+                    backgroundColor: COLORS.status.warning + "15",
+                    border: `1px solid ${COLORS.status.warning}40`,
+                  }}
+                >
+                  <p
+                    className="text-sm font-medium mb-1"
+                    style={{ color: COLORS.status.warning }}
+                  >
+                    ⚠️ OpenAI API 직접 조회 불가
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    {creditInfo.openaiApiAccess.reason}
+                  </p>
+                  <p
+                    className="text-xs mt-2"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    {creditInfo.openaiApiAccess.note}
                   </p>
                 </div>
               )}
 
-              {/* 데이터가 없을 때 메시지 */}
-              {!creditInfo.creditGrants &&
-                !creditInfo.usage &&
-                !creditInfo.subscription && (
-                  <div className="col-span-full py-4 text-center">
-                    <p
-                      className="text-sm"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      크레딧 정보를 불러올 수 없습니다.
-                    </p>
-                    <p
-                      className="text-xs mt-1"
-                      style={{ color: COLORS.text.tertiary }}
-                    >
-                      OpenAI API 키에 billing API 접근 권한이 필요합니다.
-                    </p>
-                  </div>
-                )}
-            </div>
-          )}
-
-          {creditInfo.apiKeyPrefix && (
-            <div
-              className="mt-4 pt-4 border-t"
-              style={{ borderColor: COLORS.border.light }}
-            >
-              <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-                API 키: {creditInfo.apiKeyPrefix}
-              </p>
-            </div>
+              <div
+                className="pt-4 border-t"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center justify-between">
+                  <p
+                    className="text-xs"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    API 키: {creditInfo.apiKeyPrefix}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    총 토큰:{" "}
+                    {creditInfo.trackedUsage.total.tokens.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -465,9 +491,22 @@ export function AIUsagePage() {
                       {model.model}
                     </span>
                   </div>
-                  <span style={{ color: COLORS.text.secondary }}>
-                    ${model.cost_usd.toFixed(2)} ({model.requests}회)
-                  </span>
+                  <div className="flex flex-col items-end">
+                    <span style={{ color: COLORS.text.secondary }}>
+                      ${model.cost_usd.toFixed(2)} ({model.requests}회)
+                    </span>
+                    {model.avg_duration_ms && model.avg_duration_ms > 0 && (
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        평균:{" "}
+                        {model.avg_duration_ms < 1000
+                          ? `${Math.round(model.avg_duration_ms)}ms`
+                          : `${(model.avg_duration_ms / 1000).toFixed(2)}s`}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -513,6 +552,38 @@ export function AIUsagePage() {
                 <Bar dataKey="cost_usd" fill={COLORS.brand.primary} />
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {stats.by_type.map((type) => (
+                <div
+                  key={type.request_type}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span style={{ color: COLORS.text.primary }}>
+                    {type.request_type === "daily_feedback"
+                      ? "Daily Feedback"
+                      : type.request_type === "weekly_feedback"
+                      ? "Weekly Feedback"
+                      : "Monthly Feedback"}
+                  </span>
+                  <div className="flex flex-col items-end">
+                    <span style={{ color: COLORS.text.secondary }}>
+                      ${type.cost_usd.toFixed(2)} ({type.requests}회)
+                    </span>
+                    {type.avg_duration_ms && type.avg_duration_ms > 0 && (
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        평균:{" "}
+                        {type.avg_duration_ms < 1000
+                          ? `${Math.round(type.avg_duration_ms)}ms`
+                          : `${(type.avg_duration_ms / 1000).toFixed(2)}s`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
