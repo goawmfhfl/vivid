@@ -1,4 +1,4 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
 import type { ProgressCallback } from "./types";
 import {
@@ -17,12 +17,12 @@ import {
 export type { ProgressCallback } from "./types";
 
 /**
- * Weekly Feedback 배열을 기반으로 월간 피드백 생성 (스트리밍 진행 상황 포함)
+ * Daily Feedback 배열을 기반으로 월간 피드백 생성 (스트리밍 진행 상황 포함)
  *
  * 7개 영역을 병렬로 생성 (Promise.all 사용)
  */
-export async function generateMonthlyFeedbackFromWeeklyWithProgress(
-  weeklyFeedbacks: WeeklyFeedback[],
+export async function generateMonthlyFeedbackFromDailyWithProgress(
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
@@ -50,17 +50,17 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
     closingReport,
   ] = await Promise.all([
     generateSummaryReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       totalDays,
-      weeklyFeedbacks.length,
+      dailyFeedbacks.length,
       isPro,
       progressCallback,
       1
     ),
     generateDailyLifeReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -68,7 +68,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
       2
     ),
     generateEmotionReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -76,7 +76,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
       3
     ),
     generateVisionReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -84,7 +84,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
       4
     ),
     generateInsightReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -92,7 +92,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
       5
     ),
     generateExecutionReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -100,7 +100,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
       6
     ),
     generateClosingReport(
-      weeklyFeedbacks,
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,
@@ -114,7 +114,7 @@ export async function generateMonthlyFeedbackFromWeeklyWithProgress(
     month_label: monthLabel,
     date_range: dateRange,
     total_days: totalDays,
-    recorded_days: weeklyFeedbacks.length,
+    recorded_days: dailyFeedbacks.length,
     summary_report: summaryReport,
     daily_life_report: dailyLifeReport,
     emotion_report: emotionReport,

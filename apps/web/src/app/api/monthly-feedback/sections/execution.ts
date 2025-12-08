@@ -1,4 +1,4 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { ExecutionReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
@@ -11,7 +11,7 @@ import { buildExecutionReportPrompt } from "../prompts/execution";
  * Execution Report 생성
  */
 export async function generateExecutionReport(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
@@ -24,7 +24,7 @@ export async function generateExecutionReport(
 
   const schema = getSectionSchema("execution_report");
   const userPrompt = buildExecutionReportPrompt(
-    weeklyFeedbacks,
+    dailyFeedbacks,
     month,
     dateRange
   );

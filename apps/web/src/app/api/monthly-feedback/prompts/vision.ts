@@ -1,69 +1,49 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 /**
  * Vision Report용 프롬프트 생성
  */
 export function buildVisionReportPrompt(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string }
 ): string {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 주간 피드백의 비전 데이터입니다. 
-주간 vision_report들을 종합하여 월간 비전 리포트(vision_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 비전 데이터입니다. 
+일일 dream_report들을 종합하여 월간 비전 리포트(vision_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
-  weeklyFeedbacks.forEach((wf, idx) => {
-    prompt += `[주간 피드백 ${idx + 1} - ${wf.week_range.start} ~ ${
-      wf.week_range.end
-    }]\n`;
+  dailyFeedbacks.forEach((df, idx) => {
+    prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const vr = wf.vision_report;
-    if (vr) {
-      if (vr.vision_summary) {
-        prompt += `비전 요약: ${vr.vision_summary}\n`;
+    const dr = df.dream_report;
+    if (dr) {
+      if (dr.summary) {
+        prompt += `비전 요약: ${dr.summary}\n`;
       }
-      if (vr.vision_keywords_trend.length > 0) {
-        prompt += `비전 키워드 트렌드: ${vr.vision_keywords_trend
-          .map((k) => `${k.keyword} (${k.days}일)`)
-          .join(", ")}\n`;
+      if (dr.vision_self) {
+        prompt += `자기 평가: ${dr.vision_self}\n`;
       }
-      if (vr.goals_pattern?.summary) {
-        prompt += `목표 패턴: ${vr.goals_pattern.summary}\n`;
+      if (Array.isArray(dr.vision_keywords) && dr.vision_keywords.length > 0) {
+        prompt += `비전 키워드: ${dr.vision_keywords.join(", ")}\n`;
       }
-      if (vr.goals_pattern?.goal_categories.length > 0) {
-        prompt += `목표 카테고리: ${vr.goals_pattern.goal_categories
-          .map((c) => `${c.category} (${c.count}회)`)
-          .join(", ")}\n`;
+      if (dr.vision_ai_feedback) {
+        prompt += `AI 피드백: ${dr.vision_ai_feedback}\n`;
       }
-      if (vr.self_vision_alignment?.summary) {
-        prompt += `자기 비전 정렬: ${vr.self_vision_alignment.summary}\n`;
+      // Pro 전용 필드
+      if (Array.isArray(dr.dream_goals) && dr.dream_goals.length > 0) {
+        prompt += `꿈/목표: ${dr.dream_goals.join(", ")}\n`;
       }
-      if (vr.self_vision_alignment?.key_traits.length > 0) {
-        prompt += `주요 특성: ${vr.self_vision_alignment.key_traits
-          .map((t) => `${t.trait} (${t.frequency}회)`)
-          .join(", ")}\n`;
-      }
-      if (vr.dreamer_traits_evolution?.summary) {
-        prompt += `꿈꾸는 자 특성 진화: ${vr.dreamer_traits_evolution.summary}\n`;
-      }
-      if (vr.dreamer_traits_evolution?.common_traits.length > 0) {
-        prompt += `공통 특성: ${vr.dreamer_traits_evolution.common_traits
-          .map((t) => `${t.trait} (${t.frequency}회)`)
-          .join(", ")}\n`;
-      }
-      if (vr.next_week_vision_focus?.focus_areas.length > 0) {
-        prompt += `다음 주 비전 포커스: ${vr.next_week_vision_focus.focus_areas
-          .map((a) => a.area)
-          .join(", ")}\n`;
+      if (Array.isArray(dr.dreamer_traits) && dr.dreamer_traits.length > 0) {
+        prompt += `꿈꾸는 자 특성: ${dr.dreamer_traits.join(", ")}\n`;
       }
     }
 
     prompt += `\n`;
   });
 
-  prompt += `\n위 주간 비전 리포트들을 종합하여 월간 비전 리포트(vision_report)를 생성하세요.
+  prompt += `\n위 일일 비전 리포트들을 종합하여 월간 비전 리포트(vision_report)를 생성하세요.
 - vision_days_count, vision_records_count: 비전 관련 기록이 있는 날짜 수/문장 수 계산
 - main_visions: 한 달 동안 반복해서 등장한 비전/목표를 최대 10개까지 정리 (summary, frequency 포함)
 - core_visions: 이번 달의 핵심 비전을 최대 7개까지 선별 (summary, frequency 포함, 최소 2회 이상)

@@ -287,7 +287,7 @@ export function MonthlyCandidatesSection({
                         marginTop: "2px",
                       }}
                     >
-                      {candidate.weekly_feedback_count || 0}개의 주간 피드백
+                      {candidate.daily_feedback_count || 0}개의 일일 피드백
                     </p>
                   </div>
                 </div>

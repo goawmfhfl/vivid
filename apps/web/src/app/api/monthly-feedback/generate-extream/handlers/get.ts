@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import {
-  fetchWeeklyFeedbacksByMonth,
-  validateAllSections,
+  fetchDailyFeedbacksByMonth,
   saveMonthlyFeedback,
 } from "../../db-service";
-import { generateMonthlyFeedbackFromWeeklyWithProgress } from "../../ai-service-extream";
+import { generateMonthlyFeedbackFromDailyWithProgress } from "../../ai-service-extream";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
@@ -46,10 +45,9 @@ export type SSEErrorCallback = (error: string) => void;
  * GET 핸들러: 월간 피드백 생성 (SSE 스트리밍)
  *
  * 플로우:
- * 1. Weekly Feedback 조회
- * 2. 각 영역별 데이터 존재 여부 검증 (2개 이상)
- * 3. AI로 Monthly Feedback 생성 (각 섹션 생성 시점에 진행 상황 전송)
- * 4. DB 저장
+ * 1. Daily Feedback 조회
+ * 2. AI로 Monthly Feedback 생성 (각 섹션 생성 시점에 진행 상황 전송)
+ * 3. DB 저장
  */
 export async function handleGenerateMonthlyFeedback(
   request: NextRequest,
@@ -87,28 +85,23 @@ export async function handleGenerateMonthlyFeedback(
     // 날짜 범위 계산
     const dateRange = getMonthDateRange(month);
 
-    // 1️⃣ Weekly Feedback 데이터 조회
-    const weeklyFeedbacks = await fetchWeeklyFeedbacksByMonth(
+    // 1️⃣ Daily Feedback 데이터 조회
+    const dailyFeedbacks = await fetchDailyFeedbacksByMonth(
       supabase,
       userId,
       dateRange.start_date,
       dateRange.end_date
     );
 
-    // 최소 2개 이상의 weekly-feedback이 있어야 함
-    if (weeklyFeedbacks.length < 2) {
-      sendError(
-        `최소 2개 이상의 주간 피드백이 필요합니다. 현재: ${weeklyFeedbacks.length}개`
-      );
+    // 최소 1개 이상의 daily-feedback이 있어야 함
+    if (dailyFeedbacks.length < 1) {
+      sendError(`일일 피드백이 필요합니다. 현재: ${dailyFeedbacks.length}개`);
       return;
     }
 
-    // 2️⃣ 각 영역별 데이터 존재 여부 검증 (2개 이상)
-    validateAllSections(weeklyFeedbacks);
-
-    // 3️⃣ AI 요청: Monthly Feedback 생성 (진행 상황 콜백 포함)
-    const monthlyFeedback = await generateMonthlyFeedbackFromWeeklyWithProgress(
-      weeklyFeedbacks,
+    // 2️⃣ AI 요청: Monthly Feedback 생성 (진행 상황 콜백 포함)
+    const monthlyFeedback = await generateMonthlyFeedbackFromDailyWithProgress(
+      dailyFeedbacks,
       month,
       dateRange,
       isPro,

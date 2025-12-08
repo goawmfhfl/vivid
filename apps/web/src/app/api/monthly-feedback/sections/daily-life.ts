@@ -1,4 +1,4 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { DailyLifeReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
@@ -11,7 +11,7 @@ import { generateCacheKey } from "../../utils/cache";
  * Daily Life Report 생성
  */
 export async function generateDailyLifeReport(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
@@ -24,7 +24,7 @@ export async function generateDailyLifeReport(
 
   const schema = getSectionSchema("daily_life_report");
   const userPrompt = buildDailyLifeReportPrompt(
-    weeklyFeedbacks,
+    dailyFeedbacks,
     month,
     dateRange
   );

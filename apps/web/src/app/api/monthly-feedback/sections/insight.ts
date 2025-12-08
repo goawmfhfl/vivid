@@ -1,4 +1,4 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { InsightReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
@@ -11,7 +11,7 @@ import { generateCacheKey } from "../../utils/cache";
  * Insight Report 생성
  */
 export async function generateInsightReport(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
@@ -23,11 +23,7 @@ export async function generateInsightReport(
   }
 
   const schema = getSectionSchema("insight_report");
-  const userPrompt = buildInsightReportPrompt(
-    weeklyFeedbacks,
-    month,
-    dateRange
-  );
+  const userPrompt = buildInsightReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, userPrompt);
 
   return generateSection<InsightReport>(

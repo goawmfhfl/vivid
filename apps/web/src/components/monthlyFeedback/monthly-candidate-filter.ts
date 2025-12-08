@@ -41,7 +41,7 @@ export function getLastDayOfMonthStringByMonth(month: string): string {
  * 1. 해당 월의 마지막 일이 현재 날짜(KST)보다 작거나 같아야 함
  *    ⏰ 월의 마지막 일 오전 12시(00:00:00 KST)가 되면 그때부터 생성 대상이 됨
  *    예: 10월 31일 00:00:00 KST가 되면 → 10월 후보 노출 시작
- * 2. 주간 피드백이 2개 이상인 월만 포함 (weekly_feedback_count >= 2)
+ * 2. daily_feedback이 1개 이상인 월만 포함
  *    - API에서 이미 필터링되지만, 클라이언트에서도 확인
  * 3. is_ai_generated가 true인 월간 피드백이 있으면 제외
  *    - API에서 이미 필터링되지만, 클라이언트에서도 확인
@@ -56,25 +56,25 @@ export function getLastDayOfMonthStringByMonth(month: string): string {
  *
  * 후보 데이터:
  * [
- *   { month: "2025-11", weekly_feedback_count: 2 }
+ *   { month: "2025-11", daily_feedback_count: 5 }
  *     → 11월 마지막 일: 2025-11-30
  *     → 2025-11-30 > 2025-11-15 (아직 안 지남)
  *     → ❌ 제외 (아직 마지막 일이 안 지남)
  *
- *   { month: "2025-10", weekly_feedback_count: 2 }
+ *   { month: "2025-10", daily_feedback_count: 10 }
  *     → 10월 마지막 일: 2025-10-31
  *     → 2025-10-31 <= 2025-11-15 (이미 지남)
  *     → ✅ 포함
  *
- *   { month: "2025-09", weekly_feedback_count: 1 }
- *     → weekly_feedback_count: 1 < 2 ❌
- *     → ❌ 제외 (주간 피드백이 2개 미만)
+ *   { month: "2025-09", daily_feedback_count: 0 }
+ *     → daily_feedback_count: 0 < 1 ❌
+ *     → ❌ 제외 (daily_feedback이 없음)
  * ]
  *
  * 🔄 다음 시나리오 (2025-11-30 00:00:00 KST가 되면):
  * - 11월 마지막 일: 2025-11-30
  * - 2025-11-30 <= 2025-11-30 (이미 지남)
- * - weekly_feedback_count >= 2이면 ✅ 포함됨
+ * - daily_feedback_count >= 1이면 ✅ 포함됨
  *
  * 🔄 생성 후 동작:
  * 1. 사용자가 "생성하기" 버튼 클릭
@@ -83,7 +83,7 @@ export function getLastDayOfMonthStringByMonth(month: string): string {
  * 4. API에서 is_ai_generated가 true인 월은 제외됨
  * 5. 결과: 해당 월이 후보 목록에서 사라짐 ✅
  *
- * @param candidates 전체 후보 목록 (API에서 이미 2개 이상 조건과 is_ai_generated 조건이 적용됨)
+ * @param candidates 전체 후보 목록 (API에서 이미 daily_feedback 조건과 is_ai_generated 조건이 적용됨)
  * @param referenceDate 기준 날짜 (기본값: 오늘, KST 기준)
  * @returns 필터링된 후보 목록 (최신순 정렬)
  */
@@ -99,10 +99,10 @@ export function filterMonthlyCandidatesForCreation(
 
   // Step 3: 모든 후보를 하나씩 확인
   for (const candidate of candidates) {
-    // 조건 1: 주간 피드백이 2개 이상인지 확인 (API에서 이미 필터링되지만 안전장치)
+    // 조건 1: daily_feedback이 1개 이상인지 확인 (API에서 이미 필터링되지만 안전장치)
     if (
-      candidate.weekly_feedback_count === undefined ||
-      candidate.weekly_feedback_count < 2
+      candidate.daily_feedback_count === undefined ||
+      candidate.daily_feedback_count < 1
     ) {
       continue;
     }

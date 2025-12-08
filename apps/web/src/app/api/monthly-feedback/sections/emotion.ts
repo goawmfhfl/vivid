@@ -1,4 +1,4 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
@@ -11,7 +11,7 @@ import { generateCacheKey } from "../../utils/cache";
  * Emotion Report 생성
  */
 export async function generateEmotionReport(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
@@ -23,11 +23,7 @@ export async function generateEmotionReport(
   }
 
   const schema = getSectionSchema("emotion_report");
-  const userPrompt = buildEmotionReportPrompt(
-    weeklyFeedbacks,
-    month,
-    dateRange
-  );
+  const userPrompt = buildEmotionReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, userPrompt);
 
   return generateSection<EmotionReport>(

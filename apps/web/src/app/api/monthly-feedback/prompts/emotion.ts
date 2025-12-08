@@ -1,29 +1,27 @@
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 /**
  * Emotion Report용 프롬프트 생성
  */
 export function buildEmotionReportPrompt(
-  weeklyFeedbacks: WeeklyFeedback[],
+  dailyFeedbacks: DailyFeedbackRow[],
   month: string,
   dateRange: { start_date: string; end_date: string }
 ): string {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 주간 피드백의 감정 데이터입니다. 
-주간 emotion_report들을 종합하여 월간 감정 리포트(emotion_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 감정 데이터입니다. 
+일일 emotion_report들을 종합하여 월간 감정 리포트(emotion_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
-  // 주간 감정 데이터 수집
+  // 일일 감정 데이터 수집
   const valenceValues: number[] = [];
   const arousalValues: number[] = [];
 
-  weeklyFeedbacks.forEach((wf, idx) => {
-    prompt += `[주간 피드백 ${idx + 1} - ${wf.week_range.start} ~ ${
-      wf.week_range.end
-    }]\n`;
+  dailyFeedbacks.forEach((df, idx) => {
+    prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const er = wf.emotion_report;
+    const er = df.emotion_report;
     if (er) {
       if (er.ai_mood_valence !== null) {
         prompt += `감정 가치감: ${er.ai_mood_valence}\n`;
@@ -36,38 +34,31 @@ export function buildEmotionReportPrompt(
       if (er.dominant_emotion) {
         prompt += `주요 감정: ${er.dominant_emotion}\n`;
       }
-      if (er.valence_explanation) {
-        prompt += `가치감 설명: ${er.valence_explanation}\n`;
+      if (er.emotion_quadrant) {
+        prompt += `감정 사분면: ${er.emotion_quadrant}\n`;
       }
-      if (er.arousal_explanation) {
-        prompt += `각성도 설명: ${er.arousal_explanation}\n`;
+      if (er.emotion_quadrant_explanation) {
+        prompt += `사분면 설명: ${er.emotion_quadrant_explanation}\n`;
       }
-      if (er.valence_patterns.length > 0) {
-        prompt += `가치감 패턴: ${er.valence_patterns.join(", ")}\n`;
+      if (Array.isArray(er.emotion_curve) && er.emotion_curve.length > 0) {
+        prompt += `감정 흐름: ${er.emotion_curve.join(", ")}\n`;
       }
-      if (er.arousal_patterns.length > 0) {
-        prompt += `각성도 패턴: ${er.arousal_patterns.join(", ")}\n`;
+      if (
+        Array.isArray(er.emotion_timeline) &&
+        er.emotion_timeline.length > 0
+      ) {
+        prompt += `감정 타임라인: ${er.emotion_timeline
+          .map((e) => `${e.time_range} - ${e.emotion}`)
+          .join(", ")}\n`;
       }
-      if (er.valence_triggers.length > 0) {
-        prompt += `가치감 트리거: ${er.valence_triggers.join(", ")}\n`;
+      if (er.ai_comment) {
+        prompt += `AI 코멘트: ${er.ai_comment}\n`;
       }
-      if (er.arousal_triggers.length > 0) {
-        prompt += `각성도 트리거: ${er.arousal_triggers.join(", ")}\n`;
-      }
-      if (er.anxious_triggers.length > 0) {
-        prompt += `불안 트리거: ${er.anxious_triggers.join(", ")}\n`;
-      }
-      if (er.engaged_triggers.length > 0) {
-        prompt += `몰입 트리거: ${er.engaged_triggers.join(", ")}\n`;
-      }
-      if (er.sad_triggers.length > 0) {
-        prompt += `슬픔 트리거: ${er.sad_triggers.join(", ")}\n`;
-      }
-      if (er.calm_triggers.length > 0) {
-        prompt += `평온 트리거: ${er.calm_triggers.join(", ")}\n`;
-      }
-      if (er.daily_emotions.length > 0) {
-        prompt += `일별 감정: ${er.daily_emotions.length}일\n`;
+      // Pro 전용 필드
+      if (Array.isArray(er.emotion_events) && er.emotion_events.length > 0) {
+        prompt += `감정 이벤트: ${er.emotion_events
+          .map((e) => `${e.event} - ${e.emotion}`)
+          .join(", ")}\n`;
       }
     }
 
@@ -88,9 +79,9 @@ export function buildEmotionReportPrompt(
   prompt += `- monthly_ai_mood_valence_avg: ${avgValence ?? "null"}\n`;
   prompt += `- monthly_ai_mood_arousal_avg: ${avgArousal ?? "null"}\n\n`;
 
-  prompt += `위 주간 감정 리포트들을 종합하여 월간 감정 리포트(emotion_report)를 생성하세요.
+  prompt += `위 일일 감정 리포트들을 종합하여 월간 감정 리포트(emotion_report)를 생성하세요.
 - monthly_ai_mood_valence_avg, monthly_ai_mood_arousal_avg: 위에서 계산된 평균값 사용
-- emotion_quadrant_dominant: 주간 피드백들에서 가장 많이 등장한 사분면 선택
+- emotion_quadrant_dominant: 일일 피드백들에서 가장 많이 등장한 사분면 선택
 - emotion_quadrant_distribution: 4개 사분면 모두 포함하여 비율 계산 (각 사분면에 explanation 필드 포함)
 - emotion_quadrant_analysis_summary: 4개 사분면 분포를 종합적으로 분석한 피드백 (300자 이내)
 - emotion_pattern_summary: 이 달 동안 감정이 어떻게 반복되었는지 설명 (400자 이내)
