@@ -22,7 +22,7 @@ export async function generateClosingReport(
     progressCallback(step, 7, "closing_report");
   }
 
-  const schema = getSectionSchema("closing_report");
+  const schema = getSectionSchema("closing_report", isPro);
   const userPrompt = buildClosingReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, userPrompt);
 

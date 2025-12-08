@@ -22,7 +22,7 @@ export async function generateVisionReport(
     progressCallback(step, 7, "vision_report");
   }
 
-  const schema = getSectionSchema("vision_report");
+  const schema = getSectionSchema("vision_report", isPro);
   const userPrompt = buildVisionReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, userPrompt);
 

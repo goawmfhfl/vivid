@@ -22,7 +22,7 @@ export async function generateExecutionReport(
     progressCallback(step, 7, "execution_report");
   }
 
-  const schema = getSectionSchema("execution_report");
+  const schema = getSectionSchema("execution_report", isPro);
   const userPrompt = buildExecutionReportPrompt(
     dailyFeedbacks,
     month,

@@ -22,7 +22,7 @@ export async function generateEmotionReport(
     progressCallback(step, 7, "emotion_report");
   }
 
-  const schema = getSectionSchema("emotion_report");
+  const schema = getSectionSchema("emotion_report", isPro);
   const userPrompt = buildEmotionReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, userPrompt);
 

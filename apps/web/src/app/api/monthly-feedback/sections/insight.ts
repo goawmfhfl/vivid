@@ -22,7 +22,7 @@ export async function generateInsightReport(
     progressCallback(step, 7, "insight_report");
   }
 
-  const schema = getSectionSchema("insight_report");
+  const schema = getSectionSchema("insight_report", isPro);
   const userPrompt = buildInsightReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, userPrompt);
 

@@ -24,7 +24,7 @@ export async function generateSummaryReport(
     progressCallback(step, 7, "summary_report");
   }
 
-  const schema = getSectionSchema("summary_report");
+  const schema = getSectionSchema("summary_report", isPro);
   const userPrompt = buildSummaryReportPrompt(
     dailyFeedbacks,
     month,

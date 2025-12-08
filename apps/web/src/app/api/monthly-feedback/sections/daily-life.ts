@@ -22,7 +22,7 @@ export async function generateDailyLifeReport(
     progressCallback(step, 7, "daily_life_report");
   }
 
-  const schema = getSectionSchema("daily_life_report");
+  const schema = getSectionSchema("daily_life_report", isPro);
   const userPrompt = buildDailyLifeReportPrompt(
     dailyFeedbacks,
     month,
