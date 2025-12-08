@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Heart,
   Lock,
@@ -16,6 +16,11 @@ import { Card } from "../../ui/card";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
+import { EmotionChart } from "../../weeklyFeedback/report/emotionSection/EmotionChart";
+import {
+  TooltipProvider,
+  useTooltip,
+} from "../../weeklyFeedback/report/emotionSection/TooltipContext";
 
 type EmotionSectionProps = {
   emotionReport: EmotionReport;
@@ -50,9 +55,43 @@ export function EmotionSection({
   emotionReport,
   isPro = false,
 }: EmotionSectionProps) {
+  return (
+    <TooltipProvider>
+      <EmotionSectionContent emotionReport={emotionReport} isPro={isPro} />
+    </TooltipProvider>
+  );
+}
+
+function EmotionSectionContent({
+  emotionReport,
+  isPro = false,
+}: EmotionSectionProps) {
   const router = useRouter();
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const { setSelectedDayIndex } = useTooltip();
 
   console.log("[EmotionSection] emotionReport:", emotionReport);
+
+  // 외부 클릭/터치 감지하여 선택 해제
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        chartContainerRef.current &&
+        !chartContainerRef.current.contains(event.target as Node)
+      ) {
+        setSelectedDayIndex(null);
+      }
+    };
+
+    // 클릭과 터치 이벤트 모두 처리
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [setSelectedDayIndex]);
 
   if (!emotionReport) {
     return null;
@@ -89,6 +128,20 @@ export function EmotionSection({
       title: QUADRANT_TITLES[quadrant],
     };
   });
+
+  // 월간 평균 감정 데이터
+  const monthlyAverage =
+    emotionReport &&
+    emotionReport.monthly_ai_mood_valence_avg !== null &&
+    emotionReport.monthly_ai_mood_arousal_avg !== null
+      ? {
+          valence: emotionReport.monthly_ai_mood_valence_avg,
+          arousal: emotionReport.monthly_ai_mood_arousal_avg,
+        }
+      : null;
+
+  const valence = monthlyAverage?.valence ?? 0;
+  const arousal = monthlyAverage?.arousal ?? 0;
 
   return (
     <div className="mb-10 sm:mb-12">
@@ -147,8 +200,8 @@ export function EmotionSection({
             {emotionReport.emotion_quadrant_analysis_summary && (
               <div>
                 <p
-                  className="text-base sm:text-lg leading-relaxed"
-                  style={{ color: COLORS.text.primary, lineHeight: "1.8" }}
+                  className="text-sm leading-relaxed"
+                  style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
                 >
                   {emotionReport.emotion_quadrant_analysis_summary}
                 </p>
@@ -159,13 +212,13 @@ export function EmotionSection({
             {emotionReport.emotion_quadrant_dominant && (
               <div>
                 <p
-                  className="text-sm mb-2 font-semibold uppercase tracking-wide"
+                  className="text-xs mb-2 font-semibold uppercase tracking-wide"
                   style={{ color: COLORS.text.secondary }}
                 >
                   주요 감정 영역
                 </p>
                 <p
-                  className="text-xl sm:text-2xl font-bold mb-1"
+                  className="text-lg sm:text-xl font-bold mb-1"
                   style={{ color: COLORS.text.primary }}
                 >
                   {emotionReport.emotion_quadrant_dominant}
@@ -177,14 +230,14 @@ export function EmotionSection({
             {emotionReport.emotion_pattern_summary && (
               <div>
                 <p
-                  className="text-sm mb-3 font-semibold uppercase tracking-wide"
+                  className="text-xs mb-3 font-semibold uppercase tracking-wide"
                   style={{ color: COLORS.text.secondary }}
                 >
                   감정 패턴 요약
                 </p>
                 <p
-                  className="text-base sm:text-lg leading-relaxed"
-                  style={{ color: COLORS.text.primary, lineHeight: "1.8" }}
+                  className="text-sm leading-relaxed"
+                  style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
                 >
                   {emotionReport.emotion_pattern_summary}
                 </p>
@@ -197,12 +250,52 @@ export function EmotionSection({
       {/* 감정 사분면 분포 - 카드 */}
       {sortedQuadrantData.length > 0 && (
         <div className="mb-10 sm:mb-12">
-          <h3
-            className="text-xl sm:text-2xl font-semibold mb-6"
-            style={{ color: COLORS.text.primary }}
-          >
-            감정 사분면 분포
-          </h3>
+          {/* 감정 차트 */}
+          {monthlyAverage && (
+            <Card
+              className="mb-6 overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(184, 154, 122, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #E6D5C3",
+                borderRadius: "16px",
+              }}
+            >
+              {/* 헤더 */}
+              <div
+                className="p-5 sm:p-6 pb-4 border-b"
+                style={{ borderColor: "rgba(184, 154, 122, 0.2)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "#F5E6D3" }}
+                  >
+                    <Heart
+                      className="w-4 h-4"
+                      style={{ color: EMOTION_COLOR }}
+                    />
+                  </div>
+                  <p
+                    className="text-sm font-semibold uppercase tracking-wide"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    월간 평균 감정 좌표
+                  </p>
+                </div>
+              </div>
+              {/* 바디 */}
+              <div className="p-5 sm:p-6 pt-4">
+                <EmotionChart
+                  dailyEmotions={[]}
+                  valence={valence}
+                  arousal={arousal}
+                  chartContainerRef={chartContainerRef}
+                  hideCard={true}
+                />
+              </div>
+            </Card>
+          )}
 
           {/* 감정 사분면 분포 카드 */}
           <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">

@@ -357,15 +357,6 @@ export function ExecutionSection({
                       >
                         습관 점수
                       </p>
-                      <span
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                        style={{
-                          backgroundColor: `${EXECUTION_COLOR}20`,
-                          color: EXECUTION_COLOR,
-                        }}
-                      >
-                        시각화
-                      </span>
                     </div>
                   </div>
                 </div>

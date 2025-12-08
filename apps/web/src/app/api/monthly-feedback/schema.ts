@@ -855,6 +855,45 @@ export const MonthlyReportSchema = {
           },
           next_month_focus: { type: "string" },
           ai_encouragement_message: { type: "string" },
+          // Pro 모드에서만 제공되는 정체성 분석
+          this_month_identity: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              visualization: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  characteristics_radar: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      type: { type: "string", enum: ["radar"] },
+                      data: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          additionalProperties: false,
+                          properties: {
+                            characteristic: { type: "string" },
+                            value: {
+                              type: "number",
+                              minimum: 0,
+                              maximum: 10,
+                            },
+                          },
+                          required: ["characteristic", "value"],
+                        },
+                      },
+                    },
+                    required: ["type", "data"],
+                  },
+                },
+                required: ["characteristics_radar"],
+              },
+            },
+            required: ["visualization"],
+          },
         },
         required: [
           "monthly_title",
@@ -1423,6 +1462,37 @@ export const SYSTEM_PROMPT_MONTHLY = `
   - 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 응원과 격려를 중심으로 메시지를 작성합니다.
 
   - 사용자의 노력을 존중하고, "이미 해낸 것"을 먼저 짚어준 뒤 "다음에 해볼 것"을 제안하세요.
+
+- this_month_identity (Pro 멤버십 전용, 선택적):
+
+  - Pro 멤버십 사용자의 경우에만 생성합니다.
+
+  - 이번 달의 정체성 특성을 레이더 차트로 시각화합니다.
+
+  - visualization.characteristics_radar:
+
+    - 이번 달 동안 나타난 정체성 특성들을 분석하여 레이더 차트 데이터를 생성합니다.
+
+    - data 배열에는 각 특성(characteristic)과 그 값(value, 0-10)을 포함합니다.
+
+    - 특성 예시: "성장 지향성", "자기 이해", "실행력", "감정 안정성", "관계 관리", "비전 명확성" 등
+
+    - 각 특성의 값은 이번 달의 주간 피드백과 일일 기록을 종합하여 평가합니다.
+
+    - 최소 5개 이상의 특성을 포함하되, 의미 있는 특성만 선별합니다.
+
+    - 예: [
+        { characteristic: "성장 지향성", value: 8 },
+        { characteristic: "자기 이해", value: 7 },
+        { characteristic: "실행력", value: 6 },
+        { characteristic: "감정 안정성", value: 7 },
+        { characteristic: "관계 관리", value: 5 },
+        { characteristic: "비전 명확성", value: 8 }
+      ]
+
+  - 실제 주간 피드백의 this_week_identity 데이터를 종합하여 월간 정체성 패턴을 분석합니다.
+
+  - 데이터가 부족하거나 의미 있는 패턴이 없다면 this_month_identity 필드를 생략할 수 있습니다.
 
 --------------------------------
 

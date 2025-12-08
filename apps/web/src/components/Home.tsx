@@ -10,7 +10,7 @@ import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS } from "@/lib/design-system";
+import { COLORS, SPACING } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
 import { CircularProgress } from "./ui/CircularProgress";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
@@ -142,7 +142,6 @@ export function Home() {
           const es = new EventSource(
             `/api/daily-feedback/generate-stream?${params.toString()}`
           );
-          currentEs = es;
           currentEsRef.current = es;
 
           // Promise 완료/실패 시 EventSource 정리
@@ -159,6 +158,16 @@ export function Home() {
 
           es.onmessage = (event) => {
             try {
+              // HTML 응답인지 확인 (502 Bad Gateway 등)
+              if (
+                typeof event.data === "string" &&
+                (event.data.includes("<html>") ||
+                  event.data.includes("502") ||
+                  event.data.includes("Bad Gateway"))
+              ) {
+                throw new Error(event.data);
+              }
+
               const data = JSON.parse(event.data);
 
               if (data.type === "progress") {
@@ -211,16 +220,50 @@ export function Home() {
               console.error("SSE 메시지 파싱 오류:", error);
               cleanup();
               clearDailyFeedbackProgress(todayIso);
-              openErrorModal("피드백 생성 중 알 수 없는 오류가 발생했습니다.");
-              reject(new Error("SSE 메시지 파싱 오류"));
+
+              // HTML 응답인지 확인 (502 Bad Gateway 등)
+              let errorMessage =
+                "피드백 생성 중 알 수 없는 오류가 발생했습니다.";
+
+              if (error instanceof Error && error.message) {
+                const errorText = error.message;
+                // HTML 태그가 포함되어 있으면 서버 에러로 판단
+                if (
+                  errorText.includes("<html>") ||
+                  errorText.includes("502") ||
+                  errorText.includes("Bad Gateway")
+                ) {
+                  errorMessage =
+                    "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                } else {
+                  errorMessage = `피드백 생성 중 오류가 발생했습니다: ${errorText}`;
+                }
+              }
+
+              openErrorModal(errorMessage);
+              reject(new Error(errorMessage));
             }
           };
 
-          es.onerror = (error) => {
+          es.onerror = (event) => {
             cleanup();
             clearDailyFeedbackProgress(todayIso);
-            openErrorModal("피드백 생성 중 SSE 연결 오류가 발생했습니다.");
-            reject(error);
+
+            // EventSource의 readyState를 확인하여 에러 타입 판단
+            let errorMessage = "피드백 생성 중 연결 오류가 발생했습니다.";
+
+            if (es.readyState === EventSource.CLOSED) {
+              // 연결이 닫혔을 때 - 서버 에러 가능성
+              errorMessage =
+                "서버 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            } else if (es.readyState === EventSource.CONNECTING) {
+              // 연결 중일 때
+              errorMessage =
+                "서버에 연결하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            }
+
+            openErrorModal(errorMessage);
+            reject(new Error(errorMessage));
           };
         });
       } catch (error) {

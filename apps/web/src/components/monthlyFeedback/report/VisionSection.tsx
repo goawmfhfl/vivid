@@ -415,27 +415,31 @@ export function VisionSection({
                                   paddingAngle={3}
                                   dataKey="value"
                                   label={(props: any) => {
+                                    const name =
+                                      (props.payload as { name?: string })
+                                        ?.name || "";
                                     const percentage = (
                                       props.payload as { percentage?: number }
                                     )?.percentage;
-                                    return percentage ? `${percentage}%` : "";
+                                    if (!name) return "";
+                                    const displayName =
+                                      name.length > 8
+                                        ? name.substring(0, 8) + "..."
+                                        : name;
+                                    return `${displayName}\n${percentage}%`;
                                   }}
                                   labelLine={false}
                                   style={
                                     {
-                                      fontSize: "10px",
-                                      fontWeight: 600,
-                                      fill: COLORS.text.primary,
+                                      fontSize: "8px",
+                                      fontWeight: 500,
                                     } as React.CSSProperties
                                   }
                                 >
                                   {chartData.map((entry, idx) => (
                                     <Cell
                                       key={`cell-mobile-${idx}`}
-                                      fill={
-                                        entry.color ||
-                                        CHART_COLORS[idx % CHART_COLORS.length]
-                                      }
+                                      fill={entry.color}
                                     />
                                   ))}
                                 </Pie>
@@ -505,21 +509,11 @@ export function VisionSection({
                                     return `${displayName} ${value}회`;
                                   }}
                                   labelLine={true}
-                                  style={
-                                    {
-                                      fontSize: "11px",
-                                      fontWeight: 500,
-                                      fill: COLORS.text.primary,
-                                    } as React.CSSProperties
-                                  }
                                 >
                                   {chartData.map((entry, idx) => (
                                     <Cell
                                       key={`cell-desktop-${idx}`}
-                                      fill={
-                                        entry.color ||
-                                        CHART_COLORS[idx % CHART_COLORS.length]
-                                      }
+                                      fill={entry.color}
                                     />
                                   ))}
                                 </Pie>

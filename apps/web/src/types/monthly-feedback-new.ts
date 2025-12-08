@@ -455,4 +455,16 @@ export type ClosingReport = {
   turning_points: string[]; // 최대 5개
   next_month_focus: string;
   ai_encouragement_message: string;
+  // Pro 모드에서만 제공되는 정체성 분석
+  this_month_identity?: {
+    visualization?: {
+      characteristics_radar: {
+        type: "radar";
+        data: Array<{
+          characteristic: string;
+          value: number;
+        }>;
+      };
+    };
+  };
 };

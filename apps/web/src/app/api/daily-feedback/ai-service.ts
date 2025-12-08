@@ -86,9 +86,12 @@ async function generateReport<T>(
   const openai = getOpenAIClient();
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
-  // Pro 멤버십에 따라 모델 선택
-  const proModel = process.env.OPENAI_PRO_MODEL || "gpt-5-nano";
-  const model = isPro ? proModel : "gpt-5-nano";
+  // Daily Feedback: gpt-5-nano 모델만 사용
+  // - 감정 분석, 목표 실행 체크 등 1차 점수 산출
+  // - 최소한의 비용으로 빠르게 처리
+  // - 점수 범위 및 규칙만 준수
+  // - 다른 모델로 승격 요청 금지
+  const model = "gpt-5-nano";
 
   // Pro 멤버십에 따라 프롬프트 강화
   const enhancedSystemPrompt = isPro
