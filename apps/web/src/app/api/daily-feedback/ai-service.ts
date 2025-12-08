@@ -392,34 +392,22 @@ export async function generateFeedbackReport(
  * 최종 리포트 생성 (모든 리포트를 종합)
  */
 export async function generateFinalReport(
+  records: Record[],
   date: string,
   dayOfWeek: string,
-  summaryReport: SummaryReport | null,
-  dailyReport: DailyReport | null,
-  emotionReport: EmotionReport | null,
-  dreamReport: DreamReport | null,
-  insightReport: InsightReport | null,
-  feedbackReport: FeedbackReport | null,
   isPro: boolean = false,
   userId?: string
 ): Promise<FinalReport> {
-  const prompt = buildFinalPrompt(
-    date,
-    dayOfWeek,
-    summaryReport,
-    dailyReport,
-    emotionReport,
-    dreamReport,
-    insightReport,
-    feedbackReport,
-    isPro
-  );
+  const prompt = buildFinalPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_FINAL, prompt);
+
+  // 스키마 객체를 명시적으로 생성하여 전달
+  const schema = getFinalReportSchema(isPro);
 
   return generateReport<FinalReport>(
     SYSTEM_PROMPT_FINAL,
     prompt,
-    getFinalReportSchema(isPro),
+    schema,
     cacheKey,
     isPro,
     userId,
@@ -496,14 +484,9 @@ export async function generateAllReports(
 
   // 3. 최종 리포트 생성
   const finalReport = await generateFinalReport(
+    records,
     date,
     dayOfWeek,
-    summaryReport,
-    dailyReport,
-    emotionReport,
-    dreamReport,
-    insightReport,
-    feedbackReport,
     isPro,
     userId
   );

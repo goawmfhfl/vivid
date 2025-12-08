@@ -117,8 +117,8 @@ export type DailyReportData = {
   // ========== Final Report 데이터 ==========
   /** 하루를 정리하는 멘트 */
   closing_message: string;
-  /** 내일 집중할 것 (Pro 전용) */
-  tomorrow_focus: string | null;
+  /** 내일 집중할 것 배열 (3~5개, Pro 전용) */
+  tomorrow_focus: string[] | null;
   /** 성장 포인트 리스트 (Pro 전용) */
   growth_points: string[] | null;
   /** 조정 포인트 리스트 (Pro 전용) */

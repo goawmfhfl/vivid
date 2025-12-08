@@ -360,40 +360,47 @@ export function getFeedbackReportSchema(isPro: boolean) {
 export const FeedbackReportSchema = getFeedbackReportSchema(false);
 
 export function getFinalReportSchema(isPro: boolean) {
+  // OpenAI structured output은 required에 properties의 모든 키가 포함되어야 함
+  const schema = {
+    type: "object" as const,
+    properties: {
+      closing_message: { type: "string" as const, maxLength: 400 },
+      tomorrow_focus: {
+        type: "array" as const,
+        items: { type: "string" as const },
+        minItems: 3,
+        maxItems: 5,
+        nullable: true,
+      }, // Pro 전용 필드 (3~5개 배열)
+      growth_points: {
+        type: "array" as const,
+        items: { type: "string" as const },
+        minItems: 0,
+        maxItems: 6,
+        nullable: true,
+      }, // Pro 전용 필드
+      adjustment_points: {
+        type: "array" as const,
+        items: { type: "string" as const },
+        minItems: 0,
+        maxItems: 6,
+        nullable: true,
+      }, // Pro 전용 필드
+    },
+    required: [
+      "closing_message",
+      "tomorrow_focus",
+      "growth_points",
+      "adjustment_points",
+    ],
+    additionalProperties: false,
+  };
+
   return {
     name: "FinalReport",
-    schema: {
-      type: "object",
-      properties: {
-        closing_message: { type: "string", maxLength: 400 },
-        tomorrow_focus: { type: "string", nullable: true }, // Pro 전용 필드
-        growth_points: {
-          type: "array",
-          items: { type: "string" },
-          minItems: 0,
-          maxItems: 6,
-          nullable: true,
-        }, // Pro 전용 필드
-        adjustment_points: {
-          type: "array",
-          items: { type: "string" },
-          minItems: 0,
-          maxItems: 6,
-          nullable: true,
-        }, // Pro 전용 필드
-      },
-      required: isPro
-        ? [
-            "closing_message",
-            "tomorrow_focus",
-            "growth_points",
-            "adjustment_points",
-          ]
-        : ["closing_message"],
-      additionalProperties: false,
-    },
+    schema,
     strict: true,
-  } as const;
+  };
 }
 
 // 기본 스키마 (일반 사용자용, 하위 호환성)
@@ -511,7 +518,7 @@ export const SYSTEM_PROMPT_FINAL = `
 
 [멤버십별 차별화]
 - Pro 멤버십: 
-  * tomorrow_focus는 반드시 "1)..., 2)..., 3)..." 형식의 리스트 문자열로 작성하세요. 최소 3개 이상의 포인트를 포함하세요.
+  * tomorrow_focus는 내일 집중할 포인트를 배열로 작성하세요 (3~5개). 각 항목은 한 문장으로 작성하세요.
   * growth_points는 성장 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
   * adjustment_points는 조정 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
   * 상세하고 깊이 있는 최종 리포트를 생성하세요.

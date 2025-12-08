@@ -149,7 +149,7 @@ export interface FeedbackReport {
 
 export interface FinalReport {
   closing_message: string; // 하루를 정리하는 멘트 (400자 이내)
-  tomorrow_focus: string | null; // 내일 집중할 점 (Pro 전용)
+  tomorrow_focus: string[] | null; // 내일 집중할 점 배열 (3~5개, Pro 전용)
   // Pro 전용: 리스트 형식의 성장/조정 포인트
   growth_points?: string[] | null; // 성장 포인트 리스트 (Pro 전용)
   adjustment_points?: string[] | null; // 조정 포인트 리스트 (Pro 전용)

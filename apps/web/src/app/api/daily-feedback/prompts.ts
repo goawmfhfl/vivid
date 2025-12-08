@@ -348,104 +348,34 @@ export function buildFeedbackPrompt(
  * 최종 리포트 프롬프트 생성 (모든 리포트를 종합)
  * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
  */
+/**
+ * 최종 리포트 프롬프트 생성 (records 기반)
+ * @param isPro Pro 멤버십 여부에 따라 프롬프트 지시사항 차별화
+ */
 export function buildFinalPrompt(
+  records: Record[],
   date: string,
   dayOfWeek: string,
-  summaryReport: SummaryReport | null,
-  dailyReport: DailyReport | null,
-  emotionReport: EmotionReport | null,
-  dreamReport: DreamReport | null,
-  insightReport: InsightReport | null,
-  feedbackReport: FeedbackReport | null,
   isPro: boolean = false
 ): string {
   const instruction = isPro
-    ? "이를 종합하여 하루를 정리하는 상세하고 깊이 있는 최종 리포트를 생성하세요. 더 많은 인사이트와 조언을 포함하세요."
-    : "이를 종합하여 하루를 정리하는 간단한 최종 리포트를 생성하세요. 핵심만 간결하게 알려주세요.";
+    ? "하루의 모든 기록을 종합하여 상세하고 깊이 있는 최종 리포트를 생성하세요. 더 많은 인사이트와 조언을 포함하세요."
+    : "하루의 모든 기록을 종합하여 간단한 최종 리포트를 생성하세요. 핵심만 간결하게 알려주세요.";
 
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 리포트입니다. ${instruction}\n\n`;
+  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 모든 기록입니다. ${instruction}\n\n`;
 
-  if (summaryReport) {
-    prompt += "=== 전체 요약 ===\n";
-    prompt += `요약: ${summaryReport.summary || "없음"}\n`;
-    prompt += `핵심 포인트: ${
-      Array.isArray(summaryReport.key_points) &&
-      summaryReport.key_points.length > 0
-        ? summaryReport.key_points.join(", ")
-        : "없음"
-    }\n`;
-    prompt += "\n";
-  }
-
-  if (dailyReport) {
-    prompt += "=== 일상 리포트 ===\n";
-    prompt += `요약: ${dailyReport.summary || "없음"}\n`;
-    prompt += `오늘 있었던 일: ${
-      Array.isArray(dailyReport.daily_events) &&
-      dailyReport.daily_events.length > 0
-        ? dailyReport.daily_events.join(", ")
-        : "없음"
-    }\n`;
-    prompt += `키워드: ${
-      Array.isArray(dailyReport.keywords) && dailyReport.keywords.length > 0
-        ? dailyReport.keywords.join(", ")
-        : "없음"
-    }\n`;
-    prompt += "\n";
-  }
-
-  if (emotionReport) {
-    prompt += "=== 감정 리포트 ===\n";
-    prompt += `감정 흐름: ${
-      Array.isArray(emotionReport.emotion_curve) &&
-      emotionReport.emotion_curve.length > 0
-        ? emotionReport.emotion_curve.join(" → ")
-        : "없음"
-    }\n`;
-    if (emotionReport.dominant_emotion) {
-      prompt += `대표 감정: ${emotionReport.dominant_emotion}\n`;
-    }
-    prompt += "\n";
-  }
-
-  if (dreamReport) {
-    prompt += "=== 꿈/목표 리포트 ===\n";
-    prompt += `요약: ${dreamReport.summary || "없음"}\n`;
-    prompt += `자기 평가: ${dreamReport.vision_self || "없음"}\n`;
-    prompt += "\n";
-  }
-
-  if (insightReport) {
-    prompt += "=== 인사이트 리포트 ===\n";
-    prompt += `핵심 인사이트: ${
-      Array.isArray(insightReport.core_insights) &&
-      insightReport.core_insights.length > 0
-        ? insightReport.core_insights.map((i) => i.insight).join(", ")
-        : "없음"
-    }\n`;
-    prompt += "\n";
-  }
-
-  if (feedbackReport) {
-    prompt += "=== 피드백 리포트 ===\n";
-    prompt += `핵심 피드백: ${feedbackReport.core_feedback || "없음"}\n`;
-    if (
-      Array.isArray(feedbackReport.positives) &&
-      feedbackReport.positives.length > 0
-    ) {
-      prompt += `긍정적 측면: ${feedbackReport.positives.join(", ")}\n`;
-    }
-    if (
-      Array.isArray(feedbackReport.improvements) &&
-      feedbackReport.improvements.length > 0
-    ) {
-      prompt += `개선점: ${feedbackReport.improvements.join(", ")}\n`;
-    }
-    prompt += "\n";
-  }
+  records.forEach((record, idx) => {
+    const createdAt = new Date(record.created_at);
+    const kstTime = createdAt.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Seoul",
+    });
+    prompt += `${idx + 1}. [${kstTime}] [${record.type}] ${record.content}\n`;
+  });
 
   prompt +=
-    "위 모든 리포트를 종합하여 하루를 정리하는 마무리 멘트를 작성하세요.";
+    "\n위 모든 기록을 종합하여 하루를 정리하는 마무리 멘트를 작성하세요.";
 
   return prompt;
 }

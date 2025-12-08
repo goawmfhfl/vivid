@@ -87,7 +87,12 @@ export function mapDailyFeedbackRowToReport(
   // Final Report에서 데이터 추출
   const finalReport: FinalReport | null = row.final_report;
   const closingMessage = finalReport?.closing_message ?? "";
-  const tomorrowFocus = finalReport?.tomorrow_focus ?? null;
+  // tomorrow_focus는 배열 형태 (하위 호환성: 문자열인 경우 배열로 변환)
+  const tomorrowFocus = Array.isArray(finalReport?.tomorrow_focus)
+    ? finalReport.tomorrow_focus
+    : typeof finalReport?.tomorrow_focus === "string"
+    ? [finalReport.tomorrow_focus]
+    : null;
   const growthPoints = finalReport?.growth_points ?? null;
   const adjustmentPoints = finalReport?.adjustment_points ?? null;
 

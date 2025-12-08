@@ -5,19 +5,12 @@ import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
 export function FinalSection({ view, isPro = false }: SectionProps) {
-  // 내일의 포커스를 리스트로 파싱
-  const focusItems = (() => {
-    const s = view.tomorrow_focus ?? "";
-    if (!s) return [] as string[];
-    const byPattern = Array.from(s.matchAll(/\d+\)\s*([^,]+)(?:,|$)/g)).map(
-      (m) => m[1].trim().replace(/,$/, "")
-    );
-    if (byPattern.length > 0) return byPattern;
-    return s
-      .split(",")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-  })();
+  // 내일의 포커스는 이미 배열 형태 (3~5개)
+  const focusItems = Array.isArray(view.tomorrow_focus)
+    ? view.tomorrow_focus
+    : view.tomorrow_focus
+    ? [view.tomorrow_focus] // 하위 호환성: 문자열인 경우 배열로 변환
+    : [];
 
   // 성장/조정 포인트 리스트 (Pro 전용)
   const growthItems = view.growth_points ?? [];
@@ -208,7 +201,7 @@ export function FinalSection({ view, isPro = false }: SectionProps) {
                 </ul>
               ) : (
                 <p className="text-sm" style={{ lineHeight: "1.6" }}>
-                  {view.tomorrow_focus}
+                  내일의 포커스가 없습니다.
                 </p>
               )}
             </div>
