@@ -16,7 +16,8 @@ export async function generateVisionReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 4
+  step: number = 4,
+  userId?: string
 ): Promise<VisionReport> {
   if (progressCallback) {
     progressCallback(step, 7, "vision_report");
@@ -32,6 +33,8 @@ export async function generateVisionReport(
     schema,
     cacheKey,
     isPro,
-    "vision_report"
+    "vision_report",
+    userId,
+    "monthly_feedback"
   );
 }

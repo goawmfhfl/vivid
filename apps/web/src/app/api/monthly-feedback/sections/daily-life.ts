@@ -16,7 +16,8 @@ export async function generateDailyLifeReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 2
+  step: number = 2,
+  userId?: string
 ): Promise<DailyLifeReport> {
   if (progressCallback) {
     progressCallback(step, 7, "daily_life_report");
@@ -36,6 +37,8 @@ export async function generateDailyLifeReport(
     schema,
     cacheKey,
     isPro,
-    "daily_life_report"
+    "daily_life_report",
+    userId,
+    "monthly_feedback"
   );
 }

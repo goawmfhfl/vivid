@@ -26,7 +26,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<MonthlyFeedback> {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
@@ -38,6 +39,14 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
     Math.ceil(
       (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     ) + 1;
+
+  const result = await generateDailyLifeReport(
+    dailyFeedbacks,
+    month,
+    dateRange,
+    isPro,
+    progressCallback
+  );
 
   // 7개 영역을 병렬로 생성
   const [
@@ -57,7 +66,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dailyFeedbacks.length,
       isPro,
       progressCallback,
-      1
+      1,
+      userId
     ),
     generateDailyLifeReport(
       dailyFeedbacks,
@@ -65,7 +75,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      2
+      2,
+      userId
     ),
     generateEmotionReport(
       dailyFeedbacks,
@@ -73,7 +84,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      3
+      3,
+      userId
     ),
     generateVisionReport(
       dailyFeedbacks,
@@ -81,7 +93,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      4
+      4,
+      userId
     ),
     generateInsightReport(
       dailyFeedbacks,
@@ -89,7 +102,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      5
+      5,
+      userId
     ),
     generateExecutionReport(
       dailyFeedbacks,
@@ -97,7 +111,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      6
+      6,
+      userId
     ),
     generateClosingReport(
       dailyFeedbacks,
@@ -105,7 +120,8 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       dateRange,
       isPro,
       progressCallback,
-      7
+      7,
+      userId
     ),
   ]);
 

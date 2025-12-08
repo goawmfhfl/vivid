@@ -16,7 +16,8 @@ export async function generateInsightReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 5
+  step: number = 5,
+  userId?: string
 ): Promise<InsightReport> {
   if (progressCallback) {
     progressCallback(step, 7, "insight_report");
@@ -32,6 +33,8 @@ export async function generateInsightReport(
     schema,
     cacheKey,
     isPro,
-    "insight_report"
+    "insight_report",
+    userId,
+    "monthly_feedback"
   );
 }

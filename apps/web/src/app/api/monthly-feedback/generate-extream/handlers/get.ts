@@ -105,7 +105,8 @@ export async function handleGenerateMonthlyFeedback(
       month,
       dateRange,
       isPro,
-      sendProgress // 진행 상황 콜백 전달
+      sendProgress, // 진행 상황 콜백 전달
+      userId // AI 사용량 로깅을 위한 userId 전달
     );
 
     // month_label 설정 (없는 경우)

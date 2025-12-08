@@ -14,7 +14,7 @@ import { AdditionalInfoStep } from "./steps/AdditionalInfoStep";
 import { TermsStep } from "./steps/TermsStep";
 import { COLORS } from "@/lib/design-system";
 import { ChevronLeft } from "lucide-react";
-
+import type { RecordType } from "@/components/signup/RecordTypeCard";
 const TOTAL_STEPS = 4;
 
 export function SignUpView({
@@ -46,7 +46,7 @@ export function SignUpView({
     agreeMarketing: false,
     birthYear: "",
     gender: "",
-    recordTypes: [] as string[],
+    recordTypes: [] as RecordType[],
   });
 
   // 에러 상태
@@ -91,7 +91,7 @@ export function SignUpView({
   // 폼 데이터 업데이트 헬퍼
   const updateFormData = (
     field: keyof typeof formData,
-    value: string | boolean | string[]
+    value: string | boolean | string[] | RecordType[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -341,7 +341,7 @@ export function SignUpView({
                 <AdditionalInfoStep
                   birthYear={formData.birthYear}
                   gender={formData.gender}
-                  recordTypes={formData.recordTypes as string[]}
+                  recordTypes={formData.recordTypes}
                   birthYearError={errors.birthYear}
                   genderError={errors.gender}
                   onBirthYearChange={(value) => {

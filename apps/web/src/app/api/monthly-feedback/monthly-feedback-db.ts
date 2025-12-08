@@ -188,6 +188,7 @@ export async function saveMonthlyFeedback(
         date_range: encryptedFeedback.date_range,
         total_days: encryptedFeedback.total_days,
         recorded_days: encryptedFeedback.recorded_days,
+        daily_life_report: encryptedFeedback.daily_life_report,
         summary_report: encryptedFeedback.summary_report,
         emotion_report: encryptedFeedback.emotion_report,
         insight_report: encryptedFeedback.insight_report,

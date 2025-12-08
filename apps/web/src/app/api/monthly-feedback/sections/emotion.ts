@@ -16,7 +16,8 @@ export async function generateEmotionReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 3
+  step: number = 3,
+  userId?: string
 ): Promise<EmotionReport> {
   if (progressCallback) {
     progressCallback(step, 7, "emotion_report");
@@ -32,6 +33,8 @@ export async function generateEmotionReport(
     schema,
     cacheKey,
     isPro,
-    "emotion_report"
+    "emotion_report",
+    userId,
+    "monthly_feedback"
   );
 }

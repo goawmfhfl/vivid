@@ -16,7 +16,8 @@ export async function generateExecutionReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 6
+  step: number = 6,
+  userId?: string
 ): Promise<ExecutionReport> {
   if (progressCallback) {
     progressCallback(step, 7, "execution_report");
@@ -36,6 +37,8 @@ export async function generateExecutionReport(
     schema,
     cacheKey,
     isPro,
-    "execution_report"
+    "execution_report",
+    userId,
+    "monthly_feedback"
   );
 }

@@ -16,7 +16,8 @@ export async function generateClosingReport(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 7
+  step: number = 7,
+  userId?: string
 ): Promise<ClosingReport> {
   if (progressCallback) {
     progressCallback(step, 7, "closing_report");
@@ -32,6 +33,8 @@ export async function generateClosingReport(
     schema,
     cacheKey,
     isPro,
-    "closing_report"
+    "closing_report",
+    userId,
+    "monthly_feedback"
   );
 }

@@ -18,7 +18,8 @@ export async function generateSummaryReport(
   recordedDays: number,
   isPro: boolean,
   progressCallback?: ProgressCallback,
-  step: number = 1
+  step: number = 1,
+  userId?: string
 ): Promise<SummaryReport> {
   if (progressCallback) {
     progressCallback(step, 7, "summary_report");
@@ -40,6 +41,8 @@ export async function generateSummaryReport(
     schema,
     cacheKey,
     isPro,
-    "summary_report"
+    "summary_report",
+    userId,
+    "monthly_feedback"
   );
 }

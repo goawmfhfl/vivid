@@ -6,6 +6,7 @@ import type {
   WithTracking,
   ApiError,
 } from "../types";
+import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -20,7 +21,7 @@ export function getOpenAIClient(): OpenAI {
   return new OpenAI({
     apiKey,
     timeout: 300000, // 300초(5분) 타임아웃 - 월간 피드백 생성은 더 많은 데이터를 처리하므로 시간이 더 필요
-    maxRetries: 1, // 재시도 최소화
+    maxRetries: 0, // 재시도 최소화
   });
 }
 
@@ -33,7 +34,12 @@ export async function generateSection<T>(
   schema: ReportSchema,
   cacheKey: string,
   isPro: boolean = false,
-  sectionName: string
+  sectionName: string,
+  userId?: string,
+  requestType:
+    | "daily_feedback"
+    | "weekly_feedback"
+    | "monthly_feedback" = "monthly_feedback"
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
@@ -93,6 +99,24 @@ export async function generateSection<T>(
     // 캐시에 저장 (멤버십별로 구분)
     setCache(proCacheKey, result);
 
+    // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
+    if (userId) {
+      const usage = extractUsageInfo(
+        completion.usage as ExtendedUsage | undefined
+      );
+      if (usage) {
+        logAIRequestAsync({
+          userId,
+          model,
+          requestType,
+          sectionName,
+          usage,
+          duration_ms,
+          success: true,
+        });
+      }
+    }
+
     // 추적 정보를 결과에 첨부 (테스트 환경에서만)
     if (
       process.env.NODE_ENV === "development" ||
@@ -116,6 +140,26 @@ export async function generateSection<T>(
     return result;
   } catch (error: unknown) {
     const err = error as ApiError;
+
+    // AI 사용량 로깅 (에러 발생 시에도 로깅)
+    if (userId) {
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
+      logAIRequestAsync({
+        userId,
+        model,
+        requestType,
+        sectionName,
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0,
+        },
+        duration_ms,
+        success: false,
+        errorMessage: err?.message || String(error),
+      });
+    }
 
     // 429 에러 (쿼터 초과) 처리
     if (
