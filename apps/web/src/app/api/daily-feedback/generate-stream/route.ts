@@ -3,6 +3,7 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchRecordsByDate, saveDailyReport } from "../db-service";
 import { generateAllReportsWithProgress } from "../ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
+import type { TrackingInfo, WithTracking } from "../../types";
 
 // Next.js API Route 타임아웃 설정 (최대 3분)
 export const maxDuration = 180;
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
         step: number,
         total: number,
         sectionName: string,
-        tracking?: import("../types").TrackingInfo
+        tracking?: TrackingInfo
       ) => {
         // 컨트롤러가 이미 닫혀있으면 무시
         if (isClosed) {
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 
       const sendComplete = (data: {
         id: string;
-        tracking?: import("../types").TrackingInfo[];
+        tracking?: TrackingInfo[];
         [key: string]: unknown;
       }) => {
         if (isClosed) return;
@@ -174,10 +175,8 @@ export async function GET(request: NextRequest) {
 /**
  * 추적 정보 추출 (테스트 환경에서만)
  */
-function extractTrackingInfo(
-  report: Record<string, import("../types").WithTracking<unknown>>
-): import("../types").TrackingInfo[] {
-  const tracking: import("../types").TrackingInfo[] = [];
+function extractTrackingInfo(report: Record<string, unknown>): TrackingInfo[] {
+  const tracking: TrackingInfo[] = [];
   const sections = [
     { key: "summary_report", name: "SummaryReport" },
     { key: "daily_report", name: "DailyReport" },
@@ -190,12 +189,18 @@ function extractTrackingInfo(
 
   for (const section of sections) {
     const sectionData = report[section.key];
-    if (sectionData?.__tracking) {
+    if (
+      sectionData &&
+      typeof sectionData === "object" &&
+      "__tracking" in sectionData &&
+      sectionData.__tracking
+    ) {
+      const trackingData = sectionData.__tracking as TrackingInfo;
       tracking.push({
-        name: sectionData.__tracking.name || section.name,
-        model: sectionData.__tracking.model,
-        duration_ms: sectionData.__tracking.duration_ms,
-        usage: sectionData.__tracking.usage,
+        name: trackingData.name || section.name,
+        model: trackingData.model,
+        duration_ms: trackingData.duration_ms,
+        usage: trackingData.usage,
       });
     }
   }
@@ -205,10 +210,8 @@ function extractTrackingInfo(
 /**
  * 추적 정보 제거 (DB 저장 전)
  */
-function removeTrackingInfo<T extends Record<string, unknown>>(
-  report: T
-): Omit<T, "__tracking"> {
-  const cleaned = { ...report } as T;
+function removeTrackingInfo<T extends Record<string, unknown>>(report: T): T {
+  const cleaned = { ...report } as Record<string, unknown>;
 
   const sections = [
     "summary_report",
@@ -221,15 +224,15 @@ function removeTrackingInfo<T extends Record<string, unknown>>(
   ];
 
   for (const key of sections) {
-    if (
-      cleaned[key] &&
-      typeof cleaned[key] === "object" &&
-      cleaned[key] !== null
-    ) {
+    const value = cleaned[key];
+    if (value && typeof value === "object" && value !== null) {
       // __tracking이 있는 경우에만 제거
-      if ("__tracking" in cleaned[key]) {
-        const { __tracking: _, ...rest } = cleaned[key];
-        cleaned[key] = rest;
+      if ("__tracking" in value) {
+        const valueObj = value as Record<string, unknown> & {
+          __tracking?: unknown;
+        };
+        const { __tracking: _, ...rest } = valueObj;
+        (cleaned as Record<string, unknown>)[key] = rest;
       }
       // __tracking이 없으면 그대로 유지
     }
