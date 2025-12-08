@@ -1,4 +1,5 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { EmotionReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
@@ -16,7 +17,7 @@ export async function generateEmotionReport(
   isPro: boolean,
   progressCallback?: ProgressCallback,
   step: number = 3
-): Promise<any> {
+): Promise<EmotionReport> {
   if (progressCallback) {
     progressCallback(step, 7, "emotion_report");
   }
@@ -29,7 +30,7 @@ export async function generateEmotionReport(
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_EMOTION, userPrompt);
 
-  return generateSection<any>(
+  return generateSection<EmotionReport>(
     SYSTEM_PROMPT_EMOTION,
     userPrompt,
     schema,

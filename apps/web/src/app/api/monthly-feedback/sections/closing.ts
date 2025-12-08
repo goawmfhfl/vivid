@@ -1,5 +1,6 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
-import type { ProgressCallback } from "../types";
+import type { ClosingReport } from "@/types/monthly-feedback-new";
+import type { ProgressCallback } from "../../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
 import { SYSTEM_PROMPT_CLOSING } from "../system-prompts";
@@ -16,7 +17,7 @@ export async function generateClosingReport(
   isPro: boolean,
   progressCallback?: ProgressCallback,
   step: number = 7
-): Promise<any> {
+): Promise<ClosingReport> {
   if (progressCallback) {
     progressCallback(step, 7, "closing_report");
   }
@@ -29,7 +30,7 @@ export async function generateClosingReport(
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, userPrompt);
 
-  return generateSection<any>(
+  return generateSection<ClosingReport>(
     SYSTEM_PROMPT_CLOSING,
     userPrompt,
     schema,

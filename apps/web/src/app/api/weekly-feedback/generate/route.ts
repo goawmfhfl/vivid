@@ -6,11 +6,15 @@ import type { WeeklyFeedbackGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 
+import type { TrackingInfo } from "../types";
+
 /**
  * 추적 정보 추출 (테스트 환경용)
  */
-function extractTrackingInfo(feedback: any): any[] {
-  const tracking: any[] = [];
+function extractTrackingInfo(
+  feedback: Record<string, import("../types").WithTracking<unknown>>
+): TrackingInfo[] {
+  const tracking: TrackingInfo[] = [];
 
   // 각 섹션에서 추적 정보 추출
   const sections = [
@@ -38,10 +42,14 @@ function extractTrackingInfo(feedback: any): any[] {
   return tracking;
 }
 
+import type { ApiError } from "../types";
+
 /**
  * 추적 정보 제거 (DB 저장 전)
  */
-function removeTrackingInfo(feedback: any): WeeklyFeedback {
+function removeTrackingInfo(
+  feedback: import("../types").WithTracking<WeeklyFeedback>
+): WeeklyFeedback {
   const cleaned = { ...feedback };
 
   const sections = [
@@ -148,8 +156,8 @@ export async function POST(request: NextRequest) {
     console.error("API error:", error);
 
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorCode = (error as any)?.code;
-    const errorStatus = (error as any)?.status;
+    const errorCode = (error as ApiError)?.code;
+    const errorStatus = (error as ApiError)?.status;
 
     // 429 에러 (쿼터 초과) 처리
     if (

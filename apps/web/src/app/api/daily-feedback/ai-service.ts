@@ -40,6 +40,13 @@ import {
   setCache,
   generatePromptCacheKey,
 } from "../utils/cache";
+import type {
+  Schema,
+  ReportSchema,
+  ExtendedUsage,
+  WithTracking,
+  ApiError,
+} from "../types";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -66,14 +73,13 @@ function getOpenAIClient(): OpenAI {
 async function generateReport<T>(
   systemPrompt: string,
   userPrompt: string,
-  schema:
-    | { name: string; schema: any; strict: boolean }
-    | ((isPro: boolean) => { name: string; schema: any; strict: boolean }),
+  schema: Schema,
   cacheKey: string,
   isPro: boolean = false
 ): Promise<T> {
   // 스키마가 함수인 경우 멤버십별로 동적 생성
-  const finalSchema = typeof schema === "function" ? schema(isPro) : schema;
+  const finalSchema: ReportSchema =
+    typeof schema === "function" ? schema(isPro) : schema;
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);

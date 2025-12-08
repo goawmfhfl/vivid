@@ -175,7 +175,9 @@ export async function GET(request: NextRequest) {
 /**
  * 추적 정보 제거 (DB 저장 전)
  */
-function removeTrackingInfo(feedback: any): WeeklyFeedback {
+function removeTrackingInfo(
+  feedback: import("../types").WithTracking<WeeklyFeedback>
+): WeeklyFeedback {
   const cleaned = { ...feedback };
 
   const sections = [

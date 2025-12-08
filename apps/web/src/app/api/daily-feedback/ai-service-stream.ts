@@ -40,6 +40,15 @@ import {
   setCache,
   generatePromptCacheKey,
 } from "../utils/cache";
+import type {
+  Schema,
+  ReportSchema,
+  ExtendedUsage,
+  TrackingInfo,
+  WithTracking,
+  ApiError,
+  ProgressCallback as ProgressCallbackType,
+} from "../types";
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -58,12 +67,7 @@ function getOpenAIClient(): OpenAI {
 /**
  * 진행 상황 콜백 타입
  */
-type ProgressCallback = (
-  step: number,
-  total: number,
-  sectionName: string,
-  tracking?: any
-) => void;
+type ProgressCallback = ProgressCallbackType;
 
 /**
  * Section 생성 헬퍼 함수 (진행 상황 추적 포함)
@@ -71,16 +75,15 @@ type ProgressCallback = (
 async function generateSection<T>(
   systemPrompt: string,
   userPrompt: string,
-  schema:
-    | { name: string; schema: any; strict: boolean }
-    | ((isPro: boolean) => { name: string; schema: any; strict: boolean }),
+  schema: Schema,
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
   progressCallback?: ProgressCallback
 ): Promise<T> {
   // 진행 상황 알림 (섹션 시작)
-  const schemaObj = typeof schema === "function" ? schema(isPro) : schema;
+  const schemaObj: ReportSchema =
+    typeof schema === "function" ? schema(isPro) : schema;
   progressCallback?.(0, 0, sectionName);
 
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
@@ -232,10 +235,9 @@ async function generateSection<T>(
       typeof result === "object" &&
       !Array.isArray(result)
     ) {
-      const usage = completion.usage;
-      const cachedTokens =
-        (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-      (result as any).__tracking = {
+      const usage = completion.usage as ExtendedUsage | undefined;
+      const cachedTokens = usage?.prompt_tokens_details?.cached_tokens || 0;
+      (result as WithTracking<T>).__tracking = {
         name: sectionName,
         model,
         duration_ms,
@@ -266,9 +268,9 @@ async function generateSection<T>(
     ) {
       const quotaError = new Error(
         `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schemaObj.name})`
-      );
-      (quotaError as any).code = "INSUFFICIENT_QUOTA";
-      (quotaError as any).status = 429;
+      ) as ApiError;
+      quotaError.code = "INSUFFICIENT_QUOTA";
+      quotaError.status = 429;
       throw quotaError;
     }
     throw error;
@@ -518,7 +520,7 @@ export async function generateAllReportsWithProgress(
   const totalSections = sectionNames.length;
   let completedSections = 0;
 
-  const callProgress = (sectionName: string, tracking?: any) => {
+  const callProgress = (sectionName: string, tracking?: TrackingInfo) => {
     completedSections++;
     progressCallback?.(completedSections, totalSections, sectionName, tracking);
   };

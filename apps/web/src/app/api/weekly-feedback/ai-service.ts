@@ -35,6 +35,12 @@ import {
   setCache,
   generatePromptCacheKey,
 } from "../utils/cache";
+import type {
+  ReportSchema,
+  ExtendedUsage,
+  WithTracking,
+  ApiError,
+} from "../types";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -60,7 +66,7 @@ function getOpenAIClient(): OpenAI {
 async function generateSection<T>(
   systemPrompt: string,
   userPrompt: string,
-  schema: { name: string; schema: any; strict: boolean },
+  schema: ReportSchema,
   cacheKey: string,
   isPro: boolean = false
 ): Promise<T> {
@@ -126,10 +132,9 @@ async function generateSection<T>(
         process.env.NODE_ENV === "development" ||
         process.env.NEXT_PUBLIC_NODE_ENV === "development"
       ) {
-        const usage = completion.usage;
-        const cachedTokens =
-          (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
-        (result as any).__tracking = {
+        const usage = completion.usage as ExtendedUsage | undefined;
+        const cachedTokens = usage?.prompt_tokens_details?.cached_tokens || 0;
+        (result as WithTracking<T>).__tracking = {
           name: schema.name,
           model,
           duration_ms,
@@ -162,9 +167,9 @@ async function generateSection<T>(
       ) {
         const quotaError = new Error(
           `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
-        );
-        (quotaError as any).code = "INSUFFICIENT_QUOTA";
-        (quotaError as any).status = 429;
+        ) as ApiError;
+        quotaError.code = "INSUFFICIENT_QUOTA";
+        quotaError.status = 429;
         throw quotaError;
       }
 

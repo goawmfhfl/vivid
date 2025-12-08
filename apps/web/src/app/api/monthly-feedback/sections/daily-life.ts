@@ -1,4 +1,5 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { DailyLifeReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
@@ -16,7 +17,7 @@ export async function generateDailyLifeReport(
   isPro: boolean,
   progressCallback?: ProgressCallback,
   step: number = 2
-): Promise<any> {
+): Promise<DailyLifeReport> {
   if (progressCallback) {
     progressCallback(step, 7, "daily_life_report");
   }
@@ -29,7 +30,7 @@ export async function generateDailyLifeReport(
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY_LIFE, userPrompt);
 
-  return generateSection<any>(
+  return generateSection<DailyLifeReport>(
     SYSTEM_PROMPT_DAILY_LIFE,
     userPrompt,
     schema,

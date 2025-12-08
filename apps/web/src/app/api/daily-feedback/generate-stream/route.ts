@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         step: number,
         total: number,
         sectionName: string,
-        tracking?: any
+        tracking?: import("../types").TrackingInfo
       ) => {
         // 컨트롤러가 이미 닫혀있으면 무시
         if (isClosed) {
@@ -49,7 +49,11 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      const sendComplete = (data: any & { id: string; tracking?: any[] }) => {
+      const sendComplete = (data: {
+        id: string;
+        tracking?: import("../types").TrackingInfo[];
+        [key: string]: unknown;
+      }) => {
         if (isClosed) return;
         isClosed = true;
         const result = JSON.stringify({
@@ -170,8 +174,10 @@ export async function GET(request: NextRequest) {
 /**
  * 추적 정보 추출 (테스트 환경에서만)
  */
-function extractTrackingInfo(report: any): any[] {
-  const tracking: any[] = [];
+function extractTrackingInfo(
+  report: Record<string, import("../types").WithTracking<unknown>>
+): import("../types").TrackingInfo[] {
+  const tracking: import("../types").TrackingInfo[] = [];
   const sections = [
     { key: "summary_report", name: "SummaryReport" },
     { key: "daily_report", name: "DailyReport" },
@@ -199,8 +205,10 @@ function extractTrackingInfo(report: any): any[] {
 /**
  * 추적 정보 제거 (DB 저장 전)
  */
-function removeTrackingInfo(report: any): any {
-  const cleaned = { ...report };
+function removeTrackingInfo<T extends Record<string, unknown>>(
+  report: T
+): Omit<T, "__tracking"> {
+  const cleaned = { ...report } as T;
 
   const sections = [
     "summary_report",

@@ -1,4 +1,5 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { InsightReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
@@ -16,7 +17,7 @@ export async function generateInsightReport(
   isPro: boolean,
   progressCallback?: ProgressCallback,
   step: number = 5
-): Promise<any> {
+): Promise<InsightReport> {
   if (progressCallback) {
     progressCallback(step, 7, "insight_report");
   }
@@ -29,7 +30,7 @@ export async function generateInsightReport(
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, userPrompt);
 
-  return generateSection<any>(
+  return generateSection<InsightReport>(
     SYSTEM_PROMPT_INSIGHT,
     userPrompt,
     schema,

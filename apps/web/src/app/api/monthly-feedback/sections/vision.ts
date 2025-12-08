@@ -1,4 +1,5 @@
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import type { VisionReport } from "@/types/monthly-feedback-new";
 import type { ProgressCallback } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
@@ -16,7 +17,7 @@ export async function generateVisionReport(
   isPro: boolean,
   progressCallback?: ProgressCallback,
   step: number = 4
-): Promise<any> {
+): Promise<VisionReport> {
   if (progressCallback) {
     progressCallback(step, 7, "vision_report");
   }
@@ -25,7 +26,7 @@ export async function generateVisionReport(
   const userPrompt = buildVisionReportPrompt(weeklyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, userPrompt);
 
-  return generateSection<any>(
+  return generateSection<VisionReport>(
     SYSTEM_PROMPT_VISION,
     userPrompt,
     schema,
