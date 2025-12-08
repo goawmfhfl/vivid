@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       records,
       date,
       dayOfWeek,
-      isPro
+      isPro,
+      userId // AI 사용량 로깅을 위한 userId 전달
     );
 
     // 4️⃣ DailyReportResponse 형식으로 변환

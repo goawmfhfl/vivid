@@ -114,7 +114,8 @@ export async function GET(request: NextRequest) {
           date,
           dayOfWeek,
           isPro,
-          sendProgress // 진행 상황 콜백 전달
+          sendProgress, // 진행 상황 콜백 전달
+          userId // AI 사용량 로깅을 위한 userId 전달
         );
 
         // DailyReportResponse 형식으로 변환

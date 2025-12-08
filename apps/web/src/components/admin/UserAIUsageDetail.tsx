@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import type { AIUsageDetail } from "@/types/admin";
@@ -36,7 +37,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
     const fetchDetails = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
+        const response = await adminApiFetch(
           `/api/admin/ai-usage/${userId}?page=${pagination.page}&limit=${pagination.limit}`
         );
         if (!response.ok) {

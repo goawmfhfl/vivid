@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -49,8 +50,8 @@ export function UserDetail({ userId }: UserDetailProps) {
       setIsLoading(true);
       try {
         const [userResponse, statsResponse] = await Promise.all([
-          fetch(`/api/admin/users/${userId}`),
-          fetch(`/api/admin/users/${userId}/stats`),
+          adminApiFetch(`/api/admin/users/${userId}`),
+          adminApiFetch(`/api/admin/users/${userId}/stats`),
         ]);
 
         if (!userResponse.ok) {
@@ -82,9 +83,8 @@ export function UserDetail({ userId }: UserDetailProps) {
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await adminApiFetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editData),
       });
 
@@ -135,7 +135,7 @@ export function UserDetail({ userId }: UserDetailProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* 헤더 */}
       <div className="flex items-center gap-4">
         <button
@@ -150,12 +150,14 @@ export function UserDetail({ userId }: UserDetailProps) {
         </button>
         <div className="flex-1">
           <h1
-            className="text-2xl sm:text-3xl font-bold mb-2"
+            className="text-3xl sm:text-4xl font-bold mb-2"
             style={{ color: COLORS.text.primary }}
           >
             {user.name}
           </h1>
-          <p style={{ color: COLORS.text.tertiary }}>{user.email}</p>
+          <p className="text-base" style={{ color: COLORS.text.secondary }}>
+            {user.email}
+          </p>
         </div>
         {!isEditing ? (
           <button
@@ -206,7 +208,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 기본 정보 */}
         <div
           className="rounded-xl p-6 space-y-4"

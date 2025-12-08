@@ -7,6 +7,7 @@ const bottomNavHiddenRules: RouteRule[] = [
   { type: "exact", value: "/login" },
   { type: "exact", value: "/signup" },
   { type: "exact", value: "/auth/reset-password" },
+  { type: "prefix", value: "/admin" }, // 어드민 페이지에서 BottomNavigation 비활성화
 ];
 
 export function shouldShowBottomNav(pathname: string): boolean {

@@ -41,6 +41,7 @@ import type {
   WithTracking,
   ApiError,
 } from "../types";
+import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -75,7 +76,8 @@ async function generateSection<T>(
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
@@ -227,6 +229,24 @@ async function generateSection<T>(
       // 캐시에 저장 (멤버십별로 구분)
       setCache(proCacheKey, result);
 
+      // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
+      if (userId) {
+        const usage = extractUsageInfo(
+          completion.usage as ExtendedUsage | undefined
+        );
+        if (usage) {
+          logAIRequestAsync({
+            userId,
+            model,
+            requestType: "weekly_feedback",
+            sectionName,
+            usage,
+            duration_ms,
+            success: true,
+          });
+        }
+      }
+
       // 진행 상황 알림
       if (progressCallback) {
         progressCallback(0, 0, sectionName);
@@ -273,6 +293,26 @@ async function generateSection<T>(
         throw quotaError;
       }
 
+      // AI 사용량 로깅 (에러 발생 시에도 로깅)
+      if (userId) {
+        const endTime = Date.now();
+        const duration_ms = endTime - startTime;
+        logAIRequestAsync({
+          userId,
+          model,
+          requestType: "weekly_feedback",
+          sectionName,
+          usage: {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0,
+          },
+          duration_ms,
+          success: false,
+          errorMessage: err?.message || String(error),
+        });
+      }
+
       throw error;
     });
 }
@@ -284,7 +324,8 @@ async function generateSummaryReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<SummaryReport> {
   const prompt = buildSummaryReportPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -313,8 +354,9 @@ async function generateSummaryReport(
     },
     cacheKey,
     isPro,
-    "SummaryReport",
-    progressCallback
+    "summary_report",
+    progressCallback,
+    userId
   );
 
   if (!response) {
@@ -365,7 +407,8 @@ async function generateDailyLifeReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<DailyLifeReport> {
   const prompt = buildDailyLifePrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -397,8 +440,9 @@ async function generateDailyLifeReport(
     },
     cacheKey,
     isPro,
-    "DailyLifeReport",
-    progressCallback
+    "daily_life_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateDailyLifeReport] response received:", {
@@ -484,8 +528,9 @@ async function generateEmotionReport(
     },
     cacheKey,
     isPro,
-    "EmotionReport",
-    progressCallback
+    "emotion_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateEmotionReport] response received:", {
@@ -544,7 +589,8 @@ async function generateVisionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<VisionReport> {
   const prompt = buildVisionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -573,8 +619,9 @@ async function generateVisionReport(
     },
     cacheKey,
     isPro,
-    "VisionReport",
-    progressCallback
+    "vision_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateVisionReport] response received:", {
@@ -628,7 +675,8 @@ async function generateInsightReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<InsightReport> {
   const prompt = buildInsightPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -657,8 +705,9 @@ async function generateInsightReport(
     },
     cacheKey,
     isPro,
-    "InsightReport",
-    progressCallback
+    "insight_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateInsightReport] response received:", {
@@ -715,7 +764,8 @@ async function generateExecutionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<ExecutionReport> {
   const prompt = buildExecutionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -745,8 +795,9 @@ async function generateExecutionReport(
     },
     cacheKey,
     isPro,
-    "ExecutionReport",
-    progressCallback
+    "execution_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateExecutionReport] response received:", {
@@ -803,7 +854,8 @@ async function generateClosingReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<ClosingReport> {
   const prompt = buildClosingPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
@@ -832,8 +884,9 @@ async function generateClosingReport(
     },
     cacheKey,
     isPro,
-    "ClosingReport",
-    progressCallback
+    "closing_report",
+    progressCallback,
+    userId
   );
 
   console.log("[generateClosingReport] response received:", {
@@ -891,7 +944,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<WeeklyFeedback> {
   // 병렬로 7개 섹션 생성 (각 섹션 완료 시점에 진행 상황 알림)
   console.log("[generateWeeklyFeedbackFromDailyWithProgress] 시작");
@@ -901,7 +955,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(1, 7, "SummaryReport");
@@ -917,7 +972,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(2, 7, "DailyLifeReport");
@@ -933,7 +989,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(3, 7, "EmotionReport");
@@ -949,7 +1006,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(4, 7, "VisionReport");
@@ -965,7 +1023,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(5, 7, "InsightReport");
@@ -981,7 +1040,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(6, 7, "ExecutionReport");
@@ -997,7 +1057,8 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     dailyFeedbacks,
     range,
     isPro,
-    progressCallback
+    progressCallback,
+    userId
   ).then((result) => {
     if (progressCallback) {
       progressCallback(7, 7, "ClosingReport");

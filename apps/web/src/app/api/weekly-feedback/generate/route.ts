@@ -137,7 +137,8 @@ export async function POST(request: NextRequest) {
     const weeklyFeedback = await generateWeeklyFeedbackFromDaily(
       dailyFeedbacks,
       { start, end, timezone },
-      isPro
+      isPro,
+      userId // AI 사용량 로깅을 위한 userId 전달
     );
 
     // 추적 정보 수집 (테스트 환경에서만)

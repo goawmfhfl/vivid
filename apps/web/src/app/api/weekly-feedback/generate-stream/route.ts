@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
             dailyFeedbacks,
             { start, end, timezone },
             isPro,
-            sendProgress // 진행 상황 콜백 전달
+            sendProgress, // 진행 상황 콜백 전달
+            userId // AI 사용량 로깅을 위한 userId 전달
           );
 
         console.log("[generate-stream] 생성된 weeklyFeedback:", {

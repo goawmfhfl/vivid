@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { StatsCard } from "./StatsCard";
@@ -51,7 +52,9 @@ export function AIUsagePage() {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/admin/ai-usage?days=${days}`);
+        const response = await adminApiFetch(
+          `/api/admin/ai-usage?days=${days}`
+        );
         if (!response.ok) {
           throw new Error("AI 사용량 통계를 불러오는데 실패했습니다.");
         }
@@ -92,16 +95,17 @@ export function AIUsagePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="space-y-8">
+      {/* 헤더 섹션 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
           <h1
-            className="text-2xl sm:text-3xl font-bold mb-2"
+            className="text-3xl sm:text-4xl font-bold"
             style={{ color: COLORS.text.primary }}
           >
             AI 사용량 관리
           </h1>
-          <p style={{ color: COLORS.text.tertiary }}>
+          <p className="text-base" style={{ color: COLORS.text.secondary }}>
             전체 AI 사용량 통계를 확인하세요.
           </p>
         </div>
@@ -122,7 +126,7 @@ export function AIUsagePage() {
       </div>
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatsCard
           title="오늘 AI 요청"
           value={stats.today.requests.toLocaleString()}
@@ -155,7 +159,7 @@ export function AIUsagePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 모델별 사용량 */}
         {stats.by_model.length > 0 && (
           <div

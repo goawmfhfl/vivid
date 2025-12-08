@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { supabase } from "@/lib/supabase";
 
 /**
  * 관리자 권한이 필요한 페이지를 보호하는 고차 컴포넌트 (HOC)
@@ -29,9 +30,28 @@ export function withAdminAuth<P extends object>(
         }
 
         try {
-          // API를 통해 관리자 권한 확인
-          const response = await fetch("/api/admin/check");
+          // Supabase 세션 가져오기
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session?.access_token) {
+            console.error("세션이 없습니다.");
+            setIsAdmin(false);
+            router.push("/");
+            return;
+          }
+
+          // API를 통해 관리자 권한 확인 (Authorization 헤더 포함)
+          const response = await fetch("/api/admin/check", {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            credentials: "include",
+          });
+
           if (!response.ok) {
+            console.error("관리자 권한 확인 API 실패:", response.status);
             setIsAdmin(false);
             router.push("/");
             return;
@@ -42,6 +62,7 @@ export function withAdminAuth<P extends object>(
           setIsAdmin(adminStatus);
 
           if (!adminStatus) {
+            console.error("관리자 권한이 없습니다.");
             router.push("/");
             return;
           }

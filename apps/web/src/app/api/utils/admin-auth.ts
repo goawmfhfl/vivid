@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { getAuthenticatedUserIdFromCookie } from "./auth";
+import {
+  getAuthenticatedUserId,
+  getAuthenticatedUserIdFromCookie,
+} from "./auth";
 
 /**
  * 관리자 권한 확인 함수
@@ -32,7 +35,14 @@ export async function requireAdmin(
   request: NextRequest
 ): Promise<{ userId: string } | NextResponse> {
   try {
-    const userId = await getAuthenticatedUserIdFromCookie();
+    // Authorization 헤더가 있으면 우선 사용, 없으면 쿠키에서 가져오기
+    let userId: string;
+    try {
+      userId = await getAuthenticatedUserId(request);
+    } catch {
+      // Authorization 헤더가 없으면 쿠키에서 시도
+      userId = await getAuthenticatedUserIdFromCookie();
+    }
 
     const adminStatus = await isAdmin(userId);
     if (!adminStatus) {

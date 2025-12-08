@@ -25,31 +25,37 @@ const menuItems = [
     title: "대시보드",
     href: "/admin",
     icon: LayoutDashboard,
+    enabled: true,
   },
   {
     title: "유저 관리",
     href: "/admin/users",
     icon: Users,
+    enabled: true,
   },
   {
     title: "AI 사용량",
     href: "/admin/ai-usage",
     icon: BarChart3,
+    enabled: true,
   },
   {
     title: "구독 관리",
     href: "/admin/subscriptions",
     icon: CreditCard,
+    enabled: true,
   },
   {
     title: "콘텐츠 통계",
     href: "/admin/content",
     icon: FileText,
+    enabled: false, // 비활성화
   },
   {
     title: "시스템 설정",
     href: "/admin/settings",
     icon: Settings,
+    enabled: false, // 비활성화
   },
 ];
 
@@ -61,8 +67,11 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
     <div className="flex flex-col h-full">
       {/* 로고/제목 */}
       <div
-        className="px-6 py-4 border-b"
-        style={{ borderColor: COLORS.border.light }}
+        className="px-6 py-5 border-b"
+        style={{
+          borderColor: COLORS.border.light,
+          background: `linear-gradient(135deg, ${COLORS.background.card} 0%, ${COLORS.background.hoverLight} 100%)`,
+        }}
       >
         <h1
           className="text-xl font-bold"
@@ -70,6 +79,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         >
           관리자 페이지
         </h1>
+        <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+          MyRecords Admin
+        </p>
       </div>
 
       {/* 메뉴 */}
@@ -78,17 +90,42 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
+          if (!item.enabled) {
+            return (
+              <div
+                key={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg cursor-not-allowed opacity-50"
+                )}
+                style={{
+                  color: COLORS.text.muted,
+                }}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{item.title}</span>
+                <span
+                  className="ml-auto text-xs"
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  준비중
+                </span>
+              </div>
+            );
+          }
+
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                 isActive ? "font-semibold" : "hover:bg-opacity-50"
               )}
               style={{
-                backgroundColor: isActive ? COLORS.brand.light : "transparent",
+                backgroundColor: isActive
+                  ? COLORS.brand.light + "30"
+                  : "transparent",
                 color: isActive ? COLORS.brand.primary : COLORS.text.secondary,
               }}
             >
@@ -122,7 +159,8 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       {/* 모바일 오버레이 */}
       {isMobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
+          className="lg:hidden fixed inset-0 z-40"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
           onClick={() => setIsMobileOpen(false)}
         />
       )}

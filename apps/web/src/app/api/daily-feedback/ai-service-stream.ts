@@ -49,6 +49,7 @@ import type {
   ApiError,
   ProgressCallback as ProgressCallbackType,
 } from "../types";
+import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -79,7 +80,8 @@ async function generateSection<T>(
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<T> {
   // 진행 상황 알림 (섹션 시작)
   const schemaObj: ReportSchema =
@@ -226,6 +228,24 @@ async function generateSection<T>(
 
     setCache(proCacheKey, result);
 
+    // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
+    if (userId) {
+      const usage = extractUsageInfo(
+        completion.usage as ExtendedUsage | undefined
+      );
+      if (usage) {
+        logAIRequestAsync({
+          userId,
+          model,
+          requestType: "daily_feedback",
+          sectionName,
+          usage,
+          duration_ms,
+          success: true,
+        });
+      }
+    }
+
     // 개발 환경에서 추적 정보 추가 (객체인 경우에만)
     if (
       (process.env.NODE_ENV === "development" ||
@@ -273,6 +293,27 @@ async function generateSection<T>(
       quotaError.status = 429;
       throw quotaError;
     }
+
+    // AI 사용량 로깅 (에러 발생 시에도 로깅)
+    if (userId) {
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
+      logAIRequestAsync({
+        userId,
+        model,
+        requestType: "daily_feedback",
+        sectionName,
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0,
+        },
+        duration_ms,
+        success: false,
+        errorMessage: err?.message || String(error),
+      });
+    }
+
     throw error;
   }
 }
@@ -285,7 +326,8 @@ async function generateSummaryReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<SummaryReport> {
   const prompt = buildSummaryPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY, prompt);
@@ -296,8 +338,9 @@ async function generateSummaryReport(
     (isPro) => getSummaryReportSchema(isPro),
     cacheKey,
     isPro,
-    "SummaryReport",
-    progressCallback
+    "summary_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -309,7 +352,8 @@ async function generateDailyReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<DailyReport | null> {
   const dailyRecords = records.filter((r) => r.type === "daily");
 
@@ -326,8 +370,9 @@ async function generateDailyReport(
     (isPro) => getDailyReportSchema(isPro),
     cacheKey,
     isPro,
-    "DailyReport",
-    progressCallback
+    "daily_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -339,7 +384,8 @@ async function generateEmotionReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<EmotionReport | null> {
   const emotionRecords = records.filter((r) => r.type === "emotion");
 
@@ -356,8 +402,9 @@ async function generateEmotionReport(
     EmotionReportSchema,
     cacheKey,
     isPro,
-    "EmotionReport",
-    progressCallback
+    "emotion_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -369,7 +416,8 @@ async function generateDreamReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<DreamReport | null> {
   const dreamRecords = records.filter((r) => r.type === "dream");
 
@@ -386,8 +434,9 @@ async function generateDreamReport(
     DreamReportSchema,
     cacheKey,
     isPro,
-    "DreamReport",
-    progressCallback
+    "dream_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -399,7 +448,8 @@ async function generateInsightReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<InsightReport | null> {
   const insightRecords = records.filter((r) => r.type === "insight");
 
@@ -416,8 +466,9 @@ async function generateInsightReport(
     InsightReportSchema,
     cacheKey,
     isPro,
-    "InsightReport",
-    progressCallback
+    "insight_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -429,7 +480,8 @@ async function generateFeedbackReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<FeedbackReport | null> {
   const feedbackRecords = records.filter((r) => r.type === "feedback");
 
@@ -446,8 +498,9 @@ async function generateFeedbackReport(
     (isPro) => getFeedbackReportSchema(isPro),
     cacheKey,
     isPro,
-    "FeedbackReport",
-    progressCallback
+    "feedback_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -464,7 +517,8 @@ async function generateFinalReport(
   insightReport: InsightReport | null,
   feedbackReport: FeedbackReport | null,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<FinalReport> {
   const prompt = buildFinalPrompt(
     date,
@@ -485,8 +539,9 @@ async function generateFinalReport(
     FinalReportSchema,
     cacheKey,
     isPro,
-    "FinalReport",
-    progressCallback
+    "final_report",
+    progressCallback,
+    userId
   );
 }
 
@@ -498,7 +553,8 @@ export async function generateAllReportsWithProgress(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<{
   summary_report: SummaryReport;
   daily_report: DailyReport | null;
@@ -531,7 +587,8 @@ export async function generateAllReportsWithProgress(
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
 
   // 2. 타입별 리포트 순차 생성
@@ -540,35 +597,40 @@ export async function generateAllReportsWithProgress(
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
   const emotionReport = await generateEmotionReport(
     records,
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
   const dreamReport = await generateDreamReport(
     records,
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
   const insightReport = await generateInsightReport(
     records,
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
   const feedbackReport = await generateFeedbackReport(
     records,
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
 
   // 3. 최종 리포트 생성
@@ -582,7 +644,8 @@ export async function generateAllReportsWithProgress(
     insightReport,
     feedbackReport,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr)
+    (c, t, n, tr) => callProgress(n, tr),
+    userId
   );
 
   return {

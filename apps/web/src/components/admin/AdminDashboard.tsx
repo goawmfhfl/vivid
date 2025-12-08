@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { COLORS } from "@/lib/design-system";
 import type { AdminStats } from "@/types/admin";
 import { StatsCard } from "./StatsCard";
+import { adminApiFetch } from "@/lib/admin-api-client";
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -13,7 +14,7 @@ export function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch("/api/admin/stats");
+        const response = await adminApiFetch("/api/admin/stats");
         if (!response.ok) {
           throw new Error("통계를 불러오는데 실패했습니다.");
         }
@@ -58,21 +59,22 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-8">
+      {/* 헤더 섹션 */}
+      <div className="space-y-2">
         <h1
-          className="text-2xl sm:text-3xl font-bold mb-2"
+          className="text-3xl sm:text-4xl font-bold"
           style={{ color: COLORS.text.primary }}
         >
           관리자 대시보드
         </h1>
-        <p style={{ color: COLORS.text.tertiary }}>
+        <p className="text-base" style={{ color: COLORS.text.secondary }}>
           전체 시스템 통계를 한눈에 확인하세요.
         </p>
       </div>
 
       {/* 통계 카드 그리드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatsCard
           title="총 유저 수"
           value={stats.totalUsers.toLocaleString()}
@@ -99,8 +101,6 @@ export function AdminDashboard() {
           description={`₩${stats.todayAICost.krw.toLocaleString()}`}
         />
       </div>
-
-      {/* 추가 섹션은 추후 구현 */}
     </div>
   );
 }

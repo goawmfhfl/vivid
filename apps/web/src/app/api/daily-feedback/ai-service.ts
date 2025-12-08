@@ -41,6 +41,8 @@ import {
   generatePromptCacheKey,
 } from "../utils/cache";
 import type { Schema, ReportSchema } from "../types";
+import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
+import type { ExtendedUsage } from "../types";
 
 /**
  * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -69,7 +71,9 @@ async function generateReport<T>(
   userPrompt: string,
   schema: Schema,
   cacheKey: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string,
+  sectionName?: string
 ): Promise<T> {
   // 스키마가 함수인 경우 멤버십별로 동적 생성
   const finalSchema: ReportSchema =
@@ -98,6 +102,8 @@ async function generateReport<T>(
     ? `${systemPrompt}\n\n[Pro 멤버십: 더 상세하고 깊이 있는 분석을 제공하세요. 더 많은 세부사항과 인사이트를 포함하세요.]`
     : `${systemPrompt}\n\n[무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.]`;
 
+  const startTime = Date.now();
+
   try {
     const completion = await openai.chat.completions.create({
       model,
@@ -119,12 +125,33 @@ async function generateReport<T>(
       prompt_cache_key: promptCacheKey,
     });
 
+    const endTime = Date.now();
+    const duration_ms = endTime - startTime;
+
     const content = completion.choices[0]?.message?.content;
     if (!content) {
       throw new Error(`No content from OpenAI (${finalSchema.name})`);
     }
 
     let result = JSON.parse(content) as T;
+
+    // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
+    if (userId && sectionName) {
+      const usage = extractUsageInfo(
+        completion.usage as ExtendedUsage | undefined
+      );
+      if (usage) {
+        logAIRequestAsync({
+          userId,
+          model,
+          requestType: "daily_feedback",
+          sectionName,
+          usage,
+          duration_ms,
+          success: true,
+        });
+      }
+    }
 
     // 무료 멤버십인 경우 Pro 전용 필드를 null로 설정
     if (!isPro && result && typeof result === "object") {
@@ -162,6 +189,25 @@ async function generateReport<T>(
 
     return result;
   } catch (error: unknown) {
+    // AI 사용량 로깅 (에러 발생 시에도 로깅)
+    if (userId && sectionName) {
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
+      logAIRequestAsync({
+        userId,
+        model,
+        requestType: "daily_feedback",
+        sectionName,
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0,
+        },
+        duration_ms,
+        success: false,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
+    }
     throw error;
   }
 }
@@ -173,7 +219,8 @@ export async function generateSummaryReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<SummaryReport> {
   const prompt = buildSummaryPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY, prompt);
@@ -183,7 +230,9 @@ export async function generateSummaryReport(
     prompt,
     (isPro) => getSummaryReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "summary_report"
   );
 }
 
@@ -194,7 +243,8 @@ export async function generateDailyReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<DailyReport | null> {
   const dailyRecords = records.filter((r) => r.type === "daily");
 
@@ -212,7 +262,9 @@ export async function generateDailyReport(
     prompt,
     (isPro) => getDailyReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "daily_report"
   );
 }
 
@@ -223,7 +275,8 @@ export async function generateEmotionReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<EmotionReport | null> {
   const emotionRecords = records.filter((r) => r.type === "emotion");
 
@@ -239,7 +292,9 @@ export async function generateEmotionReport(
     prompt,
     EmotionReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "emotion_report"
   );
 }
 
@@ -250,7 +305,8 @@ export async function generateDreamReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<DreamReport | null> {
   const dreamRecords = records.filter((r) => r.type === "dream");
 
@@ -266,7 +322,9 @@ export async function generateDreamReport(
     prompt,
     DreamReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "dream_report"
   );
 }
 
@@ -277,7 +335,8 @@ export async function generateInsightReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<InsightReport | null> {
   const insightRecords = records.filter((r) => r.type === "insight");
 
@@ -293,7 +352,9 @@ export async function generateInsightReport(
     prompt,
     InsightReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "insight_report"
   );
 }
 
@@ -304,7 +365,8 @@ export async function generateFeedbackReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<FeedbackReport | null> {
   const feedbackRecords = records.filter((r) => r.type === "feedback");
 
@@ -320,7 +382,9 @@ export async function generateFeedbackReport(
     prompt,
     getFeedbackReportSchema(isPro),
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "feedback_report"
   );
 }
 
@@ -336,7 +400,8 @@ export async function generateFinalReport(
   dreamReport: DreamReport | null,
   insightReport: InsightReport | null,
   feedbackReport: FeedbackReport | null,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<FinalReport> {
   const prompt = buildFinalPrompt(
     date,
@@ -356,7 +421,9 @@ export async function generateFinalReport(
     prompt,
     FinalReportSchema,
     cacheKey,
-    isPro
+    isPro,
+    userId,
+    "final_report"
   );
 }
 
@@ -369,7 +436,8 @@ export async function generateAllReports(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userId?: string
 ): Promise<{
   summary_report: SummaryReport;
   daily_report: DailyReport | null;
@@ -384,7 +452,8 @@ export async function generateAllReports(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
 
   // 2. 타입별 리포트 순차 생성 (병렬 요청 제거)
@@ -393,31 +462,36 @@ export async function generateAllReports(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
   const emotionReport = await generateEmotionReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
   const dreamReport = await generateDreamReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
   const insightReport = await generateInsightReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
   const feedbackReport = await generateFeedbackReport(
     records,
     date,
     dayOfWeek,
-    isPro
+    isPro,
+    userId
   );
 
   // 3. 최종 리포트 생성
@@ -430,7 +504,8 @@ export async function generateAllReports(
     dreamReport,
     insightReport,
     feedbackReport,
-    isPro
+    isPro,
+    userId
   );
 
   return {

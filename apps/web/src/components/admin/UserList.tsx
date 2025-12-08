@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
@@ -46,7 +47,9 @@ export function UserList() {
         if (roleFilter) params.append("role", roleFilter);
         if (activeFilter) params.append("is_active", activeFilter);
 
-        const response = await fetch(`/api/admin/users?${params.toString()}`);
+        const response = await adminApiFetch(
+          `/api/admin/users?${params.toString()}`
+        );
         if (!response.ok) {
           throw new Error("유저 목록을 불러오는데 실패했습니다.");
         }
@@ -84,14 +87,15 @@ export function UserList() {
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* 헤더 섹션 */}
+      <div className="space-y-2">
         <h1
-          className="text-2xl sm:text-3xl font-bold mb-2"
+          className="text-3xl sm:text-4xl font-bold"
           style={{ color: COLORS.text.primary }}
         >
           유저 관리
         </h1>
-        <p style={{ color: COLORS.text.tertiary }}>
+        <p className="text-base" style={{ color: COLORS.text.secondary }}>
           전체 유저 목록을 확인하고 관리하세요.
         </p>
       </div>
@@ -223,104 +227,122 @@ export function UserList() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-opacity-50 transition-colors cursor-pointer"
-                    style={{
-                      borderBottom: `1px solid ${COLORS.border.light}`,
-                    }}
-                    onClick={() => router.push(`/admin/users/${user.id}`)}
-                  >
-                    <td className="px-4 py-3">
-                      <span style={{ color: COLORS.text.primary }}>
-                        {user.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span style={{ color: COLORS.text.secondary }}>
-                        {user.email}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          backgroundColor:
-                            user.role === "admin"
-                              ? COLORS.brand.light
-                              : COLORS.background.hover,
-                          color:
-                            user.role === "admin"
-                              ? COLORS.brand.primary
-                              : COLORS.text.secondary,
-                        }}
+                {users.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-12 text-center"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      <p className="mb-2">유저 데이터가 없습니다.</p>
+                      <p
+                        className="text-xs"
+                        style={{ color: COLORS.text.tertiary }}
                       >
-                        {user.role === "admin"
-                          ? "관리자"
-                          : user.role === "moderator"
-                          ? "모더레이터"
-                          : "유저"}
-                      </span>
+                        검색 조건을 변경해보세요.
+                      </p>
                     </td>
-                    <td className="px-4 py-3">
-                      {user.subscription ? (
+                  </tr>
+                ) : (
+                  users.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-opacity-50 transition-colors cursor-pointer"
+                      style={{
+                        borderBottom: `1px solid ${COLORS.border.light}`,
+                      }}
+                      onClick={() => router.push(`/admin/users/${user.id}`)}
+                    >
+                      <td className="px-4 py-3">
+                        <span style={{ color: COLORS.text.primary }}>
+                          {user.name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span style={{ color: COLORS.text.secondary }}>
+                          {user.email}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
                         <span
                           className="px-2 py-1 rounded text-xs font-medium"
                           style={{
                             backgroundColor:
-                              user.subscription.plan === "pro"
+                              user.role === "admin"
                                 ? COLORS.brand.light
                                 : COLORS.background.hover,
                             color:
-                              user.subscription.plan === "pro"
+                              user.role === "admin"
                                 ? COLORS.brand.primary
                                 : COLORS.text.secondary,
                           }}
                         >
-                          {user.subscription.plan === "pro" ? "Pro" : "Free"}
+                          {user.role === "admin"
+                            ? "관리자"
+                            : user.role === "moderator"
+                            ? "모더레이터"
+                            : "유저"}
                         </span>
-                      ) : (
-                        <span style={{ color: COLORS.text.muted }}>-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.aiUsage ? (
-                        <div className="text-xs">
-                          <div style={{ color: COLORS.text.primary }}>
-                            {user.aiUsage.total_requests.toLocaleString()}회
+                      </td>
+                      <td className="px-4 py-3">
+                        {user.subscription ? (
+                          <span
+                            className="px-2 py-1 rounded text-xs font-medium"
+                            style={{
+                              backgroundColor:
+                                user.subscription.plan === "pro"
+                                  ? COLORS.brand.light
+                                  : COLORS.background.hover,
+                              color:
+                                user.subscription.plan === "pro"
+                                  ? COLORS.brand.primary
+                                  : COLORS.text.secondary,
+                            }}
+                          >
+                            {user.subscription.plan === "pro" ? "Pro" : "Free"}
+                          </span>
+                        ) : (
+                          <span style={{ color: COLORS.text.muted }}>-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {user.aiUsage ? (
+                          <div className="text-xs">
+                            <div style={{ color: COLORS.text.primary }}>
+                              {user.aiUsage.total_requests.toLocaleString()}회
+                            </div>
+                            <div style={{ color: COLORS.text.muted }}>
+                              ${user.aiUsage.total_cost_usd.toFixed(2)}
+                            </div>
                           </div>
-                          <div style={{ color: COLORS.text.muted }}>
-                            ${user.aiUsage.total_cost_usd.toFixed(2)}
-                          </div>
-                        </div>
-                      ) : (
-                        <span style={{ color: COLORS.text.muted }}>-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          backgroundColor: user.is_active
-                            ? COLORS.status.success + "20"
-                            : COLORS.status.error + "20",
-                          color: user.is_active
-                            ? COLORS.status.success
-                            : COLORS.status.error,
-                        }}
-                      >
-                        {user.is_active ? "활성" : "비활성"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <ChevronRight
-                        className="w-5 h-5"
-                        style={{ color: COLORS.text.muted }}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                        ) : (
+                          <span style={{ color: COLORS.text.muted }}>-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="px-2 py-1 rounded text-xs font-medium"
+                          style={{
+                            backgroundColor: user.is_active
+                              ? COLORS.status.success + "20"
+                              : COLORS.status.error + "20",
+                            color: user.is_active
+                              ? COLORS.status.success
+                              : COLORS.status.error,
+                          }}
+                        >
+                          {user.is_active ? "활성" : "비활성"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <ChevronRight
+                          className="w-5 h-5"
+                          style={{ color: COLORS.text.muted }}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
