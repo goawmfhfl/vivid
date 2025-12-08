@@ -19,6 +19,7 @@ interface Subscription {
   started_at: string | null;
   canceled_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface SubscriptionListResponse {
@@ -46,9 +47,13 @@ export function SubscriptionList() {
   const [planFilter, setPlanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [editData, setEditData] = useState({
-    plan: "" as "free" | "pro",
-    status: "" as "active" | "canceled" | "expired" | "past_due",
+  const [editData, setEditData] = useState<{
+    plan: "free" | "pro" | "";
+    status: "active" | "canceled" | "expired" | "past_due" | "";
+    expires_at: string;
+  }>({
+    plan: "",
+    status: "",
     expires_at: "",
   });
 
@@ -239,6 +244,12 @@ export function SubscriptionList() {
                     style={{ color: COLORS.text.primary }}
                   >
                     만료일
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-semibold"
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    업데이트
                   </th>
                   <th className="px-4 py-3"></th>
                 </tr>

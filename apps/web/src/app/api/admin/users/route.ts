@@ -110,6 +110,10 @@ export async function GET(request: NextRequest) {
         });
       }
       const usage = aiUsageMap.get(userId);
+      if (!usage) {
+        // 이론적으로는 발생하지 않아야 하지만, 타입 안전성을 위해 체크
+        return;
+      }
       usage.total_requests += 1;
       usage.total_tokens += Number(req.total_tokens || 0);
       usage.total_cost_usd += Number(req.cost_usd || 0);

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        profiles!inner(id, email, name)
+        profiles(id, email, name)
       `,
         { count: "exact" }
       )
@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
           started_at: sub.started_at,
           canceled_at: sub.canceled_at,
           created_at: sub.created_at,
+          updated_at: sub.updated_at,
         })) || [],
       pagination: {
         page,
@@ -189,6 +190,7 @@ export async function PATCH(request: NextRequest) {
       plan?: string;
       status?: string;
       expires_at?: string | null;
+      canceled_at?: string;
     } = {};
     if (plan) {
       if (!["free", "pro"].includes(plan)) {

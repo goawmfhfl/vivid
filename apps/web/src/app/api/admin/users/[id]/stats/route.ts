@@ -128,7 +128,7 @@ export async function GET(
           cost_krw: 0,
         });
       }
-      const stats = dailyMap.get(date);
+      const stats = dailyMap.get(date)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);

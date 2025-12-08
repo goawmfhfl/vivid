@@ -51,6 +51,33 @@ export default function AuthCallback() {
           // 프로필의 last_login_at 업데이트
           await updateLastLoginAt(user.id);
 
+          // 구독이 없으면 기본 free 플랜 생성
+          try {
+            const subscriptionResponse = await fetch("/api/subscriptions", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${data.session.access_token}`,
+              },
+              body: JSON.stringify({
+                plan: "free",
+                status: "active",
+                expires_at: null,
+              }),
+            });
+
+            if (!subscriptionResponse.ok) {
+              const errorData = await subscriptionResponse.json();
+              // 구독이 이미 존재하는 경우는 정상 (409 에러 무시)
+              if (subscriptionResponse.status !== 409) {
+                console.error("구독 생성 실패:", errorData);
+              }
+            }
+          } catch (subscriptionError) {
+            console.error("구독 생성 중 오류:", subscriptionError);
+            // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+          }
+
           router.replace("/");
         } else {
           console.log("세션이 없습니다.");

@@ -499,7 +499,8 @@ async function generateEmotionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
+  userId?: string
 ): Promise<EmotionReport> {
   const prompt = buildEmotionPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);

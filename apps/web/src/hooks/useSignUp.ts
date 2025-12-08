@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { createUserProfile } from "@/lib/profile-service";
+import type { CreateProfileRequest } from "@/types/profile";
 
 // 회원가입 데이터 타입 정의
 export interface SignUpData {
@@ -168,6 +170,56 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
     if (!user) {
       throw new SignUpError("사용자 정보를 가져올 수 없습니다.");
+    }
+
+    // 2. 프로필 생성
+    try {
+      const profileData: CreateProfileRequest = {
+        id: user.id,
+        email: user.email || email || "",
+        name,
+        phone,
+        birthYear,
+        gender,
+        agreeTerms,
+        agreeAI,
+        agreeMarketing,
+        role: "user",
+      };
+
+      await createUserProfile(profileData);
+    } catch (profileError) {
+      console.error("프로필 생성 중 오류:", profileError);
+      // 프로필 생성 실패는 에러로 처리하지 않고 로그만 남김
+      // (이미 존재하는 경우 등은 정상 처리)
+    }
+
+    // 3. 기본 구독 생성 (free 플랜)
+    // 세션이 있는 경우에만 구독 생성 (일반 회원가입은 이메일 인증 후 세션이 생성됨)
+    if (session) {
+      try {
+        const subscriptionResponse = await fetch("/api/subscriptions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            plan: "free",
+            status: "active",
+            expires_at: null,
+          }),
+        });
+
+        if (!subscriptionResponse.ok) {
+          const errorData = await subscriptionResponse.json();
+          console.error("구독 생성 실패:", errorData);
+          // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+        }
+      } catch (subscriptionError) {
+        console.error("구독 생성 중 오류:", subscriptionError);
+        // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+      }
     }
 
     return { user, session };

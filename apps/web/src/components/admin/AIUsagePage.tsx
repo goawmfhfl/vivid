@@ -428,7 +428,7 @@ export function AIUsagePage() {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ name }: { name: string }) => name}
+                  label={({ name }: { name?: string }) => name || ""}
                 >
                   {stats.by_model.map((entry, index) => (
                     <Cell

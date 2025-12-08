@@ -598,9 +598,15 @@ export function UserDetail({ userId }: UserDetailProps) {
                         cx="50%"
                         cy="50%"
                         outerRadius={60}
-                        label={(entry) =>
-                          `${entry.model}: $${entry.cost_usd.toFixed(2)}`
-                        }
+                        label={({ name }: { name?: string }) => {
+                          if (!name) return "";
+                          const entry = aiStats.by_model.find(
+                            (e) => e.model === name
+                          );
+                          return entry
+                            ? `${entry.model}: $${entry.cost_usd.toFixed(2)}`
+                            : name;
+                        }}
                       >
                         {aiStats.by_model.map((entry, index) => (
                           <Cell

@@ -167,7 +167,20 @@ export function WeeklyCandidatesSection() {
                   ? data.data.__tracking
                   : [data.data.__tracking];
                 tracking.forEach(
-                  (t: { model?: string; tokens?: number }, index: number) => {
+                  (
+                    t: {
+                      model?: string;
+                      tokens?: number;
+                      duration_ms?: number;
+                      usage?: {
+                        prompt_tokens: number;
+                        completion_tokens: number;
+                        total_tokens: number;
+                        cached_tokens?: number;
+                      };
+                    },
+                    index: number
+                  ) => {
                     if (requestIds[index]) {
                       updateRequest(requestIds[index], {
                         model: t.model,

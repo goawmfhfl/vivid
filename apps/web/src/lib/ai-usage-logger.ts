@@ -119,12 +119,24 @@ export async function logAIRequest(
 
     const supabase = getServiceSupabase();
 
+    // section_name에 접두사 추가
+    let prefixedSectionName: string | null = null;
+    if (sectionName) {
+      const prefix =
+        requestType === "daily_feedback"
+          ? "[daily]"
+          : requestType === "weekly_feedback"
+          ? "[weekly]"
+          : "[monthly]";
+      prefixedSectionName = `${prefix} ${sectionName}`;
+    }
+
     // ai_requests 테이블에 삽입
     const { error } = await supabase.from("ai_requests").insert({
       user_id: userId,
       model,
       request_type: requestType,
-      section_name: sectionName,
+      section_name: prefixedSectionName,
       prompt_tokens: usage.prompt_tokens,
       completion_tokens: usage.completion_tokens,
       cached_tokens: usage.cached_tokens || 0,

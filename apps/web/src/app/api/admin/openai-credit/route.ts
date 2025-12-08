@@ -71,8 +71,14 @@ export async function GET(request: NextRequest) {
       total_tokens?: number | string | null;
     }
 
-    const calculateTotal = (requests: RequestRow[]) => {
-      return requests.reduce(
+    interface TotalStats {
+      cost_usd: number;
+      cost_krw: number;
+      tokens: number;
+    }
+
+    const calculateTotal = (requests: RequestRow[]): TotalStats => {
+      return requests.reduce<TotalStats>(
         (acc, req) => ({
           cost_usd: acc.cost_usd + Number(req.cost_usd || 0),
           cost_krw: acc.cost_krw + Number(req.cost_krw || 0),
