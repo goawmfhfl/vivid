@@ -176,7 +176,8 @@ export function UserList() {
             ...CARD_STYLES.default,
           }}
         >
-          <div className="overflow-x-auto">
+          {/* 데스크탑 테이블 뷰 */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr
@@ -228,7 +229,7 @@ export function UserList() {
                 {users.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-12 text-center"
                       style={{ color: COLORS.text.secondary }}
                     >
@@ -343,6 +344,129 @@ export function UserList() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* 모바일/태블릿 카드 뷰 */}
+          <div className="lg:hidden space-y-3 p-4">
+            {users.length === 0 ? (
+              <div className="text-center py-12">
+                <p style={{ color: COLORS.text.secondary }} className="mb-2">
+                  유저 데이터가 없습니다.
+                </p>
+                <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+                  검색 조건을 변경해보세요.
+                </p>
+              </div>
+            ) : (
+              users.map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => router.push(`/admin/users/${user.id}`)}
+                  className="rounded-lg p-4 cursor-pointer transition-colors"
+                  style={{
+                    backgroundColor: COLORS.background.hover,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3
+                        className="font-semibold text-base mb-1"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {user.name}
+                      </h3>
+                      <p
+                        className="text-sm"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        {user.email}
+                      </p>
+                    </div>
+                    <ChevronRight
+                      className="w-5 h-5 flex-shrink-0 mt-1"
+                      style={{ color: COLORS.text.muted }}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        backgroundColor:
+                          user.role === "admin"
+                            ? COLORS.brand.light
+                            : COLORS.background.base,
+                        color:
+                          user.role === "admin"
+                            ? COLORS.brand.primary
+                            : COLORS.text.secondary,
+                      }}
+                    >
+                      {user.role === "admin"
+                        ? "관리자"
+                        : user.role === "moderator"
+                        ? "모더레이터"
+                        : "유저"}
+                    </span>
+                    {user.subscription && (
+                      <span
+                        className="px-2 py-1 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor:
+                            user.subscription.plan === "pro"
+                              ? COLORS.brand.light
+                              : COLORS.background.base,
+                          color:
+                            user.subscription.plan === "pro"
+                              ? COLORS.brand.primary
+                              : COLORS.text.secondary,
+                        }}
+                      >
+                        {user.subscription.plan === "pro" ? "Pro" : "Free"}
+                      </span>
+                    )}
+                    <span
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        backgroundColor: user.is_active
+                          ? COLORS.status.success + "20"
+                          : COLORS.status.error + "20",
+                        color: user.is_active
+                          ? COLORS.status.success
+                          : COLORS.status.error,
+                      }}
+                    >
+                      {user.is_active ? "활성" : "비활성"}
+                    </span>
+                  </div>
+
+                  {user.aiUsage && (
+                    <div
+                      className="pt-3 border-t"
+                      style={{ borderColor: COLORS.border.light }}
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <span style={{ color: COLORS.text.secondary }}>
+                          AI 사용량
+                        </span>
+                        <div className="text-right">
+                          <div style={{ color: COLORS.text.primary }}>
+                            {user.aiUsage.total_requests.toLocaleString()}회
+                          </div>
+                          <div
+                            className="text-xs"
+                            style={{ color: COLORS.text.muted }}
+                          >
+                            ${user.aiUsage.total_cost_usd.toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           {/* 페이지네이션 */}

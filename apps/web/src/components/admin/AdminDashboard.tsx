@@ -74,7 +74,7 @@ export function AdminDashboard() {
       </div>
 
       {/* 통계 카드 그리드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatsCard
           title="총 유저 수"
           value={stats.totalUsers.toLocaleString()}

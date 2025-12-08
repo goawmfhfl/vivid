@@ -255,7 +255,7 @@ export function AIUsagePage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div>
                   <p
                     className="text-sm font-medium mb-1"
@@ -267,12 +267,13 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.brand.primary }}
                   >
-                    ${creditInfo.trackedUsage.today.cost_usd.toFixed(4)}
+                    ₩{creditInfo.trackedUsage.today.cost_krw.toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
+                    ${creditInfo.trackedUsage.today.cost_usd.toFixed(4)} ·{" "}
                     {creditInfo.trackedUsage.today.requests}개 요청
                   </p>
                 </div>
@@ -288,12 +289,14 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ${creditInfo.trackedUsage.thisWeek.cost_usd.toFixed(4)}
+                    ₩
+                    {creditInfo.trackedUsage.thisWeek.cost_krw.toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
+                    ${creditInfo.trackedUsage.thisWeek.cost_usd.toFixed(4)} ·{" "}
                     {creditInfo.trackedUsage.thisWeek.requests}개 요청
                   </p>
                 </div>
@@ -309,12 +312,14 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ${creditInfo.trackedUsage.thisMonth.cost_usd.toFixed(4)}
+                    ₩
+                    {creditInfo.trackedUsage.thisMonth.cost_krw.toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
+                    ${creditInfo.trackedUsage.thisMonth.cost_usd.toFixed(4)} ·{" "}
                     {creditInfo.trackedUsage.thisMonth.requests}개 요청
                   </p>
                 </div>
@@ -330,12 +335,13 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ${creditInfo.trackedUsage.total.cost_usd.toFixed(4)}
+                    ₩{creditInfo.trackedUsage.total.cost_krw.toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
                     style={{ color: COLORS.text.tertiary }}
                   >
+                    ${creditInfo.trackedUsage.total.cost_usd.toFixed(4)} ·{" "}
                     {creditInfo.trackedUsage.total.requests}개 요청
                   </p>
                 </div>
@@ -397,26 +403,26 @@ export function AIUsagePage() {
       )}
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatsCard
           title="오늘 AI 요청"
           value={stats.today.requests.toLocaleString()}
-          description={`$${stats.today.cost_usd.toFixed(2)}`}
+          description={`₩${stats.today.cost_krw.toLocaleString()}`}
         />
         <StatsCard
           title="이번 주 AI 요청"
           value={stats.thisWeek.requests.toLocaleString()}
-          description={`$${stats.thisWeek.cost_usd.toFixed(2)}`}
+          description={`₩${stats.thisWeek.cost_krw.toLocaleString()}`}
         />
         <StatsCard
           title="이번 달 AI 요청"
           value={stats.thisMonth.requests.toLocaleString()}
-          description={`$${stats.thisMonth.cost_usd.toFixed(2)}`}
+          description={`₩${stats.thisMonth.cost_krw.toLocaleString()}`}
         />
         <StatsCard
-          title="총 비용 (USD)"
-          value={`$${stats.total_cost_usd.toFixed(2)}`}
-          description={`₩${stats.total_cost_krw.toLocaleString()}`}
+          title="총 비용"
+          value={`₩${stats.total_cost_krw.toLocaleString()}`}
+          description={`$${stats.total_cost_usd.toFixed(2)}`}
         />
         <StatsCard
           title="총 토큰"
@@ -430,7 +436,7 @@ export function AIUsagePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* 모델별 사용량 */}
         {stats.by_model.length > 0 && (
           <div
@@ -445,16 +451,20 @@ export function AIUsagePage() {
             >
               모델별 사용량
             </h2>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer
+              width="100%"
+              height={250}
+              className="sm:h-[300px]"
+            >
               <PieChart>
                 <Pie
                   data={stats.by_model}
-                  dataKey="cost_usd"
+                  dataKey="cost_krw"
                   nameKey="model"
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
-                  label={({ name }: { name?: string }) => name || ""}
+                  outerRadius={70}
+                  label={false}
                 >
                   {stats.by_model.map((entry, index) => (
                     <Cell
@@ -469,7 +479,7 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => `$${value.toFixed(2)}`}
+                  formatter={(value: number) => `₩${value.toLocaleString()}`}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -493,7 +503,13 @@ export function AIUsagePage() {
                   </div>
                   <div className="flex flex-col items-end">
                     <span style={{ color: COLORS.text.secondary }}>
-                      ${model.cost_usd.toFixed(2)} ({model.requests}회)
+                      ₩{model.cost_krw.toLocaleString()} ({model.requests}회)
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      ${model.cost_usd.toFixed(2)}
                     </span>
                     {model.avg_duration_ms && model.avg_duration_ms > 0 && (
                       <span
@@ -502,8 +518,8 @@ export function AIUsagePage() {
                       >
                         평균:{" "}
                         {model.avg_duration_ms < 1000
-                          ? `${Math.round(model.avg_duration_ms)}ms`
-                          : `${(model.avg_duration_ms / 1000).toFixed(2)}s`}
+                          ? `${Math.round(model.avg_duration_ms)}밀리초`
+                          : `${Math.round(model.avg_duration_ms / 1000)}초`}
                       </span>
                     )}
                   </div>
@@ -527,7 +543,11 @@ export function AIUsagePage() {
             >
               요청 타입별 사용량
             </h2>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer
+              width="100%"
+              height={250}
+              className="sm:h-[300px]"
+            >
               <BarChart data={stats.by_type}>
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -539,7 +559,7 @@ export function AIUsagePage() {
                 />
                 <YAxis
                   tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
-                  tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  tickFormatter={(value) => `₩${value.toLocaleString()}`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -547,9 +567,9 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => `$${value.toFixed(2)}`}
+                  formatter={(value: number) => `₩${value.toLocaleString()}`}
                 />
-                <Bar dataKey="cost_usd" fill={COLORS.brand.primary} />
+                <Bar dataKey="cost_krw" fill={COLORS.brand.primary} />
               </BarChart>
             </ResponsiveContainer>
             <div className="mt-4 space-y-2">
@@ -567,7 +587,13 @@ export function AIUsagePage() {
                   </span>
                   <div className="flex flex-col items-end">
                     <span style={{ color: COLORS.text.secondary }}>
-                      ${type.cost_usd.toFixed(2)} ({type.requests}회)
+                      ₩{type.cost_krw.toLocaleString()} ({type.requests}회)
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      ${type.cost_usd.toFixed(2)}
                     </span>
                     {type.avg_duration_ms && type.avg_duration_ms > 0 && (
                       <span
@@ -576,8 +602,8 @@ export function AIUsagePage() {
                       >
                         평균:{" "}
                         {type.avg_duration_ms < 1000
-                          ? `${Math.round(type.avg_duration_ms)}ms`
-                          : `${(type.avg_duration_ms / 1000).toFixed(2)}s`}
+                          ? `${Math.round(type.avg_duration_ms)}밀리초`
+                          : `${Math.round(type.avg_duration_ms / 1000)}초`}
                       </span>
                     )}
                   </div>
@@ -602,7 +628,11 @@ export function AIUsagePage() {
           >
             일별 비용 추이
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer
+            width="100%"
+            height={250}
+            className="sm:h-[300px]"
+          >
             <LineChart data={stats.daily_trend}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -620,7 +650,7 @@ export function AIUsagePage() {
               />
               <YAxis
                 tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
-                tickFormatter={(value) => `$${value.toFixed(0)}`}
+                tickFormatter={(value) => `₩${value.toLocaleString()}`}
               />
               <Tooltip
                 contentStyle={{
@@ -631,11 +661,14 @@ export function AIUsagePage() {
                 labelFormatter={(value) =>
                   new Date(value).toLocaleDateString("ko-KR")
                 }
-                formatter={(value: number) => [`$${value.toFixed(2)}`, "비용"]}
+                formatter={(value: number) => [
+                  `₩${value.toLocaleString()}`,
+                  "비용",
+                ]}
               />
               <Line
                 type="monotone"
-                dataKey="cost_usd"
+                dataKey="cost_krw"
                 stroke={COLORS.brand.primary}
                 strokeWidth={2}
                 dot={{ fill: COLORS.brand.primary, r: 3 }}
@@ -648,7 +681,7 @@ export function AIUsagePage() {
       {/* 상위 유저 */}
       {stats.topUsers.length > 0 && (
         <div
-          className="rounded-xl p-6"
+          className="rounded-xl p-4 sm:p-6"
           style={{
             ...CARD_STYLES.default,
           }}
@@ -659,7 +692,9 @@ export function AIUsagePage() {
           >
             AI 사용량 상위 유저 (Top 10)
           </h2>
-          <div className="overflow-x-auto">
+
+          {/* 데스크탑 테이블 뷰 */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr
@@ -690,7 +725,7 @@ export function AIUsagePage() {
                     className="px-4 py-3 text-left text-sm font-semibold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    비용 (USD)
+                    비용
                   </th>
                   <th className="px-4 py-3"></th>
                 </tr>
@@ -721,9 +756,20 @@ export function AIUsagePage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span style={{ color: COLORS.text.primary }}>
-                        ${user.cost.toFixed(2)}
-                      </span>
+                      <div>
+                        <span
+                          className="font-semibold"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          ₩{Math.round(user.cost * 1350).toLocaleString()}
+                        </span>
+                        <span
+                          className="text-xs ml-2"
+                          style={{ color: COLORS.text.tertiary }}
+                        >
+                          ${user.cost.toFixed(2)}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <button
@@ -744,6 +790,73 @@ export function AIUsagePage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* 모바일 카드 뷰 */}
+          <div className="md:hidden space-y-3">
+            {stats.topUsers.map((user, index) => (
+              <div
+                key={user.userId}
+                onClick={() => router.push(`/admin/users/${user.userId}`)}
+                className="rounded-lg p-4 cursor-pointer transition-colors"
+                style={{
+                  backgroundColor: COLORS.background.hover,
+                  border: `1px solid ${COLORS.border.light}`,
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-lg font-bold"
+                      style={{ color: COLORS.brand.primary }}
+                    >
+                      #{index + 1}
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      {user.name}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      ₩{Math.round(user.cost * 1350).toLocaleString()}
+                    </span>
+                    <span
+                      className="text-xs ml-1"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      ${user.cost.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1 mb-3">
+                  <p
+                    className="text-sm"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    {user.email}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/admin/ai-usage/${user.userId}`);
+                  }}
+                  className="w-full text-sm px-3 py-2 rounded-lg text-center"
+                  style={{
+                    backgroundColor: COLORS.brand.light,
+                    color: COLORS.brand.primary,
+                  }}
+                >
+                  상세 보기
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}

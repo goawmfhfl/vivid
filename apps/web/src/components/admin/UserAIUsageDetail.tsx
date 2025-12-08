@@ -107,7 +107,8 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
             ...CARD_STYLES.default,
           }}
         >
-          <div className="overflow-x-auto">
+          {/* 데스크탑 테이블 뷰 */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr
@@ -210,12 +211,18 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-xs">
-                        <div style={{ color: COLORS.text.primary }}>
-                          ${detail.cost_usd.toFixed(4)}
-                        </div>
-                        <div style={{ color: COLORS.text.muted }}>
+                      <div>
+                        <div
+                          className="font-semibold"
+                          style={{ color: COLORS.text.primary }}
+                        >
                           ₩{detail.cost_krw.toLocaleString()}
+                        </div>
+                        <div
+                          className="text-xs"
+                          style={{ color: COLORS.text.tertiary }}
+                        >
+                          ${detail.cost_usd.toFixed(4)}
                         </div>
                       </div>
                     </td>
@@ -223,8 +230,8 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                       <span style={{ color: COLORS.text.secondary }}>
                         {detail.duration_ms
                           ? detail.duration_ms < 1000
-                            ? `${detail.duration_ms}ms`
-                            : `${(detail.duration_ms / 1000).toFixed(2)}s`
+                            ? `${Math.round(detail.duration_ms)}밀리초`
+                            : `${Math.round(detail.duration_ms / 1000)}초`
                           : "-"}
                       </span>
                     </td>
@@ -247,6 +254,137 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* 모바일/태블릿 카드 뷰 */}
+          <div className="lg:hidden space-y-3 p-4">
+            {details.length === 0 ? (
+              <div className="text-center py-12">
+                <p style={{ color: COLORS.text.secondary }}>
+                  사용 내역이 없습니다.
+                </p>
+              </div>
+            ) : (
+              details.map((detail) => (
+                <div
+                  key={detail.id}
+                  className="rounded-lg p-4"
+                  style={{
+                    backgroundColor: COLORS.background.hover,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <p
+                        className="text-xs mb-1"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        {new Date(detail.created_at).toLocaleString("ko-KR")}
+                      </p>
+                      <h3
+                        className="font-semibold text-sm"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {detail.model}
+                      </h3>
+                    </div>
+                    <span
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        backgroundColor: detail.success
+                          ? COLORS.status.success + "20"
+                          : COLORS.status.error + "20",
+                        color: detail.success
+                          ? COLORS.status.success
+                          : COLORS.status.error,
+                      }}
+                    >
+                      {detail.success ? "성공" : "실패"}
+                    </span>
+                  </div>
+
+                  <div
+                    className="space-y-2 mb-3 pb-3 border-b"
+                    style={{ borderColor: COLORS.border.light }}
+                  >
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: COLORS.text.secondary }}>타입</span>
+                      <span style={{ color: COLORS.text.primary }}>
+                        {detail.request_type}
+                      </span>
+                    </div>
+                    {detail.section_name && (
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: COLORS.text.secondary }}>
+                          섹션
+                        </span>
+                        <span style={{ color: COLORS.text.primary }}>
+                          {detail.section_name}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span style={{ color: COLORS.text.secondary }}>
+                        소요 시간
+                      </span>
+                      <span style={{ color: COLORS.text.primary }}>
+                        {detail.duration_ms
+                          ? detail.duration_ms < 1000
+                            ? `${Math.round(detail.duration_ms)}밀리초`
+                            : `${Math.round(detail.duration_ms / 1000)}초`
+                          : "-"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p
+                        className="text-xs mb-1"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        토큰
+                      </p>
+                      <p
+                        className="text-sm font-semibold"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {detail.total_tokens.toLocaleString()}
+                      </p>
+                      {detail.cached_tokens > 0 && (
+                        <p
+                          className="text-xs mt-1"
+                          style={{ color: COLORS.text.muted }}
+                        >
+                          캐시: {detail.cached_tokens.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <p
+                        className="text-xs mb-1"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        비용
+                      </p>
+                      <p
+                        className="text-sm font-semibold"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        ₩{detail.cost_krw.toLocaleString()}
+                      </p>
+                      <p
+                        className="text-xs mt-1"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        ${detail.cost_usd.toFixed(4)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* 페이지네이션 */}

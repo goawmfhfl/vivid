@@ -168,7 +168,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       {/* 사이드바 */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-40 h-screen w-64 transition-transform duration-300",
+          "fixed lg:sticky top-0 left-0 z-40 h-screen w-64 flex-shrink-0 transition-transform duration-300",
           "lg:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           className

@@ -207,25 +207,68 @@ export function UserDetail({ userId }: UserDetailProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* 기본 정보 */}
         <div
-          className="rounded-xl p-6 space-y-4"
+          className="rounded-xl p-4 sm:p-6 space-y-4"
           style={{
             ...CARD_STYLES.default,
           }}
         >
-          <h2
-            className="text-xl font-semibold mb-4"
-            style={{ color: COLORS.text.primary }}
-          >
-            기본 정보
-          </h2>
-          <div className="space-y-3">
-            <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: COLORS.text.primary }}
+            >
+              기본 정보
+            </h2>
+            <div className="flex gap-2">
+              {!isEditing && (
+                <span
+                  className="px-3 py-1 rounded-lg text-sm font-medium"
+                  style={{
+                    backgroundColor:
+                      user.role === "admin"
+                        ? COLORS.brand.light
+                        : COLORS.background.hover,
+                    color:
+                      user.role === "admin"
+                        ? COLORS.brand.primary
+                        : COLORS.text.secondary,
+                  }}
+                >
+                  {user.role === "admin"
+                    ? "관리자"
+                    : user.role === "moderator"
+                    ? "모더레이터"
+                    : "유저"}
+                </span>
+              )}
+              <span
+                className="px-3 py-1 rounded-lg text-sm font-medium"
+                style={{
+                  backgroundColor: user.is_active
+                    ? COLORS.status.success + "20"
+                    : COLORS.status.error + "20",
+                  color: user.is_active
+                    ? COLORS.status.success
+                    : COLORS.status.error,
+                }}
+              >
+                {user.is_active ? "활성" : "비활성"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* 이름 */}
+            <div
+              className="pb-4 border-b"
+              style={{ borderColor: COLORS.border.light }}
+            >
               <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+                className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                style={{ color: COLORS.text.tertiary }}
               >
                 이름
               </label>
@@ -236,7 +279,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   onChange={(e) =>
                     setEditData({ ...editData, name: e.target.value })
                   }
-                  className="w-full mt-1 px-3 py-2 rounded-lg border"
+                  className="w-full px-4 py-2.5 rounded-lg border text-base"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,
@@ -244,26 +287,39 @@ export function UserDetail({ userId }: UserDetailProps) {
                   }}
                 />
               ) : (
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
+                <p
+                  className="text-lg font-semibold"
+                  style={{ color: COLORS.text.primary }}
+                >
                   {user.name}
                 </p>
               )}
             </div>
-            <div>
+
+            {/* 이메일 */}
+            <div
+              className="pb-4 border-b"
+              style={{ borderColor: COLORS.border.light }}
+            >
               <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+                className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                style={{ color: COLORS.text.tertiary }}
               >
                 이메일
               </label>
-              <p className="mt-1" style={{ color: COLORS.text.primary }}>
+              <p className="text-base" style={{ color: COLORS.text.primary }}>
                 {user.email}
               </p>
             </div>
-            <div>
+
+            {/* 전화번호 */}
+            <div
+              className="pb-4 border-b"
+              style={{ borderColor: COLORS.border.light }}
+            >
               <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+                className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                style={{ color: COLORS.text.tertiary }}
               >
                 전화번호
               </label>
@@ -274,7 +330,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   onChange={(e) =>
                     setEditData({ ...editData, phone: e.target.value })
                   }
-                  className="w-full mt-1 px-3 py-2 rounded-lg border"
+                  className="w-full px-4 py-2.5 rounded-lg border text-base"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,
@@ -282,19 +338,26 @@ export function UserDetail({ userId }: UserDetailProps) {
                   }}
                 />
               ) : (
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.phone || "-"}
+                <p className="text-base" style={{ color: COLORS.text.primary }}>
+                  {user.phone || (
+                    <span style={{ color: COLORS.text.muted }}>-</span>
+                  )}
                 </p>
               )}
             </div>
-            <div>
-              <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+
+            {/* 역할 (편집 모드에서만) */}
+            {isEditing && (
+              <div
+                className="pb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
               >
-                역할
-              </label>
-              {isEditing ? (
+                <label
+                  className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  역할
+                </label>
                 <select
                   value={editData.role}
                   onChange={(e) =>
@@ -303,7 +366,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                       role: e.target.value as "user" | "admin" | "moderator",
                     })
                   }
-                  className="w-full mt-1 px-3 py-2 rounded-lg border"
+                  className="w-full px-4 py-2.5 rounded-lg border text-base"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,
@@ -314,24 +377,21 @@ export function UserDetail({ userId }: UserDetailProps) {
                   <option value="admin">관리자</option>
                   <option value="moderator">모더레이터</option>
                 </select>
-              ) : (
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.role === "admin"
-                    ? "관리자"
-                    : user.role === "moderator"
-                    ? "모더레이터"
-                    : "유저"}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+              </div>
+            )}
+
+            {/* 상태 (편집 모드에서만) */}
+            {isEditing && (
+              <div
+                className="pb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
               >
-                상태
-              </label>
-              {isEditing ? (
+                <label
+                  className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  상태
+                </label>
                 <select
                   value={editData.is_active ? "true" : "false"}
                   onChange={(e) =>
@@ -340,7 +400,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                       is_active: e.target.value === "true",
                     })
                   }
-                  className="w-full mt-1 px-3 py-2 rounded-lg border"
+                  className="w-full px-4 py-2.5 rounded-lg border text-base"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,
@@ -350,34 +410,49 @@ export function UserDetail({ userId }: UserDetailProps) {
                   <option value="true">활성</option>
                   <option value="false">비활성</option>
                 </select>
-              ) : (
-                <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                  {user.is_active ? "활성" : "비활성"}
-                </p>
-              )}
-            </div>
-            <div>
+              </div>
+            )}
+
+            {/* 가입일 */}
+            <div
+              className="pb-4 border-b"
+              style={{ borderColor: COLORS.border.light }}
+            >
               <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+                className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                style={{ color: COLORS.text.tertiary }}
               >
                 가입일
               </label>
-              <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                {new Date(user.created_at).toLocaleDateString("ko-KR")}
+              <p className="text-base" style={{ color: COLORS.text.primary }}>
+                {new Date(user.created_at).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
               </p>
             </div>
+
+            {/* 최근 로그인 */}
             <div>
               <label
-                className="text-sm font-medium"
-                style={{ color: COLORS.text.secondary }}
+                className="text-xs font-medium uppercase tracking-wide mb-2 block"
+                style={{ color: COLORS.text.tertiary }}
               >
                 최근 로그인
               </label>
-              <p className="mt-1" style={{ color: COLORS.text.primary }}>
-                {user.last_login_at
-                  ? new Date(user.last_login_at).toLocaleDateString("ko-KR")
-                  : "-"}
+              <p className="text-base" style={{ color: COLORS.text.primary }}>
+                {user.last_login_at ? (
+                  new Date(user.last_login_at).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                ) : (
+                  <span style={{ color: COLORS.text.muted }}>
+                    로그인 기록 없음
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -385,7 +460,7 @@ export function UserDetail({ userId }: UserDetailProps) {
 
         {/* 구독 정보 */}
         <div
-          className="rounded-xl p-6 space-y-4"
+          className="rounded-xl p-4 sm:p-6 space-y-4"
           style={{
             ...CARD_STYLES.default,
           }}
@@ -512,7 +587,7 @@ export function UserDetail({ userId }: UserDetailProps) {
 
         {/* 기록 통계 */}
         <div
-          className="rounded-xl p-6 space-y-4"
+          className="rounded-xl p-4 sm:p-6 space-y-4"
           style={{
             ...CARD_STYLES.default,
           }}
@@ -606,7 +681,7 @@ export function UserDetail({ userId }: UserDetailProps) {
         {/* AI 사용량 통계 */}
         {aiStats && (
           <div
-            className="rounded-xl p-6 space-y-4"
+            className="rounded-xl p-4 sm:p-6 space-y-4"
             style={{
               ...CARD_STYLES.default,
             }}
