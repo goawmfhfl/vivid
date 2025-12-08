@@ -23,7 +23,14 @@ export const useCreateDailyFeedback = () => {
 
   return useMutation({
     mutationFn: ({ date }: { date: string }) => createDailyFeedback(date),
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
+      // 생성된 피드백의 ID로 쿼리 무효화
+      if (data?.id) {
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.DAILY_FEEDBACK, "id", data.id],
+        });
+      }
+
       if (variables?.date) {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.DAILY_FEEDBACK, variables.date],

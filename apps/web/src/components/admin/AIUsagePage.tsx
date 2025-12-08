@@ -41,10 +41,32 @@ interface ExtendedAIUsageStats extends AIUsageStats {
   }>;
 }
 
+interface OpenAICreditInfo {
+  subscription: {
+    hasPaymentMethod: boolean;
+    softLimit: number;
+    hardLimit: number;
+    systemHardLimit: number;
+  } | null;
+  creditGrants: {
+    totalAvailable: number;
+    grants: Array<any>;
+  } | null;
+  usage: {
+    totalUsage: number;
+    dailyCosts: Array<any>;
+  } | null;
+  apiKeyConfigured: boolean;
+  apiKeyPrefix: string;
+  error?: string;
+}
+
 export function AIUsagePage() {
   const router = useRouter();
   const [stats, setStats] = useState<ExtendedAIUsageStats | null>(null);
+  const [creditInfo, setCreditInfo] = useState<OpenAICreditInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreditLoading, setIsCreditLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
 
@@ -69,6 +91,45 @@ export function AIUsagePage() {
 
     fetchStats();
   }, [days]);
+
+  useEffect(() => {
+    const fetchCreditInfo = async () => {
+      setIsCreditLoading(true);
+      try {
+        const response = await adminApiFetch("/api/admin/openai-credit");
+        if (response.ok) {
+          const data = await response.json();
+          console.log("OpenAI 크레딧 정보 응답:", data);
+          setCreditInfo(data);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("크레딧 정보 조회 실패:", response.status, errorData);
+          setCreditInfo({
+            subscription: null,
+            creditGrants: null,
+            usage: null,
+            apiKeyConfigured: false,
+            apiKeyPrefix: "",
+            error: errorData.error || "크레딧 정보를 불러올 수 없습니다.",
+          });
+        }
+      } catch (err) {
+        console.error("크레딧 정보 조회 실패:", err);
+        setCreditInfo({
+          subscription: null,
+          creditGrants: null,
+          usage: null,
+          apiKeyConfigured: false,
+          apiKeyPrefix: "",
+          error: err instanceof Error ? err.message : "알 수 없는 오류",
+        });
+      } finally {
+        setIsCreditLoading(false);
+      }
+    };
+
+    fetchCreditInfo();
+  }, []);
 
   if (isLoading) {
     return (
@@ -124,6 +185,190 @@ export function AIUsagePage() {
           <option value="90">최근 90일</option>
         </select>
       </div>
+
+      {/* OpenAI 크레딧 정보 섹션 */}
+      {creditInfo && (
+        <div
+          className="rounded-xl p-6"
+          style={{
+            ...CARD_STYLES.default,
+            background: `linear-gradient(135deg, ${COLORS.brand.light}15 0%, ${COLORS.brand.primary}10 100%)`,
+            border: `2px solid ${COLORS.brand.light}40`,
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: COLORS.text.primary }}
+            >
+              OpenAI 크레딧 정보
+            </h2>
+            {isCreditLoading && (
+              <div
+                className="animate-spin rounded-full h-5 w-5 border-b-2"
+                style={{ borderColor: COLORS.brand.primary }}
+              ></div>
+            )}
+          </div>
+
+          {creditInfo.error ? (
+            <div className="py-4">
+              <p style={{ color: COLORS.status.error }} className="mb-2">
+                {creditInfo.error}
+              </p>
+              <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+                OpenAI API 키에 billing API 접근 권한이 필요합니다.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {creditInfo.creditGrants && (
+                <div>
+                  <p
+                    className="text-sm font-medium mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    크레딧 잔액
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: COLORS.brand.primary }}
+                  >
+                    ${creditInfo.creditGrants.totalAvailable.toFixed(2)}
+                  </p>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    {creditInfo.creditGrants.grants.length}개의 크레딧
+                  </p>
+                </div>
+              )}
+
+              {creditInfo.usage && (
+                <div>
+                  <p
+                    className="text-sm font-medium mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    이번 달 사용량
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    ${(creditInfo.usage.totalUsage / 100).toFixed(2)}
+                  </p>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    실제 OpenAI 사용량
+                  </p>
+                </div>
+              )}
+
+              {creditInfo.subscription && (
+                <>
+                  <div>
+                    <p
+                      className="text-sm font-medium mb-1"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      소프트 리밋
+                    </p>
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      ${creditInfo.subscription.softLimit.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      className="text-sm font-medium mb-1"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      하드 리밋
+                    </p>
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      ${creditInfo.subscription.hardLimit.toFixed(2)}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {creditInfo.creditGrants && creditInfo.usage && (
+                <div>
+                  <p
+                    className="text-sm font-medium mb-1"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    예상 잔액
+                  </p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{
+                      color:
+                        creditInfo.creditGrants.totalAvailable -
+                          creditInfo.usage.totalUsage / 100 >
+                        0
+                          ? COLORS.status.success
+                          : COLORS.status.warning,
+                    }}
+                  >
+                    $
+                    {(
+                      creditInfo.creditGrants.totalAvailable -
+                      creditInfo.usage.totalUsage / 100
+                    ).toFixed(2)}
+                  </p>
+                  <p
+                    className="text-xs mt-1"
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    크레딧 - 사용량
+                  </p>
+                </div>
+              )}
+
+              {/* 데이터가 없을 때 메시지 */}
+              {!creditInfo.creditGrants &&
+                !creditInfo.usage &&
+                !creditInfo.subscription && (
+                  <div className="col-span-full py-4 text-center">
+                    <p
+                      className="text-sm"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      크레딧 정보를 불러올 수 없습니다.
+                    </p>
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      OpenAI API 키에 billing API 접근 권한이 필요합니다.
+                    </p>
+                  </div>
+                )}
+            </div>
+          )}
+
+          {creditInfo.apiKeyPrefix && (
+            <div
+              className="mt-4 pt-4 border-t"
+              style={{ borderColor: COLORS.border.light }}
+            >
+              <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+                API 키: {creditInfo.apiKeyPrefix}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 요약 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -183,7 +428,7 @@ export function AIUsagePage() {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={(entry) => `${entry.model}`}
+                  label={({ name }: { name: string }) => name}
                 >
                   {stats.by_model.map((entry, index) => (
                     <Cell

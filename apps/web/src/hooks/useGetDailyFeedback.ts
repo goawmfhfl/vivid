@@ -26,7 +26,8 @@ const fetchDailyFeedbackByDate = async (
 };
 
 const fetchDailyFeedbackById = async (
-  id: string
+  id: string,
+  retryCount = 0
 ): Promise<DailyFeedbackRow | null> => {
   // id 유효성 검사
   if (!id || id === "undefined" || id === "null" || id.trim() === "") {
@@ -52,6 +53,13 @@ const fetchDailyFeedbackById = async (
 
   if (!response.ok) {
     if (response.status === 404) {
+      // 생성 직후 조회 시 DB 동기화 지연 가능성 - 재시도
+      if (retryCount < 2) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (retryCount + 1))
+        );
+        return fetchDailyFeedbackById(id, retryCount + 1);
+      }
       return null;
     }
     const errorData = await response.json().catch(() => ({}));

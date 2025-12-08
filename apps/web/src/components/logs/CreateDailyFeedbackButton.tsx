@@ -24,11 +24,22 @@ export function CreateDailyFeedbackButton({
       const createdFeedback = await createDailyFeedback.mutateAsync({
         date: dateStr,
       });
+
+      // 생성된 피드백 ID 확인
+      if (!createdFeedback?.id) {
+        throw new Error("생성된 피드백에 ID가 없습니다.");
+      }
+
+      // DB 동기화를 위한 짧은 딜레이 추가
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // 생성 성공 후 피드백 페이지로 이동 (id 사용)
       router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (error) {
       console.error("AI 리뷰 생성 실패:", error);
-      alert("AI 리뷰 생성에 실패했습니다. 다시 시도해주세요.");
+      const errorMessage =
+        error instanceof Error ? error.message : "알 수 없는 오류";
+      alert(`AI 리뷰 생성에 실패했습니다: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
