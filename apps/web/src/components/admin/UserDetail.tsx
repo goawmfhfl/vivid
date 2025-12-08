@@ -5,7 +5,7 @@ import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import type { UserDetail, AIUsageStats } from "@/types/admin";
-import { ArrowLeft, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, Trash2 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -44,6 +44,37 @@ export function UserDetail({ userId }: UserDetailProps) {
     role: "" as "user" | "admin" | "moderator",
     is_active: true,
   });
+  const [feedbacks, setFeedbacks] = useState<{
+    daily: Array<{
+      id: string;
+      type: "daily";
+      date: string;
+      day_of_week: string | null;
+      created_at: string;
+      updated_at: string;
+      is_ai_generated: boolean | null;
+    }>;
+    weekly: Array<{
+      id: string;
+      type: "weekly";
+      week_start: string;
+      week_end: string;
+      created_at: string;
+      updated_at: string;
+      is_ai_generated: boolean | null;
+    }>;
+    monthly: Array<{
+      id: string;
+      type: "monthly";
+      month: string;
+      month_label: string | null;
+      date_range: { start_date: string; end_date: string } | null;
+      created_at: string;
+      updated_at: string;
+      is_ai_generated: boolean | null;
+    }>;
+  } | null>(null);
+  const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +111,29 @@ export function UserDetail({ userId }: UserDetailProps) {
 
     fetchData();
   }, [userId]);
+
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      setIsLoadingFeedbacks(true);
+      try {
+        const response = await adminApiFetch(
+          `/api/admin/users/${userId}/feedbacks`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setFeedbacks(data);
+        }
+      } catch (err) {
+        console.error("피드백 목록 조회 실패:", err);
+      } finally {
+        setIsLoadingFeedbacks(false);
+      }
+    };
+
+    if (user) {
+      fetchFeedbacks();
+    }
+  }, [userId, user]);
 
   const handleSave = async () => {
     try {
@@ -138,6 +192,41 @@ export function UserDetail({ userId }: UserDetailProps) {
       alert(err instanceof Error ? err.message : "구독 생성 실패");
     } finally {
       setIsCreatingSubscription(false);
+    }
+  };
+
+  const handleDeleteFeedback = async (
+    feedbackId: string,
+    type: "daily" | "weekly" | "monthly"
+  ) => {
+    if (!confirm("정말 이 피드백을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await adminApiFetch(
+        `/api/admin/users/${userId}/feedbacks/${feedbackId}?type=${type}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("피드백 삭제에 실패했습니다.");
+      }
+
+      // 피드백 목록 다시 불러오기
+      const feedbacksResponse = await adminApiFetch(
+        `/api/admin/users/${userId}/feedbacks`
+      );
+      if (feedbacksResponse.ok) {
+        const data = await feedbacksResponse.json();
+        setFeedbacks(data);
+      }
+
+      alert("피드백이 성공적으로 삭제되었습니다.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "피드백 삭제 실패");
     }
   };
 
@@ -719,6 +808,209 @@ export function UserDetail({ userId }: UserDetailProps) {
           )}
         </div>
 
+        {/* 피드백 관리 */}
+        <div
+          className="rounded-xl p-4 sm:p-6 space-y-4"
+          style={{
+            ...CARD_STYLES.default,
+          }}
+        >
+          <h2
+            className="text-xl font-semibold mb-4"
+            style={{ color: COLORS.text.primary }}
+          >
+            피드백 관리
+          </h2>
+          {isLoadingFeedbacks ? (
+            <div className="text-center py-8">
+              <p style={{ color: COLORS.text.secondary }}>로딩 중...</p>
+            </div>
+          ) : feedbacks ? (
+            <div className="space-y-6">
+              {/* 일간 피드백 */}
+              <div>
+                <h3
+                  className="text-lg font-semibold mb-3"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  일간 피드백 ({feedbacks.daily.length}개)
+                </h3>
+                {feedbacks.daily.length === 0 ? (
+                  <p
+                    className="text-sm py-4"
+                    style={{ color: COLORS.text.muted }}
+                  >
+                    일간 피드백이 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {feedbacks.daily.map((fb) => (
+                      <div
+                        key={fb.id}
+                        className="flex items-center justify-between p-3 rounded-lg"
+                        style={{ backgroundColor: COLORS.background.hover }}
+                      >
+                        <div className="flex-1">
+                          <p
+                            className="font-medium"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {new Date(fb.date).toLocaleDateString("ko-KR")}
+                            {fb.day_of_week && ` (${fb.day_of_week})`}
+                          </p>
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            생성:{" "}
+                            {new Date(fb.created_at).toLocaleString("ko-KR")}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteFeedback(fb.id, "daily")}
+                          className="p-2 rounded-lg hover:bg-opacity-50"
+                          style={{
+                            backgroundColor: COLORS.status.error + "20",
+                            color: COLORS.status.error,
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 주간 피드백 */}
+              <div>
+                <h3
+                  className="text-lg font-semibold mb-3"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  주간 피드백 ({feedbacks.weekly.length}개)
+                </h3>
+                {feedbacks.weekly.length === 0 ? (
+                  <p
+                    className="text-sm py-4"
+                    style={{ color: COLORS.text.muted }}
+                  >
+                    주간 피드백이 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {feedbacks.weekly.map((fb) => (
+                      <div
+                        key={fb.id}
+                        className="flex items-center justify-between p-3 rounded-lg"
+                        style={{ backgroundColor: COLORS.background.hover }}
+                      >
+                        <div className="flex-1">
+                          <p
+                            className="font-medium"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {new Date(fb.week_start).toLocaleDateString(
+                              "ko-KR"
+                            )}{" "}
+                            ~{" "}
+                            {new Date(fb.week_end).toLocaleDateString("ko-KR")}
+                          </p>
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            생성:{" "}
+                            {new Date(fb.created_at).toLocaleString("ko-KR")}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteFeedback(fb.id, "weekly")}
+                          className="p-2 rounded-lg hover:bg-opacity-50"
+                          style={{
+                            backgroundColor: COLORS.status.error + "20",
+                            color: COLORS.status.error,
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 월간 피드백 */}
+              <div>
+                <h3
+                  className="text-lg font-semibold mb-3"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  월간 피드백 ({feedbacks.monthly.length}개)
+                </h3>
+                {feedbacks.monthly.length === 0 ? (
+                  <p
+                    className="text-sm py-4"
+                    style={{ color: COLORS.text.muted }}
+                  >
+                    월간 피드백이 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {feedbacks.monthly.map((fb) => (
+                      <div
+                        key={fb.id}
+                        className="flex items-center justify-between p-3 rounded-lg"
+                        style={{ backgroundColor: COLORS.background.hover }}
+                      >
+                        <div className="flex-1">
+                          <p
+                            className="font-medium"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {fb.month_label || fb.month}
+                          </p>
+                          {fb.date_range && (
+                            <p
+                              className="text-xs mt-1"
+                              style={{ color: COLORS.text.tertiary }}
+                            >
+                              {new Date(
+                                fb.date_range.start_date
+                              ).toLocaleDateString("ko-KR")}{" "}
+                              ~{" "}
+                              {new Date(
+                                fb.date_range.end_date
+                              ).toLocaleDateString("ko-KR")}
+                            </p>
+                          )}
+                          <p
+                            className="text-xs mt-1"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            생성:{" "}
+                            {new Date(fb.created_at).toLocaleString("ko-KR")}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteFeedback(fb.id, "monthly")}
+                          className="p-2 rounded-lg hover:bg-opacity-50"
+                          style={{
+                            backgroundColor: COLORS.status.error + "20",
+                            color: COLORS.status.error,
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
         {/* AI 사용량 통계 */}
         {aiStats && (
           <div
@@ -812,7 +1104,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ₩{aiStats.total_cost_krw.toLocaleString()}
+                    ₩{Math.round(aiStats.total_cost_krw).toLocaleString()}
                   </p>
                 </div>
               </div>

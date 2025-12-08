@@ -386,15 +386,14 @@ export function getFinalReportSchema(isPro: boolean) {
         nullable: true,
       }, // Pro 전용 필드
     },
-    // Pro일 때는 모든 필드 required, Free일 때는 closing_message만 required
-    required: isPro
-      ? [
-          "closing_message",
-          "tomorrow_focus",
-          "growth_points",
-          "adjustment_points",
-        ]
-      : ["closing_message"],
+    // OpenAI JSON 스키마 규칙: properties에 있는 모든 키는 required에 포함되어야 함
+    // nullable: true로 설정하여 선택적으로 만들 수 있음
+    required: [
+      "closing_message",
+      "tomorrow_focus",
+      "growth_points",
+      "adjustment_points",
+    ],
     additionalProperties: false,
   };
 

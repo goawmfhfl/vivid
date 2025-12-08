@@ -49,7 +49,7 @@ const menuItems = [
     title: "콘텐츠 통계",
     href: "/admin/content",
     icon: FileText,
-    enabled: false, // 비활성화
+    enabled: true,
   },
   {
     title: "시스템 설정",

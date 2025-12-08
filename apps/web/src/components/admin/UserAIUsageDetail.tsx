@@ -216,7 +216,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           className="font-semibold"
                           style={{ color: COLORS.text.primary }}
                         >
-                          ₩{detail.cost_krw.toLocaleString()}
+                          ₩{Math.round(detail.cost_krw).toLocaleString()}
                         </div>
                         <div
                           className="text-xs"
@@ -372,7 +372,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                         className="text-sm font-semibold"
                         style={{ color: COLORS.text.primary }}
                       >
-                        ₩{detail.cost_krw.toLocaleString()}
+                        ₩{Math.round(detail.cost_krw).toLocaleString()}
                       </p>
                       <p
                         className="text-xs mt-1"

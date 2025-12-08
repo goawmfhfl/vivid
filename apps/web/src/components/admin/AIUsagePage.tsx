@@ -267,7 +267,10 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.brand.primary }}
                   >
-                    ₩{creditInfo.trackedUsage.today.cost_krw.toLocaleString()}
+                    ₩
+                    {Math.round(
+                      creditInfo.trackedUsage.today.cost_krw
+                    ).toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
@@ -290,7 +293,9 @@ export function AIUsagePage() {
                     style={{ color: COLORS.text.primary }}
                   >
                     ₩
-                    {creditInfo.trackedUsage.thisWeek.cost_krw.toLocaleString()}
+                    {Math.round(
+                      creditInfo.trackedUsage.thisWeek.cost_krw
+                    ).toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
@@ -313,7 +318,9 @@ export function AIUsagePage() {
                     style={{ color: COLORS.text.primary }}
                   >
                     ₩
-                    {creditInfo.trackedUsage.thisMonth.cost_krw.toLocaleString()}
+                    {Math.round(
+                      creditInfo.trackedUsage.thisMonth.cost_krw
+                    ).toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
@@ -335,7 +342,10 @@ export function AIUsagePage() {
                     className="text-2xl font-bold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    ₩{creditInfo.trackedUsage.total.cost_krw.toLocaleString()}
+                    ₩
+                    {Math.round(
+                      creditInfo.trackedUsage.total.cost_krw
+                    ).toLocaleString()}
                   </p>
                   <p
                     className="text-xs mt-1"
@@ -407,21 +417,25 @@ export function AIUsagePage() {
         <StatsCard
           title="오늘 AI 요청"
           value={stats.today.requests.toLocaleString()}
-          description={`₩${stats.today.cost_krw.toLocaleString()}`}
+          description={`₩${Math.round(stats.today.cost_krw).toLocaleString()}`}
         />
         <StatsCard
           title="이번 주 AI 요청"
           value={stats.thisWeek.requests.toLocaleString()}
-          description={`₩${stats.thisWeek.cost_krw.toLocaleString()}`}
+          description={`₩${Math.round(
+            stats.thisWeek.cost_krw
+          ).toLocaleString()}`}
         />
         <StatsCard
           title="이번 달 AI 요청"
           value={stats.thisMonth.requests.toLocaleString()}
-          description={`₩${stats.thisMonth.cost_krw.toLocaleString()}`}
+          description={`₩${Math.round(
+            stats.thisMonth.cost_krw
+          ).toLocaleString()}`}
         />
         <StatsCard
           title="총 비용"
-          value={`₩${stats.total_cost_krw.toLocaleString()}`}
+          value={`₩${Math.round(stats.total_cost_krw).toLocaleString()}`}
           description={`$${stats.total_cost_usd.toFixed(2)}`}
         />
         <StatsCard
@@ -479,7 +493,9 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => `₩${value.toLocaleString()}`}
+                  formatter={(value: number) =>
+                    `₩${Math.round(value).toLocaleString()}`
+                  }
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -503,7 +519,8 @@ export function AIUsagePage() {
                   </div>
                   <div className="flex flex-col items-end">
                     <span style={{ color: COLORS.text.secondary }}>
-                      ₩{model.cost_krw.toLocaleString()} ({model.requests}회)
+                      ₩{Math.round(model.cost_krw).toLocaleString()} (
+                      {model.requests}회)
                     </span>
                     <span
                       className="text-xs"
@@ -559,7 +576,9 @@ export function AIUsagePage() {
                 />
                 <YAxis
                   tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
-                  tickFormatter={(value) => `₩${value.toLocaleString()}`}
+                  tickFormatter={(value) =>
+                    `₩${Math.round(value).toLocaleString()}`
+                  }
                 />
                 <Tooltip
                   contentStyle={{
@@ -567,7 +586,9 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => `₩${value.toLocaleString()}`}
+                  formatter={(value: number) =>
+                    `₩${Math.round(value).toLocaleString()}`
+                  }
                 />
                 <Bar dataKey="cost_krw" fill={COLORS.brand.primary} />
               </BarChart>
@@ -587,7 +608,8 @@ export function AIUsagePage() {
                   </span>
                   <div className="flex flex-col items-end">
                     <span style={{ color: COLORS.text.secondary }}>
-                      ₩{type.cost_krw.toLocaleString()} ({type.requests}회)
+                      ₩{Math.round(type.cost_krw).toLocaleString()} (
+                      {type.requests}회)
                     </span>
                     <span
                       className="text-xs"
@@ -650,7 +672,9 @@ export function AIUsagePage() {
               />
               <YAxis
                 tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
-                tickFormatter={(value) => `₩${value.toLocaleString()}`}
+                tickFormatter={(value) =>
+                  `₩${Math.round(value).toLocaleString()}`
+                }
               />
               <Tooltip
                 contentStyle={{
@@ -662,7 +686,7 @@ export function AIUsagePage() {
                   new Date(value).toLocaleDateString("ko-KR")
                 }
                 formatter={(value: number) => [
-                  `₩${value.toLocaleString()}`,
+                  `₩${Math.round(value).toLocaleString()}`,
                   "비용",
                 ]}
               />

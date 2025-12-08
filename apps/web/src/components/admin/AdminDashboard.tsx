@@ -98,7 +98,7 @@ export function AdminDashboard() {
         <StatsCard
           title="오늘 AI 비용"
           value={`$${stats.todayAICost.usd.toFixed(2)}`}
-          description={`₩${stats.todayAICost.krw.toLocaleString()}`}
+          description={`₩${Math.round(stats.todayAICost.krw).toLocaleString()}`}
         />
       </div>
     </div>
