@@ -83,8 +83,7 @@ export function extractUsageInfo(
 ): AIUsageInfo | null {
   if (!usage) return null;
 
-  const cachedTokens =
-    (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
+  const cachedTokens = usage?.prompt_tokens_details?.cached_tokens || 0;
 
   return {
     prompt_tokens: usage.prompt_tokens || 0,

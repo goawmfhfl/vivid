@@ -185,7 +185,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updateData: any = {};
+    const updateData: {
+      plan?: string;
+      status?: string;
+      expires_at?: string | null;
+    } = {};
     if (plan) {
       if (!["free", "pro"].includes(plan)) {
         return NextResponse.json(

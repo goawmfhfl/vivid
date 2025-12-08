@@ -50,11 +50,11 @@ interface OpenAICreditInfo {
   } | null;
   creditGrants: {
     totalAvailable: number;
-    grants: Array<any>;
+    grants: Array<unknown>;
   } | null;
   usage: {
     totalUsage: number;
-    dailyCosts: Array<any>;
+    dailyCosts: Array<unknown>;
   } | null;
   apiKeyConfigured: boolean;
   apiKeyPrefix: string;

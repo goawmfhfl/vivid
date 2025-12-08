@@ -7,12 +7,21 @@ import { supabase } from "@/lib/supabase";
 
 export default function CreateProfileTestPage() {
   const [isLoading, setIsLoading] = useState(false);
+  interface Profile {
+    id: string;
+    role: string;
+    [key: string]: unknown;
+  }
+
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
-    profile?: any;
+    profile?: Profile;
   } | null>(null);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<{
+    access_token?: string;
+    [key: string]: unknown;
+  } | null>(null);
 
   useEffect(() => {
     // 현재 세션 가져오기

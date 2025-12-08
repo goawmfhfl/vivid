@@ -54,7 +54,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
     };
 
     fetchDetails();
-  }, [userId, pagination.page]);
+  }, [userId, pagination.page, pagination.limit]);
 
   if (isLoading && details.length === 0) {
     return (

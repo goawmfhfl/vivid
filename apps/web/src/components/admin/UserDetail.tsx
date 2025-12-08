@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
-import { cn } from "@/lib/utils";
 import type { UserDetail, AIUsageStats } from "@/types/admin";
 import { ArrowLeft, Edit2, Save, X } from "lucide-react";
 import {

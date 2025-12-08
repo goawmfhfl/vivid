@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
-  const { userId: adminId } = authResult;
+  const { userId: _adminId } = authResult;
 
   try {
     const supabase = getServiceSupabase();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
-import { Search, Edit2, Plus } from "lucide-react";
+import { Edit2 } from "lucide-react";
 
 interface Subscription {
   id: string;
@@ -42,7 +42,7 @@ export function SubscriptionList() {
     total: 0,
     totalPages: 0,
   });
-  const [search, setSearch] = useState("");
+  const [_search, _setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isEditing, setIsEditing] = useState<string | null>(null);

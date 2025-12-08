@@ -1,6 +1,6 @@
 "use client";
 
-import { COLORS, CARD_STYLES, SPACING } from "@/lib/design-system";
+import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {

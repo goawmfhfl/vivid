@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role") || "";
     const isActive = searchParams.get("is_active");
-    const subscriptionStatus = searchParams.get("subscription_status") || "";
+    const _subscriptionStatus = searchParams.get("subscription_status") || "";
 
     const supabase = getServiceSupabase();
     const offset = (page - 1) * limit;
@@ -92,7 +92,13 @@ export async function GET(request: NextRequest) {
     );
 
     // AI 사용량 집계
-    const aiUsageMap = new Map<string, any>();
+    interface UserAIUsage {
+      total_requests: number;
+      total_tokens: number;
+      total_cost_usd: number;
+      total_cost_krw: number;
+    }
+    const aiUsageMap = new Map<string, UserAIUsage>();
     aiRequests.forEach((req) => {
       const userId = req.user_id;
       if (!aiUsageMap.has(userId)) {

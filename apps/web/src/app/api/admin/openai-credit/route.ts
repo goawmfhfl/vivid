@@ -65,7 +65,13 @@ export async function GET(request: NextRequest) {
       .gte("created_at", monthStartISO);
 
     // 비용 계산
-    const calculateTotal = (requests: any[]) => {
+    interface RequestRow {
+      cost_usd?: number | string | null;
+      cost_krw?: number | string | null;
+      total_tokens?: number | string | null;
+    }
+
+    const calculateTotal = (requests: RequestRow[]) => {
       return requests.reduce(
         (acc, req) => ({
           cost_usd: acc.cost_usd + Number(req.cost_usd || 0),

@@ -9,7 +9,7 @@ import type { AIUsageDetail } from "@/types/admin";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   try {
-    const userId = params.userId;
+    const { userId } = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "50", 10);

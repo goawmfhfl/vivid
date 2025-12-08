@@ -9,7 +9,7 @@ import type { UserDetail } from "@/types/admin";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
     const supabase = getServiceSupabase();
 
     // 프로필 정보 조회
@@ -112,7 +112,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
@@ -120,13 +120,18 @@ export async function PATCH(
   }
 
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
     const body = await request.json();
     const { name, phone, role, is_active } = body;
 
     const supabase = getServiceSupabase();
 
-    const updateData: any = {};
+    const updateData: {
+      name?: string;
+      phone?: string;
+      role?: string;
+      is_active?: boolean;
+    } = {};
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
     if (role !== undefined) {

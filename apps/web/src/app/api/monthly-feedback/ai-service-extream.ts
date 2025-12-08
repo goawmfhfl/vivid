@@ -40,7 +40,7 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
       (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     ) + 1;
 
-  const result = await generateDailyLifeReport(
+  await generateDailyLifeReport(
     dailyFeedbacks,
     month,
     dateRange,

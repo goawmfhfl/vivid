@@ -66,8 +66,32 @@ export async function GET(request: NextRequest) {
 
     const requests = periodRequests || [];
 
+    interface ModelStats {
+      model: string;
+      requests: number;
+      tokens: number;
+      cost_usd: number;
+      cost_krw: number;
+    }
+
+    interface TypeStats {
+      request_type: string;
+      requests: number;
+      tokens: number;
+      cost_usd: number;
+      cost_krw: number;
+    }
+
+    interface DailyStats {
+      date: string;
+      requests: number;
+      tokens: number;
+      cost_usd: number;
+      cost_krw: number;
+    }
+
     // 모델별 집계
-    const modelMap = new Map<string, any>();
+    const modelMap = new Map<string, ModelStats>();
     requests.forEach((req) => {
       const model = req.model;
       if (!modelMap.has(model)) {
@@ -79,7 +103,7 @@ export async function GET(request: NextRequest) {
           cost_krw: 0,
         });
       }
-      const stats = modelMap.get(model);
+      const stats = modelMap.get(model)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);
@@ -87,7 +111,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 타입별 집계
-    const typeMap = new Map<string, any>();
+    const typeMap = new Map<string, TypeStats>();
     requests.forEach((req) => {
       const type = req.request_type;
       if (!typeMap.has(type)) {
@@ -99,7 +123,7 @@ export async function GET(request: NextRequest) {
           cost_krw: 0,
         });
       }
-      const stats = typeMap.get(type);
+      const stats = typeMap.get(type)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);
@@ -107,7 +131,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 일별 트렌드
-    const dailyMap = new Map<string, any>();
+    const dailyMap = new Map<string, DailyStats>();
     requests.forEach((req) => {
       const date = new Date(req.created_at).toISOString().split("T")[0];
       if (!dailyMap.has(date)) {
@@ -119,7 +143,7 @@ export async function GET(request: NextRequest) {
           cost_krw: 0,
         });
       }
-      const stats = dailyMap.get(date);
+      const stats = dailyMap.get(date)!;
       stats.requests += 1;
       stats.tokens += Number(req.total_tokens || 0);
       stats.cost_usd += Number(req.cost_usd || 0);

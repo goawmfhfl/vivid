@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
-import { cn } from "@/lib/utils";
 import type { UserListItem } from "@/types/admin";
-import { Search, Filter, ChevronRight } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
 
 interface UserListResponse {
   users: UserListItem[];
