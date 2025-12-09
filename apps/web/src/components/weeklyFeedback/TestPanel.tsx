@@ -296,13 +296,13 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       description: "이번 주의 피드백 리포트",
       fields: [
         {
-          name: "positives_top3",
-          path: "view.execution_report.positives_top3",
+          name: "positives_categories",
+          path: "view.execution_report.feedback_patterns.positives_categories",
           isPro: false,
         },
         {
-          name: "improvements_top3",
-          path: "view.execution_report.improvements_top3",
+          name: "improvements_categories",
+          path: "view.execution_report.feedback_patterns.improvements_categories",
           isPro: false,
         },
         {
@@ -342,7 +342,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
         },
       ],
       condition:
-        "execution_report.positives_top3.length > 0 || execution_report.improvements_top3.length > 0",
+        "execution_report.feedback_patterns.positives_categories.length > 0 || execution_report.feedback_patterns.improvements_categories.length > 0",
     },
     {
       name: "Closing",
@@ -451,10 +451,13 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           );
         case "Execution":
           return (
-            (view.execution_report?.positives_top3 &&
-              view.execution_report.positives_top3.length > 0) ||
-            (view.execution_report?.improvements_top3 &&
-              view.execution_report.improvements_top3.length > 0)
+            (view.execution_report?.feedback_patterns?.positives_categories &&
+              view.execution_report.feedback_patterns.positives_categories
+                .length > 0) ||
+            (view.execution_report?.feedback_patterns
+              ?.improvements_categories &&
+              view.execution_report.feedback_patterns.improvements_categories
+                .length > 0)
           );
         case "Closing":
           return !!(
