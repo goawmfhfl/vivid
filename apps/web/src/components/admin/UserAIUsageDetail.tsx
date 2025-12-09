@@ -401,10 +401,10 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                         formatter={(
                           value: number,
                           name: string,
-                          props: { payload: { requests: number } }
+                          props?: { payload?: { requests?: number } }
                         ) => [
                           `₩${Math.round(value).toLocaleString()} (${
-                            props.payload.requests
+                            props?.payload?.requests ?? 0
                           }회)`,
                           name,
                         ]}
