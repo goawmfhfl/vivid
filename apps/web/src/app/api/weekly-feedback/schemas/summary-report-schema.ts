@@ -7,6 +7,12 @@ export function getSummaryReportSchema(isPro: boolean) {
     type: "object",
     additionalProperties: false,
     properties: {
+      title: {
+        type: "string",
+        description:
+          "이번 주의 제목. '~~했던 한 주' 형식으로 작성 (예: '데이터 손실과 회복을 경험했던 한 주', '새로운 도전을 시작했던 한 주'). 이 주의 핵심을 한 문장으로 표현하되, '~~한 여정'이라는 표현은 사용하지 말고 '~~했던 한 주'로 표현하세요.",
+        maxLength: 50,
+      },
       summary: {
         type: "string",
         description:
@@ -46,12 +52,13 @@ export function getSummaryReportSchema(isPro: boolean) {
     },
     required: isPro
       ? [
+          "title",
           "summary",
           "key_points",
           "trend_analysis",
           "patterns_and_strengths",
           "mindset_and_tips",
         ]
-      : ["summary", "key_points", "trend_analysis"],
+      : ["title", "summary", "key_points", "trend_analysis"],
   };
 }

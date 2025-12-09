@@ -20,8 +20,6 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
   const { data: candidates = [], isLoading: isLoadingCandidates } =
     useMonthlyCandidates();
 
-  console.log("useMonthlyCandidates candidates", candidates);
-
   // 월간 요약만 필터링 및 정렬
   const sortedSummaries = useMemo(() => {
     const monthly = summaries.filter((s) => s.type === "monthly");

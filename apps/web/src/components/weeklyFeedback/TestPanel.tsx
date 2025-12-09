@@ -51,6 +51,11 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       fields: [
         { name: "week_range", path: "view.week_range", isPro: false },
         {
+          name: "title",
+          path: "view.summary_report.title",
+          isPro: false,
+        },
+        {
           name: "summary",
           path: "view.summary_report.summary",
           isPro: false,

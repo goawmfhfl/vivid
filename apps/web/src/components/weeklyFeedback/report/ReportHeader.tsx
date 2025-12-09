@@ -49,6 +49,14 @@ export function ReportHeader({
           <h1 className="text-2xl sm:text-3xl mb-2 font-semibold">
             {weekRange.start} – {weekRange.end}
           </h1>
+          {summaryReport?.title && (
+            <p
+              className="text-base sm:text-lg font-medium"
+              style={{ opacity: 0.95 }}
+            >
+              {summaryReport.title}
+            </p>
+          )}
         </div>
 
         {/* Summary */}

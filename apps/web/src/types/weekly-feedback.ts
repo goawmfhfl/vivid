@@ -12,6 +12,7 @@ export type WeekRange = {
 // Summary Report (주간 피드백 헤더)
 // ============================================
 export type SummaryReport = {
+  title: string; // 이번 주의 제목 (예: "데이터 손실과 회복을 경험했던 한 주")
   summary: string; // 전체 요약 (일반: 250자, Pro: 500자) - Pro는 2/3 길이로 간결화
   key_points: string[]; // 핵심 포인트 (일반: 최대 5개, Pro: 최대 10개)
   trend_analysis: string | null; // 트렌드 분석 (Pro 전용) - 배열 구조로 변경

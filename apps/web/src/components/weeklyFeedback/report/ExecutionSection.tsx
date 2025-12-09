@@ -191,7 +191,7 @@ export function ExecutionSection({
       {/* Free 모드: Pro 업그레이드 유도 */}
       {!isPro && (
         <Card
-          className="p-5 sm:p-6 cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group"
+          className="p-5 sm:p-6 cursor-pointer transition-all hover:scale-[1.02] relative overflow-hidden group mb-3 sm:mb-4"
           style={{
             background:
               "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -247,9 +247,8 @@ export function ExecutionSection({
                   lineHeight: "1.6",
                 }}
               >
-                Pro 멤버십에서는 피드백 패턴, 정체성 분석, 개선-행동 정렬을
-                시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 피드백 지도를
-                함께 만들어보세요.
+                Pro 멤버십에서는 이번 주의 피드백 패턴을 깊이 분석하고, 당신의
+                강점과 개선점이 실제 행동과 어떻게 연결되는지 시각화해 드립니다.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
                 <span style={{ color: COLORS.brand.primary }}>

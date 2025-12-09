@@ -195,8 +195,8 @@ export function ClosingSection({
                 }}
               >
                 Pro 멤버십에서는 이번 주의 정체성 변화, 성장 스토리, 강점과 개선
-                영역을 시각화해 드립니다. 기록을 성장으로 바꾸는 당신만의 정체성
-                지도를 함께 만들어보세요.
+                영역을 시각화해 드립니다. "기록을 통해 나는 어떻게 달라지고
+                있을까?" 직접 확인해보세요.
               </p>
               <div className="flex items-center gap-2 text-xs font-semibold">
                 <span style={{ color: COLORS.brand.primary }}>

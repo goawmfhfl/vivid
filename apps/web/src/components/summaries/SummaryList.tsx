@@ -103,7 +103,7 @@ export function SummaryList({
                     className="truncate"
                     style={{ color: "#333333", fontSize: "1rem" }}
                   >
-                    {summary.overview}
+                    {summary.title}
                   </h3>
                   <p
                     className="truncate"

@@ -968,8 +968,8 @@ export function ExecutionSection({
               >
                 Pro 멤버십에서는 이번 달의 <strong>습관 점수 시각화</strong>,{" "}
                 <strong>핵심 피드백 분석</strong>,{" "}
-                <strong>개선 영역 추적</strong>을 제공합니다. 기록을 성장으로
-                바꾸는 당신만의 피드백 지도를 함께 만들어보세요.
+                <strong>개선 영역 추적</strong>을 제공합니다. "기록을 통해 나는
+                어떻게 달라지고 있을까?" 직접 확인해보세요.
               </p>
               <div
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl group/cta transition-all duration-200"

@@ -190,7 +190,7 @@ export function InsightSection({ view, isPro = false }: SectionProps) {
               >
                 Pro 멤버십에서는 오늘의 인사이트를 더 발전시키는 방법과, 바로
                 시도해볼 수 있는 작은 행동을 제안해드립니다. 깨달음이 그냥
-                감탄으로 끝나지 않고, 당신의 성장으로 이어지도록 도와드려요.
+                감탄으로 끝나지 않고, 성장으로 이어지도록 도와드려요.
               </p>
               <p
                 className="text-xs"

@@ -64,14 +64,16 @@ export async function fetchWeeklyFeedbackList(
   return (data || []).map((row) => {
     // summary_report 복호화
     const decryptedSummaryReport = decryptJsonbFields(
-      row.summary_report as { summary?: string; key_points?: string[] } | null
-    ) as { summary?: string; key_points?: string[] } | null;
+      row.summary_report as {
+        title?: string;
+        summary?: string;
+        key_points?: string[];
+      } | null
+    ) as { title?: string; summary?: string; key_points?: string[] } | null;
 
-    // summary의 앞부분을 사용하거나 날짜 범위 사용
-    const title = decryptedSummaryReport?.summary
-      ? decryptedSummaryReport.summary.substring(0, 50) +
-        (decryptedSummaryReport.summary.length > 50 ? "..." : "")
-      : `${row.week_start} ~ ${row.week_end}`;
+    // summary_report.title을 우선 사용, 없으면 날짜 범위 사용
+    const title =
+      decryptedSummaryReport?.title || `${row.week_start} ~ ${row.week_end}`;
 
     return {
       id: String(row.id),

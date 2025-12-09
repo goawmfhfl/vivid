@@ -45,6 +45,7 @@ type CreatePeriodSummaryParams = {
   year: number;
   dateRange: string;
   period: string;
+  title: string;
 };
 
 /**
@@ -53,15 +54,14 @@ type CreatePeriodSummaryParams = {
 export function createPeriodSummaryFromWeeklyFeedback(
   params: CreatePeriodSummaryParams
 ): PeriodSummary {
-  const { item, weekNumber, year, dateRange, period } = params;
+  const { item, weekNumber, year, dateRange, period, title } = params;
 
   return {
     id: item.id,
     period,
     type: "weekly",
     dateRange,
-    totalEntries: 0, // 주간 피드백에서는 사용하지 않음
-    overview: item.title || "",
+    title: title,
     keyInsights: [],
     emotionalTrends: "",
     growthAreas: [],

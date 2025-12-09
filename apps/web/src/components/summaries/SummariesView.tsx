@@ -32,6 +32,7 @@ function convertWeeklyFeedbackToPeriodSummary(
   const year = startDate.getFullYear();
   const dateRange = formatDateRange(startDate, endDate);
   const period = formatPeriod(startDate, weekNumber);
+  const title = item.title;
 
   return createPeriodSummaryFromWeeklyFeedback({
     item,
@@ -39,6 +40,7 @@ function convertWeeklyFeedbackToPeriodSummary(
     year,
     dateRange,
     period,
+    title,
   });
 }
 
