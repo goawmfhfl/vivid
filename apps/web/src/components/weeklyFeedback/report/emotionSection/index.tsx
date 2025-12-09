@@ -37,8 +37,13 @@ export function EmotionSection({
 function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
   const router = useRouter();
   console.log("emotionReport", emotionReport);
-  // 일별 감정 데이터 (기록이 있는 날짜만 포함)
-  const dailyEmotions = emotionReport?.daily_emotions || [];
+  // 일별 감정 데이터 (기록이 있는 날짜만 포함, 데이터가 없는 날짜는 필터링)
+  const dailyEmotions = (emotionReport?.daily_emotions || []).filter(
+    (emotion) =>
+      emotion.ai_mood_valence !== null ||
+      emotion.ai_mood_arousal !== null ||
+      emotion.dominant_emotion !== null
+  );
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const { setSelectedDayIndex } = useTooltip();
@@ -248,104 +253,99 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
-                  }}
-                >
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
+                    }}
+                  >
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: "#4E4B46" }}
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.secondary }}
                   >
                     상세 패턴 분석
                   </p>
-
-                  {/* 쾌-불쾌 패턴 */}
-                  {Array.isArray(emotionReport.valence_patterns) &&
-                    emotionReport.valence_patterns.length > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp
-                            className="w-4 h-4"
-                            style={{ color: "#8B6F47" }}
-                          />
-                          <p
-                            className="text-xs font-medium"
-                            style={{ color: "#333333", fontWeight: 600 }}
-                          >
-                            쾌-불쾌 패턴
-                          </p>
-                        </div>
-                        <ul className="space-y-1.5 ml-6">
-                          {emotionReport.valence_patterns.map(
-                            (pattern, idx) => (
-                              <li
-                                key={idx}
-                                className="flex items-start gap-2 text-xs"
-                                style={{ color: "#4E4B46", lineHeight: "1.6" }}
-                              >
-                                <span
-                                  className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                                  style={{
-                                    backgroundColor: "#8B6F47",
-                                  }}
-                                />
-                                <span style={{ lineHeight: "1.6" }}>
-                                  {pattern}
-                                </span>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-
-                  {/* 각성-에너지 패턴 */}
-                  {Array.isArray(emotionReport.arousal_patterns) &&
-                    emotionReport.arousal_patterns.length > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap
-                            className="w-4 h-4"
-                            style={{ color: "#8B6F47" }}
-                          />
-                          <p
-                            className="text-xs font-medium"
-                            style={{ color: "#333333", fontWeight: 600 }}
-                          >
-                            각성-에너지 패턴
-                          </p>
-                        </div>
-                        <ul className="space-y-1.5 ml-6">
-                          {emotionReport.arousal_patterns.map(
-                            (pattern, idx) => (
-                              <li
-                                key={idx}
-                                className="flex items-start gap-2 text-xs"
-                                style={{ color: "#4E4B46", lineHeight: "1.6" }}
-                              >
-                                <span
-                                  className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                                  style={{
-                                    backgroundColor: "#8B6F47",
-                                  }}
-                                />
-                                <span style={{ lineHeight: "1.6" }}>
-                                  {pattern}
-                                </span>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
                 </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {/* 쾌-불쾌 패턴 */}
+                {Array.isArray(emotionReport.valence_patterns) &&
+                  emotionReport.valence_patterns.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp
+                          className="w-4 h-4"
+                          style={{ color: "#8B6F47" }}
+                        />
+                        <p
+                          className="text-xs font-medium"
+                          style={{ color: "#333333", fontWeight: 600 }}
+                        >
+                          쾌-불쾌 패턴
+                        </p>
+                      </div>
+                      <ul className="space-y-1.5 ml-6">
+                        {emotionReport.valence_patterns.map((pattern, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs"
+                            style={{ color: "#4E4B46", lineHeight: "1.6" }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: "#8B6F47",
+                              }}
+                            />
+                            <span style={{ lineHeight: "1.6" }}>{pattern}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {/* 각성-에너지 패턴 */}
+                {Array.isArray(emotionReport.arousal_patterns) &&
+                  emotionReport.arousal_patterns.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Zap className="w-4 h-4" style={{ color: "#8B6F47" }} />
+                        <p
+                          className="text-xs font-medium"
+                          style={{ color: "#333333", fontWeight: 600 }}
+                        >
+                          각성-에너지 패턴
+                        </p>
+                      </div>
+                      <ul className="space-y-1.5 ml-6">
+                        {emotionReport.arousal_patterns.map((pattern, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs"
+                            style={{ color: "#4E4B46", lineHeight: "1.6" }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: "#8B6F47",
+                              }}
+                            />
+                            <span style={{ lineHeight: "1.6" }}>{pattern}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </Card>
           )}
@@ -364,86 +364,96 @@ function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
-                  }}
-                >
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #B89A7A 0%, #A78A6A 100%)",
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: "#4E4B46" }}
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.secondary }}
                   >
                     감정 트리거 분석
                   </p>
-
-                  {/* 쾌-불쾌 트리거 */}
-                  {Array.isArray(emotionReport.valence_triggers) &&
-                    emotionReport.valence_triggers.length > 0 && (
-                      <div className="mb-4">
-                        <p
-                          className="text-xs font-medium mb-2"
-                          style={{ color: "#333333", fontWeight: 600 }}
-                        >
-                          쾌-불쾌 트리거
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {emotionReport.valence_triggers.map(
-                            (trigger, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1.5 rounded-lg text-xs"
-                                style={{
-                                  backgroundColor: "#F5E6C8",
-                                  color: "#8B6F47",
-                                  border: "1px solid #E6D5C3",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                {trigger}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* 각성-에너지 트리거 */}
-                  {Array.isArray(emotionReport.arousal_triggers) &&
-                    emotionReport.arousal_triggers.length > 0 && (
-                      <div>
-                        <p
-                          className="text-xs font-medium mb-2"
-                          style={{ color: "#333333", fontWeight: 600 }}
-                        >
-                          각성-에너지 트리거
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {emotionReport.arousal_triggers.map(
-                            (trigger, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1.5 rounded-lg text-xs"
-                                style={{
-                                  backgroundColor: "#F5E6C8",
-                                  color: "#8B6F47",
-                                  border: "1px solid #E6D5C3",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                {trigger}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
                 </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {/* 쾌-불쾌 트리거 */}
+                {Array.isArray(emotionReport.valence_triggers) &&
+                  emotionReport.valence_triggers.length > 0 && (
+                    <div className="mb-4">
+                      <p
+                        className="text-xs font-medium mb-2"
+                        style={{ color: COLORS.text.primary, fontWeight: 600 }}
+                      >
+                        쾌-불쾌 트리거
+                      </p>
+                      <ul className="space-y-1.5 ml-6">
+                        {emotionReport.valence_triggers.map((trigger, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs"
+                            style={{
+                              color: COLORS.text.secondary,
+                              lineHeight: "1.6",
+                            }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: "#8B6F47",
+                              }}
+                            />
+                            <span style={{ lineHeight: "1.6" }}>{trigger}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {/* 각성-에너지 트리거 */}
+                {Array.isArray(emotionReport.arousal_triggers) &&
+                  emotionReport.arousal_triggers.length > 0 && (
+                    <div>
+                      <p
+                        className="text-xs font-medium mb-2"
+                        style={{ color: COLORS.text.primary, fontWeight: 600 }}
+                      >
+                        각성-에너지 트리거
+                      </p>
+                      <ul className="space-y-1.5 ml-6">
+                        {emotionReport.arousal_triggers.map((trigger, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs"
+                            style={{
+                              color: COLORS.text.secondary,
+                              lineHeight: "1.6",
+                            }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: "#8B6F47",
+                              }}
+                            />
+                            <span style={{ lineHeight: "1.6" }}>{trigger}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </Card>
           )}

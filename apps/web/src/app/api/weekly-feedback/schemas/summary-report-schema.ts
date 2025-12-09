@@ -9,8 +9,9 @@ export function getSummaryReportSchema(isPro: boolean) {
     properties: {
       summary: {
         type: "string",
-        description: "이번 주를 요약한 전체 요약",
-        maxLength: isPro ? 500 : 250,
+        description:
+          "이번 주를 요약한 전체 요약 (Pro는 현재 길이의 2/3로 간결하게)",
+        maxLength: isPro ? 330 : 250, // Pro는 500자에서 330자로 (2/3)
       },
       key_points: {
         type: "array",
@@ -22,9 +23,63 @@ export function getSummaryReportSchema(isPro: boolean) {
       trend_analysis: {
         type: "string",
         nullable: true,
-        description: "트렌드 분석 (Pro 전용)",
+        description: "트렌드 분석 (Pro 전용) - 간결하게 작성 (현재 길이의 2/3)",
+        maxLength: isPro ? 330 : 0, // Pro는 500자에서 330자로 (2/3)
       },
+      // Pro 전용: 배열 구조로 재구성
+      ...(isPro
+        ? {
+            patterns_and_strengths: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "패턴과 강점 배열",
+            },
+            risks_and_challenges: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "리스크와 도전 배열",
+            },
+            opportunities_and_suggestions: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "기회와 제안 배열",
+            },
+            priority_recommendations: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "우선순위 권장 배열",
+            },
+            kpi_suggestions: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "KPI 제안 배열",
+            },
+            mindset_and_tips: {
+              type: "array",
+              items: { type: "string" },
+              maxItems: 5,
+              description: "마인드셋과 실천 팁 배열",
+            },
+          }
+        : {}),
     },
-    required: ["summary", "key_points", "trend_analysis"],
+    required: isPro
+      ? [
+          "summary",
+          "key_points",
+          "trend_analysis",
+          "patterns_and_strengths",
+          "risks_and_challenges",
+          "opportunities_and_suggestions",
+          "priority_recommendations",
+          "kpi_suggestions",
+          "mindset_and_tips",
+        ]
+      : ["summary", "key_points", "trend_analysis"],
   };
 }

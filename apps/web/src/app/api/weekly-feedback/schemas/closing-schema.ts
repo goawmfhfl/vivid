@@ -135,21 +135,7 @@ export function getClosingReportSchema(isPro: boolean) {
             },
             required: ["summary", "key_areas"],
           },
-          identity_evolution: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              summary: {
-                type: "string",
-                maxLength: isPro ? 200 : 150,
-              },
-              evolution: {
-                type: "string",
-                maxLength: isPro ? 500 : 300,
-              },
-            },
-            required: ["summary", "evolution"],
-          },
+          // identity_evolution 제거됨
           ...(isPro
             ? {
                 visualization: {
@@ -213,7 +199,6 @@ export function getClosingReportSchema(isPro: boolean) {
               "growth_story",
               "strengths_highlighted",
               "areas_of_awareness",
-              "identity_evolution",
               "visualization",
             ]
           : [
@@ -221,7 +206,6 @@ export function getClosingReportSchema(isPro: boolean) {
               "growth_story",
               "strengths_highlighted",
               "areas_of_awareness",
-              "identity_evolution",
             ],
       },
       next_week_identity_intention: {

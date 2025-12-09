@@ -532,6 +532,19 @@ export function getDailyLifeReportSchema(isPro: boolean) {
           ? ["common_themes", "actionable_advice_summary", "visualization"]
           : ["common_themes", "actionable_advice_summary"],
       },
+      // Pro 전용: 이번 주 루틴을 보아하니, 나는 이런 일상을 보낸 사람이었어요 - 5가지 특징
+      ...(isPro
+        ? {
+            daily_life_characteristics: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 5,
+              maxItems: 5,
+              description:
+                "이번 주 루틴을 보아하니, 나는 이런 일상을 보낸 사람이었어요 - 5가지 특징",
+            },
+          }
+        : {}),
       daily_rhythm: {
         type: "object",
         additionalProperties: false,
@@ -686,17 +699,31 @@ export function getDailyLifeReportSchema(isPro: boolean) {
         required: ["focus_areas", "maintain_strengths"],
       },
     },
-    required: [
-      "summary",
-      "daily_summaries_trend",
-      "events_pattern",
-      "emotion_triggers_analysis",
-      "behavioral_patterns",
-      "keywords_analysis",
-      "ai_comments_insights",
-      "daily_rhythm",
-      "growth_insights",
-      "next_week_suggestions",
-    ],
+    required: isPro
+      ? [
+          "summary",
+          "daily_summaries_trend",
+          "events_pattern",
+          "emotion_triggers_analysis",
+          "behavioral_patterns",
+          "keywords_analysis",
+          "ai_comments_insights",
+          "daily_life_characteristics",
+          "daily_rhythm",
+          "growth_insights",
+          "next_week_suggestions",
+        ]
+      : [
+          "summary",
+          "daily_summaries_trend",
+          "events_pattern",
+          "emotion_triggers_analysis",
+          "behavioral_patterns",
+          "keywords_analysis",
+          "ai_comments_insights",
+          "daily_rhythm",
+          "growth_insights",
+          "next_week_suggestions",
+        ],
   };
 }

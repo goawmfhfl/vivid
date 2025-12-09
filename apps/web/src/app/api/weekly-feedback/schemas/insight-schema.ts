@@ -236,6 +236,7 @@ export function getInsightReportSchema(isPro: boolean) {
         },
         required: ["summary", "alignment_score", "strong_connections"],
       },
+      // growth_insights와 next_week_focus 분리
       growth_insights: {
         type: "object",
         additionalProperties: false,
@@ -254,7 +255,15 @@ export function getInsightReportSchema(isPro: boolean) {
             },
             maxItems: isPro ? 5 : 3,
           },
-          next_week_focus: {
+        },
+        required: ["key_learnings"],
+      },
+      // 다음 주 포커스는 별도 필드로 분리
+      next_week_focus: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          focus_areas: {
             type: "array",
             items: {
               type: "object",
@@ -269,7 +278,7 @@ export function getInsightReportSchema(isPro: boolean) {
             maxItems: isPro ? 5 : 3,
           },
         },
-        required: ["key_learnings", "next_week_focus"],
+        required: ["focus_areas"],
       },
     },
     required: [
@@ -281,6 +290,7 @@ export function getInsightReportSchema(isPro: boolean) {
       "ai_comment_patterns",
       "insight_action_alignment",
       "growth_insights",
+      "next_week_focus",
     ],
   };
 }

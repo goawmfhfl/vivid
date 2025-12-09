@@ -13,6 +13,8 @@ export function getEmotionReportSchema(isPro: boolean) {
       valence_explanation: {
         type: "string",
         maxLength: isPro ? 500 : 300,
+        description:
+          "날짜 표현 시 '2일차' 대신 '2025년 1월 15일 (수요일)' 형식 사용",
       },
       arousal_explanation: {
         type: "string",
@@ -30,32 +32,53 @@ export function getEmotionReportSchema(isPro: boolean) {
       },
       valence_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description:
+            "날짜와 요일 포함 (예: '가족/이사 등의 큰 변화로 인한 기대와 불안의 공존(2025년 1월 15일 수요일)')",
+        },
         maxItems: isPro ? 7 : 5,
       },
       arousal_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description:
+            "날짜와 요일 포함 (예: '일과 에너지 소모로 인한 피로감(2025년 1월 15일 수요일)')",
+        },
         maxItems: isPro ? 7 : 5,
       },
       anxious_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description:
+            "각 요소를 현재보다 2배 길이로 작성 (예: '캐모마일 차와 가벼운 산책 같은 루틴이 주는 안정감' → 더 상세한 설명 추가)",
+        },
         maxItems: isPro ? 5 : 3,
       },
       engaged_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description: "각 요소를 현재보다 2배 길이로 작성",
+        },
         maxItems: isPro ? 5 : 3,
       },
       sad_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description: "각 요소를 현재보다 2배 길이로 작성",
+        },
         maxItems: isPro ? 5 : 3,
       },
       calm_triggers: {
         type: "array",
-        items: { type: "string" },
+        items: {
+          type: "string",
+          description: "각 요소를 현재보다 2배 길이로 작성",
+        },
         maxItems: isPro ? 5 : 3,
       },
       daily_emotions: {
@@ -66,8 +89,8 @@ export function getEmotionReportSchema(isPro: boolean) {
           properties: {
             date: {
               type: "string",
-              pattern: "^\\d{2}/\\d{2}[월화수목금토일]$",
-              description: "11/24월 형식",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              description: "YYYY-MM-DD 형식 (예: 2025-01-15)",
             },
             weekday: { type: "string" },
             ai_mood_valence: { type: "number", nullable: true },

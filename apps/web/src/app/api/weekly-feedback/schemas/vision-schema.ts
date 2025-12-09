@@ -27,7 +27,8 @@ export function getVisionReportSchema(isPro: boolean) {
           },
           required: ["keyword", "days", "context", "related_keywords"],
         },
-        maxItems: isPro ? 10 : 7,
+        maxItems: 8, // 최대 8개
+        description: "홀수 개수로 생성 (4, 6, 8개)",
       },
       goals_pattern: {
         type: "object",
@@ -93,64 +94,7 @@ export function getVisionReportSchema(isPro: boolean) {
           ? ["summary", "goal_categories", "visualization"]
           : ["summary", "goal_categories"],
       },
-      self_vision_alignment: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          summary: {
-            type: "string",
-            maxLength: isPro ? 300 : 200,
-          },
-          key_traits: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                trait: { type: "string" },
-                evidence: { type: "string" },
-                frequency: { type: "integer", minimum: 0 },
-              },
-              required: ["trait", "evidence", "frequency"],
-            },
-            maxItems: isPro ? 10 : 5,
-          },
-          ...(isPro
-            ? {
-                visualization: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    trait_frequency: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: {
-                        type: { type: "string", enum: ["bar"] },
-                        data: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                              trait: { type: "string" },
-                              count: { type: "integer" },
-                            },
-                            required: ["trait", "count"],
-                          },
-                        },
-                      },
-                      required: ["type", "data"],
-                    },
-                  },
-                  required: ["trait_frequency"],
-                },
-              }
-            : {}),
-        },
-        required: isPro
-          ? ["summary", "key_traits", "visualization"]
-          : ["summary", "key_traits"],
-      },
+      // self_vision_alignment 제거됨
       dreamer_traits_evolution: {
         type: "object",
         additionalProperties: false,
@@ -264,6 +208,27 @@ export function getVisionReportSchema(isPro: boolean) {
               },
               required: ["summary", "alignment_score", "gaps", "strengths"],
             },
+            // 비전을 통해서 내가 바라보는 나의 모습 - 5가지 특성
+            vision_self_characteristics: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 5,
+              maxItems: 5,
+              description:
+                "비전을 통해서 내가 바라보는 나의 모습 - 5가지 특성 리스트",
+            },
+            // 역사적 위인 추천
+            vision_historical_figure: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                name: { type: "string" },
+                reason: { type: "string", maxLength: 300 },
+              },
+              required: ["name", "reason"],
+              description:
+                "역사적 위인 중 나와 같은 성향 혹은 꿈을 가진 사람 1명 추천",
+            },
           }
         : {}),
       next_week_vision_focus: {
@@ -298,17 +263,17 @@ export function getVisionReportSchema(isPro: boolean) {
           "vision_summary",
           "vision_keywords_trend",
           "goals_pattern",
-          "self_vision_alignment",
           "dreamer_traits_evolution",
           "ai_feedback_patterns",
           "vision_action_alignment",
+          "vision_self_characteristics",
+          "vision_historical_figure",
           "next_week_vision_focus",
         ]
       : [
           "vision_summary",
           "vision_keywords_trend",
           "goals_pattern",
-          "self_vision_alignment",
           "dreamer_traits_evolution",
           "next_week_vision_focus",
         ],

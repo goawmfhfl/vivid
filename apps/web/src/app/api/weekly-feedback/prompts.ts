@@ -247,13 +247,25 @@ export function buildUnifiedWeeklyFeedbackPrompt(
   });
 
   prompt += `\n위 데이터를 종합하여 주간 피드백의 모든 섹션을 생성하세요:
-1. summary_report: 이번 주 전체를 요약한 핵심 내용
-2. daily_life_report: 일주일간의 일상 패턴과 트렌드 분석
-3. emotion_report: 일주일간의 감정 흐름과 패턴 분석 (ai_mood_valence와 ai_mood_arousal은 일별 값들의 평균 계산)
-4. vision_report: 일주일간의 비전과 꿈에 대한 통합 분석
-5. insight_report: 일주일간의 인사이트와 패턴 발견
-6. execution_report: 일주일간의 실행과 행동에 대한 분석
-7. closing_report: 이번 주를 마무리하는 종합 리포트
+
+**중요 지시사항:**
+1. Pro 멤버십이 아닌 경우, Pro 전용 필드는 모두 null로 출력하세요.
+2. Free 멤버에게 제공하는 데이터는 간략하게 작성하세요 (토큰 사용량 최소화).
+3. 날짜 표현 시 "2일차", "3일차" 같은 표현을 사용하지 말고, 정확한 날짜와 요일을 함께 언급하세요 (예: "2025년 1월 15일 (수요일)").
+4. emotion_report의 daily_emotions에는 기록이 있는 날짜의 데이터만 포함하세요 (데이터가 없는 요일은 제외).
+5. valence_triggers, arousal_triggers의 각 요소에는 날짜와 요일을 포함하세요 (예: "가족/이사 등의 큰 변화로 인한 기대와 불안의 공존(2025년 1월 15일 수요일)").
+6. anxious_triggers, engaged_triggers, sad_triggers, calm_triggers의 각 요소는 현재보다 2배 길이로 상세하게 작성하세요.
+7. vision_keywords_trend는 최대 8개, 홀수 개수(4, 6, 8개)로 생성하세요.
+8. summary_report의 Pro 버전은 현재 길이의 2/3로 간결하게 작성하세요.
+
+**섹션별 요구사항:**
+1. summary_report: 이번 주 전체를 요약한 핵심 내용 (Pro는 배열 구조로 재구성)
+2. daily_life_report: 일주일간의 일상 패턴과 트렌드 분석 (Pro는 daily_life_characteristics 5개 추가)
+3. emotion_report: 일주일간의 감정 흐름과 패턴 분석 (ai_mood_valence와 ai_mood_arousal은 일별 값들의 평균 계산, 날짜 형식 주의)
+4. vision_report: 일주일간의 비전과 꿈에 대한 통합 분석 (self_vision_alignment 제거, vision_self_characteristics와 vision_historical_figure 추가)
+5. insight_report: 일주일간의 인사이트와 패턴 발견 (growth_insights와 next_week_focus 분리)
+6. execution_report: 일주일간의 실행과 행동에 대한 분석 (positives_top3, improvements_top3, core_feedback_themes 제거, ai_feedback_summary가 가장 먼저 표시)
+7. closing_report: 이번 주를 마무리하는 종합 리포트 (identity_evolution 제거)
 
 모든 섹션을 스키마에 맞게 완전히 작성해주세요.`;
 

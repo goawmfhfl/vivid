@@ -218,7 +218,19 @@ export function EmotionChart({
                       <span style={{ fontWeight: "600" }}>{day.weekday}</span>
                     </div>
                     <div style={{ fontSize: "0.7rem", opacity: 0.9 }}>
-                      {day.date}
+                      {(() => {
+                        // YYYY-MM-DD 형식을 "2025년 1월 15일" 형식으로 변환
+                        try {
+                          const date = new Date(day.date + "T00:00:00+09:00");
+                          return date.toLocaleDateString("ko-KR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          });
+                        } catch {
+                          return day.date;
+                        }
+                      })()}
                     </div>
                     <div
                       className="mt-1.5 pt-1.5"

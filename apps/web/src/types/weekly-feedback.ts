@@ -12,9 +12,16 @@ export type WeekRange = {
 // Summary Report (주간 피드백 헤더)
 // ============================================
 export type SummaryReport = {
-  summary: string; // 전체 요약 (일반: 250자, Pro: 500자)
+  summary: string; // 전체 요약 (일반: 250자, Pro: 500자) - Pro는 2/3 길이로 간결화
   key_points: string[]; // 핵심 포인트 (일반: 최대 5개, Pro: 최대 10개)
-  trend_analysis: string | null; // 트렌드 분석 (Pro 전용)
+  trend_analysis: string | null; // 트렌드 분석 (Pro 전용) - 배열 구조로 변경
+  // Pro 전용: 배열 구조로 재구성
+  patterns_and_strengths?: string[]; // 패턴과 강점 배열
+  risks_and_challenges?: string[]; // 리스크와 도전 배열
+  opportunities_and_suggestions?: string[]; // 기회와 제안 배열
+  priority_recommendations?: string[]; // 우선순위 권장 배열
+  kpi_suggestions?: string[]; // KPI 제안 배열
+  mindset_and_tips?: string[]; // 마인드셋과 실천 팁 배열
 };
 
 // ============================================
@@ -205,6 +212,8 @@ export type DailyLifeReport = {
       };
     };
   };
+  // Pro 전용: 이번 주 루틴을 보아하니, 나는 이런 일상을 보낸 사람이었어요 - 5가지 특징
+  daily_life_characteristics?: string[]; // Pro 전용, 5개
   growth_insights: {
     resilience_patterns: Array<{
       pattern: string;
@@ -232,7 +241,7 @@ export type DailyLifeReport = {
 // Emotion Report
 // ============================================
 export type DailyEmotion = {
-  date: string; // "11/24월" 형식
+  date: string; // "YYYY-MM-DD" 형식
   weekday: string; // "일요일", "월요일" 등
   ai_mood_valence: number | null;
   ai_mood_arousal: number | null;
@@ -266,7 +275,7 @@ export type VisionReport = {
     days: number;
     context: string;
     related_keywords: string[];
-  }>;
+  }>; // 최대 8개, 홀수 개수(4, 6, 8개)
   goals_pattern: {
     summary: string;
     goal_categories: Array<{
@@ -286,23 +295,7 @@ export type VisionReport = {
       };
     };
   };
-  self_vision_alignment: {
-    summary: string;
-    key_traits: Array<{
-      trait: string;
-      evidence: string;
-      frequency: number;
-    }>;
-    visualization?: {
-      trait_frequency: {
-        type: "bar";
-        data: Array<{
-          trait: string;
-          count: number;
-        }>;
-      };
-    };
-  };
+  // self_vision_alignment 제거됨
   dreamer_traits_evolution: {
     summary: string;
     common_traits: Array<{
@@ -338,6 +331,13 @@ export type VisionReport = {
     gaps: string[];
     strengths: string[];
   };
+  // Pro 전용: 비전을 통해서 내가 바라보는 나의 모습 - 5가지 특성
+  vision_self_characteristics?: string[]; // Pro 전용, 5개
+  // Pro 전용: 역사적 위인 추천
+  vision_historical_figure?: {
+    name: string;
+    reason: string;
+  }; // Pro 전용
   next_week_vision_focus: {
     focus_areas: Array<{
       area: string;
@@ -422,13 +422,17 @@ export type InsightReport = {
       connection: string;
     }>;
   };
+  // growth_insights와 next_week_focus 분리
   growth_insights: {
     key_learnings: Array<{
       learning: string;
       evidence: string;
       implication: string;
     }>;
-    next_week_focus: Array<{
+  };
+  // 다음 주 포커스는 별도 필드로 분리
+  next_week_focus: {
+    focus_areas: Array<{
       area: string;
       reason: string;
       suggested_action: string;
@@ -440,9 +444,8 @@ export type InsightReport = {
 // Execution Report (Feedback)
 // ============================================
 export type ExecutionReport = {
-  positives_top3: string[];
-  improvements_top3: string[];
-  ai_feedback_summary: string;
+  // positives_top3, improvements_top3 제거됨
+  ai_feedback_summary: string; // AI 종합 피드백 (가장 먼저 표시)
   feedback_patterns: {
     summary: string;
     positives_categories: Array<{
@@ -494,21 +497,7 @@ export type ExecutionReport = {
       };
     };
   };
-  core_feedback_themes: {
-    summary: string;
-    main_themes: Array<{
-      theme: string;
-      frequency: number;
-      evidence: string[];
-      insight: string;
-    }>;
-    visualization?: {
-      themes_timeline: Array<{
-        date: string;
-        themes: string[];
-      }>;
-    };
-  };
+  // core_feedback_themes 제거됨
   ai_message_patterns: {
     summary: string;
     common_themes: Array<{
@@ -519,7 +508,7 @@ export type ExecutionReport = {
     }>;
   };
   improvement_action_alignment: {
-    summary: string;
+    summary: string; // 설명을 더 명확하게 개선 필요
     alignment_score: {
       value: number;
       description: string;
@@ -530,18 +519,7 @@ export type ExecutionReport = {
       connection: string;
     }>;
   };
-  growth_insights: {
-    key_learnings: Array<{
-      learning: string;
-      evidence: string;
-      implication: string;
-    }>;
-    next_week_focus: Array<{
-      area: string;
-      reason: string;
-      suggested_action: string;
-    }>;
-  };
+  // growth_insights는 InsightReport로 이동됨
 };
 
 // ============================================
@@ -580,10 +558,7 @@ export type ClosingReport = {
         action_taken: string;
       }>;
     };
-    identity_evolution: {
-      summary: string;
-      evolution: string;
-    };
+    // identity_evolution 제거됨
     visualization?: {
       characteristics_radar: {
         type: "radar";

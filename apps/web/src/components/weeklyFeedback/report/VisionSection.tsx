@@ -47,8 +47,9 @@ export function VisionSection({
         <Card
           className="p-5 sm:p-6 mb-4"
           style={{
-            backgroundColor: "white",
-            border: "1px solid #E6E4DE",
+            background:
+              "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+            border: "1px solid #C5D5E5",
             borderRadius: "16px",
           }}
         >
@@ -154,7 +155,7 @@ export function VisionSection({
       {/* Pro 모드: 상세 분석 표시 */}
       {isPro && (
         <div className="space-y-6">
-          {/* Vision Keywords Trend */}
+          {/* Vision Keywords Trend - 2열 그리드 */}
           {visionReport.vision_keywords_trend &&
             visionReport.vision_keywords_trend.length > 0 && (
               <Card
@@ -166,7 +167,105 @@ export function VisionSection({
                   borderRadius: "16px",
                 }}
               >
-                <div className="flex items-start gap-3 mb-4">
+                {/* Header */}
+                <div
+                  className="pb-4 mb-4 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                      }}
+                    >
+                      <Lightbulb className="w-5 h-5 text-white" />
+                    </div>
+                    <p
+                      className="text-xs font-semibold"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      비전 키워드 트렌드
+                    </p>
+                  </div>
+                </div>
+                {/* Body - 2열 그리드 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {visionReport.vision_keywords_trend.map((keyword, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-lg"
+                      style={{
+                        backgroundColor: "#FAFAF8",
+                        border: "1px solid #EFE9E3",
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {keyword.keyword}
+                        </span>
+                        <span
+                          className="px-2 py-0.5 rounded text-xs"
+                          style={{
+                            backgroundColor: "#E8F0F8",
+                            color: "#5A7A9A",
+                          }}
+                        >
+                          {keyword.days}일
+                        </span>
+                      </div>
+                      {keyword.context && (
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          {keyword.context}
+                        </p>
+                      )}
+                      {keyword.related_keywords &&
+                        keyword.related_keywords.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {keyword.related_keywords.map((related, rIdx) => (
+                              <span
+                                key={rIdx}
+                                className="px-2 py-0.5 rounded text-xs"
+                                style={{
+                                  backgroundColor: "#E8F0F8",
+                                  color: "#5A7A9A",
+                                }}
+                              >
+                                {related}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+          {/* Goals Pattern - 2열 그리드 */}
+          {visionReport.goals_pattern && (
+            <Card
+              className="p-5 sm:p-6 relative overflow-hidden group"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
+                borderRadius: "16px",
+              }}
+            >
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                     style={{
@@ -174,18 +273,31 @@ export function VisionSection({
                         "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                     }}
                   >
-                    <Lightbulb className="w-5 h-5 text-white" />
+                    <BarChart3 className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      비전 키워드 트렌드
-                    </p>
-                    <div className="space-y-3">
-                      {visionReport.vision_keywords_trend.map(
-                        (keyword, idx) => (
+                  <p
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    목표 패턴
+                  </p>
+                </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {visionReport.goals_pattern.summary && (
+                  <p
+                    className="text-sm leading-relaxed mb-4"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {visionReport.goals_pattern.summary}
+                  </p>
+                )}
+                {visionReport.goals_pattern.goal_categories &&
+                  visionReport.goals_pattern.goal_categories.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {visionReport.goals_pattern.goal_categories.map(
+                        (category, idx) => (
                           <div
                             key={idx}
                             className="p-3 rounded-lg"
@@ -199,240 +311,54 @@ export function VisionSection({
                                 className="text-sm font-semibold"
                                 style={{ color: COLORS.text.primary }}
                               >
-                                {keyword.keyword}
+                                {category.category}
                               </span>
                               <span
                                 className="px-2 py-0.5 rounded text-xs"
                                 style={{
-                                  backgroundColor: "#E8F0F8",
+                                  backgroundColor: "#D5E5F0",
                                   color: "#5A7A9A",
                                 }}
                               >
-                                {keyword.days}일
+                                {category.count}개
                               </span>
                             </div>
-                            {keyword.context && (
-                              <p
-                                className="text-xs mb-2"
-                                style={{ color: COLORS.text.secondary }}
-                              >
-                                {keyword.context}
-                              </p>
-                            )}
-                            {keyword.related_keywords &&
-                              keyword.related_keywords.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                  {keyword.related_keywords.map(
-                                    (related, rIdx) => (
-                                      <span
-                                        key={rIdx}
-                                        className="px-2 py-0.5 rounded text-xs"
-                                        style={{
-                                          backgroundColor: "#E8F0F8",
-                                          color: "#5A7A9A",
-                                        }}
-                                      >
-                                        {related}
-                                      </span>
-                                    )
-                                  )}
+                            {Array.isArray(category.examples) &&
+                              category.examples.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                  {category.examples.map((example, eIdx) => (
+                                    <span
+                                      key={eIdx}
+                                      className="px-2 py-0.5 rounded text-xs"
+                                      style={{
+                                        backgroundColor: "white",
+                                        color: "#5A7A9A",
+                                        border: "1px solid #C5D5E5",
+                                      }}
+                                    >
+                                      {example}
+                                    </span>
+                                  ))}
                                 </div>
                               )}
+                            {category.insight && (
+                              <p
+                                className="text-xs mt-2"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {category.insight}
+                              </p>
+                            )}
                           </div>
                         )
                       )}
                     </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-          {/* Goals Pattern */}
-          {visionReport.goals_pattern && (
-            <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #C5D5E5",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <BarChart3 className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    목표 패턴
-                  </p>
-                  {visionReport.goals_pattern.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.goals_pattern.summary}
-                    </p>
                   )}
-                  {visionReport.goals_pattern.goal_categories &&
-                    visionReport.goals_pattern.goal_categories.length > 0 && (
-                      <div className="space-y-3">
-                        {visionReport.goals_pattern.goal_categories.map(
-                          (category, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-lg"
-                              style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span
-                                  className="text-sm font-semibold"
-                                  style={{ color: COLORS.text.primary }}
-                                >
-                                  {category.category}
-                                </span>
-                                <span
-                                  className="px-2 py-0.5 rounded text-xs"
-                                  style={{
-                                    backgroundColor: "#D5E5F0",
-                                    color: "#5A7A9A",
-                                  }}
-                                >
-                                  {category.count}개
-                                </span>
-                              </div>
-                              {Array.isArray(category.examples) &&
-                                category.examples.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mb-2">
-                                    {category.examples.map((example, eIdx) => (
-                                      <span
-                                        key={eIdx}
-                                        className="px-2 py-0.5 rounded text-xs"
-                                        style={{
-                                          backgroundColor: "white",
-                                          color: "#5A7A9A",
-                                          border: "1px solid #C5D5E5",
-                                        }}
-                                      >
-                                        {example}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              {category.insight && (
-                                <p
-                                  className="text-xs mt-2"
-                                  style={{ color: COLORS.text.secondary }}
-                                >
-                                  {category.insight}
-                                </p>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-                </div>
               </div>
             </Card>
           )}
 
-          {/* Self Vision Alignment */}
-          {visionReport.self_vision_alignment && (
-            <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
-                border: "1px solid #C5D5E5",
-                borderRadius: "16px",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p
-                    className="text-xs mb-3 font-semibold"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    자기 비전 정렬
-                  </p>
-                  {visionReport.self_vision_alignment.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.self_vision_alignment.summary}
-                    </p>
-                  )}
-                  {visionReport.self_vision_alignment.key_traits &&
-                    visionReport.self_vision_alignment.key_traits.length >
-                      0 && (
-                      <div className="space-y-3">
-                        {visionReport.self_vision_alignment.key_traits.map(
-                          (trait, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-lg"
-                              style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span
-                                  className="text-sm font-semibold"
-                                  style={{ color: COLORS.text.primary }}
-                                >
-                                  {trait.trait}
-                                </span>
-                                <span
-                                  className="px-2 py-0.5 rounded text-xs"
-                                  style={{
-                                    backgroundColor: "#E8F0F8",
-                                    color: "#5A7A9A",
-                                  }}
-                                >
-                                  {trait.frequency}회
-                                </span>
-                              </div>
-                              {trait.evidence && (
-                                <p
-                                  className="text-xs"
-                                  style={{ color: COLORS.text.secondary }}
-                                >
-                                  {trait.evidence}
-                                </p>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-                </div>
-              </div>
-            </Card>
-          )}
+          {/* self_vision_alignment 제거됨 */}
 
           {/* Dreamer Traits Evolution */}
           {visionReport.dreamer_traits_evolution && (
@@ -445,81 +371,88 @@ export function VisionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     꿈꾸는 자 특성 진화
                   </p>
-                  {visionReport.dreamer_traits_evolution.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.dreamer_traits_evolution.summary}
-                    </p>
-                  )}
-                  {visionReport.dreamer_traits_evolution.common_traits &&
-                    visionReport.dreamer_traits_evolution.common_traits.length >
-                      0 && (
-                      <div className="space-y-2">
-                        {visionReport.dreamer_traits_evolution.common_traits.map(
-                          (trait, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-start gap-2 p-2 rounded-lg"
-                              style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
-                              }}
-                            >
-                              <span
-                                className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                                style={{
-                                  backgroundColor: "#A3BFD9",
-                                }}
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span
-                                    className="text-sm font-medium"
-                                    style={{ color: COLORS.text.primary }}
-                                  >
-                                    {trait.trait}
-                                  </span>
-                                  <span
-                                    className="text-xs"
-                                    style={{ color: COLORS.text.secondary }}
-                                  >
-                                    ({trait.frequency}회)
-                                  </span>
-                                </div>
-                                {trait.insight && (
-                                  <p
-                                    className="text-xs"
-                                    style={{ color: COLORS.text.secondary }}
-                                  >
-                                    {trait.insight}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
                 </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {visionReport.dreamer_traits_evolution.summary && (
+                  <p
+                    className="text-sm leading-relaxed mb-4"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {visionReport.dreamer_traits_evolution.summary}
+                  </p>
+                )}
+                {visionReport.dreamer_traits_evolution.common_traits &&
+                  visionReport.dreamer_traits_evolution.common_traits.length >
+                    0 && (
+                    <div className="space-y-2">
+                      {visionReport.dreamer_traits_evolution.common_traits.map(
+                        (trait, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2 p-2 rounded-lg"
+                            style={{
+                              backgroundColor: "#FAFAF8",
+                              border: "1px solid #EFE9E3",
+                            }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: "#A3BFD9",
+                              }}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span
+                                  className="text-sm font-medium"
+                                  style={{ color: COLORS.text.primary }}
+                                >
+                                  {trait.trait}
+                                </span>
+                                <span
+                                  className="text-xs"
+                                  style={{ color: COLORS.text.secondary }}
+                                >
+                                  ({trait.frequency}회)
+                                </span>
+                              </div>
+                              {trait.insight && (
+                                <p
+                                  className="text-xs"
+                                  style={{ color: COLORS.text.secondary }}
+                                >
+                                  {trait.insight}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
               </div>
             </Card>
           )}
@@ -535,84 +468,209 @@ export function VisionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                    }}
+                  >
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     AI 피드백 패턴
                   </p>
-                  {visionReport.ai_feedback_patterns.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.ai_feedback_patterns.summary}
-                    </p>
-                  )}
-                  {visionReport.ai_feedback_patterns.common_themes &&
-                    visionReport.ai_feedback_patterns.common_themes.length >
-                      0 && (
-                      <div className="space-y-3">
-                        {visionReport.ai_feedback_patterns.common_themes.map(
-                          (theme, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-lg"
-                              style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span
-                                  className="text-sm font-semibold"
-                                  style={{ color: COLORS.text.primary }}
-                                >
-                                  {theme.theme}
-                                </span>
-                                <span
-                                  className="px-2 py-0.5 rounded text-xs"
-                                  style={{
-                                    backgroundColor: "#E8F0F8",
-                                    color: "#5A7A9A",
-                                  }}
-                                >
-                                  {theme.frequency}회
-                                </span>
-                              </div>
-                              {theme.example && (
-                                <p
-                                  className="text-xs mb-2"
-                                  style={{ color: COLORS.text.secondary }}
-                                >
-                                  예시: {theme.example}
-                                </p>
-                              )}
-                              {theme.insight && (
-                                <p
-                                  className="text-xs"
-                                  style={{ color: COLORS.text.secondary }}
-                                >
-                                  {theme.insight}
-                                </p>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
                 </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {visionReport.ai_feedback_patterns.summary && (
+                  <p
+                    className="text-sm leading-relaxed mb-4"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {visionReport.ai_feedback_patterns.summary}
+                  </p>
+                )}
+                {visionReport.ai_feedback_patterns.common_themes &&
+                  visionReport.ai_feedback_patterns.common_themes.length >
+                    0 && (
+                    <div className="space-y-3">
+                      {visionReport.ai_feedback_patterns.common_themes.map(
+                        (theme, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-lg"
+                            style={{
+                              backgroundColor: "#FAFAF8",
+                              border: "1px solid #EFE9E3",
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span
+                                className="text-sm font-semibold"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {theme.theme}
+                              </span>
+                              <span
+                                className="px-2 py-0.5 rounded text-xs"
+                                style={{
+                                  backgroundColor: "#E8F0F8",
+                                  color: "#5A7A9A",
+                                }}
+                              >
+                                {theme.frequency}회
+                              </span>
+                            </div>
+                            {theme.example && (
+                              <p
+                                className="text-xs mb-2"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                예시: {theme.example}
+                              </p>
+                            )}
+                            {theme.insight && (
+                              <p
+                                className="text-xs"
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                {theme.insight}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+              </div>
+            </Card>
+          )}
+
+          {/* 비전을 통해서 내가 바라보는 나의 모습 - Pro 전용 */}
+          {visionReport.vision_self_characteristics &&
+            visionReport.vision_self_characteristics.length > 0 && (
+              <Card
+                className="p-5 sm:p-6 relative overflow-hidden group"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #C5D5E5",
+                  borderRadius: "16px",
+                }}
+              >
+                {/* Header */}
+                <div
+                  className="pb-4 mb-4 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                      }}
+                    >
+                      <Star className="w-5 h-5 text-white" />
+                    </div>
+                    <p
+                      className="text-xs font-semibold"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      비전을 통해서 내가 바라보는 나의 모습
+                    </p>
+                  </div>
+                </div>
+                {/* Body */}
+                <div className="pt-0">
+                  <p
+                    className="text-sm mb-4 leading-relaxed"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    이번 주 루틴을 보아하니, 나는 이런 일상을 보낸 사람이었어요
+                  </p>
+                  <ul className="space-y-3">
+                    {visionReport.vision_self_characteristics.map(
+                      (characteristic, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-3"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          <span
+                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: "#A3BFD9" }}
+                          />
+                          <span className="text-sm leading-relaxed">
+                            {characteristic}
+                          </span>
+                        </li>
+                      )
+                    )}
+                  </ul>
+                </div>
+              </Card>
+            )}
+
+          {/* 역사적 위인 추천 - Pro 전용 */}
+          {visionReport.vision_historical_figure && (
+            <Card
+              className="p-5 sm:p-6 relative overflow-hidden group"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                border: "1px solid #C5D5E5",
+                borderRadius: "16px",
+              }}
+            >
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-white" />
+                  </div>
+                  <p
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    역사적 위인 추천
+                  </p>
+                </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                <p
+                  className="text-lg font-semibold mb-3"
+                  style={{ color: COLORS.text.primary }}
+                >
+                  {visionReport.vision_historical_figure.name}
+                </p>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: COLORS.text.secondary, lineHeight: "1.7" }}
+                >
+                  {visionReport.vision_historical_figure.reason}
+                </p>
               </div>
             </Card>
           )}
@@ -628,161 +686,167 @@ export function VisionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <CheckCircle2 className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                    }}
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     비전-행동 정렬
                   </p>
-                  {visionReport.vision_action_alignment.summary && (
+                </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {visionReport.vision_action_alignment.summary && (
+                  <p
+                    className="text-sm leading-relaxed mb-4"
+                    style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                  >
+                    {visionReport.vision_action_alignment.summary}
+                  </p>
+                )}
+                {visionReport.vision_action_alignment.alignment_score && (
+                  <div
+                    className="mb-4 p-4 rounded-lg"
+                    style={{
+                      backgroundColor: COLORS.background.base,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="text-xs font-medium"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          정렬 점수
+                        </span>
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: "#5A7A9A" }}
+                        >
+                          {(() => {
+                            const score =
+                              visionReport.vision_action_alignment
+                                .alignment_score.value;
+                            // 비전-행동 정렬 점수는 0-100 사이의 값
+                            const percentage = Math.round(score);
+                            return `${percentage} / 100`;
+                          })()}
+                        </span>
+                      </div>
+                      {/* 프로그레스 바 */}
+                      <div className="relative">
+                        <div
+                          className="w-full h-4 rounded-full overflow-hidden"
+                          style={{
+                            backgroundColor: COLORS.border.light,
+                          }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(
+                                  0,
+                                  visionReport.vision_action_alignment
+                                    .alignment_score.value
+                                )
+                              )}%`,
+                              background: `linear-gradient(90deg, #A3BFD9 0%, #8FA8C7 100%)`,
+                              boxShadow: `0 2px 4px rgba(163, 191, 217, 0.4)`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <p
-                      className="text-sm leading-relaxed mb-4"
-                      style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
-                    >
-                      {visionReport.vision_action_alignment.summary}
-                    </p>
-                  )}
-                  {visionReport.vision_action_alignment.alignment_score && (
-                    <div
-                      className="mb-4 p-4 rounded-lg"
+                      className="text-xs leading-relaxed"
                       style={{
-                        backgroundColor: COLORS.background.base,
-                        border: `1px solid ${COLORS.border.light}`,
+                        color: COLORS.text.secondary,
+                        lineHeight: "1.6",
                       }}
                     >
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span
-                            className="text-xs font-medium"
-                            style={{ color: COLORS.text.secondary }}
-                          >
-                            정렬 점수
-                          </span>
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "#5A7A9A" }}
-                          >
-                            {(() => {
-                              const score =
-                                visionReport.vision_action_alignment
-                                  .alignment_score.value;
-                              // 비전-행동 정렬 점수는 0-100 사이의 값
-                              const percentage = Math.round(score);
-                              return `${percentage} / 100`;
-                            })()}
-                          </span>
-                        </div>
-                        {/* 프로그레스 바 */}
-                        <div className="relative">
-                          <div
-                            className="w-full h-4 rounded-full overflow-hidden"
-                            style={{
-                              backgroundColor: COLORS.border.light,
-                            }}
-                          >
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.min(
-                                  100,
-                                  Math.max(
-                                    0,
-                                    visionReport.vision_action_alignment
-                                      .alignment_score.value
-                                  )
-                                )}%`,
-                                background: `linear-gradient(90deg, #A3BFD9 0%, #8FA8C7 100%)`,
-                                boxShadow: `0 2px 4px rgba(163, 191, 217, 0.4)`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      {
+                        visionReport.vision_action_alignment.alignment_score
+                          .description
+                      }
+                    </p>
+                  </div>
+                )}
+                {visionReport.vision_action_alignment.strengths &&
+                  visionReport.vision_action_alignment.strengths.length > 0 && (
+                    <div className="mb-3">
                       <p
-                        className="text-xs leading-relaxed"
-                        style={{
-                          color: COLORS.text.secondary,
-                          lineHeight: "1.6",
-                        }}
+                        className="text-xs font-medium mb-2"
+                        style={{ color: COLORS.text.secondary }}
                       >
-                        {
-                          visionReport.vision_action_alignment.alignment_score
-                            .description
-                        }
+                        강점
                       </p>
+                      <div className="flex flex-wrap gap-2">
+                        {visionReport.vision_action_alignment.strengths.map(
+                          (strength, idx) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1.5 rounded-lg text-xs"
+                              style={{
+                                backgroundColor: "#E8F0F8",
+                                color: "#5A7A9A",
+                                border: "1px solid #C5D5E5",
+                              }}
+                            >
+                              {strength}
+                            </span>
+                          )
+                        )}
+                      </div>
                     </div>
                   )}
-                  {visionReport.vision_action_alignment.strengths &&
-                    visionReport.vision_action_alignment.strengths.length >
-                      0 && (
-                      <div className="mb-3">
-                        <p
-                          className="text-xs font-medium mb-2"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          강점
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {visionReport.vision_action_alignment.strengths.map(
-                            (strength, idx) => (
+                {visionReport.vision_action_alignment.gaps &&
+                  visionReport.vision_action_alignment.gaps.length > 0 && (
+                    <div>
+                      <p
+                        className="text-xs font-medium mb-2"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        개선 영역
+                      </p>
+                      <ul className="space-y-1.5 ml-4">
+                        {visionReport.vision_action_alignment.gaps.map(
+                          (gap, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2 text-xs"
+                              style={{ color: COLORS.text.secondary }}
+                            >
                               <span
-                                key={idx}
-                                className="px-3 py-1.5 rounded-lg text-xs"
+                                className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
                                 style={{
-                                  backgroundColor: "#E8F0F8",
-                                  color: "#5A7A9A",
-                                  border: "1px solid #C5D5E5",
+                                  backgroundColor: "#A3BFD9",
                                 }}
-                              >
-                                {strength}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  {visionReport.vision_action_alignment.gaps &&
-                    visionReport.vision_action_alignment.gaps.length > 0 && (
-                      <div>
-                        <p
-                          className="text-xs font-medium mb-2"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          개선 영역
-                        </p>
-                        <ul className="space-y-1.5 ml-4">
-                          {visionReport.vision_action_alignment.gaps.map(
-                            (gap, idx) => (
-                              <li
-                                key={idx}
-                                className="flex items-start gap-2 text-xs"
-                                style={{ color: COLORS.text.secondary }}
-                              >
-                                <span
-                                  className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                                  style={{
-                                    backgroundColor: "#A3BFD9",
-                                  }}
-                                />
-                                <span style={{ lineHeight: "1.6" }}>{gap}</span>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                </div>
+                              />
+                              <span style={{ lineHeight: "1.6" }}>{gap}</span>
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
               </div>
             </Card>
           )}
@@ -798,102 +862,109 @@ export function VisionSection({
                 borderRadius: "16px",
               }}
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
-                  }}
-                >
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
+              {/* Header */}
+              <div
+                className="pb-4 mb-4 border-b"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                    }}
+                  >
+                    <Target className="w-5 h-5 text-white" />
+                  </div>
                   <p
-                    className="text-xs mb-3 font-semibold"
+                    className="text-xs font-semibold"
                     style={{ color: COLORS.text.secondary }}
                   >
                     다음 주 비전 포커스
                   </p>
-                  {visionReport.next_week_vision_focus.focus_areas &&
-                    visionReport.next_week_vision_focus.focus_areas.length >
-                      0 && (
-                      <div className="space-y-3 mb-4">
-                        {visionReport.next_week_vision_focus.focus_areas.map(
-                          (area, idx) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-lg"
-                              style={{
-                                backgroundColor: "#FAFAF8",
-                                border: "1px solid #EFE9E3",
-                              }}
+                </div>
+              </div>
+              {/* Body */}
+              <div className="pt-0">
+                {visionReport.next_week_vision_focus.focus_areas &&
+                  visionReport.next_week_vision_focus.focus_areas.length >
+                    0 && (
+                    <div className="space-y-3 mb-4">
+                      {visionReport.next_week_vision_focus.focus_areas.map(
+                        (area, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-lg"
+                            style={{
+                              backgroundColor: "#FAFAF8",
+                              border: "1px solid #EFE9E3",
+                            }}
+                          >
+                            <p
+                              className="text-sm font-semibold mb-1"
+                              style={{ color: COLORS.text.primary }}
                             >
+                              {area.area}
+                            </p>
+                            {area.reason && (
                               <p
-                                className="text-sm font-semibold mb-1"
-                                style={{ color: COLORS.text.primary }}
+                                className="text-xs mb-2"
+                                style={{ color: COLORS.text.secondary }}
                               >
-                                {area.area}
+                                {area.reason}
                               </p>
-                              {area.reason && (
+                            )}
+                            {area.suggested_action && (
+                              <div className="flex items-start gap-2 mt-2">
+                                <span
+                                  className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                                  style={{
+                                    backgroundColor: "#A3BFD9",
+                                  }}
+                                />
                                 <p
-                                  className="text-xs mb-2"
+                                  className="text-xs"
                                   style={{ color: COLORS.text.secondary }}
                                 >
-                                  {area.reason}
+                                  {area.suggested_action}
                                 </p>
-                              )}
-                              {area.suggested_action && (
-                                <div className="flex items-start gap-2 mt-2">
-                                  <span
-                                    className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                                    style={{
-                                      backgroundColor: "#A3BFD9",
-                                    }}
-                                  />
-                                  <p
-                                    className="text-xs"
-                                    style={{ color: COLORS.text.secondary }}
-                                  >
-                                    {area.suggested_action}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                {visionReport.next_week_vision_focus.maintain_momentum &&
+                  visionReport.next_week_vision_focus.maintain_momentum.length >
+                    0 && (
+                    <div>
+                      <p
+                        className="text-xs font-medium mb-2"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        유지할 모멘텀
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {visionReport.next_week_vision_focus.maintain_momentum.map(
+                          (momentum, idx) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1.5 rounded-lg text-xs"
+                              style={{
+                                backgroundColor: "#E8F0F8",
+                                color: "#5A7A9A",
+                                border: "1px solid #C5D5E5",
+                              }}
+                            >
+                              {momentum}
+                            </span>
                           )
                         )}
                       </div>
-                    )}
-                  {visionReport.next_week_vision_focus.maintain_momentum &&
-                    visionReport.next_week_vision_focus.maintain_momentum
-                      .length > 0 && (
-                      <div>
-                        <p
-                          className="text-xs font-medium mb-2"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          유지할 모멘텀
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {visionReport.next_week_vision_focus.maintain_momentum.map(
-                            (momentum, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1.5 rounded-lg text-xs"
-                                style={{
-                                  backgroundColor: "#E8F0F8",
-                                  color: "#5A7A9A",
-                                  border: "1px solid #C5D5E5",
-                                }}
-                              >
-                                {momentum}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                </div>
+                    </div>
+                  )}
               </div>
             </Card>
           )}
