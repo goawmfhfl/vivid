@@ -35,30 +35,6 @@ export function getSummaryReportSchema(isPro: boolean) {
               maxItems: 5,
               description: "패턴과 강점 배열",
             },
-            risks_and_challenges: {
-              type: "array",
-              items: { type: "string" },
-              maxItems: 5,
-              description: "리스크와 도전 배열",
-            },
-            opportunities_and_suggestions: {
-              type: "array",
-              items: { type: "string" },
-              maxItems: 5,
-              description: "기회와 제안 배열",
-            },
-            priority_recommendations: {
-              type: "array",
-              items: { type: "string" },
-              maxItems: 5,
-              description: "우선순위 권장 배열",
-            },
-            kpi_suggestions: {
-              type: "array",
-              items: { type: "string" },
-              maxItems: 5,
-              description: "KPI 제안 배열",
-            },
             mindset_and_tips: {
               type: "array",
               items: { type: "string" },
@@ -74,10 +50,6 @@ export function getSummaryReportSchema(isPro: boolean) {
           "key_points",
           "trend_analysis",
           "patterns_and_strengths",
-          "risks_and_challenges",
-          "opportunities_and_suggestions",
-          "priority_recommendations",
-          "kpi_suggestions",
           "mindset_and_tips",
         ]
       : ["summary", "key_points", "trend_analysis"],

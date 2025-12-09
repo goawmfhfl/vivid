@@ -7,8 +7,6 @@ import {
   Target,
   Sparkles,
   ArrowRight,
-  TrendingUp,
-  Star,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { ExecutionReport } from "@/types/weekly-feedback";
@@ -36,15 +34,14 @@ type ExecutionSectionProps = {
 
 const EXECUTION_COLOR = COLORS.brand.primary; // #6B7A6F
 const EXECUTION_COLOR_DARK = COLORS.brand.dark; // #5A6B5A
-// 프로젝트 브랜드 색상과 조화로운 그린 계열 팔레트
+// 피드백/개선점에 어울리는 브랜드 그린 계열 그라데이션 팔레트
+// 기본 색상: rgb(107, 122, 111) = #6B7A6F를 기준으로 명암 조절
 const EXECUTION_COLORS = [
-  COLORS.brand.primary, // #6B7A6F - 다크 그린
-  COLORS.brand.secondary, // #7C9A7C - 미드 그린
-  COLORS.brand.light, // #A8BBA8 - 라이트 그린
-  "#8FA38F", // 중간-다크 그린
-  "#9DB29D", // 중간 그린
-  "#B0C4B0", // 연한 그린
-  "#C5D5C5", // 매우 연한 그린
+  "#9DB29D", // 가장 밝은 톤 (기본 색상의 +30% 밝기)
+  "#8FA38F", // 밝은 톤 (기본 색상의 +15% 밝기)
+  "#6B7A6F", // 기본 색상 (중간 톤) - rgb(107, 122, 111)
+  "#5A6B5A", // 어두운 톤 (기본 색상의 -15% 밝기) - rgb(90, 107, 90)
+  "#4A5A4A", // 가장 어두운 톤 (기본 색상의 -30% 밝기)
 ];
 
 // 모던한 차트 스타일을 위한 커스텀 컴포넌트
@@ -149,7 +146,7 @@ export function ExecutionSection({
       {/* AI Feedback Summary - 가장 먼저 표시 (모든 사용자) */}
       {executionReport.ai_feedback_summary && (
         <Card
-          className="p-5 sm:p-6 mb-4"
+          className="p-5 sm:p-6 mb-4 mb-3 sm:mb-4"
           style={{
             background:
               "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -270,7 +267,7 @@ export function ExecutionSection({
 
       {/* 잘한 점 카테고리 분포 - Pro 전용 */}
       {isPro && executionReport.feedback_patterns && (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {executionReport.feedback_patterns.visualization
             ?.positives_categories_chart && (
             <Card
@@ -353,7 +350,6 @@ export function ExecutionSection({
                                 <Cell
                                   key={`cell-${index}`}
                                   fill={
-                                    entry.color ||
                                     EXECUTION_COLORS[
                                       index % EXECUTION_COLORS.length
                                     ]
@@ -411,10 +407,6 @@ export function ExecutionSection({
                                   className="w-2 h-2 rounded-full flex-shrink-0"
                                   style={{
                                     backgroundColor:
-                                      executionReport.feedback_patterns
-                                        .visualization
-                                        ?.positives_categories_chart?.data[idx]
-                                        ?.color ||
                                       EXECUTION_COLORS[
                                         idx % EXECUTION_COLORS.length
                                       ],
@@ -491,7 +483,7 @@ export function ExecutionSection({
           {executionReport.feedback_patterns.visualization
             ?.improvements_categories_chart && (
             <Card
-              className="p-5 sm:p-6 relative overflow-hidden group"
+              className="p-5 sm:p-6 relative overflow-hidden group mt-6 mb-3 sm:mb-4"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -508,7 +500,7 @@ export function ExecutionSection({
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
                     style={{
-                      background: `linear-gradient(135deg, ${COLORS.brand.secondary} 0%, ${COLORS.brand.primary} 100%)`,
+                      background: `linear-gradient(135deg, rgb(107, 122, 111) 0%, rgb(90, 107, 90) 100%)`,
                     }}
                   >
                     <XCircle className="w-5 h-5 text-white" />
@@ -535,8 +527,10 @@ export function ExecutionSection({
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={
-                          executionReport.feedback_patterns.visualization
-                            .improvements_categories_chart.data
+                          executionReport.feedback_patterns.visualization.improvements_categories_chart.data.slice(
+                            0,
+                            5
+                          ) // 최대 5개로 제한
                         }
                         margin={{
                           top: 20,
@@ -555,13 +549,13 @@ export function ExecutionSection({
                           >
                             <stop
                               offset="0%"
-                              stopColor={COLORS.brand.secondary}
+                              stopColor="rgb(107, 122, 111)"
                               stopOpacity={1}
                             />
                             <stop
                               offset="100%"
-                              stopColor={COLORS.brand.primary}
-                              stopOpacity={0.8}
+                              stopColor="rgb(90, 107, 90)"
+                              stopOpacity={0.9}
                             />
                           </linearGradient>
                         </defs>
@@ -593,7 +587,6 @@ export function ExecutionSection({
                         <Tooltip content={<CustomTooltip />} />
                         <Bar
                           dataKey="count"
-                          fill="url(#improvementsBarGradient)"
                           radius={[12, 12, 0, 0]}
                           animationDuration={800}
                           animationBegin={0}
@@ -601,6 +594,18 @@ export function ExecutionSection({
                             filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
                           }}
                         >
+                          {executionReport.feedback_patterns.visualization.improvements_categories_chart.data
+                            .slice(0, 5)
+                            .map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={
+                                  EXECUTION_COLORS[
+                                    index % EXECUTION_COLORS.length
+                                  ]
+                                }
+                              />
+                            ))}
                           <LabelList
                             dataKey="count"
                             position="top"
@@ -615,13 +620,15 @@ export function ExecutionSection({
                     </ResponsiveContainer>
                   </div>
                 </div>
-                {/* 카테고리 상세 정보 */}
+
+                {/* 카테고리 상세 정보 - 최대 5개 */}
                 {executionReport.feedback_patterns.improvements_categories &&
                   executionReport.feedback_patterns.improvements_categories
                     .length > 0 && (
                     <div className="space-y-3">
-                      {executionReport.feedback_patterns.improvements_categories.map(
-                        (category, idx) => (
+                      {executionReport.feedback_patterns.improvements_categories
+                        .slice(0, 5)
+                        .map((category, idx) => (
                           <div
                             key={idx}
                             className="p-4 rounded-lg transition-all hover:shadow-md"
@@ -636,11 +643,9 @@ export function ExecutionSection({
                                   className="w-2 h-2 rounded-full flex-shrink-0"
                                   style={{
                                     backgroundColor:
-                                      executionReport.feedback_patterns
-                                        .visualization
-                                        ?.improvements_categories_chart?.data[
-                                        idx
-                                      ]?.color || COLORS.brand.secondary,
+                                      EXECUTION_COLORS[
+                                        idx % EXECUTION_COLORS.length
+                                      ],
                                   }}
                                 />
                                 <span
@@ -653,8 +658,8 @@ export function ExecutionSection({
                               <span
                                 className="px-3 py-1 rounded-full text-xs font-semibold"
                                 style={{
-                                  backgroundColor: "#E8F0E8",
-                                  color: COLORS.brand.primary,
+                                  backgroundColor: "rgba(107, 122, 111, 0.15)",
+                                  color: "#5A6B5A",
                                 }}
                               >
                                 {category.count}개
@@ -702,8 +707,7 @@ export function ExecutionSection({
                               </p>
                             )}
                           </div>
-                        )
-                      )}
+                        ))}
                     </div>
                   )}
               </div>
@@ -715,7 +719,7 @@ export function ExecutionSection({
       {/* Person Traits Analysis - 정체성 분석 */}
       {executionReport.person_traits_analysis && (
         <Card
-          className="p-5 sm:p-6 relative overflow-hidden group"
+          className="p-5 sm:p-6 relative overflow-hidden group mb-3 sm:mb-4"
           style={{
             background:
               "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -811,7 +815,7 @@ export function ExecutionSection({
       {/* Improvement Action Alignment - 개선-행동 정렬 */}
       {executionReport.improvement_action_alignment && (
         <Card
-          className="p-5 sm:p-6 relative overflow-hidden group"
+          className="p-5 sm:p-6 relative overflow-hidden group mb-3 sm:mb-4"
           style={{
             background:
               "linear-gradient(135deg, rgba(107, 122, 111, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
@@ -903,75 +907,40 @@ export function ExecutionSection({
                       })()}
                     </span>
                   </div>
-                  {/* 별표 표시 */}
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const score =
-                        executionReport.improvement_action_alignment
-                          .alignment_score.value;
-                      // 점수가 5점 만점 기준인지 확인
-                      const maxScore = score <= 5 ? 5 : 100;
-                      const normalizedScore = score <= 5 ? score : score / 20; // 100점 만점을 5점 만점으로 변환
-                      const fullStars = Math.floor(normalizedScore);
-                      const hasHalfStar =
-                        normalizedScore % 1 >= 0.5 &&
-                        normalizedScore < maxScore;
-
-                      return (
-                        <>
-                          {Array.from({ length: maxScore }).map((_, idx) => {
-                            if (idx < fullStars) {
-                              // 채워진 별
-                              return (
-                                <Star
-                                  key={idx}
-                                  className="w-5 h-5 fill-current"
-                                  style={{ color: EXECUTION_COLOR }}
-                                />
-                              );
-                            } else if (idx === fullStars && hasHalfStar) {
-                              // 반 별
-                              return (
-                                <div
-                                  key={idx}
-                                  className="relative w-5 h-5"
-                                  style={{ color: EXECUTION_COLOR }}
-                                >
-                                  <Star
-                                    className="w-5 h-5 absolute"
-                                    style={{
-                                      color: COLORS.border.light,
-                                      fill: "none",
-                                    }}
-                                  />
-                                  <div
-                                    className="absolute inset-0 overflow-hidden"
-                                    style={{ width: "50%" }}
-                                  >
-                                    <Star
-                                      className="w-5 h-5 fill-current"
-                                      style={{ color: EXECUTION_COLOR }}
-                                    />
-                                  </div>
-                                </div>
-                              );
+                  {/* ProgressBar */}
+                  <div className="relative">
+                    <div
+                      className="w-full h-4 rounded-full overflow-hidden"
+                      style={{
+                        backgroundColor: COLORS.border.light,
+                      }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-500 relative"
+                        style={{
+                          width: `${(() => {
+                            const score =
+                              executionReport.improvement_action_alignment
+                                .alignment_score.value;
+                            // 정렬 점수는 별도로 처리: 0-1 사이면 비율로 해석, 1-5 사이면 5점 만점, 5-100 사이면 이미 100점 만점
+                            let percentage: number;
+                            if (score > 0 && score <= 1) {
+                              // 0-1 사이: 비율로 해석 (0.9 = 90%)
+                              percentage = score * 100;
+                            } else if (score > 1 && score <= 5) {
+                              // 1-5 사이: 5점 만점으로 해석 (4.5 / 5 = 90%)
+                              percentage = (score / 5) * 100;
                             } else {
-                              // 빈 별
-                              return (
-                                <Star
-                                  key={idx}
-                                  className="w-5 h-5"
-                                  style={{
-                                    color: COLORS.border.light,
-                                    fill: "none",
-                                  }}
-                                />
-                              );
+                              // 5-100 사이: 이미 100점 만점
+                              percentage = score;
                             }
-                          })}
-                        </>
-                      );
-                    })()}
+                            return Math.min(100, Math.max(0, percentage));
+                          })()}%`,
+                          background: `linear-gradient(90deg, ${EXECUTION_COLOR} 0%, ${EXECUTION_COLOR_DARK} 100%)`,
+                          boxShadow: `0 2px 4px ${EXECUTION_COLOR}40`,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <p

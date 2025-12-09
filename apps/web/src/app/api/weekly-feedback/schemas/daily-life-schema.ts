@@ -66,6 +66,8 @@ export function getDailyLifeReportSchema(isPro: boolean) {
       summary: {
         type: "string",
         maxLength: isPro ? 300 : 150,
+        description:
+          "이번 주를 요약한 전체 요약. 날짜를 언급할 때는 '12/01(월)' 또는 '월요일(12/01)' 형식으로 요일 정보를 반드시 포함하세요.",
       },
       daily_summaries_trend: {
         type: "object",

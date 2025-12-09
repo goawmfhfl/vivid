@@ -375,7 +375,9 @@ export function buildDailyLifePrompt(
     }
   });
 
-  prompt += `\n\n위 데이터를 종합하여 주간 일상 리포트(daily_life_report)를 생성하세요. 패턴을 발견하고 트렌드 분석을 포함하세요.`;
+  prompt += `\n\n위 데이터를 종합하여 주간 일상 리포트(daily_life_report)를 생성하세요. 패턴을 발견하고 트렌드 분석을 포함하세요.
+
+**중요**: summary 필드에서 날짜를 언급할 때는 반드시 요일 정보를 포함하세요. 예: "이번 주(월요일(12/01)–일요일(12/07))" 또는 "12/01(월)–12/07(일)" 형식으로 작성하세요.`;
   return prompt;
 }
 

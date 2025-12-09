@@ -17,10 +17,6 @@ export type SummaryReport = {
   trend_analysis: string | null; // 트렌드 분석 (Pro 전용) - 배열 구조로 변경
   // Pro 전용: 배열 구조로 재구성
   patterns_and_strengths?: string[]; // 패턴과 강점 배열
-  risks_and_challenges?: string[]; // 리스크와 도전 배열
-  opportunities_and_suggestions?: string[]; // 기회와 제안 배열
-  priority_recommendations?: string[]; // 우선순위 권장 배열
-  kpi_suggestions?: string[]; // KPI 제안 배열
   mindset_and_tips?: string[]; // 마인드셋과 실천 팁 배열
 };
 
@@ -444,7 +440,6 @@ export type InsightReport = {
 // Execution Report (Feedback)
 // ============================================
 export type ExecutionReport = {
-  // positives_top3, improvements_top3 제거됨
   ai_feedback_summary: string; // AI 종합 피드백 (가장 먼저 표시)
   feedback_patterns: {
     summary: string;

@@ -818,7 +818,9 @@ async function generateExecutionReport(
     typeof response === "object" &&
     response !== null &&
     !Array.isArray(response) &&
-    ("positives_top3" in response || "improvements_top3" in response) &&
+    ("ai_feedback_summary" in response ||
+      "feedback_patterns" in response ||
+      "person_traits_analysis" in response) &&
     !("execution_report" in response)
   ) {
     console.log(
@@ -1102,19 +1104,6 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     closing_report: closingReport,
     is_ai_generated: true,
   };
-
-  console.log(
-    "[generateWeeklyFeedbackFromDailyWithProgress] 모든 섹션 생성 완료:",
-    {
-      summary_report: !!weeklyFeedback.summary_report,
-      daily_life_report: !!weeklyFeedback.daily_life_report,
-      emotion_report: !!weeklyFeedback.emotion_report,
-      vision_report: !!weeklyFeedback.vision_report,
-      insight_report: !!weeklyFeedback.insight_report,
-      execution_report: !!weeklyFeedback.execution_report,
-      closing_report: !!weeklyFeedback.closing_report,
-    }
-  );
 
   return weeklyFeedback;
 }

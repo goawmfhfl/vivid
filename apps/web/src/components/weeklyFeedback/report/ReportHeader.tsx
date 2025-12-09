@@ -4,9 +4,12 @@ import {
   Sparkles,
   Lock,
   ArrowRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import type { SummaryReport } from "@/types/weekly-feedback";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type ReportHeaderProps = {
   weekRange: {
@@ -23,6 +26,8 @@ export function ReportHeader({
   isPro = false,
 }: ReportHeaderProps) {
   const router = useRouter();
+  const [isPatternsOpen, setIsPatternsOpen] = useState(false);
+  const [isMindsetOpen, setIsMindsetOpen] = useState(false);
   return (
     <div className="mb-8 sm:mb-10">
       {/* Main Header Card */}
@@ -112,10 +117,6 @@ export function ReportHeader({
         {isPro &&
           (summaryReport?.trend_analysis ||
             summaryReport?.patterns_and_strengths ||
-            summaryReport?.risks_and_challenges ||
-            summaryReport?.opportunities_and_suggestions ||
-            summaryReport?.priority_recommendations ||
-            summaryReport?.kpi_suggestions ||
             summaryReport?.mindset_and_tips) && (
             <div className="space-y-4">
               {/* Trend Analysis (간결화된 버전) */}
@@ -181,182 +182,102 @@ export function ReportHeader({
                 </div>
               )}
 
-              {/* 배열 구조 데이터 */}
+              {/* 배열 구조 데이터 - 드롭다운 형식 */}
               {summaryReport?.patterns_and_strengths &&
                 summaryReport.patterns_and_strengths.length > 0 && (
                   <div
-                    className="py-4 px-6 rounded-2xl"
+                    className="rounded-2xl overflow-hidden"
                     style={{
                       background: "rgba(255, 255, 255, 0.15)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                     }}
                   >
-                    <p
-                      className="text-xs mb-3 font-semibold"
+                    <button
+                      onClick={() => setIsPatternsOpen(!isPatternsOpen)}
+                      className="w-full py-4 px-6 flex items-center justify-between transition-all hover:bg-white/10"
                       style={{ opacity: 0.9 }}
                     >
-                      패턴과 강점
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.patterns_and_strengths.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <span style={{ opacity: 0.8 }}>•</span>
-                          <span style={{ lineHeight: "1.6" }}>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-              {summaryReport?.risks_and_challenges &&
-                summaryReport.risks_and_challenges.length > 0 && (
-                  <div
-                    className="py-4 px-6 rounded-2xl"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.15)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                    }}
-                  >
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ opacity: 0.9 }}
-                    >
-                      리스크와 도전
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.risks_and_challenges.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <span style={{ opacity: 0.8 }}>•</span>
-                          <span style={{ lineHeight: "1.6" }}>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-              {summaryReport?.opportunities_and_suggestions &&
-                summaryReport.opportunities_and_suggestions.length > 0 && (
-                  <div
-                    className="py-4 px-6 rounded-2xl"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.15)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                    }}
-                  >
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ opacity: 0.9 }}
-                    >
-                      기회와 제안
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.opportunities_and_suggestions.map(
-                        (item, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2 text-sm"
-                          >
-                            <span style={{ opacity: 0.8 }}>•</span>
-                            <span style={{ lineHeight: "1.6" }}>{item}</span>
-                          </li>
-                        )
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ opacity: 0.9 }}
+                      >
+                        패턴과 강점
+                      </p>
+                      {isPatternsOpen ? (
+                        <ChevronUp className="w-4 h-4 transition-transform duration-300" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 transition-transform duration-300" />
                       )}
-                    </ul>
-                  </div>
-                )}
-
-              {summaryReport?.priority_recommendations &&
-                summaryReport.priority_recommendations.length > 0 && (
-                  <div
-                    className="py-4 px-6 rounded-2xl"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.15)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                    }}
-                  >
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ opacity: 0.9 }}
+                    </button>
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{
+                        maxHeight: isPatternsOpen ? "1000px" : "0",
+                        opacity: isPatternsOpen ? 1 : 0,
+                      }}
                     >
-                      우선순위 권장
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.priority_recommendations.map(
-                        (item, idx) => (
-                          <li
-                            key={idx}
-                            className="flex items-start gap-2 text-sm"
-                          >
-                            <span style={{ opacity: 0.8 }}>•</span>
-                            <span style={{ lineHeight: "1.6" }}>{item}</span>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-              {summaryReport?.kpi_suggestions &&
-                summaryReport.kpi_suggestions.length > 0 && (
-                  <div
-                    className="py-4 px-6 rounded-2xl"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.15)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                    }}
-                  >
-                    <p
-                      className="text-xs mb-3 font-semibold"
-                      style={{ opacity: 0.9 }}
-                    >
-                      KPI 제안
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.kpi_suggestions.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <span style={{ opacity: 0.8 }}>•</span>
-                          <span style={{ lineHeight: "1.6" }}>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                      <ul className="space-y-2 px-6 pb-4 pt-2">
+                        {summaryReport.patterns_and_strengths.map(
+                          (item, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2 text-sm"
+                            >
+                              <span style={{ opacity: 0.8 }}>•</span>
+                              <span style={{ lineHeight: "1.6" }}>{item}</span>
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
                   </div>
                 )}
 
               {summaryReport?.mindset_and_tips &&
                 summaryReport.mindset_and_tips.length > 0 && (
                   <div
-                    className="py-4 px-6 rounded-2xl"
+                    className="rounded-2xl overflow-hidden"
                     style={{
                       background: "rgba(255, 255, 255, 0.15)",
                       border: "1px solid rgba(255, 255, 255, 0.2)",
                     }}
                   >
-                    <p
-                      className="text-xs mb-3 font-semibold"
+                    <button
+                      onClick={() => setIsMindsetOpen(!isMindsetOpen)}
+                      className="w-full py-4 px-6 flex items-center justify-between transition-all hover:bg-white/10"
                       style={{ opacity: 0.9 }}
                     >
-                      마인드셋과 실천 팁
-                    </p>
-                    <ul className="space-y-2">
-                      {summaryReport.mindset_and_tips.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <span style={{ opacity: 0.8 }}>•</span>
-                          <span style={{ lineHeight: "1.6" }}>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                      <p
+                        className="text-xs font-semibold"
+                        style={{ opacity: 0.9 }}
+                      >
+                        마인드셋과 실천 팁
+                      </p>
+                      {isMindsetOpen ? (
+                        <ChevronUp className="w-4 h-4 transition-transform duration-300" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+                      )}
+                    </button>
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{
+                        maxHeight: isMindsetOpen ? "1000px" : "0",
+                        opacity: isMindsetOpen ? 1 : 0,
+                      }}
+                    >
+                      <ul className="space-y-2 px-6 pb-4 pt-2">
+                        {summaryReport.mindset_and_tips.map((item, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-sm"
+                          >
+                            <span style={{ opacity: 0.8 }}>•</span>
+                            <span style={{ lineHeight: "1.6" }}>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 )}
             </div>

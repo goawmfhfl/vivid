@@ -30,15 +30,15 @@ type InsightSectionProps = {
 const INSIGHT_COLOR = "#E5B96B";
 const INSIGHT_COLOR_DARK = "#D4A85A";
 const INSIGHT_COLOR_LIGHT = "#F5E6C8";
-// 골드/베이지 계열 차트 색상 팔레트
+// 골드/베이지 계열 차트 색상 팔레트 - 인사이트 색상과 조화되는 부드러운 톤
 const INSIGHT_COLORS = [
   "#E5B96B", // 골드 - 메인 색상
   "#D4A85A", // 다크 골드
   "#C9A052", // 미드 골드
   "#B89A7A", // 베이지 브라운
-  "#D4C4B0", // 웜 베이지
+  "#A68B6B", // 웜 브라운
+  "#D4B89A", // 미드 베이지
   "#E6D5C3", // 라이트 크림
-  "#F5E6C8", // 매우 연한 베이지
 ];
 
 // 모던한 차트 스타일을 위한 커스텀 컴포넌트
@@ -428,7 +428,6 @@ export function InsightSection({
                                     <Cell
                                       key={`cell-${index}`}
                                       fill={
-                                        entry.color ||
                                         INSIGHT_COLORS[
                                           index % INSIGHT_COLORS.length
                                         ]
@@ -484,9 +483,6 @@ export function InsightSection({
                                 className="w-2 h-2 rounded-full flex-shrink-0"
                                 style={{
                                   backgroundColor:
-                                    insightReport.insight_patterns.visualization
-                                      ?.insight_categories_chart?.data[idx]
-                                      ?.color ||
                                     INSIGHT_COLORS[idx % INSIGHT_COLORS.length],
                                 }}
                               />
