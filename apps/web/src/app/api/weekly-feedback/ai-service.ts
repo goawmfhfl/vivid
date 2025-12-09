@@ -77,7 +77,6 @@ async function generateSection<T>(
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);
   if (cachedResult) {
-    console.log(`캐시에서 결과 반환 (${schema.name}, Pro: ${isPro})`);
     return cachedResult;
   }
 

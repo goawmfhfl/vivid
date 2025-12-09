@@ -171,8 +171,6 @@ export function MonthlyReportHeader({
     rootMargin: "0px 0px -50px 0px",
   });
 
-  console.log("[MonthlyReportHeader] summaryReport:", summaryReport);
-
   return (
     <div className="mb-8 sm:mb-10">
       {/* Main Header Card */}

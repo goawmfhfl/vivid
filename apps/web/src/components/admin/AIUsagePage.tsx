@@ -117,7 +117,6 @@ export function AIUsagePage() {
         const response = await adminApiFetch("/api/admin/openai-credit");
         if (response.ok) {
           const data = await response.json();
-          console.log("OpenAI 크레딧 정보 응답:", data);
           setCreditInfo(data);
         } else {
           const errorData = await response.json().catch(() => ({}));

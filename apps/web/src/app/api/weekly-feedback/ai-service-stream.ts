@@ -216,16 +216,6 @@ async function generateSection<T>(
         );
       }
 
-      // 결과 구조 로깅 (디버깅용)
-      console.log(`[generateSection:${schema.name}] Final result structure:`, {
-        resultKeys: Object.keys(result || {}),
-        resultType: typeof result,
-        isArray: Array.isArray(result),
-        resultPreview: result
-          ? JSON.stringify(result).substring(0, 200)
-          : "null",
-      });
-
       // 캐시에 저장 (멤버십별로 구분)
       setCache(proCacheKey, result);
 
@@ -445,13 +435,6 @@ async function generateDailyLifeReport(
     userId
   );
 
-  console.log("[generateDailyLifeReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasDailyLifeReport: response ? "daily_life_report" in response : false,
-    responseType: typeof response,
-  });
-
   if (!response) {
     console.error("[generateDailyLifeReport] response is null or undefined");
     throw new Error("Daily life report response is null or undefined");
@@ -533,13 +516,6 @@ async function generateEmotionReport(
     progressCallback,
     userId
   );
-
-  console.log("[generateEmotionReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasEmotionReport: response ? "emotion_report" in response : false,
-    responseType: typeof response,
-  });
 
   if (!response) {
     console.error("[generateEmotionReport] response is null or undefined");
@@ -625,13 +601,6 @@ async function generateVisionReport(
     userId
   );
 
-  console.log("[generateVisionReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasVisionReport: response ? "vision_report" in response : false,
-    responseType: typeof response,
-  });
-
   if (!response) {
     console.error("[generateVisionReport] response is null or undefined");
     throw new Error("Vision report response is null or undefined");
@@ -710,13 +679,6 @@ async function generateInsightReport(
     progressCallback,
     userId
   );
-
-  console.log("[generateInsightReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasInsightReport: response ? "insight_report" in response : false,
-    responseType: typeof response,
-  });
 
   if (!response) {
     console.error("[generateInsightReport] response is null or undefined");
@@ -800,13 +762,6 @@ async function generateExecutionReport(
     progressCallback,
     userId
   );
-
-  console.log("[generateExecutionReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasExecutionReport: response ? "execution_report" in response : false,
-    responseType: typeof response,
-  });
 
   if (!response) {
     console.error("[generateExecutionReport] response is null or undefined");
@@ -892,13 +847,6 @@ async function generateClosingReport(
     userId
   );
 
-  console.log("[generateClosingReport] response received:", {
-    response,
-    responseKeys: response ? Object.keys(response) : [],
-    hasClosingReport: response ? "closing_report" in response : false,
-    responseType: typeof response,
-  });
-
   if (!response) {
     console.error("[generateClosingReport] response is null or undefined");
     throw new Error("Closing report response is null or undefined");
@@ -951,7 +899,6 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   userId?: string
 ): Promise<WeeklyFeedback> {
   // 병렬로 7개 섹션 생성 (각 섹션 완료 시점에 진행 상황 알림)
-  console.log("[generateWeeklyFeedbackFromDailyWithProgress] 시작");
 
   // 각 Promise에 완료 콜백 추가
   const summaryPromise = generateSummaryReport(
@@ -964,10 +911,7 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     if (progressCallback) {
       progressCallback(1, 7, "SummaryReport");
     }
-    console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] summaryReport 생성 완료:",
-      !!result
-    );
+
     return result;
   });
 

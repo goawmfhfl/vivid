@@ -113,28 +113,8 @@ export async function GET(request: NextRequest) {
             userId // AI 사용량 로깅을 위한 userId 전달
           );
 
-        console.log("[generate-stream] 생성된 weeklyFeedback:", {
-          summary_report: !!weeklyFeedback.summary_report,
-          daily_life_report: !!weeklyFeedback.daily_life_report,
-          emotion_report: !!weeklyFeedback.emotion_report,
-          vision_report: !!weeklyFeedback.vision_report,
-          insight_report: !!weeklyFeedback.insight_report,
-          execution_report: !!weeklyFeedback.execution_report,
-          closing_report: !!weeklyFeedback.closing_report,
-        });
-
         // 추적 정보 제거 (DB 저장 전)
         const cleanedFeedback = removeTrackingInfo(weeklyFeedback);
-
-        console.log("[generate-stream] cleanedFeedback:", {
-          summary_report: !!cleanedFeedback.summary_report,
-          daily_life_report: !!cleanedFeedback.daily_life_report,
-          emotion_report: !!cleanedFeedback.emotion_report,
-          vision_report: !!cleanedFeedback.vision_report,
-          insight_report: !!cleanedFeedback.insight_report,
-          execution_report: !!cleanedFeedback.execution_report,
-          closing_report: !!cleanedFeedback.closing_report,
-        });
 
         // 데이터 검증: 필수 필드 확인
         // summary_report가 null이거나 undefined인 경우만 에러 처리

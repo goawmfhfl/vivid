@@ -36,7 +36,6 @@ export function EmotionSection({
 
 function EmotionSectionContent({ emotionReport, isPro }: EmotionSectionProps) {
   const router = useRouter();
-  console.log("emotionReport", emotionReport);
   // 일별 감정 데이터 (기록이 있는 날짜만 포함, 데이터가 없는 날짜는 필터링)
   // ai_mood_arousal과 ai_mood_valence가 모두 0인 경우도 제외
   const dailyEmotions = (emotionReport?.daily_emotions || []).filter(

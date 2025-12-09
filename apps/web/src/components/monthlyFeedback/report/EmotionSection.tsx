@@ -70,8 +70,6 @@ function EmotionSectionContent({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const { setSelectedDayIndex } = useTooltip();
 
-  console.log("[EmotionSection] emotionReport:", emotionReport);
-
   // 외부 클릭/터치 감지하여 선택 해제
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
