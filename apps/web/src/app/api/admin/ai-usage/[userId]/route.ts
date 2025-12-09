@@ -87,19 +87,16 @@ export async function GET(
     // 일간/주간/월간 통계 계산
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayISO = today.toISOString();
 
     const weekStart = new Date(today);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    const weekStartISO = weekStart.toISOString();
 
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     monthStart.setHours(0, 0, 0, 0);
-    const monthStartISO = monthStart.toISOString();
 
     // 전체 데이터 조회 (통계용)
-    let statsQuery = supabase
+    const statsQuery = supabase
       .from("ai_requests")
       .select("*")
       .eq("user_id", userId);

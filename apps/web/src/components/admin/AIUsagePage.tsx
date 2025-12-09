@@ -211,7 +211,7 @@ export function AIUsagePage() {
         }
         const data = await response.json();
         setUsageList(data.details || []);
-        setListPagination(data.pagination || listPagination);
+        setListPagination((prev) => data.pagination || prev);
       } catch (err) {
         console.error("AI 사용량 목록 조회 실패:", err);
       } finally {

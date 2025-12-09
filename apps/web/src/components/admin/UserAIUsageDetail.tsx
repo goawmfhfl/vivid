@@ -7,8 +7,6 @@ import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import type { AIUsageDetail } from "@/types/admin";
 import { ArrowLeft } from "lucide-react";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -403,7 +401,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                         formatter={(
                           value: number,
                           name: string,
-                          props: any
+                          props: { payload: { requests: number } }
                         ) => [
                           `₩${Math.round(value).toLocaleString()} (${
                             props.payload.requests

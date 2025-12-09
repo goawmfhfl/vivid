@@ -45,12 +45,11 @@ export function InsightSection({
   isPro = false,
 }: InsightSectionProps) {
   const router = useRouter();
+  const [isTopInsightsExpanded, setIsTopInsightsExpanded] = useState(false);
 
   if (!insightReport) {
     return null;
   }
-
-  const [isTopInsightsExpanded, setIsTopInsightsExpanded] = useState(false);
 
   // core_insights 차트 데이터 준비 (최대 5개)
   const coreInsightsChartData =
