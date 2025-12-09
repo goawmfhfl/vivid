@@ -108,15 +108,46 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           name: "summary",
           path: "view.daily_life_report.summary",
           isPro: false,
+          description: "리스트 형태의 요약 (각 항목은 한 문장)",
         },
         {
-          name: "daily_patterns",
-          path: "view.daily_life_report.daily_patterns",
+          name: "daily_summaries_trend",
+          path: "view.daily_life_report.daily_summaries_trend",
+          isPro: true,
+        },
+        {
+          name: "events_pattern",
+          path: "view.daily_life_report.events_pattern",
+          isPro: true,
+        },
+        {
+          name: "emotion_triggers_analysis",
+          path: "view.daily_life_report.emotion_triggers_analysis",
+          isPro: true,
+        },
+        {
+          name: "behavioral_patterns",
+          path: "view.daily_life_report.behavioral_patterns",
+          isPro: true,
+        },
+        {
+          name: "keywords_analysis",
+          path: "view.daily_life_report.keywords_analysis",
+          isPro: true,
+        },
+        {
+          name: "daily_rhythm",
+          path: "view.daily_life_report.daily_rhythm",
           isPro: true,
         },
         {
           name: "visualization",
           path: "view.daily_life_report.visualization",
+          isPro: true,
+        },
+        {
+          name: "ai_comment",
+          path: "view.daily_life_report.ai_comment",
           isPro: true,
         },
       ],
@@ -148,6 +179,11 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
+          name: "emotion_stability_explanation",
+          path: "view.emotion_report.emotion_stability_explanation",
+          isPro: false,
+        },
+        {
           name: "emotion_pattern_summary",
           path: "view.emotion_report.emotion_pattern_summary",
           isPro: false,
@@ -163,6 +199,16 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
+          name: "monthly_ai_mood_valence_avg",
+          path: "view.emotion_report.monthly_ai_mood_valence_avg",
+          isPro: true,
+        },
+        {
+          name: "monthly_ai_mood_arousal_avg",
+          path: "view.emotion_report.monthly_ai_mood_arousal_avg",
+          isPro: true,
+        },
+        {
           name: "emotion_stability_score_reason",
           path: "view.emotion_report.emotion_stability_score_reason",
           isPro: true,
@@ -173,13 +219,13 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: true,
         },
         {
-          name: "emotion_stability_actions",
-          path: "view.emotion_report.emotion_stability_actions",
-          isPro: true,
-        },
-        {
           name: "emotion_ai_comment",
           path: "view.emotion_report.emotion_ai_comment",
+          isPro: false,
+        },
+        {
+          name: "monthly_mood_timeline",
+          path: "view.emotion_report.monthly_mood_timeline",
           isPro: false,
         },
       ],
@@ -191,12 +237,37 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       description: "월간 비전 키워드 트렌드",
       fields: [
         {
-          name: "summary",
-          path: "view.vision_report.summary",
+          name: "vision_progress_comment",
+          path: "view.vision_report.vision_progress_comment",
           isPro: false,
         },
+        {
+          name: "core_visions",
+          path: "view.vision_report.core_visions",
+          isPro: true,
+        },
+        {
+          name: "vision_ai_feedbacks",
+          path: "view.vision_report.vision_ai_feedbacks",
+          isPro: true,
+        },
+        {
+          name: "desired_self",
+          path: "view.vision_report.desired_self",
+          isPro: true,
+        },
+        {
+          name: "vision_days_count",
+          path: "view.vision_report.vision_days_count",
+          isPro: true,
+        },
+        {
+          name: "vision_records_count",
+          path: "view.vision_report.vision_records_count",
+          isPro: true,
+        },
       ],
-      condition: "vision_report.summary !== ''",
+      condition: "vision_report.vision_progress_comment !== null",
     },
     {
       name: "Insight",
@@ -209,13 +280,28 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
-          name: "pattern_discoveries",
-          path: "view.insight_report.pattern_discoveries",
+          name: "top_insights",
+          path: "view.insight_report.top_insights",
           isPro: true,
         },
         {
-          name: "growth_areas",
-          path: "view.insight_report.growth_areas",
+          name: "insight_comprehensive_summary",
+          path: "view.insight_report.insight_comprehensive_summary",
+          isPro: true,
+        },
+        {
+          name: "insight_inspiration",
+          path: "view.insight_report.insight_inspiration",
+          isPro: true,
+        },
+        {
+          name: "insight_days_count",
+          path: "view.insight_report.insight_days_count",
+          isPro: true,
+        },
+        {
+          name: "insight_records_count",
+          path: "view.insight_report.insight_records_count",
           isPro: true,
         },
       ],
@@ -227,22 +313,47 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       description: "잘한 점, 개선 영역, 실행 계획",
       fields: [
         {
-          name: "positives_top3",
-          path: "view.execution_report.positives_top3",
+          name: "recurring_positives",
+          path: "view.execution_report.recurring_positives",
           isPro: false,
         },
         {
-          name: "improvement_areas",
-          path: "view.execution_report.improvement_areas",
+          name: "core_feedback_for_month",
+          path: "view.execution_report.core_feedback_for_month",
           isPro: true,
         },
         {
-          name: "action_items",
-          path: "view.execution_report.action_items",
+          name: "habit_scores",
+          path: "view.execution_report.habit_scores",
+          isPro: true,
+        },
+        {
+          name: "core_feedbacks",
+          path: "view.execution_report.core_feedbacks",
+          isPro: true,
+        },
+        {
+          name: "recurring_improvements_with_frequency",
+          path: "view.execution_report.recurring_improvements_with_frequency",
+          isPro: true,
+        },
+        {
+          name: "feedback_ai_comment",
+          path: "view.execution_report.feedback_ai_comment",
+          isPro: true,
+        },
+        {
+          name: "feedback_days_count",
+          path: "view.execution_report.feedback_days_count",
+          isPro: true,
+        },
+        {
+          name: "feedback_records_count",
+          path: "view.execution_report.feedback_records_count",
           isPro: true,
         },
       ],
-      condition: "execution_report.positives_top3.length > 0",
+      condition: "execution_report.recurring_positives.length > 0",
     },
     {
       name: "Closing",
@@ -250,36 +361,115 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       description: "월간 마무리, 다음 달 방향, 실행 계획",
       fields: [
         {
-          name: "call_to_action",
-          path: "view.closing_report.call_to_action",
+          name: "monthly_title",
+          path: "view.closing_report.monthly_title",
           isPro: false,
         },
+        {
+          name: "monthly_summary",
+          path: "view.closing_report.monthly_summary",
+          isPro: false,
+        },
+        {
+          name: "turning_points",
+          path: "view.closing_report.turning_points",
+          isPro: false,
+        },
+        {
+          name: "next_month_focus",
+          path: "view.closing_report.next_month_focus",
+          isPro: false,
+        },
+        {
+          name: "ai_encouragement_message",
+          path: "view.closing_report.ai_encouragement_message",
+          isPro: false,
+        },
+        {
+          name: "this_month_identity",
+          path: "view.closing_report.this_month_identity",
+          isPro: true,
+        },
       ],
-      condition: "closing_report.call_to_action !== null",
+      condition: "closing_report.monthly_title !== null",
     },
   ];
 
   // 필드 값 가져오기 헬퍼 함수
   const getFieldValue = (path: string) => {
-    const parts = path.split(".");
+    // "view." 제거
+    const pathWithoutView = path.replace(/^view\./, "");
+
+    // 옵셔널 체이닝(`?.`)과 일반 점(`.`)을 모두 분리
+    const parts = pathWithoutView.split(/\?\.|\./).filter(Boolean);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let value: any = view;
     for (const part of parts) {
-      if (value === null || value === undefined) return undefined;
+      // 모든 접근에 옵셔널 체이닝 사용 (null/undefined 안전)
+      if (value === null || value === undefined) {
+        return undefined;
+      }
       value = value[part];
     }
     return value;
   };
 
-  // 섹션별 필드 데이터 준비
+  // 섹션별 데이터 검증 (조건 평가 포함)
   const sectionsWithData = sectionDefinitions.map((section) => {
+    // 조건 평가 (안전한 방식)
+    const hasData = (() => {
+      switch (section.name) {
+        case "Header":
+          return true;
+        case "Daily Life":
+          return !!(
+            view.daily_life_report?.summary &&
+            Array.isArray(view.daily_life_report.summary) &&
+            view.daily_life_report.summary.length > 0
+          );
+        case "Emotion":
+          return !!(
+            view.emotion_report?.emotion_quadrant_analysis_summary &&
+            view.emotion_report.emotion_quadrant_analysis_summary.trim() !== ""
+          );
+        case "Vision":
+          return !!(
+            view.vision_report?.vision_progress_comment !== null &&
+            view.vision_report?.vision_progress_comment !== undefined
+          );
+        case "Insight":
+          return !!(
+            view.insight_report?.core_insights &&
+            Array.isArray(view.insight_report.core_insights) &&
+            view.insight_report.core_insights.length > 0
+          );
+        case "Execution":
+          return !!(
+            view.execution_report?.recurring_positives &&
+            Array.isArray(view.execution_report.recurring_positives) &&
+            view.execution_report.recurring_positives.length > 0
+          );
+        case "Closing":
+          return !!(
+            view.closing_report?.monthly_title !== null &&
+            view.closing_report?.monthly_title !== undefined
+          );
+        default:
+          return false;
+      }
+    })();
+
     const allFields = section.fields.map((field) => {
       const value = getFieldValue(field.path);
-      const hasValue =
-        value !== null &&
-        value !== undefined &&
-        !(Array.isArray(value) && value.length === 0) &&
-        !(typeof value === "string" && value.trim() === "");
+
+      const hasValue = (() => {
+        if (value === null || value === undefined) return false;
+        if (Array.isArray(value)) return value.length > 0;
+        if (typeof value === "string") return value.trim() !== "";
+        if (typeof value === "object") return Object.keys(value).length > 0;
+        return true;
+      })();
 
       return {
         ...field,
@@ -288,11 +478,11 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       };
     });
 
-    const hasAnyData = allFields.some((f) => f.hasValue);
+    const hasAnyData = hasData && allFields.some((f) => f.hasValue);
     const proFields = allFields.filter((f) => f.isPro);
     const freeFields = allFields.filter((f) => !f.isPro);
-    const hasProData = proFields.some((f) => f.hasValue);
-    const hasFreeData = freeFields.some((f) => f.hasValue);
+    const hasProData = hasData && proFields.some((f) => f.hasValue);
+    const hasFreeData = hasData && freeFields.some((f) => f.hasValue);
 
     return {
       ...section,

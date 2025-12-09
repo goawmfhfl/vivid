@@ -45,10 +45,10 @@ export function buildVisionReportPrompt(
 
   prompt += `\n위 일일 비전 리포트들을 종합하여 월간 비전 리포트(vision_report)를 생성하세요.
 - vision_days_count, vision_records_count: 비전 관련 기록이 있는 날짜 수/문장 수 계산
-- main_visions: 한 달 동안 반복해서 등장한 비전/목표를 최대 10개까지 정리 (summary, frequency 포함)
 - core_visions: 이번 달의 핵심 비전을 최대 7개까지 선별 (summary, frequency 포함, 최소 2회 이상)
-- vision_progress_comment: 비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리
-- vision_ai_feedbacks: 비전을 실현하기 위한 구체적인 조언이나 제안을 최대 5개 제공`;
+- vision_progress_comment: 비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리 (300자 이내)
+- vision_ai_feedbacks: 비전을 실현하기 위한 구체적인 조언이나 제안을 최대 5개 제공
+- desired_self: 이번 달의 비전 기록을 바탕으로 "내가 되고싶은 사람"에 대한 섹션을 생성하세요. characteristics는 최대 5개까지 작성하고, 각각은 "~~~ 한 사람" 형식으로 작성하세요. historical_figure는 이러한 특성들을 대표하는 역사적 위인 1명을 선택하고, 그 이유를 사용자의 현재 모습과 연결하여 설명하세요. 비전 기록이 충분하지 않으면 null로 설정하세요.`;
 
   return prompt;
 }

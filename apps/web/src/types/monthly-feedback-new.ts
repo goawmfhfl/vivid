@@ -120,7 +120,7 @@ export type SummaryVisualization = {
 // 2. Daily Life Report (서버 스키마 기반)
 // ============================================
 export type DailyLifeReport = {
-  summary: string;
+  summary: string[]; // 리스트 형태의 요약
   daily_summaries_trend: DailySummariesTrend;
   events_pattern: EventsPattern;
   emotion_triggers_analysis: EmotionTriggersAnalysis;
@@ -254,8 +254,16 @@ export type EmotionReport = {
   emotion_stability_explanation: string;
   emotion_stability_score_reason: string;
   emotion_stability_guidelines: string[];
-  emotion_stability_actions: string[];
   emotion_ai_comment: string | null;
+  monthly_mood_timeline: MonthlyMoodTimelineItem[];
+};
+
+export type MonthlyMoodTimelineItem = {
+  date: string; // "YYYY-MM-DD" 형식
+  weekday: string; // "월요일", "화요일" 등
+  ai_mood_arousal: number | null;
+  ai_mood_valence: number | null;
+  dominant_emotion: string | null;
 };
 
 export type EmotionQuadrantDistribution = {
@@ -370,15 +378,24 @@ export type EmotionVisualization = {
 export type VisionReport = {
   vision_days_count: number;
   vision_records_count: number;
-  main_visions: MainVision[];
   core_visions: CoreVision[];
   vision_progress_comment: string | null;
   vision_ai_feedbacks: string[]; // 최대 5개
+  desired_self: DesiredSelf | null;
 };
 
-export type MainVision = {
-  summary: string;
-  frequency: number;
+export type DesiredSelf = {
+  characteristics: DesiredCharacteristic[]; // 최대 5개
+  historical_figure: HistoricalFigure | null;
+};
+
+export type DesiredCharacteristic = {
+  trait: string; // 예: "기록을 통해 나를 이해하고 성장하는 사람"
+};
+
+export type HistoricalFigure = {
+  name: string; // 예: "레오나르도 다 빈치"
+  reason: string; // 왜 이 인물을 선택했는지, 사용자의 현재 모습과의 연결점 설명
 };
 
 export type CoreVision = {
@@ -394,8 +411,14 @@ export type InsightReport = {
   insight_records_count: number;
   top_insights: TopInsight[];
   core_insights: CoreInsight[];
-  insight_ai_comment: string | null;
   insight_comprehensive_summary: string | null;
+  insight_inspiration: InsightInspiration | null;
+};
+
+export type InsightInspiration = {
+  has_inspiration: boolean;
+  ideas: string[]; // 최대 5개
+  explanation: string | null; // 왜 이 아이디어를 제안했는지 설명
 };
 
 export type TopInsight = {
@@ -408,6 +431,7 @@ export type TopInsight = {
 export type CoreInsight = {
   summary: string;
   explanation: string;
+  frequency: number; // 등장 횟수
 };
 
 // ============================================

@@ -85,7 +85,9 @@ export function buildEmotionReportPrompt(
 - emotion_quadrant_distribution: 4개 사분면 모두 포함하여 비율 계산 (각 사분면에 explanation 필드 포함)
 - emotion_quadrant_analysis_summary: 4개 사분면 분포를 종합적으로 분석한 피드백 (300자 이내)
 - emotion_pattern_summary: 이 달 동안 감정이 어떻게 반복되었는지 설명 (400자 이내)
-- positive_triggers, negative_triggers: 반복적으로 긍정/부정 감정을 만들어낸 행동/상황을 각각 최대 10개까지 정리
+- positive_triggers: 반복적으로 긍정 감정을 만들어낸 행동/상황을 최대 7개까지 정리
+- negative_triggers: 반복적으로 부정 감정을 만들어낸 행동/상황을 최대 10개까지 정리
+- monthly_mood_timeline: 이 필드는 서버에서 자동으로 생성되므로 빈 배열 []로 설정하세요
 - emotion_stability_score: 감정 곡선의 출렁임 정도를 0~10 점으로 평가 (그 이유와 가이드라인 포함)
 - emotion_ai_comment: 왜 이런 감정 패턴이 만들어졌는지, 다음 달을 위해 어떤 감정 전략이 도움이 될지 부드럽게 정리`;
 

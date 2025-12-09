@@ -45,7 +45,7 @@ export function buildClosingReportPrompt(
 - monthly_summary: 400자 이내로, 이 달의 결론을 정리 ("무엇을 배웠는지", "어디까지 와 있는지", "어떤 마음으로 다음 달을 맞이하면 좋을지" 포함)
 - turning_points: 중요한 전환점/사건을 최대 5개까지 짧게 정리 (실제 기록에 등장한 사건에 기반)
 - next_month_focus: "1) ~, 2) ~, 3) ~" 형식으로 작성 (가능한 한 구체적인 행동 중심)
-- ai_encouragement_message: 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 응원과 격려를 중심으로 메시지 작성
+- ai_encouragement_message: 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 방향성과 이해를 중심으로 메시지 작성 (직접적인 "응원합니다" 문구는 사용하지 마세요)
 - this_month_identity (Pro 전용): 이번 달의 정체성 특성을 레이더 차트로 시각화 (visualization.characteristics_radar.data 포함)`;
 
   return prompt;

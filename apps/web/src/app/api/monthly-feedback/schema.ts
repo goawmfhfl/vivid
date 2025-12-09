@@ -154,7 +154,8 @@ export const MonthlyReportSchema = {
             type: "array",
             items: { type: "string" },
             minItems: 0,
-            maxItems: 10,
+            maxItems: 7,
+            description: "반복적으로 긍정 감정을 만들어낸 행동/상황 (최대 7개)",
           },
           negative_triggers: {
             type: "array",
@@ -179,15 +180,37 @@ export const MonthlyReportSchema = {
             description:
               "감정 안정성 점수를 더 높이기 위한 구체적인 가이드라인",
           },
-          emotion_stability_actions: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 5,
-            description:
-              "감정 안정성 점수를 높이기 위한 구체적인 행동 제안 (하위 호환성)",
-          },
           emotion_ai_comment: { type: "string", nullable: true },
+          monthly_mood_timeline: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                date: {
+                  type: "string",
+                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+                  description: "날짜 (YYYY-MM-DD 형식)",
+                },
+                weekday: {
+                  type: "string",
+                  description: "요일 (예: '월요일', '화요일')",
+                },
+                ai_mood_arousal: { type: "number", nullable: true },
+                ai_mood_valence: { type: "number", nullable: true },
+                dominant_emotion: { type: "string", nullable: true },
+              },
+              required: [
+                "date",
+                "weekday",
+                "ai_mood_arousal",
+                "ai_mood_valence",
+                "dominant_emotion",
+              ],
+            },
+            minItems: 0,
+            description: "월간 감정 좌표 타임라인 (30일 전체 데이터)",
+          },
         },
         required: [
           "monthly_ai_mood_valence_avg",
@@ -202,8 +225,8 @@ export const MonthlyReportSchema = {
           "emotion_stability_explanation",
           "emotion_stability_score_reason",
           "emotion_stability_guidelines",
-          "emotion_stability_actions",
           "emotion_ai_comment",
+          "monthly_mood_timeline",
         ],
       },
 
@@ -212,7 +235,14 @@ export const MonthlyReportSchema = {
         type: "object",
         additionalProperties: false,
         properties: {
-          summary: { type: "string" },
+          summary: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+            maxItems: 10,
+            description:
+              "이번 달의 일상을 요약한 리스트 (각 항목은 한 문장으로 작성)",
+          },
           daily_summaries_trend: {
             type: "object",
             additionalProperties: false,
@@ -644,7 +674,7 @@ export const MonthlyReportSchema = {
           core_insights: {
             type: "array",
             minItems: 0,
-            maxItems: 3,
+            maxItems: 5,
             items: {
               type: "object",
               additionalProperties: false,
@@ -654,16 +684,42 @@ export const MonthlyReportSchema = {
                   type: "string",
                   description: "이 인사이트가 핵심인 이유 설명",
                 },
+                frequency: { type: "integer", minimum: 1 },
               },
-              required: ["summary", "explanation"],
+              required: ["summary", "explanation", "frequency"],
             },
-            description: "이번 달의 핵심 인사이트 최대 3개",
+            description: "이번 달의 핵심 인사이트 최대 5개 (frequency 포함)",
           },
-          insight_ai_comment: { type: "string", nullable: true },
           insight_comprehensive_summary: {
             type: "string",
             nullable: true,
             description: "모든 인사이트를 종합한 종합적인 인사이트 분석",
+          },
+          insight_inspiration: {
+            type: "object",
+            nullable: true,
+            additionalProperties: false,
+            properties: {
+              has_inspiration: {
+                type: "boolean",
+                description: "특별한 영감이 감지되었는지 여부",
+              },
+              ideas: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 0,
+                maxItems: 5,
+                description: "제안할 아이디어 리스트 (최대 5개)",
+              },
+              explanation: {
+                type: "string",
+                nullable: true,
+                description: "왜 이 아이디어를 제안했는지 설명",
+              },
+            },
+            required: ["has_inspiration", "ideas", "explanation"],
+            description:
+              "인사이트를 기반으로 한 아이디어 제안 (특별한 영감이 감지된 경우에만 생성)",
           },
         },
         required: [
@@ -671,8 +727,8 @@ export const MonthlyReportSchema = {
           "insight_records_count",
           "top_insights",
           "core_insights",
-          "insight_ai_comment",
           "insight_comprehensive_summary",
+          "insight_inspiration",
         ],
       },
 
@@ -790,20 +846,6 @@ export const MonthlyReportSchema = {
         properties: {
           vision_days_count: { type: "integer", minimum: 0 },
           vision_records_count: { type: "integer", minimum: 0 },
-          main_visions: {
-            type: "array",
-            minItems: 0,
-            maxItems: 10,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                frequency: { type: "integer", minimum: 0 },
-              },
-              required: ["summary", "frequency"],
-            },
-          },
           core_visions: {
             type: "array",
             minItems: 0,
@@ -820,7 +862,13 @@ export const MonthlyReportSchema = {
             description:
               "이번 달의 핵심 비전 최대 7개 (가장 중요하고 반복적으로 등장한 비전)",
           },
-          vision_progress_comment: { type: "string", nullable: true },
+          vision_progress_comment: {
+            type: "string",
+            nullable: true,
+            maxLength: 300,
+            description:
+              "비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리 (300자 이내)",
+          },
           vision_ai_feedbacks: {
             type: "array",
             minItems: 0,
@@ -829,14 +877,61 @@ export const MonthlyReportSchema = {
             description:
               "AI가 제공하는 비전 관련 피드백 리스트 (최대 5개, 각각 실행 가능한 구체적인 피드백)",
           },
+          desired_self: {
+            type: "object",
+            nullable: true,
+            additionalProperties: false,
+            properties: {
+              characteristics: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    trait: {
+                      type: "string",
+                      description:
+                        "내가 되고싶은 사람의 특성 (예: '기록을 통해 나를 이해하고 성장하는 사람')",
+                    },
+                  },
+                  required: ["trait"],
+                },
+                minItems: 1,
+                maxItems: 5,
+                description: "내가 되고싶은 사람의 특성 리스트 (최대 5개)",
+              },
+              historical_figure: {
+                type: "object",
+                nullable: true,
+                additionalProperties: false,
+                properties: {
+                  name: {
+                    type: "string",
+                    description:
+                      "역사적 위인의 이름 (예: '레오나르도 다 빈치')",
+                  },
+                  reason: {
+                    type: "string",
+                    description:
+                      "왜 이 인물을 선택했는지, 사용자의 현재 모습과의 연결점 설명",
+                  },
+                },
+                required: ["name", "reason"],
+                description: "내가 되고싶은 모습을 대표하는 역사적 위인",
+              },
+            },
+            required: ["characteristics", "historical_figure"],
+            description:
+              "내가 되고싶은 사람에 대한 섹션 (비전 기록이 충분한 경우에만 생성)",
+          },
         },
         required: [
           "vision_days_count",
           "vision_records_count",
-          "main_visions",
           "core_visions",
           "vision_progress_comment",
           "vision_ai_feedbacks",
+          "desired_self",
         ],
       },
 
@@ -941,19 +1036,13 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - 숫자(점수/분포)와 서사(텍스트)를 결합해 사용자가 스스로를 이해하기 쉽게 도와주는 것
 
-규칙(공통):
-
-- 오직 JSON 하나만 출력합니다. 설명/마크다운/코드블록 금지.
+## 월간 리포트 특화 규칙
 
 - MonthlyReportSchema 스키마 키와 타입을 정확히 준수합니다.
 
-- 모든 키를 반드시 포함하세요. 값이 없으면 null, ""(빈 문자열), [] 또는 0 등으로 채웁니다.
-
-- 텍스트는 누구나 이해할 수 있을 만큼 쉽고 친절하게 작성합니다.
-
 - daily_reports, categorized_records에 실제로 없는 내용을 상상해서 만들지 않습니다. 
 
-  "반복 패턴" 역시 실제 데이터에서 최소 2회 이상 등장한 경우만 "반복"으로 간주합니다.
+- "반복 패턴" 역시 실제 데이터에서 최소 2회 이상 등장한 경우만 "반복"으로 간주합니다.
 
 --------------------------------
 
@@ -995,7 +1084,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - summary_description:
 
-  - 공백 포함 400자 이내로, 이 달에 있었던 주요 흐름을 서사적으로 정리합니다.
+  - 공백 포함 300자 이내로, 이 달에 있었던 주요 흐름을 서사적으로 정리합니다.
 
   - "처음에는 ~, 중반에는 ~, 마지막에는 ~" 처럼 자연스러운 이야기 구조를 사용합니다.
 
@@ -1047,7 +1136,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 이 달 전체를 "한 사람으로서" 바라보고, 부드러운 코멘트를 남깁니다.
 
-  - 비난보다 이해, 응원, 정리를 중심으로 작성합니다.
+  - 비난보다 이해와 정리를 중심으로 작성합니다.
 
 --------------------------------
 
@@ -1101,7 +1190,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 5) emotion_pattern_summary
 
-- 400자 이내로, 이 달 동안 감정이 어떻게 반복되었는지 설명합니다.
+- 300자 이내로, 이 달 동안 감정이 어떻게 반복되었는지 설명합니다.
 
 - 예:
 
@@ -1111,7 +1200,9 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 7) positive_triggers / negative_triggers
 
-- 반복적으로 긍정/부정 감정을 만들어낸 행동/상황을 각각 최대 10개까지 정리합니다.
+- positive_triggers: 반복적으로 긍정 감정을 만들어낸 행동/상황을 최대 7개까지 정리합니다.
+
+- negative_triggers: 반복적으로 부정 감정을 만들어낸 행동/상황을 최대 10개까지 정리합니다.
 
 - 정확한 상황과 패턴을 기반으로 작성합니다:
 
@@ -1167,10 +1258,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 예: ["주말 산책이 평온함을 가져다주었으므로(8일 중 6일) 주중에도 짧은 산책 시간(15분)을 추가하여 일상의 안정감을 높이기", "수면 시간이 부족한 날(화요일, 수요일) 감정 변화가 컸으므로 규칙적인 수면 패턴(밤 11시 취침) 유지하기", "아침 운동 후 감정이 안정되었으므로(주 3회) 주 3회 이상 아침 운동을 고정 루틴으로 만들기"]
 
-- emotion_stability_actions:
-
-  - emotion_stability_guidelines와 동일한 내용입니다 (하위 호환성을 위해 유지).
-
 8) emotion_ai_comment
 
 - 왜 이런 감정 패턴이 만들어졌는지, 어떤 점이 인상적인지,
@@ -1211,7 +1298,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - core_insights:
 
-  - 이번 달의 핵심 인사이트를 최대 3개까지 선별합니다.
+  - 이번 달의 핵심 인사이트를 최대 5개까지 선별합니다.
 
   - 각 항목:
 
@@ -1219,7 +1306,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
     - explanation: 이 인사이트가 핵심인 이유에 대한 설명
 
+    - frequency: 해당 인사이트가 등장한 횟수 (최소 1)
+
   - 가장 중요하고 반복적으로 등장한 인사이트, 또는 사용자의 성장에 가장 큰 영향을 미친 인사이트를 선별합니다.
+
+  - top_insights에서 frequency가 높은 인사이트를 우선적으로 선택합니다.
 
   - 예: [
       {
@@ -1242,7 +1333,19 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 예: "이번 달의 인사이트들을 종합해보면, '루틴의 재시작 능력', '기록의 행동 촉발 효과', '작은 실행의 힘'이라는 세 가지 핵심 주제가 반복적으로 등장했습니다. 이는 완벽함보다는 지속적인 시도와 작은 변화가 더 큰 성장을 가져온다는 통찰을 보여줍니다."
 
-  - 400자 이내로 작성합니다.
+  - 300자 이내로 작성합니다.
+
+- insight_inspiration:
+
+  - 인사이트를 종합적으로 분석했을 때 특별한 영감이나 패턴이 감지되었다면, "이런 아이디어는 어때요?"라는 섹션을 생성합니다.
+
+  - has_inspiration: 특별한 영감이 감지되었는지 여부 (true/false)
+
+  - ideas: 제안할 아이디어 리스트 (최대 5개, 각각 실행 가능한 구체적인 아이디어)
+
+  - explanation: 왜 이 아이디어를 제안했는지 설명 (인사이트와의 연결점 명시)
+
+  - has_inspiration이 false이면 null로 설정합니다.
 
 인사이트 관련 데이터가 거의 없다면:
 
@@ -1250,7 +1353,9 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - top_insights, core_insights 는 []
 
-- insight_ai_comment, insight_comprehensive_summary 는 null 로 처리합니다.
+- insight_comprehensive_summary 는 null 로 처리합니다.
+
+- insight_inspiration 는 null 로 처리합니다.
 
 - 인사이트 내용을 억지로 만들어내지 마세요.
 
@@ -1382,8 +1487,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 가장 중요하고 반복적으로 등장한 비전을 선별합니다.
 
-  - main_visions에서 빈도가 높고 의미 있는 비전을 우선적으로 선택합니다.
-
   - 예: [
       {
         summary: "기록과 루틴을 바탕으로 꾸준히 성장하는 사람으로 살고 싶다",
@@ -1415,15 +1518,38 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
   - 비전 관련 데이터가 거의 없다면 빈 배열 []로 처리합니다.
 
+- desired_self:
+
+  - 이번 달의 비전 기록을 바탕으로 "내가 되고싶은 사람"에 대한 섹션을 생성합니다.
+
+  - characteristics: 내가 되고싶은 사람의 특성을 최대 5개까지 작성합니다. 각 항목은 "~~~ 한 사람" 형식으로 작성합니다.
+
+    예: [
+      { trait: "기록을 통해 나를 이해하고 성장하는 사람" },
+      { trait: "작은 변화를 꾸준히 쌓아가는 사람" },
+      { trait: "자기 기준으로 살아가는 사람" }
+    ]
+
+  - historical_figure: 이러한 특성들을 대표하는 역사적 위인 1명을 선택하고, 그 이유를 사용자의 현재 모습과 연결하여 설명합니다.
+
+    예: {
+      name: "레오나르도 다 빈치",
+      reason: "레오나르도 다 빈치는 끊임없이 관찰하고 기록하며 자신만의 방식으로 세상을 이해하려 했던 인물입니다. 이번 달 기록을 보면, 당신도 매일의 작은 관찰과 기록을 통해 자신을 이해하고 성장하려는 모습이 보입니다. 특히 '루틴의 재시작 능력'이라는 인사이트에서 보이는 것처럼, 완벽하지 않아도 다시 시작하는 힘은 레오나르도가 여러 분야를 넘나들며 지속적으로 탐구했던 모습과 닮아있습니다."
+    }
+
+  - 비전 기록이 충분하지 않으면 null로 설정합니다.
+
 비전/시각화 기록이 거의 없다면:
 
 - vision_days_count, vision_records_count 는 0
 
-- main_visions, core_visions 는 []
+- core_visions 는 []
 
 - vision_progress_comment 는 null
 
 - vision_ai_feedbacks 는 []
+
+- desired_self 는 null
 
 - 비전 내용을 억지로 생성하지 마세요.
 
@@ -1439,7 +1565,7 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - monthly_summary:
 
-  - 400자 이내로, 이 달의 결론을 정리합니다.
+  - 300자 이내로, 이 달의 결론을 정리합니다.
 
   - "무엇을 배웠는지", "어디까지 와 있는지", "어떤 마음으로 다음 달을 맞이하면 좋을지"를 포함합니다.
 
@@ -1459,9 +1585,11 @@ export const SYSTEM_PROMPT_MONTHLY = `
 
 - ai_encouragement_message:
 
-  - 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 응원과 격려를 중심으로 메시지를 작성합니다.
+  - 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 방향성과 이해를 중심으로 메시지를 작성합니다.
 
   - 사용자의 노력을 존중하고, "이미 해낸 것"을 먼저 짚어준 뒤 "다음에 해볼 것"을 제안하세요.
+
+  - 직접적인 "응원합니다" 문구는 사용하지 마세요. 자연스럽고 진솔한 톤을 유지하세요.
 
 - this_month_identity (Pro 멤버십 전용, 선택적):
 

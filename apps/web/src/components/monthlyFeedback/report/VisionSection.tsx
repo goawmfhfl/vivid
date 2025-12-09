@@ -1,6 +1,13 @@
 "use client";
 
-import { Target, Lock, ArrowRight, Lightbulb, Sparkles } from "lucide-react";
+import {
+  Target,
+  Lock,
+  ArrowRight,
+  Lightbulb,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { Card } from "../../ui/card";
 import type { VisionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
@@ -334,17 +341,18 @@ export function VisionSection({
               </Card>
             )}
 
-          {/* 주요 비전 (Main Visions) - 도넛 차트 포함 */}
-          {visionReport.main_visions &&
-            visionReport.main_visions.length > 0 && (
+          {/* 내가 되고싶은 사람 */}
+          {visionReport.desired_self &&
+            visionReport.desired_self.characteristics &&
+            visionReport.desired_self.characteristics.length > 0 && (
               <Card
                 className="relative overflow-hidden group"
                 style={{
                   background:
-                    "linear-gradient(135deg, rgba(163, 191, 217, 0.08) 0%, rgba(255, 255, 255, 1) 100%)",
-                  border: "1px solid #D5E3E5",
+                    "linear-gradient(135deg, rgba(163, 191, 217, 0.1) 0%, rgba(255, 255, 255, 1) 100%)",
+                  border: "1px solid #D5E3D5",
                   borderRadius: "20px",
-                  boxShadow: "0 4px 20px rgba(163, 191, 217, 0.06)",
+                  boxShadow: "0 4px 20px rgba(163, 191, 217, 0.08)",
                 }}
               >
                 {/* 헤더 */}
@@ -361,7 +369,7 @@ export function VisionSection({
                         boxShadow: "0 4px 12px rgba(163, 191, 217, 0.2)",
                       }}
                     >
-                      <Lightbulb
+                      <User
                         className="w-4 h-4"
                         style={{ color: VISION_COLOR }}
                       />
@@ -370,271 +378,106 @@ export function VisionSection({
                       className="text-xs font-semibold uppercase tracking-wide flex-1"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      주요 비전 ({visionReport.main_visions.length}개)
+                      내가 되고싶은 사람
                     </p>
                   </div>
                 </div>
 
                 {/* 바디 */}
                 <div className="p-5 sm:p-6 pt-4">
-                  {/* 도넛 차트 - 모바일/데스크톱 반응형 */}
-                  <div className="flex flex-col items-center justify-center mb-4">
-                    <div
-                      className="relative"
-                      style={{ width: "100%", maxWidth: "600px" }}
-                    >
-                      {/* 모바일용 작은 차트 */}
-                      <div className="block md:hidden">
-                        <ResponsiveContainer width="100%" height={220}>
-                          <PieChart>
-                            {(() => {
-                              const sortedVisions = [
-                                ...visionReport.main_visions,
-                              ].sort((a, b) => b.frequency - a.frequency);
-                              const total = sortedVisions.reduce(
-                                (sum, item) => sum + item.frequency,
-                                0
-                              );
-                              const chartData = sortedVisions.map((v, idx) => ({
-                                name: v.summary,
-                                value: v.frequency,
-                                fullName: v.summary,
-                                percentage: Math.round(
-                                  (v.frequency / total) * 100
-                                ),
-                                color: CHART_COLORS[idx % CHART_COLORS.length],
-                              }));
-
-                              return (
-                                <Pie
-                                  data={chartData}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={45}
-                                  outerRadius={70}
-                                  paddingAngle={3}
-                                  dataKey="value"
-                                  label={(props: {
-                                    payload?: {
-                                      name?: string;
-                                      percentage?: number;
-                                    };
-                                  }) => {
-                                    const name =
-                                      (props.payload as { name?: string })
-                                        ?.name || "";
-                                    const percentage = (
-                                      props.payload as { percentage?: number }
-                                    )?.percentage;
-                                    if (!name) return "";
-                                    const displayName =
-                                      name.length > 8
-                                        ? name.substring(0, 8) + "..."
-                                        : name;
-                                    return `${displayName}\n${percentage}%`;
-                                  }}
-                                  labelLine={false}
-                                  style={
-                                    {
-                                      fontSize: "8px",
-                                      fontWeight: 500,
-                                    } as React.CSSProperties
-                                  }
-                                >
-                                  {chartData.map((entry, idx) => (
-                                    <Cell
-                                      key={`cell-mobile-${idx}`}
-                                      fill={entry.color}
-                                    />
-                                  ))}
-                                </Pie>
-                              );
-                            })()}
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: COLORS.background.card,
-                                border: `1px solid ${COLORS.border.light}`,
-                                borderRadius: "12px",
-                                padding: "6px 10px",
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                fontSize: "11px",
-                              }}
-                              labelStyle={{
-                                color: COLORS.text.primary,
-                                fontWeight: "bold",
-                                marginBottom: "4px",
-                                fontSize: "11px",
-                              }}
-                              formatter={(
-                                value: number,
-                                name: string,
-                                entry?: { payload?: { fullName?: string } }
-                              ) => [
-                                `${value}회`,
-                                (entry?.payload as { fullName?: string })
-                                  ?.fullName ||
-                                  name ||
-                                  "",
-                              ]}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* 데스크톱용 큰 차트 */}
-                      <div className="hidden md:block">
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
-                            {(() => {
-                              const sortedVisions = [
-                                ...visionReport.main_visions,
-                              ].sort((a, b) => b.frequency - a.frequency);
-                              const chartData = sortedVisions.map((v, idx) => ({
-                                name: v.summary,
-                                value: v.frequency,
-                                fullName: v.summary,
-                                color: CHART_COLORS[idx % CHART_COLORS.length],
-                              }));
-
-                              return (
-                                <Pie
-                                  data={chartData}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={70}
-                                  outerRadius={100}
-                                  paddingAngle={4}
-                                  dataKey="value"
-                                  label={({ name, value }) => {
-                                    if (!name) return "";
-                                    const displayName =
-                                      name.length > 12
-                                        ? name.substring(0, 12) + "..."
-                                        : name;
-                                    return `${displayName} ${value}회`;
-                                  }}
-                                  labelLine={true}
-                                >
-                                  {chartData.map((entry, idx) => (
-                                    <Cell
-                                      key={`cell-desktop-${idx}`}
-                                      fill={entry.color}
-                                    />
-                                  ))}
-                                </Pie>
-                              );
-                            })()}
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: COLORS.background.card,
-                                border: `1px solid ${COLORS.border.light}`,
-                                borderRadius: "12px",
-                                padding: "8px 12px",
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                              }}
-                              labelStyle={{
-                                color: COLORS.text.primary,
-                                fontWeight: "bold",
-                                marginBottom: "4px",
-                                fontSize: "12px",
-                              }}
-                              formatter={(
-                                value: number,
-                                name: string,
-                                entry?: { payload?: { fullName?: string } }
-                              ) => [
-                                `${value}회`,
-                                (entry?.payload as { fullName?: string })
-                                  ?.fullName ||
-                                  name ||
-                                  "",
-                              ]}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 모바일/데스크톱 공통 비전 리스트 - 모바일 친화적 디자인 */}
-                  <div className="mt-4 md:mt-6 w-full">
-                    <div className="space-y-2">
-                      {visionReport.main_visions
-                        .sort((a, b) => b.frequency - a.frequency)
-                        .map((vision, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-start gap-2 p-3 rounded-lg transition-all duration-200 hover:bg-white/60"
-                            style={{
-                              backgroundColor: `${
-                                CHART_COLORS[idx % CHART_COLORS.length]
-                              }08`,
-                              border: `1px solid ${
-                                CHART_COLORS[idx % CHART_COLORS.length]
-                              }30`,
-                              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                            }}
-                          >
-                            {/* 색상 인디케이터 */}
+                  {/* 특성 리스트 */}
+                  <div className="space-y-3 mb-6">
+                    {visionReport.desired_self.characteristics.map(
+                      (char, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 rounded-xl transition-all duration-200 hover:shadow-md"
+                          style={{
+                            backgroundColor: "rgba(163, 191, 217, 0.06)",
+                            border: "1px solid rgba(163, 191, 217, 0.15)",
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
                             <div
-                              className="w-1 h-full rounded-full flex-shrink-0 mt-0.5"
+                              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
                               style={{
-                                backgroundColor:
-                                  CHART_COLORS[idx % CHART_COLORS.length],
-                                minHeight: "20px",
-                              }}
-                            />
-                            {/* 내용 */}
-                            <div className="flex-1 min-w-0">
-                              <p
-                                className="text-xs sm:text-sm font-medium mb-1.5"
-                                style={{
-                                  color: COLORS.text.primary,
-                                }}
-                              >
-                                {vision.summary}
-                              </p>
-                              <div className="flex items-center gap-1.5">
-                                <div
-                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                  style={{
-                                    backgroundColor:
-                                      CHART_COLORS[idx % CHART_COLORS.length],
-                                  }}
-                                />
-                                <span
-                                  className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full"
-                                  style={{
-                                    backgroundColor: `${
-                                      CHART_COLORS[idx % CHART_COLORS.length]
-                                    }20`,
-                                    color:
-                                      CHART_COLORS[idx % CHART_COLORS.length],
-                                  }}
-                                >
-                                  {vision.frequency}회 기록
-                                </span>
-                              </div>
-                            </div>
-                            {/* 빈도 배지 */}
-                            <div
-                              className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-bold"
-                              style={{
-                                backgroundColor:
-                                  CHART_COLORS[idx % CHART_COLORS.length],
-                                color: "white",
-                                fontSize: "13px",
-                                boxShadow: `0 1px 4px ${
-                                  CHART_COLORS[idx % CHART_COLORS.length]
-                                }40`,
+                                background:
+                                  "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
                               }}
                             >
-                              {vision.frequency}
+                              <span
+                                className="text-xs font-bold text-white"
+                                style={{ fontSize: "10px" }}
+                              >
+                                {idx + 1}
+                              </span>
                             </div>
+                            <p
+                              className="text-sm font-semibold flex-1"
+                              style={{
+                                color: COLORS.text.primary,
+                                lineHeight: "1.6",
+                              }}
+                            >
+                              {char.trait}
+                            </p>
                           </div>
-                        ))}
-                    </div>
+                        </div>
+                      )
+                    )}
                   </div>
+
+                  {/* 역사적 위인 */}
+                  {visionReport.desired_self.historical_figure && (
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{
+                        backgroundColor: "rgba(163, 191, 217, 0.08)",
+                        border: "1px solid rgba(163, 191, 217, 0.2)",
+                      }}
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #A3BFD9 0%, #8FA8C7 100%)",
+                          }}
+                        >
+                          <Target className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p
+                            className="text-xs font-semibold mb-1 uppercase tracking-wide"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            대표하는 역사적 위인
+                          </p>
+                          <p
+                            className="text-lg font-bold mb-2"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {visionReport.desired_self.historical_figure.name}
+                          </p>
+                          {visionReport.desired_self.historical_figure
+                            .reason && (
+                            <p
+                              className="text-sm leading-relaxed"
+                              style={{
+                                color: COLORS.text.secondary,
+                                lineHeight: "1.7",
+                              }}
+                            >
+                              {
+                                visionReport.desired_self.historical_figure
+                                  .reason
+                              }
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}

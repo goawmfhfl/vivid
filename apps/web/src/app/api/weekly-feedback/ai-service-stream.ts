@@ -95,10 +95,14 @@ async function generateSection<T>(
   // Daily 점수 기반으로 정확도 향상 및 일관성 보정 역할
   const model = "gpt-5-mini";
 
-  // Pro 멤버십에 따라 프롬프트 강화
-  const enhancedSystemPrompt = isPro
-    ? `${systemPrompt}\n\n[Pro 멤버십: 더 상세하고 깊이 있는 분석을 제공하세요. 더 많은 세부사항과 인사이트를 포함하세요.]`
-    : `${systemPrompt}\n\n[무료 멤버십: 간단하게 핵심만 알려주세요. 간결하고 요약된 형태로 응답하세요.]`;
+  // 전역 프롬프터와 시스템 프롬프트 결합
+  const { enhanceSystemPromptWithGlobal } = await import(
+    "../shared/global-prompt"
+  );
+  const enhancedSystemPrompt = enhanceSystemPromptWithGlobal(
+    systemPrompt,
+    isPro
+  );
 
   const startTime = Date.now();
 

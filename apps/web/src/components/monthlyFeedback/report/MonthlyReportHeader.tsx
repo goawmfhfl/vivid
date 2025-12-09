@@ -118,19 +118,26 @@ function ScoreProgressBar({
   return (
     <div ref={containerRef} className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ opacity: 0.85 }}>
+        <span
+          className="text-xs font-medium"
+          style={{ opacity: 0.95, color: "rgba(255, 255, 255, 0.95)" }}
+        >
           {label}
         </span>
         {showValue && (
-          <span className="text-xs font-semibold" style={{ opacity: 0.95 }}>
-            {Math.round(displayValue)}
+          <span
+            className="text-xs font-bold"
+            style={{ opacity: 1, color: "rgba(255, 255, 255, 1)" }}
+          >
+            {Math.round(displayValue)}/10
           </span>
         )}
       </div>
       <div
-        className="h-2 rounded-full overflow-hidden"
+        className="h-2.5 rounded-full overflow-hidden"
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          backgroundColor: "rgba(255, 255, 255, 0.25)",
+          border: "1px solid rgba(255, 255, 255, 0.3)",
         }}
       >
         <div
@@ -138,8 +145,8 @@ function ScoreProgressBar({
           style={{
             width: `${percentage}%`,
             background:
-              "linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)",
-            boxShadow: "0 2px 8px rgba(255, 255, 255, 0.3)",
+              "linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)",
+            boxShadow: "0 2px 8px rgba(255, 255, 255, 0.4)",
           }}
         />
       </div>
@@ -347,7 +354,16 @@ export function MonthlyReportHeader({
 
                   {/* Pro 전용 점수들 */}
                   {isPro ? (
-                    <div className="space-y-3 mt-4 pt-4 border-t border-white/20">
+                    <div
+                      className="space-y-3 mt-4 pt-4 border-t"
+                      style={{
+                        borderColor: "rgba(255, 255, 255, 0.3)",
+                        backgroundColor: "rgba(0, 0, 0, 0.1)",
+                        padding: "1rem",
+                        borderRadius: "12px",
+                        marginTop: "1rem",
+                      }}
+                    >
                       <ScoreProgressBar
                         label="생활 밸런스"
                         value={summaryReport.life_balance_score}
