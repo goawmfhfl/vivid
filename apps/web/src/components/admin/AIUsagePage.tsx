@@ -5,7 +5,7 @@ import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { StatsCard } from "./StatsCard";
-import type { AIUsageStats } from "@/types/admin";
+import type { AIUsageStats, AIUsageDetail } from "@/types/admin";
 import {
   LineChart,
   Line,
@@ -88,6 +88,26 @@ export function AIUsagePage() {
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState(30);
 
+  // 전체 사용량 목록 관련 상태
+  const [usageList, setUsageList] = useState<
+    Array<AIUsageDetail & { user_name?: string; user_email?: string }>
+  >([]);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+  const [listPagination, setListPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
+  const [filters, setFilters] = useState({
+    model: "",
+    requestType: "",
+    userId: "",
+    search: "",
+    startDate: "",
+    endDate: "",
+  });
+
   useEffect(() => {
     const fetchStats = async () => {
       setIsLoading(true);
@@ -165,6 +185,42 @@ export function AIUsagePage() {
 
     fetchCreditInfo();
   }, []);
+
+  // 전체 사용량 목록 조회
+  useEffect(() => {
+    const fetchUsageList = async () => {
+      setIsLoadingList(true);
+      try {
+        const params = new URLSearchParams({
+          page: listPagination.page.toString(),
+          limit: listPagination.limit.toString(),
+        });
+        if (filters.model) params.append("model", filters.model);
+        if (filters.requestType)
+          params.append("requestType", filters.requestType);
+        if (filters.userId) params.append("userId", filters.userId);
+        if (filters.search) params.append("search", filters.search);
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
+
+        const response = await adminApiFetch(
+          `/api/admin/ai-usage/list?${params.toString()}`
+        );
+        if (!response.ok) {
+          throw new Error("AI 사용량 목록을 불러오는데 실패했습니다.");
+        }
+        const data = await response.json();
+        setUsageList(data.details || []);
+        setListPagination(data.pagination || listPagination);
+      } catch (err) {
+        console.error("AI 사용량 목록 조회 실패:", err);
+      } finally {
+        setIsLoadingList(false);
+      }
+    };
+
+    fetchUsageList();
+  }, [listPagination.page, listPagination.limit, filters]);
 
   if (isLoading) {
     return (
@@ -700,6 +756,497 @@ export function AIUsagePage() {
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* 일간/주간/월간 사용량 시각화 */}
+      <div
+        className="rounded-xl p-6"
+        style={{
+          ...CARD_STYLES.default,
+        }}
+      >
+        <h2
+          className="text-xl font-semibold mb-4"
+          style={{ color: COLORS.text.primary }}
+        >
+          기간별 사용량 추이
+        </h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={[
+              {
+                period: "오늘",
+                requests: stats.today.requests,
+                cost_krw: stats.today.cost_krw,
+              },
+              {
+                period: "이번 주",
+                requests: stats.thisWeek.requests,
+                cost_krw: stats.thisWeek.cost_krw,
+              },
+              {
+                period: "이번 달",
+                requests: stats.thisMonth.requests,
+                cost_krw: stats.thisMonth.cost_krw,
+              },
+            ]}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.light} />
+            <XAxis
+              dataKey="period"
+              tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
+            />
+            <YAxis
+              yAxisId="left"
+              tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
+              tickFormatter={(value) => value.toLocaleString()}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
+              tickFormatter={(value) =>
+                `₩${Math.round(value).toLocaleString()}`
+              }
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: COLORS.background.card,
+                border: `1px solid ${COLORS.border.light}`,
+                borderRadius: "8px",
+              }}
+            />
+            <Bar
+              yAxisId="left"
+              dataKey="requests"
+              fill={COLORS.brand.primary}
+              name="요청 수"
+            />
+            <Bar
+              yAxisId="right"
+              dataKey="cost_krw"
+              fill={COLORS.brand.secondary}
+              name="비용 (₩)"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* 전체 사용량 목록 */}
+      <div
+        className="rounded-xl p-6"
+        style={{
+          ...CARD_STYLES.default,
+        }}
+      >
+        <h2
+          className="text-xl font-semibold mb-4"
+          style={{ color: COLORS.text.primary }}
+        >
+          전체 사용량 내역
+        </h2>
+
+        {/* 필터 및 검색 영역 */}
+        <div className="mb-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                검색
+              </label>
+              <input
+                type="text"
+                placeholder="사용자명, 이메일, 모델명..."
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters({ ...filters, search: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              />
+            </div>
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                모델
+              </label>
+              <select
+                value={filters.model}
+                onChange={(e) =>
+                  setFilters({ ...filters, model: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              >
+                <option value="">전체</option>
+                <option value="gpt-5-nano">gpt-5-nano</option>
+                <option value="gpt-5-mini">gpt-5-mini</option>
+                <option value="gpt-4-turbo">gpt-4-turbo</option>
+              </select>
+            </div>
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                요청 타입
+              </label>
+              <select
+                value={filters.requestType}
+                onChange={(e) =>
+                  setFilters({ ...filters, requestType: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              >
+                <option value="">전체</option>
+                <option value="daily_feedback">Daily Feedback</option>
+                <option value="weekly_feedback">Weekly Feedback</option>
+                <option value="monthly_feedback">Monthly Feedback</option>
+              </select>
+            </div>
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                페이지당 개수
+              </label>
+              <select
+                value={listPagination.limit}
+                onChange={(e) => {
+                  setListPagination({
+                    ...listPagination,
+                    limit: parseInt(e.target.value, 10),
+                    page: 1,
+                  });
+                }}
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              >
+                <option value="10">10개</option>
+                <option value="20">20개</option>
+                <option value="50">50개</option>
+                <option value="100">100개</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                시작일
+              </label>
+              <input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, startDate: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              />
+            </div>
+            <div>
+              <label
+                className="text-xs font-medium block mb-2"
+                style={{ color: COLORS.text.secondary }}
+              >
+                종료일
+              </label>
+              <input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) =>
+                  setFilters({ ...filters, endDate: e.target.value })
+                }
+                className="w-full px-4 py-2 rounded-lg border text-sm"
+                style={{
+                  borderColor: COLORS.border.input,
+                  backgroundColor: COLORS.background.card,
+                  color: COLORS.text.primary,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 테이블 */}
+        {isLoadingList ? (
+          <div className="text-center py-8">
+            <p style={{ color: COLORS.text.secondary }}>로딩 중...</p>
+          </div>
+        ) : usageList.length === 0 ? (
+          <div className="text-center py-8">
+            <p style={{ color: COLORS.text.muted }}>사용량 내역이 없습니다.</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: COLORS.background.hover,
+                      borderBottom: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    <th
+                      className="px-4 py-3 text-left text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      날짜
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      사용자
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      모델
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      타입
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      섹션
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      토큰
+                    </th>
+                    <th
+                      className="px-4 py-3 text-right text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      비용
+                    </th>
+                    <th
+                      className="px-4 py-3 text-center text-sm font-semibold"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      상태
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usageList.map((detail) => (
+                    <tr
+                      key={detail.id}
+                      className="hover:bg-opacity-50 transition-colors cursor-pointer"
+                      style={{
+                        borderBottom: `1px solid ${COLORS.border.light}`,
+                      }}
+                      onClick={() =>
+                        detail.user_id &&
+                        router.push(`/admin/users/${detail.user_id}`)
+                      }
+                    >
+                      <td className="px-4 py-3">
+                        <span
+                          className="text-sm"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {new Date(detail.created_at).toLocaleDateString(
+                            "ko-KR"
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <span
+                            className="text-sm font-medium block"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {detail.user_name || "알 수 없음"}
+                          </span>
+                          <span
+                            className="text-xs"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            {detail.user_email || ""}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="text-sm"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {detail.model}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="text-sm"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          {detail.request_type === "daily_feedback"
+                            ? "Daily"
+                            : detail.request_type === "weekly_feedback"
+                            ? "Weekly"
+                            : "Monthly"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="text-sm"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          {detail.section_name || "-"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span
+                          className="text-sm"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {detail.total_tokens.toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div>
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            ₩{Math.round(detail.cost_krw).toLocaleString()}
+                          </span>
+                          <span
+                            className="text-xs ml-2"
+                            style={{ color: COLORS.text.tertiary }}
+                          >
+                            ${detail.cost_usd.toFixed(4)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className="px-2 py-1 rounded text-xs font-medium"
+                          style={{
+                            backgroundColor: detail.success
+                              ? COLORS.status.success + "20"
+                              : COLORS.status.error + "20",
+                            color: detail.success
+                              ? COLORS.status.success
+                              : COLORS.status.error,
+                          }}
+                        >
+                          {detail.success ? "성공" : "실패"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 페이지네이션 */}
+            {listPagination.totalPages > 1 && (
+              <div
+                className="flex items-center justify-between pt-4 border-t mt-4"
+                style={{ borderColor: COLORS.border.light }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm"
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    페이지 {listPagination.page} / {listPagination.totalPages} (
+                    {listPagination.total}개)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      setListPagination({
+                        ...listPagination,
+                        page: Math.max(1, listPagination.page - 1),
+                      })
+                    }
+                    disabled={listPagination.page === 1}
+                    className="px-3 py-1 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      backgroundColor:
+                        listPagination.page === 1
+                          ? COLORS.background.hover
+                          : COLORS.brand.light,
+                      color:
+                        listPagination.page === 1
+                          ? COLORS.text.muted
+                          : COLORS.brand.primary,
+                    }}
+                  >
+                    이전
+                  </button>
+                  <button
+                    onClick={() =>
+                      setListPagination({
+                        ...listPagination,
+                        page: Math.min(
+                          listPagination.totalPages,
+                          listPagination.page + 1
+                        ),
+                      })
+                    }
+                    disabled={listPagination.page === listPagination.totalPages}
+                    className="px-3 py-1 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      backgroundColor:
+                        listPagination.page === listPagination.totalPages
+                          ? COLORS.background.hover
+                          : COLORS.brand.light,
+                      color:
+                        listPagination.page === listPagination.totalPages
+                          ? COLORS.text.muted
+                          : COLORS.brand.primary,
+                    }}
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* 상위 유저 */}
       {stats.topUsers.length > 0 && (

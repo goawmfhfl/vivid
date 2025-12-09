@@ -92,4 +92,7 @@ export interface AIUsageDetail {
   success: boolean;
   error_message: string | null;
   created_at: string;
+  user_id?: string;
+  user_name?: string;
+  user_email?: string;
 }

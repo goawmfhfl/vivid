@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { supabase } from "@/lib/supabase";
+
+// 관리자 권한 캐시 (페이지 간 이동 시 재사용)
+const adminAuthCache = new Map<
+  string,
+  { isAdmin: boolean; timestamp: number }
+>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5분
 
 /**
  * 관리자 권한이 필요한 페이지를 보호하는 고차 컴포넌트 (HOC)
@@ -18,14 +25,40 @@ export function withAdminAuth<P extends object>(
 ) {
   return function AdminAuthenticatedComponent(props: P) {
     const router = useRouter();
+    const pathname = usePathname();
     const { data: user, isLoading: userLoading } = useCurrentUser();
     const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const hasCheckedRef = useRef(false);
 
     useEffect(() => {
       const checkAdminStatus = async () => {
+        // 사용자 로딩 중이면 대기
         if (userLoading || !user) {
-          setIsLoading(true);
+          if (!hasCheckedRef.current) {
+            setIsLoading(true);
+          }
+          return;
+        }
+
+        // 캐시 확인
+        const cacheKey = user.id;
+        const cached = adminAuthCache.get(cacheKey);
+        const now = Date.now();
+
+        if (cached && now - cached.timestamp < CACHE_DURATION) {
+          setIsAdmin(cached.isAdmin);
+          setIsLoading(false);
+          hasCheckedRef.current = true;
+          if (!cached.isAdmin) {
+            router.push("/");
+          }
+          return;
+        }
+
+        // 캐시가 없거나 만료된 경우에만 API 호출
+        if (hasCheckedRef.current) {
+          // 이미 확인했으면 로딩 표시하지 않음
           return;
         }
 
@@ -38,6 +71,7 @@ export function withAdminAuth<P extends object>(
           if (!session?.access_token) {
             console.error("세션이 없습니다.");
             setIsAdmin(false);
+            adminAuthCache.set(cacheKey, { isAdmin: false, timestamp: now });
             router.push("/");
             return;
           }
@@ -53,6 +87,7 @@ export function withAdminAuth<P extends object>(
           if (!response.ok) {
             console.error("관리자 권한 확인 API 실패:", response.status);
             setIsAdmin(false);
+            adminAuthCache.set(cacheKey, { isAdmin: false, timestamp: now });
             router.push("/");
             return;
           }
@@ -60,6 +95,11 @@ export function withAdminAuth<P extends object>(
           const data = await response.json();
           const adminStatus = data.isAdmin === true;
           setIsAdmin(adminStatus);
+          adminAuthCache.set(cacheKey, {
+            isAdmin: adminStatus,
+            timestamp: now,
+          });
+          hasCheckedRef.current = true;
 
           if (!adminStatus) {
             console.error("관리자 권한이 없습니다.");
@@ -69,6 +109,7 @@ export function withAdminAuth<P extends object>(
         } catch (error) {
           console.error("관리자 권한 확인 실패:", error);
           setIsAdmin(false);
+          adminAuthCache.set(cacheKey, { isAdmin: false, timestamp: now });
           router.push("/");
         } finally {
           setIsLoading(false);
@@ -76,10 +117,14 @@ export function withAdminAuth<P extends object>(
       };
 
       checkAdminStatus();
-    }, [user, userLoading, router]);
+    }, [user, userLoading, router, pathname]);
 
-    // 로딩 중이거나 인증되지 않은 경우
-    if (isLoading || userLoading || isAdmin === null || !isAdmin) {
+    // 사용자 로딩 중이거나 아직 확인하지 않은 경우에만 로딩 표시
+    if (
+      (isLoading && !hasCheckedRef.current) ||
+      userLoading ||
+      isAdmin === null
+    ) {
       return (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
@@ -88,6 +133,11 @@ export function withAdminAuth<P extends object>(
           </div>
         </div>
       );
+    }
+
+    // 관리자 권한이 없는 경우
+    if (!isAdmin) {
+      return null; // 로딩창 없이 조용히 리다이렉트
     }
 
     // 관리자 권한이 있는 경우 원래 컴포넌트 렌더링

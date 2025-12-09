@@ -17,16 +17,24 @@ export async function GET(
 
   try {
     const { id: userId } = await params;
+    const { searchParams } = new URL(request.url);
     const supabase = getServiceSupabase();
 
-    // Daily Feedback 목록 (메타데이터만)
-    const { data: dailyFeedbacks } = await supabase
+    // 페이지네이션 파라미터
+    const dailyPage = parseInt(searchParams.get("dailyPage") || "1", 10);
+    const dailyLimit = parseInt(searchParams.get("dailyLimit") || "10", 10);
+    const dailyOffset = (dailyPage - 1) * dailyLimit;
+
+    // Daily Feedback 목록 (메타데이터만, 페이지네이션)
+    const { data: dailyFeedbacks, count: dailyCount } = await supabase
       .from("daily_feedback")
       .select(
-        "id, report_date, day_of_week, created_at, updated_at, is_ai_generated"
+        "id, report_date, day_of_week, created_at, updated_at, is_ai_generated",
+        { count: "exact" }
       )
       .eq("user_id", userId)
-      .order("report_date", { ascending: false });
+      .order("report_date", { ascending: false })
+      .range(dailyOffset, dailyOffset + dailyLimit - 1);
 
     // Weekly Feedback 목록 (메타데이터만)
     const { data: weeklyFeedbacks } = await supabase
@@ -56,6 +64,12 @@ export async function GET(
         updated_at: fb.updated_at,
         is_ai_generated: fb.is_ai_generated,
       })),
+      dailyPagination: {
+        page: dailyPage,
+        limit: dailyLimit,
+        total: dailyCount || 0,
+        totalPages: Math.ceil((dailyCount || 0) / dailyLimit),
+      },
       weekly: (weeklyFeedbacks || []).map((fb) => ({
         id: fb.id,
         type: "weekly" as const,

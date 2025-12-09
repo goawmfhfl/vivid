@@ -5,7 +5,15 @@ import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import type { UserDetail, AIUsageStats } from "@/types/admin";
-import { ArrowLeft, Edit2, Save, X, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit2,
+  Save,
+  X,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -54,6 +62,12 @@ export function UserDetail({ userId }: UserDetailProps) {
       updated_at: string;
       is_ai_generated: boolean | null;
     }>;
+    dailyPagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
     weekly: Array<{
       id: string;
       type: "weekly";
@@ -75,6 +89,19 @@ export function UserDetail({ userId }: UserDetailProps) {
     }>;
   } | null>(null);
   const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
+  const [dailyPage, setDailyPage] = useState(1);
+  const [dailyLimit] = useState(10);
+  const [expandedSections, setExpandedSections] = useState({
+    daily: true,
+    weekly: true,
+    monthly: true,
+  });
+  const [isEditingSubscription, setIsEditingSubscription] = useState(false);
+  const [subscriptionEditData, setSubscriptionEditData] = useState({
+    plan: "" as "free" | "pro" | "",
+    status: "" as "active" | "canceled" | "expired" | "past_due" | "",
+    expires_at: "",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,14 +144,31 @@ export function UserDetail({ userId }: UserDetailProps) {
       setIsLoadingFeedbacks(true);
       try {
         const response = await adminApiFetch(
-          `/api/admin/users/${userId}/feedbacks`
+          `/api/admin/users/${userId}/feedbacks?dailyPage=${dailyPage}&dailyLimit=${dailyLimit}`
         );
-        if (response.ok) {
-          const data = await response.json();
-          setFeedbacks(data);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || "피드백 목록을 불러오는데 실패했습니다."
+          );
+        }
+        const data = await response.json();
+        // weekly 피드백이 제대로 있는지 확인
+        if (data && typeof data === "object") {
+          setFeedbacks({
+            daily: data.daily || [],
+            dailyPagination: data.dailyPagination,
+            weekly: data.weekly || [],
+            monthly: data.monthly || [],
+          });
         }
       } catch (err) {
         console.error("피드백 목록 조회 실패:", err);
+        setFeedbacks({
+          daily: [],
+          weekly: [],
+          monthly: [],
+        });
       } finally {
         setIsLoadingFeedbacks(false);
       }
@@ -133,7 +177,7 @@ export function UserDetail({ userId }: UserDetailProps) {
     if (user) {
       fetchFeedbacks();
     }
-  }, [userId, user]);
+  }, [userId, user, dailyPage, dailyLimit]);
 
   const handleSave = async () => {
     try {
@@ -217,16 +261,78 @@ export function UserDetail({ userId }: UserDetailProps) {
 
       // 피드백 목록 다시 불러오기
       const feedbacksResponse = await adminApiFetch(
-        `/api/admin/users/${userId}/feedbacks`
+        `/api/admin/users/${userId}/feedbacks?dailyPage=${dailyPage}&dailyLimit=${dailyLimit}`
       );
       if (feedbacksResponse.ok) {
         const data = await feedbacksResponse.json();
-        setFeedbacks(data);
+        setFeedbacks({
+          daily: data.daily || [],
+          dailyPagination: data.dailyPagination,
+          weekly: data.weekly || [],
+          monthly: data.monthly || [],
+        });
       }
 
       alert("피드백이 성공적으로 삭제되었습니다.");
     } catch (err) {
       alert(err instanceof Error ? err.message : "피드백 삭제 실패");
+    }
+  };
+
+  const handleUpdateSubscription = async () => {
+    if (!user?.subscription) {
+      alert("구독 정보가 없습니다.");
+      return;
+    }
+
+    try {
+      const updatePayload: {
+        userId: string;
+        plan?: string;
+        status?: string;
+        expires_at?: string | null;
+      } = {
+        userId: user.id,
+      };
+
+      if (subscriptionEditData.plan) {
+        updatePayload.plan = subscriptionEditData.plan;
+      }
+      if (subscriptionEditData.status) {
+        updatePayload.status = subscriptionEditData.status;
+      }
+      if (subscriptionEditData.expires_at !== undefined) {
+        updatePayload.expires_at = subscriptionEditData.expires_at || null;
+      }
+
+      const response = await adminApiFetch("/api/admin/subscriptions", {
+        method: "PATCH",
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || "구독 정보를 수정하는데 실패했습니다."
+        );
+      }
+
+      // 유저 정보 다시 불러오기
+      const userResponse = await adminApiFetch(`/api/admin/users/${userId}`);
+      if (userResponse.ok) {
+        const userData: UserDetail = await userResponse.json();
+        setUser(userData);
+      }
+
+      setIsEditingSubscription(false);
+      setSubscriptionEditData({
+        plan: "",
+        status: "",
+        expires_at: "",
+      });
+      alert("구독 정보가 성공적으로 수정되었습니다.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "구독 정보 수정 실패");
     }
   };
 
@@ -603,11 +709,20 @@ export function UserDetail({ userId }: UserDetailProps) {
             >
               구독 정보
             </h2>
-            {user.subscription && (
+            {user.subscription && !isEditingSubscription && (
               <button
-                onClick={() =>
-                  router.push(`/admin/subscriptions?userId=${user.id}`)
-                }
+                onClick={() => {
+                  setIsEditingSubscription(true);
+                  setSubscriptionEditData({
+                    plan: user.subscription!.plan,
+                    status: user.subscription!.status,
+                    expires_at: user.subscription!.expires_at
+                      ? new Date(user.subscription!.expires_at)
+                          .toISOString()
+                          .split("T")[0]
+                      : "",
+                  });
+                }}
                 className="text-sm px-3 py-1 rounded-lg"
                 style={{
                   backgroundColor: COLORS.brand.light,
@@ -620,80 +735,204 @@ export function UserDetail({ userId }: UserDetailProps) {
           </div>
           {user.subscription ? (
             <div className="space-y-4">
-              <div
-                className="flex items-center justify-between p-3 rounded-lg"
-                style={{ backgroundColor: COLORS.background.hover }}
-              >
-                <div>
-                  <label
-                    className="text-xs font-medium block mb-1"
-                    style={{ color: COLORS.text.secondary }}
+              {isEditingSubscription ? (
+                <>
+                  <div>
+                    <label
+                      className="text-xs font-medium block mb-2"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      플랜
+                    </label>
+                    <select
+                      value={subscriptionEditData.plan}
+                      onChange={(e) =>
+                        setSubscriptionEditData({
+                          ...subscriptionEditData,
+                          plan: e.target.value as "free" | "pro",
+                        })
+                      }
+                      className="w-full px-4 py-2.5 rounded-lg border text-base"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      className="text-xs font-medium block mb-2"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      상태
+                    </label>
+                    <select
+                      value={subscriptionEditData.status}
+                      onChange={(e) =>
+                        setSubscriptionEditData({
+                          ...subscriptionEditData,
+                          status: e.target.value as
+                            | "active"
+                            | "canceled"
+                            | "expired"
+                            | "past_due",
+                        })
+                      }
+                      className="w-full px-4 py-2.5 rounded-lg border text-base"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      <option value="active">활성</option>
+                      <option value="canceled">취소됨</option>
+                      <option value="expired">만료됨</option>
+                      <option value="past_due">연체</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      className="text-xs font-medium block mb-2"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      만료일
+                    </label>
+                    <input
+                      type="date"
+                      value={subscriptionEditData.expires_at}
+                      onChange={(e) =>
+                        setSubscriptionEditData({
+                          ...subscriptionEditData,
+                          expires_at: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2.5 rounded-lg border text-base"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUpdateSubscription}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg"
+                      style={{
+                        backgroundColor: COLORS.status.success,
+                        color: COLORS.text.white,
+                      }}
+                    >
+                      <Save className="w-4 h-4" />
+                      저장
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingSubscription(false);
+                        setSubscriptionEditData({
+                          plan: "",
+                          status: "",
+                          expires_at: "",
+                        });
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                      취소
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="flex items-center justify-between p-3 rounded-lg"
+                    style={{ backgroundColor: COLORS.background.hover }}
                   >
-                    플랜
-                  </label>
-                  <span
-                    className="px-3 py-1 rounded-lg text-sm font-semibold"
-                    style={{
-                      backgroundColor:
-                        user.subscription.plan === "pro"
-                          ? COLORS.brand.light
-                          : COLORS.background.card,
-                      color:
-                        user.subscription.plan === "pro"
-                          ? COLORS.brand.primary
-                          : COLORS.text.secondary,
-                    }}
-                  >
-                    {user.subscription.plan === "pro" ? "Pro" : "Free"}
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    className="text-xs font-medium block mb-1"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    상태
-                  </label>
-                  <span
-                    className="px-2 py-1 rounded text-xs font-medium"
-                    style={{
-                      backgroundColor:
-                        user.subscription.status === "active"
-                          ? COLORS.status.success + "20"
-                          : COLORS.status.error + "20",
-                      color:
-                        user.subscription.status === "active"
-                          ? COLORS.status.success
-                          : COLORS.status.error,
-                    }}
-                  >
-                    {user.subscription.status === "active"
-                      ? "활성"
-                      : user.subscription.status === "canceled"
-                      ? "취소됨"
-                      : user.subscription.status === "expired"
-                      ? "만료됨"
-                      : "연체"}
-                  </span>
-                </div>
-                <div>
-                  <label
-                    className="text-xs font-medium block mb-1"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    만료일
-                  </label>
-                  <p className="text-sm" style={{ color: COLORS.text.primary }}>
-                    {user.subscription.expires_at
-                      ? new Date(
-                          user.subscription.expires_at
-                        ).toLocaleDateString("ko-KR")
-                      : "-"}
-                  </p>
-                </div>
-              </div>
+                    <div>
+                      <label
+                        className="text-xs font-medium block mb-1"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        플랜
+                      </label>
+                      <span
+                        className="px-3 py-1 rounded-lg text-sm font-semibold"
+                        style={{
+                          backgroundColor:
+                            user.subscription.plan === "pro"
+                              ? COLORS.brand.light
+                              : COLORS.background.card,
+                          color:
+                            user.subscription.plan === "pro"
+                              ? COLORS.brand.primary
+                              : COLORS.text.secondary,
+                        }}
+                      >
+                        {user.subscription.plan === "pro" ? "Pro" : "Free"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label
+                        className="text-xs font-medium block mb-1"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        상태
+                      </label>
+                      <span
+                        className="px-2 py-1 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor:
+                            user.subscription.status === "active"
+                              ? COLORS.status.success + "20"
+                              : COLORS.status.error + "20",
+                          color:
+                            user.subscription.status === "active"
+                              ? COLORS.status.success
+                              : COLORS.status.error,
+                        }}
+                      >
+                        {user.subscription.status === "active"
+                          ? "활성"
+                          : user.subscription.status === "canceled"
+                          ? "취소됨"
+                          : user.subscription.status === "expired"
+                          ? "만료됨"
+                          : "연체"}
+                      </span>
+                    </div>
+                    <div>
+                      <label
+                        className="text-xs font-medium block mb-1"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        만료일
+                      </label>
+                      <p
+                        className="text-sm"
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {user.subscription.expires_at
+                          ? new Date(
+                              user.subscription.expires_at
+                            ).toLocaleDateString("ko-KR")
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -826,184 +1065,353 @@ export function UserDetail({ userId }: UserDetailProps) {
               <p style={{ color: COLORS.text.secondary }}>로딩 중...</p>
             </div>
           ) : feedbacks ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* 일간 피드백 */}
               <div>
-                <h3
-                  className="text-lg font-semibold mb-3"
-                  style={{ color: COLORS.text.primary }}
+                <button
+                  onClick={() =>
+                    setExpandedSections({
+                      ...expandedSections,
+                      daily: !expandedSections.daily,
+                    })
+                  }
+                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-opacity-50 transition-colors"
+                  style={{ backgroundColor: COLORS.background.hover }}
                 >
-                  일간 피드백 ({feedbacks.daily.length}개)
-                </h3>
-                {feedbacks.daily.length === 0 ? (
-                  <p
-                    className="text-sm py-4"
-                    style={{ color: COLORS.text.muted }}
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: COLORS.text.primary }}
                   >
-                    일간 피드백이 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {feedbacks.daily.map((fb) => (
-                      <div
-                        key={fb.id}
-                        className="flex items-center justify-between p-3 rounded-lg"
-                        style={{ backgroundColor: COLORS.background.hover }}
+                    일간 피드백 (
+                    {feedbacks.dailyPagination?.total || feedbacks.daily.length}
+                    개)
+                  </h3>
+                  {expandedSections.daily ? (
+                    <ChevronUp
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  ) : (
+                    <ChevronDown
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  )}
+                </button>
+                {expandedSections.daily && (
+                  <div className="mt-3 space-y-3">
+                    {feedbacks.daily.length === 0 ? (
+                      <p
+                        className="text-sm py-4"
+                        style={{ color: COLORS.text.muted }}
                       >
-                        <div className="flex-1">
-                          <p
-                            className="font-medium"
-                            style={{ color: COLORS.text.primary }}
-                          >
-                            {new Date(fb.date).toLocaleDateString("ko-KR")}
-                            {fb.day_of_week && ` (${fb.day_of_week})`}
-                          </p>
-                          <p
-                            className="text-xs mt-1"
-                            style={{ color: COLORS.text.tertiary }}
-                          >
-                            생성:{" "}
-                            {new Date(fb.created_at).toLocaleString("ko-KR")}
-                          </p>
+                        일간 피드백이 없습니다.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {feedbacks.daily.map((fb) => (
+                            <div
+                              key={fb.id}
+                              className="flex items-center justify-between p-3 rounded-lg"
+                              style={{
+                                backgroundColor: COLORS.background.hover,
+                              }}
+                            >
+                              <div className="flex-1">
+                                <p
+                                  className="font-medium"
+                                  style={{ color: COLORS.text.primary }}
+                                >
+                                  {new Date(fb.date).toLocaleDateString(
+                                    "ko-KR"
+                                  )}
+                                  {fb.day_of_week && ` (${fb.day_of_week})`}
+                                </p>
+                                <p
+                                  className="text-xs mt-1"
+                                  style={{ color: COLORS.text.tertiary }}
+                                >
+                                  생성:{" "}
+                                  {new Date(fb.created_at).toLocaleString(
+                                    "ko-KR"
+                                  )}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleDeleteFeedback(fb.id, "daily")
+                                }
+                                className="p-2 rounded-lg hover:bg-opacity-50"
+                                style={{
+                                  backgroundColor: COLORS.status.error + "20",
+                                  color: COLORS.status.error,
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                        <button
-                          onClick={() => handleDeleteFeedback(fb.id, "daily")}
-                          className="p-2 rounded-lg hover:bg-opacity-50"
-                          style={{
-                            backgroundColor: COLORS.status.error + "20",
-                            color: COLORS.status.error,
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                        {feedbacks.dailyPagination &&
+                          feedbacks.dailyPagination.totalPages > 1 && (
+                            <div
+                              className="flex items-center justify-between pt-3 border-t"
+                              style={{ borderColor: COLORS.border.light }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-sm"
+                                  style={{ color: COLORS.text.secondary }}
+                                >
+                                  페이지 {feedbacks.dailyPagination.page} /{" "}
+                                  {feedbacks.dailyPagination.totalPages}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    setDailyPage((p) => Math.max(1, p - 1))
+                                  }
+                                  disabled={
+                                    feedbacks.dailyPagination.page === 1
+                                  }
+                                  className="px-3 py-1 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                  style={{
+                                    backgroundColor:
+                                      feedbacks.dailyPagination.page === 1
+                                        ? COLORS.background.hover
+                                        : COLORS.brand.light,
+                                    color:
+                                      feedbacks.dailyPagination.page === 1
+                                        ? COLORS.text.muted
+                                        : COLORS.brand.primary,
+                                  }}
+                                >
+                                  이전
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setDailyPage((p) =>
+                                      Math.min(
+                                        feedbacks.dailyPagination!.totalPages,
+                                        p + 1
+                                      )
+                                    )
+                                  }
+                                  disabled={
+                                    feedbacks.dailyPagination.page ===
+                                    feedbacks.dailyPagination.totalPages
+                                  }
+                                  className="px-3 py-1 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                  style={{
+                                    backgroundColor:
+                                      feedbacks.dailyPagination.page ===
+                                      feedbacks.dailyPagination.totalPages
+                                        ? COLORS.background.hover
+                                        : COLORS.brand.light,
+                                    color:
+                                      feedbacks.dailyPagination.page ===
+                                      feedbacks.dailyPagination.totalPages
+                                        ? COLORS.text.muted
+                                        : COLORS.brand.primary,
+                                  }}
+                                >
+                                  다음
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                      </>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* 주간 피드백 */}
               <div>
-                <h3
-                  className="text-lg font-semibold mb-3"
-                  style={{ color: COLORS.text.primary }}
+                <button
+                  onClick={() =>
+                    setExpandedSections({
+                      ...expandedSections,
+                      weekly: !expandedSections.weekly,
+                    })
+                  }
+                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-opacity-50 transition-colors"
+                  style={{ backgroundColor: COLORS.background.hover }}
                 >
-                  주간 피드백 ({feedbacks.weekly.length}개)
-                </h3>
-                {feedbacks.weekly.length === 0 ? (
-                  <p
-                    className="text-sm py-4"
-                    style={{ color: COLORS.text.muted }}
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: COLORS.text.primary }}
                   >
-                    주간 피드백이 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {feedbacks.weekly.map((fb) => (
-                      <div
-                        key={fb.id}
-                        className="flex items-center justify-between p-3 rounded-lg"
-                        style={{ backgroundColor: COLORS.background.hover }}
+                    주간 피드백 ({feedbacks.weekly.length}개)
+                  </h3>
+                  {expandedSections.weekly ? (
+                    <ChevronUp
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  ) : (
+                    <ChevronDown
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  )}
+                </button>
+                {expandedSections.weekly && (
+                  <div className="mt-3">
+                    {feedbacks.weekly.length === 0 ? (
+                      <p
+                        className="text-sm py-4"
+                        style={{ color: COLORS.text.muted }}
                       >
-                        <div className="flex-1">
-                          <p
-                            className="font-medium"
-                            style={{ color: COLORS.text.primary }}
+                        주간 피드백이 없습니다.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {feedbacks.weekly.map((fb) => (
+                          <div
+                            key={fb.id}
+                            className="flex items-center justify-between p-3 rounded-lg"
+                            style={{ backgroundColor: COLORS.background.hover }}
                           >
-                            {new Date(fb.week_start).toLocaleDateString(
-                              "ko-KR"
-                            )}{" "}
-                            ~{" "}
-                            {new Date(fb.week_end).toLocaleDateString("ko-KR")}
-                          </p>
-                          <p
-                            className="text-xs mt-1"
-                            style={{ color: COLORS.text.tertiary }}
-                          >
-                            생성:{" "}
-                            {new Date(fb.created_at).toLocaleString("ko-KR")}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteFeedback(fb.id, "weekly")}
-                          className="p-2 rounded-lg hover:bg-opacity-50"
-                          style={{
-                            backgroundColor: COLORS.status.error + "20",
-                            color: COLORS.status.error,
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                            <div className="flex-1">
+                              <p
+                                className="font-medium"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {new Date(fb.week_start).toLocaleDateString(
+                                  "ko-KR"
+                                )}{" "}
+                                ~{" "}
+                                {new Date(fb.week_end).toLocaleDateString(
+                                  "ko-KR"
+                                )}
+                              </p>
+                              <p
+                                className="text-xs mt-1"
+                                style={{ color: COLORS.text.tertiary }}
+                              >
+                                생성:{" "}
+                                {new Date(fb.created_at).toLocaleString(
+                                  "ko-KR"
+                                )}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() =>
+                                handleDeleteFeedback(fb.id, "weekly")
+                              }
+                              className="p-2 rounded-lg hover:bg-opacity-50"
+                              style={{
+                                backgroundColor: COLORS.status.error + "20",
+                                color: COLORS.status.error,
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
 
               {/* 월간 피드백 */}
               <div>
-                <h3
-                  className="text-lg font-semibold mb-3"
-                  style={{ color: COLORS.text.primary }}
+                <button
+                  onClick={() =>
+                    setExpandedSections({
+                      ...expandedSections,
+                      monthly: !expandedSections.monthly,
+                    })
+                  }
+                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-opacity-50 transition-colors"
+                  style={{ backgroundColor: COLORS.background.hover }}
                 >
-                  월간 피드백 ({feedbacks.monthly.length}개)
-                </h3>
-                {feedbacks.monthly.length === 0 ? (
-                  <p
-                    className="text-sm py-4"
-                    style={{ color: COLORS.text.muted }}
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: COLORS.text.primary }}
                   >
-                    월간 피드백이 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {feedbacks.monthly.map((fb) => (
-                      <div
-                        key={fb.id}
-                        className="flex items-center justify-between p-3 rounded-lg"
-                        style={{ backgroundColor: COLORS.background.hover }}
+                    월간 피드백 ({feedbacks.monthly.length}개)
+                  </h3>
+                  {expandedSections.monthly ? (
+                    <ChevronUp
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  ) : (
+                    <ChevronDown
+                      className="w-5 h-5"
+                      style={{ color: COLORS.text.secondary }}
+                    />
+                  )}
+                </button>
+                {expandedSections.monthly && (
+                  <div className="mt-3">
+                    {feedbacks.monthly.length === 0 ? (
+                      <p
+                        className="text-sm py-4"
+                        style={{ color: COLORS.text.muted }}
                       >
-                        <div className="flex-1">
-                          <p
-                            className="font-medium"
-                            style={{ color: COLORS.text.primary }}
+                        월간 피드백이 없습니다.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {feedbacks.monthly.map((fb) => (
+                          <div
+                            key={fb.id}
+                            className="flex items-center justify-between p-3 rounded-lg"
+                            style={{ backgroundColor: COLORS.background.hover }}
                           >
-                            {fb.month_label || fb.month}
-                          </p>
-                          {fb.date_range && (
-                            <p
-                              className="text-xs mt-1"
-                              style={{ color: COLORS.text.tertiary }}
+                            <div className="flex-1">
+                              <p
+                                className="font-medium"
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {fb.month_label || fb.month}
+                              </p>
+                              {fb.date_range && (
+                                <p
+                                  className="text-xs mt-1"
+                                  style={{ color: COLORS.text.tertiary }}
+                                >
+                                  {new Date(
+                                    fb.date_range.start_date
+                                  ).toLocaleDateString("ko-KR")}{" "}
+                                  ~{" "}
+                                  {new Date(
+                                    fb.date_range.end_date
+                                  ).toLocaleDateString("ko-KR")}
+                                </p>
+                              )}
+                              <p
+                                className="text-xs mt-1"
+                                style={{ color: COLORS.text.tertiary }}
+                              >
+                                생성:{" "}
+                                {new Date(fb.created_at).toLocaleString(
+                                  "ko-KR"
+                                )}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() =>
+                                handleDeleteFeedback(fb.id, "monthly")
+                              }
+                              className="p-2 rounded-lg hover:bg-opacity-50"
+                              style={{
+                                backgroundColor: COLORS.status.error + "20",
+                                color: COLORS.status.error,
+                              }}
                             >
-                              {new Date(
-                                fb.date_range.start_date
-                              ).toLocaleDateString("ko-KR")}{" "}
-                              ~{" "}
-                              {new Date(
-                                fb.date_range.end_date
-                              ).toLocaleDateString("ko-KR")}
-                            </p>
-                          )}
-                          <p
-                            className="text-xs mt-1"
-                            style={{ color: COLORS.text.tertiary }}
-                          >
-                            생성:{" "}
-                            {new Date(fb.created_at).toLocaleString("ko-KR")}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteFeedback(fb.id, "monthly")}
-                          className="p-2 rounded-lg hover:bg-opacity-50"
-                          style={{
-                            backgroundColor: COLORS.status.error + "20",
-                            color: COLORS.status.error,
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
