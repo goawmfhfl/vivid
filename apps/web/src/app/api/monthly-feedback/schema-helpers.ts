@@ -29,18 +29,23 @@ export function getSectionSchema(sectionName: string, isPro: boolean = false) {
         "this_month_identity"
       );
 
-      // required 배열도 조정
-      if (schemaCopy.required && Array.isArray(schemaCopy.required)) {
-        if (isPro) {
-          // Pro일 때: this_month_identity가 properties에 있으면 required에도 추가
-          if (
-            hasThisMonthIdentity &&
-            !schemaCopy.required.includes("this_month_identity")
-          ) {
-            schemaCopy.required.push("this_month_identity");
-          }
-        } else {
-          // Pro가 아닐 때: this_month_identity를 required에서 제거 (이미 properties에서 제거됨)
+      // Pro 여부에 따라 this_month_identity 처리
+      if (isPro) {
+        // Pro일 때: this_month_identity가 properties에 있고 required에도 포함되어 있는지 확인
+        if (
+          hasThisMonthIdentity &&
+          schemaCopy.required &&
+          Array.isArray(schemaCopy.required) &&
+          !schemaCopy.required.includes("this_month_identity")
+        ) {
+          schemaCopy.required.push("this_month_identity");
+        }
+      } else {
+        // Pro가 아닐 때: this_month_identity를 properties와 required에서 모두 제거
+        if (hasThisMonthIdentity) {
+          delete props["this_month_identity"];
+        }
+        if (schemaCopy.required && Array.isArray(schemaCopy.required)) {
           schemaCopy.required = schemaCopy.required.filter(
             (key: string) => key !== "this_month_identity"
           );

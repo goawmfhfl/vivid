@@ -952,42 +952,47 @@ export const MonthlyReportSchema = {
           ai_encouragement_message: { type: "string" },
           // Pro 모드에서만 제공되는 정체성 분석
           this_month_identity: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              visualization: {
+            anyOf: [
+              {
                 type: "object",
                 additionalProperties: false,
                 properties: {
-                  characteristics_radar: {
+                  visualization: {
                     type: "object",
                     additionalProperties: false,
                     properties: {
-                      type: { type: "string", enum: ["radar"] },
-                      data: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          additionalProperties: false,
-                          properties: {
-                            characteristic: { type: "string" },
-                            value: {
-                              type: "number",
-                              minimum: 0,
-                              maximum: 10,
+                      characteristics_radar: {
+                        type: "object",
+                        additionalProperties: false,
+                        properties: {
+                          type: { type: "string", enum: ["radar"] },
+                          data: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              additionalProperties: false,
+                              properties: {
+                                characteristic: { type: "string" },
+                                value: {
+                                  type: "number",
+                                  minimum: 0,
+                                  maximum: 10,
+                                },
+                              },
+                              required: ["characteristic", "value"],
                             },
                           },
-                          required: ["characteristic", "value"],
                         },
+                        required: ["type", "data"],
                       },
                     },
-                    required: ["type", "data"],
+                    required: ["characteristics_radar"],
                   },
                 },
-                required: ["characteristics_radar"],
+                required: ["visualization"],
               },
-            },
-            required: ["visualization"],
+              { type: "null" },
+            ],
           },
         },
         required: [
@@ -996,6 +1001,7 @@ export const MonthlyReportSchema = {
           "turning_points",
           "next_month_focus",
           "ai_encouragement_message",
+          "this_month_identity",
         ],
       },
     },
