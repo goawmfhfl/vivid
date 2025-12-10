@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LogOut, Settings, Cog, Crown } from "lucide-react";
+import { User, LogOut, Settings, Cog, Crown, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,16 +15,44 @@ import { clearAllCache } from "@/lib/cache-utils";
 import { useState } from "react";
 import { SystemSettingsModal } from "./SystemSettingsModal";
 import { useSubscription } from "@/hooks/useSubscription";
+import { DatePickerBottomSheet } from "./DatePickerBottomSheet";
+import { getKSTDate } from "@/lib/date-utils";
 
 interface AppHeaderProps {
   title: string;
   subtitle?: string;
+  showDatePicker?: boolean;
+  selectedDate?: string; // YYYY-MM-DD
+  onDateSelect?: (date: string) => void;
+  currentMonth?: { year: number; month: number }; // 현재 표시 중인 월
+  recordDates?: string[]; // 기록이 있는 날짜 목록
+  aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
 }
 
-export function AppHeader({ title, subtitle }: AppHeaderProps) {
+export function AppHeader({
+  title,
+  subtitle,
+  showDatePicker = false,
+  selectedDate,
+  onDateSelect,
+  currentMonth,
+  recordDates = [],
+  aiFeedbackDates = [],
+}: AppHeaderProps) {
   const router = useRouter();
   const [showSystemSettings, setShowSystemSettings] = useState(false);
+  const [showDatePickerSheet, setShowDatePickerSheet] = useState(false);
   const { isPro } = useSubscription();
+
+  // currentMonth가 제공되면 사용, 없으면 selectedDate 또는 오늘 날짜 사용
+  const displayDate = currentMonth
+    ? new Date(currentMonth.year, currentMonth.month - 1, 1)
+    : selectedDate
+    ? getKSTDate(new Date(selectedDate))
+    : getKSTDate();
+  const monthLabel = `${displayDate.getFullYear()}년 ${
+    displayDate.getMonth() + 1
+  }월`;
 
   const handleLogout = async () => {
     try {
@@ -41,14 +69,26 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
     <>
       <header className="mb-6">
         <div className="flex items-start justify-between mb-2">
-          <div>
-            <h1
-              className={`mb-1 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
-              style={{ color: COLORS.text.primary }}
-            >
-              {title}
-            </h1>
-            {subtitle && (
+          <div className="flex-1">
+            {showDatePicker ? (
+              <button
+                onClick={() => setShowDatePickerSheet(true)}
+                className="flex items-center gap-1.5 mb-2"
+                style={{ color: COLORS.text.primary }}
+              >
+                <span className="text-lg font-semibold">{monthLabel}</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            ) : (
+              <h1
+                className={`mb-1 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+                style={{ color: COLORS.text.primary }}
+              >
+                {title}
+              </h1>
+            )}
+            {/* subtitle은 showDatePicker가 true일 때 표시하지 않음 */}
+            {subtitle && !showDatePicker && (
               <p
                 className={TYPOGRAPHY.body.fontSize}
                 style={{
@@ -327,6 +367,18 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
         isOpen={showSystemSettings}
         onClose={() => setShowSystemSettings(false)}
       />
+
+      {/* 날짜 선택 바텀 시트 */}
+      {showDatePicker && (
+        <DatePickerBottomSheet
+          isOpen={showDatePickerSheet}
+          onClose={() => setShowDatePickerSheet(false)}
+          selectedDate={selectedDate}
+          onDateSelect={onDateSelect}
+          recordDates={recordDates}
+          aiFeedbackDates={aiFeedbackDates}
+        />
+      )}
     </>
   );
 }

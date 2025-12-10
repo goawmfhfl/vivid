@@ -16,6 +16,7 @@ export interface Record {
 export interface CreateRecordData {
   content: string;
   type: string;
+  kst_date?: string; // YYYY-MM-DD 형식, 선택적
 }
 
 // Record 업데이트 데이터 타입
@@ -91,7 +92,11 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ content: data.content, type: data.type }),
+      body: JSON.stringify({
+        content: data.content,
+        type: data.type,
+        ...(data.kst_date && { kst_date: data.kst_date }),
+      }),
     });
 
     if (!response.ok) {

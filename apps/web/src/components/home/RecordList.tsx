@@ -16,6 +16,7 @@ interface RecordListProps {
   onEdit: (record: Record) => void;
   onDelete: (id: number) => void;
   onRetry?: () => void;
+  selectedDate?: string; // YYYY-MM-DD 형식, 선택한 날짜
 }
 
 export function RecordList({
@@ -25,20 +26,24 @@ export function RecordList({
   onEdit,
   onDelete,
   onRetry,
+  selectedDate,
 }: RecordListProps) {
   const [retryCount, setRetryCount] = useState(0);
 
-  const todayRecords = records.filter((record) => {
-    const todayKST = getKSTDateString();
-    return record.kst_date === todayKST;
+  // 선택한 날짜 또는 오늘 날짜로 필터링
+  const targetDate = selectedDate || getKSTDateString();
+  const filteredRecords = records.filter((record) => {
+    return record.kst_date === targetDate;
   });
 
-  // 오늘의 총 글자 수 계산
+  const isToday = !selectedDate || selectedDate === getKSTDateString();
+
+  // 선택한 날짜의 총 글자 수 계산
   const totalCharCount = useMemo(() => {
-    return todayRecords.reduce((total, record) => {
+    return filteredRecords.reduce((total, record) => {
       return total + (record.content?.length || 0);
     }, 0);
-  }, [todayRecords]);
+  }, [filteredRecords]);
 
   const handleRetry = () => {
     setRetryCount((c) => c + 1);
@@ -69,7 +74,7 @@ export function RecordList({
     return (
       <div className="mb-6">
         <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
-          오늘의 타임라인
+          {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         <div className="py-8">
           <LoadingSpinner
@@ -87,7 +92,7 @@ export function RecordList({
     return (
       <div className="mb-6">
         <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
-          오늘의 타임라인
+          {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         <div className="py-8">
           <ErrorDisplay
@@ -102,7 +107,7 @@ export function RecordList({
   }
 
   // Empty State
-  if (todayRecords.length === 0) {
+  if (filteredRecords.length === 0) {
     return (
       <div className="text-center py-12">
         <PenLine
@@ -116,7 +121,9 @@ export function RecordList({
             fontSize: "0.9rem",
           }}
         >
-          오늘의 첫 기록을 시작해보세요
+          {isToday
+            ? "오늘의 첫 기록을 시작해보세요"
+            : "이 날짜에는 기록이 없습니다"}
         </p>
       </div>
     );
@@ -127,7 +134,7 @@ export function RecordList({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 style={{ color: "#333333", fontSize: "1.1rem" }}>
-          오늘의 타임라인
+          {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         {totalCharCount > 0 && (
           <span
@@ -144,7 +151,7 @@ export function RecordList({
       </div>
 
       <div className="space-y-3">
-        {todayRecords.map((record) => (
+        {filteredRecords.map((record) => (
           <RecordItem
             key={record.id}
             record={record}

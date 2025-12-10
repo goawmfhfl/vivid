@@ -13,11 +13,12 @@ import {
 
 interface RecordFormProps {
   onSuccess?: () => void;
+  selectedDate?: string; // YYYY-MM-DD
 }
 
 const STORAGE_KEY = "record-form-draft";
 
-export function RecordForm({ onSuccess }: RecordFormProps) {
+export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const [content, setContent] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
@@ -118,7 +119,11 @@ export function RecordForm({ onSuccess }: RecordFormProps) {
     const recordType = selectedType || "daily";
     if (content.trim()) {
       createRecordMutation.mutate(
-        { content, type: recordType },
+        {
+          content,
+          type: recordType,
+          ...(selectedDate && { kst_date: selectedDate }),
+        },
         {
           onSuccess: () => {
             setContent("");

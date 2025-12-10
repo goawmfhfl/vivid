@@ -1,6 +1,6 @@
 "use client";
 
-import { Home as HomeIcon, Clock, BarChart3 } from "lucide-react";
+import { Home as HomeIcon, BarChart3 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { shouldShowBottomNav } from "@/lib/navigation";
@@ -41,13 +41,8 @@ export function BottomNavigation() {
       href: "/",
       icon: HomeIcon,
       label: "작성하기",
-      isActive: pathname === "/",
-    },
-    {
-      href: "/logs",
-      icon: Clock,
-      label: "지난 기록",
-      isActive: pathname === "/logs",
+      isActive:
+        pathname === "/" || pathname?.match(/^\/(\d{4}-\d{2}-\d{2})$/) !== null,
     },
     {
       href: "/analysis",
@@ -111,7 +106,7 @@ export function BottomNavigation() {
         }}
       />
       <div className="max-w-2xl mx-auto px-2 relative z-10">
-        <div className="grid grid-cols-3 gap-1 py-2">
+        <div className="grid grid-cols-2 gap-1 py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (

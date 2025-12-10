@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -16,13 +16,20 @@ import { CircularProgress } from "./ui/CircularProgress";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
+import { WeeklyDateView } from "./home/WeeklyDateView";
+import { getKSTDate } from "@/lib/date-utils";
+import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
 
-export function Home() {
+interface HomeProps {
+  selectedDate?: string; // YYYY-MM-DD
+}
+
+export function Home({ selectedDate }: HomeProps = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const {
-    data: records = [],
+    data: allRecords = [],
     isLoading,
     error,
     refetch: refetchRecords,
@@ -36,14 +43,49 @@ export function Home() {
 
   // KST 기준으로 오늘 날짜 계산
   const todayIso = getKSTDateString();
+  const activeDate = selectedDate || todayIso;
+  const isToday = activeDate === todayIso;
 
-  const hasTodayRecords = useMemo(() => {
-    // KST 기준 오늘 날짜 문자열
-    const todayKST = getKSTDateString();
-    return records.some((record) => {
-      // record.kst_date는 이미 "YYYY-MM-DD" 형식이므로 직접 비교
-      return record.kst_date === todayKST;
+  // 기록 및 AI 피드백 날짜 조회
+  const { data: datesData, isLoading: isLoadingDates } =
+    useRecordsAndFeedbackDates();
+
+  const recordDates = datesData?.recordDates || [];
+  const aiFeedbackDates = datesData?.aiFeedbackDates || [];
+
+  // 현재 표시 중인 월 상태 (WeeklyDateView와 동기화)
+  const [currentMonth, setCurrentMonth] = useState<{
+    year: number;
+    month: number;
+  }>(() => {
+    const date = getKSTDate(new Date(activeDate));
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+    };
+  });
+
+  // activeDate가 변경되면 currentMonth도 업데이트
+  useEffect(() => {
+    const date = getKSTDate(new Date(activeDate));
+    setCurrentMonth({
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
     });
+  }, [activeDate]);
+
+  // 월 변경 핸들러 메모이제이션 (무한 루프 방지)
+  const handleMonthChange = useCallback((year: number, month: number) => {
+    setCurrentMonth({ year, month });
+  }, []);
+
+  // 선택한 날짜의 레코드만 필터링
+  const records = useMemo(() => {
+    return allRecords.filter((record) => record.kst_date === activeDate);
+  }, [allRecords, activeDate]);
+
+  const hasDateRecords = useMemo(() => {
+    return records.length > 0;
   }, [records]);
 
   const handleEdit = (record: Record) => {
@@ -62,22 +104,26 @@ export function Home() {
     setDeletingRecordId(id);
   };
 
-  // 오늘 자 피드백 존재 여부 조회
-  const { data: todayFeedback } = useGetDailyFeedback(todayIso);
+  // 선택한 날짜의 피드백 존재 여부 조회
+  const { data: dateFeedback } = useGetDailyFeedback(activeDate);
 
-  const hasTodayFeedback = !!todayFeedback && todayFeedback.is_ai_generated;
+  const hasDateFeedback = !!dateFeedback && dateFeedback.is_ai_generated;
 
   // 전역 모달 및 피드백 생성 상태 관리
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const openErrorModal = useModalStore((state) => state.openErrorModal);
-  const {
-    dailyFeedbackProgress,
-    setDailyFeedbackProgress,
-    clearDailyFeedbackProgress,
-  } = useModalStore();
+  const dailyFeedbackProgress = useModalStore(
+    (state) => state.dailyFeedbackProgress
+  );
+  const setDailyFeedbackProgress = useModalStore(
+    (state) => state.setDailyFeedbackProgress
+  );
+  const clearDailyFeedbackProgress = useModalStore(
+    (state) => state.clearDailyFeedbackProgress
+  );
 
   // 진행 상황 확인
-  const progress = dailyFeedbackProgress[todayIso] || null;
+  const progress = dailyFeedbackProgress[activeDate] || null;
   const isGeneratingFeedback = isGenerating || progress !== null;
   const progressPercentage = progress
     ? Math.min(Math.round((progress.current / progress.total) * 100), 99)
@@ -99,12 +145,12 @@ export function Home() {
 
   const handleOpenDailyFeedback = async () => {
     try {
-      if (hasTodayFeedback) {
+      if (hasDateFeedback) {
         // 기존 피드백이 있으면 id로 라우팅
-        if (!todayFeedback.id) {
+        if (!dateFeedback.id) {
           throw new Error("피드백 ID를 찾을 수 없습니다.");
         }
-        router.push(`/analysis/feedback/daily/${todayFeedback.id}`);
+        router.push(`/analysis/feedback/daily/${dateFeedback.id}`);
         return;
       }
 
@@ -121,8 +167,8 @@ export function Home() {
       ];
 
       // 진행 상황 즉시 초기화 (버튼 클릭 시 바로 프로그래스바 표시)
-      setDailyFeedbackProgress(todayIso, {
-        date: todayIso,
+      setDailyFeedbackProgress(activeDate, {
+        date: activeDate,
         current: 0,
         total: sectionNames.length,
         currentStep: getSectionNameKR(sectionNames[0]),
@@ -135,7 +181,7 @@ export function Home() {
         await new Promise<void>((resolve, reject) => {
           const params = new URLSearchParams({
             userId,
-            date: todayIso,
+            date: activeDate,
             timezone: "Asia/Seoul",
           });
 
@@ -172,8 +218,8 @@ export function Home() {
 
               if (data.type === "progress") {
                 // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
-                setDailyFeedbackProgress(todayIso, {
-                  date: todayIso,
+                setDailyFeedbackProgress(activeDate, {
+                  date: activeDate,
                   current: data.current,
                   total: data.total,
                   currentStep: getSectionNameKR(data.sectionName),
@@ -190,12 +236,22 @@ export function Home() {
                 });
 
                 // 진행 상황 초기화
-                clearDailyFeedbackProgress(todayIso);
+                clearDailyFeedbackProgress(activeDate);
 
                 // 성공 시 전역 모달로 알림
                 if (data.data?.id) {
+                  const dateLabel = isToday
+                    ? "오늘의"
+                    : getKSTDate(new Date(activeDate)).toLocaleDateString(
+                        "ko-KR",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      );
                   openSuccessModal(
-                    "오늘의 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.",
+                    `${dateLabel} 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.`,
                     () => {
                       router.push(`/analysis/feedback/daily/${data.data.id}`);
                     }
@@ -209,7 +265,7 @@ export function Home() {
                 // 에러 처리
                 cleanup();
 
-                clearDailyFeedbackProgress(todayIso);
+                clearDailyFeedbackProgress(activeDate);
                 openErrorModal(
                   `피드백 생성 중 오류가 발생했습니다: ${data.error}`
                 );
@@ -219,7 +275,7 @@ export function Home() {
             } catch (error) {
               console.error("SSE 메시지 파싱 오류:", error);
               cleanup();
-              clearDailyFeedbackProgress(todayIso);
+              clearDailyFeedbackProgress(activeDate);
 
               // HTML 응답인지 확인 (502 Bad Gateway 등)
               let errorMessage =
@@ -247,7 +303,7 @@ export function Home() {
 
           es.onerror = (_event) => {
             cleanup();
-            clearDailyFeedbackProgress(todayIso);
+            clearDailyFeedbackProgress(activeDate);
 
             // EventSource의 readyState를 확인하여 에러 타입 판단
             let errorMessage = "피드백 생성 중 연결 오류가 발생했습니다.";
@@ -308,26 +364,36 @@ export function Home() {
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
       <AppHeader
-        title="오늘의 기록"
-        subtitle={new Date().toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          weekday: "long",
-        })}
+        title={isToday ? "오늘의 기록" : "기록"}
+        showDatePicker={true}
+        selectedDate={activeDate}
+        onDateSelect={(date) => router.push(`/${date}`)}
+        currentMonth={currentMonth}
+        recordDates={recordDates}
+        aiFeedbackDates={aiFeedbackDates}
       />
 
-      <RecordForm />
+      <WeeklyDateView
+        selectedDate={activeDate}
+        onDateSelect={(date) => router.push(`/${date}`)}
+        recordDates={recordDates}
+        aiFeedbackDates={aiFeedbackDates}
+        onMonthChange={handleMonthChange}
+        isLoading={isLoadingDates}
+      />
+
+      <RecordForm selectedDate={activeDate} />
       <RecordList
-        records={records}
+        records={allRecords}
         isLoading={isLoading}
         error={error}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onRetry={() => refetchRecords()}
+        selectedDate={activeDate}
       />
 
-      {hasTodayRecords && (
+      {hasDateRecords && (
         <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4">
           <div
             className="relative cursor-pointer transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
@@ -435,9 +501,13 @@ export function Home() {
                 >
                   {progress
                     ? "피드백 생성 중..."
-                    : hasTodayFeedback
-                    ? "오늘 피드백 보기"
-                    : "오늘 피드백 생성하기"}
+                    : hasDateFeedback
+                    ? isToday
+                      ? "오늘 피드백 보기"
+                      : "피드백 보기"
+                    : isToday
+                    ? "오늘 피드백 생성하기"
+                    : "피드백 생성하기"}
                 </span>
                 {progress && (
                   <span

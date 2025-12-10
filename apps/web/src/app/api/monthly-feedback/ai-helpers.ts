@@ -52,7 +52,6 @@ export async function generateSection<T>(
   const openai = getOpenAIClient();
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
-  // Weekly & Monthly Reports는 gpt-5-mini로 자동 업그레이드
   // Daily 점수 기반으로 정확도 향상 및 일관성 보정 역할
   const model = "gpt-5-mini";
 
