@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { generateAllReports } from "./ai-service";
+import { generateAllReportsWithProgress } from "./ai-service-stream";
 import { fetchRecordsByDate, saveDailyReport } from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { DailyFeedbackRequest } from "./types";
@@ -43,11 +43,12 @@ export async function POST(request: NextRequest) {
     const { isPro } = await verifySubscription(userId);
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
-    const allReports = await generateAllReports(
+    const allReports = await generateAllReportsWithProgress(
       records,
       date,
       dayOfWeek,
       isPro,
+      undefined, // progressCallback 없음
       userId // AI 사용량 로깅을 위한 userId 전달
     );
 

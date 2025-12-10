@@ -49,7 +49,7 @@ export function DatePickerBottomSheet({
     startDate.setDate(startDate.getDate() - startDate.getDay()); // 주의 시작(일요일)
 
     const matrix: Date[][] = [];
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
 
     // 항상 6주(42일) 고정
     for (let week = 0; week < 6; week++) {
