@@ -192,7 +192,6 @@ export function WeeklyDateView({
       setDirection(null); // 직접 선택 시 애니메이션 방지
       // 월 변경 콜백은 currentWeekStart 변경 시 자동으로 호출됨
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   // 애니메이션 variants
@@ -270,7 +269,6 @@ export function WeeklyDateView({
             {weekDates.map((date, index) => {
               const dateIso = getKSTDateString(date);
               const isActive = dateIso === activeDate;
-              const isToday = dateIso === todayIso;
               const hasRecord = recordDates.includes(dateIso);
               const hasAiFeedback = aiFeedbackDates.includes(dateIso);
               const dayOfWeek = WEEKDAYS[index];

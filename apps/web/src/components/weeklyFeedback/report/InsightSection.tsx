@@ -89,10 +89,28 @@ const CustomTooltip = ({
   return null;
 };
 
-const CustomLabel = (props: any) => {
+interface CustomLabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
+}
+
+const CustomLabel = (props: CustomLabelProps) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
 
-  if (!midAngle || !percent || percent < 0.05) return null; // midAngle이나 percent가 없거나 5% 미만은 라벨 숨김
+  if (
+    !midAngle ||
+    !percent ||
+    percent < 0.05 ||
+    !cx ||
+    !cy ||
+    !innerRadius ||
+    !outerRadius
+  )
+    return null; // midAngle이나 percent가 없거나 5% 미만은 라벨 숨김
 
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -446,18 +464,22 @@ export function InsightSection({
                                   paddingTop: "20px",
                                 }}
                                 iconType="circle"
-                                formatter={(value, entry: any) => (
-                                  <span
-                                    style={{
-                                      fontSize: "0.75rem",
-                                      color: COLORS.text.primary,
-                                      fontWeight: 500,
-                                    }}
-                                  >
-                                    {(entry?.payload as { category?: string })
-                                      ?.category || value}
-                                  </span>
-                                )}
+                                formatter={(value, entry) => {
+                                  const category = (
+                                    entry?.payload as { category?: string }
+                                  )?.category;
+                                  return (
+                                    <span
+                                      style={{
+                                        fontSize: "0.75rem",
+                                        color: COLORS.text.primary,
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      {category || value}
+                                    </span>
+                                  );
+                                }}
                               />
                             </PieChart>
                           </ResponsiveContainer>

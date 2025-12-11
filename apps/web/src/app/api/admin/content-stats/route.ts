@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get("days") || "30", 10);
-    const period = (searchParams.get("period") || "day") as PeriodType;
+    const _period = (searchParams.get("period") || "day") as PeriodType;
 
     const supabase = getServiceSupabase();
 

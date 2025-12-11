@@ -8,7 +8,6 @@ import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { MonthlySummariesTab } from "@/components/summaries/MonthlySummariesTab";
 import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
 import { convertMonthlyFeedbackToPeriodSummary } from "@/components/summaries/monthly-feedback-mapper";
-import type { PeriodSummary } from "@/types/Entry";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Button } from "@/components/ui/button";

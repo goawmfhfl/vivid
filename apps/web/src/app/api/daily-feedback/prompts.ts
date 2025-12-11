@@ -1,12 +1,4 @@
 import type { Record } from "./types";
-import type {
-  SummaryReport,
-  DailyReport,
-  EmotionReport,
-  DreamReport,
-  InsightReport,
-  FeedbackReport,
-} from "@/types/daily-feedback";
 
 /**
  * 전체 요약 리포트 프롬프트 생성

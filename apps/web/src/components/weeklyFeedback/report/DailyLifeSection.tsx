@@ -6,7 +6,6 @@ import {
   Heart,
   Brain,
   ArrowRight,
-  Clock,
   Lightbulb,
   Target,
   User,

@@ -44,7 +44,6 @@ export function DatePickerBottomSheet({
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - startDate.getDay()); // 주의 시작(일요일)
 
@@ -242,7 +241,7 @@ export function DatePickerBottomSheet({
 
             {/* 날짜 그리드 */}
             <div className="grid grid-cols-7 gap-3">
-              {calendarMatrix.map((week, weekIndex) =>
+              {calendarMatrix.map((week) =>
                 week.map((date) => {
                   const dateIso = getKSTDateString(date);
                   const isActive = dateIso === activeDate;

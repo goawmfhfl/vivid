@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Target,
-  Lock,
-  ArrowRight,
-  Lightbulb,
-  Sparkles,
-  User,
-} from "lucide-react";
+import { Target, Lock, ArrowRight, Sparkles, User } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { VisionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
@@ -20,8 +13,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
   LabelList,
 } from "recharts";

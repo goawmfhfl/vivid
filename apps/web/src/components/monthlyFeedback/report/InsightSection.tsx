@@ -3,13 +3,9 @@
 import { useState } from "react";
 import {
   Lightbulb,
-  Lock,
-  TrendingUp,
-  ArrowRight,
   Calendar,
   FileText,
   Sparkles,
-  Target,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -17,7 +13,6 @@ import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
 import type { InsightReport } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING } from "@/lib/design-system";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -44,7 +39,6 @@ export function InsightSection({
   insightReport,
   isPro = false,
 }: InsightSectionProps) {
-  const router = useRouter();
   const [isTopInsightsExpanded, setIsTopInsightsExpanded] = useState(false);
 
   if (!insightReport) {

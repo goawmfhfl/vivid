@@ -9,8 +9,6 @@ import {
   Sparkles,
   AlertTriangle,
   Cloud,
-  Smile,
-  AlertCircle,
 } from "lucide-react";
 import { Card } from "../../ui/card";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
