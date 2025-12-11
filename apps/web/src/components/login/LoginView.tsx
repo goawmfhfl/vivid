@@ -112,10 +112,7 @@ export function LoginView() {
       style={{ backgroundColor: "#FAFAF8" }}
     >
       <div className="w-full max-w-md">
-        <AuthHeader
-          title="myRecord"
-          subtitle="기록하면, 피드백이 따라옵니다."
-        />
+        <AuthHeader title="Grit" subtitle="기록하면, 피드백이 따라옵니다." />
 
         {/* Form */}
         <form

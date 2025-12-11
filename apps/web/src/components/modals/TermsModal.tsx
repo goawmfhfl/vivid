@@ -29,7 +29,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
               제1조 (목적)
             </h3>
             <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
-              본 약관은 myRecord(이하 &quot;서비스&quot;)가 제공하는 기록 및 AI
+              본 약관은 Grit(이하 &quot;서비스&quot;)가 제공하는 기록 및 AI
               피드백 기능을 이용함에 있어, 이용자와 서비스 운영자 간의
               권리·의무를 규정함을 목적으로 합니다.
             </p>
