@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { PenLine } from "lucide-react";
 import { RecordItem } from "../common/RecordItem";
 import { type Record } from "../../hooks/useRecords";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { RecordItemSkeleton } from "../ui/Skeleton";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
@@ -76,12 +76,10 @@ export function RecordList({
         <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
           {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
-        <div className="py-8">
-          <LoadingSpinner
-            message="기록을 불러오는 중..."
-            size="md"
-            showMessage={true}
-          />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <RecordItemSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
