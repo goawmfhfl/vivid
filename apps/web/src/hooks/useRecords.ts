@@ -210,9 +210,47 @@ export const useCreateRecord = () => {
 
   return useMutation({
     mutationFn: createRecord,
-    onSuccess: () => {
-      // 성공 시 records 쿼리 무효화하여 새로고침
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RECORDS] });
+    onSuccess: (newRecord) => {
+      // RECORDS 쿼리 캐시에 새 record 추가
+      queryClient.setQueryData<Record[]>(
+        [QUERY_KEYS.RECORDS],
+        (oldRecords = []) => {
+          // 중복 체크 (같은 id가 이미 있는 경우)
+          const exists = oldRecords.some((r) => r.id === newRecord.id);
+          if (exists) {
+            return oldRecords;
+          }
+          // 새 기록을 배열의 첫 번째에 추가
+          return [newRecord, ...oldRecords];
+        }
+      );
+
+      // useRecordsAndFeedbackDates의 recordDates 업데이트
+      queryClient.setQueryData<{
+        recordDates: string[];
+        aiFeedbackDates: string[];
+      }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
+        if (!oldData) {
+          return {
+            recordDates: [newRecord.kst_date],
+            aiFeedbackDates: [],
+          };
+        }
+
+        const { recordDates, aiFeedbackDates } = oldData;
+        // 날짜가 이미 있는지 확인
+        if (!recordDates.includes(newRecord.kst_date)) {
+          const updatedRecordDates = [
+            ...recordDates,
+            newRecord.kst_date,
+          ].sort();
+          return {
+            recordDates: updatedRecordDates,
+            aiFeedbackDates,
+          };
+        }
+        return oldData;
+      });
     },
     onError: (error: RecordError) => {
       console.error("기록 생성 실패:", error.message);
@@ -227,9 +265,62 @@ export const useUpdateRecord = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateRecordData }) =>
       updateRecord(id, data),
-    onSuccess: () => {
-      // 성공 시 records 쿼리 무효화하여 새로고침
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RECORDS] });
+    onSuccess: (updatedRecord) => {
+      // RECORDS 쿼리 캐시에서 해당 id의 record를 업데이트
+      queryClient.setQueryData<Record[]>(
+        [QUERY_KEYS.RECORDS],
+        (oldRecords = []) => {
+          return oldRecords.map((record) =>
+            record.id === updatedRecord.id ? updatedRecord : record
+          );
+        }
+      );
+
+      // 날짜가 변경된 경우 useRecordsAndFeedbackDates도 업데이트
+      const oldRecords =
+        queryClient.getQueryData<Record[]>([QUERY_KEYS.RECORDS]) || [];
+      const oldRecord = oldRecords.find((r) => r.id === updatedRecord.id);
+
+      if (oldRecord && oldRecord.kst_date !== updatedRecord.kst_date) {
+        // 이전 날짜에 다른 record가 있는지 확인
+        const hasOtherRecordsOnOldDate = oldRecords.some(
+          (r) => r.id !== updatedRecord.id && r.kst_date === oldRecord.kst_date
+        );
+
+        queryClient.setQueryData<{
+          recordDates: string[];
+          aiFeedbackDates: string[];
+        }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
+          if (!oldData) {
+            return {
+              recordDates: [updatedRecord.kst_date],
+              aiFeedbackDates: [],
+            };
+          }
+
+          let { recordDates } = oldData;
+
+          // 이전 날짜에 다른 record가 없으면 제거
+          if (
+            !hasOtherRecordsOnOldDate &&
+            recordDates.includes(oldRecord.kst_date)
+          ) {
+            recordDates = recordDates.filter(
+              (date) => date !== oldRecord.kst_date
+            );
+          }
+
+          // 새 날짜 추가 (없는 경우만)
+          if (!recordDates.includes(updatedRecord.kst_date)) {
+            recordDates = [...recordDates, updatedRecord.kst_date].sort();
+          }
+
+          return {
+            recordDates,
+            aiFeedbackDates: oldData.aiFeedbackDates,
+          };
+        });
+      }
     },
     onError: (error: RecordError) => {
       console.error("기록 수정 실패:", error.message);
@@ -243,9 +334,52 @@ export const useDeleteRecord = () => {
 
   return useMutation({
     mutationFn: deleteRecord,
-    onSuccess: () => {
-      // 성공 시 records 쿼리 무효화하여 새로고침
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RECORDS] });
+    onSuccess: (_data, deletedId) => {
+      // 삭제 전에 record 정보 가져오기 (날짜 확인용)
+      const records =
+        queryClient.getQueryData<Record[]>([QUERY_KEYS.RECORDS]) || [];
+      const deletedRecord = records.find((r) => r.id === deletedId);
+
+      if (!deletedRecord) {
+        // 캐시에 없는 경우 무효화로 폴백
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RECORDS] });
+        return;
+      }
+
+      // 해당 날짜에 다른 record가 있는지 확인 (삭제 전)
+      const hasOtherRecordsOnDate = records.some(
+        (r) => r.id !== deletedId && r.kst_date === deletedRecord.kst_date
+      );
+
+      // RECORDS 쿼리 캐시에서 해당 id의 record 제거
+      queryClient.setQueryData<Record[]>(
+        [QUERY_KEYS.RECORDS],
+        (oldRecords = []) => {
+          return oldRecords.filter((record) => record.id !== deletedId);
+        }
+      );
+
+      // 해당 날짜에 다른 record가 없는 경우 recordDates에서 날짜 제거
+      if (!hasOtherRecordsOnDate) {
+        queryClient.setQueryData<{
+          recordDates: string[];
+          aiFeedbackDates: string[];
+        }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
+          if (!oldData) {
+            return { recordDates: [], aiFeedbackDates: [] };
+          }
+
+          const { recordDates, aiFeedbackDates } = oldData;
+          const updatedRecordDates = recordDates.filter(
+            (date) => date !== deletedRecord.kst_date
+          );
+
+          return {
+            recordDates: updatedRecordDates,
+            aiFeedbackDates,
+          };
+        });
+      }
     },
     onError: (error: RecordError) => {
       console.error("기록 삭제 실패:", error.message);

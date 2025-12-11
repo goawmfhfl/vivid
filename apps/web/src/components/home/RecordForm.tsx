@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
 import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
+import { getKSTDateString } from "@/lib/date-utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   RECORD_TYPES,
@@ -26,6 +27,11 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const createRecordMutation = useCreateRecord();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { data: currentUser } = useCurrentUser();
+
+  // 날짜 상태 계산
+  const todayIso = getKSTDateString();
+  const targetDateIso = selectedDate || todayIso;
+  const isFuture = targetDateIso > todayIso;
 
   // 사용자의 recordTypes 가져오기 및 첫 번째 타입을 기본값으로 설정
   useEffect(() => {
@@ -115,6 +121,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   }, [content]);
 
   const handleSubmit = () => {
+    if (isFuture) return;
     // selectedType이 없으면 기본값 "daily" 사용
     const recordType = selectedType || "daily";
     if (content.trim()) {
@@ -185,6 +192,30 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
       };
     }
   }, [showTypeSelector]);
+
+  if (isFuture) {
+    return (
+      <div className="mb-6">
+        <div
+          className={`${SPACING.card.padding}`}
+          style={{
+            ...CARD_STYLES.default,
+            border: `1.5px solid ${COLORS.border.card}`,
+            backgroundColor: COLORS.background.card,
+            borderRadius: "12px",
+          }}
+        >
+          <p
+            className={TYPOGRAPHY.body.fontSize}
+            style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}
+          >
+            미래 날짜에는 기록을 작성할 수 없습니다. 오늘 또는 지난 날짜를
+            선택해 주세요.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6">

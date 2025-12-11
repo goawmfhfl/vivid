@@ -7,6 +7,7 @@ import { QUERY_KEYS } from "@/constants";
 import { filterMonthlyCandidatesForCreation } from "../monthlyFeedback/monthly-candidate-filter";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
+import type { MonthlyFeedback } from "@/types/monthly-feedback";
 
 export function MonthlyCandidatesSection({
   referenceDate,
@@ -104,9 +105,30 @@ export function MonthlyCandidatesSection({
 
               cleanup();
 
-              queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
-              });
+              // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
+              if (data.data) {
+                const feedbackData = data.data as MonthlyFeedback;
+
+                // MONTHLY_CANDIDATES에서 해당 월의 monthly_feedback_id 업데이트
+                queryClient.setQueryData<
+                  import("@/types/monthly-candidate").MonthlyCandidate[]
+                >([QUERY_KEYS.MONTHLY_CANDIDATES], (oldCandidates = []) => {
+                  return oldCandidates.map((candidate) => {
+                    if (candidate.month === feedbackData.month) {
+                      return {
+                        ...candidate,
+                        monthly_feedback_id: feedbackData.id || null,
+                      };
+                    }
+                    return candidate;
+                  });
+                });
+              } else {
+                // 데이터가 없는 경우 무효화로 폴백
+                queryClient.invalidateQueries({
+                  queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
+                });
+              }
 
               resolve();
             } else if (data.type === "error") {

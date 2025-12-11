@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { QUERY_KEYS } from "@/constants";
+import type { CurrentUser } from "./useCurrentUser";
 
 // 프로필 업데이트 데이터 타입 정의
 export interface UpdateProfileData {
@@ -89,9 +91,35 @@ export const useUpdateProfile = () => {
 
   return useMutation({
     mutationFn: updateProfile,
-    onSuccess: () => {
-      // 사용자 정보 쿼리 무효화하여 최신 정보 가져오기
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+    onSuccess: async () => {
+      // 업데이트 후 최신 사용자 정보 가져오기
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const updatedUser: CurrentUser = {
+            id: user.id,
+            email: user.email,
+            user_metadata: user.user_metadata,
+          };
+
+          // CURRENT_USER 쿼리 캐시 업데이트
+          queryClient.setQueryData<CurrentUser>(
+            [QUERY_KEYS.CURRENT_USER],
+            updatedUser
+          );
+
+          // currentUser 쿼리도 업데이트 (하위 호환성)
+          queryClient.setQueryData<CurrentUser>(["currentUser"], updatedUser);
+        }
+      } catch (error) {
+        // 사용자 정보 가져오기 실패 시 무효화로 폴백
+        console.error("프로필 업데이트 후 사용자 정보 가져오기 실패:", error);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      }
     },
     onError: (error: UpdateProfileError) => {
       console.error("프로필 업데이트 실패:", error.message);

@@ -89,17 +89,29 @@ export async function POST(request: NextRequest) {
     // 암호화 처리
     const encryptedContent = encrypt(content);
 
-    // kst_date는 데이터베이스에서 자동 생성되는 컬럼이므로 직접 삽입하지 않음
-    // 대신 created_at을 조작하여 원하는 날짜로 설정
-    // kst_date가 제공된 경우, 해당 날짜의 KST 정오로 created_at 설정
     const targetKstDate = kst_date || getKSTDateString();
+    const todayKstDate = getKSTDateString();
 
-    // kst_date를 기반으로 created_at 계산 (KST 기준)
-    // targetKstDate가 "2025-12-09" 형식이면, 이를 KST 시간대로 변환
+    // KST 기준 현재 시각 계산
+    const now = new Date();
+    const utcNow = now.getTime() + now.getTimezoneOffset() * 60000;
+    const nowKst = new Date(utcNow + 9 * 60 * 60000);
+
+    // targetKstDate가 미래인 경우 생성 차단
+    if (targetKstDate > todayKstDate) {
+      return NextResponse.json(
+        { error: "미래 날짜에는 기록을 생성할 수 없습니다." },
+        { status: 400 }
+      );
+    }
+
     const [year, month, day] = targetKstDate.split("-").map(Number);
-    // KST 기준으로 해당 날짜의 정오(12:00)로 설정
-    // KST는 UTC+9이므로, UTC로는 03:00이 되어야 KST 12:00
-    const kstDateTime = new Date(Date.UTC(year, month - 1, day, 3, 0, 0));
+
+    // created_at 계산: 오늘은 현재 시각, 과거는 해당 날짜 23:59:59 KST
+    const createdAtKst =
+      targetKstDate === todayKstDate
+        ? nowKst
+        : new Date(Date.UTC(year, month - 1, day, 14, 59, 59)); // KST 23:59:59 -> UTC 14:59:59
 
     // kst_date를 제외하고 삽입 (데이터베이스가 자동 생성)
     const { data: newRecord, error } = await supabase
@@ -108,7 +120,7 @@ export async function POST(request: NextRequest) {
         user_id: authenticatedUserId,
         content: encryptedContent,
         type: type,
-        created_at: kstDateTime.toISOString(),
+        created_at: createdAtKst.toISOString(),
       })
       .select()
       .single();

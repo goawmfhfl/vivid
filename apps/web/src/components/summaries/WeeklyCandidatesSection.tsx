@@ -10,6 +10,8 @@ import { useAIRequestStore } from "@/store/useAIRequestStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
+import type { WeeklyFeedback } from "@/types/weekly-feedback";
+import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
 
 export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
@@ -193,9 +195,75 @@ export function WeeklyCandidatesSection() {
                 );
               }
 
-              queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
-              });
+              // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
+              if (data.data) {
+                const feedbackData = data.data as WeeklyFeedback;
+
+                // WEEKLY_FEEDBACK 리스트에 추가
+                if (feedbackData.id) {
+                  queryClient.setQueryData<
+                    import("@/types/weekly-feedback").WeeklyFeedbackListItem[]
+                  >([QUERY_KEYS.WEEKLY_FEEDBACK, "list"], (oldList = []) => {
+                    const newItem: import("@/types/weekly-feedback").WeeklyFeedbackListItem =
+                      {
+                        id: feedbackData.id!,
+                        title: `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`,
+                        week_range: {
+                          start: feedbackData.week_range.start,
+                          end: feedbackData.week_range.end,
+                        },
+                        is_ai_generated: feedbackData.is_ai_generated,
+                        created_at:
+                          feedbackData.created_at || new Date().toISOString(),
+                      };
+
+                    // 중복 체크
+                    const exists = oldList.some(
+                      (item) => item.id === newItem.id
+                    );
+                    if (exists) {
+                      return oldList.map((item) =>
+                        item.id === newItem.id ? newItem : item
+                      );
+                    }
+
+                    return [newItem, ...oldList];
+                  });
+
+                  // 상세 쿼리에 데이터 설정
+                  queryClient.setQueryData<WeeklyFeedback | null>(
+                    [QUERY_KEYS.WEEKLY_FEEDBACK, "detail", feedbackData.id],
+                    feedbackData
+                  );
+                }
+
+                // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
+                const weekStartDate = new Date(feedbackData.week_range.start);
+                const weekStart = getMondayOfWeek(weekStartDate);
+                const weekStartStr = weekStart.toISOString().split("T")[0];
+
+                queryClient.setQueryData<
+                  import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]
+                >([QUERY_KEYS.WEEKLY_CANDIDATES], (oldCandidates = []) => {
+                  return oldCandidates.map((candidate) => {
+                    if (candidate.week_start === weekStartStr) {
+                      return {
+                        ...candidate,
+                        weekly_feedback_id: feedbackData.id
+                          ? parseInt(feedbackData.id, 10)
+                          : null,
+                        is_ai_generated: feedbackData.is_ai_generated ?? true,
+                      };
+                    }
+                    return candidate;
+                  });
+                });
+              } else {
+                // 데이터가 없는 경우 무효화로 폴백
+                queryClient.invalidateQueries({
+                  queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+                });
+              }
 
               resolve();
             } else if (data.type === "error") {

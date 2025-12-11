@@ -19,6 +19,7 @@ import { QUERY_KEYS } from "@/constants";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -228,12 +229,58 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 // 완료 처리
                 cleanup();
 
-                queryClient.invalidateQueries({
-                  queryKey: [QUERY_KEYS.DAILY_FEEDBACK],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: [QUERY_KEYS.RECORDS],
-                });
+                // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
+                if (data.data) {
+                  const feedbackData = data.data as DailyFeedbackRow;
+
+                  // 해당 날짜의 DAILY_FEEDBACK 쿼리에 생성된 피드백 데이터 설정
+                  queryClient.setQueryData<DailyFeedbackRow | null>(
+                    [QUERY_KEYS.DAILY_FEEDBACK, activeDate],
+                    feedbackData || null
+                  );
+
+                  // 생성된 피드백의 ID로 쿼리도 업데이트 (있는 경우)
+                  if (feedbackData?.id) {
+                    queryClient.setQueryData<DailyFeedbackRow | null>(
+                      [QUERY_KEYS.DAILY_FEEDBACK, "id", feedbackData.id],
+                      feedbackData || null
+                    );
+                  }
+
+                  // useRecordsAndFeedbackDates의 aiFeedbackDates 업데이트 (is_ai_generated가 true인 경우만)
+                  if (feedbackData?.is_ai_generated) {
+                    queryClient.setQueryData<{
+                      recordDates: string[];
+                      aiFeedbackDates: string[];
+                    }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
+                      if (!oldData) {
+                        return {
+                          recordDates: [],
+                          aiFeedbackDates: [activeDate],
+                        };
+                      }
+
+                      const { recordDates, aiFeedbackDates } = oldData;
+                      // 날짜가 이미 있는지 확인
+                      if (!aiFeedbackDates.includes(activeDate)) {
+                        const updatedAiFeedbackDates = [
+                          ...aiFeedbackDates,
+                          activeDate,
+                        ].sort();
+                        return {
+                          recordDates,
+                          aiFeedbackDates: updatedAiFeedbackDates,
+                        };
+                      }
+                      return oldData;
+                    });
+                  }
+                } else {
+                  // 데이터가 없는 경우 무효화로 폴백
+                  queryClient.invalidateQueries({
+                    queryKey: [QUERY_KEYS.DAILY_FEEDBACK],
+                  });
+                }
 
                 // 진행 상황 초기화
                 clearDailyFeedbackProgress(activeDate);

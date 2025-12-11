@@ -99,15 +99,44 @@ export function useCreateWeeklyFeedback() {
   return useMutation({
     mutationFn: (params: Omit<WeeklyFeedbackGenerateRequest, "userId">) =>
       createWeeklyFeedback(params),
-    onSuccess: () => {
-      // 리스트 쿼리 무효화
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.WEEKLY_FEEDBACK, "list"],
-      });
-      // 상세 쿼리도 무효화 (생성된 항목의 경우)
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.WEEKLY_FEEDBACK, "detail"],
-      });
+    onSuccess: (data) => {
+      // 리스트 쿼리 캐시에 새 피드백을 리스트 앞에 추가
+      queryClient.setQueryData<WeeklyFeedbackListItem[]>(
+        [QUERY_KEYS.WEEKLY_FEEDBACK, "list"],
+        (oldList = []) => {
+          // WeeklyFeedback을 WeeklyFeedbackListItem으로 변환
+          const newItem: WeeklyFeedbackListItem = {
+            id: data.id!,
+            title: `${data.week_range.start} ~ ${data.week_range.end}`,
+            week_range: {
+              start: data.week_range.start,
+              end: data.week_range.end,
+            },
+            is_ai_generated: data.is_ai_generated,
+            created_at: data.created_at,
+          };
+
+          // 중복 체크 (같은 id가 이미 있는 경우)
+          const exists = oldList.some((item) => item.id === newItem.id);
+          if (exists) {
+            // 이미 있으면 업데이트
+            return oldList.map((item) =>
+              item.id === newItem.id ? newItem : item
+            );
+          }
+
+          // 리스트 앞에 추가
+          return [newItem, ...oldList];
+        }
+      );
+
+      // 생성된 피드백의 id가 있으면 상세 쿼리에 데이터 설정
+      if (data?.id) {
+        queryClient.setQueryData<WeeklyFeedback | null>(
+          [QUERY_KEYS.WEEKLY_FEEDBACK, "detail", data.id],
+          data
+        );
+      }
     },
     onError: (error) => {
       console.error("주간 피드백 생성 실패:", error);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { COLORS } from "@/lib/design-system";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCurrentUser, type CurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/app/providers";
@@ -96,8 +96,34 @@ export function SystemSettingsModal({
         throw updateError;
       }
 
-      // 캐시 무효화하여 사용자 정보 다시 불러오기
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
+      // 업데이트 후 최신 사용자 정보 가져오기
+      try {
+        const {
+          data: { user: updatedUser },
+        } = await supabase.auth.getUser();
+
+        if (updatedUser) {
+          const newUserData: CurrentUser = {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            user_metadata: updatedUser.user_metadata,
+          };
+
+          // CURRENT_USER 쿼리 캐시 직접 업데이트
+          queryClient.setQueryData<CurrentUser>(
+            [QUERY_KEYS.CURRENT_USER],
+            newUserData
+          );
+
+          // currentUser 쿼리도 업데이트 (하위 호환성)
+          queryClient.setQueryData<CurrentUser>(["currentUser"], newUserData);
+        }
+      } catch (err) {
+        // 사용자 정보 가져오기 실패 시 무효화로 폴백
+        console.error("사용자 정보 가져오기 실패:", err);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      }
 
       onClose();
     } catch (err) {
