@@ -115,9 +115,9 @@ export function EditRecordDialog({
       }}
     >
       <DialogContent
-        className="max-w-[calc(100vw-2rem)] sm:max-w-md [&>button]:z-[110]"
+        className="sm:max-w-md [&>button]:z-[110]"
         style={{
-          maxWidth: "calc(100vw - 2rem)",
+          maxWidth: "672px",
           width: "calc(100vw - 2rem)",
           left: "50%",
           right: "auto",

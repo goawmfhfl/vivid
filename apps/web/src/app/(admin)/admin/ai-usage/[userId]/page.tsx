@@ -1,8 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { withAdminAuth } from "@/components/admin/withAdminAuth";
-import { UserAIUsageDetail } from "@/components/admin/UserAIUsageDetail";
+import { withAdminAuth } from "@/app/(admin)/components/withAdminAuth";
+import { UserAIUsageDetail } from "@/app/(admin)/components/UserAIUsageDetail";
 
 function UserAIUsageDetailPage({
   params,

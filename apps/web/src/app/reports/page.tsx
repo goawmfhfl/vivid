@@ -2,12 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
+import { RecentTrendsSection } from "@/components/reports/RecentTrendsSection";
+import { useRecentTrends } from "@/hooks/useRecentTrends";
 import { COLORS, SPACING, CARD_STYLES, TYPOGRAPHY } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Calendar, TrendingUp } from "lucide-react";
 
 function ReportsPage() {
   const router = useRouter();
+
+  // 최근 동향 데이터 조회
+  const {
+    data: recentTrendsData,
+    isLoading: isLoadingTrends,
+    error: trendsError,
+  } = useRecentTrends();
 
   return (
     <div
@@ -18,7 +27,7 @@ function ReportsPage() {
         subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
       />
 
-      <div className="space-y-4 mt-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
         {/* 주간 리포트 버튼 */}
         <button
           onClick={() => router.push("/reports/weekly")}
@@ -152,6 +161,18 @@ function ReportsPage() {
             </div>
           </div>
         </button>
+      </div>
+
+      {/* 최근 동향 섹션 */}
+      <div
+        className="mt-12 pt-12 border-t"
+        style={{ borderColor: COLORS.border.light }}
+      >
+        <RecentTrendsSection
+          data={recentTrendsData || null}
+          isLoading={isLoadingTrends}
+          error={trendsError || null}
+        />
       </div>
     </div>
   );

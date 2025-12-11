@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { COLORS } from "@/lib/design-system";
 import type { AdminStats } from "@/types/admin";
-import { StatsCard } from "./StatsCard";
+import { StatsCard } from "../components/StatsCard";
 import { adminApiFetch } from "@/lib/admin-api-client";
 
 export function AdminDashboard() {

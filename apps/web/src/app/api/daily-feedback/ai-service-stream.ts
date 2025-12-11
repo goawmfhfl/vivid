@@ -142,12 +142,6 @@ async function generateSection<T>(
     }
 
     const parsed = JSON.parse(content);
-
-    // 파싱된 결과에서 실제 데이터 추출
-    // OpenAI는 다양한 형태로 반환할 수 있음:
-    // 1. { "SummaryReportResponse": { summary_report: {...} } }
-    // 2. { "summary_report": {...} }
-    // 3. { "SummaryReportResponse": {...} } (직접 객체)
     let result: T;
 
     // parsed가 이미 직접 객체인 경우 (래퍼 없이)

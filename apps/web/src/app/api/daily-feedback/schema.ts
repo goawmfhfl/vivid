@@ -385,6 +385,32 @@ export function getFinalReportSchema(isPro: boolean) {
         maxItems: 6,
         nullable: true,
       }, // Pro 전용 필드
+      // Pro 전용 필드: 최근 동향 분석용
+      aspired_self: {
+        type: "string" as const,
+        maxLength: 50,
+        nullable: true,
+      }, // 지향하는 나의 모습
+      interest_characteristic: {
+        type: "string" as const,
+        maxLength: 50,
+        nullable: true,
+      }, // 관심사의 특징 1가지
+      personality_strength: {
+        type: "string" as const,
+        maxLength: 50,
+        nullable: true,
+      }, // 성격의 강점 특징 1가지
+      immersion_hope_situation: {
+        type: "string" as const,
+        maxLength: 50,
+        nullable: true,
+      }, // 몰입-희망을 느끼는 구체적인 상황 1가지
+      relief_comfort_situation: {
+        type: "string" as const,
+        maxLength: 50,
+        nullable: true,
+      }, // 안도-편안을 느끼는 구체적인 상황 1가지
     },
     // OpenAI JSON 스키마 규칙: properties에 있는 모든 키는 required에 포함되어야 함
     // nullable: true로 설정하여 선택적으로 만들 수 있음
@@ -393,6 +419,11 @@ export function getFinalReportSchema(isPro: boolean) {
       "tomorrow_focus",
       "growth_points",
       "adjustment_points",
+      "aspired_self",
+      "interest_characteristic",
+      "personality_strength",
+      "immersion_hope_situation",
+      "relief_comfort_situation",
     ],
     additionalProperties: false,
   };
@@ -492,6 +523,11 @@ export const SYSTEM_PROMPT_FINAL = `
   * tomorrow_focus는 내일 집중할 포인트를 배열로 작성하세요 (3~5개). 각 항목은 한 문장으로 작성하세요.
   * growth_points는 성장 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
   * adjustment_points는 조정 포인트를 리스트 형식으로 정리하세요 (최소 2개 이상, 최대 6개).
+  * aspired_self는 사용자가 지향하는 나의 모습을 한 문장으로 작성하세요 (최대 50자). 오늘의 기록을 통해 드러난 사용자의 이상적인 자아상을 반영하세요.
+  * interest_characteristic은 사용자의 관심사를 나타내는 특징을 한 문장으로 작성하세요 (최대 50자). 오늘의 기록에서 발견된 관심사나 주목하는 영역을 요약하세요.
+  * personality_strength는 사용자의 성격에서 드러난 강점을 한 문장으로 작성하세요 (최대 50자). 오늘의 행동과 선택에서 나타난 긍정적인 성격 특성을 반영하세요.
+  * immersion_hope_situation은 사용자가 몰입하거나 희망을 느낀 구체적인 상황을 한 문장으로 작성하세요 (최대 50자). 오늘의 기록에서 발견된 몰입과 희망의 순간을 구체적으로 기술하세요.
+  * relief_comfort_situation은 사용자가 편안함이나 안도를 느낀 구체적인 상황을 한 문장으로 작성하세요 (최대 50자). 오늘의 기록에서 발견된 편안함과 안도의 순간을 구체적으로 기술하세요.
 - 무료 멤버십: 
-  * tomorrow_focus, growth_points, adjustment_points는 반드시 null로 설정하세요.
+  * tomorrow_focus, growth_points, adjustment_points, aspired_self, interest_characteristic, personality_strength, immersion_hope_situation, relief_comfort_situation은 반드시 null로 설정하세요.
 `;

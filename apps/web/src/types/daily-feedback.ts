@@ -153,6 +153,13 @@ export interface FinalReport {
   // Pro 전용: 리스트 형식의 성장/조정 포인트
   growth_points?: string[] | null; // 성장 포인트 리스트 (Pro 전용)
   adjustment_points?: string[] | null; // 조정 포인트 리스트 (Pro 전용)
+  // Pro 전용: 최근 동향 분석용 필드
+  aspired_self?: string | null; // 지향하는 나의 모습
+  aspired_self_description?: string | null; // 지향하는 나의 모습에 대한 정보 1줄
+  interest_characteristic?: string | null; // 관심사의 특징 1가지
+  personality_strength?: string | null; // 성격의 강점 특징 1가지
+  immersion_hope_situation?: string | null; // 몰입-희망을 느끼는 구체적인 상황 1가지
+  relief_comfort_situation?: string | null; // 안도-편안을 느끼는 구체적인 상황 1가지
 }
 
 // Daily Feedback Row (DB에서 가져온 구조)
@@ -170,6 +177,9 @@ export interface DailyFeedbackRow {
   insight_report: InsightReport | null;
   feedback_report: FeedbackReport | null;
   final_report: FinalReport | null;
+
+  // 향후 pattern 컬럼 데이터 저장용
+  pattern_points?: unknown | null;
 
   created_at: string;
   updated_at: string;

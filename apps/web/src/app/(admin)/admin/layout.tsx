@@ -1,4 +1,4 @@
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSidebar } from "@/app/(admin)/components/AdminSidebar";
 import { COLORS } from "@/lib/design-system";
 
 export default function AdminLayout({

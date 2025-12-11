@@ -1,8 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { withAdminAuth } from "@/components/admin/withAdminAuth";
-import { UserDetail } from "@/components/admin/UserDetail";
+import { withAdminAuth } from "@/app/(admin)/components/withAdminAuth";
+import { UserDetail } from "@/app/(admin)/components/UserDetail";
 
 function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
