@@ -32,7 +32,7 @@ export function WeeklyFeedbackReport({
   const router = useRouter();
 
   const handleGoToAnalysis = () => {
-    router.push("/analysis");
+    router.push("/reports/weekly");
   };
 
   return (

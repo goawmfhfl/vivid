@@ -34,7 +34,7 @@ export default function WeeklyViewPage({
   const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
 
   const handleBack = () => {
-    router.push("/analysis");
+    router.push("/reports/weekly");
   };
 
   // 로딩 상태

@@ -34,7 +34,7 @@ export function MonthlyFeedbackReport({
   // 각 영역별 데이터 존재 여부 체크
 
   const handleGoToAnalysis = () => {
-    router.push("/analysis?tab=monthly");
+    router.push("/reports/monthly");
   };
 
   return (
@@ -110,7 +110,9 @@ export function MonthlyFeedbackReport({
             <ScrollAnimation delay={200}>
               <div className="mb-64">
                 <InsightSection
-                  insightReport={data.insight_report as unknown as InsightReport}
+                  insightReport={
+                    data.insight_report as unknown as InsightReport
+                  }
                   isPro={isPro}
                 />
               </div>

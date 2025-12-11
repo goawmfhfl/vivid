@@ -13,7 +13,7 @@ export default function DailyViewPage({
   const resolvedParams = use(params);
 
   const handleBack = () => {
-    router.push("/analysis");
+    router.push("/");
   };
 
   return <DailyFeedbackView id={resolvedParams.id} onBack={handleBack} />;

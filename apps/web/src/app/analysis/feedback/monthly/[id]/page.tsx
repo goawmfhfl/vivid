@@ -13,7 +13,7 @@ export default function MonthlyViewPage({
   const resolvedParams = use(params);
 
   const handleBack = () => {
-    router.push("/analysis");
+    router.push("/reports/monthly");
   };
 
   return <MonthlyFeedbackView id={resolvedParams.id} onBack={handleBack} />;
