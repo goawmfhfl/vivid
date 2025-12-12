@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { EmotionQuadrantChart } from "./EmotionQuadrantChart";
 import { FeedbackCard } from "@/components/ui/FeedbackCard";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SHADOWS } from "@/lib/design-system";
 import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
 import { useSubscription } from "@/hooks/useSubscription";
 
@@ -65,30 +65,6 @@ function TrendCard({
         title={title}
         gradientColor={iconColor}
       >
-        {/* 자물쇠 오버레이 */}
-        {isLocked && (
-          <div
-            className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(8px)",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              border: `1px solid ${COLORS.border.light}`,
-            }}
-          >
-            <Lock
-              className="w-4 h-4"
-              style={{ color: COLORS.text.secondary }}
-            />
-            <span
-              className="text-xs font-medium"
-              style={{ color: COLORS.text.secondary }}
-            >
-              Pro
-            </span>
-          </div>
-        )}
-
         <ul className="space-y-2">
           {items.map((item, index) => (
             <li key={index} className="flex items-start gap-2">
@@ -108,19 +84,47 @@ function TrendCard({
             </li>
           ))}
         </ul>
-
-        {/* 구독 안내 메시지 */}
-        {isLocked && (
-          <div
-            className="mt-4 pt-4 border-t text-center"
-            style={{ borderColor: COLORS.border.light }}
-          >
-            <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-              프로 멤버십에서 확인 가능한 인사이트입니다
-            </p>
-          </div>
-        )}
       </FeedbackCard>
+
+      {/* 카드 전체를 덮는 blur 오버레이 */}
+      {isLocked && (
+        <>
+          <div
+            className="absolute inset-0 z-20 rounded-xl pointer-events-none"
+            style={{
+              background: `linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.75) 0%, 
+                rgba(250, 252, 250, 0.85) 30%, 
+                rgba(248, 250, 248, 0.88) 60%, 
+                rgba(255, 255, 255, 0.82) 100%
+              )`,
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
+          />
+          {/* 중앙 잠금 배지 */}
+          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl pointer-events-none">
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+              style={{
+                background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                boxShadow:
+                  "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <Lock className="w-4 h-4" style={{ color: COLORS.text.white }} />
+              <span
+                className="text-sm font-semibold tracking-wide"
+                style={{ color: COLORS.text.white }}
+              >
+                Pro
+              </span>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -134,6 +138,28 @@ export function RecentTrendsSection({
 
   // 임시 데이터 (프로가 아닐 경우 사용)
   const mockData = {
+    emotionData: [
+      { date: "2024-01-01", valence: 0.5, arousal: 0.6, quadrant: "몰입·설렘" },
+      {
+        date: "2024-01-02",
+        valence: 0.3,
+        arousal: -0.2,
+        quadrant: "안도·평온",
+      },
+      {
+        date: "2024-01-03",
+        valence: -0.2,
+        arousal: 0.4,
+        quadrant: "불안·초조",
+      },
+      { date: "2024-01-04", valence: 0.4, arousal: 0.5, quadrant: "몰입·설렘" },
+      {
+        date: "2024-01-05",
+        valence: 0.2,
+        arousal: -0.1,
+        quadrant: "안도·평온",
+      },
+    ],
     aspired_self: [
       "창의적인 문제 해결자",
       "균형잡힌 삶을 추구하는 사람",
@@ -154,13 +180,10 @@ export function RecentTrendsSection({
 
   // 데이터 처리 로직 (useMemo로 메모이제이션)
   const processedData = useMemo(() => {
-    // 감정 데이터는 프로 여부와 무관하게 표시
-    const emotionData = data?.emotionData || [];
-
-    // 프로가 아닐 경우 임시 데이터 사용, 프로일 경우 실제 데이터 사용
+    // 프로가 아닐 경우: 모든 데이터를 mockData로 사용
     if (!isPro) {
       return {
-        emotionData,
+        emotionData: mockData.emotionData,
         aspired_self: mockData.aspired_self,
         interests: mockData.interests,
         immersionSituations: mockData.immersionSituations,
@@ -180,7 +203,7 @@ export function RecentTrendsSection({
     }
 
     return {
-      emotionData,
+      emotionData: data.emotionData || [],
       aspired_self: (data.aspired_self || []).slice(0, 5),
       interests: (data.interests || []).slice(0, 5),
       immersionSituations: (data.immersionSituations || []).slice(0, 5),
@@ -259,7 +282,7 @@ export function RecentTrendsSection({
       {/* 1. 기분의 변화 - 감정 사분면 차트 */}
       {processedData.emotionData.length > 0 && (
         <ScrollAnimation delay={100}>
-          <div className="mb-12">
+          <div className="mb-12 relative">
             <FeedbackCard
               icon={<Heart className="w-6 h-6 text-white" />}
               iconColor="#B89A7A"
@@ -277,6 +300,49 @@ export function RecentTrendsSection({
               </p>
               <EmotionQuadrantChart data={processedData.emotionData} />
             </FeedbackCard>
+
+            {/* 카드 전체를 덮는 blur 오버레이 */}
+            {!isPro && (
+              <>
+                <div
+                  className="absolute inset-0 z-20 rounded-xl pointer-events-none"
+                  style={{
+                    background: `linear-gradient(135deg, 
+                      rgba(255, 255, 255, 0.75) 0%, 
+                      rgba(250, 252, 250, 0.85) 30%, 
+                      rgba(248, 250, 248, 0.88) 60%, 
+                      rgba(255, 255, 255, 0.82) 100%
+                    )`,
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                  }}
+                />
+                {/* 중앙 잠금 배지 */}
+                <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl pointer-events-none">
+                  <div
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      boxShadow:
+                        "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <Lock
+                      className="w-4 h-4"
+                      style={{ color: COLORS.text.white }}
+                    />
+                    <span
+                      className="text-sm font-semibold tracking-wide"
+                      style={{ color: COLORS.text.white }}
+                    >
+                      Pro
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </ScrollAnimation>
       )}
