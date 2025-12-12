@@ -45,8 +45,6 @@ export async function GET(request: NextRequest) {
       dates.push(date.toISOString().split("T")[0]);
     }
 
-    console.log(`[RecentTrends] dates:`, dates);
-
     // 최근 5일의 daily-feedback 데이터 조회 (필요한 컬럼만 선택)
     const { data, error } = await supabase
       .from(API_ENDPOINTS.DAILY_FEEDBACK)
@@ -69,21 +67,6 @@ export async function GET(request: NextRequest) {
         },
         { status: 200 }
       );
-    }
-
-    // 디버깅: 복호화 전 원본 데이터 확인
-    console.log(`[RecentTrends] 복호화 전 데이터 개수: ${data.length}`);
-    if (data.length > 0) {
-      console.log(`[RecentTrends] 첫 번째 항목 (복호화 전):`, {
-        report_date: data[0].report_date,
-        has_emotion_report: !!data[0].emotion_report,
-        has_final_report: !!data[0].final_report,
-        final_report_type: typeof data[0].final_report,
-        final_report_keys:
-          data[0].final_report && typeof data[0].final_report === "object"
-            ? Object.keys(data[0].final_report as Record<string, unknown>)
-            : null,
-      });
     }
 
     // 데이터 복호화 처리
@@ -190,21 +173,6 @@ export async function GET(request: NextRequest) {
       immersionSituations: Array.from(immersionSituationsSet).slice(0, 5),
       reliefSituations: Array.from(reliefSituationsSet).slice(0, 5),
     };
-
-    // 디버깅: 최종 응답 데이터 확인
-    console.log(`[RecentTrends] 최종 응답:`, {
-      emotionDataCount: response.emotionData.length,
-      aspired_selfCount: response.aspired_self.length,
-      interestsCount: response.interests.length,
-      personalityStrengthsCount: response.personalityStrengths.length,
-      immersionSituationsCount: response.immersionSituations.length,
-      reliefSituationsCount: response.reliefSituations.length,
-      aspired_self: response.aspired_self,
-      interests: response.interests,
-      personalityStrengths: response.personalityStrengths,
-      immersionSituations: response.immersionSituations,
-      reliefSituations: response.reliefSituations,
-    });
 
     return NextResponse.json<RecentTrendsResponse>(response, { status: 200 });
   } catch (error) {

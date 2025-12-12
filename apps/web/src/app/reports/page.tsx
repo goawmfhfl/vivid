@@ -7,11 +7,9 @@ import { useRecentTrends } from "@/hooks/useRecentTrends";
 import {
   COLORS,
   SPACING,
-  CARD_STYLES,
   TYPOGRAPHY,
   GRADIENT_UTILS,
   SHADOWS,
-  TRANSITIONS,
 } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Calendar, TrendingUp } from "lucide-react";
