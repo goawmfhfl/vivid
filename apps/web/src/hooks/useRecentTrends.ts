@@ -9,8 +9,9 @@ export interface RecentTrendsResponse {
     arousal: number | null;
     quadrant: string | null;
   }>;
-  aspiredSelf: string[];
+  aspired_self: string[];
   interests: string[];
+  personalityStrengths: string[];
   immersionSituations: string[];
   reliefSituations: string[];
 }

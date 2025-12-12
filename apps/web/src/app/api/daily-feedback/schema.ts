@@ -414,17 +414,25 @@ export function getFinalReportSchema(isPro: boolean) {
     },
     // OpenAI JSON 스키마 규칙: properties에 있는 모든 키는 required에 포함되어야 함
     // nullable: true로 설정하여 선택적으로 만들 수 있음
-    required: [
-      "closing_message",
-      "tomorrow_focus",
-      "growth_points",
-      "adjustment_points",
-      "aspired_self",
-      "interest_characteristic",
-      "personality_strength",
-      "immersion_hope_situation",
-      "relief_comfort_situation",
-    ],
+    // Pro 멤버십일 때만 최근 동향 분석용 필드들을 required에 포함
+    required: isPro
+      ? [
+          "closing_message",
+          "tomorrow_focus",
+          "growth_points",
+          "adjustment_points",
+          "aspired_self",
+          "interest_characteristic",
+          "personality_strength",
+          "immersion_hope_situation",
+          "relief_comfort_situation",
+        ]
+      : [
+          "closing_message",
+          "tomorrow_focus",
+          "growth_points",
+          "adjustment_points",
+        ],
     additionalProperties: false,
   };
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { COLORS, SPACING, SHADOWS, TRANSITIONS } from "@/lib/design-system";
+import {
+  COLORS,
+  SPACING,
+  SHADOWS,
+  TRANSITIONS,
+  GRADIENT_UTILS,
+} from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
 export interface FeedbackCardProps {
@@ -44,19 +50,20 @@ export function FeedbackCard({
 }: FeedbackCardProps) {
   // 기본 색상 설정
   const defaultGradientColor = gradientColor || COLORS.brand.primary;
-  const defaultBorderColor = borderColor || `${defaultGradientColor}40`;
+  const defaultBorderColor =
+    borderColor || GRADIENT_UTILS.borderColor(defaultGradientColor);
 
   // 그라디언트 배경 생성
-  const gradientBackground = `linear-gradient(135deg, ${hexToRgba(
+  const gradientBackground = GRADIENT_UTILS.cardBackground(
     defaultGradientColor,
     0.12
-  )} 0%, rgb(255, 255, 255) 100%)`;
+  );
 
   // 배경 장식 그라디언트
-  const decorationGradient = `radial-gradient(circle, ${hexToRgba(
+  const decorationGradient = GRADIENT_UTILS.decoration(
     defaultGradientColor,
     0.8
-  )} 0%, transparent 70%)`;
+  );
 
   // 패딩 설정
   const padding = variant === "compact" ? "p-4 sm:p-5" : SPACING.card.padding;
@@ -100,10 +107,7 @@ export function FeedbackCard({
                 variant === "compact" ? "w-10 h-10" : "w-12 h-12"
               )}
               style={{
-                background: `linear-gradient(135deg, ${iconColor} 0%, ${darkenColor(
-                  iconColor,
-                  0.1
-                )} 100%)`,
+                background: GRADIENT_UTILS.iconBadge(iconColor, 0.1),
                 boxShadow: `0 4px 12px ${iconColor}30`,
               }}
             >
@@ -149,31 +153,4 @@ export function FeedbackCard({
       <div className="relative z-10">{children}</div>
     </Card>
   );
-}
-
-/**
- * HEX 색상을 RGBA 문자열로 변환
- */
-function hexToRgba(hex: string, alpha: number): string {
-  // # 제거
-  const cleanHex = hex.replace("#", "");
-
-  // RGB 값 추출
-  const r = parseInt(cleanHex.substring(0, 2), 16);
-  const g = parseInt(cleanHex.substring(2, 4), 16);
-  const b = parseInt(cleanHex.substring(4, 6), 16);
-
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/**
- * 색상을 어둡게 만드는 헬퍼 함수
- */
-function darkenColor(hex: string, amount: number): string {
-  const cleanHex = hex.replace("#", "");
-  const r = Math.max(0, parseInt(cleanHex.substring(0, 2), 16) - amount * 255);
-  const g = Math.max(0, parseInt(cleanHex.substring(2, 4), 16) - amount * 255);
-  const b = Math.max(0, parseInt(cleanHex.substring(4, 6), 16) - amount * 255);
-
-  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 }

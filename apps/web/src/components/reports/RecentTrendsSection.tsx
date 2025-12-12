@@ -96,7 +96,7 @@ export function RecentTrendsSection({
     if (!data) {
       return {
         emotionData: [],
-        aspiredSelf: [],
+        aspired_self: [],
         interests: [],
         immersionSituations: [],
         reliefSituations: [],
@@ -105,7 +105,7 @@ export function RecentTrendsSection({
 
     return {
       emotionData: data.emotionData || [],
-      aspiredSelf: (data.aspiredSelf || []).slice(0, 5),
+      aspired_self: (data.aspired_self || []).slice(0, 5),
       interests: (data.interests || []).slice(0, 5),
       immersionSituations: (data.immersionSituations || []).slice(0, 5),
       reliefSituations: (data.reliefSituations || []).slice(0, 5),
@@ -144,7 +144,7 @@ export function RecentTrendsSection({
   // 빈 데이터 상태
   const hasAnyData =
     processedData.emotionData.length > 0 ||
-    processedData.aspiredSelf.length > 0 ||
+    processedData.aspired_self.length > 0 ||
     processedData.interests.length > 0 ||
     processedData.immersionSituations.length > 0 ||
     processedData.reliefSituations.length > 0;
@@ -211,7 +211,7 @@ export function RecentTrendsSection({
           title="지향하는 나의 모습"
           icon={<Target className="w-4 h-4 text-white" />}
           iconColor="#E5B96B"
-          items={processedData.aspiredSelf}
+          items={processedData.aspired_self}
           emptyMessage="아직 데이터가 없습니다"
         />
       </ScrollAnimation>

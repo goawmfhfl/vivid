@@ -299,6 +299,138 @@ export const TRANSITIONS = {
 } as const;
 
 // ============================================
+// 색상 유틸리티 함수
+// ============================================
+/**
+ * HEX 색상을 RGBA 문자열로 변환
+ * @param hex HEX 색상 코드 (예: "#6B7A6F" 또는 "6B7A6F")
+ * @param alpha 투명도 (0-1)
+ * @returns RGBA 문자열 (예: "rgba(107, 122, 111, 0.5)")
+ */
+export function hexToRgba(hex: string, alpha: number): string {
+  // # 제거
+  const cleanHex = hex.replace("#", "");
+
+  // RGB 값 추출
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * 색상을 어둡게 만드는 헬퍼 함수
+ * @param hex HEX 색상 코드 (예: "#6B7A6F" 또는 "6B7A6F")
+ * @param amount 어둡게 만들 정도 (0-1, 0.1 = 10% 어둡게)
+ * @returns RGB 문자열 (예: "rgb(96, 110, 96)")
+ */
+export function darkenColor(hex: string, amount: number): string {
+  const cleanHex = hex.replace("#", "");
+  const r = Math.max(0, parseInt(cleanHex.substring(0, 2), 16) - amount * 255);
+  const g = Math.max(0, parseInt(cleanHex.substring(2, 4), 16) - amount * 255);
+  const b = Math.max(0, parseInt(cleanHex.substring(4, 6), 16) - amount * 255);
+
+  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+
+/**
+ * 색상을 밝게 만드는 헬퍼 함수
+ * @param hex HEX 색상 코드 (예: "#6B7A6F" 또는 "6B7A6F")
+ * @param amount 밝게 만들 정도 (0-1, 0.1 = 10% 밝게)
+ * @returns RGB 문자열 (예: "rgb(139, 154, 139)")
+ */
+export function lightenColor(hex: string, amount: number): string {
+  const cleanHex = hex.replace("#", "");
+  const r = Math.min(
+    255,
+    parseInt(cleanHex.substring(0, 2), 16) + amount * 255
+  );
+  const g = Math.min(
+    255,
+    parseInt(cleanHex.substring(2, 4), 16) + amount * 255
+  );
+  const b = Math.min(
+    255,
+    parseInt(cleanHex.substring(4, 6), 16) + amount * 255
+  );
+
+  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+
+// ============================================
+// 그라디언트 생성 유틸리티
+// ============================================
+/**
+ * 그라디언트 스타일 생성 유틸리티
+ * 컨테이너 컴포넌트에서 일관된 그라디언트 스타일을 생성하기 위한 함수들
+ */
+export const GRADIENT_UTILS = {
+  /**
+   * 카드 배경용 그라디언트 생성
+   * 색상에서 흰색으로 페이드되는 그라디언트
+   * @param color 기본 색상 (HEX)
+   * @param opacity 시작 색상의 투명도 (기본: 0.12)
+   * @param endColor 끝 색상 (기본: 흰색)
+   * @returns linear-gradient 문자열
+   */
+  cardBackground: (
+    color: string,
+    opacity: number = 0.12,
+    endColor: string = "rgb(255, 255, 255)"
+  ): string => {
+    return `linear-gradient(135deg, ${hexToRgba(
+      color,
+      opacity
+    )} 0%, ${endColor} 100%)`;
+  },
+
+  /**
+   * 배경 장식용 방사형 그라디언트 생성
+   * 카드 배경 장식으로 사용되는 방사형 그라디언트
+   * @param color 기본 색상 (HEX)
+   * @param opacity 시작 색상의 투명도 (기본: 0.8)
+   * @param size 그라디언트 크기 비율 (기본: 70%)
+   * @returns radial-gradient 문자열
+   */
+  decoration: (
+    color: string,
+    opacity: number = 0.8,
+    size: number = 70
+  ): string => {
+    return `radial-gradient(circle, ${hexToRgba(
+      color,
+      opacity
+    )} 0%, transparent ${size}%)`;
+  },
+
+  /**
+   * 아이콘 배지용 그라디언트 생성
+   * 아이콘 배경에 사용되는 그라디언트
+   * @param color 기본 색상 (HEX)
+   * @param darkenAmount 어둡게 만들 정도 (기본: 0.1)
+   * @returns linear-gradient 문자열
+   */
+  iconBadge: (color: string, darkenAmount: number = 0.1): string => {
+    return `linear-gradient(135deg, ${color} 0%, ${darkenColor(
+      color,
+      darkenAmount
+    )} 100%)`;
+  },
+
+  /**
+   * 테두리 색상 생성
+   * 기본 색상에서 투명도를 적용한 테두리 색상
+   * @param color 기본 색상 (HEX)
+   * @param opacity 투명도 (기본: 0.25, 16진수로는 40)
+   * @returns HEX 색상 문자열 (투명도 포함)
+   */
+  borderColor: (color: string, opacity: string = "40"): string => {
+    return `${color}${opacity}`;
+  },
+} as const;
+
+// ============================================
 // 레거시 호환성 (월간 피드백 리포트용)
 // ============================================
 // 기존 코드와의 호환성을 위해 유지
