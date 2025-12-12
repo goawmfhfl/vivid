@@ -90,6 +90,10 @@ export async function GET(request: NextRequest) {
       // 감정 데이터 추출
       if (
         item.emotion_report &&
+        typeof item.emotion_report === "object" &&
+        item.emotion_report !== null &&
+        "ai_mood_valence" in item.emotion_report &&
+        "ai_mood_arousal" in item.emotion_report &&
         item.emotion_report.ai_mood_valence !== null &&
         item.emotion_report.ai_mood_arousal !== null
       ) {
@@ -97,25 +101,50 @@ export async function GET(request: NextRequest) {
           date,
           valence: item.emotion_report.ai_mood_valence,
           arousal: item.emotion_report.ai_mood_arousal,
-          quadrant: item.emotion_report.emotion_quadrant,
+          quadrant: item.emotion_report.emotion_quadrant || null,
         });
       }
 
-      // final_report에서 데이터 추출
+      // final_report에서 데이터 추출 (타입 가드 강화)
       if (item.final_report) {
         const finalReport = item.final_report;
 
-        if (finalReport.aspired_self) {
-          aspiredSelfSet.add(finalReport.aspired_self);
+        // aspired_self 추출
+        if (
+          finalReport.aspired_self &&
+          typeof finalReport.aspired_self === "string" &&
+          finalReport.aspired_self.trim().length > 0
+        ) {
+          aspiredSelfSet.add(finalReport.aspired_self.trim());
         }
-        if (finalReport.interest_characteristic) {
-          interestsSet.add(finalReport.interest_characteristic);
+
+        // interest_characteristic 추출
+        if (
+          finalReport.interest_characteristic &&
+          typeof finalReport.interest_characteristic === "string" &&
+          finalReport.interest_characteristic.trim().length > 0
+        ) {
+          interestsSet.add(finalReport.interest_characteristic.trim());
         }
-        if (finalReport.immersion_hope_situation) {
-          immersionSituationsSet.add(finalReport.immersion_hope_situation);
+
+        // immersion_hope_situation 추출
+        if (
+          finalReport.immersion_hope_situation &&
+          typeof finalReport.immersion_hope_situation === "string" &&
+          finalReport.immersion_hope_situation.trim().length > 0
+        ) {
+          immersionSituationsSet.add(
+            finalReport.immersion_hope_situation.trim()
+          );
         }
-        if (finalReport.relief_comfort_situation) {
-          reliefSituationsSet.add(finalReport.relief_comfort_situation);
+
+        // relief_comfort_situation 추출
+        if (
+          finalReport.relief_comfort_situation &&
+          typeof finalReport.relief_comfort_situation === "string" &&
+          finalReport.relief_comfort_situation.trim().length > 0
+        ) {
+          reliefSituationsSet.add(finalReport.relief_comfort_situation.trim());
         }
       }
     }

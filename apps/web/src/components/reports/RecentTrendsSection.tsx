@@ -6,8 +6,8 @@ import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { EmotionQuadrantChart } from "./EmotionQuadrantChart";
-import { Card } from "@/components/ui/card";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { FeedbackCard } from "@/components/ui/FeedbackCard";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
 
 interface RecentTrendsSectionProps {
@@ -35,28 +35,19 @@ function TrendCard({
     if (emptyMessage) {
       return (
         <div className="mb-12">
-          <div className="flex items-center gap-2 mb-4">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: iconColor }}
-            >
-              {icon}
-            </div>
-            <h2
-              className="text-xl sm:text-2xl font-semibold"
-              style={{ color: "#333333" }}
-            >
-              {title}
-            </h2>
-          </div>
-          <Card
-            className="p-6"
-            style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+          <FeedbackCard
+            icon={icon}
+            iconColor={iconColor}
+            title={title}
+            gradientColor={iconColor}
           >
-            <p className="text-sm" style={{ color: COLORS.text.muted }}>
+            <p
+              className={TYPOGRAPHY.body.fontSize}
+              style={{ color: COLORS.text.muted }}
+            >
               {emptyMessage}
             </p>
-          </Card>
+          </FeedbackCard>
         </div>
       );
     }
@@ -65,23 +56,11 @@ function TrendCard({
 
   return (
     <div className="mb-12">
-      <div className="flex items-center gap-2 mb-4">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: iconColor }}
-        >
-          {icon}
-        </div>
-        <h2
-          className="text-xl sm:text-2xl font-semibold"
-          style={{ color: "#333333" }}
-        >
-          {title}
-        </h2>
-      </div>
-      <Card
-        className="p-6"
-        style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+      <FeedbackCard
+        icon={icon}
+        iconColor={iconColor}
+        title={title}
+        gradientColor={iconColor}
       >
         <ul className="space-y-2">
           {items.map((item, index) => (
@@ -91,9 +70,9 @@ function TrendCard({
                 style={{ backgroundColor: iconColor }}
               />
               <p
-                className="text-sm"
+                className={TYPOGRAPHY.body.fontSize}
                 style={{
-                  color: "#333333",
+                  color: COLORS.text.primary,
                   lineHeight: "1.6",
                 }}
               >
@@ -102,7 +81,7 @@ function TrendCard({
             </li>
           ))}
         </ul>
-      </Card>
+      </FeedbackCard>
     </div>
   );
 }
@@ -187,12 +166,15 @@ export function RecentTrendsSection({
       <ScrollAnimation>
         <div className="mb-6">
           <h2
-            className="text-xl sm:text-2xl font-semibold"
-            style={{ color: "#333333", marginBottom: "8px" }}
+            className={TYPOGRAPHY.h2.fontSize}
+            style={{ ...TYPOGRAPHY.h2, marginBottom: "8px" }}
           >
             나의 최근 흐름
           </h2>
-          <p className="text-sm" style={{ color: COLORS.text.secondary }}>
+          <p
+            className={TYPOGRAPHY.body.fontSize}
+            style={{ color: COLORS.text.secondary }}
+          >
             최근 5일간의 데이터를 기반으로 한 인사이트입니다
           </p>
         </div>
@@ -202,34 +184,23 @@ export function RecentTrendsSection({
       {processedData.emotionData.length > 0 && (
         <ScrollAnimation delay={100}>
           <div className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#B89A7A" }}
-              >
-                <Heart className="w-4 h-4 text-white" />
-              </div>
-              <h2
-                className="text-xl sm:text-2xl font-semibold"
-                style={{ color: "#333333" }}
-              >
-                기분의 변화
-              </h2>
-            </div>
-            <Card
-              className="p-6"
-              style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
+            <FeedbackCard
+              icon={<Heart className="w-6 h-6 text-white" />}
+              iconColor="#B89A7A"
+              title="기분의 변화"
+              gradientColor="#B89A7A"
             >
               <p
-                className="text-xs mb-4"
+                className={TYPOGRAPHY.bodySmall.fontSize}
                 style={{
-                  color: "#6B7A6F",
+                  color: COLORS.text.tertiary,
+                  marginBottom: "16px",
                 }}
               >
                 최근 5일간의 감정 변화를 사분면으로 확인하세요
               </p>
               <EmotionQuadrantChart data={processedData.emotionData} />
-            </Card>
+            </FeedbackCard>
           </div>
         </ScrollAnimation>
       )}
