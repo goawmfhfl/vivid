@@ -3,6 +3,20 @@
 import { useState } from "react";
 import { COLORS } from "@/lib/design-system";
 
+// Pulse 애니메이션 스타일
+const pulseAnimation = `
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 8px currentColor, 0 0 12px currentColor, 0 0 16px currentColor;
+      opacity: 1;
+    }
+    50% {
+      box-shadow: 0 0 12px currentColor, 0 0 18px currentColor, 0 0 24px currentColor;
+      opacity: 0.8;
+    }
+  }
+`;
+
 interface EmotionDataPoint {
   date: string;
   valence: number | null;
@@ -61,229 +75,236 @@ export function EmotionQuadrantChart({ data }: EmotionQuadrantChartProps) {
   }
 
   return (
-    <div
-      className="relative"
-      style={{
-        width: "100%",
-        height: "280px",
-        backgroundColor: COLORS.background.base,
-        borderRadius: "12px",
-        border: `2px solid ${COLORS.border.light}`,
-        position: "relative",
-        overflow: "visible",
-      }}
-    >
-      {/* 격자 배경 */}
-      <svg
-        className="absolute inset-0"
-        style={{ width: "100%", height: "100%" }}
+    <>
+      <style>{pulseAnimation}</style>
+      <div
+        className="relative"
+        style={{
+          width: "100%",
+          height: "280px",
+          backgroundColor: COLORS.background.base,
+          borderRadius: "12px",
+          border: `2px solid ${COLORS.border.light}`,
+          position: "relative",
+          overflow: "visible",
+        }}
       >
-        {/* 중앙선 (valence) */}
-        <line
-          x1="50%"
-          y1="0"
-          x2="50%"
-          y2="100%"
-          stroke={COLORS.border.light}
-          strokeWidth="2"
-          strokeDasharray="4 4"
+        {/* 격자 배경 */}
+        <svg
+          className="absolute inset-0"
+          style={{ width: "100%", height: "100%" }}
+        >
+          {/* 중앙선 (valence) */}
+          <line
+            x1="50%"
+            y1="0"
+            x2="50%"
+            y2="100%"
+            stroke={COLORS.border.light}
+            strokeWidth="2"
+            strokeDasharray="4 4"
+          />
+          {/* 중앙선 (arousal) */}
+          <line
+            x1="0"
+            y1="50%"
+            x2="100%"
+            y2="50%"
+            stroke={COLORS.border.light}
+            strokeWidth="2"
+            strokeDasharray="4 4"
+          />
+        </svg>
+
+        {/* 4개 구역 배경색 */}
+        <div
+          className="absolute"
+          style={{
+            left: "50%",
+            top: 0,
+            width: "50%",
+            height: "50%",
+            backgroundColor: "rgba(168, 187, 168, 0.1)",
+          }}
         />
-        {/* 중앙선 (arousal) */}
-        <line
-          x1="0"
-          y1="50%"
-          x2="100%"
-          y2="50%"
-          stroke={COLORS.border.light}
-          strokeWidth="2"
-          strokeDasharray="4 4"
+        <div
+          className="absolute"
+          style={{
+            left: "50%",
+            top: "50%",
+            width: "50%",
+            height: "50%",
+            backgroundColor: "rgba(229, 185, 107, 0.1)",
+          }}
         />
-      </svg>
+        <div
+          className="absolute"
+          style={{
+            left: 0,
+            top: 0,
+            width: "50%",
+            height: "50%",
+            backgroundColor: "rgba(184, 154, 122, 0.1)",
+          }}
+        />
+        <div
+          className="absolute"
+          style={{
+            left: 0,
+            top: "50%",
+            width: "50%",
+            height: "50%",
+            backgroundColor: "rgba(107, 122, 111, 0.1)",
+          }}
+        />
 
-      {/* 4개 구역 배경색 */}
-      <div
-        className="absolute"
-        style={{
-          left: "50%",
-          top: 0,
-          width: "50%",
-          height: "50%",
-          backgroundColor: "rgba(168, 187, 168, 0.1)",
-        }}
-      />
-      <div
-        className="absolute"
-        style={{
-          left: "50%",
-          top: "50%",
-          width: "50%",
-          height: "50%",
-          backgroundColor: "rgba(229, 185, 107, 0.1)",
-        }}
-      />
-      <div
-        className="absolute"
-        style={{
-          left: 0,
-          top: 0,
-          width: "50%",
-          height: "50%",
-          backgroundColor: "rgba(184, 154, 122, 0.1)",
-        }}
-      />
-      <div
-        className="absolute"
-        style={{
-          left: 0,
-          top: "50%",
-          width: "50%",
-          height: "50%",
-          backgroundColor: "rgba(107, 122, 111, 0.1)",
-        }}
-      />
+        {/* 감정 점들 */}
+        {validData.map((item, index) => {
+          const pointPos = getPointPosition(
+            item.valence as number,
+            item.arousal as number
+          );
+          const quadrantColor = getQuadrantColor(item.quadrant);
+          const isHovered = hoveredIndex === index;
 
-      {/* 감정 점들 */}
-      {validData.map((item, index) => {
-        const pointPos = getPointPosition(
-          item.valence as number,
-          item.arousal as number
-        );
-        const quadrantColor = getQuadrantColor(item.quadrant);
-        const isHovered = hoveredIndex === index;
-
-        return (
-          <div key={index}>
-            {/* 감정 점 */}
-            <div
-              className="absolute cursor-pointer transition-all"
-              style={{
-                left: `${pointPos.x}%`,
-                top: `${pointPos.y}%`,
-                transform: "translate(-50%, -50%)",
-                width: isHovered ? "20px" : "12px",
-                height: isHovered ? "20px" : "12px",
-                borderRadius: "50%",
-                backgroundColor: quadrantColor,
-                border: "3px solid white",
-                boxShadow: isHovered
-                  ? "0 4px 12px rgba(0,0,0,0.3)"
-                  : "0 2px 8px rgba(0,0,0,0.2)",
-                zIndex: isHovered ? 15 : 10,
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            />
-            {/* 호버 시 날짜 라벨 */}
-            {isHovered && (
+          return (
+            <div key={index}>
+              {/* 감정 점 */}
               <div
-                className="absolute pointer-events-none"
+                className="absolute cursor-pointer transition-all"
                 style={{
                   left: `${pointPos.x}%`,
-                  top: `${pointPos.y - 8}%`,
-                  transform: "translate(-50%, -100%)",
-                  backgroundColor: COLORS.text.primary,
-                  color: COLORS.text.white,
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "0.75rem",
-                  fontWeight: "500",
-                  whiteSpace: "nowrap",
-                  zIndex: 20,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  top: `${pointPos.y}%`,
+                  transform: "translate(-50%, -50%)",
+                  width: isHovered ? "20px" : "12px",
+                  height: isHovered ? "20px" : "12px",
+                  borderRadius: "50%",
+                  backgroundColor: quadrantColor,
+                  border: "3px solid white",
+                  color: quadrantColor,
+                  boxShadow: isHovered
+                    ? "0 4px 12px rgba(0,0,0,0.3)"
+                    : `0 2px 8px ${quadrantColor}40`,
+                  zIndex: isHovered ? 15 : 10,
+                  transition: "all 0.2s ease",
+                  animation: isHovered
+                    ? "none"
+                    : "pulse-glow 2s ease-in-out infinite",
                 }}
-              >
-                {formatDate(item.date)}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              />
+              {/* 호버 시 날짜 라벨 */}
+              {isHovered && (
                 <div
-                  className="absolute"
+                  className="absolute pointer-events-none"
                   style={{
-                    left: "50%",
-                    top: "100%",
-                    transform: "translateX(-50%)",
-                    width: 0,
-                    height: 0,
-                    borderLeft: "4px solid transparent",
-                    borderRight: "4px solid transparent",
-                    borderTop: `4px solid ${COLORS.text.primary}`,
+                    left: `${pointPos.x}%`,
+                    top: `${pointPos.y - 8}%`,
+                    transform: "translate(-50%, -100%)",
+                    backgroundColor: COLORS.text.primary,
+                    color: COLORS.text.white,
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    fontSize: "0.75rem",
+                    fontWeight: "500",
+                    whiteSpace: "nowrap",
+                    zIndex: 20,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
                   }}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
+                >
+                  {formatDate(item.date)}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: "50%",
+                      top: "100%",
+                      transform: "translateX(-50%)",
+                      width: 0,
+                      height: 0,
+                      borderLeft: "4px solid transparent",
+                      borderRight: "4px solid transparent",
+                      borderTop: `4px solid ${COLORS.text.primary}`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
 
-      {/* 구역 레이블 */}
-      <div
-        className="absolute text-xs"
-        style={{
-          right: "12px",
-          top: "12px",
-          color: COLORS.text.tertiary,
-          fontWeight: "500",
-        }}
-      >
-        몰입·설렘
-      </div>
-      <div
-        className="absolute text-xs"
-        style={{
-          right: "12px",
-          bottom: "12px",
-          color: COLORS.text.tertiary,
-          fontWeight: "500",
-        }}
-      >
-        안도·평온
-      </div>
-      <div
-        className="absolute text-xs"
-        style={{
-          left: "12px",
-          top: "12px",
-          color: COLORS.text.tertiary,
-          fontWeight: "500",
-        }}
-      >
-        불안·초조
-      </div>
-      <div
-        className="absolute text-xs"
-        style={{
-          left: "12px",
-          bottom: "12px",
-          color: COLORS.text.tertiary,
-          fontWeight: "500",
-        }}
-      >
-        슬픔·무기력
-      </div>
+        {/* 구역 레이블 */}
+        <div
+          className="absolute text-xs"
+          style={{
+            right: "12px",
+            top: "12px",
+            color: COLORS.text.tertiary,
+            fontWeight: "500",
+          }}
+        >
+          몰입·설렘
+        </div>
+        <div
+          className="absolute text-xs"
+          style={{
+            right: "12px",
+            bottom: "12px",
+            color: COLORS.text.tertiary,
+            fontWeight: "500",
+          }}
+        >
+          안도·평온
+        </div>
+        <div
+          className="absolute text-xs"
+          style={{
+            left: "12px",
+            top: "12px",
+            color: COLORS.text.tertiary,
+            fontWeight: "500",
+          }}
+        >
+          불안·초조
+        </div>
+        <div
+          className="absolute text-xs"
+          style={{
+            left: "12px",
+            bottom: "12px",
+            color: COLORS.text.tertiary,
+            fontWeight: "500",
+          }}
+        >
+          슬픔·무기력
+        </div>
 
-      {/* 축 레이블 */}
-      <div
-        className="absolute text-xs"
-        style={{
-          left: "50%",
-          bottom: "-24px",
-          transform: "translateX(-50%)",
-          color: COLORS.text.secondary,
-          fontWeight: "500",
-        }}
-      >
-        쾌감 (valence)
+        {/* 축 레이블 */}
+        <div
+          className="absolute text-xs"
+          style={{
+            left: "50%",
+            bottom: "-24px",
+            transform: "translateX(-50%)",
+            color: COLORS.text.secondary,
+            fontWeight: "500",
+          }}
+        >
+          쾌감 (valence)
+        </div>
+        <div
+          className="absolute text-xs"
+          style={{
+            left: "-32px",
+            top: "50%",
+            transform: "translateY(-50%) rotate(-90deg)",
+            color: COLORS.text.secondary,
+            fontWeight: "500",
+          }}
+        >
+          각성 (arousal)
+        </div>
       </div>
-      <div
-        className="absolute text-xs"
-        style={{
-          left: "-32px",
-          top: "50%",
-          transform: "translateY(-50%) rotate(-90deg)",
-          color: COLORS.text.secondary,
-          fontWeight: "500",
-        }}
-      >
-        각성 (arousal)
-      </div>
-    </div>
+    </>
   );
 }

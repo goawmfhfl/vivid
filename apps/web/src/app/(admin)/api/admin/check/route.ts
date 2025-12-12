@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserIdFromCookie,
-} from "../../utils/auth";
-import { isAdmin } from "../../utils/admin-auth";
+} from "../../../../api/utils/auth";
+import { isAdmin } from "../util/admin-auth";
 
 /**
  * GET /api/admin/check

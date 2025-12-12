@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Heart, Target, Sparkles, Zap, Wind } from "lucide-react";
+import { Heart, Target, Sparkles, Zap, Wind, Lock } from "lucide-react";
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -9,6 +9,7 @@ import { EmotionQuadrantChart } from "./EmotionQuadrantChart";
 import { FeedbackCard } from "@/components/ui/FeedbackCard";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface RecentTrendsSectionProps {
   data: RecentTrendsResponse | null;
@@ -22,6 +23,7 @@ interface TrendCardProps {
   iconColor: string;
   items: string[];
   emptyMessage?: string;
+  isLocked?: boolean;
 }
 
 function TrendCard({
@@ -30,6 +32,7 @@ function TrendCard({
   iconColor,
   items,
   emptyMessage,
+  isLocked = false,
 }: TrendCardProps) {
   if (items.length === 0) {
     if (emptyMessage) {
@@ -55,13 +58,37 @@ function TrendCard({
   }
 
   return (
-    <div className="mb-12">
+    <div className="mb-12 relative">
       <FeedbackCard
         icon={icon}
         iconColor={iconColor}
         title={title}
         gradientColor={iconColor}
       >
+        {/* 자물쇠 오버레이 */}
+        {isLocked && (
+          <div
+            className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              border: `1px solid ${COLORS.border.light}`,
+            }}
+          >
+            <Lock
+              className="w-4 h-4"
+              style={{ color: COLORS.text.secondary }}
+            />
+            <span
+              className="text-xs font-medium"
+              style={{ color: COLORS.text.secondary }}
+            >
+              Pro
+            </span>
+          </div>
+        )}
+
         <ul className="space-y-2">
           {items.map((item, index) => (
             <li key={index} className="flex items-start gap-2">
@@ -81,6 +108,18 @@ function TrendCard({
             </li>
           ))}
         </ul>
+
+        {/* 구독 안내 메시지 */}
+        {isLocked && (
+          <div
+            className="mt-4 pt-4 border-t text-center"
+            style={{ borderColor: COLORS.border.light }}
+          >
+            <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+              프로 멤버십에서 확인 가능한 인사이트입니다
+            </p>
+          </div>
+        )}
       </FeedbackCard>
     </div>
   );
@@ -91,8 +130,45 @@ export function RecentTrendsSection({
   isLoading = false,
   error = null,
 }: RecentTrendsSectionProps) {
+  const { isPro } = useSubscription();
+
+  // 임시 데이터 (프로가 아닐 경우 사용)
+  const mockData = {
+    aspired_self: [
+      "창의적인 문제 해결자",
+      "균형잡힌 삶을 추구하는 사람",
+      "성장을 지속하는 학습자",
+    ],
+    interests: ["독서와 학습", "자연 속에서의 휴식", "새로운 경험 탐색"],
+    immersionSituations: [
+      "깊이 몰입하는 작업을 할 때",
+      "새로운 아이디어를 발견할 때",
+      "목표를 향해 나아갈 때",
+    ],
+    reliefSituations: [
+      "가족과 함께 시간을 보낼 때",
+      "평온한 아침을 시작할 때",
+      "자신만의 공간에서 휴식을 취할 때",
+    ],
+  };
+
   // 데이터 처리 로직 (useMemo로 메모이제이션)
   const processedData = useMemo(() => {
+    // 감정 데이터는 프로 여부와 무관하게 표시
+    const emotionData = data?.emotionData || [];
+
+    // 프로가 아닐 경우 임시 데이터 사용, 프로일 경우 실제 데이터 사용
+    if (!isPro) {
+      return {
+        emotionData,
+        aspired_self: mockData.aspired_self,
+        interests: mockData.interests,
+        immersionSituations: mockData.immersionSituations,
+        reliefSituations: mockData.reliefSituations,
+      };
+    }
+
+    // 프로 멤버십: 실제 데이터 사용
     if (!data) {
       return {
         emotionData: [],
@@ -104,13 +180,13 @@ export function RecentTrendsSection({
     }
 
     return {
-      emotionData: data.emotionData || [],
+      emotionData,
       aspired_self: (data.aspired_self || []).slice(0, 5),
       interests: (data.interests || []).slice(0, 5),
       immersionSituations: (data.immersionSituations || []).slice(0, 5),
       reliefSituations: (data.reliefSituations || []).slice(0, 5),
     };
-  }, [data]);
+  }, [data, isPro]);
 
   // 로딩 상태
   if (isLoading) {
@@ -208,44 +284,48 @@ export function RecentTrendsSection({
       {/* 2. 지향하는 나의 모습 */}
       <ScrollAnimation delay={200}>
         <TrendCard
-          title="지향하는 나의 모습"
+          title="나를 향한 나침반"
           icon={<Target className="w-4 h-4 text-white" />}
           iconColor="#E5B96B"
           items={processedData.aspired_self}
           emptyMessage="아직 데이터가 없습니다"
+          isLocked={!isPro}
         />
       </ScrollAnimation>
 
       {/* 3. 관심사 */}
       <ScrollAnimation delay={300}>
         <TrendCard
-          title="관심사"
+          title="나를 움직이는 것들"
           icon={<Sparkles className="w-4 h-4 text-white" />}
           iconColor="#A8BBA8"
           items={processedData.interests}
           emptyMessage="아직 데이터가 없습니다"
+          isLocked={!isPro}
         />
       </ScrollAnimation>
 
       {/* 4. 몰입-희망 순간 */}
       <ScrollAnimation delay={400}>
         <TrendCard
-          title="몰입 그리고 희망을 느끼는 순간"
+          title="몰입의 순간들"
           icon={<Zap className="w-4 h-4 text-white" />}
           iconColor="#A8BBA8"
           items={processedData.immersionSituations}
           emptyMessage="아직 데이터가 없습니다"
+          isLocked={!isPro}
         />
       </ScrollAnimation>
 
       {/* 5. 안도-편안 순간 */}
       <ScrollAnimation delay={500}>
         <TrendCard
-          title="편함, 안도를 느끼는 순간"
+          title="편안함의 순간들"
           icon={<Wind className="w-4 h-4 text-white" />}
           iconColor="#E5B96B"
           items={processedData.reliefSituations}
           emptyMessage="아직 데이터가 없습니다"
+          isLocked={!isPro}
         />
       </ScrollAnimation>
     </>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "../../../../../utils/admin-auth";
+import { requireAdmin } from "../../../../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 
 /**

@@ -4,7 +4,15 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RecentTrendsSection } from "@/components/reports/RecentTrendsSection";
 import { useRecentTrends } from "@/hooks/useRecentTrends";
-import { COLORS, SPACING, CARD_STYLES, TYPOGRAPHY } from "@/lib/design-system";
+import {
+  COLORS,
+  SPACING,
+  CARD_STYLES,
+  TYPOGRAPHY,
+  GRADIENT_UTILS,
+  SHADOWS,
+  TRANSITIONS,
+} from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Calendar, TrendingUp } from "lucide-react";
 
@@ -27,71 +35,76 @@ function ReportsPage() {
         subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+      <div className="grid grid-cols-2 gap-4 mt-8">
         {/* 주간 리포트 버튼 */}
         <button
           onClick={() => router.push("/reports/weekly")}
           className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98]"
           style={{
-            ...CARD_STYLES.default,
-            padding: "24px",
+            background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+            border: `1.5px solid ${GRADIENT_UTILS.borderColor(
+              COLORS.brand.light,
+              "30"
+            )}`,
+            borderRadius: "20px",
+            padding: "20px",
             textAlign: "left",
+            boxShadow: SHADOWS.default,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = `
-              0 4px 16px rgba(107, 122, 111, 0.12),
-              0 2px 6px rgba(0,0,0,0.04),
-              inset 0 1px 0 rgba(255,255,255,0.6)
-            `;
+            e.currentTarget.style.boxShadow = SHADOWS.lg;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+            e.currentTarget.style.boxShadow = SHADOWS.default;
           }}
         >
-          {/* 종이 질감 오버레이 */}
+          {/* 배경 장식 그라디언트 */}
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none"
             style={{
-              background: `
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
-              `,
-              mixBlendMode: "overlay",
-              opacity: 0.5,
+              background: GRADIENT_UTILS.decoration(COLORS.brand.light, 0.6),
             }}
           />
-          <div className="relative z-10 flex items-start gap-4">
-            <div
-              className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: `${COLORS.brand.light}20` }}
-            >
-              <Calendar
-                className="w-6 h-6"
-                style={{ color: COLORS.brand.light }}
-              />
-            </div>
-            <div className="flex-1">
+          <div className="relative z-10 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: GRADIENT_UTILS.iconBadge(
+                    COLORS.brand.light,
+                    0.15
+                  ),
+                  boxShadow: `0 2px 8px ${COLORS.brand.light}30`,
+                }}
+              >
+                <Calendar
+                  className="w-5 h-5"
+                  style={{ color: COLORS.text.white }}
+                />
+              </div>
               <h3
                 className={TYPOGRAPHY.h3.fontSize}
                 style={{
                   ...TYPOGRAPHY.h3,
-                  marginBottom: "4px",
+                  fontSize: "0.95rem",
+                  whiteSpace: "nowrap",
                 }}
               >
                 주간 리포트
               </h3>
-              <p
-                className={TYPOGRAPHY.body.fontSize}
-                style={{
-                  color: COLORS.text.secondary,
-                  opacity: 0.8,
-                }}
-              >
-                일주일간의 기록을 분석하여 패턴과 인사이트를 확인하세요
-              </p>
             </div>
+            <p
+              className="text-xs leading-relaxed"
+              style={{
+                color: COLORS.text.secondary,
+                opacity: 0.85,
+                lineHeight: "1.4",
+              }}
+            >
+              일주일간의 기록을 분석하여 패턴과 인사이트를 확인하세요
+            </p>
           </div>
         </button>
 
@@ -100,65 +113,73 @@ function ReportsPage() {
           onClick={() => router.push("/reports/monthly")}
           className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98]"
           style={{
-            ...CARD_STYLES.default,
-            padding: "24px",
+            background: GRADIENT_UTILS.cardBackground(
+              COLORS.brand.primary,
+              0.15
+            ),
+            border: `1.5px solid ${GRADIENT_UTILS.borderColor(
+              COLORS.brand.primary,
+              "30"
+            )}`,
+            borderRadius: "20px",
+            padding: "20px",
             textAlign: "left",
+            boxShadow: SHADOWS.default,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow = `
-              0 4px 16px rgba(107, 122, 111, 0.12),
-              0 2px 6px rgba(0,0,0,0.04),
-              inset 0 1px 0 rgba(255,255,255,0.6)
-            `;
+            e.currentTarget.style.boxShadow = SHADOWS.lg;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+            e.currentTarget.style.boxShadow = SHADOWS.default;
           }}
         >
-          {/* 종이 질감 오버레이 */}
+          {/* 배경 장식 그라디언트 */}
           <div
-            className="absolute inset-0 pointer-events-none"
+            className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none"
             style={{
-              background: `
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, ${COLORS.brand.primary}15 0%, transparent 40%)
-              `,
-              mixBlendMode: "overlay",
-              opacity: 0.5,
+              background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.6),
             }}
           />
-          <div className="relative z-10 flex items-start gap-4">
-            <div
-              className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: `${COLORS.brand.primary}20` }}
-            >
-              <TrendingUp
-                className="w-6 h-6"
-                style={{ color: COLORS.brand.primary }}
-              />
-            </div>
-            <div className="flex-1">
+          <div className="relative z-10 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: GRADIENT_UTILS.iconBadge(
+                    COLORS.brand.primary,
+                    0.15
+                  ),
+                  boxShadow: `0 2px 8px ${COLORS.brand.primary}30`,
+                }}
+              >
+                <TrendingUp
+                  className="w-5 h-5"
+                  style={{ color: COLORS.text.white }}
+                />
+              </div>
               <h3
                 className={TYPOGRAPHY.h3.fontSize}
                 style={{
                   ...TYPOGRAPHY.h3,
-                  marginBottom: "4px",
+                  fontSize: "0.95rem",
+                  whiteSpace: "nowrap",
                 }}
               >
                 월간 리포트
               </h3>
-              <p
-                className={TYPOGRAPHY.body.fontSize}
-                style={{
-                  color: COLORS.text.secondary,
-                  opacity: 0.8,
-                }}
-              >
-                한 달간의 기록을 종합 분석하여 성장과 변화를 확인하세요
-              </p>
             </div>
+            <p
+              className="text-xs leading-relaxed"
+              style={{
+                color: COLORS.text.secondary,
+                opacity: 0.85,
+                lineHeight: "1.4",
+              }}
+            >
+              한 달간의 기록을 종합 분석하여 성장과 변화를 확인하세요
+            </p>
           </div>
         </button>
       </div>
