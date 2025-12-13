@@ -85,21 +85,38 @@ export function getKSTWeekdayShort(date: Date = new Date()): string {
 }
 
 /**
+ * 환경 변수 확인 (클라이언트 사이드)
+ */
+function isProduction(): boolean {
+  if (typeof window === "undefined") {
+    // 서버 사이드에서는 process.env 사용
+    return process.env.NODE_ENV === "production";
+  }
+  // 클라이언트 사이드에서는 NEXT_PUBLIC_ 접두사 변수 사용
+  return process.env.NEXT_PUBLIC_NODE_ENV === "production";
+}
+
+/**
  * UTC ISO 문자열을 KST 기준 시간으로 변환하는 헬퍼 함수
  * @param dateString UTC ISO 문자열 또는 Date 객체
  * @returns KST 기준 Date 객체 (내부적으로만 사용)
  *
- * 주의: 이 함수는 UTC 시간에 9시간을 더한 Date 객체를 반환합니다.
- * getUTC* 메서드를 사용하여 KST 시간을 추출해야 합니다.
+ * 주의: 배포 환경에서는 이미 9시간이 더해진 상태로 저장되어 있으므로
+ * 9시간을 빼서 표시해야 합니다. 로컬 환경에서는 9시간을 더합니다.
  */
 function toKSTDate(dateString: string | Date): Date {
   const date =
     typeof dateString === "string" ? new Date(dateString) : dateString;
   // UTC 시간을 밀리초로 가져오기
   const utcTime = date.getTime();
-  // KST는 UTC+9이므로 9시간(32400000ms)을 더함
-  const kstOffsetMs = 9 * 60 * 60 * 1000;
-  const kstTime = utcTime + kstOffsetMs;
+  const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+
+  // 배포 환경: 이미 9시간이 더해진 상태이므로 9시간을 빼서 표시
+  // 로컬 환경: 9시간을 더해서 표시
+  const kstTime = isProduction()
+    ? utcTime - kstOffsetMs // 배포 환경: 9시간 빼기
+    : utcTime + kstOffsetMs; // 로컬 환경: 9시간 더하기
+
   // UTC 메서드로 직접 접근하기 위해 Date 객체 생성
   // 이 Date 객체의 getUTC* 메서드를 사용하면 KST 시간을 얻을 수 있습니다
   return new Date(kstTime);
