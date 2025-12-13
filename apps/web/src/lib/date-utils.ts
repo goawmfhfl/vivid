@@ -88,13 +88,21 @@ export function getKSTWeekdayShort(date: Date = new Date()): string {
  * UTC ISO 문자열을 KST 기준 시간으로 변환하는 헬퍼 함수
  * @param dateString UTC ISO 문자열 또는 Date 객체
  * @returns KST 기준 Date 객체 (내부적으로만 사용)
+ *
+ * 주의: 이 함수는 UTC 시간에 9시간을 더한 Date 객체를 반환합니다.
+ * getUTC* 메서드를 사용하여 KST 시간을 추출해야 합니다.
  */
 function toKSTDate(dateString: string | Date): Date {
   const date =
     typeof dateString === "string" ? new Date(dateString) : dateString;
+  // UTC 시간을 밀리초로 가져오기
   const utcTime = date.getTime();
-  const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
-  return new Date(utcTime + kstOffsetMs);
+  // KST는 UTC+9이므로 9시간(32400000ms)을 더함
+  const kstOffsetMs = 9 * 60 * 60 * 1000;
+  const kstTime = utcTime + kstOffsetMs;
+  // UTC 메서드로 직접 접근하기 위해 Date 객체 생성
+  // 이 Date 객체의 getUTC* 메서드를 사용하면 KST 시간을 얻을 수 있습니다
+  return new Date(kstTime);
 }
 
 /**

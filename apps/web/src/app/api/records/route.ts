@@ -92,12 +92,6 @@ export async function POST(request: NextRequest) {
     const targetKstDate = kst_date || getKSTDateString();
     const todayKstDate = getKSTDateString();
 
-    // KST 기준 현재 시각 계산 (타임존 독립적)
-    const now = new Date();
-    const utcTime = now.getTime();
-    const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
-    const nowKst = new Date(utcTime + kstOffsetMs);
-
     // targetKstDate가 미래인 경우 생성 차단
     if (targetKstDate > todayKstDate) {
       return NextResponse.json(
@@ -108,11 +102,18 @@ export async function POST(request: NextRequest) {
 
     const [year, month, day] = targetKstDate.split("-").map(Number);
 
-    // created_at 계산: 오늘은 현재 시각, 과거는 해당 날짜 23:59:59 KST
-    const createdAtKst =
-      targetKstDate === todayKstDate
-        ? nowKst
-        : new Date(Date.UTC(year, month - 1, day, 14, 59, 59)); // KST 23:59:59 -> UTC 14:59:59
+    // created_at 계산: UTC로 저장해야 함
+    // 오늘: 현재 UTC 시간 그대로 사용
+    // 과거: 해당 날짜 23:59:59 KST를 UTC로 변환 (KST 23:59:59 = UTC 14:59:59)
+    let createdAtUtc: Date;
+    if (targetKstDate === todayKstDate) {
+      // 오늘인 경우: 현재 UTC 시간 사용
+      createdAtUtc = new Date();
+    } else {
+      // 과거 날짜인 경우: KST 23:59:59를 UTC로 변환
+      // KST 23:59:59 = UTC 14:59:59 (9시간 차이)
+      createdAtUtc = new Date(Date.UTC(year, month - 1, day, 14, 59, 59));
+    }
 
     // kst_date를 제외하고 삽입 (데이터베이스가 자동 생성)
     const { data: newRecord, error } = await supabase
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
         user_id: authenticatedUserId,
         content: encryptedContent,
         type: type,
-        created_at: createdAtKst.toISOString(),
+        created_at: createdAtUtc.toISOString(),
       })
       .select()
       .single();
