@@ -92,10 +92,11 @@ export async function POST(request: NextRequest) {
     const targetKstDate = kst_date || getKSTDateString();
     const todayKstDate = getKSTDateString();
 
-    // KST 기준 현재 시각 계산
+    // KST 기준 현재 시각 계산 (타임존 독립적)
     const now = new Date();
-    const utcNow = now.getTime() + now.getTimezoneOffset() * 60000;
-    const nowKst = new Date(utcNow + 9 * 60 * 60000);
+    const utcTime = now.getTime();
+    const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+    const nowKst = new Date(utcTime + kstOffsetMs);
 
     // targetKstDate가 미래인 경우 생성 차단
     if (targetKstDate > todayKstDate) {

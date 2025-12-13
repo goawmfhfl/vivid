@@ -18,19 +18,16 @@
  * ```
  */
 export function getKSTDateString(date: Date = new Date()): string {
-  // KST는 UTC+9 (9시간 앞서있음)
-  const kstOffset = 9 * 60; // 분 단위로 변환 (9시간 = 540분)
+  // UTC 시간을 밀리초로 가져오기 (타임존 독립적)
+  const utcTime = date.getTime();
+  const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+  const kstTime = utcTime + kstOffsetMs;
+  const kst = new Date(kstTime);
 
-  // UTC 시간 계산
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-
-  // KST 시간 계산 (UTC + 9시간)
-  const kst = new Date(utc + kstOffset * 60000);
-
-  // YYYY-MM-DD 형식으로 포맷팅
-  const year = kst.getFullYear();
-  const month = String(kst.getMonth() + 1).padStart(2, "0");
-  const day = String(kst.getDate()).padStart(2, "0");
+  // UTC 메서드로 직접 접근 (타임존 변환 없이)
+  const year = kst.getUTCFullYear();
+  const month = String(kst.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(kst.getUTCDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
@@ -85,4 +82,82 @@ export function getKSTWeekdayShort(date: Date = new Date()): string {
     6: "Sat",
   };
   return weekdayMap[kstDate.getDay()] || "Sun";
+}
+
+/**
+ * UTC ISO 문자열을 KST 기준 시간으로 변환하는 헬퍼 함수
+ * @param dateString UTC ISO 문자열 또는 Date 객체
+ * @returns KST 기준 Date 객체 (내부적으로만 사용)
+ */
+function toKSTDate(dateString: string | Date): Date {
+  const date =
+    typeof dateString === "string" ? new Date(dateString) : dateString;
+  const utcTime = date.getTime();
+  const kstOffsetMs = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+  return new Date(utcTime + kstOffsetMs);
+}
+
+/**
+ * UTC ISO 문자열을 KST 기준 시간으로 포맷팅 (오전/오후 형식)
+ *
+ * @param dateString UTC ISO 문자열 (예: "2025-12-13T12:33:36.119+00:00")
+ * @returns KST 기준 시간 문자열 (예: "오후 9:33")
+ *
+ * @example
+ * formatKSTTime("2025-12-13T12:33:36.119+00:00") // "오후 9:33"
+ */
+export function formatKSTTime(dateString: string): string {
+  const kstDate = toKSTDate(dateString);
+  const hours = kstDate.getUTCHours();
+  const minutes = kstDate.getUTCMinutes();
+  const period = hours < 12 ? "오전" : "오후";
+  const displayHours = hours % 12 || 12;
+  return `${period} ${displayHours}:${minutes.toString().padStart(2, "0")}`;
+}
+
+/**
+ * UTC ISO 문자열을 KST 기준 날짜로 포맷팅 (YYYY-MM-DD 형식)
+ *
+ * @param dateString UTC ISO 문자열
+ * @returns KST 기준 날짜 문자열 (예: "2025-12-13")
+ *
+ * @example
+ * formatKSTDate("2025-12-13T12:33:36.119+00:00") // "2025-12-13"
+ */
+export function formatKSTDate(dateString: string): string {
+  const kstDate = toKSTDate(dateString);
+  const year = kstDate.getUTCFullYear();
+  const month = String(kstDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(kstDate.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * UTC ISO 문자열을 KST 기준 긴 형식 날짜로 포맷팅 (한국어)
+ *
+ * @param dateString UTC ISO 문자열
+ * @returns KST 기준 긴 형식 날짜 문자열 (예: "2025년 12월 13일")
+ *
+ * @example
+ * formatKSTDateLong("2025-12-13T12:33:36.119+00:00") // "2025년 12월 13일"
+ */
+export function formatKSTDateLong(dateString: string): string {
+  const kstDate = toKSTDate(dateString);
+  const year = kstDate.getUTCFullYear();
+  const month = kstDate.getUTCMonth() + 1;
+  const day = kstDate.getUTCDate();
+  return `${year}년 ${month}월 ${day}일`;
+}
+
+/**
+ * UTC ISO 문자열을 KST 기준 날짜+시간으로 포맷팅 (한국어 형식)
+ *
+ * @param dateString UTC ISO 문자열
+ * @returns KST 기준 날짜+시간 문자열 (예: "2025-12-13 오후 9:33")
+ *
+ * @example
+ * formatKSTDateTime("2025-12-13T12:33:36.119+00:00") // "2025-12-13 오후 9:33"
+ */
+export function formatKSTDateTime(dateString: string): string {
+  return `${formatKSTDate(dateString)} ${formatKSTTime(dateString)}`;
 }

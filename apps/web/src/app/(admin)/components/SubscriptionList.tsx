@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
+import { formatKSTDate, formatKSTTime } from "@/lib/date-utils";
 import { Edit2 } from "lucide-react";
 
 interface Subscription {
@@ -423,9 +424,7 @@ export function SubscriptionList() {
                             style={{ color: COLORS.text.secondary }}
                           >
                             {sub.updated_at
-                              ? new Date(sub.updated_at).toLocaleDateString(
-                                  "ko-KR"
-                                )
+                              ? formatKSTDate(sub.updated_at)
                               : "-"}
                           </span>
                           <span
@@ -433,10 +432,7 @@ export function SubscriptionList() {
                             style={{ color: COLORS.text.tertiary }}
                           >
                             {sub.updated_at
-                              ? new Date(sub.updated_at).toLocaleTimeString(
-                                  "ko-KR",
-                                  { hour: "2-digit", minute: "2-digit" }
-                                )
+                              ? formatKSTTime(sub.updated_at)
                               : ""}
                           </span>
                         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
+import { formatKSTDate, formatKSTTime } from "@/lib/date-utils";
 import type { AIUsageDetail } from "@/types/admin";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -790,22 +791,14 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                               className="text-sm"
                               style={{ color: COLORS.text.primary }}
                             >
-                              {new Date(detail.created_at).toLocaleDateString(
-                                "ko-KR"
-                              )}
+                              {formatKSTDate(detail.created_at)}
                             </span>
                             <br />
                             <span
                               className="text-xs"
                               style={{ color: COLORS.text.tertiary }}
                             >
-                              {new Date(detail.created_at).toLocaleTimeString(
-                                "ko-KR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
+                              {formatKSTTime(detail.created_at)}
                             </span>
                           </td>
                           <td className="px-4 py-3">

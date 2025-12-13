@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
+import { formatKSTDateLong } from "@/lib/date-utils";
 import type { UserDetail, AIUsageStats } from "@/types/admin";
 import {
   ArrowLeft,
@@ -680,11 +681,7 @@ export function UserDetail({ userId }: UserDetailProps) {
               </label>
               <p className="text-base" style={{ color: COLORS.text.primary }}>
                 {user.last_login_at ? (
-                  new Date(user.last_login_at).toLocaleDateString("ko-KR", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                  formatKSTDateLong(user.last_login_at)
                 ) : (
                   <span style={{ color: COLORS.text.muted }}>
                     로그인 기록 없음

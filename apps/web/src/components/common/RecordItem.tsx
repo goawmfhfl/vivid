@@ -20,6 +20,7 @@ import {
   RECORD_TYPE_COLORS,
   type RecordType,
 } from "../signup/RecordTypeCard";
+import { formatKSTTime } from "@/lib/date-utils";
 
 interface RecordItemProps {
   record: Record;
@@ -34,15 +35,6 @@ export function RecordItem({
   onDelete,
   showActions = true,
 }: RecordItemProps) {
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const period = hours < 12 ? "오전" : "오후";
-    const displayHours = hours % 12 || 12;
-    return `${period} ${displayHours}:${minutes.toString().padStart(2, "0")}`;
-  };
-
   const recordType = (record.type as RecordType) || "daily";
   const typeColors = RECORD_TYPE_COLORS[recordType];
   const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
@@ -176,7 +168,7 @@ export function RecordItem({
                 fontSize: "0.75rem",
               }}
             >
-              {formatTime(record.created_at)}
+              {formatKSTTime(record.created_at)}
             </span>
             <span
               className={TYPOGRAPHY.caption.fontSize}
@@ -285,4 +277,3 @@ export function RecordItem({
     </div>
   );
 }
-
