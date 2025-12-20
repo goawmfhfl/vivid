@@ -186,9 +186,14 @@ export function Home({ selectedDate }: HomeProps = {}) {
             timezone: "Asia/Seoul",
           });
 
-          const es = new EventSource(
-            `/api/daily-feedback/generate-stream?${params.toString()}`
-          );
+          // 배포 환경에서 절대 URL 사용 (상대 경로는 일부 환경에서 문제 발생 가능)
+          const eventSourceUrl = `/api/daily-feedback/generate-stream?${params.toString()}`;
+          const absoluteUrl =
+            typeof window !== "undefined"
+              ? `${window.location.origin}${eventSourceUrl}`
+              : eventSourceUrl;
+
+          const es = new EventSource(absoluteUrl);
           currentEsRef.current = es;
 
           // Promise 완료/실패 시 EventSource 정리
@@ -348,21 +353,30 @@ export function Home({ selectedDate }: HomeProps = {}) {
             }
           };
 
-          es.onerror = (_event) => {
+          es.onerror = (event) => {
             cleanup();
             clearDailyFeedbackProgress(activeDate);
 
             // EventSource의 readyState를 확인하여 에러 타입 판단
             let errorMessage = "피드백 생성 중 연결 오류가 발생했습니다.";
 
+            // 에러 상세 정보 로깅 (개발 환경)
+            if (process.env.NEXT_PUBLIC_NODE_ENV === "development") {
+              console.error("EventSource error:", {
+                readyState: es.readyState,
+                url: es.url,
+                event,
+              });
+            }
+
             if (es.readyState === EventSource.CLOSED) {
               // 연결이 닫혔을 때 - 서버 에러 가능성
               errorMessage =
                 "서버 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
             } else if (es.readyState === EventSource.CONNECTING) {
-              // 연결 중일 때
+              // 연결 중일 때 - 네트워크 문제 또는 타임아웃
               errorMessage =
-                "서버에 연결하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                "서버에 연결하는 중 문제가 발생했습니다. 네트워크 연결을 확인하고 잠시 후 다시 시도해주세요.";
             }
 
             openErrorModal(errorMessage);

@@ -109,14 +109,9 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     if (textarea) {
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 100), 600);
+      const newHeight = Math.max(scrollHeight, 100);
       textarea.style.height = `${newHeight}px`;
-
-      if (scrollHeight > 600) {
-        textarea.style.overflowY = "auto";
-      } else {
-        textarea.style.overflowY = "hidden";
-      }
+      textarea.style.overflowY = "hidden";
     }
   }, [content]);
 
@@ -512,7 +507,6 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
               fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
               lineHeight: "28px", // 줄무늬 간격(28px)과 일치
               minHeight: "100px",
-              maxHeight: "600px",
               transition: "height 0.1s ease-out",
               padding: 0,
               paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
