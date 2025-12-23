@@ -26,6 +26,8 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const createRecordMutation = useCreateRecord();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const isUserScrollingRef = useRef(false);
   const { data: currentUser } = useCurrentUser();
 
   // 날짜 상태 계산
@@ -103,15 +105,95 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     };
   }, []);
 
+  // 사용자 스크롤 감지
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      isUserScrollingRef.current = true;
+      scrollPositionRef.current = {
+        x: window.scrollX,
+        y: window.scrollY,
+      };
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isUserScrollingRef.current = false;
+      }, 100);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
+
+  // DOM 변경 감지하여 자동 스크롤 방지
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const observer = new MutationObserver(() => {
+      // DOM이 변경되었을 때 스크롤 위치 복원
+      if (scrollPositionRef.current && !isUserScrollingRef.current) {
+        requestAnimationFrame(() => {
+          if (scrollPositionRef.current) {
+            window.scrollTo(
+              scrollPositionRef.current.x,
+              scrollPositionRef.current.y
+            );
+          }
+        });
+      }
+    });
+
+    observer.observe(textarea, {
+      attributes: true,
+      attributeFilter: ["style"],
+      childList: false,
+      subtree: false,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   // textarea 높이 자동 조정
   useEffect(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
+    if (textarea && !isUserScrollingRef.current) {
+      // 스크롤 위치 저장
+      scrollPositionRef.current = {
+        x: window.scrollX,
+        y: window.scrollY,
+      };
+
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
       const newHeight = Math.max(scrollHeight, 100);
       textarea.style.height = `${newHeight}px`;
       textarea.style.overflowY = "hidden";
+
+      // 스크롤 위치 복원 (여러 프레임에 걸쳐 시도)
+      if (scrollPositionRef.current) {
+        requestAnimationFrame(() => {
+          if (scrollPositionRef.current) {
+            window.scrollTo(
+              scrollPositionRef.current.x,
+              scrollPositionRef.current.y
+            );
+          }
+        });
+        // 추가 보정을 위해 한 번 더 시도
+        setTimeout(() => {
+          if (scrollPositionRef.current) {
+            window.scrollTo(
+              scrollPositionRef.current.x,
+              scrollPositionRef.current.y
+            );
+          }
+        }, 0);
+      }
     }
   }, [content]);
 
@@ -149,9 +231,25 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
 
   // content 변경 시 localStorage에 저장
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // 스크롤 위치 저장
+    scrollPositionRef.current = {
+      x: window.scrollX,
+      y: window.scrollY,
+    };
+
     const newContent = e.target.value;
     setContent(newContent);
     debouncedSave(newContent);
+
+    // 스크롤 위치 복원
+    requestAnimationFrame(() => {
+      if (scrollPositionRef.current) {
+        window.scrollTo(
+          scrollPositionRef.current.x,
+          scrollPositionRef.current.y
+        );
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -160,6 +258,58 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
       handleSubmit();
     }
   };
+
+  // focus 시 자동 스크롤 방지
+  const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    // 스크롤 위치 저장
+    scrollPositionRef.current = {
+      x: window.scrollX,
+      y: window.scrollY,
+    };
+
+    // scrollIntoView 오버라이드
+    const textarea = e.target;
+    const originalScrollIntoView = textarea.scrollIntoView;
+    textarea.scrollIntoView = function (
+      options?: boolean | ScrollIntoViewOptions
+    ) {
+      // 아무것도 하지 않음 (스크롤 방지)
+      return;
+    };
+
+    // 다음 프레임에서 스크롤 위치 복원 및 원래 메서드 복구
+    requestAnimationFrame(() => {
+      if (scrollPositionRef.current) {
+        window.scrollTo(
+          scrollPositionRef.current.x,
+          scrollPositionRef.current.y
+        );
+      }
+      textarea.scrollIntoView = originalScrollIntoView;
+    });
+  };
+
+  // textarea의 scrollIntoView를 영구적으로 오버라이드
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // scrollIntoView 메서드를 오버라이드하여 스크롤을 방지
+      const originalScrollIntoView = textarea.scrollIntoView.bind(textarea);
+      textarea.scrollIntoView = function (
+        options?: boolean | ScrollIntoViewOptions
+      ) {
+        // 스크롤 방지
+        return;
+      };
+
+      return () => {
+        // cleanup 시 원래 메서드 복구
+        if (textarea) {
+          textarea.scrollIntoView = originalScrollIntoView;
+        }
+      };
+    }
+  }, []);
 
   const recordType = selectedType || "daily";
   const typeColors = RECORD_TYPE_COLORS[recordType];
@@ -499,6 +649,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
             value={content}
             onChange={handleContentChange}
             onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
             placeholder="오늘의 기록을 자유롭게 작성하세요..."
             className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
             style={{
@@ -511,6 +662,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
               padding: 0,
               paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
               boxShadow: "none",
+              scrollMargin: "0px",
             }}
           />
 
