@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -7,19 +7,16 @@ import { RecordList } from "./home/RecordList";
 import { EditRecordDialog } from "./home/EditRecordDialog";
 import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
 import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
+import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
 import { CircularProgress } from "./ui/CircularProgress";
-import { getCurrentUserId } from "@/hooks/useCurrentUser";
-import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -27,7 +24,6 @@ interface HomeProps {
 
 export function Home({ selectedDate }: HomeProps = {}) {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const {
     data: allRecords = [],
@@ -39,8 +35,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const currentEsRef = useRef<EventSource | null>(null);
+  const createDailyFeedback = useCreateDailyFeedback();
 
   // KST 기준으로 오늘 날짜 계산
   const todayIso = getKSTDateString();
@@ -123,26 +118,62 @@ export function Home({ selectedDate }: HomeProps = {}) {
     (state) => state.clearDailyFeedbackProgress
   );
 
+  // 타이머 기반 progress 상태
+  const [timerProgress, setTimerProgress] = useState<number | null>(null);
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+
   // 진행 상황 확인
   const progress = dailyFeedbackProgress[activeDate] || null;
-  const isGeneratingFeedback = isGenerating || progress !== null;
-  const progressPercentage = progress
-    ? Math.min(Math.round((progress.current / progress.total) * 100), 99)
-    : 0;
+  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null || timerProgress !== null;
+  
+  // 타이머 기반 progress 계산 (0% → 99%, 36초 동안)
+  useEffect(() => {
+    if (timerStartTime === null) return;
 
-  // 섹션 이름을 한글로 변환
-  const getSectionNameKR = (sectionName: string) => {
-    const names: { [key: string]: string } = {
-      SummaryReport: "전체 요약",
-      DailyReport: "일상 분석",
-      EmotionReport: "감정 분석",
-      DreamReport: "꿈/목표 분석",
-      InsightReport: "인사이트",
-      FeedbackReport: "피드백",
-      FinalReport: "최종 정리중",
+    const DURATION_MS = 33000; // 33초
+    const TARGET_PERCENTAGE = 99; // 최대 99%
+    const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - timerStartTime;
+      
+      // 36초가 넘어가면 99%에 고정
+      if (elapsed >= DURATION_MS) {
+        setTimerProgress(TARGET_PERCENTAGE);
+        clearInterval(interval);
+        return;
+      }
+      
+      // 36초 이내일 때만 진행률 계산
+      const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
+      setTimerProgress(progress);
+    }, UPDATE_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [timerStartTime]);
+
+  // activeDate가 변경되거나 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      setTimerStartTime(null);
+      setTimerProgress(null);
     };
-    return names[sectionName] || sectionName;
-  };
+  }, [activeDate]);
+
+  // 타이머 progress와 실제 서버 progress 병합 (더 높은 값 사용)
+  const serverProgressPercentage = progress
+    ? Math.round((progress.current / progress.total) * 100)
+    : 0;
+  
+  // 서버 응답이 완료되면 100%, 그렇지 않으면 타이머와 서버 중 더 높은 값 (최대 99%)
+  const isComplete = progress && progress.current >= progress.total;
+  const progressPercentage = isComplete
+    ? 100
+    : Math.min(
+        Math.max(timerProgress ?? 0, serverProgressPercentage),
+        99
+      );
+
 
   const handleOpenDailyFeedback = async () => {
     try {
@@ -155,260 +186,64 @@ export function Home({ selectedDate }: HomeProps = {}) {
         return;
       }
 
-      setIsGenerating(true);
+      // 타이머 시작
+      setTimerStartTime(Date.now());
+      setTimerProgress(0);
 
-      const sectionNames = [
-        "SummaryReport",
-        "DailyReport",
-        "EmotionReport",
-        "DreamReport",
-        "InsightReport",
-        "FeedbackReport",
-        "FinalReport",
-      ];
-
-      // 진행 상황 즉시 초기화 (버튼 클릭 시 바로 프로그래스바 표시)
+      // 진행 상황 초기화
       setDailyFeedbackProgress(activeDate, {
         date: activeDate,
         current: 0,
-        total: sectionNames.length,
-        currentStep: getSectionNameKR(sectionNames[0]),
+        total: 1,
+        currentStep: "피드백 생성 중",
       });
 
       try {
-        const userId = await getCurrentUserId();
-
-        // SSE를 사용하여 진행 상황 수신
-        await new Promise<void>((resolve, reject) => {
-          const params = new URLSearchParams({
-            userId,
-            date: activeDate,
-            timezone: "Asia/Seoul",
-          });
-
-          // 배포 환경에서 절대 URL 사용 (상대 경로는 일부 환경에서 문제 발생 가능)
-          const eventSourceUrl = `/api/daily-feedback/generate-stream?${params.toString()}`;
-          const absoluteUrl =
-            typeof window !== "undefined"
-              ? `${window.location.origin}${eventSourceUrl}`
-              : eventSourceUrl;
-
-          const es = new EventSource(absoluteUrl);
-          currentEsRef.current = es;
-
-          // Promise 완료/실패 시 EventSource 정리
-          const cleanup = () => {
-            try {
-              if (es && es.readyState !== EventSource.CLOSED) {
-                es.close();
-              }
-            } catch {
-              // 무시
-            }
-            currentEsRef.current = null;
-          };
-
-          es.onmessage = (event) => {
-            try {
-              // HTML 응답인지 확인 (502 Bad Gateway 등)
-              if (
-                typeof event.data === "string" &&
-                (event.data.includes("<html>") ||
-                  event.data.includes("502") ||
-                  event.data.includes("Bad Gateway"))
-              ) {
-                throw new Error(event.data);
-              }
-
-              const data = JSON.parse(event.data);
-
-              if (data.type === "progress") {
-                // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
-                setDailyFeedbackProgress(activeDate, {
-                  date: activeDate,
-                  current: data.current,
-                  total: data.total,
-                  currentStep: getSectionNameKR(data.sectionName),
-                });
-              } else if (data.type === "complete") {
-                // 완료 처리
-                cleanup();
-
-                // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
-                if (data.data) {
-                  const feedbackData = data.data as DailyFeedbackRow;
-
-                  // 해당 날짜의 DAILY_FEEDBACK 쿼리에 생성된 피드백 데이터 설정
-                  queryClient.setQueryData<DailyFeedbackRow | null>(
-                    [QUERY_KEYS.DAILY_FEEDBACK, activeDate],
-                    feedbackData || null
-                  );
-
-                  // 생성된 피드백의 ID로 쿼리도 업데이트 (있는 경우)
-                  if (feedbackData?.id) {
-                    queryClient.setQueryData<DailyFeedbackRow | null>(
-                      [QUERY_KEYS.DAILY_FEEDBACK, "id", feedbackData.id],
-                      feedbackData || null
-                    );
-                  }
-
-                  // useRecordsAndFeedbackDates의 aiFeedbackDates 업데이트 (is_ai_generated가 true인 경우만)
-                  if (feedbackData?.is_ai_generated) {
-                    queryClient.setQueryData<{
-                      recordDates: string[];
-                      aiFeedbackDates: string[];
-                    }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
-                      if (!oldData) {
-                        return {
-                          recordDates: [],
-                          aiFeedbackDates: [activeDate],
-                        };
-                      }
-
-                      const { recordDates, aiFeedbackDates } = oldData;
-                      // 날짜가 이미 있는지 확인
-                      if (!aiFeedbackDates.includes(activeDate)) {
-                        const updatedAiFeedbackDates = [
-                          ...aiFeedbackDates,
-                          activeDate,
-                        ].sort();
-                        return {
-                          recordDates,
-                          aiFeedbackDates: updatedAiFeedbackDates,
-                        };
-                      }
-                      return oldData;
-                    });
-                  }
-                } else {
-                  // 데이터가 없는 경우 무효화로 폴백
-                  queryClient.invalidateQueries({
-                    queryKey: [QUERY_KEYS.DAILY_FEEDBACK],
-                  });
-                }
-
-                // 진행 상황 초기화
-                clearDailyFeedbackProgress(activeDate);
-
-                // 성공 시 전역 모달로 알림
-                if (data.data?.id) {
-                  const dateLabel = isToday
-                    ? "오늘의"
-                    : getKSTDate(new Date(activeDate)).toLocaleDateString(
-                        "ko-KR",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      );
-                  openSuccessModal(
-                    `${dateLabel} 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.`,
-                    () => {
-                      router.push(`/analysis/feedback/daily/${data.data.id}`);
-                    }
-                  );
-                } else {
-                  throw new Error("생성된 피드백에 ID가 없습니다.");
-                }
-
-                resolve();
-              } else if (data.type === "error") {
-                // 에러 처리
-                cleanup();
-
-                clearDailyFeedbackProgress(activeDate);
-                openErrorModal(
-                  `피드백 생성 중 오류가 발생했습니다: ${data.error}`
-                );
-
-                reject(new Error(data.error));
-              }
-            } catch (error) {
-              console.error("SSE 메시지 파싱 오류:", error);
-              cleanup();
-              clearDailyFeedbackProgress(activeDate);
-
-              // HTML 응답인지 확인 (502 Bad Gateway 등)
-              let errorMessage =
-                "피드백 생성 중 알 수 없는 오류가 발생했습니다.";
-
-              if (error instanceof Error && error.message) {
-                const errorText = error.message;
-                // HTML 태그가 포함되어 있으면 서버 에러로 판단
-                if (
-                  errorText.includes("<html>") ||
-                  errorText.includes("502") ||
-                  errorText.includes("Bad Gateway")
-                ) {
-                  errorMessage =
-                    "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
-                } else {
-                  errorMessage = `피드백 생성 중 오류가 발생했습니다: ${errorText}`;
-                }
-              }
-
-              openErrorModal(errorMessage);
-              reject(new Error(errorMessage));
-            }
-          };
-
-          es.onerror = (event) => {
-            cleanup();
-            clearDailyFeedbackProgress(activeDate);
-
-            // EventSource의 readyState를 확인하여 에러 타입 판단
-            let errorMessage = "피드백 생성 중 연결 오류가 발생했습니다.";
-
-            // 에러 상세 정보 로깅 (개발 환경)
-            if (process.env.NEXT_PUBLIC_NODE_ENV === "development") {
-              console.error("EventSource error:", {
-                readyState: es.readyState,
-                url: es.url,
-                event,
-              });
-            }
-
-            if (es.readyState === EventSource.CLOSED) {
-              // 연결이 닫혔을 때 - 서버 에러 가능성
-              errorMessage =
-                "서버 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
-            } else if (es.readyState === EventSource.CONNECTING) {
-              // 연결 중일 때 - 네트워크 문제 또는 타임아웃
-              errorMessage =
-                "서버에 연결하는 중 문제가 발생했습니다. 네트워크 연결을 확인하고 잠시 후 다시 시도해주세요.";
-            }
-
-            openErrorModal(errorMessage);
-            reject(new Error(errorMessage));
-          };
+        const feedbackData = await createDailyFeedback.mutateAsync({
+          date: activeDate,
         });
+
+        // 타이머 정리
+        setTimerStartTime(null);
+        setTimerProgress(null);
+        
+        // 진행 상황 초기화
+        clearDailyFeedbackProgress(activeDate);
+
+        // 성공 시 전역 모달로 알림
+        if (feedbackData?.id) {
+          const dateLabel = isToday
+            ? "오늘의"
+            : getKSTDate(new Date(activeDate)).toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              });
+          openSuccessModal(
+            `${dateLabel} 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.`,
+            () => {
+              router.push(`/analysis/feedback/daily/${feedbackData.id}`);
+            }
+          );
+        } else {
+          throw new Error("생성된 피드백에 ID가 없습니다.");
+        }
       } catch (error) {
         console.error("피드백 생성 실패:", error);
 
-        // EventSource 정리
-        try {
-          if (
-            currentEsRef.current &&
-            currentEsRef.current.readyState !== EventSource.CLOSED
-          ) {
-            currentEsRef.current.close();
-          }
-        } catch {
-          // 무시
-        }
-        currentEsRef.current = null;
-
+        // 타이머 정리
+        setTimerStartTime(null);
+        setTimerProgress(null);
+        
         // 진행 상황 초기화
-        clearDailyFeedbackProgress(todayIso);
+        clearDailyFeedbackProgress(activeDate);
 
-        openErrorModal(
-          `피드백 생성에 실패했습니다. 다시 시도해주세요. ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      } finally {
-        setIsGenerating(false);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "피드백 생성에 실패했습니다. 다시 시도해주세요.";
+
+        openErrorModal(errorMessage);
       }
     } catch (e) {
       // 동기 에러 처리
@@ -416,7 +251,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
         e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
       const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
       openErrorModal(message);
-      setIsGenerating(false);
+      
+      // 타이머 정리
+      setTimerStartTime(null);
+      setTimerProgress(null);
+      
+      clearDailyFeedbackProgress(activeDate);
     }
   };
 
@@ -534,7 +374,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
             {/* 버튼 내용 */}
             <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
               {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
-              {progress && (
+              {(progress || timerProgress !== null) && (
                 <CircularProgress
                   percentage={progressPercentage}
                   size={40}
@@ -546,7 +386,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
               )}
               <Sparkles
                 className={`flex-shrink-0 ${
-                  progress ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
+                  (progress || timerProgress !== null) ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
                 }`}
                 style={{ color: COLORS.brand.primary }}
               />
@@ -555,12 +395,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   className="text-sm sm:text-base"
                   style={{
                     color: COLORS.brand.primary,
-                    fontSize: progress ? "0.875rem" : "1rem",
+                    fontSize: (progress || timerProgress !== null) ? "0.875rem" : "1rem",
                     fontWeight: "600",
                     lineHeight: "1.2",
                   }}
                 >
-                  {progress
+                  {(progress || timerProgress !== null)
                     ? "피드백 생성 중..."
                     : hasDateFeedback
                     ? isToday
@@ -570,7 +410,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                     ? "오늘 피드백 생성하기"
                     : "피드백 생성하기"}
                 </span>
-                {progress && (
+                {(progress || timerProgress !== null) && (
                   <span
                     className="text-xs sm:text-sm"
                     style={{
@@ -579,7 +419,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                       fontWeight: "500",
                     }}
                   >
-                    {progress.currentStep}
+                    {progress?.currentStep || "피드백 생성 중"}
                   </span>
                 )}
               </div>

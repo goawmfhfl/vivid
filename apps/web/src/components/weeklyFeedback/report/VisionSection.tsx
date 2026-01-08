@@ -10,12 +10,14 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Card } from "../../ui/card";
-import type { VisionReport } from "@/types/weekly-feedback";
+// VisionSection은 더 이상 사용되지 않음 (VividSection으로 대체됨)
+// import type { VisionReport } from "@/types/weekly-feedback";
+import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
 
 type VisionSectionProps = {
-  visionReport: VisionReport;
+  visionReport: VividReport; // 레거시 타입명 유지 (실제로는 VividReport)
   isPro?: boolean;
 };
 

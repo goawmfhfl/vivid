@@ -3,7 +3,7 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { generateAllReportsWithProgress } from "./ai-service-stream";
 import { fetchRecordsByDate, saveDailyReport } from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
-import type { DailyFeedbackRequest } from "./types";
+import type { DailyFeedbackRequest, DailyReportResponse } from "./types";
 
 /**
  * POST 핸들러: 일일 리포트 생성
@@ -53,10 +53,11 @@ export async function POST(request: NextRequest) {
     );
 
     // 4️⃣ DailyReportResponse 형식으로 변환
-    const report = {
+    const report: DailyReportResponse = {
       date,
       day_of_week: dayOfWeek,
-      ...allReports,
+      emotion_report: allReports.emotion_report,
+      vivid_report: allReports.vivid_report,
     };
 
     // 5️⃣ Supabase daily_feedback 테이블에 저장

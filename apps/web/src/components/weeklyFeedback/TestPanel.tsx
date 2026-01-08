@@ -199,54 +199,55 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       ],
       condition: "emotion_report !== null",
     },
-    {
-      name: "Vision",
-      component: "VisionSection",
-      description: "이번 주의 비전 리포트",
-      fields: [
-        {
-          name: "vision_summary",
-          path: "view.vision_report.vision_summary",
-          isPro: false,
-        },
-        {
-          name: "vision_keywords_trend",
-          path: "view.vision_report.vision_keywords_trend",
-          isPro: true,
-        },
-        {
-          name: "goals_pattern",
-          path: "view.vision_report.goals_pattern",
-          isPro: true,
-        },
-        {
-          name: "self_vision_alignment",
-          path: "view.vision_report.self_vision_alignment",
-          isPro: true,
-        },
-        {
-          name: "dreamer_traits_evolution",
-          path: "view.vision_report.dreamer_traits_evolution",
-          isPro: true,
-        },
-        {
-          name: "ai_feedback_patterns",
-          path: "view.vision_report.ai_feedback_patterns",
-          isPro: true,
-        },
-        {
-          name: "vision_action_alignment",
-          path: "view.vision_report.vision_action_alignment",
-          isPro: true,
-        },
-        {
-          name: "next_week_vision_focus",
-          path: "view.vision_report.next_week_vision_focus",
-          isPro: true,
-        },
-      ],
-      condition: "vision_report.vision_summary.trim() !== ''",
-    },
+    // Vision 섹션은 더 이상 사용되지 않음 (VividSection으로 대체됨)
+    // {
+    //   name: "Vision",
+    //   component: "VisionSection",
+    //   description: "이번 주의 비전 리포트",
+    //   fields: [
+    //     {
+    //       name: "vision_summary",
+    //       path: "view.vision_report.vision_summary",
+    //       isPro: false,
+    //     },
+    //     {
+    //       name: "vision_keywords_trend",
+    //       path: "view.vision_report.vision_keywords_trend",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "goals_pattern",
+    //       path: "view.vision_report.goals_pattern",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "self_vision_alignment",
+    //       path: "view.vision_report.self_vision_alignment",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "dreamer_traits_evolution",
+    //       path: "view.vision_report.dreamer_traits_evolution",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "ai_feedback_patterns",
+    //       path: "view.vision_report.ai_feedback_patterns",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "vision_action_alignment",
+    //       path: "view.vision_report.vision_action_alignment",
+    //       isPro: true,
+    //     },
+    //     {
+    //       name: "next_week_vision_focus",
+    //       path: "view.vision_report.next_week_vision_focus",
+    //       isPro: true,
+    //     },
+    //   ],
+    //   condition: "vision_report.vision_summary.trim() !== ''",
+    // },
     {
       name: "Insight",
       component: "InsightSection",
@@ -444,11 +445,12 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           );
         case "Emotion":
           return view.emotion_report !== null;
-        case "Vision":
-          return !!(
-            view.vision_report?.vision_summary &&
-            view.vision_report.vision_summary.trim()
-          );
+        // Vision 섹션은 더 이상 사용되지 않음 (VividSection으로 대체됨)
+        // case "Vision":
+        //   return !!(
+        //     view.vision_report?.vision_summary &&
+        //     view.vision_report.vision_summary.trim()
+        //   );
         case "Insight":
           return (
             view.insight_report?.core_insights &&

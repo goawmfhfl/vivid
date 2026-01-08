@@ -27,7 +27,7 @@ export function validateAllSections(weeklyFeedbacks: WeeklyFeedback[]): {
   summary_report: boolean;
   daily_life_report: boolean;
   emotion_report: boolean;
-  vision_report: boolean;
+  vivid_report: boolean;
   insight_report: boolean;
   execution_report: boolean;
   closing_report: boolean;
@@ -39,7 +39,7 @@ export function validateAllSections(weeklyFeedbacks: WeeklyFeedback[]): {
       "daily_life_report"
     ),
     emotion_report: validateSectionData(weeklyFeedbacks, "emotion_report"),
-    vision_report: validateSectionData(weeklyFeedbacks, "vision_report"),
+    vivid_report: validateSectionData(weeklyFeedbacks, "vivid_report"),
     insight_report: validateSectionData(weeklyFeedbacks, "insight_report"),
     execution_report: validateSectionData(weeklyFeedbacks, "execution_report"),
     closing_report: validateSectionData(weeklyFeedbacks, "closing_report"),

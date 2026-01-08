@@ -3,7 +3,6 @@ import {
   User,
   BarChart3,
   Sparkles,
-  Eye,
   TrendingUp,
   Heart,
   Zap,
@@ -21,7 +20,7 @@ import {
   KeywordCard,
 } from "../common/feedback";
 
-export function VisionSection({ view, isPro = false }: SectionProps) {
+export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
   const hasCurrentData = !!(
     view.current_summary?.trim() ||
     view.current_evaluation?.trim() ||

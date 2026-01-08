@@ -9,7 +9,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import {
   LineChart,
   Line,
@@ -33,7 +33,7 @@ type VividSectionProps = {
 
 export function VividSection({
   vividReport,
-  isPro = false,
+  isPro: _isPro = false,
 }: VividSectionProps) {
   // 색상 팔레트
   const vividColor = "#A3BFD9"; // 파스텔 블루

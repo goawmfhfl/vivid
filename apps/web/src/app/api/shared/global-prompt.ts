@@ -89,7 +89,7 @@ export const GLOBAL_PROMPT = `
  */
 export function enhanceSystemPromptWithGlobal(
   systemPrompt: string,
-  isPro: boolean = false
+  _isPro: boolean = false
 ): string {
   return `${GLOBAL_PROMPT}\n\n${systemPrompt}`;
 }

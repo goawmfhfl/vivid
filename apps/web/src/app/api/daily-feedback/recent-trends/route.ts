@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       decryptDailyFeedback(item as unknown as { [key: string]: unknown })
     ) as unknown as Pick<
       DailyFeedbackRow,
-      "report_date" | "emotion_report" | "final_report"
+      "report_date" | "emotion_report" | "vivid_report"
     >[];
 
     // 감정 데이터 추출 (emotion_report가 있는 경우만)
@@ -110,62 +110,6 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // final_report에서 데이터 추출 (타입 가드 강화)
-      if (item.final_report) {
-        const finalReport = item.final_report;
-
-        // aspired_self 추출
-        if (
-          finalReport.aspired_self &&
-          typeof finalReport.aspired_self === "string" &&
-          finalReport.aspired_self.trim().length > 0
-        ) {
-          aspired_selfSet.add(finalReport.aspired_self.trim());
-        }
-
-        // interest_characteristic 추출
-        if (
-          finalReport.interest_characteristic &&
-          typeof finalReport.interest_characteristic === "string" &&
-          finalReport.interest_characteristic.trim().length > 0
-        ) {
-          interestsSet.add(finalReport.interest_characteristic.trim());
-        }
-
-        // personality_strength 추출
-        if (
-          finalReport.personality_strength &&
-          typeof finalReport.personality_strength === "string" &&
-          finalReport.personality_strength.trim().length > 0
-        ) {
-          personalityStrengthsSet.add(finalReport.personality_strength.trim());
-        }
-
-        // immersion_hope_situation 추출
-        if (
-          finalReport.immersion_hope_situation &&
-          typeof finalReport.immersion_hope_situation === "string" &&
-          finalReport.immersion_hope_situation.trim().length > 0
-        ) {
-          immersionSituationsSet.add(
-            finalReport.immersion_hope_situation.trim()
-          );
-        }
-
-        // relief_comfort_situation 추출
-        if (
-          finalReport.relief_comfort_situation &&
-          typeof finalReport.relief_comfort_situation === "string" &&
-          finalReport.relief_comfort_situation.trim().length > 0
-        ) {
-          reliefSituationsSet.add(finalReport.relief_comfort_situation.trim());
-        }
-      } else {
-        // 디버깅: final_report가 없는 경우
-        console.log(
-          `[RecentTrends] ${date} - final_report is null or undefined`
-        );
-      }
     }
 
     // Set을 배열로 변환하고 최대 5개로 제한

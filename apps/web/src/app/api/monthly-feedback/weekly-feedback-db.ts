@@ -87,6 +87,8 @@ export async function fetchWeeklyFeedbacksByMonth(
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyFeedback 타입으로 변환
   return filteredData.map((row) => {
+    // vision_report는 레거시 필드명이므로 타입 단언으로 처리
+    const rowWithLegacy = row as typeof row & { vision_report?: unknown };
     const rawFeedback = {
       id: String(row.id),
       week_range: {
@@ -99,7 +101,7 @@ export async function fetchWeeklyFeedbacksByMonth(
         row.daily_life_report as WeeklyFeedback["daily_life_report"],
       emotion_report:
         (row.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
-      vision_report: row.vision_report as WeeklyFeedback["vision_report"],
+      vivid_report: (row.vivid_report ?? rowWithLegacy.vision_report) as WeeklyFeedback["vivid_report"],
       insight_report: row.insight_report as WeeklyFeedback["insight_report"],
       execution_report:
         row.execution_report as WeeklyFeedback["execution_report"],

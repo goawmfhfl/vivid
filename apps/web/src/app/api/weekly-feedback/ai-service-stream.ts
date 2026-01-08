@@ -395,9 +395,9 @@ async function generateSection<T>(
 }
 
 /**
- * Summary Report 생성
+ * Summary Report 생성 (사용되지 않음 - 기본값 사용)
  */
-async function generateSummaryReport(
+async function _generateSummaryReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
@@ -478,9 +478,9 @@ async function generateSummaryReport(
 }
 
 /**
- * Daily Life Report 생성
+ * Daily Life Report 생성 (사용되지 않음 - 기본값 사용)
  */
-async function generateDailyLifeReport(
+async function _generateDailyLifeReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
@@ -726,9 +726,9 @@ async function generateVividReport(
 }
 
 /**
- * Insight Report 생성
+ * Insight Report 생성 (사용되지 않음 - 기본값 사용)
  */
-async function generateInsightReport(
+async function _generateInsightReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
@@ -808,9 +808,9 @@ async function generateInsightReport(
 }
 
 /**
- * Execution Report 생성
+ * Execution Report 생성 (사용되지 않음 - 기본값 사용)
  */
-async function generateExecutionReport(
+async function _generateExecutionReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
@@ -893,9 +893,9 @@ async function generateExecutionReport(
 }
 
 /**
- * Closing Report 생성
+ * Closing Report 생성 (사용되지 않음 - 기본값 사용)
  */
-async function generateClosingReport(
+async function _generateClosingReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,

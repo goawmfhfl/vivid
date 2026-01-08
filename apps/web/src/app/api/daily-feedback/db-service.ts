@@ -55,13 +55,8 @@ export async function saveDailyReport(
 
   // 새로운 타입별 리포트 데이터 준비 (암호화)
   const newReportDataToEncrypt: { [key: string]: unknown } = {
-    summary_report: report.summary_report,
-    daily_report: report.daily_report,
     emotion_report: report.emotion_report,
     vivid_report: report.vivid_report,
-    insight_report: report.insight_report,
-    feedback_report: report.feedback_report,
-    final_report: report.final_report,
   };
 
   // 암호화 적용 (기존 encryptDailyFeedback 함수 재사용)

@@ -3,13 +3,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
+import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
 import { QUERY_KEYS } from "@/constants";
 import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useAIRequestStore } from "@/store/useAIRequestStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
-import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
 
@@ -17,6 +17,7 @@ export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const createWeeklyFeedback = useCreateWeeklyFeedback();
   const { addRequest, updateRequest, requests, openModal } =
     useAIRequestStore();
   const { isTest } = useEnvironment();
@@ -76,263 +77,68 @@ export function WeeklyCandidatesSection() {
 
   const handleCreateFeedback = async (weekStart: string) => {
     setGeneratingWeek(weekStart);
-    const currentEsRef: { current: EventSource | null } = { current: null };
 
     try {
       const weekEnd = getWeekEnd(weekStart);
-      const userId = await getCurrentUserId();
-
-      // 테스트 환경에서 추적 시작 및 로딩 모달 열기
-      const requestIds: string[] = [];
-      const sectionNames = [
-        "EmotionReport",
-        "VividReport",
-      ];
 
       // 진행 상황 초기화 (전역 상태)
       setWeeklyFeedbackProgress(weekStart, {
         weekStart,
         current: 0,
-        total: sectionNames.length,
-        currentStep: sectionNames[0],
+        total: 2,
+        currentStep: "생성 중",
       });
 
-      if (isTest) {
-        // 각 섹션에 대한 요청 ID 생성
-        sectionNames.forEach((name) => {
-          const id = addRequest({
-            name,
-            model: "gpt-5-nano", // 기본 모델 (실제로는 응답에서 확인)
+      // 일반 API 호출
+      const feedbackData = await createWeeklyFeedback.mutateAsync({
+        start: weekStart,
+        end: weekEnd,
+        timezone: "Asia/Seoul",
+      });
+
+      // 진행 상황 완료
+      setWeeklyFeedbackProgress(weekStart, {
+        weekStart,
+        current: 2,
+        total: 2,
+        currentStep: "완료",
+      });
+
+      // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
+      if (feedbackData.id) {
+        const weekStartDate = new Date(feedbackData.week_range.start);
+        const weekStartDateObj = getMondayOfWeek(weekStartDate);
+        const weekStartStr = weekStartDateObj.toISOString().split("T")[0];
+
+        queryClient.setQueryData<
+          import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]
+        >([QUERY_KEYS.WEEKLY_CANDIDATES], (oldCandidates = []) => {
+          return oldCandidates.map((candidate) => {
+            if (candidate.week_start === weekStartStr) {
+              return {
+                ...candidate,
+                weekly_feedback_id: feedbackData.id
+                  ? parseInt(feedbackData.id, 10)
+                  : null,
+                is_ai_generated: feedbackData.is_ai_generated ?? true,
+              };
+            }
+            return candidate;
           });
-          requestIds.push(id);
         });
       }
 
-      // SSE를 사용하여 진행 상황 수신
-      await new Promise<void>((resolve, reject) => {
-        const params = new URLSearchParams({
-          userId,
-          start: weekStart,
-          end: weekEnd,
-          timezone: "Asia/Seoul",
-        });
-
-        const es = new EventSource(
-          `/api/weekly-feedback/generate-stream?${params.toString()}`
-        );
-        currentEsRef.current = es;
-
-        // Promise 완료/실패 시 EventSource 정리
-        const cleanup = () => {
-          try {
-            if (es && es.readyState !== EventSource.CLOSED) {
-              es.close();
-            }
-          } catch {
-            // 무시
-          }
-          currentEsRef.current = null;
-        };
-
-        es.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-
-            if (data.type === "progress") {
-              // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
-              // 완료 전이므로 99%를 넘지 않도록 제한
-              setWeeklyFeedbackProgress(weekStart, {
-                weekStart,
-                current: data.current,
-                total: data.total,
-                currentStep: data.sectionName,
-              });
-            } else if (data.type === "complete") {
-              // 완료 처리 - 99%에서 멈추도록 설정
-              setWeeklyFeedbackProgress(weekStart, {
-                weekStart,
-                current: data.total, // 전체 섹션 수
-                total: data.total,
-                currentStep: "완료",
-              });
-
-              cleanup();
-
-              // 테스트 환경에서 추적 정보 처리
-              if (isTest && data.data.__tracking) {
-                const tracking = Array.isArray(data.data.__tracking)
-                  ? data.data.__tracking
-                  : [data.data.__tracking];
-                tracking.forEach(
-                  (
-                    t: {
-                      model?: string;
-                      tokens?: number;
-                      duration_ms?: number;
-                      usage?: {
-                        prompt_tokens: number;
-                        completion_tokens: number;
-                        total_tokens: number;
-                        cached_tokens?: number;
-                      };
-                    },
-                    index: number
-                  ) => {
-                    if (requestIds[index]) {
-                      updateRequest(requestIds[index], {
-                        model: t.model,
-                        endTime: Date.now(),
-                        duration_ms: t.duration_ms,
-                        usage: t.usage,
-                      });
-                    }
-                  }
-                );
-              }
-
-              // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
-              if (data.data) {
-                const feedbackData = data.data as WeeklyFeedback;
-
-                // WEEKLY_FEEDBACK 리스트에 추가
-                if (feedbackData.id) {
-                  queryClient.setQueryData<
-                    import("@/types/weekly-feedback").WeeklyFeedbackListItem[]
-                  >([QUERY_KEYS.WEEKLY_FEEDBACK, "list"], (oldList = []) => {
-                    const newItem: import("@/types/weekly-feedback").WeeklyFeedbackListItem =
-                      {
-                        id: feedbackData.id!,
-                        title: `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`,
-                        week_range: {
-                          start: feedbackData.week_range.start,
-                          end: feedbackData.week_range.end,
-                        },
-                        is_ai_generated: feedbackData.is_ai_generated,
-                        created_at:
-                          feedbackData.created_at || new Date().toISOString(),
-                      };
-
-                    // 중복 체크
-                    const exists = oldList.some(
-                      (item) => item.id === newItem.id
-                    );
-                    if (exists) {
-                      return oldList.map((item) =>
-                        item.id === newItem.id ? newItem : item
-                      );
-                    }
-
-                    return [newItem, ...oldList];
-                  });
-
-                  // 상세 쿼리에 데이터 설정
-                  queryClient.setQueryData<WeeklyFeedback | null>(
-                    [QUERY_KEYS.WEEKLY_FEEDBACK, "detail", feedbackData.id],
-                    feedbackData
-                  );
-                }
-
-                // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
-                const weekStartDate = new Date(feedbackData.week_range.start);
-                const weekStart = getMondayOfWeek(weekStartDate);
-                const weekStartStr = weekStart.toISOString().split("T")[0];
-
-                queryClient.setQueryData<
-                  import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]
-                >([QUERY_KEYS.WEEKLY_CANDIDATES], (oldCandidates = []) => {
-                  return oldCandidates.map((candidate) => {
-                    if (candidate.week_start === weekStartStr) {
-                      return {
-                        ...candidate,
-                        weekly_feedback_id: feedbackData.id
-                          ? parseInt(feedbackData.id, 10)
-                          : null,
-                        is_ai_generated: feedbackData.is_ai_generated ?? true,
-                      };
-                    }
-                    return candidate;
-                  });
-                });
-              } else {
-                // 데이터가 없는 경우 무효화로 폴백
-                queryClient.invalidateQueries({
-                  queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
-                });
-              }
-
-              resolve();
-            } else if (data.type === "error") {
-              // 에러 처리
-              cleanup();
-
-              if (isTest) {
-                requests.forEach((req) => {
-                  if (!req.endTime) {
-                    updateRequest(req.id, {
-                      error: data.error,
-                      endTime: Date.now(),
-                    });
-                  }
-                });
-              }
-
-              reject(new Error(data.error));
-            }
-          } catch (error) {
-            console.error("SSE 메시지 파싱 오류:", error);
-          }
-        };
-
-        es.onerror = (error) => {
-          cleanup();
-
-          if (isTest) {
-            requests.forEach((req) => {
-              if (!req.endTime) {
-                updateRequest(req.id, {
-                  error: "SSE 연결 오류",
-                  endTime: Date.now(),
-                });
-              }
-            });
-          }
-
-          reject(error);
-        };
-      });
+      // 진행 상황 초기화
+      clearWeeklyFeedbackProgress(weekStart);
     } catch (error) {
       console.error("주간 vivid 생성 실패:", error);
-
-      // EventSource 정리
-      const esToClose = currentEsRef.current;
-      try {
-        if (esToClose && esToClose.readyState !== EventSource.CLOSED) {
-          esToClose.close();
-        }
-      } catch {
-        // 무시
-      }
-      currentEsRef.current = null;
 
       // 진행 상황 초기화 (전역 상태)
       clearWeeklyFeedbackProgress(weekStart);
 
-      // 테스트 환경에서 에러 추적
-      if (isTest) {
-        requests.forEach((req) => {
-          if (!req.endTime) {
-            updateRequest(req.id, {
-              error: error instanceof Error ? error.message : String(error),
-              endTime: Date.now(),
-            });
-          }
-        });
-      }
-
       alert("주간 vivid 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setGeneratingWeek(null);
-      // 진행 상황은 완료/에러 핸들러에서 이미 처리됨
     }
   };
 

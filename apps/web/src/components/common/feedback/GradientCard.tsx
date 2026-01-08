@@ -1,8 +1,6 @@
 import React from "react";
 import { Card } from "../../ui/card";
-import { COLORS, TYPOGRAPHY, SHADOWS } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
 
 export interface GradientCardProps {
   /** 그라디언트 색상 (RGB 값, 예: "229, 185, 107") */

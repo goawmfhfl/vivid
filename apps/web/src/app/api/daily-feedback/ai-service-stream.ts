@@ -1,30 +1,12 @@
 import OpenAI from "openai";
 import {
-  getSummaryReportSchema,
-  getDailyReportSchema,
   EmotionReportSchema,
-  VividReportSchema,
-  InsightReportSchema,
-  getFeedbackReportSchema,
-  getFinalReportSchema,
-  SYSTEM_PROMPT_SUMMARY,
-  SYSTEM_PROMPT_DAILY,
   SYSTEM_PROMPT_EMOTION,
-  SYSTEM_PROMPT_DREAM,
-  SYSTEM_PROMPT_INSIGHT,
-  SYSTEM_PROMPT_FEEDBACK,
-  SYSTEM_PROMPT_FINAL,
+  SYSTEM_PROMPT_VIVID,
+  VividReportSchema,
 } from "./schema";
 import type { Record } from "./types";
-import {
-  buildSummaryPrompt,
-  buildDailyPrompt,
-  buildEmotionPrompt,
-  buildDreamPrompt,
-  buildInsightPrompt,
-  buildFeedbackPrompt,
-  buildFinalPrompt,
-} from "./prompts";
+import { buildEmotionPrompt, buildVividPrompt } from "./prompts";
 import type {
   SummaryReport,
   DailyReport,
@@ -312,66 +294,9 @@ async function generateSection<T>(
 }
 
 /**
- * 전체 요약 리포트 생성
- */
-async function generateSummaryReport(
-  records: Record[],
-  date: string,
-  dayOfWeek: string,
-  isPro: boolean = false,
-  progressCallback?: ProgressCallback,
-  userId?: string
-): Promise<SummaryReport> {
-  const prompt = buildSummaryPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_SUMMARY, prompt);
-
-  return generateSection<SummaryReport>(
-    SYSTEM_PROMPT_SUMMARY,
-    prompt,
-    (isPro) => getSummaryReportSchema(isPro),
-    cacheKey,
-    isPro,
-    "summary_report",
-    progressCallback,
-    userId
-  );
-}
-
-/**
- * 일상 기록 리포트 생성
- */
-async function generateDailyReport(
-  records: Record[],
-  date: string,
-  dayOfWeek: string,
-  isPro: boolean = false,
-  progressCallback?: ProgressCallback,
-  userId?: string
-): Promise<DailyReport | null> {
-  const dailyRecords = records.filter((r) => r.type === "daily");
-
-  if (dailyRecords.length === 0) {
-    return null;
-  }
-
-  const prompt = buildDailyPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_DAILY, prompt);
-
-  return generateSection<DailyReport>(
-    SYSTEM_PROMPT_DAILY,
-    prompt,
-    (isPro) => getDailyReportSchema(isPro),
-    cacheKey,
-    isPro,
-    "daily_report",
-    progressCallback,
-    userId
-  );
-}
-
-/**
  * 감정 기록 리포트 생성
  */
+
 async function generateEmotionReport(
   records: Record[],
   date: string,
@@ -404,6 +329,7 @@ async function generateEmotionReport(
 /**
  * VIVID 기록 리포트 생성
  */
+
 async function generateVividReport(
   records: Record[],
   date: string,
@@ -418,11 +344,11 @@ async function generateVividReport(
     return null;
   }
 
-  const prompt = buildDreamPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_DREAM, prompt);
+  const prompt = buildVividPrompt(records, date, dayOfWeek, isPro);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
   return generateSection<VividReport>(
-    SYSTEM_PROMPT_DREAM,
+    SYSTEM_PROMPT_VIVID,
     prompt,
     VividReportSchema,
     cacheKey,
@@ -433,98 +359,6 @@ async function generateVividReport(
   );
 }
 
-/**
- * 인사이트 기록 리포트 생성
- */
-async function generateInsightReport(
-  records: Record[],
-  date: string,
-  dayOfWeek: string,
-  isPro: boolean = false,
-  progressCallback?: ProgressCallback,
-  userId?: string
-): Promise<InsightReport | null> {
-  const insightRecords = records.filter((r) => r.type === "insight");
-
-  if (insightRecords.length === 0) {
-    return null;
-  }
-
-  const prompt = buildInsightPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_INSIGHT, prompt);
-
-  return generateSection<InsightReport>(
-    SYSTEM_PROMPT_INSIGHT,
-    prompt,
-    InsightReportSchema,
-    cacheKey,
-    isPro,
-    "insight_report",
-    progressCallback,
-    userId
-  );
-}
-
-/**
- * 피드백 기록 리포트 생성
- */
-async function generateFeedbackReport(
-  records: Record[],
-  date: string,
-  dayOfWeek: string,
-  isPro: boolean = false,
-  progressCallback?: ProgressCallback,
-  userId?: string
-): Promise<FeedbackReport | null> {
-  const feedbackRecords = records.filter((r) => r.type === "feedback");
-
-  if (feedbackRecords.length === 0) {
-    return null;
-  }
-
-  const prompt = buildFeedbackPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_FEEDBACK, prompt);
-
-  return generateSection<FeedbackReport>(
-    SYSTEM_PROMPT_FEEDBACK,
-    prompt,
-    (isPro) => getFeedbackReportSchema(isPro),
-    cacheKey,
-    isPro,
-    "feedback_report",
-    progressCallback,
-    userId
-  );
-}
-
-/**
- * 최종 리포트 생성 (모든 리포트를 종합)
- */
-async function generateFinalReport(
-  records: Record[],
-  date: string,
-  dayOfWeek: string,
-  isPro: boolean = false,
-  progressCallback?: ProgressCallback,
-  userId?: string
-): Promise<FinalReport> {
-  const prompt = buildFinalPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_FINAL, prompt);
-
-  // 스키마 객체를 명시적으로 생성하여 전달
-  const schema = getFinalReportSchema(isPro);
-
-  return generateSection<FinalReport>(
-    SYSTEM_PROMPT_FINAL,
-    prompt,
-    schema,
-    cacheKey,
-    isPro,
-    "final_report",
-    progressCallback,
-    userId
-  );
-}
 
 /**
  * 모든 타입별 리포트 생성 (진행 상황 콜백 포함)
@@ -537,13 +371,8 @@ export async function generateAllReportsWithProgress(
   progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<{
-  summary_report: SummaryReport | null;
-  daily_report: DailyReport | null;
   emotion_report: EmotionReport | null;
   vivid_report: VividReport | null;
-  insight_report: InsightReport | null;
-  feedback_report: FeedbackReport | null;
-  final_report: FinalReport | null;
 }> {
   // recordType 확인: 기본값은 vivid 모드 (vivid/dream, emotion만)
   // 다른 record type(daily, insight, feedback)이 있으면 일반 모드로 전환
@@ -582,13 +411,8 @@ export async function generateAllReportsWithProgress(
     );
 
     return {
-      summary_report: null,
-      daily_report: null,
       emotion_report: emotionReport,
       vivid_report: vividReport,
-      insight_report: null,
-      feedback_report: null,
-      final_report: null,
     };
   }
 
@@ -610,25 +434,6 @@ export async function generateAllReportsWithProgress(
     progressCallback?.(completedSections, totalSections, sectionName, tracking);
   };
 
-  // 1. 전체 요약 리포트 생성
-  const summaryReport = await generateSummaryReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    (c, t, n, tr) => callProgress(n, tr),
-    userId
-  );
-
-  // 2. 타입별 리포트 순차 생성
-  const dailyReport = await generateDailyReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    (c, t, n, tr) => callProgress(n, tr),
-    userId
-  );
   const emotionReport = await generateEmotionReport(
     records,
     date,
@@ -645,40 +450,9 @@ export async function generateAllReportsWithProgress(
     (c, t, n, tr) => callProgress(n, tr),
     userId
   );
-  const insightReport = await generateInsightReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    (c, t, n, tr) => callProgress(n, tr),
-    userId
-  );
-  const feedbackReport = await generateFeedbackReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    (c, t, n, tr) => callProgress(n, tr),
-    userId
-  );
-
-  // 3. 최종 리포트 생성 (records 기반)
-  const finalReport = await generateFinalReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    (c, t, n, tr) => callProgress(n, tr),
-    userId
-  );
 
   return {
-    summary_report: summaryReport,
-    daily_report: dailyReport,
     emotion_report: emotionReport,
     vivid_report: vividReport,
-    insight_report: insightReport,
-    feedback_report: feedbackReport,
-    final_report: finalReport,
   };
 }
