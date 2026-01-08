@@ -105,7 +105,7 @@ export function mapWeeklyFeedbackToReportData(
           ),
         }
       : null,
-    vision_report: feedback.vision_report,
+    vivid_report: feedback.vivid_report,
     insight_report: feedback.insight_report,
     execution_report: feedback.execution_report,
     closing_report: feedback.closing_report,

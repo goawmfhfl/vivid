@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { getAuthenticatedUserId } from "../../utils/auth";
 import { encrypt, decrypt } from "@/lib/encryption";
@@ -65,6 +66,9 @@ export async function PATCH(
       content: decrypt(updatedRecord.content),
     };
 
+    // Records 조회 캐시 무효화
+    revalidatePath("/api/records");
+
     return NextResponse.json({ data: decryptedRecord }, { status: 200 });
   } catch (error) {
     console.error("API error:", error);
@@ -103,6 +107,9 @@ export async function DELETE(
     if (error) {
       throw new Error(`Failed to delete record: ${error.message}`);
     }
+
+    // Records 조회 캐시 무효화
+    revalidatePath("/api/records");
 
     return NextResponse.json(
       { message: "Record deleted successfully" },

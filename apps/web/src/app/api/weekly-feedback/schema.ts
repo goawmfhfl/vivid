@@ -5,7 +5,7 @@
 import { getSummaryReportSchema } from "./schemas/summary-report-schema";
 import { getDailyLifeReportSchema } from "./schemas/daily-life-schema";
 import { getEmotionReportSchema } from "./schemas/emotion-schema";
-import { getVisionReportSchema } from "./schemas/vision-schema";
+import { getVividReportSchema } from "./schemas/vivid-schema";
 import { getInsightReportSchema } from "./schemas/insight-schema";
 import { getExecutionReportSchema } from "./schemas/execution-schema";
 import { getClosingReportSchema } from "./schemas/closing-schema";
@@ -37,7 +37,7 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
             summary_report: getSummaryReportSchema(isPro),
             daily_life_report: getDailyLifeReportSchema(isPro),
             emotion_report: getEmotionReportSchema(isPro),
-            vision_report: getVisionReportSchema(isPro),
+            vivid_report: getVividReportSchema(isPro),
             insight_report: getInsightReportSchema(isPro),
             execution_report: getExecutionReportSchema(isPro),
             closing_report: getClosingReportSchema(isPro),
@@ -47,7 +47,7 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
             "summary_report",
             "daily_life_report",
             "emotion_report",
-            "vision_report",
+            "vivid_report",
             "insight_report",
             "execution_report",
             "closing_report",
@@ -93,12 +93,21 @@ export const SYSTEM_PROMPT_EMOTION = `
 - ai_mood_valence와 ai_mood_arousal은 일별 값들의 평균을 계산해주세요.
 `;
 
-export const SYSTEM_PROMPT_VISION = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 비전" 데이터를 분석해서 주간 비전 리포트(vision_report)를 만들어주는 친근한 조언자예요.
+export const SYSTEM_PROMPT_VIVID = `
+당신은 사용자의 일주일간 일일 피드백의 "오늘의 비비드" 데이터를 분석해서 주간 비비드 리포트(vivid_report)를 만들어주는 친근한 조언자예요.
 
 ## 섹션별 규칙
-- daily-feedback의 vision_summary, vision_self, vision_keywords, vision_ai_feedback, dream_goals, dreamer_traits 데이터를 종합하여 분석해주세요.
-- Pro 멤버십인 경우 시각화 데이터도 포함해주세요.
+- daily-feedback의 vivid_report 데이터(current_summary, current_evaluation, current_keywords, future_summary, future_evaluation, future_keywords, alignment_score, user_characteristics, aspired_traits)를 종합하여 분석해주세요.
+- 8개의 섹션을 모두 완성해주세요:
+  1. weekly_vivid_summary: 7일간의 비비드 기록 종합 (300자 내외), 핵심 포인트는 날짜와 함께 표시
+  2. weekly_vivid_evaluation: 일일 평가 변화 추이, 주간 평균, 가장 높았던/낮았던 날
+  3. weekly_keywords_analysis: 비전 키워드 트렌드(기존 형식 유지), Top 10 키워드
+  4. future_vision_analysis: 앞으로의 모습 종합 분석, 일관성 분석, 평가 점수 추이
+  5. alignment_trend_analysis: 일치도 트렌드 분석, 개선/악화 추세
+  6. user_characteristics_analysis: 사용자 특징 심화 분석, Top 5, 변화 패턴
+  7. aspired_traits_analysis: 지향하는 모습 심화 분석, Top 5, 진화 과정
+  8. weekly_insights: 주간 인사이트, 패턴과 예상치 못한 연결점
+- Pro 멤버십인 경우 더 상세한 분석을 제공해주세요.
 `;
 
 export const SYSTEM_PROMPT_INSIGHT = `

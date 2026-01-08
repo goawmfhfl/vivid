@@ -71,6 +71,8 @@ export async function GET(request: NextRequest) {
         controller.close();
       };
 
+      const requestStartTime = Date.now();
+      
       try {
         // GET 요청에서 쿼리 파라미터로 데이터 받기
         const searchParams = request.nextUrl.searchParams;
@@ -78,6 +80,14 @@ export async function GET(request: NextRequest) {
         const start = searchParams.get("start");
         const end = searchParams.get("end");
         const timezone = searchParams.get("timezone") || "Asia/Seoul";
+
+        console.log("[generate-stream] 요청 시작:", {
+          userId,
+          start,
+          end,
+          timezone,
+          timestamp: new Date().toISOString(),
+        });
 
         // 요청 검증
         if (!userId || !start || !end) {
@@ -88,15 +98,25 @@ export async function GET(request: NextRequest) {
         const supabase = getServiceSupabase();
 
         // Pro 멤버십 확인
+        const subscriptionStartTime = Date.now();
         const isPro = (await verifySubscription(userId)).isPro;
+        console.log("[generate-stream] 멤버십 확인 완료:", {
+          isPro,
+          duration_ms: Date.now() - subscriptionStartTime,
+        });
 
         // 1️⃣ Daily Feedback 데이터 조회
+        const fetchStartTime = Date.now();
         const dailyFeedbacks = await fetchDailyFeedbacksByRange(
           supabase,
           userId,
           start,
           end
         );
+        console.log("[generate-stream] Daily Feedback 조회 완료:", {
+          count: dailyFeedbacks.length,
+          duration_ms: Date.now() - fetchStartTime,
+        });
 
         if (dailyFeedbacks.length === 0) {
           sendError("No daily feedbacks found for this date range");
@@ -104,6 +124,13 @@ export async function GET(request: NextRequest) {
         }
 
         // 2️⃣ AI 요청: Weekly Feedback 생성 (진행 상황 콜백 포함)
+        const aiStartTime = Date.now();
+        console.log("[generate-stream] AI 요청 시작:", {
+          dailyFeedbacksCount: dailyFeedbacks.length,
+          isPro,
+          timestamp: new Date().toISOString(),
+        });
+        
         const weeklyFeedback =
           await generateWeeklyFeedbackFromDailyWithProgress(
             dailyFeedbacks,
@@ -112,6 +139,11 @@ export async function GET(request: NextRequest) {
             sendProgress, // 진행 상황 콜백 전달
             userId // AI 사용량 로깅을 위한 userId 전달
           );
+        
+        console.log("[generate-stream] AI 요청 완료:", {
+          duration_ms: Date.now() - aiStartTime,
+          duration_seconds: ((Date.now() - aiStartTime) / 1000).toFixed(2),
+        });
 
         // 추적 정보 제거 (DB 저장 전)
         const cleanedFeedback = removeTrackingInfo(weeklyFeedback);
@@ -127,17 +159,38 @@ export async function GET(request: NextRequest) {
         }
 
         // 3️⃣ Supabase weekly_feedbacks 테이블에 저장
+        const saveStartTime = Date.now();
         const savedId = await saveWeeklyFeedback(
           supabase,
           userId,
           cleanedFeedback
         );
+        console.log("[generate-stream] DB 저장 완료:", {
+          savedId,
+          duration_ms: Date.now() - saveStartTime,
+        });
 
         // 완료 메시지 전송
+        const totalDuration = Date.now() - requestStartTime;
+        console.log("[generate-stream] 전체 요청 완료:", {
+          totalDuration_ms: totalDuration,
+          totalDuration_seconds: (totalDuration / 1000).toFixed(2),
+          timestamp: new Date().toISOString(),
+        });
+        
         sendComplete({ ...cleanedFeedback, id: savedId });
         controller.close();
       } catch (error) {
-        console.error("API error:", error);
+        const totalDuration = Date.now() - requestStartTime;
+        console.error("[generate-stream] API error:", {
+          error,
+          errorType: error?.constructor?.name || typeof error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+          totalDuration_ms: totalDuration,
+          totalDuration_seconds: (totalDuration / 1000).toFixed(2),
+          timestamp: new Date().toISOString(),
+        });
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         sendError(errorMessage);
@@ -166,7 +219,7 @@ function removeTrackingInfo(
     "summary_report",
     "daily_life_report",
     "emotion_report",
-    "vision_report",
+    "vivid_report",
     "insight_report",
     "execution_report",
     "closing_report",

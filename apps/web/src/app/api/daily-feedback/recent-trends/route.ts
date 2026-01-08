@@ -3,6 +3,10 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import { API_ENDPOINTS } from "@/constants";
+import {
+  RECENT_TRENDS_REVALIDATE,
+  getCacheControlHeader,
+} from "@/constants/cache";
 
 interface RecentTrendsResponse {
   emotionData: Array<{
@@ -174,7 +178,15 @@ export async function GET(request: NextRequest) {
       reliefSituations: Array.from(reliefSituationsSet).slice(0, 5),
     };
 
-    return NextResponse.json<RecentTrendsResponse>(response, { status: 200 });
+    return NextResponse.json<RecentTrendsResponse>(
+      response,
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(RECENT_TRENDS_REVALIDATE),
+        },
+      }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);

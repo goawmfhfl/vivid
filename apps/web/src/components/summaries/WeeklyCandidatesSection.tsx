@@ -85,13 +85,8 @@ export function WeeklyCandidatesSection() {
       // 테스트 환경에서 추적 시작 및 로딩 모달 열기
       const requestIds: string[] = [];
       const sectionNames = [
-        "SummaryReport",
-        "DailyLifeReport",
         "EmotionReport",
-        "VisionReport",
-        "InsightReport",
-        "ExecutionReport",
-        "ClosingReport",
+        "VividReport",
       ];
 
       // 진행 상황 초기화 (전역 상태)

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchMonthlyFeedbackDetail } from "../../db-service";
+import {
+  FEEDBACK_REVALIDATE,
+  getCacheControlHeader,
+} from "@/constants/cache";
 
 /**
  * GET 핸들러: 월간 피드백 상세 조회 (id 기반)
@@ -39,7 +43,12 @@ export async function handleGetMonthlyFeedbackById(
         message: "Monthly feedback retrieved successfully",
         data: monthlyFeedback,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
+        },
+      }
     );
   } catch (error) {
     console.error("API error:", error);

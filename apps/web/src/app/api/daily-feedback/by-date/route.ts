@@ -3,6 +3,10 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import { API_ENDPOINTS } from "@/constants";
+import {
+  FEEDBACK_REVALIDATE,
+  getCacheControlHeader,
+} from "@/constants/cache";
 
 /**
  * GET 핸들러: 일일 피드백 조회 (date 기반)
@@ -49,7 +53,15 @@ export async function GET(request: NextRequest) {
       data as unknown as { [key: string]: unknown }
     ) as unknown as DailyFeedbackRow;
 
-    return NextResponse.json({ data: decrypted }, { status: 200 });
+    return NextResponse.json(
+      { data: decrypted },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
+        },
+      }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);

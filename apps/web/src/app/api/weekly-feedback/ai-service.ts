@@ -14,7 +14,7 @@ import {
   buildSummaryReportPrompt,
   buildDailyLifePrompt,
   buildEmotionPrompt,
-  buildVisionPrompt,
+  buildVividPrompt,
   buildInsightPrompt,
   buildExecutionPrompt,
   buildClosingPrompt,
@@ -24,7 +24,7 @@ import type {
   SummaryReport,
   DailyLifeReport,
   EmotionReport,
-  VisionReport,
+  VividReport,
   InsightReport,
   ExecutionReport,
   ClosingReport,
@@ -341,43 +341,43 @@ async function generateEmotionReport(
 }
 
 /**
- * Vision Report 생성
+ * Vivid Report 생성
  */
-async function generateVisionReport(
+async function generateVividReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
   userId?: string
-): Promise<VisionReport> {
-  const prompt = buildVisionPrompt(dailyFeedbacks, range);
+): Promise<VividReport> {
+  const prompt = buildVividPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, prompt);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
   const response = await generateSection<{
-    vision_report: VisionReport;
+    vivid_report: VividReport;
   }>(
-    SYSTEM_PROMPT_VISION,
+    SYSTEM_PROMPT_VIVID,
     prompt,
     {
-      name: "VisionReportResponse",
+      name: "VividReportResponse",
       schema: {
         type: "object",
         additionalProperties: false,
         properties: {
-          vision_report:
-            schema.schema.properties.weekly_feedback.properties.vision_report,
+          vivid_report:
+            schema.schema.properties.weekly_feedback.properties.vivid_report,
         },
-        required: ["vision_report"],
+        required: ["vivid_report"],
       },
       strict: true,
     },
     cacheKey,
     isPro,
     userId,
-    "vision_report"
+    "vivid_report"
   );
 
-  return response.vision_report;
+  return response.vivid_report;
 }
 
 /**
@@ -512,7 +512,7 @@ export async function generateWeeklyFeedbackFromDaily(
     summaryReport,
     dailyLifeReport,
     emotionReport,
-    visionReport,
+    vividReport,
     insightReport,
     executionReport,
     closingReport,
@@ -520,7 +520,7 @@ export async function generateWeeklyFeedbackFromDaily(
     generateSummaryReport(dailyFeedbacks, range, isPro, userId),
     generateDailyLifeReport(dailyFeedbacks, range, isPro, userId),
     generateEmotionReport(dailyFeedbacks, range, isPro, userId),
-    generateVisionReport(dailyFeedbacks, range, isPro, userId),
+    generateVividReport(dailyFeedbacks, range, isPro, userId),
     generateInsightReport(dailyFeedbacks, range, isPro, userId),
     generateExecutionReport(dailyFeedbacks, range, isPro, userId),
     generateClosingReport(dailyFeedbacks, range, isPro, userId),
@@ -532,7 +532,7 @@ export async function generateWeeklyFeedbackFromDaily(
     summary_report: summaryReport,
     daily_life_report: dailyLifeReport,
     emotion_report: emotionReport,
-    vision_report: visionReport,
+    vivid_report: vividReport,
     insight_report: insightReport,
     execution_report: executionReport,
     closing_report: closingReport,

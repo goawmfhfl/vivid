@@ -144,7 +144,7 @@ export async function fetchWeeklyFeedbackByDate(
       data.daily_life_report as WeeklyFeedback["daily_life_report"],
     emotion_report:
       (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
-    vision_report: data.vision_report as WeeklyFeedback["vision_report"],
+    vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
     insight_report: data.insight_report as WeeklyFeedback["insight_report"],
     execution_report:
       data.execution_report as WeeklyFeedback["execution_report"],
@@ -198,7 +198,7 @@ export async function fetchWeeklyFeedbackDetail(
       data.daily_life_report as WeeklyFeedback["daily_life_report"],
     emotion_report:
       (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
-    vision_report: data.vision_report as WeeklyFeedback["vision_report"],
+    vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
     insight_report: data.insight_report as WeeklyFeedback["insight_report"],
     execution_report:
       data.execution_report as WeeklyFeedback["execution_report"],
@@ -234,7 +234,7 @@ export async function saveWeeklyFeedback(
         summary_report: encryptedFeedback.summary_report,
         daily_life_report: encryptedFeedback.daily_life_report,
         emotion_report: encryptedFeedback.emotion_report ?? null,
-        vision_report: encryptedFeedback.vision_report,
+        vivid_report: encryptedFeedback.vivid_report,
         insight_report: encryptedFeedback.insight_report,
         execution_report: encryptedFeedback.execution_report,
         closing_report: encryptedFeedback.closing_report,

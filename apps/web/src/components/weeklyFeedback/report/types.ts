@@ -3,7 +3,7 @@ import type {
   SummaryReport,
   DailyLifeReport,
   EmotionReport,
-  VisionReport,
+  VividReport,
   InsightReport,
   ExecutionReport,
   ClosingReport,
@@ -23,8 +23,8 @@ export type WeeklyReportData = {
   // Emotion Report
   emotion_report: EmotionReport | null;
 
-  // Vision Report
-  vision_report: VisionReport;
+  // Vivid Report
+  vivid_report: VividReport;
 
   // Insight Report
   insight_report: InsightReport;

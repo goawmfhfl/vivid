@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { getAuthenticatedUserId } from "../utils/auth";
 import { encrypt, decrypt } from "@/lib/encryption";
 import { API_ENDPOINTS } from "@/constants";
 import { getKSTDateString } from "@/lib/date-utils";
+import {
+  RECORDS_REVALIDATE,
+  getCacheControlHeader,
+} from "@/constants/cache";
 
 /**
  * GET 핸들러: Records 조회
@@ -45,7 +50,15 @@ export async function GET(request: NextRequest) {
       content: decrypt(record.content),
     }));
 
-    return NextResponse.json({ data: decryptedRecords }, { status: 200 });
+    return NextResponse.json(
+      { data: decryptedRecords },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(RECORDS_REVALIDATE),
+        },
+      }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -161,6 +174,9 @@ export async function POST(request: NextRequest) {
       ...newRecord,
       content: decrypt(newRecord.content),
     };
+
+    // Records 조회 캐시 무효화
+    revalidatePath("/api/records");
 
     return NextResponse.json({ data: decryptedRecord }, { status: 201 });
   } catch (error) {

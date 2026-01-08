@@ -263,85 +263,138 @@ export type EmotionReport = {
 };
 
 // ============================================
-// Vision Report
+// Vivid Report (주간 비비드 분석)
 // ============================================
-export type VisionReport = {
-  vision_summary: string;
-  vision_keywords_trend: Array<{
-    keyword: string;
-    days: number;
-    context: string;
-    related_keywords: string[];
-  }>; // 최대 8개, 홀수 개수(4, 6, 8개)
-  goals_pattern: {
-    summary: string;
-    goal_categories: Array<{
-      category: string;
-      count: number;
-      examples: string[];
-      insight: string;
+export type VividReport = {
+  // 1. 주간 비비드 요약
+  weekly_vivid_summary: {
+    summary: string; // 300자 내외
+    key_points: Array<{
+      point: string;
+      dates: string[]; // ["2025-12-17", "2025-12-18"]
     }>;
-    visualization?: {
-      goal_categories_chart: {
-        type: "pie";
-        data: Array<{
-          category: string;
-          value: number;
-          color: string;
-        }>;
-      };
+    next_week_vision_key_points: string[];
+  };
+
+  // 2. 주간 비비드 평가
+  weekly_vivid_evaluation: {
+    daily_evaluation_trend: Array<{
+      date: string;
+      evaluation_score: number; // current_evaluation에서 추출한 점수
+    }>;
+    weekly_average_score: number;
+    highest_day: {
+      date: string;
+      score: number;
+      reason: string;
+    };
+    lowest_day: {
+      date: string;
+      score: number;
+      reason: string;
     };
   };
-  // self_vision_alignment 제거됨
-  dreamer_traits_evolution: {
-    summary: string;
-    common_traits: Array<{
+
+  // 3. 주간 키워드 분석
+  weekly_keywords_analysis: {
+    vision_keywords_trend: Array<{
+      keyword: string;
+      days: number;
+      context: string;
+      related_keywords: string[];
+    }>; // 기존 vision_keywords_trend와 동일한 구조, 최대 8개, 홀수 개수(4, 6, 8개)
+    top_10_keywords: Array<{
+      keyword: string;
+      frequency: number;
+      dates: string[];
+    }>;
+  };
+
+  // 4. 앞으로의 모습 종합 분석
+  future_vision_analysis: {
+    integrated_summary: string;
+    consistency_analysis: {
+      consistent_themes: string[];
+      changing_themes: string[];
+      analysis: string;
+    };
+    evaluation_trend: Array<{
+      date: string;
+      evaluation_score: number; // future_evaluation에서 추출한 점수
+    }>;
+  };
+
+  // 5. 일치도 트렌드 분석
+  alignment_trend_analysis: {
+    daily_alignment_scores: Array<{
+      date: string;
+      score: number;
+    }>;
+    average_alignment_score: number;
+    highest_alignment_day: {
+      date: string;
+      score: number;
+      pattern: string;
+    };
+    lowest_alignment_day: {
+      date: string;
+      score: number;
+      pattern: string;
+    };
+    trend: "improving" | "declining" | "stable";
+  };
+
+  // 6. 사용자 특징 심화 분석
+  user_characteristics_analysis: {
+    consistency_summary: string;
+    top_5_characteristics: Array<{
+      characteristic: string;
+      frequency: number;
+      dates: string[];
+    }>;
+    change_patterns: {
+      new_characteristics: Array<{
+        characteristic: string;
+        first_appeared: string;
+      }>;
+      disappeared_characteristics: Array<{
+        characteristic: string;
+        last_appeared: string;
+      }>;
+    };
+  };
+
+  // 7. 지향하는 모습 심화 분석
+  aspired_traits_analysis: {
+    consistency_summary: string;
+    average_score: number;
+    top_5_aspired_traits: Array<{
       trait: string;
       frequency: number;
-      insight: string;
+      dates: string[];
     }>;
-    visualization?: {
-      trait_word_cloud: {
-        traits: Array<{
-          text: string;
-          size: number;
-          color: string;
-        }>;
-      };
+    evolution_process: {
+      summary: string;
+      stages: Array<{
+        period: string;
+        traits: string[];
+        description: string;
+      }>;
     };
   };
-  ai_feedback_patterns?: {
-    summary: string;
-    common_themes: Array<{
-      theme: string;
-      frequency: number;
-      example: string;
-      insight: string;
-    }>;
-  };
-  vision_action_alignment?: {
-    summary: string;
-    alignment_score: {
-      value: number;
+
+  // 8. 주간 인사이트
+  weekly_insights: {
+    patterns: Array<{
+      pattern: string;
       description: string;
-    };
-    gaps: string[];
-    strengths: string[];
-  };
-  // Pro 전용: 비전을 통해서 내가 바라보는 나의 모습 - 5가지 특성
-  vision_self_characteristics?: string[]; // Pro 전용, 5개
-  // Pro 전용: 역사적 위인 추천
-  vision_historical_figure?: {
-    name: string;
-    reason: string;
-  }; // Pro 전용
-  next_week_vision_focus: {
-    focus_areas: Array<{
-      area: string;
-      reason: string;
-      suggested_action: string;
+      evidence: string[];
     }>;
-    maintain_momentum: string[];
+    unexpected_connections: Array<{
+      connection: string;
+      description: string;
+      significance: string;
+    }>;
   };
 };
 
@@ -593,7 +646,7 @@ export type WeeklyFeedback = {
   summary_report: SummaryReport;
   daily_life_report: DailyLifeReport;
   emotion_report: EmotionReport | null;
-  vision_report: VisionReport;
+  vivid_report: VividReport;
   insight_report: InsightReport;
   execution_report: ExecutionReport;
   closing_report: ClosingReport;

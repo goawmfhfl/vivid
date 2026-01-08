@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchWeeklyFeedbackList } from "../db-service";
+import {
+  FEEDBACK_REVALIDATE,
+  getCacheControlHeader,
+} from "@/constants/cache";
 
 /**
  * GET 핸들러: 주간 피드백 리스트 조회
@@ -20,7 +24,15 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceSupabase();
     const list = await fetchWeeklyFeedbackList(supabase, userId);
 
-    return NextResponse.json({ data: list }, { status: 200 });
+    return NextResponse.json(
+      { data: list },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
+        },
+      }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);

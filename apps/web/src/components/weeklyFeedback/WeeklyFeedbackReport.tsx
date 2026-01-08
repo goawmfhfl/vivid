@@ -4,11 +4,11 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { ReportHeader } from "./report/ReportHeader";
-import { EmotionSection } from "./report/emotionSection/index";
-import { DailyLifeSection } from "./report/DailyLifeSection";
-import { VisionSection } from "./report/VisionSection";
-import { InsightSection } from "./report/InsightSection";
-import { ExecutionSection } from "./report/ExecutionSection";
+// import { EmotionSection } from "./report/emotionSection/index"; // 주석 처리: 나중에 사용할 수 있도록
+// import { DailyLifeSection } from "./report/DailyLifeSection"; // 제거: 사용하지 않음
+import { VividSection } from "./report/VividSection";
+// import { InsightSection } from "./report/InsightSection"; // 제거: 사용하지 않음
+// import { ExecutionSection } from "./report/ExecutionSection"; // 제거: 사용하지 않음
 import { ClosingSection } from "./report/ClosingSection";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { TestPanel } from "./TestPanel";
@@ -64,7 +64,8 @@ export function WeeklyFeedbackReport({
           </div>
         </ScrollAnimation>
 
-        {data.daily_life_report && (
+        {/* 이번 주의 일상 - 제거됨 */}
+        {/* {data.daily_life_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <DailyLifeSection
@@ -73,9 +74,10 @@ export function WeeklyFeedbackReport({
               />
             </div>
           </ScrollAnimation>
-        )}
+        )} */}
 
-        {data.emotion_report && (
+        {/* 이번 주 감정 - 주석 처리: 나중에 사용할 수 있도록 */}
+        {/* {data.emotion_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <EmotionSection
@@ -84,17 +86,18 @@ export function WeeklyFeedbackReport({
               />
             </div>
           </ScrollAnimation>
-        )}
+        )} */}
 
-        {data.vision_report && (
+        {data.vivid_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
-              <VisionSection visionReport={data.vision_report} isPro={isPro} />
+              <VividSection vividReport={data.vivid_report} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
-        {data.insight_report && (
+        {/* 이번 주의 인사이트 - 제거됨 */}
+        {/* {data.insight_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <InsightSection
@@ -103,9 +106,10 @@ export function WeeklyFeedbackReport({
               />
             </div>
           </ScrollAnimation>
-        )}
+        )} */}
 
-        {data.execution_report && (
+        {/* 이번 주의 피드백 - 제거됨 */}
+        {/* {data.execution_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
               <ExecutionSection
@@ -114,7 +118,7 @@ export function WeeklyFeedbackReport({
               />
             </div>
           </ScrollAnimation>
-        )}
+        )} */}
 
         {data.closing_report && (
           <ScrollAnimation delay={200}>

@@ -4,7 +4,7 @@ import {
   SYSTEM_PROMPT_SUMMARY_REPORT,
   SYSTEM_PROMPT_DAILY_LIFE,
   SYSTEM_PROMPT_EMOTION,
-  SYSTEM_PROMPT_VISION,
+  SYSTEM_PROMPT_VIVID,
   SYSTEM_PROMPT_INSIGHT,
   SYSTEM_PROMPT_EXECUTION,
   SYSTEM_PROMPT_CLOSING,
@@ -14,7 +14,7 @@ import {
   buildSummaryReportPrompt,
   buildDailyLifePrompt,
   buildEmotionPrompt,
-  buildVisionPrompt,
+  buildVividPrompt,
   buildInsightPrompt,
   buildExecutionPrompt,
   buildClosingPrompt,
@@ -24,7 +24,7 @@ import type {
   SummaryReport,
   DailyLifeReport,
   EmotionReport,
-  VisionReport,
+  VividReport,
   InsightReport,
   ExecutionReport,
   ClosingReport,
@@ -106,6 +106,21 @@ async function generateSection<T>(
 
   const startTime = Date.now();
 
+  // 요청 정보 로깅
+  const systemPromptSize = enhancedSystemPrompt.length;
+  const userPromptSize = userPrompt.length;
+  const totalPromptSize = systemPromptSize + userPromptSize;
+  
+  console.log(`[${sectionName}] API 요청 시작:`, {
+    model,
+    schemaName: schema.name,
+    systemPromptSize,
+    userPromptSize,
+    totalPromptSize,
+    estimatedTokens: Math.ceil(totalPromptSize / 4), // 대략적인 토큰 수 추정 (1 토큰 ≈ 4 문자)
+    timestamp: new Date().toISOString(),
+  });
+
   // Promise를 반환하여 비동기 요청 시작
   return openai.chat.completions
     .create({
@@ -130,6 +145,14 @@ async function generateSection<T>(
     .then((completion) => {
       const endTime = Date.now();
       const duration_ms = endTime - startTime;
+
+      console.log(`[${sectionName}] API 요청 성공:`, {
+        duration_ms,
+        duration_seconds: (duration_ms / 1000).toFixed(2),
+        usage: completion.usage,
+        cachedTokens: (completion.usage as ExtendedUsage | undefined)?.prompt_tokens_details?.cached_tokens || 0,
+        timestamp: new Date().toISOString(),
+      });
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
@@ -270,6 +293,68 @@ async function generateSection<T>(
     })
     .catch((error: unknown) => {
       const err = error as ApiError;
+      const endTime = Date.now();
+      const duration_ms = endTime - startTime;
+
+      // 상세 에러 정보 로깅 (502 에러 원인 파악을 위해)
+      const errorDetails: Record<string, unknown> = {
+        sectionName,
+        duration_ms,
+        duration_seconds: (duration_ms / 1000).toFixed(2),
+        errorType: err?.constructor?.name || typeof error,
+        status: err?.status,
+        code: err?.code,
+        type: err?.type,
+        message: err?.message || String(error),
+        timestamp: new Date().toISOString(),
+        model,
+        systemPromptSize,
+        userPromptSize,
+        totalPromptSize,
+        estimatedTokens: Math.ceil(totalPromptSize / 4),
+      };
+
+      // OpenAI SDK 에러의 경우 추가 정보 수집
+      if (err && typeof err === 'object') {
+        if ('headers' in err && err.headers) {
+          errorDetails.headers = err.headers;
+        }
+        if ('response' in err && err.response) {
+          errorDetails.response = err.response;
+        }
+        if ('cause' in err && err.cause) {
+          errorDetails.cause = err.cause;
+        }
+        // OpenAI SDK의 경우 error 객체에 직접 속성이 있을 수 있음
+        if ('error' in err && err.error) {
+          errorDetails.openaiError = err.error;
+        }
+      }
+
+      // 502 에러인 경우 특별히 상세 로깅
+      if (err?.status === 502) {
+        console.error(`[${sectionName}] 502 Bad Gateway 에러 발생 - 상세 정보:`, errorDetails);
+        console.error(`[${sectionName}] 502 에러 분석:`, {
+          가능한_원인: [
+            "Cloudflare 타임아웃 (일반적으로 100초)",
+            "Next.js API Route 타임아웃 (180초 설정)",
+            "OpenAI API 응답 지연",
+            "네트워크 연결 문제",
+          ],
+          현재_설정: {
+            openaiTimeout: "180000ms (3분)",
+            nextjsMaxDuration: "180초 (3분)",
+            cloudflareTimeout: "일반적으로 100초",
+          },
+          요청_정보: {
+            duration_ms,
+            estimatedTokens: Math.ceil(totalPromptSize / 4),
+            promptSize: totalPromptSize,
+          },
+        });
+      } else {
+        console.error(`[${sectionName}] API 요청 실패:`, errorDetails);
+      }
 
       // 429 에러 (쿼터 초과) 처리
       if (
@@ -289,8 +374,6 @@ async function generateSection<T>(
 
       // AI 사용량 로깅 (에러 발생 시에도 로깅)
       if (userId) {
-        const endTime = Date.now();
-        const duration_ms = endTime - startTime;
         logAIRequestAsync({
           userId,
           model,
@@ -564,82 +647,82 @@ async function generateEmotionReport(
 }
 
 /**
- * Vision Report 생성
+ * Vivid Report 생성
  */
-async function generateVisionReport(
+async function generateVividReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
   progressCallback?: ProgressCallback,
   userId?: string
-): Promise<VisionReport> {
-  const prompt = buildVisionPrompt(dailyFeedbacks, range);
+): Promise<VividReport> {
+  const prompt = buildVividPrompt(dailyFeedbacks, range);
   const schema = getWeeklyFeedbackSchema(isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_VISION, prompt);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
   // 진행 상황 알림
   if (progressCallback) {
-    progressCallback(4, 7, "VisionReport");
+    progressCallback(4, 7, "VividReport");
   }
 
-  const response = await generateSection<{ vision_report: VisionReport }>(
-    SYSTEM_PROMPT_VISION,
+  const response = await generateSection<{ vivid_report: VividReport }>(
+    SYSTEM_PROMPT_VIVID,
     prompt,
     {
-      name: "VisionReportResponse",
+      name: "VividReportResponse",
       schema: {
         type: "object",
         additionalProperties: false,
         properties: {
-          vision_report:
-            schema.schema.properties.weekly_feedback.properties.vision_report,
+          vivid_report:
+            schema.schema.properties.weekly_feedback.properties.vivid_report,
         },
-        required: ["vision_report"],
+        required: ["vivid_report"],
       },
       strict: true,
     },
     cacheKey,
     isPro,
-    "vision_report",
+    "vivid_report",
     progressCallback,
     userId
   );
 
   if (!response) {
-    console.error("[generateVisionReport] response is null or undefined");
-    throw new Error("Vision report response is null or undefined");
+    console.error("[generateVividReport] response is null or undefined");
+    throw new Error("Vivid report response is null or undefined");
   }
 
-  // response가 직접 VisionReport인 경우 처리
+  // response가 직접 VividReport인 경우 처리
   if (
     typeof response === "object" &&
     response !== null &&
     !Array.isArray(response) &&
-    "vision_summary" in response &&
-    !("vision_report" in response)
+    "weekly_vivid_summary" in response &&
+    !("vivid_report" in response)
   ) {
     console.log(
-      "[generateVisionReport] Response appears to be VisionReport directly, using it"
+      "[generateVividReport] Response appears to be VividReport directly, using it"
     );
-    return response as VisionReport;
+    return response as VividReport;
   }
 
-  if (!response.vision_report) {
-    console.error("[generateVisionReport] response.vision_report is missing", {
+  if (!response.vivid_report) {
+    console.error("[generateVividReport] response.vivid_report is missing", {
       response,
       responseKeys: Object.keys(response || {}),
       responseType: typeof response,
       responseValues: Object.values(response || {}),
       responseStringified: JSON.stringify(response, null, 2),
     });
-    throw new Error("Vision report data is missing from response");
+    throw new Error("Vivid report data is missing from response");
   }
 
   console.log(
-    "[generateVisionReport] vision_report 추출 완료:",
-    !!response.vision_report
+    "[generateVividReport] vivid_report 추출 완료:",
+    !!response.vivid_report
   );
-  return response.vision_report;
+  return response.vivid_report;
 }
 
 /**
@@ -892,8 +975,179 @@ async function generateClosingReport(
 }
 
 /**
- * Daily Feedback 배열을 기반으로 주간 피드백 생성 (병렬 처리 + 진행 상황 콜백)
- * 7개 섹션을 병렬로 생성하며 각 섹션 완료 시점에 진행 상황을 콜백으로 전달
+ * 기본값 생성 헬퍼 함수들
+ */
+function createDefaultSummaryReport(
+  range: { start: string; end: string; timezone: string }
+): SummaryReport {
+  return {
+    title: `${range.start} ~ ${range.end} 주간 피드백`,
+    summary: "이번 주 피드백이 생성되었습니다.",
+    key_points: [],
+    trend_analysis: null,
+  };
+}
+
+function createDefaultDailyLifeReport(): DailyLifeReport {
+  return {
+    summary: "",
+    daily_summaries_trend: {
+      overall_narrative: "",
+      key_highlights: [],
+    },
+    events_pattern: {
+      most_frequent_events: [],
+      event_categories: [],
+      timing_patterns: [],
+    },
+    emotion_triggers_analysis: {
+      summary: "",
+      category_distribution: {
+        self: { count: 0, percentage: 0, top_triggers: [], insight: null },
+        work: { count: 0, percentage: 0, top_triggers: [], insight: null },
+        people: { count: 0, percentage: 0, top_triggers: [], insight: null },
+        environment: {
+          count: 0,
+          percentage: 0,
+          top_triggers: [],
+          insight: null,
+        },
+      },
+    },
+    behavioral_patterns: {
+      summary: "",
+      pattern_distribution: {
+        planned: { count: 0, percentage: 0, examples: [], insight: null },
+        impulsive: { count: 0, percentage: 0, examples: [], insight: null },
+        routine_attempt: {
+          count: 0,
+          percentage: 0,
+          examples: [],
+          insight: null,
+        },
+        avoidance: { count: 0, percentage: 0, examples: [], insight: null },
+        routine_failure: {
+          count: 0,
+          percentage: 0,
+          examples: [],
+          insight: null,
+        },
+      },
+      behavior_emotion_correlation: [],
+    },
+    keywords_analysis: {
+      top_keywords: [],
+      keyword_categories: [],
+    },
+    ai_comments_insights: {
+      common_themes: [],
+      actionable_advice_summary: "",
+    },
+    daily_rhythm: {
+      summary: "",
+      time_patterns: [],
+    },
+    growth_insights: {
+      resilience_patterns: [],
+      improvement_opportunities: [],
+      strengths_highlighted: [],
+    },
+    next_week_suggestions: {
+      focus_areas: [],
+      maintain_strengths: [],
+    },
+  };
+}
+
+function createDefaultInsightReport(): InsightReport {
+  return {
+    core_insights: [],
+    meta_questions_highlight: [],
+    repeated_themes: [],
+    insight_patterns: {
+      summary: "",
+      insight_categories: [],
+      key_strengths_identified: [],
+    },
+    meta_questions_analysis: {
+      summary: "",
+      question_themes: [],
+    },
+    ai_comment_patterns: {
+      summary: "",
+      common_themes: [],
+    },
+    insight_action_alignment: {
+      summary: "",
+      alignment_score: { value: 0, description: "" },
+      strong_connections: [],
+    },
+    growth_insights: {
+      key_learnings: [],
+    },
+    next_week_focus: {
+      focus_areas: [],
+    },
+  };
+}
+
+function createDefaultExecutionReport(): ExecutionReport {
+  return {
+    ai_feedback_summary: "",
+    feedback_patterns: {
+      summary: "",
+      positives_categories: [],
+      improvements_categories: [],
+    },
+    person_traits_analysis: {
+      summary: "",
+      key_traits: [],
+    },
+    ai_message_patterns: {
+      summary: "",
+      common_themes: [],
+    },
+    improvement_action_alignment: {
+      summary: "",
+      alignment_score: { value: 0, description: "" },
+      strong_connections: [],
+    },
+  };
+}
+
+function createDefaultClosingReport(): ClosingReport {
+  return {
+    call_to_action: {
+      weekly_one_liner: "",
+      next_week_objective: "",
+      actions: [],
+    },
+    this_week_identity: {
+      core_characteristics: [],
+      growth_story: {
+        summary: "",
+        narrative: "",
+      },
+      strengths_highlighted: {
+        summary: "",
+        top_strengths: [],
+      },
+      areas_of_awareness: {
+        summary: "",
+        key_areas: [],
+      },
+    },
+    next_week_identity_intention: {
+      summary: "",
+      intention: "",
+      focus_areas: [],
+    },
+  };
+}
+
+/**
+ * Daily Feedback 배열을 기반으로 주간 피드백 생성 (vivid_report와 emotion_report만 AI 생성)
+ * 2개 섹션만 병렬로 생성하며 각 섹션 완료 시점에 진행 상황을 콜백으로 전달
  */
 export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
@@ -902,39 +1156,12 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<WeeklyFeedback> {
-  // 병렬로 7개 섹션 생성 (각 섹션 완료 시점에 진행 상황 알림)
+  // vivid_report와 emotion_report만 AI로 생성
 
-  // 각 Promise에 완료 콜백 추가
-  const summaryPromise = generateSummaryReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback,
-    userId
-  ).then((result) => {
-    if (progressCallback) {
-      progressCallback(1, 7, "SummaryReport");
-    }
-
-    return result;
-  });
-
-  const dailyLifePromise = generateDailyLifeReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback,
-    userId
-  ).then((result) => {
-    if (progressCallback) {
-      progressCallback(2, 7, "DailyLifeReport");
-    }
-    console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] dailyLifeReport 생성 완료:",
-      !!result
-    );
-    return result;
-  });
+  // 진행 상황 알림
+  if (progressCallback) {
+    progressCallback(0, 2, "시작");
+  }
 
   const emotionPromise = generateEmotionReport(
     dailyFeedbacks,
@@ -944,7 +1171,7 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     userId
   ).then((result) => {
     if (progressCallback) {
-      progressCallback(3, 7, "EmotionReport");
+      progressCallback(1, 2, "EmotionReport");
     }
     console.log(
       "[generateWeeklyFeedbackFromDailyWithProgress] emotionReport 생성 완료:",
@@ -953,7 +1180,7 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     return result;
   });
 
-  const visionPromise = generateVisionReport(
+  const vividPromise = generateVividReport(
     dailyFeedbacks,
     range,
     isPro,
@@ -961,84 +1188,27 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     userId
   ).then((result) => {
     if (progressCallback) {
-      progressCallback(4, 7, "VisionReport");
+      progressCallback(2, 2, "VividReport");
     }
     console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] visionReport 생성 완료:",
+      "[generateWeeklyFeedbackFromDailyWithProgress] vividReport 생성 완료:",
       !!result
     );
     return result;
   });
 
-  const insightPromise = generateInsightReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback,
-    userId
-  ).then((result) => {
-    if (progressCallback) {
-      progressCallback(5, 7, "InsightReport");
-    }
-    console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] insightReport 생성 완료:",
-      !!result
-    );
-    return result;
-  });
-
-  const executionPromise = generateExecutionReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback,
-    userId
-  ).then((result) => {
-    if (progressCallback) {
-      progressCallback(6, 7, "ExecutionReport");
-    }
-    console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] executionReport 생성 완료:",
-      !!result
-    );
-    return result;
-  });
-
-  const closingPromise = generateClosingReport(
-    dailyFeedbacks,
-    range,
-    isPro,
-    progressCallback,
-    userId
-  ).then((result) => {
-    if (progressCallback) {
-      progressCallback(7, 7, "ClosingReport");
-    }
-    console.log(
-      "[generateWeeklyFeedbackFromDailyWithProgress] closingReport 생성 완료:",
-      !!result
-    );
-    return result;
-  });
-
-  // 모든 Promise를 병렬로 실행
-  const [
-    summaryReport,
-    dailyLifeReport,
-    emotionReport,
-    visionReport,
-    insightReport,
-    executionReport,
-    closingReport,
-  ] = await Promise.all([
-    summaryPromise,
-    dailyLifePromise,
+  // emotion_report와 vivid_report만 병렬로 생성
+  const [emotionReport, vividReport] = await Promise.all([
     emotionPromise,
-    visionPromise,
-    insightPromise,
-    executionPromise,
-    closingPromise,
+    vividPromise,
   ]);
+
+  // 나머지 섹션들은 기본값으로 설정 (AI 요청하지 않음)
+  const summaryReport = createDefaultSummaryReport(range);
+  const dailyLifeReport = createDefaultDailyLifeReport();
+  const insightReport = createDefaultInsightReport();
+  const executionReport = createDefaultExecutionReport();
+  const closingReport = createDefaultClosingReport();
 
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {
@@ -1046,7 +1216,7 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     summary_report: summaryReport,
     daily_life_report: dailyLifeReport,
     emotion_report: emotionReport,
-    vision_report: visionReport,
+    vivid_report: vividReport,
     insight_report: insightReport,
     execution_report: executionReport,
     closing_report: closingReport,
