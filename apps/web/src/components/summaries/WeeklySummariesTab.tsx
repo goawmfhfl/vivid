@@ -69,7 +69,7 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
                 marginBottom: "4px",
               }}
             >
-              주간 피드백 리스트
+              주간 vivid 리스트
             </h2>
             <p
               style={{

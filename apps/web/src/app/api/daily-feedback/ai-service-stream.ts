@@ -3,7 +3,7 @@ import {
   getSummaryReportSchema,
   getDailyReportSchema,
   EmotionReportSchema,
-  DreamReportSchema,
+  VividReportSchema,
   InsightReportSchema,
   getFeedbackReportSchema,
   getFinalReportSchema,
@@ -29,7 +29,7 @@ import type {
   SummaryReport,
   DailyReport,
   EmotionReport,
-  DreamReport,
+  VividReport,
   InsightReport,
   FeedbackReport,
   FinalReport,
@@ -402,17 +402,17 @@ async function generateEmotionReport(
 }
 
 /**
- * 꿈/목표 기록 리포트 생성
+ * VIVID 기록 리포트 생성
  */
-async function generateDreamReport(
+async function generateVividReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
   progressCallback?: ProgressCallback,
   userId?: string
-): Promise<DreamReport | null> {
-  const dreamRecords = records.filter((r) => r.type === "dream");
+): Promise<VividReport | null> {
+  const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
   if (dreamRecords.length === 0) {
     return null;
@@ -421,13 +421,13 @@ async function generateDreamReport(
   const prompt = buildDreamPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_DREAM, prompt);
 
-  return generateSection<DreamReport>(
+  return generateSection<VividReport>(
     SYSTEM_PROMPT_DREAM,
     prompt,
-    DreamReportSchema,
+    VividReportSchema,
     cacheKey,
     isPro,
-    "dream_report",
+    "vivid_report",
     progressCallback,
     userId
   );
@@ -537,19 +537,67 @@ export async function generateAllReportsWithProgress(
   progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<{
-  summary_report: SummaryReport;
+  summary_report: SummaryReport | null;
   daily_report: DailyReport | null;
   emotion_report: EmotionReport | null;
-  dream_report: DreamReport | null;
+  vivid_report: VividReport | null;
   insight_report: InsightReport | null;
   feedback_report: FeedbackReport | null;
-  final_report: FinalReport;
+  final_report: FinalReport | null;
 }> {
+  // recordType 확인: 기본값은 vivid 모드 (vivid/dream, emotion만)
+  // 다른 record type(daily, insight, feedback)이 있으면 일반 모드로 전환
+  const recordTypes = new Set(records.map((r) => r.type));
+  const hasOtherTypes = Array.from(recordTypes).some(
+    (type) => type !== "vivid" && type !== "dream" && type !== "emotion"
+  );
+
+  // vivid 모드가 기본값: vivid_report와 emotion_report만 생성
+  if (!hasOtherTypes) {
+    const sectionNames = ["VividReport", "EmotionReport"];
+    const totalSections = sectionNames.length;
+    let completedSections = 0;
+
+    const callProgress = (sectionName: string, tracking?: TrackingInfo) => {
+      completedSections++;
+      progressCallback?.(completedSections, totalSections, sectionName, tracking);
+    };
+
+    // vivid_report와 emotion_report만 생성
+    const vividReport = await generateVividReport(
+      records,
+      date,
+      dayOfWeek,
+      isPro,
+      (c, t, n, tr) => callProgress(n, tr),
+      userId
+    );
+    const emotionReport = await generateEmotionReport(
+      records,
+      date,
+      dayOfWeek,
+      isPro,
+      (c, t, n, tr) => callProgress(n, tr),
+      userId
+    );
+
+    return {
+      summary_report: null,
+      daily_report: null,
+      emotion_report: emotionReport,
+      vivid_report: vividReport,
+      insight_report: null,
+      feedback_report: null,
+      final_report: null,
+    };
+  }
+
+  // 일반 모드: 다른 record type이 있을 때만 모든 리포트 생성
   const sectionNames = [
     "SummaryReport",
     "DailyReport",
     "EmotionReport",
-    "DreamReport",
+    "VividReport",
     "InsightReport",
     "FeedbackReport",
     "FinalReport",
@@ -589,7 +637,7 @@ export async function generateAllReportsWithProgress(
     (c, t, n, tr) => callProgress(n, tr),
     userId
   );
-  const dreamReport = await generateDreamReport(
+  const vividReport = await generateVividReport(
     records,
     date,
     dayOfWeek,
@@ -628,7 +676,7 @@ export async function generateAllReportsWithProgress(
     summary_report: summaryReport,
     daily_report: dailyReport,
     emotion_report: emotionReport,
-    dream_report: dreamReport,
+    vivid_report: vividReport,
     insight_report: insightReport,
     feedback_report: feedbackReport,
     final_report: finalReport,

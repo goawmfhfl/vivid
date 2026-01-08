@@ -87,7 +87,7 @@ function WeeklyReportsPage() {
       {isLoadingWeekly ? (
         <div className="flex justify-center items-center py-12">
           <LoadingSpinner
-            message="주간 피드백을 불러오는 중..."
+            message="주간 vivid를 불러오는 중..."
             size="md"
             showMessage={true}
           />
@@ -98,7 +98,7 @@ function WeeklyReportsPage() {
             message={
               weeklyError instanceof Error
                 ? weeklyError.message
-                : "주간 피드백을 불러오는 중 오류가 발생했습니다."
+                : "주간 vivid를 불러오는 중 오류가 발생했습니다."
             }
             size="md"
             onRetry={() => {

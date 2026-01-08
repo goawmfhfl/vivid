@@ -152,9 +152,9 @@ export function buildUnifiedWeeklyFeedbackPrompt(
       });
     }
 
-    // Dream Report 데이터
-    if (feedback.dream_report) {
-      const dream = feedback.dream_report;
+    // Vivid Report 데이터
+    if (feedback.vivid_report) {
+      const dream = feedback.vivid_report;
       if (dream.summary) {
         prompt += `[비전 요약] ${dream.summary}\n`;
       }
@@ -458,8 +458,8 @@ export function buildVisionPrompt(
   dailyFeedbacks.forEach((feedback, idx) => {
     prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
 
-    if (feedback.dream_report) {
-      const dream = feedback.dream_report;
+    if (feedback.vivid_report) {
+      const dream = feedback.vivid_report;
       if (dream.summary) {
         prompt += `비전 요약: ${dream.summary}\n`;
       }

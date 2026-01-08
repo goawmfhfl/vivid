@@ -27,17 +27,19 @@ export function HeaderSection({ view }: SectionProps) {
             </p>
           </div>
         </div>
-        <div
-          className="py-5 px-6 rounded-2xl"
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-        >
-          <p className="text-sm" style={{ lineHeight: "1.7", opacity: 0.95 }}>
-            {view.narrative_summary}
-          </p>
-        </div>
+        {view.narrative_summary && view.narrative_summary.trim() && (
+          <div
+            className="py-5 px-6 rounded-2xl"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+          >
+            <p className="text-sm" style={{ lineHeight: "1.7", opacity: 0.95 }}>
+              {view.narrative_summary}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Summary Section 통합 */}
+      {/* Summary Section 통합 - summary_report가 있을 때만 표시 */}
       {view.summary_key_points && view.summary_key_points.length > 0 && (
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-4">

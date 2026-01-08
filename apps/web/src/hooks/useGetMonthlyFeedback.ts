@@ -7,7 +7,7 @@ import type {
 } from "@/types/monthly-feedback";
 
 /**
- * 월간 피드백 조회 (month 기반)
+ * 월간 vivid 조회 (month 기반)
  */
 export function useGetMonthlyFeedback(month: string | null) {
   return useQuery({
@@ -50,7 +50,7 @@ export function useGetMonthlyFeedback(month: string | null) {
 }
 
 /**
- * 월간 피드백 조회 (id 기반)
+ * 월간 vivid 조회 (id 기반)
  */
 export function useGetMonthlyFeedbackById(id: string | null) {
   return useQuery({
@@ -74,7 +74,7 @@ export function useGetMonthlyFeedbackById(id: string | null) {
 }
 
 /**
- * 월간 피드백 리스트 조회
+ * 월간 vivid 리스트 조회
  */
 export function useGetMonthlyFeedbackList(enabled: boolean = true) {
   return useQuery<MonthlyFeedbackListItem[]>({

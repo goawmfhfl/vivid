@@ -68,7 +68,7 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
                 marginBottom: "4px",
               }}
             >
-              월간 피드백 리스트
+              월간 vivid 리스트
             </h2>
             <p
               style={{

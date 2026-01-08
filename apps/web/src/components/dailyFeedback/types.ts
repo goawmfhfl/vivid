@@ -72,18 +72,38 @@ export type DailyReportData = {
       }[]
     | null;
 
-  // ========== Dream Report 데이터 ==========
-  /** 시각화 요약 */
+  // ========== Vivid Report 데이터 ==========
+  /** 오늘의 VIVID (현재 모습) - 요약 */
+  current_summary: string;
+  /** 오늘의 VIVID (현재 모습) - 평가 */
+  current_evaluation: string;
+  /** 오늘의 VIVID (현재 모습) - 키워드 */
+  current_keywords: string[];
+  /** 앞으로의 나의 모습 (미래 비전) - 요약 */
+  future_summary: string;
+  /** 앞으로의 나의 모습 (미래 비전) - 평가 */
+  future_evaluation: string;
+  /** 앞으로의 나의 모습 (미래 비전) - 키워드 */
+  future_keywords: string[];
+  /** 일치도 점수 (0-100) */
+  alignment_score: number | null;
+  /** 기록을 쓰는 사람의 특징 (최대 5가지) */
+  user_characteristics: string[];
+  /** 지향하는 모습 (최대 5가지) */
+  aspired_traits: string[];
+  
+  // 하위 호환성을 위한 레거시 필드
+  /** @deprecated vision_summary는 current_summary를 사용하세요 */
   vision_summary: string;
-  /** 자기 평가 */
+  /** @deprecated vision_self는 current_evaluation을 사용하세요 */
   vision_self: string;
-  /** 시각화 키워드 배열 (6~10개 필수) */
+  /** @deprecated vision_keywords는 current_keywords와 future_keywords를 사용하세요 */
   vision_keywords: string[];
-  /** AI 피드백 배열 (3개 요소) */
+  /** @deprecated vision_ai_feedback는 더 이상 사용되지 않습니다 */
   vision_ai_feedback: string[];
-  /** 시각화를 통해 이루고 싶은 꿈 목표 리스트 (Pro 전용) */
+  /** @deprecated dream_goals는 더 이상 사용되지 않습니다 */
   dream_goals: string[] | null;
-  /** 이런 꿈을 꾸는 사람들의 특징 리스트 (Pro 전용) */
+  /** @deprecated dreamer_traits는 user_characteristics를 사용하세요 */
   dreamer_traits: string[] | null;
 
   // ========== Insight Report 데이터 ==========

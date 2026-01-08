@@ -9,7 +9,7 @@ import type {
 import type { TrackingInfo } from "@/app/api/types";
 
 /**
- * 주간 피드백 리스트 조회
+ * 주간 vivid 리스트 조회
  */
 const fetchWeeklyFeedbackList = async (): Promise<WeeklyFeedbackListItem[]> => {
   const userId = await getCurrentUserId();
@@ -23,7 +23,7 @@ const fetchWeeklyFeedbackList = async (): Promise<WeeklyFeedbackListItem[]> => {
 };
 
 /**
- * 주간 피드백 상세 조회 (id 기반)
+ * 주간 vivid 상세 조회 (id 기반)
  */
 const fetchWeeklyFeedbackDetail = async (
   id: string
@@ -68,7 +68,7 @@ const createWeeklyFeedback = async (
 };
 
 /**
- * 주간 피드백 리스트 조회 훅
+ * 주간 vivid 리스트 조회 훅
  */
 export function useWeeklyFeedbackList() {
   return useQuery({
@@ -79,7 +79,7 @@ export function useWeeklyFeedbackList() {
 }
 
 /**
- * 주간 피드백 상세 조회 훅 (id 기반)
+ * 주간 vivid 상세 조회 훅 (id 기반)
  */
 export function useWeeklyFeedbackDetail(id: string | null) {
   return useQuery({
@@ -91,7 +91,7 @@ export function useWeeklyFeedbackDetail(id: string | null) {
 }
 
 /**
- * 주간 피드백 생성 훅
+ * 주간 vivid 생성 훅
  */
 export function useCreateWeeklyFeedback() {
   const queryClient = useQueryClient();
@@ -139,7 +139,7 @@ export function useCreateWeeklyFeedback() {
       }
     },
     onError: (error) => {
-      console.error("주간 피드백 생성 실패:", error);
+      console.error("주간 vivid 생성 실패:", error);
     },
   });
 }

@@ -4,7 +4,7 @@ import type {
   SummaryReport,
   DailyReport,
   EmotionReport,
-  DreamReport,
+  VividReport,
   InsightReport,
   FeedbackReport,
   FinalReport,
@@ -55,19 +55,29 @@ export function mapDailyFeedbackRowToReport(
   const emotionTimeline = emotionReport?.emotion_timeline ?? [];
   const emotionEvents = emotionReport?.emotion_events ?? null;
 
-  // Dream Report에서 데이터 추출
-  const dreamReport: DreamReport | null = row.dream_report;
-  const visionSummary = dreamReport?.summary ?? "";
-  const visionSelf = dreamReport?.vision_self ?? "";
-  const visionKeywords = dreamReport?.vision_keywords ?? [];
-  // vision_ai_feedback이 배열이 아니면 빈 배열로 처리 (하위 호환성)
-  const visionAiFeedback = Array.isArray(dreamReport?.vision_ai_feedback)
-    ? dreamReport.vision_ai_feedback
-    : dreamReport?.vision_ai_feedback
-    ? [dreamReport.vision_ai_feedback] // 문자열인 경우 배열로 변환 (하위 호환성)
-    : [];
-  const dreamGoals = dreamReport?.dream_goals ?? null;
-  const dreamerTraits = dreamReport?.dreamer_traits ?? null;
+  // Vivid Report에서 데이터 추출 (새로운 구조)
+  const vividReport: VividReport | null = row.vivid_report;
+  // 오늘의 VIVID (현재 모습)
+  const currentSummary = vividReport?.current_summary ?? "";
+  const currentEvaluation = vividReport?.current_evaluation ?? "";
+  const currentKeywords = vividReport?.current_keywords ?? [];
+  // 앞으로의 나의 모습 (미래 비전)
+  const futureSummary = vividReport?.future_summary ?? "";
+  const futureEvaluation = vividReport?.future_evaluation ?? "";
+  const futureKeywords = vividReport?.future_keywords ?? [];
+  // 일치도 분석
+  const alignmentScore = vividReport?.alignment_score ?? null;
+  // 사용자 특성 분석
+  const userCharacteristics = vividReport?.user_characteristics ?? [];
+  const aspiredTraits = vividReport?.aspired_traits ?? [];
+  
+  // 하위 호환성을 위한 레거시 필드 매핑
+  const visionSummary = currentSummary || futureSummary || "";
+  const visionSelf = currentEvaluation || "";
+  const visionKeywords = [...currentKeywords, ...futureKeywords];
+  const visionAiFeedback: string[] = [];
+  const dreamGoals = null;
+  const dreamerTraits = null;
 
   // Insight Report에서 데이터 추출
   const insightReport: InsightReport | null = row.insight_report;
@@ -97,7 +107,8 @@ export function mapDailyFeedbackRowToReport(
   const adjustmentPoints = finalReport?.adjustment_points ?? null;
 
   // narrative_summary는 summary_report의 summary를 사용
-  const narrativeSummary = summarySummary;
+  // summary_report가 없으면 vivid_report의 current_summary를 사용 (vivid 모드 대응)
+  const narrativeSummary = summarySummary || currentSummary || futureSummary;
 
   return {
     date: row.report_date,
@@ -126,7 +137,18 @@ export function mapDailyFeedbackRowToReport(
     emotion_timeline: emotionTimeline,
     emotion_events: emotionEvents,
 
-    // Dream Report 데이터
+    // Vivid Report 데이터 (새로운 구조)
+    current_summary: currentSummary,
+    current_evaluation: currentEvaluation,
+    current_keywords: currentKeywords,
+    future_summary: futureSummary,
+    future_evaluation: futureEvaluation,
+    future_keywords: futureKeywords,
+    alignment_score: alignmentScore,
+    user_characteristics: userCharacteristics,
+    aspired_traits: aspiredTraits,
+    
+    // 하위 호환성을 위한 레거시 필드
     vision_summary: visionSummary,
     vision_self: visionSelf,
     vision_keywords: visionKeywords,

@@ -183,7 +183,7 @@ export function SummariesView() {
           {isLoadingWeekly ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner
-                message="주간 피드백을 불러오는 중..."
+                message="주간 vivid를 불러오는 중..."
                 size="md"
                 showMessage={true}
               />
@@ -194,7 +194,7 @@ export function SummariesView() {
                 message={
                   weeklyError instanceof Error
                     ? weeklyError.message
-                    : "주간 피드백을 불러오는 중 오류가 발생했습니다."
+                    : "주간 vivid를 불러오는 중 오류가 발생했습니다."
                 }
                 size="md"
                 onRetry={() => {
@@ -213,7 +213,7 @@ export function SummariesView() {
           {isLoadingMonthly ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner
-                message="월간 피드백을 불러오는 중..."
+                message="월간 vivid를 불러오는 중..."
                 size="md"
                 showMessage={true}
               />
@@ -224,7 +224,7 @@ export function SummariesView() {
                 message={
                   monthlyError instanceof Error
                     ? monthlyError.message
-                    : "월간 피드백을 불러오는 중 오류가 발생했습니다."
+                    : "월간 vivid를 불러오는 중 오류가 발생했습니다."
                 }
                 size="md"
                 onRetry={() => {

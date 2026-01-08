@@ -1225,7 +1225,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                 )}
               </div>
 
-              {/* 주간 피드백 */}
+              {/* 주간 vivid */}
               <div>
                 <button
                   onClick={() =>
@@ -1241,7 +1241,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                     className="text-lg font-semibold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    주간 피드백 ({feedbacks.weekly.length}개)
+                    주간 vivid ({feedbacks.weekly.length}개)
                   </h3>
                   {expandedSections.weekly ? (
                     <ChevronUp
@@ -1262,7 +1262,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                         className="text-sm py-4"
                         style={{ color: COLORS.text.muted }}
                       >
-                        주간 피드백이 없습니다.
+                        주간 vivid가 없습니다.
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -1315,7 +1315,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                 )}
               </div>
 
-              {/* 월간 피드백 */}
+              {/* 월간 vivid */}
               <div>
                 <button
                   onClick={() =>
@@ -1331,7 +1331,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                     className="text-lg font-semibold"
                     style={{ color: COLORS.text.primary }}
                   >
-                    월간 피드백 ({feedbacks.monthly.length}개)
+                    월간 vivid ({feedbacks.monthly.length}개)
                   </h3>
                   {expandedSections.monthly ? (
                     <ChevronUp
@@ -1352,7 +1352,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                         className="text-sm py-4"
                         style={{ color: COLORS.text.muted }}
                       >
-                        월간 피드백이 없습니다.
+                        월간 vivid가 없습니다.
                       </p>
                     ) : (
                       <div className="space-y-2">

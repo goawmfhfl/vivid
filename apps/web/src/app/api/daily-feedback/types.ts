@@ -2,7 +2,7 @@ import type {
   SummaryReport,
   DailyReport,
   EmotionReport,
-  DreamReport,
+  VividReport,
   InsightReport,
   FeedbackReport,
   FinalReport,
@@ -13,7 +13,7 @@ export interface Record {
   id: number;
   user_id: string;
   content: string;
-  type: string; // "daily" | "emotion" | "dream" | "insight" | "feedback"
+  type: string; // "daily" | "emotion" | "vivid" | "dream" | "insight" | "feedback" (dream은 하위 호환성)
   created_at: string;
   kst_date: string;
 }
@@ -27,7 +27,7 @@ export interface DailyReportResponse {
   summary_report: SummaryReport | null;
   daily_report: DailyReport | null;
   emotion_report: EmotionReport | null;
-  dream_report: DreamReport | null;
+  vivid_report: VividReport | null;
   insight_report: InsightReport | null;
   feedback_report: FeedbackReport | null;
   final_report: FinalReport | null;

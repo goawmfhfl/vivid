@@ -209,49 +209,59 @@ export const EmotionReportSchema = {
   strict: true,
 } as const;
 
-export const DreamReportSchema = {
-  name: "DreamReport",
+export const VividReportSchema = {
+  name: "VividReport",
   schema: {
     type: "object",
     properties: {
-      summary: { type: "string" },
-      vision_self: { type: "string" },
-      vision_keywords: {
-        type: "array",
-        items: { type: "string" },
-        minItems: 6,
-        maxItems: 10,
-      },
-      vision_ai_feedback: {
+      // 오늘의 VIVID (현재 모습)
+      current_summary: { type: "string" },
+      current_evaluation: { type: "string" },
+      current_keywords: {
         type: "array",
         items: { type: "string" },
         minItems: 3,
-        maxItems: 3,
+        maxItems: 10,
       },
-      // Pro 전용: 시각화를 통해 이루고 싶은 꿈 목표 리스트
-      dream_goals: {
+      // 앞으로의 나의 모습 (미래 비전)
+      future_summary: { type: "string" },
+      future_evaluation: { type: "string" },
+      future_keywords: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 3,
+        maxItems: 10,
+      },
+      // 일치도 분석
+      alignment_score: {
+        type: "number",
+        minimum: 0,
+        maximum: 100,
+      },
+      // 사용자 특성 분석
+      user_characteristics: {
         type: "array",
         items: { type: "string" },
         minItems: 0,
         maxItems: 5,
-        nullable: true,
       },
-      // Pro 전용: 이런 꿈을 꾸는 사람들의 특징 리스트
-      dreamer_traits: {
+      aspired_traits: {
         type: "array",
         items: { type: "string" },
         minItems: 0,
         maxItems: 5,
-        nullable: true,
       },
     },
     required: [
-      "summary",
-      "vision_self",
-      "vision_keywords",
-      "vision_ai_feedback",
-      "dream_goals",
-      "dreamer_traits",
+      "current_summary",
+      "current_evaluation",
+      "current_keywords",
+      "future_summary",
+      "future_evaluation",
+      "future_keywords",
+      "alignment_score",
+      "user_characteristics",
+      "aspired_traits",
     ],
     additionalProperties: false,
   },
@@ -490,12 +500,12 @@ export const SYSTEM_PROMPT_EMOTION = `
 `;
 
 export const SYSTEM_PROMPT_DREAM = `
-당신은 사용자의 꿈/목표 기록(type="dream")을 분석하여 꿈/목표 리포트를 생성합니다.
+당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")을 분석하여 VIVID 리포트를 생성합니다.
 
 ## 섹션별 규칙
 - vision_keywords는 6~10개 필수로 추출합니다.
 - vision_ai_feedback는 3개 요소의 배열로 반환합니다. 각 요소는 핵심 피드백 한 문장입니다.
-- 꿈/목표 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
+- VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
 `;
 
 export const SYSTEM_PROMPT_INSIGHT = `

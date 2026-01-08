@@ -12,12 +12,12 @@ export function buildVisionReportPrompt(
   const monthLabel = `${year}년 ${monthNum}월`;
 
   let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 비전 데이터입니다. 
-일일 dream_report들을 종합하여 월간 비전 리포트(vision_report)를 생성하여 JSON만 출력하세요.\n\n`;
+일일 vivid_report들을 종합하여 월간 비전 리포트(vision_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
   dailyFeedbacks.forEach((df, idx) => {
     prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const dr = df.dream_report;
+    const dr = df.vivid_report;
     if (dr) {
       if (dr.summary) {
         prompt += `비전 요약: ${dr.summary}\n`;

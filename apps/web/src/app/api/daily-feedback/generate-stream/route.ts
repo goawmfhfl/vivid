@@ -135,12 +135,6 @@ export async function GET(request: NextRequest) {
         // 추적 정보 제거 (DB 저장 전)
         const cleanedReport = removeTrackingInfo(report);
 
-        // 데이터 검증: 필수 필드 확인
-        if (!cleanedReport.summary_report) {
-          sendError("Summary report가 생성되지 않았습니다.");
-          return;
-        }
-
         // 4️⃣ Supabase daily_feedback 테이블에 저장
         const savedFeedback = await saveDailyReport(
           supabase,
@@ -182,7 +176,7 @@ function extractTrackingInfo(report: Record<string, unknown>): TrackingInfo[] {
     { key: "summary_report", name: "SummaryReport" },
     { key: "daily_report", name: "DailyReport" },
     { key: "emotion_report", name: "EmotionReport" },
-    { key: "dream_report", name: "DreamReport" },
+    { key: "vivid_report", name: "VividReport" },
     { key: "insight_report", name: "InsightReport" },
     { key: "feedback_report", name: "FeedbackReport" },
     { key: "final_report", name: "FinalReport" },
@@ -218,7 +212,7 @@ function removeTrackingInfo<T extends Record<string, unknown>>(report: T): T {
     "summary_report",
     "daily_report",
     "emotion_report",
-    "dream_report",
+    "vivid_report",
     "insight_report",
     "feedback_report",
     "final_report",

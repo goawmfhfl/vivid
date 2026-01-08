@@ -277,8 +277,8 @@ export function encryptDailyFeedback(
     emotion_report: feedback.emotion_report
       ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
       : null,
-    dream_report: feedback.dream_report
-      ? encryptJsonbFields(feedback.dream_report as JsonbValue)
+    vivid_report: feedback.vivid_report
+      ? encryptJsonbFields(feedback.vivid_report as JsonbValue)
       : null,
     insight_report: feedback.insight_report
       ? encryptJsonbFields(feedback.insight_report as JsonbValue)
@@ -311,8 +311,8 @@ export function decryptDailyFeedback(
     emotion_report: feedback.emotion_report
       ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
       : null,
-    dream_report: feedback.dream_report
-      ? decryptJsonbFields(feedback.dream_report as JsonbValue)
+    vivid_report: feedback.vivid_report
+      ? decryptJsonbFields(feedback.vivid_report as JsonbValue)
       : null,
     insight_report: feedback.insight_report
       ? decryptJsonbFields(feedback.insight_report as JsonbValue)

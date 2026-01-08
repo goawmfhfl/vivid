@@ -49,7 +49,7 @@ export default function WeeklyViewPage({
         error={
           error instanceof Error
             ? error.message
-            : "주간 피드백을 불러오는 중 오류가 발생했습니다."
+            : "주간 vivid를 불러오는 중 오류가 발생했습니다."
         }
         onRetry={() => refetch()}
         onBack={handleBack}

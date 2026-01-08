@@ -25,7 +25,7 @@ export function MonthlyCandidatesSection({
     toggleMonthlyCandidatesDropdown,
   } = useModalStore();
 
-  // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 월간 피드백 필터링
+  // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 월간 vivid 필터링
   const candidatesForCreation = useMemo(() => {
     return filterMonthlyCandidatesForCreation(
       candidates,
@@ -147,7 +147,7 @@ export function MonthlyCandidatesSection({
         };
       });
     } catch (error) {
-      console.error("월간 피드백 생성 실패:", error);
+      console.error("월간 vivid 생성 실패:", error);
 
       // EventSource 정리
       const esToClose = currentEsRef.current;
@@ -163,7 +163,7 @@ export function MonthlyCandidatesSection({
       // 진행 상황 초기화 (전역 상태)
       clearMonthlyFeedbackProgress(month);
 
-      alert("월간 피드백 생성에 실패했습니다. 다시 시도해주세요.");
+      alert("월간 vivid 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setGeneratingMonth(null);
       // 진행 상황은 완료/에러 핸들러에서 이미 처리됨
@@ -203,7 +203,7 @@ export function MonthlyCandidatesSection({
                     fontWeight: "600",
                   }}
                 >
-                  아직 생성되지 않은 월간 피드백이 있어요
+                  아직 생성되지 않은 월간 vivid가 있어요
                 </h3>
                 <p
                   style={{
@@ -213,7 +213,7 @@ export function MonthlyCandidatesSection({
                     lineHeight: "1.5",
                   }}
                 >
-                  {candidatesForCreation.length}개의 월간 피드백을 생성할 수
+                  {candidatesForCreation.length}개의 월간 vivid를 생성할 수
                   있어요. 기록을 통해 나를 이해하고, 나답게 성장하는 시간을
                   가져보세요.
                 </p>
@@ -233,7 +233,7 @@ export function MonthlyCandidatesSection({
         </div>
       </div>
 
-      {/* 생성 가능한 월간 피드백 리스트 (드롭다운 애니메이션) */}
+      {/* 생성 가능한 월간 vivid 리스트 (드롭다운 애니메이션) */}
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
         style={{

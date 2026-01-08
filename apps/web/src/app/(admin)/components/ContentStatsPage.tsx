@@ -195,19 +195,19 @@ export function ContentStatsPage() {
       {/* 요약 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <StatsCard
-          title="일간 피드백"
+          title="데일리 vivid"
           value={totalDaily.toLocaleString()}
           description={`${
             period === "day" ? "일별" : period === "week" ? "주별" : "월별"
           } 생성 건수`}
         />
         <StatsCard
-          title="주간 피드백"
+          title="주간 vivid"
           value={totalWeekly.toLocaleString()}
           description={`${period === "week" ? "주별" : "월별"} 생성 건수`}
         />
         <StatsCard
-          title="월간 피드백"
+          title="월간 vivid"
           value={totalMonthly.toLocaleString()}
           description="월별 생성 건수"
         />
@@ -224,7 +224,7 @@ export function ContentStatsPage() {
           className="text-xl font-semibold mb-4"
           style={{ color: COLORS.text.primary }}
         >
-          일간 피드백 생성 추이
+          데일리 vivid 생성 추이
         </h2>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={getDailyChartData()}>
@@ -265,7 +265,7 @@ export function ContentStatsPage() {
           className="text-xl font-semibold mb-4"
           style={{ color: COLORS.text.primary }}
         >
-          주간 피드백 생성 추이
+          주간 vivid 생성 추이
         </h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={getWeeklyChartData()}>
@@ -298,7 +298,7 @@ export function ContentStatsPage() {
           className="text-xl font-semibold mb-4"
           style={{ color: COLORS.text.primary }}
         >
-          월간 피드백 생성 추이
+          월간 vivid 생성 추이
         </h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={getMonthlyChartData()}>
