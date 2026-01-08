@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className="antialiased">
         <JournalProvider>
           <div className="min-h-screen" style={{ backgroundColor: "#e4e2dd" }}>
-            <main className="pb-20">{children}</main>
+            <main>{children}</main>
             <BottomNavigation />
             <GlobalModals />
           </div>

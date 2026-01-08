@@ -1,32 +1,13 @@
-import type {
-  NarrativeOverview,
-  EmotionOverview,
-  InsightOverview,
-  VisionOverview,
-  FeedbackOverview,
-  MetaOverview,
-} from "@/types/daily-feedback";
+import type { DailyFeedbackRow } from "@/types/daily-feedback";
 
 /**
  * 월간 피드백 생성을 위한 일일 피드백 타입
- * (weekly feedback에서 변환된 형태 또는 확장된 형태)
+ * (vivid_report와 emotion_report만 포함)
  */
-export type DailyFeedbackForMonthly = Array<{
-  report_date: string;
-  narrative_overview?: NarrativeOverview | null;
-  emotion_overview?: EmotionOverview | null;
-  insight_overview?: InsightOverview | null;
-  vision_overview?:
-    | (VisionOverview & { reminder_sentence?: string | null })
-    | null;
-  feedback_overview?: FeedbackOverview | null;
-  meta_overview?:
-    | (MetaOverview & {
-        growth_point?: string | null;
-        adjustment_point?: string | null;
-      })
-    | null;
-}>;
+export type DailyFeedbackForMonthly = Pick<
+  DailyFeedbackRow,
+  "report_date" | "day_of_week" | "vivid_report" | "emotion_report"
+>[];
 
 /**
  * 월간 피드백 생성을 위한 프롬프트 생성
@@ -98,53 +79,39 @@ export function buildMonthlyFeedbackPrompt(
       (feedback: DailyFeedbackForMonthly[number], idx: number) => {
         prompt += `\n[일일 피드백 ${idx + 1}]\n`;
 
-        // integrity_score
-        if (
-          feedback.narrative_overview?.integrity_score !== null &&
-          feedback.narrative_overview?.integrity_score !== undefined
-        ) {
-          prompt += `통합 점수: ${feedback.narrative_overview.integrity_score}/10\n`;
-        }
-
-        // narrative_overview
-        if (feedback.narrative_overview) {
-          const narrative = feedback.narrative_overview as {
-            narrative_summary?: string;
-            narrative?: string;
-            keywords?: string[];
-          };
-          if (narrative.narrative_summary) {
-            prompt += `요약: ${narrative.narrative_summary}\n`;
+        // vivid_report와 emotion_report만 사용
+        if (feedback.vivid_report) {
+          const vivid = feedback.vivid_report;
+          if (vivid.current_summary) {
+            prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
           }
-          if (narrative.narrative) {
-            prompt += `이야기: ${narrative.narrative.substring(0, 200)}...\n`;
+          if (vivid.future_summary) {
+            prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
           }
           if (
-            Array.isArray(narrative.keywords) &&
-            narrative.keywords.length > 0
+            Array.isArray(vivid.current_keywords) &&
+            vivid.current_keywords.length > 0
           ) {
-            prompt += `키워드: ${narrative.keywords.join(", ")}\n`;
+            prompt += `오늘의 비비드 키워드: ${vivid.current_keywords.join(", ")}\n`;
+          }
+          if (
+            Array.isArray(vivid.future_keywords) &&
+            vivid.future_keywords.length > 0
+          ) {
+            prompt += `기대하는 모습 키워드: ${vivid.future_keywords.join(", ")}\n`;
+          }
+          if (vivid.alignment_score !== null && vivid.alignment_score !== undefined) {
+            prompt += `일치도 점수: ${vivid.alignment_score}\n`;
           }
         }
 
-        // emotion_overview
-        if (feedback.emotion_overview) {
-          const emotion = feedback.emotion_overview as {
-            ai_mood_valence?: number | null;
-            ai_mood_arousal?: number | null;
-            emotion_quadrant?: string;
-            dominant_emotion?: string;
-          };
-          if (
-            emotion.ai_mood_valence !== null &&
-            emotion.ai_mood_valence !== undefined
-          ) {
+        // emotion_report
+        if (feedback.emotion_report) {
+          const emotion = feedback.emotion_report;
+          if (emotion.ai_mood_valence !== null && emotion.ai_mood_valence !== undefined) {
             prompt += `감정 쾌-불쾌: ${emotion.ai_mood_valence}\n`;
           }
-          if (
-            emotion.ai_mood_arousal !== null &&
-            emotion.ai_mood_arousal !== undefined
-          ) {
+          if (emotion.ai_mood_arousal !== null && emotion.ai_mood_arousal !== undefined) {
             prompt += `감정 각성-에너지: ${emotion.ai_mood_arousal}\n`;
           }
           if (emotion.emotion_quadrant) {
@@ -153,81 +120,11 @@ export function buildMonthlyFeedbackPrompt(
           if (emotion.dominant_emotion) {
             prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
           }
-        }
-
-        // insight_overview
-        if (feedback.insight_overview) {
-          const insight = feedback.insight_overview as {
-            core_insight?: string;
-            meta_question?: string;
-          };
-          if (insight.core_insight) {
-            prompt += `핵심 인사이트: ${insight.core_insight}\n`;
-          }
-          if (insight.meta_question) {
-            prompt += `메타 질문: ${insight.meta_question}\n`;
-          }
-        }
-
-        // vision_overview
-        if (feedback.vision_overview) {
-          const vision = feedback.vision_overview as {
-            vision_summary?: string;
-            vision_keywords?: string[];
-            reminder_sentence?: string;
-          };
-          if (vision.vision_summary) {
-            prompt += `시각화 요약: ${vision.vision_summary.substring(
-              0,
-              150
-            )}...\n`;
-          }
           if (
-            Array.isArray(vision.vision_keywords) &&
-            vision.vision_keywords.length > 0
+            Array.isArray(emotion.emotion_curve) &&
+            emotion.emotion_curve.length > 0
           ) {
-            prompt += `시각화 키워드: ${vision.vision_keywords.join(", ")}\n`;
-          }
-          if (vision.reminder_sentence) {
-            prompt += `리마인더: ${vision.reminder_sentence}\n`;
-          }
-        }
-
-        // feedback_overview
-        if (feedback.feedback_overview) {
-          const feedbackData = feedback.feedback_overview as {
-            core_feedback?: string;
-            positives?: string[];
-            improvements?: string[];
-          };
-          if (feedbackData.core_feedback) {
-            prompt += `핵심 피드백: ${feedbackData.core_feedback}\n`;
-          }
-          if (
-            Array.isArray(feedbackData.positives) &&
-            feedbackData.positives.length > 0
-          ) {
-            prompt += `긍정적 측면: ${feedbackData.positives.join(", ")}\n`;
-          }
-          if (
-            Array.isArray(feedbackData.improvements) &&
-            feedbackData.improvements.length > 0
-          ) {
-            prompt += `개선점: ${feedbackData.improvements.join(", ")}\n`;
-          }
-        }
-
-        // meta_overview
-        if (feedback.meta_overview) {
-          const meta = feedback.meta_overview as {
-            growth_point?: string;
-            adjustment_point?: string;
-          };
-          if (meta.growth_point) {
-            prompt += `성장 포인트: ${meta.growth_point}\n`;
-          }
-          if (meta.adjustment_point) {
-            prompt += `조정 포인트: ${meta.adjustment_point}\n`;
+            prompt += `감정 곡선: ${emotion.emotion_curve.join(" → ")}\n`;
           }
         }
       }

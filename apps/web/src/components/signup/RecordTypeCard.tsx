@@ -20,14 +20,14 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
   },
   {
     id: "emotion",
-    title: "감정 기록",
+    title: "감정",
     description:
       "일상중에 떠오르는 감정에 대한 기록, 감정 위주의 기록을 하는 사람들에게 적합",
     icon: "💭",
   },
   {
     id: "dream",
-    title: "VIVID 기록",
+    title: "VIVID",
     description: "살아가면서 이루고 싶은 꿈, 혹은 목표를 향한 기록",
     icon: "🎯",
   },

@@ -19,24 +19,39 @@ export function buildVisionReportPrompt(
 
     const dr = df.vivid_report;
     if (dr) {
-      if (dr.summary) {
-        prompt += `비전 요약: ${dr.summary}\n`;
+      // 오늘의 VIVID (현재 모습)
+      if (dr.current_summary) {
+        prompt += `오늘의 비비드 요약: ${dr.current_summary}\n`;
       }
-      if (dr.vision_self) {
-        prompt += `자기 평가: ${dr.vision_self}\n`;
+      if (dr.current_evaluation) {
+        prompt += `오늘의 비비드 평가: ${dr.current_evaluation}\n`;
       }
-      if (Array.isArray(dr.vision_keywords) && dr.vision_keywords.length > 0) {
-        prompt += `비전 키워드: ${dr.vision_keywords.join(", ")}\n`;
+      if (Array.isArray(dr.current_keywords) && dr.current_keywords.length > 0) {
+        prompt += `오늘의 비비드 키워드: ${dr.current_keywords.join(", ")}\n`;
       }
-      if (dr.vision_ai_feedback) {
-        prompt += `AI 피드백: ${dr.vision_ai_feedback}\n`;
+
+      // 앞으로의 나의 모습 (미래 비전)
+      if (dr.future_summary) {
+        prompt += `기대하는 모습 요약: ${dr.future_summary}\n`;
       }
-      // Pro 전용 필드
-      if (Array.isArray(dr.dream_goals) && dr.dream_goals.length > 0) {
-        prompt += `꿈/목표: ${dr.dream_goals.join(", ")}\n`;
+      if (dr.future_evaluation) {
+        prompt += `기대하는 모습 평가: ${dr.future_evaluation}\n`;
       }
-      if (Array.isArray(dr.dreamer_traits) && dr.dreamer_traits.length > 0) {
-        prompt += `꿈꾸는 자 특성: ${dr.dreamer_traits.join(", ")}\n`;
+      if (Array.isArray(dr.future_keywords) && dr.future_keywords.length > 0) {
+        prompt += `기대하는 모습 키워드: ${dr.future_keywords.join(", ")}\n`;
+      }
+
+      // 일치도 분석
+      if (dr.alignment_score !== null && dr.alignment_score !== undefined) {
+        prompt += `일치도 점수: ${dr.alignment_score}\n`;
+      }
+
+      // 사용자 특성 분석
+      if (Array.isArray(dr.user_characteristics) && dr.user_characteristics.length > 0) {
+        prompt += `기록을 쓰는 사람의 특징: ${dr.user_characteristics.join(", ")}\n`;
+      }
+      if (Array.isArray(dr.aspired_traits) && dr.aspired_traits.length > 0) {
+        prompt += `지향하는 모습: ${dr.aspired_traits.join(", ")}\n`;
       }
     }
 

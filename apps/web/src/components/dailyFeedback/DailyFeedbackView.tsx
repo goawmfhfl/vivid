@@ -1,6 +1,5 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   useGetDailyFeedback,
@@ -19,7 +18,6 @@ import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
-import { TestPanel } from "./TestPanel";
 
 type DailyFeedbackViewProps = {
   date?: string;
@@ -62,17 +60,13 @@ export function DailyFeedbackView({
   const refetch = isValidId ? refetchById : refetchByDate;
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
-  const { isPro: subscriptionIsPro } = useSubscription();
-  const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
-
-  // 테스트 모드가 활성화되어 있으면 테스트 값을 사용, 아니면 실제 구독 상태 사용
-  const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
+  const { isPro } = useSubscription();
 
   if (isLoading) {
     return (
       <div
-        className="min-h-screen pb-24"
-        style={{ backgroundColor: "#FAFAF8" }}
+        className="min-h-screen"
+        style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
       >
         <div className="max-w-3xl mx-auto px-4 py-6">
           <Button
@@ -99,8 +93,8 @@ export function DailyFeedbackView({
   if (error) {
     return (
       <div
-        className="min-h-screen pb-24"
-        style={{ backgroundColor: "#FAFAF8" }}
+        className="min-h-screen"
+        style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
       >
         <div className="max-w-3xl mx-auto px-4 py-6">
           <Button
@@ -152,8 +146,8 @@ export function DailyFeedbackView({
 
   return (
     <div
-      className="min-h-screen pb-24"
-      style={{ backgroundColor: COLORS.background.base }}
+      className="min-h-screen"
+      style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
     >
       <div
         className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
@@ -232,7 +226,7 @@ export function DailyFeedbackView({
             </div>
           </ScrollAnimation>
         )}
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-4 pb-32">
           <Button
             onClick={() => router.push("/")}
             className="rounded-full px-8 py-6"
@@ -245,15 +239,6 @@ export function DailyFeedbackView({
           </Button>
         </div>
       </div>
-
-      {/* 개발 환경 테스트 패널 */}
-      {view && (
-        <TestPanel
-          view={view}
-          isPro={isPro}
-          onTogglePro={(newIsPro) => setTestIsPro(newIsPro)}
-        />
-      )}
     </div>
   );
 }

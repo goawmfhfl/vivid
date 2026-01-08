@@ -4,12 +4,15 @@ import { Home as HomeIcon, BarChart3, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { shouldShowBottomNav } from "@/lib/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { COLORS } from "@/lib/design-system";
 
 export function BottomNavigation() {
   const pathname = usePathname();
   const [isErrorPage, setIsErrorPage] = useState(false);
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     // 에러 페이지나 404 페이지 감지
@@ -30,11 +33,49 @@ export function BottomNavigation() {
     return () => observer.disconnect();
   }, []);
 
+  // 스크롤 이벤트 핸들러 (모든 페이지에서 동작)
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollThreshold = 10; // 최상단 판단 임계값
+      const scrollDelta = 5; // 스크롤 방향 감지를 위한 최소 변화량
+
+      // 최상단 여부 확인
+      setIsAtTop(currentScrollY < scrollThreshold);
+
+      // 스크롤 방향 확인 (최소 변화량 이상일 때만)
+      const scrollDifference = currentScrollY - lastScrollY.current;
+      
+      if (scrollDifference > scrollDelta && currentScrollY > scrollThreshold) {
+        // 아래로 스크롤 중 (임계값 이상)
+        setIsScrolledDown(true);
+      } else if (scrollDifference < -scrollDelta) {
+        // 위로 스크롤 중
+        setIsScrolledDown(false);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    // 초기 스크롤 위치 설정
+    lastScrollY.current = window.scrollY;
+    setIsAtTop(window.scrollY < 10);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const isVisible = shouldShowBottomNav(pathname ?? "") && !isErrorPage;
 
   if (!isVisible) {
     return null;
   }
+
+  // 스크롤 애니메이션 적용
+  const shouldHide = isScrolledDown && !isAtTop;
 
   const navItems = [
     {
@@ -75,6 +116,8 @@ export function BottomNavigation() {
         `,
         overflow: "hidden",
         zIndex: 100,
+        transform: shouldHide ? "translateY(100%)" : "translateY(0)",
+        transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         // 종이 질감 배경 패턴
         backgroundImage: `
           /* 가로 줄무늬 (프로젝트 그린 톤) */

@@ -9,17 +9,17 @@ import {
   Zap,
 } from "lucide-react";
 import { Card } from "../ui/card";
-import { ScrollingKeywords } from "../ui/ScrollingKeywords";
 import { SectionProps } from "./types";
 import {
   COLORS,
   TYPOGRAPHY,
-  SPACING,
-  CARD_STYLES,
-  SHADOWS,
-  TRANSITIONS,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
+import {
+  SectionHeader,
+  ContentCard,
+  KeywordCard,
+} from "../common/feedback";
 
 export function VisionSection({ view, isPro = false }: SectionProps) {
   const hasCurrentData = !!(
@@ -46,176 +46,52 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
   return (
     <div className="mb-16">
       {/* 메인 헤더 */}
-      <div className="flex items-center gap-4 mb-10">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative overflow-hidden group"
-          style={{
-            background: "linear-gradient(135deg, #E5B96B 0%, #D4A85A 100%)",
-            boxShadow: SHADOWS.elevation3,
-          }}
-        >
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              background:
-                "radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%)",
-            }}
-          />
-          <Target className="w-6 h-6 text-white relative z-10" />
-        </div>
-        <div>
-          <h2
-            className={cn(TYPOGRAPHY.h1.fontSize, TYPOGRAPHY.h1.fontWeight, "mb-2")}
-            style={{ color: COLORS.text.primary }}
-          >
-            오늘의 VIVID
-          </h2>
-          <p
-            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-            style={{ color: COLORS.text.secondary }}
-          >
-            기륵올 통해, 나다운 삶을 선명하게
-          </p>
-        </div>
-      </div>
+      <SectionHeader
+        icon={Target}
+        iconGradient="#E5B96B"
+        title="오늘의 VIVID"
+        description="기륵올 통해, 나다운 삶을 선명하게"
+      />
 
       {/* 📝 오늘의 VIVID (현재 모습) */}
       {hasCurrentData && (
         <div className="mb-12">
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* 오늘의 비비드 요약 */}
             {view.current_summary && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${currentColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${currentColor}30`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
-                }}
-              >
-                {/* 배경 장식 */}
-                <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle, ${currentColor} 0%, transparent 70%)`,
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        backgroundColor: `${currentColor}20`,
-                        border: `1.5px solid ${currentColor}40`,
-                      }}
-                    >
-                      <Sparkles className="w-4 h-4" style={{ color: currentColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      오늘의 비비드 요약
-                    </p>
-                  </div>
-                  <p
-                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {view.current_summary}
-                  </p>
-                </div>
-              </Card>
+              <ContentCard
+                icon={Sparkles}
+                iconColor={currentColor}
+                label="오늘의 비비드 요약"
+                content={view.current_summary}
+                gradientColor="229, 185, 107"
+              />
             )}
 
             {/* 오늘의 비비드 평가 */}
             {view.current_evaluation && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${currentColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${currentColor}30`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
-                }}
-              >
-                {/* 배경 장식 */}
-                <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle, ${currentColor} 0%, transparent 70%)`,
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        backgroundColor: `${currentColor}20`,
-                        border: `1.5px solid ${currentColor}40`,
-                      }}
-                    >
-                      <TrendingUp className="w-4 h-4" style={{ color: currentColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      오늘의 비비드 평가
-                    </p>
-                  </div>
-                  <p
-                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {view.current_evaluation}
-                  </p>
-                </div>
-              </Card>
+              <ContentCard
+                icon={TrendingUp}
+                iconColor={currentColor}
+                label="비비드 AI 평가"
+                content={view.current_evaluation}
+                gradientColor="229, 185, 107"
+              />
             )}
 
             {/* 오늘의 비비드 키워드 */}
             {view.current_keywords && view.current_keywords.length > 0 && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${currentColor}08 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${currentColor}25`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation1,
-                }}
-              >
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{
-                        backgroundColor: `${currentColor}20`,
-                        border: `1.5px solid ${currentColor}40`,
-                      }}
-                    >
-                      <Zap className="w-4 h-4" style={{ color: currentColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      오늘의 비비드 키워드
-                    </p>
-                  </div>
-                  <div className="-mx-2">
-                    <ScrollingKeywords keywords={view.current_keywords} />
-                  </div>
-                </div>
-              </Card>
+              <KeywordCard
+                icon={Zap}
+                iconColor={currentColor}
+                label="오늘의 비비드 키워드"
+                keywords={view.current_keywords}
+                gradientColor="229, 185, 107"
+                badgeColor="rgba(229, 185, 107, 0.15)"
+                badgeTextColor="#B8860B"
+                duration={15}
+              />
             )}
           </div>
         </div>
@@ -242,139 +118,41 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
             </h3>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* 기대하는 모습 요약 */}
             {view.future_summary && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${futureColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${futureColor}30`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
-                }}
-              >
-                {/* 배경 장식 */}
-                <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle, ${futureColor} 0%, transparent 70%)`,
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        backgroundColor: `${futureColor}20`,
-                        border: `1.5px solid ${futureColor}40`,
-                      }}
-                    >
-                      <Sparkles className="w-4 h-4" style={{ color: futureColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      기대하는 모습 요약
-                    </p>
-                  </div>
-                  <p
-                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {view.future_summary}
-                  </p>
-                </div>
-              </Card>
+              <ContentCard
+                icon={Sparkles}
+                iconColor={futureColor}
+                label="기대하는 모습 요약"
+                content={view.future_summary}
+                gradientColor="163, 191, 217"
+              />
             )}
 
             {/* 기대하는 모습 평가 */}
             {view.future_evaluation && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${futureColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${futureColor}30`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
-                }}
-              >
-                {/* 배경 장식 */}
-                <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle, ${futureColor} 0%, transparent 70%)`,
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        backgroundColor: `${futureColor}20`,
-                        border: `1.5px solid ${futureColor}40`,
-                      }}
-                    >
-                      <TrendingUp className="w-4 h-4" style={{ color: futureColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      기대하는 모습 평가
-                    </p>
-                  </div>
-                  <p
-                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {view.future_evaluation}
-                  </p>
-                </div>
-              </Card>
+              <ContentCard
+                icon={TrendingUp}
+                iconColor={futureColor}
+                label="비비드 AI 평가"
+                content={view.future_evaluation}
+                gradientColor="163, 191, 217"
+              />
             )}
 
             {/* 기대하는 모습 키워드 */}
             {view.future_keywords && view.future_keywords.length > 0 && (
-              <Card
-                className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, ${futureColor}08 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${futureColor}25`,
-                  borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation1,
-                }}
-              >
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{
-                        backgroundColor: `${futureColor}20`,
-                        border: `1.5px solid ${futureColor}40`,
-                      }}
-                    >
-                      <Zap className="w-4 h-4" style={{ color: futureColor }} />
-                    </div>
-                    <p
-                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      기대하는 모습 키워드
-                    </p>
-                  </div>
-                  <div className="-mx-2">
-                    <ScrollingKeywords keywords={view.future_keywords} />
-                  </div>
-                </div>
-              </Card>
+              <KeywordCard
+                icon={Zap}
+                iconColor={futureColor}
+                label="기대하는 모습 키워드"
+                keywords={view.future_keywords}
+                gradientColor="163, 191, 217"
+                badgeColor="rgba(163, 191, 217, 0.15)"
+                badgeTextColor="#5A7A9A"
+                duration={15}
+              />
             )}
           </div>
         </div>
@@ -402,20 +180,26 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
           </div>
           <Card
             className={cn(
-              "p-8 sm:p-10 relative overflow-hidden group transition-all duration-300 hover:shadow-xl"
+              "p-6 sm:p-7 relative overflow-hidden group transition-all duration-300 hover:shadow-xl"
             )}
             style={{
-              background: `linear-gradient(135deg, ${alignmentColor}12 0%, ${COLORS.background.card} 100%)`,
-              border: `1.5px solid ${alignmentColor}30`,
+              background: `linear-gradient(135deg, rgba(127, 143, 122, 0.12) 0%, rgba(127, 143, 122, 0.06) 50%, rgb(255, 255, 255) 100%)`,
+              border: `1.5px solid rgba(127, 143, 122, 0.25)`,
               borderRadius: "20px",
-              boxShadow: SHADOWS.elevation2,
+              boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(127, 143, 122, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)`,
             }}
           >
             {/* 배경 장식 */}
             <div
-              className="absolute top-0 right-0 w-64 h-64 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
+              className="absolute top-0 right-0 w-64 h-64 opacity-4 group-hover:opacity-6 transition-opacity duration-300 pointer-events-none"
               style={{
-                background: `radial-gradient(circle, ${alignmentColor} 0%, transparent 70%)`,
+                background: `radial-gradient(circle at 80% 20%, rgba(127, 143, 122, 0.15) 0%, transparent 60%)`,
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 w-48 h-48 opacity-3 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at 20% 80%, rgba(127, 143, 122, 0.1) 0%, transparent 50%)`,
               }}
             />
             <div className="relative z-10">
@@ -436,48 +220,39 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
                   일치도 점수
                 </p>
               </div>
-              <div className="flex items-center gap-6 mb-4">
-                <div
-                  className={cn(TYPOGRAPHY.number.large.fontSize, TYPOGRAPHY.number.large.fontWeight)}
-                  style={{
-                    color: alignmentColor,
-                    textShadow: `0 2px 8px ${alignmentColor}20`,
-                  }}
-                >
-                  {view.alignment_score}
-                </div>
-                <div className="flex-1">
+              <div className="mb-4">
+                <div className="flex items-center gap-4 mb-3">
                   <div
-                    className="h-8 rounded-full overflow-hidden relative"
+                    className={cn(TYPOGRAPHY.number.large.fontSize, TYPOGRAPHY.number.large.fontWeight)}
                     style={{
-                      backgroundColor: COLORS.background.hover,
-                      boxShadow: "inset 0 2px 6px rgba(0,0,0,0.08)",
+                      color: alignmentColor,
+                      textShadow: `0 2px 8px ${alignmentColor}20`,
                     }}
                   >
-                    <div
-                      className="h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-3 relative"
-                      style={{
-                        width: `${view.alignment_score}%`,
-                        background: `linear-gradient(90deg, ${alignmentColor} 0%, ${alignmentColor}CC 100%)`,
-                        boxShadow: `0 2px 8px ${alignmentColor}40`,
-                      }}
-                    >
-                      {view.alignment_score && view.alignment_score >= 15 && (
-                        <span
-                          className="text-xs font-bold"
-                          style={{ color: COLORS.text.white }}
-                        >
-                          {view.alignment_score}%
-                        </span>
-                      )}
-                    </div>
+                    {view.alignment_score}
+                  </div>
+                  <div
+                    className={cn(TYPOGRAPHY.h4.fontSize, "font-medium")}
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    / 100
                   </div>
                 </div>
                 <div
-                  className={cn(TYPOGRAPHY.h4.fontSize, "font-medium")}
-                  style={{ color: COLORS.text.tertiary, minWidth: "50px" }}
+                  className="h-10 rounded-full overflow-hidden relative"
+                  style={{
+                    backgroundColor: COLORS.background.hover,
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.08)",
+                  }}
                 >
-                  / 100
+                  <div
+                    className="h-full rounded-full transition-all duration-1000 ease-out relative"
+                    style={{
+                      width: `${view.alignment_score}%`,
+                      background: `linear-gradient(90deg, ${alignmentColor} 0%, ${alignmentColor}CC 100%)`,
+                      boxShadow: `0 2px 8px ${alignmentColor}40`,
+                    }}
+                  />
                 </div>
               </div>
               <p
@@ -513,25 +288,31 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
             </h3>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* 기록을 쓰는 사람의 특징 */}
             {hasUserCharacteristics && (
               <Card
                 className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                  "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
                 )}
                 style={{
-                  background: `linear-gradient(135deg, ${alignmentColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${alignmentColor}30`,
+                  background: `linear-gradient(135deg, rgba(127, 143, 122, 0.12) 0%, rgba(127, 143, 122, 0.06) 50%, rgb(255, 255, 255) 100%)`,
+                  border: `1.5px solid rgba(127, 143, 122, 0.25)`,
                   borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
+                  boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(127, 143, 122, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)`,
                 }}
               >
                 {/* 배경 장식 */}
                 <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
+                  className="absolute top-0 right-0 w-64 h-64 opacity-4 group-hover:opacity-6 transition-opacity duration-300 pointer-events-none"
                   style={{
-                    background: `radial-gradient(circle, ${alignmentColor} 0%, transparent 70%)`,
+                    background: `radial-gradient(circle at 80% 20%, rgba(127, 143, 122, 0.15) 0%, transparent 60%)`,
+                  }}
+                />
+                <div
+                  className="absolute bottom-0 left-0 w-48 h-48 opacity-3 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 20% 80%, rgba(127, 143, 122, 0.1) 0%, transparent 50%)`,
                   }}
                 />
                 <div className="relative z-10">
@@ -561,7 +342,7 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
                         />
                         <p
                           className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
-                          style={{ color: COLORS.text.primary }}
+                          style={{ color: "#1a1a1a" }}
                         >
                           {trait}
                         </p>
@@ -576,20 +357,26 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
             {hasAspiredTraits && (
               <Card
                 className={cn(
-                  "p-6 sm:p-8 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                  "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
                 )}
                 style={{
-                  background: `linear-gradient(135deg, ${futureColor}12 0%, ${COLORS.background.card} 100%)`,
-                  border: `1.5px solid ${futureColor}30`,
+                  background: `linear-gradient(135deg, rgba(163, 191, 217, 0.12) 0%, rgba(163, 191, 217, 0.06) 50%, rgb(255, 255, 255) 100%)`,
+                  border: `1.5px solid rgba(163, 191, 217, 0.25)`,
                   borderRadius: "20px",
-                  boxShadow: SHADOWS.elevation2,
+                  boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(163, 191, 217, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)`,
                 }}
               >
                 {/* 배경 장식 */}
                 <div
-                  className="absolute top-0 right-0 w-48 h-48 opacity-5 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"
+                  className="absolute top-0 right-0 w-64 h-64 opacity-8 group-hover:opacity-12 transition-opacity duration-300 pointer-events-none"
                   style={{
-                    background: `radial-gradient(circle, ${futureColor} 0%, transparent 70%)`,
+                    background: `radial-gradient(circle at 80% 20%, rgba(163, 191, 217, 0.25) 0%, transparent 60%)`,
+                  }}
+                />
+                <div
+                  className="absolute bottom-0 left-0 w-48 h-48 opacity-5 group-hover:opacity-8 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 20% 80%, rgba(163, 191, 217, 0.15) 0%, transparent 50%)`,
                   }}
                 />
                 <div className="relative z-10">

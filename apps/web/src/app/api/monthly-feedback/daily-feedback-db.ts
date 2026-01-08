@@ -4,14 +4,28 @@ import { API_ENDPOINTS } from "@/constants";
 import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
 
 /**
- * 날짜 범위로 daily-feedback 조회 (월간용)
+ * DailyFeedbackRow에서 vivid_report와 emotion_report만 추출
+ */
+function extractVividAndEmotionReports(
+  feedback: DailyFeedbackRow
+): Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report" | "emotion_report"> {
+  return {
+    report_date: feedback.report_date,
+    day_of_week: feedback.day_of_week,
+    vivid_report: feedback.vivid_report,
+    emotion_report: feedback.emotion_report,
+  };
+}
+
+/**
+ * 날짜 범위로 daily-feedback 조회 (월간용, vivid_report와 emotion_report만 포함)
  */
 export async function fetchDailyFeedbacksByMonth(
   supabase: SupabaseClient,
   userId: string,
   startDate: string,
   endDate: string
-): Promise<DailyFeedbackRow[]> {
+): Promise<Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report" | "emotion_report">[]> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.DAILY_FEEDBACK)
     .select("*")
@@ -25,10 +39,13 @@ export async function fetchDailyFeedbacksByMonth(
   }
 
   // 복호화 처리
-  return (data || []).map(
+  const decryptedFeedbacks = (data || []).map(
     (item) =>
       decryptDailyFeedback(
         item as unknown as { [key: string]: unknown }
       ) as unknown as DailyFeedbackRow
   );
+
+  // vivid_report와 emotion_report만 추출
+  return decryptedFeedbacks.map(extractVividAndEmotionReports);
 }
