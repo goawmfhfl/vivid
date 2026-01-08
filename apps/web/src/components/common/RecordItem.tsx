@@ -17,7 +17,6 @@ import {
 } from "@/lib/design-system";
 import {
   RECORD_TYPES,
-  RECORD_TYPE_COLORS,
   type RecordType,
 } from "../signup/RecordTypeCard";
 import { formatKSTTime } from "@/lib/date-utils";
@@ -35,9 +34,16 @@ export function RecordItem({
   onDelete,
   showActions = true,
 }: RecordItemProps) {
-  const recordType = (record.type as RecordType) || "daily";
-  const typeColors = RECORD_TYPE_COLORS[recordType];
+  const recordType = (record.type as RecordType) || "dream";
   const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
+
+  // 프로젝트 기본 색상 (타입별 색상 변경 없이 고정)
+  const defaultColors = {
+    background: COLORS.background.card,
+    border: COLORS.border.light,
+    lineColor: "rgba(196, 190, 178, 0.12)", // border.card 기반
+    overlay: "rgba(127, 143, 122, 0.08)", // primary.500 기반
+  };
 
   // 편집/삭제 기능이 있는지 확인
   const hasActions = showActions && (onEdit || onDelete);
@@ -46,8 +52,8 @@ export function RecordItem({
     <div
       className={`${SPACING.card.paddingSmall} ${CARD_STYLES.hover.transition} relative`}
       style={{
-        backgroundColor: typeColors.background,
-        border: `1.5px solid ${typeColors.border}`,
+        backgroundColor: defaultColors.background,
+        border: `1.5px solid ${defaultColors.border}`,
         borderRadius: "12px",
         boxShadow: `
           0 2px 8px rgba(0,0,0,0.04),
@@ -67,13 +73,13 @@ export function RecordItem({
             ${COLORS.border.card} 38px,
             transparent 38px
           ),
-          /* 가로 줄무늬 (타입별 색상) */
+          /* 가로 줄무늬 */
           repeating-linear-gradient(
             to bottom,
             transparent 0px,
             transparent 27px,
-            ${typeColors.lineColor} 27px,
-            ${typeColors.lineColor} 28px
+            ${defaultColors.lineColor} 27px,
+            ${defaultColors.lineColor} 28px
           ),
           /* 종이 텍스처 노이즈 */
           repeating-linear-gradient(
@@ -116,13 +122,13 @@ export function RecordItem({
         }}
       />
 
-      {/* 종이 질감 오버레이 (타입별 색상) */}
+      {/* 종이 질감 오버레이 */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
             radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${typeColors.overlay} 0%, transparent 40%)
+            radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
           `,
           mixBlendMode: "overlay",
           opacity: 0.5,
@@ -138,27 +144,17 @@ export function RecordItem({
         >
           <div className="flex items-center gap-2.5 flex-wrap">
             {typeInfo && (
-              <div className="flex items-center gap-1.5">
-                <span
-                  style={{
-                    fontSize: "0.95rem",
-                    lineHeight: "1",
-                  }}
-                >
-                  {typeInfo.icon}
-                </span>
-                <span
-                  className={TYPOGRAPHY.caption.fontSize}
-                  style={{
-                    color: COLORS.text.primary,
-                    fontWeight: "500",
-                    fontSize: "0.875rem",
-                    lineHeight: "1.2",
-                  }}
-                >
-                  {typeInfo.title}
-                </span>
-              </div>
+              <span
+                className={TYPOGRAPHY.caption.fontSize}
+                style={{
+                  color: COLORS.text.primary,
+                  fontWeight: "500",
+                  fontSize: "0.875rem",
+                  lineHeight: "1.2",
+                }}
+              >
+                {typeInfo.title}
+              </span>
             )}
             <span
               className={TYPOGRAPHY.caption.fontSize}

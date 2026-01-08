@@ -12,6 +12,8 @@ import { Checkbox } from "../ui/checkbox";
 import { useRouter } from "next/navigation";
 import { FindEmailDialog } from "./FindEmailDialog";
 import { FindPasswordDialog } from "./FindPasswordDialog";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
 const EMAIL_STORAGE_KEY = "login-saved-email";
 const REMEMBER_EMAIL_KEY = "login-remember-email";
@@ -109,10 +111,10 @@ export function LoginView() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-8"
-      style={{ backgroundColor: "#FAFAF8" }}
+      style={{ backgroundColor: COLORS.background.base }}
     >
       <div className="w-full max-w-md">
-        <AuthHeader title="Grit" subtitle="기록하면, 피드백이 따라옵니다." />
+        <AuthHeader subtitle="하루 10분 기록으로, 나를 선명하게" />
 
         {/* Form */}
         <form
@@ -125,15 +127,15 @@ export function LoginView() {
             <div
               className="p-4 rounded-lg flex items-center gap-2"
               style={{
-                backgroundColor: "#FEE2E2",
-                border: "1px solid #EF4444",
+                backgroundColor: COLORS.status.errorLight,
+                border: `1px solid ${COLORS.status.error}`,
               }}
             >
               <AlertCircle
                 className="w-5 h-5 flex-shrink-0"
-                style={{ color: "#EF4444" }}
+                style={{ color: COLORS.status.error }}
               />
-              <p style={{ color: "#991B1B", fontSize: "0.9rem" }}>
+              <p style={{ color: COLORS.status.errorDark, fontSize: "0.9rem" }}>
                 {errors.general}
               </p>
             </div>
@@ -178,8 +180,8 @@ export function LoginView() {
             />
             <label
               htmlFor="remember-email"
-              className="cursor-pointer"
-              style={{ color: "#4E4B46", fontSize: "0.9rem" }}
+              className={cn("cursor-pointer", TYPOGRAPHY.body.fontSize)}
+              style={{ color: COLORS.text.secondary }}
             >
               이메일 저장하기
             </label>
@@ -200,8 +202,8 @@ export function LoginView() {
             <button
               type="button"
               onClick={() => router.push("/signup")}
-              className="text-sm underline"
-              style={{ color: "#6B7A6F" }}
+              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              style={{ color: COLORS.brand.primary }}
             >
               계정이 없으신가요? 회원가입하기
             </button>
@@ -211,17 +213,16 @@ export function LoginView() {
             <div className="absolute inset-0 flex items-center">
               <div
                 className="w-full border-t"
-                style={{ borderColor: "#EFE9E3" }}
+                style={{ borderColor: COLORS.border.light }}
               />
             </div>
             <div className="relative flex justify-center">
               <span
-                className="px-4"
+                className={cn("px-4", TYPOGRAPHY.caption.fontSize)}
                 style={{
-                  backgroundColor: "#FAFAF8",
-                  color: "#4E4B46",
+                  backgroundColor: COLORS.background.base,
+                  color: COLORS.text.secondary,
                   opacity: 0.6,
-                  fontSize: "0.8rem",
                 }}
               >
                 간편 로그인
@@ -258,17 +259,17 @@ export function LoginView() {
             <button
               type="button"
               onClick={() => setFindEmailDialogOpen(true)}
-              className="text-sm underline"
-              style={{ color: "#6B7A6F" }}
+              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              style={{ color: COLORS.brand.primary }}
             >
               이메일 찾기
             </button>
-            <span style={{ color: "#6B7A6F" }}>|</span>
+            <span style={{ color: COLORS.brand.primary }}>|</span>
             <button
               type="button"
               onClick={() => setFindPasswordDialogOpen(true)}
-              className="text-sm underline"
-              style={{ color: "#6B7A6F" }}
+              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              style={{ color: COLORS.brand.primary }}
             >
               비밀번호 찾기
             </button>

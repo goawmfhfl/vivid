@@ -1,27 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { JournalProvider } from "./providers";
 import { BottomNavigation } from "../components/common/BottomNavigation";
 import { GlobalModals } from "../components/ui/modals/GlobalModals";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-});
-
 export const metadata: Metadata = {
-  title: "Today Journal",
+  title: "vivid",
   description: "오늘의 기록을 남기고 분석하는 일기 앱",
+  icons: {
+    icon: "/vivid-logo.png",
+    shortcut: "/vivid-logo.png",
+    apple: "/vivid-logo.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -38,11 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         <JournalProvider>
-          <div className="min-h-screen" style={{ backgroundColor: "#FAFAF8" }}>
+          <div className="min-h-screen" style={{ backgroundColor: "#e4e2dd" }}>
             <main className="pb-20">{children}</main>
             <BottomNavigation />
             <GlobalModals />

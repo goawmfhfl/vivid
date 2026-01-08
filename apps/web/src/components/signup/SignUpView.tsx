@@ -12,9 +12,9 @@ import { LoginInfoStep } from "./steps/LoginInfoStep";
 import { BasicProfileStep } from "./steps/BasicProfileStep";
 import { AdditionalInfoStep } from "./steps/AdditionalInfoStep";
 import { TermsStep } from "./steps/TermsStep";
-import { COLORS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SHADOWS } from "@/lib/design-system";
 import { ChevronLeft } from "lucide-react";
-import type { RecordType } from "@/components/signup/RecordTypeCard";
+import { cn } from "@/lib/utils";
 const TOTAL_STEPS = 4;
 
 export function SignUpView({
@@ -46,7 +46,6 @@ export function SignUpView({
     agreeMarketing: false,
     birthYear: "",
     gender: "",
-    recordTypes: [] as RecordType[],
   });
 
   // 에러 상태
@@ -58,7 +57,6 @@ export function SignUpView({
     birthYear?: string;
     gender?: string;
     terms?: string;
-    recordTypes?: string;
   }>({});
 
   // 모달 상태
@@ -91,7 +89,7 @@ export function SignUpView({
   // 폼 데이터 업데이트 헬퍼
   const updateFormData = (
     field: keyof typeof formData,
-    value: string | boolean | string[] | RecordType[]
+    value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -168,10 +166,6 @@ export function SignUpView({
       if (!formData.gender) {
         newErrors.gender = "성별을 선택해주세요.";
       }
-
-      if (formData.recordTypes.length !== 2) {
-        newErrors.recordTypes = "기록 타입을 2개 선택해주세요.";
-      }
     } else if (step === 4) {
       // 약관 동의 검증
       if (!formData.agreeTerms || !formData.agreeAI) {
@@ -227,7 +221,6 @@ export function SignUpView({
       agreeMarketing: formData.agreeMarketing,
       birthYear: formData.birthYear,
       gender: formData.gender,
-      recordTypes: formData.recordTypes,
       isSocialOnboarding,
     });
   };
@@ -249,10 +242,7 @@ export function SignUpView({
         formData.phone.replace(/\s/g, "").length >= 10
       );
     } else if (currentStep === 3) {
-      return (
-        Boolean(formData.birthYear && formData.gender) &&
-        formData.recordTypes.length === 2
-      );
+      return Boolean(formData.birthYear && formData.gender);
     } else if (currentStep === 4) {
       return formData.agreeTerms && formData.agreeAI;
     }
@@ -341,7 +331,6 @@ export function SignUpView({
                 <AdditionalInfoStep
                   birthYear={formData.birthYear}
                   gender={formData.gender}
-                  recordTypes={formData.recordTypes}
                   birthYearError={errors.birthYear}
                   genderError={errors.gender}
                   onBirthYearChange={(value) => {
@@ -351,23 +340,6 @@ export function SignUpView({
                   onGenderChange={(value) => {
                     updateFormData("gender", value);
                     clearFieldError("gender");
-                  }}
-                  onRecordTypeToggle={(type) => {
-                    const currentTypes = formData.recordTypes;
-                    const isSelected = currentTypes.includes(type);
-
-                    if (isSelected) {
-                      // 선택 해제
-                      updateFormData(
-                        "recordTypes",
-                        currentTypes.filter((t) => t !== type)
-                      );
-                    } else {
-                      // 선택 추가 (최대 2개)
-                      if (currentTypes.length < 2) {
-                        updateFormData("recordTypes", [...currentTypes, type]);
-                      }
-                    }
                   }}
                 />
               )}
@@ -414,17 +386,21 @@ export function SignUpView({
               <button
                 type="button"
                 onClick={handlePrev}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all hover:opacity-80 flex-shrink-0"
+                className={cn(
+                  "h-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl transition-all hover:opacity-80 flex-shrink-0 font-medium",
+                  TYPOGRAPHY.body.fontSize
+                )}
                 style={{
                   color: COLORS.text.secondary,
                   backgroundColor: COLORS.background.card,
                   border: `1.5px solid ${COLORS.border.light}`,
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
-                  minWidth: "100px",
+                  boxShadow: SHADOWS.elevation2,
+                  minWidth: "140px",
+                  lineHeight: "1.5",
                 }}
               >
                 <ChevronLeft className="h-4 w-4" />
-                <span className="text-sm font-medium">이전</span>
+                <span>이전</span>
               </button>
             )}
 

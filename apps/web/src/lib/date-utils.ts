@@ -87,7 +87,7 @@ export function getKSTWeekdayShort(date: Date = new Date()): string {
 /**
  * 환경 변수 확인 (클라이언트 사이드)
  */
-function isProduction(): boolean {
+function _isProduction(): boolean {
   if (typeof window === "undefined") {
     // 서버 사이드에서는 process.env 사용
     return process.env.NODE_ENV === "production";

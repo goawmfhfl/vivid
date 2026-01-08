@@ -80,7 +80,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           관리자 페이지
         </h1>
         <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
-          Grit Admin
+          vivid Admin
         </p>
       </div>
 

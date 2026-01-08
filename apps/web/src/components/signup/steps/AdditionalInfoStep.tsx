@@ -1,36 +1,24 @@
 import { Input } from "@/components/ui/Input";
 import { PaperCard } from "../PaperCard";
 import { COLORS } from "@/lib/design-system";
-import {
-  RecordTypeCard,
-  RECORD_TYPES,
-  type RecordType,
-} from "../RecordTypeCard";
 
 interface AdditionalInfoStepProps {
   birthYear: string;
   gender: string;
-  recordTypes: RecordType[];
   birthYearError?: string;
   genderError?: string;
   onBirthYearChange: (value: string) => void;
   onGenderChange: (value: string) => void;
-  onRecordTypeToggle: (type: RecordType) => void;
 }
 
 export function AdditionalInfoStep({
   birthYear,
   gender,
-  recordTypes,
   birthYearError,
   genderError,
   onBirthYearChange,
   onGenderChange,
-  onRecordTypeToggle,
 }: AdditionalInfoStepProps) {
-  const maxSelections = 2;
-  const isMaxSelected = recordTypes.length >= maxSelections;
-
   return (
     <PaperCard className="p-6 sm:p-8">
       <div className="mb-6">
@@ -38,10 +26,10 @@ export function AdditionalInfoStep({
           className="text-xl font-semibold mb-2"
           style={{ color: COLORS.text.primary }}
         >
-          맞춤형 피드백 정보
+          추가 정보
         </h2>
         <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
-          더 정교한 피드백을 위해 선택 정보를 입력해주세요.
+          개인화된 경험을 위해 추가 정보를 입력해주세요.
         </p>
       </div>
 
@@ -106,37 +94,6 @@ export function AdditionalInfoStep({
             {genderError && (
               <p className="mt-1 text-xs text-[#EF4444]">{genderError}</p>
             )}
-          </div>
-        </div>
-
-        {/* 기록 타입 선택 */}
-        <div>
-          <div className="mb-4">
-            <h3
-              className="text-base font-semibold mb-1"
-              style={{ color: COLORS.text.primary }}
-            >
-              기록 타입 선택
-            </h3>
-            <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-              나에게 맞는 기록 타입을 2개 선택해주세요. ({recordTypes.length}/
-              {maxSelections})
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {RECORD_TYPES.map((type) => {
-              const isSelected = recordTypes.includes(type.id);
-              return (
-                <RecordTypeCard
-                  key={type.id}
-                  type={type}
-                  isSelected={isSelected}
-                  isDisabled={isMaxSelected && !isSelected}
-                  onClick={() => onRecordTypeToggle(type.id)}
-                />
-              );
-            })}
           </div>
         </div>
       </div>

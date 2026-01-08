@@ -7,82 +7,144 @@
 // 색상 팔레트
 // ============================================
 export const COLORS = {
+  // Primary Colors - Sage / Olive Green (브랜드 그린 계열)
+  primary: {
+    50: "#f1f2ec",
+    100: "#e4e6d9",
+    200: "#d3d9c4",
+    300: "#b9c0a3",
+    400: "#9da688",
+    500: "#7f8f7a", // 메인 세이지 그린
+    600: "#6f7f68",
+    700: "#5f6b3a", // 포인트 올리브 그린
+    800: "#4b5530",
+    900: "#343b22",
+  },
+  // Secondary Colors - Mustard Yellow (옐로우 포인트)
+  secondary: {
+    50: "#f6f0df",
+    100: "#ecddb8",
+    200: "#e0c68a",
+    300: "#d4af5c",
+    400: "#c89c42",
+    500: "#b38e3a", // 머스터드 옐로우 (포인트)
+    600: "#947331",
+    700: "#735828",
+    800: "#524020",
+    900: "#342918",
+  },
+  // Accent Colors - Dusty / Navy Blue (블루 & 네이비 포인트)
+  accent: {
+    50: "#eef2f5",
+    100: "#d8e0e9",
+    200: "#bcc8d7",
+    300: "#9caac1",
+    400: "#7f8fa9",
+    500: "#6f859c", // 더스티 블루
+    600: "#5e7085",
+    700: "#2e3a4f", // 네이비 블루
+    800: "#242d3e",
+    900: "#181f2b",
+  },
   // 텍스트 색상
   text: {
-    primary: "#333333",
-    secondary: "#4E4B46",
-    tertiary: "#6B7A6F",
-    muted: "#9CA3AF",
+    primary: "#2b2b2b",
+    secondary: "#4b4b4b",
+    tertiary: "#7a7a7a",
+    muted: "#9a9a9a", // 더 연한 회색 (비활성/보조 텍스트용)
+    inverse: "#f7f5f0",
     white: "#FFFFFF",
   },
   // 배경 색상
   background: {
-    base: "#FAFAF8",
-    card: "#FFFFFF",
-    cardGradient: "linear-gradient(135deg, #F5F7F5 0%, #F0F5F0 100%)",
-    hover: "#F3F4F6",
-    hoverLight: "#F9FAFB",
+    base: "#FAFAF8", // 메인 배경
+    secondary: "#d8d3c7",
+    card: "#f5f3ee",
+    cardGradient: "linear-gradient(135deg, #f5f3ee 0%, #FAFAF8 100%)",
+    cardElevated: "#ffffff",
+    hover: "#e0ddd5",
+    hoverLight: "#f5f3ee",
+  },
+  // Surface Colors (카드/모달 등)
+  surface: {
+    default: "#f5f3ee",
+    elevated: "#ffffff",
+    hover: "#e0ddd5",
   },
   // 테두리 색상
   border: {
-    default: "#E8E8E8",
-    light: "#EFE9E3",
-    card: "#E0E5E0",
-    input: "#E5E7EB",
+    default: "#c4beb2",
+    light: "#d8d3c7",
+    card: "#c4beb2",
+    input: "#c4beb2",
   },
-  // 브랜드 색상 (그린 계열)
+  // 브랜드 색상 (Primary 그린 계열을 브랜드로 매핑)
   brand: {
-    primary: "#6B7A6F", // 다크 그린
-    secondary: "#7C9A7C", // 미드 그린
-    light: "#A8BBA8", // 라이트 그린
-    dark: "#5A6B5A", // 더 다크 그린
+    primary: "#7f8f7a", // 세이지 그린
+    secondary: "#5f6b3a", // 올리브 그린
+    light: "#b9c0a3",
+    dark: "#4b5530",
   },
   // 상태 색상
   status: {
-    success: "#10B981",
-    error: "#DC2626",
-    warning: "#F59E0B",
-    info: "#3B82F6",
+    success: "#7f8f7a",
+    successLight: "#b9c0a3",
+    successDark: "#5f6b3a",
+    warning: "#b38e3a",
+    warningLight: "#d4af5c",
+    warningDark: "#735828",
+    error: "#b5674a", // 테리코타
+    errorLight: "#d58a6f",
+    errorDark: "#8b4a35",
+    info: "#6f859c", // 더스티 블루
   },
-  // 섹션별 컬러 (월간 피드백 리포트용)
+  // 섹션별 컬러 (월간 피드백 리포트용) - 새로운 색상 시스템 적용
   section: {
     summary: {
-      primary: "#6B7A6F",
-      gradient: "linear-gradient(135deg, #6B7A6F 0%, #5A6B5A 100%)",
-      light: "#6B7A6F20",
-      border: "#6B7A6F40",
+      primary: "#7f8f7a", // 세이지 그린
+      gradient: "linear-gradient(135deg, #7f8f7a 0%, #5f6b3a 100%)",
+      light: "#7f8f7a20",
+      border: "#7f8f7a40",
     },
     emotion: {
-      primary: "#7C9A7C",
-      gradient: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-      light: "#7C9A7C20",
-      border: "#7C9A7C40",
+      primary: "#b38e3a", // 머스터드 옐로우
+      gradient: "linear-gradient(135deg, #b38e3a 0%, #947331 100%)",
+      light: "#b38e3a20",
+      border: "#b38e3a40",
     },
     insight: {
-      primary: "#A8BBA8",
-      gradient: "linear-gradient(135deg, #A8BBA8 0%, #98AB98 100%)",
-      light: "#A8BBA820",
-      border: "#A8BBA840",
+      primary: "#6f859c", // 더스티 블루
+      gradient: "linear-gradient(135deg, #6f859c 0%, #5e7085 100%)",
+      light: "#6f859c20",
+      border: "#6f859c40",
     },
     feedback: {
-      primary: "#7C9A7C",
-      gradient: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-      light: "#7C9A7C20",
-      border: "#7C9A7C40",
+      primary: "#5f6b3a", // 올리브 그린
+      gradient: "linear-gradient(135deg, #5f6b3a 0%, #4b5530 100%)",
+      light: "#5f6b3a20",
+      border: "#5f6b3a40",
     },
     vision: {
-      primary: "#7C9A7C",
-      gradient: "linear-gradient(135deg, #7C9A7C 0%, #6B8A6B 100%)",
-      light: "#7C9A7C20",
-      border: "#7C9A7C40",
+      primary: "#2e3a4f", // 네이비 블루
+      gradient: "linear-gradient(135deg, #2e3a4f 0%, #242d3e 100%)",
+      light: "#2e3a4f20",
+      border: "#2e3a4f40",
     },
     conclusion: {
-      primary: "#6B7A6F",
-      gradient: "linear-gradient(135deg, #6B7A6F 0%, #5A6B5A 100%)",
-      light: "#6B7A6F20",
-      border: "#6B7A6F40",
+      primary: "#7f8f7a", // 세이지 그린
+      gradient: "linear-gradient(135deg, #7f8f7a 0%, #5f6b3a 100%)",
+      light: "#7f8f7a20",
+      border: "#7f8f7a40",
     },
   },
+} as const;
+
+// ============================================
+// 폰트 시스템
+// ============================================
+export const FONTS = {
+  sans: '"Pretendard", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  mono: '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
 } as const;
 
 // ============================================
@@ -278,14 +340,21 @@ export const ICON_BADGE_STYLES = {
 } as const;
 
 // ============================================
-// 그림자 시스템
+// 그림자 시스템 (Elevation System)
 // ============================================
 export const SHADOWS = {
-  sm: "0 1px 2px rgba(0,0,0,0.05)",
-  default: "0 2px 8px rgba(0,0,0,0.04)",
-  md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-  xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+  elevation0: "none",
+  elevation1: "0 1px 2px 0 rgb(0 0 0 / 0.3)",
+  elevation2: "0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4)",
+  elevation3: "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)",
+  elevation4: "0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4)",
+  elevation5: "0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5)",
+  // Legacy aliases for backward compatibility
+  sm: "0 1px 2px 0 rgb(0 0 0 / 0.3)",
+  default: "0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4)",
+  md: "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)",
+  lg: "0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4)",
+  xl: "0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5)",
 } as const;
 
 // ============================================

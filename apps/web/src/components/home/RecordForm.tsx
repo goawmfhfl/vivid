@@ -6,9 +6,9 @@ import { useCreateRecord } from "../../hooks/useRecords";
 import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   RECORD_TYPES,
-  RECORD_TYPE_COLORS,
   type RecordType,
 } from "../signup/RecordTypeCard";
 
@@ -18,35 +18,56 @@ interface RecordFormProps {
 }
 
 const STORAGE_KEY = "record-form-draft";
+const STORAGE_KEY_Q1 = "record-form-draft-q1";
+const STORAGE_KEY_Q2 = "record-form-draft-q2";
 
 export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const [content, setContent] = useState("");
+  const [q1Content, setQ1Content] = useState("");
+  const [q2Content, setQ2Content] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
+  const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
   const createRecordMutation = useCreateRecord();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollPositionRef = useRef<{ x: number; y: number } | null>(null);
   const isUserScrollingRef = useRef(false);
   const { data: currentUser } = useCurrentUser();
+  const { subscription } = useSubscription();
 
   // 날짜 상태 계산
   const todayIso = getKSTDateString();
   const targetDateIso = selectedDate || todayIso;
   const isFuture = targetDateIso > todayIso;
 
-  // 사용자의 recordTypes 가져오기 및 첫 번째 타입을 기본값으로 설정
-  useEffect(() => {
-    if (currentUser?.user_metadata?.recordTypes) {
-      const recordTypes = currentUser.user_metadata.recordTypes as string[];
-      if (recordTypes.length > 0 && !selectedType) {
-        setSelectedType(recordTypes[0] as RecordType);
-      }
-    } else if (!selectedType) {
-      // recordTypes가 없으면 기본값으로 "daily" 설정
-      setSelectedType("daily");
+  // 사용 가능한 기록 타입 가져오기
+  const getAllowedRecordTypes = useCallback((): RecordType[] => {
+    // 프로 플랜: VIVID 기록(dream) + 감정 기록(emotion) 가능
+    if (subscription?.isPro) {
+      return ["dream", "emotion"];
     }
-  }, [currentUser, selectedType]);
+    
+    // 프리 플랜: 사용자의 recordTypes 사용, 없으면 기본값 "daily"
+    if (currentUser?.user_metadata?.recordTypes) {
+      return currentUser.user_metadata.recordTypes as RecordType[];
+    }
+    
+    // 기본값: "daily"
+    return ["daily"];
+  }, [subscription, currentUser]);
+
+  // 첫 번째 타입을 기본값으로 설정
+  useEffect(() => {
+    const allowedTypes = getAllowedRecordTypes();
+    if (allowedTypes.length > 0 && !selectedType) {
+      setSelectedType(allowedTypes[0] as RecordType);
+    } else if (selectedType && !allowedTypes.includes(selectedType)) {
+      // 현재 선택된 타입이 허용되지 않으면 첫 번째 타입으로 변경
+      setSelectedType(allowedTypes[0] as RecordType);
+    }
+  }, [getAllowedRecordTypes, selectedType]);
 
   // localStorage에서 초기값 불러오기
   useEffect(() => {
@@ -54,6 +75,14 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
       const savedContent = localStorage.getItem(STORAGE_KEY);
       if (savedContent) {
         setContent(savedContent);
+      }
+      const savedQ1 = localStorage.getItem(STORAGE_KEY_Q1);
+      if (savedQ1) {
+        setQ1Content(savedQ1);
+      }
+      const savedQ2 = localStorage.getItem(STORAGE_KEY_Q2);
+      if (savedQ2) {
+        setQ2Content(savedQ2);
       }
     }
   }, []);
@@ -65,6 +94,26 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
         localStorage.setItem(STORAGE_KEY, value);
       } else {
         localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  const saveQ1ToLocalStorage = useCallback((value: string) => {
+    if (typeof window !== "undefined") {
+      if (value.trim()) {
+        localStorage.setItem(STORAGE_KEY_Q1, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_Q1);
+      }
+    }
+  }, []);
+
+  const saveQ2ToLocalStorage = useCallback((value: string) => {
+    if (typeof window !== "undefined") {
+      if (value.trim()) {
+        localStorage.setItem(STORAGE_KEY_Q2, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_Q2);
       }
     }
   }, []);
@@ -82,11 +131,41 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     [saveToLocalStorage]
   );
 
+  const debouncedSaveQ1 = useCallback(
+    (value: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        saveQ1ToLocalStorage(value);
+      }, 500);
+    },
+    [saveQ1ToLocalStorage]
+  );
+
+  const debouncedSaveQ2 = useCallback(
+    (value: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        saveQ2ToLocalStorage(value);
+      }, 500);
+    },
+    [saveQ2ToLocalStorage]
+  );
+
   // 페이지를 떠날 때 저장 (beforeunload)
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (content.trim()) {
         saveToLocalStorage(content);
+      }
+      if (q1Content.trim()) {
+        saveQ1ToLocalStorage(q1Content);
+      }
+      if (q2Content.trim()) {
+        saveQ2ToLocalStorage(q2Content);
       }
     };
 
@@ -94,7 +173,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [content, saveToLocalStorage]);
+  }, [content, q1Content, q2Content, saveToLocalStorage, saveQ1ToLocalStorage, saveQ2ToLocalStorage]);
 
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
@@ -197,35 +276,97 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     }
   }, [content]);
 
+  // q1 textarea 높이 자동 조정
+  useEffect(() => {
+    const textarea = q1TextareaRef.current;
+    if (textarea && !isUserScrollingRef.current) {
+      textarea.style.height = "auto";
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.max(scrollHeight, 100);
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = "hidden";
+    }
+  }, [q1Content]);
+
+  // q2 textarea 높이 자동 조정
+  useEffect(() => {
+    const textarea = q2TextareaRef.current;
+    if (textarea && !isUserScrollingRef.current) {
+      textarea.style.height = "auto";
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.max(scrollHeight, 100);
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = "hidden";
+    }
+  }, [q2Content]);
+
   const handleSubmit = () => {
     if (isFuture) return;
-    // selectedType이 없으면 기본값 "daily" 사용
-    const recordType = selectedType || "daily";
-    if (content.trim()) {
-      createRecordMutation.mutate(
-        {
-          content,
-          type: recordType,
-          ...(selectedDate && { kst_date: selectedDate }),
-        },
-        {
-          onSuccess: () => {
-            setContent("");
-            // localStorage에서도 삭제
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(STORAGE_KEY);
-            }
-            // textarea 높이 초기화
-            if (textareaRef.current) {
-              textareaRef.current.style.height = "100px";
-            }
-            onSuccess?.();
+    const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
+    
+    // dream 타입일 때는 2개의 질문을 포맷팅해서 합치기
+    if (recordType === "dream") {
+      if (q1Content.trim() || q2Content.trim()) {
+        const formattedContent = `Q1. 오늘 하루를 어떻게 보낼까?\n${q1Content.trim() || ""}\n\nQ2. 앞으로의 나는 어떤 모습일까?\n${q2Content.trim() || ""}`;
+        
+        createRecordMutation.mutate(
+          {
+            content: formattedContent,
+            type: recordType,
+            ...(selectedDate && { kst_date: selectedDate }),
           },
-          onError: (error) => {
-            console.error("기록 생성 실패:", error.message);
+          {
+            onSuccess: () => {
+              setQ1Content("");
+              setQ2Content("");
+              // localStorage에서도 삭제
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(STORAGE_KEY_Q1);
+                localStorage.removeItem(STORAGE_KEY_Q2);
+              }
+              // textarea 높이 초기화
+              if (q1TextareaRef.current) {
+                q1TextareaRef.current.style.height = "100px";
+              }
+              if (q2TextareaRef.current) {
+                q2TextareaRef.current.style.height = "100px";
+              }
+              onSuccess?.();
+            },
+            onError: (error) => {
+              console.error("기록 생성 실패:", error.message);
+            },
+          }
+        );
+      }
+    } else {
+      // 다른 타입은 기존 로직
+      if (content.trim()) {
+        createRecordMutation.mutate(
+          {
+            content,
+            type: recordType,
+            ...(selectedDate && { kst_date: selectedDate }),
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              setContent("");
+              // localStorage에서도 삭제
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(STORAGE_KEY);
+              }
+              // textarea 높이 초기화
+              if (textareaRef.current) {
+                textareaRef.current.style.height = "100px";
+              }
+              onSuccess?.();
+            },
+            onError: (error) => {
+              console.error("기록 생성 실패:", error.message);
+            },
+          }
+        );
+      }
     }
   };
 
@@ -252,6 +393,18 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     });
   };
 
+  const handleQ1Change = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setQ1Content(newContent);
+    debouncedSaveQ1(newContent);
+  };
+
+  const handleQ2Change = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setQ2Content(newContent);
+    debouncedSaveQ2(newContent);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -271,7 +424,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     const textarea = e.target;
     const originalScrollIntoView = textarea.scrollIntoView;
     textarea.scrollIntoView = function (
-      options?: boolean | ScrollIntoViewOptions
+      _options?: boolean | ScrollIntoViewOptions
     ) {
       // 아무것도 하지 않음 (스크롤 방지)
       return;
@@ -296,7 +449,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
       // scrollIntoView 메서드를 오버라이드하여 스크롤을 방지
       const originalScrollIntoView = textarea.scrollIntoView.bind(textarea);
       textarea.scrollIntoView = function (
-        options?: boolean | ScrollIntoViewOptions
+        _options?: boolean | ScrollIntoViewOptions
       ) {
         // 스크롤 방지
         return;
@@ -311,11 +464,16 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     }
   }, []);
 
-  const recordType = selectedType || "daily";
-  const typeColors = RECORD_TYPE_COLORS[recordType];
-  const availableTypes = (currentUser?.user_metadata?.recordTypes as
-    | string[]
-    | undefined) || ["daily"]; // 기본값으로 "daily" 포함
+  const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
+  const availableTypes = getAllowedRecordTypes();
+  
+  // 프로젝트 기본 색상 (타입별 색상 변경 없이 고정)
+  const defaultColors = {
+    background: COLORS.background.card,
+    border: COLORS.border.light,
+    lineColor: "rgba(196, 190, 178, 0.12)", // border.card 기반
+    overlay: "rgba(127, 143, 122, 0.08)", // primary.500 기반
+  };
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -372,7 +530,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
             className="cursor-pointer inline-flex relative overflow-hidden"
             onClick={() => setShowTypeSelector(!showTypeSelector)}
             style={{
-              backgroundColor: typeColors.background,
+              backgroundColor: defaultColors.background,
               padding: "0.375rem 0.75rem",
               borderRadius: "20px",
               boxShadow: `
@@ -380,17 +538,17 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
                 0 1px 2px rgba(0,0,0,0.04),
                 inset 0 1px 0 rgba(255,255,255,0.6)
               `,
-              border: `1px solid ${typeColors.border}`,
+              border: `1px solid ${defaultColors.border}`,
               transition: "all 0.2s ease",
               // 종이 질감 배경 패턴
               backgroundImage: `
-                /* 가로 줄무늬 (타입별 색상) */
+                /* 가로 줄무늬 */
                 repeating-linear-gradient(
                   to bottom,
                   transparent 0px,
                   transparent 27px,
-                  ${typeColors.lineColor} 27px,
-                  ${typeColors.lineColor} 28px
+                  ${defaultColors.lineColor} 27px,
+                  ${defaultColors.lineColor} 28px
                 ),
                 /* 종이 텍스처 노이즈 */
                 repeating-linear-gradient(
@@ -428,16 +586,13 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
               style={{
                 background: `
                   radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                  radial-gradient(circle at 75% 75%, ${typeColors.overlay} 0%, transparent 40%)
+                  radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
                 `,
                 mixBlendMode: "overlay",
                 opacity: 0.5,
               }}
             />
             <div className="relative z-10 flex items-center gap-1.5">
-              <span style={{ fontSize: "0.875rem" }}>
-                {RECORD_TYPES.find((t) => t.id === recordType)?.icon}
-              </span>
               <span
                 style={{
                   fontSize: "0.75rem",
@@ -533,11 +688,11 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
                       style={{
                         backgroundColor:
                           recordType === type.id
-                            ? `${RECORD_TYPE_COLORS[type.id].overlay}40`
+                            ? COLORS.background.hover
                             : "transparent",
                         border:
                           recordType === type.id
-                            ? `1px solid ${RECORD_TYPE_COLORS[type.id].border}`
+                            ? `1px solid ${COLORS.brand.primary}`
                             : "1px solid transparent",
                       }}
                       onMouseEnter={(e) => {
@@ -552,7 +707,6 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
                         }
                       }}
                     >
-                      <span style={{ fontSize: "0.875rem" }}>{type.icon}</span>
                       <span
                         style={{
                           fontSize: "0.8125rem",
@@ -571,23 +725,274 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
         </div>
       )}
 
-      {/* 텍스트에어리어 컨테이너 */}
-      <div
-        className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
-        style={{
-          backgroundColor: typeColors.background,
-          border: `1.5px solid ${typeColors.border}`,
-          borderRadius: "12px",
-          boxShadow: `
+      {/* dream 타입일 때 2개의 질문 입력 필드 */}
+      {recordType === "dream" ? (
+        <>
+          {/* Q1 입력 필드 */}
+          <div className="mb-4">
+            <div
+              className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
+              style={{
+                backgroundColor: defaultColors.background,
+                border: `1.5px solid ${defaultColors.border}`,
+                borderRadius: "12px",
+                boxShadow: `
+                  0 2px 8px rgba(0,0,0,0.04),
+                  0 1px 3px rgba(0,0,0,0.02),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `,
+                position: "relative",
+                overflow: "hidden",
+                paddingLeft: "48px",
+                backgroundImage: `
+                  linear-gradient(90deg, 
+                    transparent 0px,
+                    transparent 36px,
+                    ${COLORS.border.card} 36px,
+                    ${COLORS.border.card} 38px,
+                    transparent 38px
+                  ),
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 27px,
+                    ${defaultColors.lineColor} 27px,
+                    ${defaultColors.lineColor} 28px
+                  ),
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(107, 122, 111, 0.01) 2px,
+                    rgba(107, 122, 111, 0.01) 4px
+                  )
+                `,
+                backgroundSize: "100% 100%, 100% 28px, 8px 8px",
+                backgroundPosition: "0 0, 0 2px, 0 0",
+                filter: "contrast(1.02) brightness(1.01)",
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 bottom-0"
+                style={{
+                  width: "2px",
+                  backgroundColor: `${COLORS.border.card}CC`,
+                  left: "36px",
+                }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `
+                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
+                  `,
+                  mixBlendMode: "overlay",
+                  opacity: 0.5,
+                }}
+              />
+              <div className="relative z-10">
+                <div className="mb-2">
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    Q1. 오늘 하루를 어떻게 보낼까?
+                  </span>
+                </div>
+                <Textarea
+                  ref={q1TextareaRef}
+                  value={q1Content}
+                  onChange={handleQ1Change}
+                  placeholder="답변을 입력하세요..."
+                  className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: COLORS.text.primary,
+                    fontSize: "16px",
+                    lineHeight: "28px",
+                    minHeight: "100px",
+                    transition: "height 0.1s ease-out",
+                    padding: 0,
+                    paddingTop: "2px",
+                    boxShadow: "none",
+                    scrollMargin: "0px",
+                  }}
+                />
+                <div className="flex items-center justify-between">
+                  <span
+                    className={TYPOGRAPHY.caption.fontSize}
+                    style={{
+                      color: COLORS.text.muted,
+                      opacity: q1Content.length > 0 ? 0.6 : 0.3,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {q1Content.length}자
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Q2 입력 필드 */}
+          <div className="mb-4">
+            <div
+              className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
+              style={{
+                backgroundColor: defaultColors.background,
+                border: `1.5px solid ${defaultColors.border}`,
+                borderRadius: "12px",
+                boxShadow: `
+                  0 2px 8px rgba(0,0,0,0.04),
+                  0 1px 3px rgba(0,0,0,0.02),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `,
+                position: "relative",
+                overflow: "hidden",
+                paddingLeft: "48px",
+                backgroundImage: `
+                  linear-gradient(90deg, 
+                    transparent 0px,
+                    transparent 36px,
+                    ${COLORS.border.card} 36px,
+                    ${COLORS.border.card} 38px,
+                    transparent 38px
+                  ),
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 27px,
+                    ${defaultColors.lineColor} 27px,
+                    ${defaultColors.lineColor} 28px
+                  ),
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(107, 122, 111, 0.01) 2px,
+                    rgba(107, 122, 111, 0.01) 4px
+                  )
+                `,
+                backgroundSize: "100% 100%, 100% 28px, 8px 8px",
+                backgroundPosition: "0 0, 0 2px, 0 0",
+                filter: "contrast(1.02) brightness(1.01)",
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 bottom-0"
+                style={{
+                  width: "2px",
+                  backgroundColor: `${COLORS.border.card}CC`,
+                  left: "36px",
+                }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `
+                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
+                  `,
+                  mixBlendMode: "overlay",
+                  opacity: 0.5,
+                }}
+              />
+              <div className="relative z-10">
+                <div className="mb-2">
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    Q2. 앞으로의 나는 어떤 모습일까?
+                  </span>
+                </div>
+                <Textarea
+                  ref={q2TextareaRef}
+                  value={q2Content}
+                  onChange={handleQ2Change}
+                  placeholder="답변을 입력하세요..."
+                  className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: COLORS.text.primary,
+                    fontSize: "16px",
+                    lineHeight: "28px",
+                    minHeight: "100px",
+                    transition: "height 0.1s ease-out",
+                    padding: 0,
+                    paddingTop: "2px",
+                    boxShadow: "none",
+                    scrollMargin: "0px",
+                  }}
+                />
+                <div className="flex items-center justify-between">
+                  <span
+                    className={TYPOGRAPHY.caption.fontSize}
+                    style={{
+                      color: COLORS.text.muted,
+                      opacity: q2Content.length > 0 ? 0.6 : 0.3,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {q2Content.length}자
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 제출 버튼 */}
+          <div className="flex justify-end mb-6">
+            <Button
+              onClick={handleSubmit}
+              disabled={(!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending}
+              style={{
+                backgroundColor:
+                  (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
+                    ? "#D1D5DB"
+                    : COLORS.brand.primary,
+                color: "#FFFFFF",
+                fontWeight: "600",
+                padding: "0.625rem 1.5rem",
+                borderRadius: "0.5rem",
+                transition: "all 0.2s ease-in-out",
+                boxShadow:
+                  (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
+                    ? "none"
+                    : "0 2px 4px rgba(0, 0, 0, 0.1)",
+              }}
+              className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
+            </Button>
+          </div>
+        </>
+      ) : (
+        /* 다른 타입일 때 기존 단일 입력 필드 */
+        <div
+          className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
+          style={{
+            backgroundColor: defaultColors.background,
+            border: `1.5px solid ${defaultColors.border}`,
+            borderRadius: "12px",
+            boxShadow: `
           0 2px 8px rgba(0,0,0,0.04),
           0 1px 3px rgba(0,0,0,0.02),
           inset 0 1px 0 rgba(255,255,255,0.6)
         `,
-          position: "relative",
-          overflow: "hidden",
-          paddingLeft: "48px", // 왼쪽 마진 라인을 위한 패딩
-          // 종이 질감 배경 패턴
-          backgroundImage: `
+            position: "relative",
+            overflow: "hidden",
+            paddingLeft: "48px", // 왼쪽 마진 라인을 위한 패딩
+            // 종이 질감 배경 패턴
+            backgroundImage: `
           /* 왼쪽 마진 라인 */
           linear-gradient(90deg, 
             transparent 0px,
@@ -596,13 +1001,13 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
             ${COLORS.border.card} 38px,
             transparent 38px
           ),
-          /* 가로 줄무늬 (타입별 색상) */
+          /* 가로 줄무늬 */
           repeating-linear-gradient(
             to bottom,
             transparent 0px,
             transparent 27px,
-            ${typeColors.lineColor} 27px,
-            ${typeColors.lineColor} 28px
+            ${defaultColors.lineColor} 27px,
+            ${defaultColors.lineColor} 28px
           ),
           /* 종이 텍스처 노이즈 */
           repeating-linear-gradient(
@@ -613,101 +1018,102 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
             rgba(107, 122, 111, 0.01) 4px
           )
         `,
-          backgroundSize: "100% 100%, 100% 28px, 8px 8px",
-          backgroundPosition: "0 0, 0 2px, 0 0", // 줄무늬를 텍스트와 정렬
-          // 종이 질감을 위한 필터
-          filter: "contrast(1.02) brightness(1.01)",
-        }}
-      >
-        {/* 왼쪽 마진 라인 (프로젝트 색감) */}
-        <div
-          className="absolute left-0 top-0 bottom-0"
-          style={{
-            width: "2px",
-            backgroundColor: `${COLORS.border.card}CC`, // 프로젝트 border.card 색상 사용
-            left: "36px",
+            backgroundSize: "100% 100%, 100% 28px, 8px 8px",
+            backgroundPosition: "0 0, 0 2px, 0 0", // 줄무늬를 텍스트와 정렬
+            // 종이 질감을 위한 필터
+            filter: "contrast(1.02) brightness(1.01)",
           }}
-        />
-
-        {/* 종이 질감 오버레이 (타입별 색상) */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${typeColors.overlay} 0%, transparent 40%)
-          `,
-            mixBlendMode: "overlay",
-            opacity: 0.5,
-          }}
-        />
-
-        {/* 내용 영역 */}
-        <div className="relative z-10">
-          <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-            placeholder="오늘의 기록을 자유롭게 작성하세요..."
-            className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
+        >
+          {/* 왼쪽 마진 라인 (프로젝트 색감) */}
+          <div
+            className="absolute left-0 top-0 bottom-0"
             style={{
-              backgroundColor: "transparent",
-              color: COLORS.text.primary,
-              fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
-              lineHeight: "28px", // 줄무늬 간격(28px)과 일치
-              minHeight: "100px",
-              transition: "height 0.1s ease-out",
-              padding: 0,
-              paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
-              boxShadow: "none",
-              scrollMargin: "0px",
+              width: "2px",
+              backgroundColor: `${COLORS.border.card}CC`, // 프로젝트 border.card 색상 사용
+              left: "36px",
             }}
           />
 
-          <div className="flex items-center justify-between mb-3">
-            {/* 글자 수 표시 */}
-            <span
-              className={TYPOGRAPHY.caption.fontSize}
-              style={{
-                color: COLORS.text.muted,
-                opacity: content.length > 0 ? 0.6 : 0.3,
-                fontSize: "0.75rem",
-                transition: "opacity 0.2s ease-in-out",
-              }}
-            >
-              {content.length}자
-            </span>
-          </div>
+          {/* 종이 질감 오버레이 */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
+          `,
+              mixBlendMode: "overlay",
+              opacity: 0.5,
+            }}
+          />
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleSubmit}
-              disabled={!content.trim() || createRecordMutation.isPending}
+          {/* 내용 영역 */}
+          <div className="relative z-10">
+            <Textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              placeholder="오늘의 기록을 자유롭게 작성하세요..."
+              className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
               style={{
-                backgroundColor:
-                  !content.trim() || createRecordMutation.isPending
-                    ? "#D1D5DB"
-                    : COLORS.brand.primary,
-                color: "#FFFFFF",
-                fontWeight: "600",
-                padding: "0.625rem 1.5rem",
-                borderRadius: "0.5rem",
-                transition: "all 0.2s ease-in-out",
-                boxShadow:
-                  !content.trim() || createRecordMutation.isPending
-                    ? "none"
-                    : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                backgroundColor: "transparent",
+                color: COLORS.text.primary,
+                fontSize: "16px", // iOS 자동 줌 방지: 최소 16px
+                lineHeight: "28px", // 줄무늬 간격(28px)과 일치
+                minHeight: "100px",
+                transition: "height 0.1s ease-out",
+                padding: 0,
+                paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
+                boxShadow: "none",
+                scrollMargin: "0px",
               }}
-              className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
-            </Button>
+            />
+
+            <div className="flex items-center justify-between mb-3">
+              {/* 글자 수 표시 */}
+              <span
+                className={TYPOGRAPHY.caption.fontSize}
+                style={{
+                  color: COLORS.text.muted,
+                  opacity: content.length > 0 ? 0.6 : 0.3,
+                  fontSize: "0.75rem",
+                  transition: "opacity 0.2s ease-in-out",
+                }}
+              >
+                {content.length}자
+              </span>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmit}
+                disabled={!content.trim() || createRecordMutation.isPending}
+                style={{
+                  backgroundColor:
+                    !content.trim() || createRecordMutation.isPending
+                      ? "#D1D5DB"
+                      : COLORS.brand.primary,
+                  color: "#FFFFFF",
+                  fontWeight: "600",
+                  padding: "0.625rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  transition: "all 0.2s ease-in-out",
+                  boxShadow:
+                    !content.trim() || createRecordMutation.isPending
+                      ? "none"
+                      : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
+                className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { AlertCircle, Mail } from "lucide-react";
 import { Input } from "../ui/Input";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
 interface EmailFieldProps {
   value: string;
@@ -21,15 +23,15 @@ export function EmailField({
   return (
     <div>
       <label
-        className="block mb-2"
-        style={{ color: "#333333", fontSize: "0.9rem" }}
+        className={cn("block mb-2", TYPOGRAPHY.body.fontSize)}
+        style={{ color: COLORS.text.primary }}
       >
         이메일
       </label>
       <div className="relative">
         <Mail
           className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-          style={{ color: "#6B7A6F", opacity: 0.5 }}
+          style={{ color: COLORS.brand.primary, opacity: 0.5 }}
         />
         <Input
           type="email"
@@ -39,15 +41,15 @@ export function EmailField({
           className="pl-11 pr-4"
           disabled={disabled}
           style={{
-            borderColor: error ? "#EF4444" : "#EFE9E3",
-            backgroundColor: "white",
+            borderColor: error ? COLORS.status.error : COLORS.border.light,
+            backgroundColor: COLORS.surface.elevated,
           }}
         />
       </div>
       {error && (
         <p
-          className="mt-1.5 flex items-center gap-1"
-          style={{ color: "#EF4444", fontSize: "0.8rem" }}
+          className={cn("mt-1.5 flex items-center gap-1", TYPOGRAPHY.caption.fontSize)}
+          style={{ color: COLORS.status.error }}
         >
           <AlertCircle className="w-3.5 h-3.5" />
           {error}

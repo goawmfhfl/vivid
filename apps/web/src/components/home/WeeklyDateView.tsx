@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 import { getMondayOfWeek } from "@/components/weeklyFeedback/weekly-candidate-filter";
-import { COLORS, TRANSITIONS } from "@/lib/design-system";
+import { COLORS, TRANSITIONS, SHADOWS } from "@/lib/design-system";
 import { motion, AnimatePresence } from "framer-motion";
 import { DateButtonSkeleton } from "@/components/ui/Skeleton";
 
@@ -301,13 +301,13 @@ export function WeeklyDateView({
                       backgroundColor: isActive
                         ? COLORS.brand.primary
                         : COLORS.background.card,
-                      color: isActive ? "white" : COLORS.text.primary,
+                      color: isActive ? COLORS.text.white : COLORS.text.primary,
                       border: isActive
                         ? `1.5px solid ${COLORS.brand.primary}`
                         : `1px solid ${COLORS.border.light}`,
                       boxShadow: isActive
-                        ? "0 4px 12px rgba(107, 122, 111, 0.2)"
-                        : "0 1px 3px rgba(0, 0, 0, 0.05)",
+                        ? SHADOWS.elevation3
+                        : SHADOWS.elevation1,
                       transform: isActive
                         ? "scale(1.05) md:scale(1.08)"
                         : "scale(1)",
@@ -316,18 +316,18 @@ export function WeeklyDateView({
                       if (!isActive) {
                         e.currentTarget.style.backgroundColor =
                           COLORS.background.hover;
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 12px rgba(0, 0, 0, 0.12)";
+                        e.currentTarget.style.boxShadow = SHADOWS.elevation2;
                         e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.borderColor = COLORS.brand.primary;
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
                         e.currentTarget.style.backgroundColor =
                           COLORS.background.card;
-                        e.currentTarget.style.boxShadow =
-                          "0 1px 3px rgba(0, 0, 0, 0.05)";
+                        e.currentTarget.style.boxShadow = SHADOWS.elevation1;
                         e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.borderColor = COLORS.border.light;
                       }
                     }}
                   >

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useUpdateRecord, type Record } from "../../hooks/useRecords";
 import { COLORS } from "@/lib/design-system";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useSubscription } from "@/hooks/useSubscription";
 import { RECORD_TYPES, type RecordType } from "../signup/RecordTypeCard";
 import { ChevronDown } from "lucide-react";
 
@@ -22,29 +23,45 @@ export function EditRecordDialog({
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const updateRecordMutation = useUpdateRecord();
-  const { data: currentUser } = useCurrentUser();
+  const { subscription } = useSubscription();
 
-  // 활성화된 타입 목록 가져오기
-  const activeTypes = currentUser?.user_metadata?.recordTypes as
-    | RecordType[]
-    | undefined;
+  // 플랜별 사용 가능한 기록 타입 가져오기
+  const getAllowedRecordTypes = (): RecordType[] => {
+    const plan = subscription?.plan || "free";
+    
+    // 프리 플랜, 첼린저 플랜: VIVID 기록(dream)만 가능
+    if (plan === "free") {
+      return ["dream"];
+    }
+    
+    // 프로 플랜: VIVID 기록(dream) + 감정 기록(emotion) 가능
+    if (plan === "pro") {
+      return ["dream", "emotion"];
+    }
+    
+    // 기본값: VIVID 기록만
+    return ["dream"];
+  };
+
+  // 플랜별로 허용된 타입만 사용
+  const allowedTypes = getAllowedRecordTypes();
 
   // record가 변경될 때마다 상태 업데이트
   useEffect(() => {
     if (record) {
       setEditContent(record.content);
-      // record.type이 활성화된 타입 목록에 있으면 선택, 없으면 null
+      // record.type이 허용된 타입 목록에 있으면 선택, 없으면 기본값(dream)으로 설정
       const recordType = record.type as RecordType | null;
-      if (recordType && activeTypes && activeTypes.includes(recordType)) {
+      if (recordType && allowedTypes.includes(recordType)) {
         setSelectedType(recordType);
       } else {
-        // 활성화된 타입이 있으면 첫 번째 타입을 기본값으로 설정
+        // 허용된 타입이 있으면 첫 번째 타입(보통 dream)을 기본값으로 설정
         setSelectedType(
-          activeTypes && activeTypes.length > 0 ? activeTypes[0] : null
+          allowedTypes.length > 0 ? allowedTypes[0] : "dream"
         );
       }
     }
-  }, [record, activeTypes]);
+  }, [record, allowedTypes]);
 
   useEffect(() => {
     if (!showTypeSelector) return;
@@ -191,7 +208,7 @@ export function EditRecordDialog({
 
             <div className="space-y-4 py-4">
               {/* 타입 선택 */}
-              {activeTypes && activeTypes.length > 0 && (
+              {allowedTypes && allowedTypes.length > 0 && (
                 <div className="relative">
                   <button
                     type="button"
@@ -249,7 +266,7 @@ export function EditRecordDialog({
                         overflowY: "auto",
                       }}
                     >
-                      {activeTypes.map((typeId) => {
+                      {allowedTypes.map((typeId) => {
                         const typeInfo = RECORD_TYPES.find(
                           (t) => t.id === typeId
                         );

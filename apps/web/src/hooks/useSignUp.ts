@@ -16,7 +16,6 @@ export interface SignUpData {
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
-  recordTypes?: string[]; // 기록 타입 배열
   isSocialOnboarding?: boolean; // 소셜 로그인 완료 플래그
 }
 
@@ -46,7 +45,6 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     agreeTerms,
     agreeAI,
     agreeMarketing,
-    recordTypes = [],
     isSocialOnboarding = false,
   } = data;
 
@@ -101,7 +99,6 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         agreeTerms,
         agreeAI,
         agreeMarketing,
-        recordTypes,
       };
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -133,7 +130,6 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
             phone,
             birthYear,
             gender,
-            recordTypes,
           },
         },
       });

@@ -27,7 +27,7 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
   },
   {
     id: "dream",
-    title: "꿈/목표 기록",
+    title: "VIVID 기록",
     description: "살아가면서 이루고 싶은 꿈, 혹은 목표를 향한 기록",
     icon: "🎯",
   },
@@ -76,12 +76,12 @@ export const RECORD_TYPE_COLORS: Record<
     overlay: "rgba(255, 180, 160, 0.15)", // 부드러운 피치 오버레이
   },
   dream: {
-    // 꿈/목표 기록: 희망적이고 밝은 라벤더/퍼플 톤
-    background: "#F8F5FF", // 연한 라벤더
-    border: "#EDE5F5", // 부드러운 퍼플 테두리
+    // VIVID 기록: 희망적이고 밝은 머스터드 옐로우 톤 (프로젝트 Secondary 색상 활용)
+    background: "#FCF8F0", // 따뜻한 크림 옐로우
+    border: "#E8D9B8", // 부드러운 머스터드 테두리
     text: "#333333",
-    lineColor: "rgba(160, 130, 200, 0.12)", // 라벤더 줄무늬
-    overlay: "rgba(180, 150, 220, 0.15)", // 밝은 퍼플 오버레이
+    lineColor: "rgba(179, 142, 58, 0.12)", // 머스터드 옐로우 줄무늬
+    overlay: "rgba(212, 175, 92, 0.15)", // 따뜻한 옐로우 오버레이
   },
   insight: {
     // 인사이트 기록: 창의적이고 영감을 주는 골드/앰버 톤
