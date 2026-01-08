@@ -10,10 +10,10 @@ export interface WeeklyFeedbackGenerateRequest {
   isPro?: boolean; // Pro 멤버십 여부 (서버에서 확인하거나 클라이언트에서 전달)
 }
 
-// AI 요청을 위한 daily feedback 배열 타입 (vivid_report와 emotion_report만 포함)
+// AI 요청을 위한 daily feedback 배열 타입 (vivid_report만 포함)
 export type DailyFeedbackForWeekly = Pick<
   DailyFeedbackRow,
-  "report_date" | "day_of_week" | "vivid_report" | "emotion_report"
+  "report_date" | "day_of_week" | "vivid_report"
 >[];
 
 // AI 응답 래퍼 타입

@@ -5,11 +5,7 @@ import {
   useGetDailyFeedback,
   useGetDailyFeedbackById,
 } from "@/hooks/useGetDailyFeedback";
-import { DailyReportSection } from "./DailyReportSection";
 import { VisionSection } from "./Vision";
-import { InsightSection } from "./Insight";
-import { FeedbackSection } from "./Feedback";
-import { FinalSection } from "./Final";
 import { EmptyState } from "./States";
 import { EmotionSection } from "./Emotion";
 import { mapDailyFeedbackRowToReport } from "./mappers";
@@ -123,7 +119,6 @@ export function DailyFeedbackView({
   if (!view) return <EmptyState onBack={onBack} />;
 
   // 섹션 노출 가드: 리포트 데이터가 null이면 렌더링 제외
-  const hasDailySection = !!(view.daily_summary && view.daily_summary.trim());
   const hasEmotionSection = !!(
     view.emotion_curve && view.emotion_curve.length > 0
   );
@@ -133,15 +128,6 @@ export function DailyFeedbackView({
     (view.alignment_score !== null && view.alignment_score !== undefined) ||
     (view.user_characteristics && view.user_characteristics.length > 0) ||
     (view.aspired_traits && view.aspired_traits.length > 0)
-  );
-  const hasInsightSection = !!(
-    view.core_insights && view.core_insights.length > 0
-  );
-  const hasFeedbackSection = !!(
-    view.core_feedback && view.core_feedback.trim()
-  );
-  const hasFinalSection = !!(
-    view.closing_message && view.closing_message.trim()
   );
 
   return (
@@ -178,7 +164,7 @@ export function DailyFeedbackView({
           </div>
         </div>
 
-        {/* 오늘의 VIVID 섹션을 가장 상단에 배치 */}
+        {/* 오늘의 VIVID 섹션 */}
         {hasDreamSection && (
           <ScrollAnimation>
             <div className="mb-16">
@@ -187,42 +173,11 @@ export function DailyFeedbackView({
           </ScrollAnimation>
         )}
 
-        {hasDailySection && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-16">
-              <DailyReportSection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
+        {/* 이번 주 감정 */}
         {hasEmotionSection && (
           <ScrollAnimation delay={200}>
             <div className="mb-16">
               <EmotionSection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {hasInsightSection && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-16">
-              <InsightSection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {hasFeedbackSection && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-16">
-              <FeedbackSection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
-        {hasFinalSection && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-12">
-              <FinalSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}

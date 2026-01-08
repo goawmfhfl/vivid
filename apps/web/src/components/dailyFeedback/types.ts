@@ -1,6 +1,6 @@
 /**
  * DailyFeedbackRow를 평면 구조로 변환한 일일 리포트 데이터
- * 새로운 리포트 구조(summary_report, daily_report 등)를 사용
+ * emotion_report와 vivid_report만 사용
  */
 export type DailyReportData = {
   // ========== 기본 정보 ==========
@@ -8,39 +8,8 @@ export type DailyReportData = {
   date: string;
   /** 요일 (예: "월요일") */
   dayOfWeek: string;
-  /** 오늘의 전체 흐름 요약 (헤더에 표시되는 짧은 요약) - summary_report의 summary */
+  /** 오늘의 전체 흐름 요약 (vivid_report의 current_summary 사용) */
   narrative_summary: string;
-
-  // ========== Summary Report 데이터 ==========
-  /** 핵심 포인트 배열 */
-  summary_key_points: string[];
-  /** 트렌드 분석 (Pro 전용) */
-  trend_analysis: string | null;
-
-  // ========== Daily Report 데이터 ==========
-  /** 일상 기록 요약 */
-  daily_summary: string;
-  /** 오늘 있었던 일 리스트 (서사 대신) */
-  daily_events: string[];
-  /** 키워드 배열 */
-  keywords: string[];
-  /** AI 코멘트 */
-  ai_comment: string | null;
-  /** 감정 트리거 (Pro 전용) */
-  emotion_triggers: {
-    people: string[]; // 사람 관련: 직장동료, 가족, 연인, 친구
-    work: string[]; // 업무 관련: 데드라인, 불안, 일정폭주
-    environment: string[]; // 환경: 날씨, 피로, 금전
-    self: string[]; // 자기 요인: 기대, 비교, 자기비판
-  } | null;
-  /** 행동 단서 (Pro 전용) */
-  behavioral_clues: {
-    avoidance: string[]; // 회피 행동
-    routine_attempt: string[]; // 루틴 시도
-    routine_failure: string[]; // 루틴 실패
-    impulsive: string[]; // 즉흥 충동
-    planned: string[]; // 계획적 행동
-  } | null;
 
   // ========== Emotion Report 데이터 ==========
   /** 하루의 감정 흐름을 순서대로 나타내는 배열 */
@@ -105,44 +74,6 @@ export type DailyReportData = {
   dream_goals: string[] | null;
   /** @deprecated dreamer_traits는 user_characteristics를 사용하세요 */
   dreamer_traits: string[] | null;
-
-  // ========== Insight Report 데이터 ==========
-  /** 핵심 인사이트 리스트 (각 항목에 출처 포함) */
-  core_insights: Array<{ insight: string; source: string }>;
-  /** 오늘의 인사이트를 더 발전시키는 방법 (간단하고 실용적으로) */
-  meta_question: string | null;
-  /** AI 인사이트 코멘트 */
-  insight_ai_comment: string | null;
-  /** 인사이트 기반 추천 행동 리스트 (Pro 전용) */
-  insight_next_actions:
-    | {
-        label: string;
-        difficulty: "낮음" | "보통" | "높음";
-        estimated_minutes: number | null;
-      }[]
-    | null;
-
-  // ========== Feedback Report 데이터 ==========
-  /** 핵심 피드백 */
-  core_feedback: string;
-  /** 잘한 점 배열 (Pro: 최대 6개, Free: 2~3개) */
-  positives: string[];
-  /** 개선할 점 배열 (Pro: 최대 6개, Free: 2~3개) */
-  improvements: string[];
-  /** AI 메시지 (Pro 전용) */
-  ai_message: string | null;
-  /** 피드백을 통해 알 수 있는 사람들의 특징 (Pro 전용) */
-  feedback_person_traits: string[] | null;
-
-  // ========== Final Report 데이터 ==========
-  /** 하루를 정리하는 멘트 */
-  closing_message: string;
-  /** 내일 집중할 것 배열 (3~5개, Pro 전용) */
-  tomorrow_focus: string[] | null;
-  /** 성장 포인트 리스트 (Pro 전용) */
-  growth_points: string[] | null;
-  /** 조정 포인트 리스트 (Pro 전용) */
-  adjustment_points: string[] | null;
 };
 
 /**

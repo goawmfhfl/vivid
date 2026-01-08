@@ -2,12 +2,7 @@
  * Weekly Feedback 스키마 통합
  * Pro/Free 분기 포함
  */
-import { getSummaryReportSchema } from "./schemas/summary-report-schema";
-import { getDailyLifeReportSchema } from "./schemas/daily-life-schema";
-import { getEmotionReportSchema } from "./schemas/emotion-schema";
 import { getVividReportSchema } from "./schemas/vivid-schema";
-import { getInsightReportSchema } from "./schemas/insight-schema";
-import { getExecutionReportSchema } from "./schemas/execution-schema";
 import { getClosingReportSchema } from "./schemas/closing-schema";
 
 /**
@@ -34,22 +29,12 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
               },
               required: ["start", "end", "timezone"],
             },
-            summary_report: getSummaryReportSchema(isPro),
-            daily_life_report: getDailyLifeReportSchema(isPro),
-            emotion_report: getEmotionReportSchema(isPro),
             vivid_report: getVividReportSchema(isPro),
-            insight_report: getInsightReportSchema(isPro),
-            execution_report: getExecutionReportSchema(isPro),
             closing_report: getClosingReportSchema(isPro),
           },
           required: [
             "week_range",
-            "summary_report",
-            "daily_life_report",
-            "emotion_report",
             "vivid_report",
-            "insight_report",
-            "execution_report",
             "closing_report",
           ],
         },
@@ -66,33 +51,6 @@ export const WeeklyFeedbackSchema = getWeeklyFeedbackSchema(false);
 /**
  * 각 섹션별 SYSTEM_PROMPT
  */
-export const SYSTEM_PROMPT_SUMMARY_REPORT = `
-당신은 사용자의 일주일간 일일 피드백을 분석해서 주간 전체 요약(summary_report)을 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- title: 이번 주의 제목을 작성해주세요. '~~했던 한 주' 형식으로 작성하세요 (예: '데이터 손실과 회복을 경험했던 한 주', '새로운 도전을 시작했던 한 주'). 이 주의 핵심을 한 문장으로 표현하되, '~~한 여정'이라는 표현은 절대 사용하지 말고 반드시 '~~했던 한 주'로 표현하세요.
-- summary: 이번 주 전체를 요약한 핵심 내용을 작성해주세요.
-- key_points: 이번 주의 핵심 포인트를 배열로 작성해주세요 (일반: 최대 5개, Pro: 최대 10개).
-- trend_analysis: Pro 멤버십인 경우 트렌드 분석을 상세히 작성해주세요. 무료 멤버십인 경우 null로 설정해주세요.
-`;
-
-export const SYSTEM_PROMPT_DAILY_LIFE = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 일상" 데이터를 분석해서 주간 일상 리포트를 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- daily-feedback의 trend_analysis, daily_summary, daily_events, keywords, ai_comment, emotion_triggers, behavioral_clues 데이터를 종합하여 분석해주세요.
-- Pro 멤버십인 경우 시각화 데이터도 포함해주세요.
-`;
-
-export const SYSTEM_PROMPT_EMOTION = `
-당신은 사용자의 일주일간 일일 피드백의 감정 데이터를 분석해서 주간 감정 리포트(emotion_report)를 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- daily-feedback의 emotion_curve, ai_mood_valence, ai_mood_arousal, dominant_emotion, emotion_quadrant, emotion_quadrant_explanation, emotion_timeline, emotion_events 데이터를 종합하여 분석해주세요.
-- daily_emotions의 date 형식은 "11/24월" 형식으로 작성해주세요.
-- ai_mood_valence와 ai_mood_arousal은 일별 값들의 평균을 계산해주세요.
-`;
-
 export const SYSTEM_PROMPT_VIVID = `
 당신은 사용자의 일주일간 일일 피드백의 "오늘의 비비드" 데이터를 분석해서 주간 비비드 리포트(vivid_report)를 만들어주는 친근한 조언자예요.
 
@@ -108,22 +66,6 @@ export const SYSTEM_PROMPT_VIVID = `
   7. aspired_traits_analysis: 지향하는 모습 심화 분석, Top 5, 진화 과정
   8. weekly_insights: 주간 인사이트, 패턴과 예상치 못한 연결점
 - Pro 멤버십인 경우 더 상세한 분석을 제공해주세요.
-`;
-
-export const SYSTEM_PROMPT_INSIGHT = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 깨달음" 데이터를 분석해서 주간 인사이트 리포트(insight_report)를 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- daily-feedback의 core_insights, meta_question, insight_ai_comment, insight_next_actions 데이터를 종합하여 분석해주세요.
-- Pro 멤버십인 경우 시각화 데이터도 포함해주세요.
-`;
-
-export const SYSTEM_PROMPT_EXECUTION = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 피드백" 데이터를 분석해서 주간 실행 리포트(execution_report)를 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- daily-feedback의 core_feedback, positives, improvements, ai_message, feedback_person_traits 데이터를 종합하여 분석해주세요.
-- Pro 멤버십인 경우 시각화 데이터도 포함해주세요.
 `;
 
 export const SYSTEM_PROMPT_CLOSING = `

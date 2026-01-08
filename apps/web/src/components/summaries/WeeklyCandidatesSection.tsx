@@ -10,7 +10,6 @@ import { getKSTDateString } from "@/lib/date-utils";
 import { useAIRequestStore } from "@/store/useAIRequestStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
-import type { WeeklyFeedback } from "@/types/weekly-feedback";
 import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
 
 export function WeeklyCandidatesSection() {
@@ -18,8 +17,7 @@ export function WeeklyCandidatesSection() {
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const createWeeklyFeedback = useCreateWeeklyFeedback();
-  const { addRequest, updateRequest, requests, openModal } =
-    useAIRequestStore();
+  const { requests, openModal } = useAIRequestStore();
   const { isTest } = useEnvironment();
   const {
     weeklyFeedbackProgress,

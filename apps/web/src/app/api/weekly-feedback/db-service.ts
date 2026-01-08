@@ -12,28 +12,27 @@ import {
 } from "@/lib/jsonb-encryption";
 
 /**
- * DailyFeedbackRow에서 vivid_report와 emotion_report만 추출
+ * DailyFeedbackRow에서 vivid_report만 추출
  */
-function extractVividAndEmotionReports(
+function extractVividReport(
   feedback: DailyFeedbackRow
-): Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report" | "emotion_report"> {
+): Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report"> {
   return {
     report_date: feedback.report_date,
     day_of_week: feedback.day_of_week,
     vivid_report: feedback.vivid_report,
-    emotion_report: feedback.emotion_report,
   };
 }
 
 /**
- * 날짜 범위로 daily-feedback 조회 (vivid_report와 emotion_report만 포함)
+ * 날짜 범위로 daily-feedback 조회 (vivid_report만 포함)
  */
 export async function fetchDailyFeedbacksByRange(
   supabase: SupabaseClient,
   userId: string,
   start: string,
   end: string
-): Promise<Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report" | "emotion_report">[]> {
+): Promise<Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report">[]> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.DAILY_FEEDBACK)
     .select("*")
@@ -55,8 +54,8 @@ export async function fetchDailyFeedbacksByRange(
       ) as unknown as DailyFeedbackRow
   );
 
-  // vivid_report와 emotion_report만 추출
-  return decryptedFeedbacks.map(extractVividAndEmotionReports);
+  // vivid_report만 추출
+  return decryptedFeedbacks.map(extractVividReport);
 }
 
 /**
@@ -69,7 +68,7 @@ export async function fetchWeeklyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select(
-      "id, week_start, week_end, summary_report, is_ai_generated, created_at"
+      "id, week_start, week_end, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("week_start", { ascending: false });
@@ -79,18 +78,8 @@ export async function fetchWeeklyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    // summary_report 복호화
-    const decryptedSummaryReport = decryptJsonbFields(
-      row.summary_report as {
-        title?: string;
-        summary?: string;
-        key_points?: string[];
-      } | null
-    ) as { title?: string; summary?: string; key_points?: string[] } | null;
-
-    // summary_report.title을 우선 사용, 없으면 날짜 범위 사용
-    const title =
-      decryptedSummaryReport?.title || `${row.week_start} ~ ${row.week_end}`;
+    // 날짜 범위를 title로 사용
+    const title = `${row.week_start} ~ ${row.week_end}`;
 
     return {
       id: String(row.id),
@@ -139,15 +128,7 @@ export async function fetchWeeklyFeedbackByDate(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    summary_report: data.summary_report as WeeklyFeedback["summary_report"],
-    daily_life_report:
-      data.daily_life_report as WeeklyFeedback["daily_life_report"],
-    emotion_report:
-      (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
-    insight_report: data.insight_report as WeeklyFeedback["insight_report"],
-    execution_report:
-      data.execution_report as WeeklyFeedback["execution_report"],
     closing_report: data.closing_report as WeeklyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
@@ -193,15 +174,7 @@ export async function fetchWeeklyFeedbackDetail(
       end: data.week_end,
       timezone: data.timezone || "Asia/Seoul",
     },
-    summary_report: data.summary_report as WeeklyFeedback["summary_report"],
-    daily_life_report:
-      data.daily_life_report as WeeklyFeedback["daily_life_report"],
-    emotion_report:
-      (data.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
-    insight_report: data.insight_report as WeeklyFeedback["insight_report"],
-    execution_report:
-      data.execution_report as WeeklyFeedback["execution_report"],
     closing_report: data.closing_report as WeeklyFeedback["closing_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
@@ -231,12 +204,7 @@ export async function saveWeeklyFeedback(
         week_start: encryptedFeedback.week_range.start,
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
-        summary_report: encryptedFeedback.summary_report,
-        daily_life_report: encryptedFeedback.daily_life_report,
-        emotion_report: encryptedFeedback.emotion_report ?? null,
         vivid_report: encryptedFeedback.vivid_report,
-        insight_report: encryptedFeedback.insight_report,
-        execution_report: encryptedFeedback.execution_report,
         closing_report: encryptedFeedback.closing_report,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },

@@ -1,54 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchDailyFeedbacksByRange, saveWeeklyFeedback } from "../db-service";
-import { generateWeeklyFeedbackFromDaily } from "../ai-service";
+import { generateWeeklyFeedbackFromDailyWithProgress } from "../ai-service-stream";
 import type { WeeklyFeedbackGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyFeedback } from "@/types/weekly-feedback";
 
-import type { TrackingInfo, WithTracking } from "../../types";
-
-/**
- * 추적 정보 추출 (테스트 환경용)
- */
-function extractTrackingInfo(
-  feedback: Record<string, unknown>
-): TrackingInfo[] {
-  const tracking: TrackingInfo[] = [];
-
-  // 각 섹션에서 추적 정보 추출
-  const sections = [
-    { key: "summary_report", name: "SummaryReport" },
-    { key: "daily_life_report", name: "DailyLifeReport" },
-    { key: "emotion_report", name: "EmotionReport" },
-    { key: "vivid_report", name: "VividReport" },
-    { key: "insight_report", name: "InsightReport" },
-    { key: "execution_report", name: "ExecutionReport" },
-    { key: "closing_report", name: "ClosingReport" },
-  ];
-
-  for (const section of sections) {
-    const sectionData = feedback[section.key] as
-      | WithTracking<unknown>
-      | undefined;
-    if (
-      sectionData &&
-      typeof sectionData === "object" &&
-      "__tracking" in sectionData &&
-      sectionData.__tracking
-    ) {
-      tracking.push({
-        name: sectionData.__tracking.name || section.name,
-        model: sectionData.__tracking.model,
-        duration_ms: sectionData.__tracking.duration_ms,
-        usage: sectionData.__tracking.usage,
-      });
-    }
-  }
-
-  return tracking;
-}
-
+import type { WithTracking } from "../../types";
 import type { ApiError } from "../../types";
 
 /**
@@ -60,12 +18,7 @@ function removeTrackingInfo(
   const cleaned = { ...feedback } as Record<string, unknown>;
 
   const sections = [
-    "summary_report",
-    "daily_life_report",
-    "emotion_report",
     "vivid_report",
-    "insight_report",
-    "execution_report",
     "closing_report",
   ];
 
@@ -133,20 +86,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2️⃣ AI 요청: Weekly Feedback 생성 (순차 처리)
-    const weeklyFeedback = await generateWeeklyFeedbackFromDaily(
+    // 2️⃣ AI 요청: Weekly Feedback 생성 (vivid_report만 생성)
+    const weeklyFeedback = await generateWeeklyFeedbackFromDailyWithProgress(
       dailyFeedbacks,
       { start, end, timezone },
       isPro,
       userId // AI 사용량 로깅을 위한 userId 전달
     );
-
-    // 추적 정보 수집 (테스트 환경에서만)
-    const trackingInfo =
-      process.env.NODE_ENV === "development" ||
-      process.env.NEXT_PUBLIC_NODE_ENV === "development"
-        ? extractTrackingInfo(weeklyFeedback)
-        : undefined;
 
     // 추적 정보 제거 (DB 저장 전)
     const cleanedFeedback = removeTrackingInfo(weeklyFeedback);
@@ -158,7 +104,6 @@ export async function POST(request: NextRequest) {
       {
         message: "Weekly feedback generated and saved successfully",
         data: { ...cleanedFeedback, id: savedId },
-        ...(trackingInfo && { tracking: trackingInfo }),
       },
       { status: 200 }
     );

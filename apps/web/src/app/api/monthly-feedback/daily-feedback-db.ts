@@ -15,11 +15,12 @@ function extractMonthlyFeedbackFields(
     day_of_week: feedback.day_of_week,
     vivid_report: feedback.vivid_report,
     emotion_report: feedback.emotion_report,
-    daily_report: feedback.daily_report,
-    summary_report: feedback.summary_report,
-    insight_report: feedback.insight_report,
-    feedback_report: feedback.feedback_report,
-    final_report: feedback.final_report,
+    // 현재 DailyFeedbackRow에는 emotion_report와 vivid_report만 존재
+    daily_report: null,
+    summary_report: null,
+    insight_report: null,
+    feedback_report: null,
+    final_report: null,
   };
 }
 

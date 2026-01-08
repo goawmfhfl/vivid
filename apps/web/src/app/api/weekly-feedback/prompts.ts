@@ -21,56 +21,11 @@ export function buildUnifiedWeeklyFeedbackPrompt(
   weekRange: { start: string; end: string; timezone: string }
 ): string {
   let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 
-위 스키마에 따라 주간 피드백의 모든 섹션(summary_report, daily_life_report, emotion_report, vivid_report, insight_report, execution_report, closing_report)을 한 번에 생성하여 JSON만 출력하세요.\n\n`;
+위 스키마에 따라 주간 피드백의 모든 섹션(vivid_report, closing_report)을 한 번에 생성하여 JSON만 출력하세요.\n\n`;
 
-  // 일일 피드백 데이터를 종합하여 제공 (vivid_report와 emotion_report만 사용)
+  // 일일 피드백 데이터를 종합하여 제공 (vivid_report만 사용)
   dailyFeedbacks.forEach((feedback, idx) => {
     prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    // Emotion Report 데이터
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.ai_mood_valence !== null) {
-        prompt += `[감정 쾌-불쾌] ${emotion.ai_mood_valence}\n`;
-      }
-      if (emotion.ai_mood_arousal !== null) {
-        prompt += `[감정 각성-에너지] ${emotion.ai_mood_arousal}\n`;
-      }
-      if (
-        Array.isArray(emotion.emotion_curve) &&
-        emotion.emotion_curve.length > 0
-      ) {
-        prompt += `[감정 곡선] ${emotion.emotion_curve.join(" → ")}\n`;
-      }
-      if (emotion.dominant_emotion) {
-        prompt += `[대표 감정] ${emotion.dominant_emotion}\n`;
-      }
-      if (emotion.emotion_quadrant) {
-        prompt += `[감정 사분면] ${emotion.emotion_quadrant}\n`;
-      }
-      if (emotion.emotion_quadrant_explanation) {
-        prompt += `[감정 사분면 설명] ${emotion.emotion_quadrant_explanation}\n`;
-      }
-      if (
-        Array.isArray(emotion.emotion_timeline) &&
-        emotion.emotion_timeline.length > 0
-      ) {
-        prompt += `[감정 타임라인] ${emotion.emotion_timeline.join(", ")}\n`;
-      }
-    }
-
-    // Emotion Report 데이터 (Pro 전용)
-    if (
-      Array.isArray(feedback.emotion_report?.emotion_events) &&
-      feedback.emotion_report.emotion_events.length > 0
-    ) {
-      prompt += `[감정 이벤트]\n`;
-      feedback.emotion_report.emotion_events.forEach((event, i) => {
-        prompt += `  ${i + 1}. ${event.event} (감정: ${event.emotion}${
-          event.reason ? `, 이유: ${event.reason}` : ""
-        })\n`;
-      });
-    }
 
     // Vivid Report 데이터
     if (feedback.vivid_report) {
@@ -133,171 +88,17 @@ export function buildUnifiedWeeklyFeedbackPrompt(
 1. Pro 멤버십이 아닌 경우, Pro 전용 필드는 모두 null로 출력하세요.
 2. Free 멤버에게 제공하는 데이터는 간략하게 작성하세요 (토큰 사용량 최소화).
 3. 날짜 표현 시 "2일차", "3일차" 같은 표현을 사용하지 말고, 정확한 날짜와 요일을 함께 언급하세요 (예: "2025년 1월 15일 (수요일)").
-4. emotion_report의 daily_emotions에는 기록이 있는 날짜의 데이터만 포함하세요 (데이터가 없는 요일은 제외).
-5. valence_triggers, arousal_triggers의 각 요소에는 날짜와 요일을 포함하세요 (예: "가족/이사 등의 큰 변화로 인한 기대와 불안의 공존(2025년 1월 15일 수요일)").
-6. anxious_triggers, engaged_triggers, sad_triggers, calm_triggers의 각 요소는 현재보다 2배 길이로 상세하게 작성하세요.
-7. summary_report의 Pro 버전은 현재 길이의 2/3로 간결하게 작성하세요.
+4. 날짜 표현 시 정확한 날짜와 요일을 함께 언급하세요.
 
 **섹션별 요구사항:**
-1. summary_report: 이번 주 전체를 요약한 핵심 내용 (Pro는 배열 구조로 재구성)
-2. daily_life_report: 일주일간의 일상 패턴과 트렌드 분석 (Pro는 daily_life_characteristics 5개 추가)
-3. emotion_report: 일주일간의 감정 흐름과 패턴 분석 (ai_mood_valence와 ai_mood_arousal은 일별 값들의 평균 계산, 날짜 형식 주의)
-4. vivid_report: 일주일간의 비비드 분석 - 8개 섹션 모두 포함 (주간 비비드 요약, 평가, 키워드 분석, 앞으로의 모습 분석, 일치도 트렌드, 사용자 특징 분석, 지향하는 모습 분석, 주간 인사이트)
-5. insight_report: 일주일간의 인사이트와 패턴 발견 (growth_insights와 next_week_focus 분리)
-6. execution_report: 일주일간의 실행과 행동에 대한 분석 (positives_top3, improvements_top3, core_feedback_themes 제거, ai_feedback_summary가 가장 먼저 표시)
-7. closing_report: 이번 주를 마무리하는 종합 리포트 (identity_evolution 제거)
+1. vivid_report: 일주일간의 비비드 분석 - 8개 섹션 모두 포함 (주간 비비드 요약, 평가, 키워드 분석, 앞으로의 모습 분석, 일치도 트렌드, 사용자 특징 분석, 지향하는 모습 분석, 주간 인사이트)
+2. closing_report: 이번 주를 마무리하는 종합 리포트
 
 모든 섹션을 스키마에 맞게 완전히 작성해주세요.`;
 
   return prompt;
 }
 
-// 기존 함수들은 하위 호환성을 위해 유지 (사용되지 않을 수 있음)
-export function buildSummaryReportPrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
-): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 전체 요약(summary_report)을 생성하여 JSON만 출력하세요.\n\n`;
-
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    // vivid_report와 emotion_report 데이터만 사용
-    if (feedback.vivid_report) {
-      const vivid = feedback.vivid_report;
-      if (vivid.current_summary) {
-        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
-      }
-      if (vivid.future_summary) {
-        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
-      }
-    }
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.ai_mood_valence !== null) {
-        prompt += `감정 쾌-불쾌: ${emotion.ai_mood_valence}\n`;
-      }
-      if (emotion.ai_mood_arousal !== null) {
-        prompt += `감정 각성-에너지: ${emotion.ai_mood_arousal}\n`;
-      }
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
-      }
-    }
-  });
-
-  prompt += `\n\n위 데이터를 종합하여 주간 전체 요약(summary_report)을 생성하세요.
-
-**중요**: title 필드는 이번 주의 핵심을 '~~했던 한 주' 형식으로 작성하세요. 예를 들어:
-- "데이터 손실과 회복을 경험했던 한 주"
-- "새로운 도전을 시작했던 한 주"
-- "스트레스 속에서도 성장을 발견했던 한 주"
-
-'~~한 여정'이라는 표현은 절대 사용하지 말고, 반드시 '~~했던 한 주'로 표현하세요.`;
-  return prompt;
-}
-
-export function buildDailyLifePrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
-): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백의 "오늘의 일상" 데이터입니다. 위 스키마에 따라 주간 일상 리포트(daily_life_report)를 생성하여 JSON만 출력하세요.\n\n`;
-
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    // vivid_report와 emotion_report 데이터만 사용
-    if (feedback.vivid_report) {
-      const vivid = feedback.vivid_report;
-      if (vivid.current_summary) {
-        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
-      }
-      if (
-        Array.isArray(vivid.current_keywords) &&
-        vivid.current_keywords.length > 0
-      ) {
-        prompt += `오늘의 비비드 키워드: ${vivid.current_keywords.join(", ")}\n`;
-      }
-    }
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
-      }
-      if (emotion.emotion_quadrant) {
-        prompt += `감정 사분면: ${emotion.emotion_quadrant}\n`;
-      }
-    }
-  });
-
-  prompt += `\n\n위 데이터를 종합하여 주간 일상 리포트(daily_life_report)를 생성하세요. 패턴을 발견하고 트렌드 분석을 포함하세요.
-
-**중요**: summary 필드에서 날짜를 언급할 때는 반드시 요일 정보를 포함하세요. 예: "이번 주(월요일(12/01)–일요일(12/07))" 또는 "12/01(월)–12/07(일)" 형식으로 작성하세요.`;
-  return prompt;
-}
-
-export function buildEmotionPrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
-): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백의 감정 데이터입니다. 위 스키마에 따라 주간 감정 리포트(emotion_report)를 생성하여 JSON만 출력하세요.\n\n`;
-
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.ai_mood_valence !== null) {
-        prompt += `감정 쾌-불쾌 (Valence): ${emotion.ai_mood_valence}\n`;
-      }
-      if (emotion.ai_mood_arousal !== null) {
-        prompt += `감정 각성-에너지 (Arousal): ${emotion.ai_mood_arousal}\n`;
-      }
-      if (
-        Array.isArray(emotion.emotion_curve) &&
-        emotion.emotion_curve.length > 0
-      ) {
-        prompt += `감정 곡선: ${emotion.emotion_curve.join(" → ")}\n`;
-      }
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
-      }
-      if (emotion.emotion_quadrant) {
-        prompt += `감정 사분면: ${emotion.emotion_quadrant}\n`;
-      }
-      if (emotion.emotion_quadrant_explanation) {
-        prompt += `감정 사분면 설명: ${emotion.emotion_quadrant_explanation}\n`;
-      }
-      if (
-        Array.isArray(emotion.emotion_timeline) &&
-        emotion.emotion_timeline.length > 0
-      ) {
-        prompt += `감정 타임라인: ${emotion.emotion_timeline.join(", ")}\n`;
-      }
-    }
-
-    if (
-      Array.isArray(feedback.emotion_report?.emotion_events) &&
-      feedback.emotion_report.emotion_events.length > 0
-    ) {
-      prompt += `감정 이벤트:\n`;
-      feedback.emotion_report.emotion_events.forEach((event, i) => {
-        prompt += `  ${i + 1}. ${event.event} (감정: ${event.emotion}${
-          event.reason ? `, 이유: ${event.reason}` : ""
-        })\n`;
-      });
-    }
-  });
-
-  prompt += `\n\n위 데이터를 종합하여 주간 감정 리포트(emotion_report)를 생성하세요.
-- ai_mood_valence: 일별 ai_mood_valence 값들의 평균을 계산하세요 (null이 아닌 값들만 평균 계산)
-- ai_mood_arousal: 일별 ai_mood_arousal 값들의 평균을 계산하세요 (null이 아닌 값들만 평균 계산)
-- dominant_emotion: 이번 주를 대표하는 가장 핵심적인 감정을 한 단어 또는 짧은 구로 작성하세요
-${formatDateForEmotion(weekRange.start)})`;
-  return prompt;
-}
 
 export function buildVividPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
@@ -408,72 +209,6 @@ export function buildVividPrompt(
   return prompt;
 }
 
-export function buildInsightPrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
-): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백의 인사이트 데이터입니다. 위 스키마에 따라 주간 인사이트 리포트(insight_report)를 생성하여 JSON만 출력하세요.\n\n`;
-
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    // vivid_report와 emotion_report 데이터만 사용
-    if (feedback.vivid_report) {
-      const vivid = feedback.vivid_report;
-      if (vivid.current_summary) {
-        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
-      }
-      if (vivid.future_summary) {
-        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
-      }
-    }
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
-      }
-      if (emotion.emotion_quadrant) {
-        prompt += `감정 사분면: ${emotion.emotion_quadrant}\n`;
-      }
-    }
-  });
-
-  prompt += `\n\n위 데이터를 종합하여 주간 인사이트 리포트(insight_report)를 생성하세요.`;
-  return prompt;
-}
-
-export function buildExecutionPrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
-): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백의 실행 데이터입니다. 위 스키마에 따라 주간 실행 리포트(execution_report)를 생성하여 JSON만 출력하세요.\n\n`;
-
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
-
-    // vivid_report와 emotion_report 데이터만 사용
-    if (feedback.vivid_report) {
-      const vivid = feedback.vivid_report;
-      if (vivid.current_summary) {
-        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
-      }
-      if (vivid.future_summary) {
-        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
-      }
-    }
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
-      }
-    }
-  });
-
-  prompt += `\n\n위 데이터를 종합하여 주간 실행 리포트(execution_report)를 생성하세요.`;
-  return prompt;
-}
 
 export function buildClosingPrompt(
   dailyFeedbacks: DailyFeedbackForWeekly,
@@ -484,7 +219,7 @@ export function buildClosingPrompt(
   dailyFeedbacks.forEach((feedback, idx) => {
     prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
 
-    // vivid_report와 emotion_report 데이터만 사용
+    // vivid_report 데이터만 사용
     if (feedback.vivid_report) {
       const vivid = feedback.vivid_report;
       if (vivid.current_summary) {
@@ -492,13 +227,6 @@ export function buildClosingPrompt(
       }
       if (vivid.future_summary) {
         prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
-      }
-    }
-
-    if (feedback.emotion_report) {
-      const emotion = feedback.emotion_report;
-      if (emotion.dominant_emotion) {
-        prompt += `대표 감정: ${emotion.dominant_emotion}\n`;
       }
     }
   });

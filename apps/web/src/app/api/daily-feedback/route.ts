@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
       date,
       dayOfWeek,
       isPro,
-      undefined, // progressCallback 없음
       userId // AI 사용량 로깅을 위한 userId 전달
     );
 

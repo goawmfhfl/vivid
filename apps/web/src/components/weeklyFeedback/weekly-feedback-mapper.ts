@@ -69,45 +69,14 @@ function toNumber(value: unknown): number {
 }
 
 /**
- * WeeklyFeedback을 WeeklyReportData로 변환 (새로운 구조 반영)
+ * WeeklyFeedback을 WeeklyReportData로 변환
  */
 export function mapWeeklyFeedbackToReportData(
   feedback: WeeklyFeedback
 ): WeeklyReportData {
   return {
-    week_range: {
-      start: formatDateForDisplay(feedback.week_range.start),
-      end: formatDateForDisplay(feedback.week_range.end),
-    },
-    summary_report: feedback.summary_report,
-    daily_life_report: feedback.daily_life_report,
-    emotion_report: feedback.emotion_report
-      ? {
-          ...feedback.emotion_report,
-          daily_emotions: (feedback.emotion_report.daily_emotions || []).map(
-            (day) => ({
-              ...day,
-              date: day.date.includes("-")
-                ? formatDateForDisplay(day.date)
-                : day.date,
-              weekday: convertWeekdayToKorean(day.weekday),
-              ai_mood_valence:
-                day.ai_mood_valence !== null &&
-                day.ai_mood_valence !== undefined
-                  ? toNumber(day.ai_mood_valence)
-                  : null,
-              ai_mood_arousal:
-                day.ai_mood_arousal !== null &&
-                day.ai_mood_arousal !== undefined
-                  ? toNumber(day.ai_mood_arousal)
-                  : null,
-            })
-          ),
-        }
-      : null,
+    week_range: feedback.week_range,
     vivid_report: feedback.vivid_report,
-    insight_report: feedback.insight_report,
-    execution_report: feedback.execution_report,
     closing_report: feedback.closing_report,
   };
 }

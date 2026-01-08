@@ -8,13 +8,8 @@ import {
 import type { Record } from "./types";
 import { buildEmotionPrompt, buildVividPrompt } from "./prompts";
 import type {
-  SummaryReport,
-  DailyReport,
   EmotionReport,
   VividReport,
-  InsightReport,
-  FeedbackReport,
-  FinalReport,
 } from "@/types/daily-feedback";
 import {
   generateCacheKey,
@@ -26,10 +21,8 @@ import type {
   Schema,
   ReportSchema,
   ExtendedUsage,
-  TrackingInfo,
   WithTracking,
   ApiError,
-  ProgressCallback as ProgressCallbackType,
 } from "../types";
 import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
@@ -48,12 +41,7 @@ function getOpenAIClient(): OpenAI {
 }
 
 /**
- * 진행 상황 콜백 타입
- */
-type ProgressCallback = ProgressCallbackType;
-
-/**
- * Section 생성 헬퍼 함수 (진행 상황 추적 포함)
+ * Section 생성 헬퍼 함수
  */
 async function generateSection<T>(
   systemPrompt: string,
@@ -62,20 +50,16 @@ async function generateSection<T>(
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
-  progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<T> {
-  // 진행 상황 알림 (섹션 시작)
   const schemaObj: ReportSchema =
     typeof schema === "function" ? schema(isPro) : schema;
-  progressCallback?.(0, 0, sectionName);
 
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;
   const cachedResult = getFromCache<T>(proCacheKey);
   if (cachedResult) {
     console.log(`캐시에서 결과 반환 (${schemaObj.name}, Pro: ${isPro})`);
-    // 캐시된 경우에도 진행 상황 알림 (이미 완료된 것으로 간주)
     return cachedResult;
   }
 
@@ -296,13 +280,11 @@ async function generateSection<T>(
 /**
  * 감정 기록 리포트 생성
  */
-
 async function generateEmotionReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<EmotionReport | null> {
   const emotionRecords = records.filter((r) => r.type === "emotion");
@@ -321,7 +303,6 @@ async function generateEmotionReport(
     cacheKey,
     isPro,
     "emotion_report",
-    progressCallback,
     userId
   );
 }
@@ -329,13 +310,11 @@ async function generateEmotionReport(
 /**
  * VIVID 기록 리포트 생성
  */
-
 async function generateVividReport(
   records: Record[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<VividReport | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
@@ -354,21 +333,19 @@ async function generateVividReport(
     cacheKey,
     isPro,
     "vivid_report",
-    progressCallback,
     userId
   );
 }
 
 
 /**
- * 모든 타입별 리포트 생성 (진행 상황 콜백 포함)
+ * 모든 타입별 리포트 생성
  */
 export async function generateAllReportsWithProgress(
   records: Record[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<{
   emotion_report: EmotionReport | null;
@@ -383,22 +360,12 @@ export async function generateAllReportsWithProgress(
 
   // vivid 모드가 기본값: vivid_report와 emotion_report만 생성
   if (!hasOtherTypes) {
-    const sectionNames = ["VividReport", "EmotionReport"];
-    const totalSections = sectionNames.length;
-    let completedSections = 0;
-
-    const callProgress = (sectionName: string, tracking?: TrackingInfo) => {
-      completedSections++;
-      progressCallback?.(completedSections, totalSections, sectionName, tracking);
-    };
-
     // vivid_report와 emotion_report만 생성
     const vividReport = await generateVividReport(
       records,
       date,
       dayOfWeek,
       isPro,
-      (c, t, n, tr) => callProgress(n, tr),
       userId
     );
     const emotionReport = await generateEmotionReport(
@@ -406,7 +373,6 @@ export async function generateAllReportsWithProgress(
       date,
       dayOfWeek,
       isPro,
-      (c, t, n, tr) => callProgress(n, tr),
       userId
     );
 
@@ -416,30 +382,13 @@ export async function generateAllReportsWithProgress(
     };
   }
 
-  // 일반 모드: 다른 record type이 있을 때만 모든 리포트 생성
-  const sectionNames = [
-    "SummaryReport",
-    "DailyReport",
-    "EmotionReport",
-    "VividReport",
-    "InsightReport",
-    "FeedbackReport",
-    "FinalReport",
-  ];
-  const totalSections = sectionNames.length;
-  let completedSections = 0;
-
-  const callProgress = (sectionName: string, tracking?: TrackingInfo) => {
-    completedSections++;
-    progressCallback?.(completedSections, totalSections, sectionName, tracking);
-  };
-
+  // 일반 모드: 다른 record type이 있어도 현재는 vivid 모드와 동일하게 처리
+  // (향후 확장 가능성을 위해 구조는 유지)
   const emotionReport = await generateEmotionReport(
     records,
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr),
     userId
   );
   const vividReport = await generateVividReport(
@@ -447,7 +396,6 @@ export async function generateAllReportsWithProgress(
     date,
     dayOfWeek,
     isPro,
-    (c, t, n, tr) => callProgress(n, tr),
     userId
   );
 

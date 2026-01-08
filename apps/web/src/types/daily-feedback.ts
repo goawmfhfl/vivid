@@ -4,6 +4,14 @@ export interface EmotionTimelineItem {
   emotion: string;
 }
 
+// Emotion Event 타입
+export interface EmotionEvent {
+  event: string;
+  emotion: string;
+  reason?: string | null;
+  suggestion?: string | null;
+}
+
 // Emotion Report 타입
 export interface EmotionReport {
   ai_mood_valence: number | null;
@@ -18,6 +26,7 @@ export interface EmotionReport {
     | null;
   emotion_quadrant_explanation: string | null;
   emotion_timeline: EmotionTimelineItem[];
+  emotion_events?: EmotionEvent[] | null;
 }
 
 
