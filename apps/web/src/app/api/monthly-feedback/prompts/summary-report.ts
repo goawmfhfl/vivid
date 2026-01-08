@@ -1,10 +1,10 @@
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
+import type { DailyFeedbackForMonthly } from "../types";
 
 /**
  * Summary Report용 프롬프트 생성
  */
 export function buildSummaryReportPrompt(
-  dailyFeedbacks: DailyFeedbackRow[],
+  dailyFeedbacks: DailyFeedbackForMonthly[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   totalDays: number,

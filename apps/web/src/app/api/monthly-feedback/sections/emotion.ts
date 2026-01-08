@@ -1,9 +1,8 @@
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type {
   EmotionReport,
   MonthlyMoodTimelineItem,
 } from "@/types/monthly-feedback-new";
-import type { ProgressCallback } from "../types";
+import type { ProgressCallback, DailyFeedbackForMonthly } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
 import { SYSTEM_PROMPT_EMOTION } from "../system-prompts";
@@ -15,7 +14,7 @@ import { getKSTDate, getKSTWeekday } from "@/lib/date-utils";
  * monthly_mood_timeline 생성 (daily-feedback 데이터에서 추출)
  */
 function generateMonthlyMoodTimeline(
-  dailyFeedbacks: DailyFeedbackRow[]
+  dailyFeedbacks: DailyFeedbackForMonthly[]
 ): MonthlyMoodTimelineItem[] {
   const timeline: MonthlyMoodTimelineItem[] = [];
 
@@ -44,7 +43,7 @@ function generateMonthlyMoodTimeline(
  * Emotion Report 생성
  */
 export async function generateEmotionReport(
-  dailyFeedbacks: DailyFeedbackRow[],
+  dailyFeedbacks: DailyFeedbackForMonthly[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,

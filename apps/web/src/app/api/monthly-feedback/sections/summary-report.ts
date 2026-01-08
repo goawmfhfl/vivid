@@ -1,6 +1,5 @@
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { SummaryReport } from "@/types/monthly-feedback-new";
-import type { ProgressCallback } from "../types";
+import type { ProgressCallback, DailyFeedbackForMonthly } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
 import { SYSTEM_PROMPT_SUMMARY_REPORT } from "../system-prompts";
@@ -11,7 +10,7 @@ import { generateCacheKey } from "../../utils/cache";
  * Summary Report 생성
  */
 export async function generateSummaryReport(
-  dailyFeedbacks: DailyFeedbackRow[],
+  dailyFeedbacks: DailyFeedbackForMonthly[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   totalDays: number,

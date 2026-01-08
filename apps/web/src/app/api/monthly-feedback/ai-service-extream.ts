@@ -1,6 +1,5 @@
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import type { MonthlyFeedback } from "@/types/monthly-feedback";
-import type { ProgressCallback } from "./types";
+import type { ProgressCallback, DailyFeedbackForMonthly } from "./types";
 import {
   generateSummaryReport,
   generateDailyLifeReport,
@@ -20,10 +19,11 @@ export type { ProgressCallback } from "./types";
  * Daily Feedback 배열을 기반으로 월간 피드백 생성 (스트리밍 진행 상황 포함)
  *
  * 7개 영역을 병렬로 생성 (Promise.all 사용)
- * vivid_report와 emotion_report만 사용
+ * 필요한 리포트 필드만 사용
  */
+
 export async function generateMonthlyFeedbackFromDailyWithProgress(
-  dailyFeedbacks: Pick<DailyFeedbackRow, "report_date" | "day_of_week" | "vivid_report" | "emotion_report">[],
+  dailyFeedbacks: DailyFeedbackForMonthly[],
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,

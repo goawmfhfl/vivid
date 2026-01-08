@@ -395,35 +395,6 @@ export function buildInsightPrompt(
       }
     }
   });
-      const insight = feedback.insight_report;
-      if (
-        Array.isArray(insight.core_insights) &&
-        insight.core_insights.length > 0
-      ) {
-        prompt += `핵심 인사이트:\n`;
-        insight.core_insights.forEach((item, i) => {
-          prompt += `  ${i + 1}. ${item.insight} (출처: ${item.source})\n`;
-        });
-      }
-      if (insight.meta_question) {
-        prompt += `메타 질문: ${insight.meta_question}\n`;
-      }
-      if (insight.insight_ai_comment) {
-        prompt += `인사이트 AI 코멘트: ${insight.insight_ai_comment}\n`;
-      }
-      if (
-        Array.isArray(insight.insight_next_actions) &&
-        insight.insight_next_actions.length > 0
-      ) {
-        prompt += `다음 액션:\n`;
-        insight.insight_next_actions.forEach((action, i) => {
-          prompt += `  ${i + 1}. ${action.label} (난이도: ${
-            action.difficulty
-          }, 예상 시간: ${action.estimated_minutes}분)\n`;
-        });
-      }
-    }
-  });
 
   prompt += `\n\n위 데이터를 종합하여 주간 인사이트 리포트(insight_report)를 생성하세요.`;
   return prompt;
