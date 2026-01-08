@@ -307,7 +307,7 @@ export function DatePickerBottomSheet({
                               className="w-1.5 h-1.5 rounded-full"
                               style={{
                                 backgroundColor: isActive
-                                  ? "white"
+                                  ? COLORS.text.white
                                   : COLORS.brand.primary,
                               }}
                             />
@@ -316,9 +316,7 @@ export function DatePickerBottomSheet({
                             <div
                               className="w-1.5 h-1.5 rounded-full"
                               style={{
-                                backgroundColor: isActive
-                                  ? "white"
-                                  : COLORS.brand.secondary,
+                                backgroundColor: "#E5B96B", // 머스터드 옐로우 (active 상태에서도 잘 보임)
                               }}
                             />
                           )}

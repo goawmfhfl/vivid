@@ -6,7 +6,6 @@ import {
   useGetDailyFeedback,
   useGetDailyFeedbackById,
 } from "@/hooks/useGetDailyFeedback";
-import { HeaderSection } from "./Header";
 import { DailyReportSection } from "./DailyReportSection";
 import { VisionSection } from "./Vision";
 import { InsightSection } from "./Insight";
@@ -134,7 +133,13 @@ export function DailyFeedbackView({
   const hasEmotionSection = !!(
     view.emotion_curve && view.emotion_curve.length > 0
   );
-  const hasDreamSection = !!(view.vision_summary && view.vision_summary.trim());
+  const hasDreamSection = !!(
+    (view.current_summary && view.current_summary.trim()) ||
+    (view.future_summary && view.future_summary.trim()) ||
+    (view.alignment_score !== null && view.alignment_score !== undefined) ||
+    (view.user_characteristics && view.user_characteristics.length > 0) ||
+    (view.aspired_traits && view.aspired_traits.length > 0)
+  );
   const hasInsightSection = !!(
     view.core_insights && view.core_insights.length > 0
   );
@@ -153,64 +158,75 @@ export function DailyFeedbackView({
       <div
         className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
       >
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="mb-6 -ml-2"
-          style={{ color: COLORS.brand.primary }}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          돌아가기
-        </Button>
-
-        <ScrollAnimation>
-          <div className="mb-64">
-            <HeaderSection view={view} isPro={isPro} />
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="-ml-2"
+            style={{ color: COLORS.brand.primary }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            돌아가기
+          </Button>
+          <div className="text-right">
+            <div
+              className="text-sm font-medium"
+              style={{ color: COLORS.text.secondary }}
+            >
+              {view.dayOfWeek}
+            </div>
+            <div
+              className="text-lg font-semibold"
+              style={{ color: COLORS.text.primary }}
+            >
+              {view.date}
+            </div>
           </div>
-        </ScrollAnimation>
+        </div>
+
+        {/* 오늘의 VIVID 섹션을 가장 상단에 배치 */}
+        {hasDreamSection && (
+          <ScrollAnimation>
+            <div className="mb-16">
+              <VisionSection view={view} isPro={isPro} />
+            </div>
+          </ScrollAnimation>
+        )}
 
         {hasDailySection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
+          <ScrollAnimation delay={200}>
+            <div className="mb-16">
               <DailyReportSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
         {hasEmotionSection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
+          <ScrollAnimation delay={200}>
+            <div className="mb-16">
               <EmotionSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
-        {hasDreamSection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
-              <VisionSection view={view} isPro={isPro} />
-            </div>
-          </ScrollAnimation>
-        )}
-
         {hasInsightSection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
+          <ScrollAnimation delay={200}>
+            <div className="mb-16">
               <InsightSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
         {hasFeedbackSection && (
-          <ScrollAnimation delay={300}>
-            <div className="mb-64">
+          <ScrollAnimation delay={200}>
+            <div className="mb-16">
               <FeedbackSection view={view} isPro={isPro} />
             </div>
           </ScrollAnimation>
         )}
 
         {hasFinalSection && (
-          <ScrollAnimation delay={300}>
+          <ScrollAnimation delay={200}>
             <div className="mb-12">
               <FinalSection view={view} isPro={isPro} />
             </div>

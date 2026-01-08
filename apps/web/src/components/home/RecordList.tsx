@@ -8,6 +8,7 @@ import { RecordItemSkeleton } from "../ui/Skeleton";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
 interface RecordListProps {
   records: Record[];
@@ -73,7 +74,10 @@ export function RecordList({
   if (isLoading) {
     return (
       <div className="mb-6">
-        <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
+        <h2
+          className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight, "mb-4")}
+          style={{ color: COLORS.text.primary }}
+        >
           {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         <div className="space-y-3">
@@ -89,7 +93,10 @@ export function RecordList({
   if (error) {
     return (
       <div className="mb-6">
-        <h2 className="mb-4" style={{ color: "#333333", fontSize: "1.1rem" }}>
+        <h2
+          className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight, "mb-4")}
+          style={{ color: COLORS.text.primary }}
+        >
           {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         <div className="py-8">
@@ -113,10 +120,10 @@ export function RecordList({
           style={{ color: "#A8BBA8", opacity: 0.5 }}
         />
         <p
+          className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
           style={{
-            color: "#4E4B46",
+            color: COLORS.text.secondary,
             opacity: 0.6,
-            fontSize: "0.9rem",
           }}
         >
           {isToday
@@ -131,16 +138,18 @@ export function RecordList({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 style={{ color: "#333333", fontSize: "1.1rem" }}>
+        <h2
+          className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+          style={{ color: COLORS.text.primary }}
+        >
           {isToday ? "오늘의 타임라인" : "타임라인"}
         </h2>
         {totalCharCount > 0 && (
           <span
-            className={TYPOGRAPHY.caption.fontSize}
+            className={cn(TYPOGRAPHY.caption.fontSize, TYPOGRAPHY.caption.fontWeight)}
             style={{
               color: COLORS.text.muted,
               opacity: 0.6,
-              fontSize: "0.75rem",
             }}
           >
             총 {totalCharCount.toLocaleString()}자

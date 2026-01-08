@@ -15,6 +15,7 @@ import {
   CARD_STYLES,
   SPACING,
 } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 import {
   RECORD_TYPES,
   type RecordType,
@@ -145,11 +146,9 @@ export function RecordItem({
           <div className="flex items-center gap-2.5 flex-wrap">
             {typeInfo && (
               <span
-                className={TYPOGRAPHY.caption.fontSize}
+                className={cn(TYPOGRAPHY.body.fontSize, "font-medium")}
                 style={{
                   color: COLORS.text.primary,
-                  fontWeight: "500",
-                  fontSize: "0.875rem",
                   lineHeight: "1.2",
                 }}
               >
@@ -157,21 +156,19 @@ export function RecordItem({
               </span>
             )}
             <span
-              className={TYPOGRAPHY.caption.fontSize}
+              className={cn(TYPOGRAPHY.caption.fontSize, TYPOGRAPHY.caption.fontWeight)}
               style={{
                 color: COLORS.text.secondary,
                 opacity: 0.5,
-                fontSize: "0.75rem",
               }}
             >
               {formatKSTTime(record.created_at)}
             </span>
             <span
-              className={TYPOGRAPHY.caption.fontSize}
+              className={cn(TYPOGRAPHY.caption.fontSize, TYPOGRAPHY.caption.fontWeight)}
               style={{
                 color: COLORS.text.muted,
                 opacity: 0.5,
-                fontSize: "0.7rem",
               }}
             >
               {record.content?.length || 0}자
@@ -258,7 +255,7 @@ export function RecordItem({
           )}
         </div>
         <p
-          className={TYPOGRAPHY.bodyLarge.fontSize}
+          className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}
           style={{
             color: COLORS.text.primary,
             lineHeight: "28px", // 줄무늬 간격(28px)과 일치

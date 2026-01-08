@@ -6,6 +6,7 @@ import {
   isToday,
   toISODate,
 } from "./calendar-utils";
+import { COLORS } from "@/lib/design-system";
 
 export interface CalendarProps {
   year: number;
@@ -115,7 +116,9 @@ export function Calendar({
                     <div
                       className="h-1.5 w-1.5 rounded-full"
                       style={{
-                        backgroundColor: "#FFD23F",
+                        backgroundColor: isSelected
+                          ? COLORS.text.white
+                          : COLORS.brand.primary,
                       }}
                     />
                   )}
@@ -123,7 +126,7 @@ export function Calendar({
                     <div
                       className="h-1.5 w-1.5 rounded-full"
                       style={{
-                        backgroundColor: "#A8BBA8",
+                        backgroundColor: "#E5B96B", // 머스터드 옐로우 (active 상태에서도 잘 보임)
                       }}
                     />
                   )}
