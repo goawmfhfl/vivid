@@ -3,17 +3,10 @@ import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 
 export interface RecentTrendsResponse {
-  emotionData: Array<{
-    date: string;
-    valence: number | null;
-    arousal: number | null;
-    quadrant: string | null;
-  }>;
-  aspired_self: string[];
-  interests: string[];
-  personalityStrengths: string[];
-  immersionSituations: string[];
-  reliefSituations: string[];
+  aspired_self: string[]; // 내가 지향하는 모습 (최근 5개)
+  interests: string[]; // 나의 관심사 (최근 5개)
+  immersion_moments: string[]; // 몰입 희망 순간 (최근 5개)
+  personality_traits: string[]; // 나라는 사람의 성향 (최근 5개)
 }
 
 const fetchRecentTrends = async (): Promise<RecentTrendsResponse> => {

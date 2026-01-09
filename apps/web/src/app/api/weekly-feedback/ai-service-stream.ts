@@ -2,15 +2,19 @@ import OpenAI from "openai";
 import {
   getWeeklyFeedbackSchema,
   SYSTEM_PROMPT_VIVID,
+  SYSTEM_PROMPT_WEEKLY_TREND,
+  WeeklyTrendDataSchema,
 } from "./schema";
 import type { DailyFeedbackForWeekly } from "./types";
 import {
   buildVividPrompt,
   buildWeeklyTitlePrompt,
+  buildWeeklyTrendPrompt,
 } from "./prompts";
 import type {
   WeeklyFeedback,
   VividReport,
+  WeeklyTrendData,
 } from "@/types/weekly-feedback";
 import {
   generateCacheKey,
@@ -492,6 +496,42 @@ async function generateWeeklyTitle(
 }
 
 /**
+ * 주간 흐름 데이터(trend) 생성
+ */
+async function generateWeeklyTrend(
+  vividReport: VividReport,
+  range: { start: string; end: string; timezone: string },
+  isPro: boolean,
+  userId?: string,
+  userName?: string
+): Promise<WeeklyTrendData | null> {
+  const prompt = buildWeeklyTrendPrompt(vividReport, range, userName);
+  const cacheKey = generateCacheKey("weekly_trend", prompt);
+
+  try {
+    const response = await generateSection<WeeklyTrendData>(
+      SYSTEM_PROMPT_WEEKLY_TREND,
+      prompt,
+      WeeklyTrendDataSchema,
+      cacheKey,
+      isPro,
+      "weekly_trend",
+      userId
+    );
+
+    if (!response || !response.direction || !response.core_value || !response.driving_force || !response.current_self) {
+      console.error("[generateWeeklyTrend] trend 데이터 생성 실패: 필수 필드 누락");
+      return null;
+    }
+
+    return response;
+  } catch (error) {
+    console.error("[generateWeeklyTrend] trend 생성 실패:", error);
+    return null;
+  }
+}
+
+/**
  * Daily Feedback 배열을 기반으로 주간 피드백 생성 (vivid_report와 title 생성)
  */
 export async function generateWeeklyFeedbackFromDailyWithProgress(
@@ -519,11 +559,21 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     userName
   );
 
+  // vivid_report를 바탕으로 trend 생성
+  const trend = await generateWeeklyTrend(
+    vividReport,
+    range,
+    isPro,
+    userId,
+    userName
+  );
+
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {
     week_range: range,
     vivid_report: vividReport,
     title,
+    trend: trend || null,
     is_ai_generated: true,
   };
 

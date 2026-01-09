@@ -7,7 +7,7 @@ import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-cand
 import { SummaryList } from "./SummaryList";
 import { EmptyState } from "./EmptyState";
 import { Pagination } from "./Pagination";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 
 interface WeeklySummariesTabProps {
   summaries: PeriodSummary[];

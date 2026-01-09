@@ -3,12 +3,15 @@ import {
   EmotionReportSchema,
   SYSTEM_PROMPT_EMOTION,
   SYSTEM_PROMPT_VIVID,
+  SYSTEM_PROMPT_TREND,
+  TrendDataSchema,
   VividReportSchema,
 } from "./schema";
 import type { Record } from "./types";
 import { buildEmotionPrompt, buildVividPrompt } from "./prompts";
 import type {
   EmotionReport,
+  TrendData,
   VividReport,
 } from "@/types/daily-feedback";
 import {
@@ -337,6 +340,37 @@ async function generateVividReport(
   );
 }
 
+/**
+ * Trend 데이터 생성 (최근 동향 섹션용)
+ */
+async function generateTrendData(
+  records: Record[],
+  date: string,
+  dayOfWeek: string,
+  isPro: boolean = false,
+  userId?: string
+): Promise<TrendData | null> {
+  const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
+
+  if (dreamRecords.length === 0) {
+    return null;
+  }
+
+  // VIVID 기록을 기반으로 trend 데이터 생성
+  const prompt = buildVividPrompt(records, date, dayOfWeek, isPro);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_TREND, prompt);
+
+  return generateSection<TrendData>(
+    SYSTEM_PROMPT_TREND,
+    prompt,
+    TrendDataSchema,
+    cacheKey,
+    isPro,
+    "trend",
+    userId
+  );
+}
+
 
 /**
  * 모든 타입별 리포트 생성
@@ -350,6 +384,7 @@ export async function generateAllReportsWithProgress(
 ): Promise<{
   emotion_report: EmotionReport | null;
   vivid_report: VividReport | null;
+  trend: TrendData | null;
 }> {
   // recordType 확인: 기본값은 vivid 모드 (vivid/dream, emotion만)
   // 다른 record type(daily, insight, feedback)이 있으면 일반 모드로 전환
@@ -358,49 +393,33 @@ export async function generateAllReportsWithProgress(
     (type) => type !== "vivid" && type !== "dream" && type !== "emotion"
   );
 
-  // vivid 모드가 기본값: vivid_report와 emotion_report만 생성
+  // vivid 모드가 기본값: vivid_report, emotion_report, trend 생성
   if (!hasOtherTypes) {
-    // vivid_report와 emotion_report만 생성
-    const vividReport = await generateVividReport(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId
-    );
-    const emotionReport = await generateEmotionReport(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId
-    );
+    // vivid_report, emotion_report, trend 생성
+    const [vividReport, emotionReport, trendData] = await Promise.all([
+      generateVividReport(records, date, dayOfWeek, isPro, userId),
+      generateEmotionReport(records, date, dayOfWeek, isPro, userId),
+      generateTrendData(records, date, dayOfWeek, isPro, userId),
+    ]);
 
     return {
       emotion_report: emotionReport,
       vivid_report: vividReport,
+      trend: trendData,
     };
   }
 
   // 일반 모드: 다른 record type이 있어도 현재는 vivid 모드와 동일하게 처리
   // (향후 확장 가능성을 위해 구조는 유지)
-  const emotionReport = await generateEmotionReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    userId
-  );
-  const vividReport = await generateVividReport(
-    records,
-    date,
-    dayOfWeek,
-    isPro,
-    userId
-  );
+  const [emotionReport, vividReport, trendData] = await Promise.all([
+    generateEmotionReport(records, date, dayOfWeek, isPro, userId),
+    generateVividReport(records, date, dayOfWeek, isPro, userId),
+    generateTrendData(records, date, dayOfWeek, isPro, userId),
+  ]);
 
   return {
     emotion_report: emotionReport,
     vivid_report: vividReport,
+    trend: trendData,
   };
 }

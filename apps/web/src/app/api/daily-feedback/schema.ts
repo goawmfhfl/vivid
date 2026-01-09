@@ -169,6 +169,22 @@ export const SYSTEM_PROMPT_EMOTION = `
 - 무료 멤버십: emotion_events는 최대 3개까지만 생성하고, event와 emotion, 짧은 reason만 포함하세요. suggestion은 필요할 때만 간단히 작성하거나 null로 둘 수 있습니다.
 `;
 
+export const TrendDataSchema = {
+  name: "TrendData",
+  schema: {
+    type: "object",
+    properties: {
+      aspired_self: { type: "string" }, // 내가 지향하는 모습 1개
+      interest: { type: "string" }, // 나의 관심사 1개
+      immersion_moment: { type: "string" }, // 몰입 희망 순간 1개
+      personality_trait: { type: "string" }, // 나라는 사람의 성향 1개
+    },
+    required: ["aspired_self", "interest", "immersion_moment", "personality_trait"],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
 export const SYSTEM_PROMPT_VIVID = `
 당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")을 분석하여 VIVID 리포트를 생성합니다.
 
@@ -176,4 +192,23 @@ export const SYSTEM_PROMPT_VIVID = `
 - vision_keywords는 6~10개 필수로 추출합니다.
 - vision_ai_feedback는 3개 요소의 배열로 반환합니다. 각 요소는 핵심 피드백 한 문장입니다.
 - VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
+`;
+
+export const SYSTEM_PROMPT_TREND = `
+당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")을 분석하여 최근 동향 데이터를 생성합니다.
+
+## 섹션별 규칙
+- 각 항목은 1개씩만 작성합니다.
+- VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
+- 간결하고 명확하게 작성하세요.
+
+## 필드별 요구사항
+- aspired_self: 오늘의 VIVID 기록(Q2 중심)에서 드러난 가장 핵심적인 지향 모습을 한 문장으로 작성합니다.
+  예: "균형 잡힌 삶을 추구하는 사람"
+- interest: 오늘의 VIVID 기록(Q1, Q2 모두)에서 드러난 가장 중요한 관심사나 흥미를 한 문장으로 작성합니다.
+  예: "창의적인 문제 해결과 학습"
+- immersion_moment: 오늘의 VIVID 기록에서 드러난 몰입하고 싶은 순간이나 상황을 한 문장으로 작성합니다.
+  예: "깊이 몰입하는 작업을 할 때"
+- personality_trait: 오늘의 VIVID 기록을 통해 드러난 사용자의 핵심 성향을 한 문장으로 작성합니다.
+  예: "자기 성찰을 중시하는 사람"
 `;

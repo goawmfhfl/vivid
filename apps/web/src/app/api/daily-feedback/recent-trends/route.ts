@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { decryptDailyFeedback } from "@/lib/jsonb-encryption";
-import type { DailyFeedbackRow } from "@/types/daily-feedback";
 import { API_ENDPOINTS } from "@/constants";
 import {
   RECENT_TRENDS_REVALIDATE,
@@ -9,17 +7,10 @@ import {
 } from "@/constants/cache";
 
 interface RecentTrendsResponse {
-  emotionData: Array<{
-    date: string;
-    valence: number | null;
-    arousal: number | null;
-    quadrant: string | null;
-  }>;
-  aspired_self: string[];
-  interests: string[];
-  personalityStrengths: string[];
-  immersionSituations: string[];
-  reliefSituations: string[];
+  aspired_self: string[]; // 내가 지향하는 모습 (최근 5개)
+  interests: string[]; // 나의 관심사 (최근 5개)
+  immersion_moments: string[]; // 몰입 희망 순간 (최근 5개)
+  personality_traits: string[]; // 나라는 사람의 성향 (최근 5개)
 }
 
 /**
@@ -49,11 +40,13 @@ export async function GET(request: NextRequest) {
       dates.push(date.toISOString().split("T")[0]);
     }
 
-    // 최근 5일의 daily-feedback 데이터 조회 (필요한 컬럼만 선택)
+    // 최근 5일의 daily-feedback 데이터 조회 (trend 컬럼만 선택)
     const { data, error } = await supabase
       .from(API_ENDPOINTS.DAILY_FEEDBACK)
-      .select("report_date, emotion_report, final_report")
-      .in("report_date", dates);
+      .select("report_date, trend")
+      .eq("user_id", userId)
+      .in("report_date", dates)
+      .order("report_date", { ascending: false });
 
     if (error) {
       throw new Error(`Failed to fetch daily feedback: ${error.message}`);
@@ -62,64 +55,52 @@ export async function GET(request: NextRequest) {
     if (!data || data.length === 0) {
       return NextResponse.json<RecentTrendsResponse>(
         {
-          emotionData: [],
           aspired_self: [],
           interests: [],
-          personalityStrengths: [],
-          immersionSituations: [],
-          reliefSituations: [],
+          immersion_moments: [],
+          personality_traits: [],
         },
         { status: 200 }
       );
     }
 
-    // 데이터 복호화 처리
-    const decryptedData = data.map((item) =>
-      decryptDailyFeedback(item as unknown as { [key: string]: unknown })
-    ) as unknown as Pick<
-      DailyFeedbackRow,
-      "report_date" | "emotion_report" | "vivid_report"
-    >[];
+    // trend 데이터 추출 및 복호화
+    const { decryptJsonbFields } = await import("@/lib/jsonb-encryption");
+    const aspired_selfList: string[] = [];
+    const interestsList: string[] = [];
+    const immersion_momentsList: string[] = [];
+    const personality_traitsList: string[] = [];
 
-    // 감정 데이터 추출 (emotion_report가 있는 경우만)
-    const emotionData: RecentTrendsResponse["emotionData"] = [];
-    const aspired_selfSet = new Set<string>();
-    const interestsSet = new Set<string>();
-    const personalityStrengthsSet = new Set<string>();
-    const immersionSituationsSet = new Set<string>();
-    const reliefSituationsSet = new Set<string>();
+    for (const item of data) {
+      if (item.trend) {
+        // trend 복호화
+        const decryptedTrend = decryptJsonbFields(
+          item.trend as unknown as { [key: string]: unknown }
+        ) as { aspired_self?: string; interest?: string; immersion_moment?: string; personality_trait?: string } | null;
 
-    for (const item of decryptedData) {
-      const date = item.report_date;
-
-      // 감정 데이터 추출
-      if (
-        item.emotion_report &&
-        typeof item.emotion_report === "object" &&
-        item.emotion_report !== null &&
-        "ai_mood_valence" in item.emotion_report &&
-        "ai_mood_arousal" in item.emotion_report &&
-        item.emotion_report.ai_mood_valence !== null &&
-        item.emotion_report.ai_mood_arousal !== null
-      ) {
-        emotionData.push({
-          date,
-          valence: item.emotion_report.ai_mood_valence,
-          arousal: item.emotion_report.ai_mood_arousal,
-          quadrant: item.emotion_report.emotion_quadrant || null,
-        });
+        if (decryptedTrend && typeof decryptedTrend === "object") {
+          if (decryptedTrend.aspired_self) {
+            aspired_selfList.push(decryptedTrend.aspired_self);
+          }
+          if (decryptedTrend.interest) {
+            interestsList.push(decryptedTrend.interest);
+          }
+          if (decryptedTrend.immersion_moment) {
+            immersion_momentsList.push(decryptedTrend.immersion_moment);
+          }
+          if (decryptedTrend.personality_trait) {
+            personality_traitsList.push(decryptedTrend.personality_trait);
+          }
+        }
       }
-
     }
 
-    // Set을 배열로 변환하고 최대 5개로 제한
+    // 최대 5개로 제한
     const response: RecentTrendsResponse = {
-      emotionData: emotionData.slice(0, 5),
-      aspired_self: Array.from(aspired_selfSet).slice(0, 5),
-      interests: Array.from(interestsSet).slice(0, 5),
-      personalityStrengths: Array.from(personalityStrengthsSet).slice(0, 5),
-      immersionSituations: Array.from(immersionSituationsSet).slice(0, 5),
-      reliefSituations: Array.from(reliefSituationsSet).slice(0, 5),
+      aspired_self: aspired_selfList.slice(0, 5),
+      interests: interestsList.slice(0, 5),
+      immersion_moments: immersion_momentsList.slice(0, 5),
+      personality_traits: personality_traitsList.slice(0, 5),
     };
 
     return NextResponse.json<RecentTrendsResponse>(

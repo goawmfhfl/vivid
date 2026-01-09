@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       day_of_week: dayOfWeek,
       emotion_report: allReports.emotion_report,
       vivid_report: allReports.vivid_report,
+      trend: allReports.trend,
     };
 
     // 5️⃣ Supabase daily_feedback 테이블에 저장

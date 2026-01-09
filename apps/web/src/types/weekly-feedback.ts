@@ -136,6 +136,14 @@ export type VividReport = {
   };
 };
 
+// Weekly Trend 데이터 타입 (주간 흐름 섹션용)
+export type WeeklyTrendData = {
+  direction: string; // 어떤 방향으로 가고 있는 사람인가
+  core_value: string; // 내가 진짜 중요하게 여기는 가치 (한 문장)
+  driving_force: string; // 나를 움직이는 실제 원동력
+  current_self: string; // 요즘의 나라는 사람 (한 문장)
+};
+
 // ============================================
 // Weekly Feedback (메인 타입)
 // ============================================
@@ -144,6 +152,7 @@ export type WeeklyFeedback = {
   week_range: WeekRange;
   vivid_report: VividReport;
   title?: string; // "~ 했던 주" 형식의 제목 (예: "개발과 운동에 집중했던 주")
+  trend?: WeeklyTrendData | null; // 주간 흐름 데이터 (JSONB)
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;

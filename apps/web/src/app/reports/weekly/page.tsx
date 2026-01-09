@@ -33,7 +33,8 @@ function convertWeeklyFeedbackToPeriodSummary(
   const period = formatPeriod(startDate, endDate);
   
   // 월 기준 주차 계산
-  const { weekNumber, month, year } = calculateWeekNumberInMonth(startDate, endDate);
+  const result = calculateWeekNumberInMonth(startDate, endDate);
+  const { weekNumber, year } = result;
   
   const title = item.title;
 

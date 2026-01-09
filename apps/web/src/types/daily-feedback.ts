@@ -60,6 +60,14 @@ export interface VividReport {
   aspired_traits: string[]; // 지향하는 모습 (최대 5가지) - 오늘의 VIVID 기록에서 드러난 지향 모습 (예: "균형 잡힌 삶을 추구하는", "창의적인 문제 해결자", "타인과의 깊은 연결을 원하는" 등)
 }
 
+// Trend 데이터 타입 (최근 동향 섹션용)
+export interface TrendData {
+  aspired_self: string; // 내가 지향하는 모습 1개
+  interest: string; // 나의 관심사 1개
+  immersion_moment: string; // 몰입 희망 순간 1개
+  personality_trait: string; // 나라는 사람의 성향 1개
+}
+
 
 
 
@@ -74,6 +82,7 @@ export interface DailyFeedbackRow {
   // 새로운 타입별 리포트 (jsonb)
   emotion_report: EmotionReport | null;
   vivid_report: VividReport | null;
+  trend: TrendData | null; // 최근 동향 데이터 (JSONB)
 
   created_at: string;
   updated_at: string;

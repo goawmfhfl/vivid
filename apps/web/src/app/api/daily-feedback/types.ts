@@ -1,5 +1,6 @@
 import type {
   EmotionReport,
+  TrendData,
   VividReport,
 } from "@/types/daily-feedback";
 
@@ -21,6 +22,7 @@ export interface DailyReportResponse {
   // 타입별 리포트
   emotion_report: EmotionReport | null;
   vivid_report: VividReport | null;
+  trend: TrendData | null; // 최근 동향 데이터
 }
 
 // API 요청 본문 타입

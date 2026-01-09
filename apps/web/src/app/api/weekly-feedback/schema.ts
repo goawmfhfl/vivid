@@ -46,6 +46,41 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
 export const WeeklyFeedbackSchema = getWeeklyFeedbackSchema(false);
 
 /**
+ * Weekly Trend 스키마
+ */
+export const WeeklyTrendDataSchema = {
+  name: "WeeklyTrendData",
+  schema: {
+    type: "object",
+    properties: {
+      direction: { type: "string" }, // 어떤 방향으로 가고 있는 사람인가
+      core_value: { type: "string" }, // 내가 진짜 중요하게 여기는 가치 (한 문장)
+      driving_force: { type: "string" }, // 나를 움직이는 실제 원동력
+      current_self: { type: "string" }, // 요즘의 나라는 사람 (한 문장)
+    },
+    required: ["direction", "core_value", "driving_force", "current_self"],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
+export const SYSTEM_PROMPT_WEEKLY_TREND = `
+당신은 사용자의 주간 비비드 리포트를 분석하여 주간 흐름 데이터를 생성합니다.
+
+## 필드별 요구사항
+- direction: 이번 주의 기록을 통해 드러난 사용자가 가고 있는 방향을 한 문장으로 작성합니다.
+  예: "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람"
+- core_value: 이번 주의 기록에서 가장 중요하게 여기는 가치를 한 문장으로 작성합니다.
+  예: "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치"
+- driving_force: 이번 주를 움직인 실제 원동력을 한 문장으로 작성합니다.
+  예: "새로운 목표를 향한 호기심과 실행력"
+- current_self: 요즘의 사용자를 한 문장으로 표현합니다.
+  예: "변화를 두려워하지 않고 꾸준히 나아가는 사람"
+
+각 필드는 간결하고 명확하게 작성하세요.
+`;
+
+/**
  * 각 섹션별 SYSTEM_PROMPT
  */
 export const SYSTEM_PROMPT_VIVID = `

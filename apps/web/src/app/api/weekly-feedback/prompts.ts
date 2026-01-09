@@ -1,5 +1,5 @@
 import type { DailyFeedbackForWeekly } from "./types";
-import type { VividReport } from "@/types/weekly-feedback";
+import type { VividReport, WeeklyTrendData } from "@/types/weekly-feedback";
 
 /**
  * 모든 섹션을 포함하는 통합 프롬프트 생성
@@ -220,7 +220,7 @@ export function buildWeeklyTitlePrompt(
 ): string {
   const dateRangeText = `${weekRange.start}부터 ${weekRange.end}까지`;
   
-  let prompt = `${userName ? `${userName}님의 ` : ""}${dateRangeText} 주간 피드백 분석 결과를 바탕으로, 이번 주를 한 문장으로 요약하는 제목을 생성해주세요.
+  const prompt = `${userName ? `${userName}님의 ` : ""}${dateRangeText} 주간 피드백 분석 결과를 바탕으로, 이번 주를 한 문장으로 요약하는 제목을 생성해주세요.
 
 **제목 형식: "~ 했던 주" 또는 "~ 했던 한 주"**
 **예시:**
@@ -244,6 +244,57 @@ ${vividReport.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).
 위 분석 결과를 바탕으로, 이번 주의 가장 핵심적인 특징을 담은 제목을 "~ 했던 주" 형식으로 생성해주세요.
 제목은 간결하고 명확하며, 이번 주의 가장 중요한 활동이나 변화를 잘 표현해야 합니다.
 JSON 형식으로 {"title": "제목"}만 출력해주세요.`;
+
+  return prompt;
+}
+
+/**
+ * 주간 흐름 데이터(trend) 생성 프롬프트
+ * vivid_report 분석 결과를 바탕으로 주간 흐름 데이터 생성
+ */
+export function buildWeeklyTrendPrompt(
+  vividReport: VividReport,
+  weekRange: { start: string; end: string; timezone: string },
+  userName?: string
+): string {
+  const dateRangeText = `${weekRange.start}부터 ${weekRange.end}까지`;
+  
+  const prompt = `${userName ? `${userName}님의 ` : ""}${dateRangeText} 주간 비비드 리포트를 분석하여, 이번 주의 흐름을 나타내는 4가지 인사이트를 생성해주세요.
+
+**분석 결과 요약:**
+${vividReport.weekly_vivid_summary?.summary || ""}
+
+**핵심 포인트:**
+${vividReport.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
+
+**주요 키워드:**
+${vividReport.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
+
+**사용자 특징:**
+${vividReport.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
+
+**지향하는 모습:**
+${vividReport.aspired_traits_analysis?.top_5_aspired_traits?.slice(0, 3).map((t: { trait: string; frequency: number; dates: string[] }) => `- ${t.trait}`).join("\n") || ""}
+
+**앞으로의 모습 종합:**
+${vividReport.future_vision_analysis?.integrated_summary || ""}
+
+위 분석 결과를 바탕으로 다음 4가지 필드를 생성해주세요:
+
+1. direction: 이번 주의 기록을 통해 드러난 ${userName ? `${userName}님이 ` : "사용자가 "}가고 있는 방향을 한 문장으로 작성
+   예: "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람"
+
+2. core_value: 이번 주의 기록에서 가장 중요하게 여기는 가치를 한 문장으로 작성
+   예: "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치"
+
+3. driving_force: 이번 주를 움직인 실제 원동력을 한 문장으로 작성
+   예: "새로운 목표를 향한 호기심과 실행력"
+
+4. current_self: 요즘의 ${userName ? `${userName}님을 ` : "사용자를 "}한 문장으로 표현
+   예: "변화를 두려워하지 않고 꾸준히 나아가는 사람"
+
+각 필드는 간결하고 명확하게 작성하세요.
+JSON 형식으로 {"direction": "...", "core_value": "...", "driving_force": "...", "current_self": "..."}만 출력해주세요.`;
 
   return prompt;
 }
