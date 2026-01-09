@@ -25,10 +25,8 @@ export function validateSectionData(
  */
 export function validateAllSections(weeklyFeedbacks: WeeklyFeedback[]): {
   vivid_report: boolean;
-  closing_report: boolean;
 } {
   return {
     vivid_report: validateSectionData(weeklyFeedbacks, "vivid_report"),
-    closing_report: validateSectionData(weeklyFeedbacks, "closing_report"),
   };
 }

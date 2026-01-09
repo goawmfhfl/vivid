@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import { type JsonbValue } from "@/lib/jsonb-encryption";
 import { API_ENDPOINTS } from "@/constants";
 import {
   RECENT_TRENDS_REVALIDATE,
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
       if (item.trend) {
         // trend 복호화
         const decryptedTrend = decryptJsonbFields(
-          item.trend as unknown as { [key: string]: unknown }
+          item.trend as unknown as JsonbValue
         ) as { aspired_self?: string; interest?: string; immersion_moment?: string; personality_trait?: string } | null;
 
         if (decryptedTrend && typeof decryptedTrend === "object") {

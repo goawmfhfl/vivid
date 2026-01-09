@@ -98,7 +98,7 @@ function WeeklyReportsPage() {
       {/* 나의 주간 흐름 */}
       <div className="mb-12">
         <WeeklyTrendsSection
-          data={weeklyTrendsData}
+          data={weeklyTrendsData ?? null}
           isLoading={isLoadingTrends}
           error={trendsError}
         />
