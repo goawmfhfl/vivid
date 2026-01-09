@@ -57,16 +57,11 @@ export async function saveDailyReport(
   const newReportDataToEncrypt: { [key: string]: unknown } = {
     emotion_report: report.emotion_report,
     vivid_report: report.vivid_report,
+    trend: report.trend, // trend도 함께 암호화
   };
 
   // 암호화 적용 (기존 encryptDailyFeedback 함수 재사용)
   const encryptedNewReports = encryptDailyFeedback(newReportDataToEncrypt);
-
-  // trend는 별도로 암호화 (trend는 최근 동향 섹션에서만 사용되므로)
-  const { encryptJsonbFields } = await import("@/lib/jsonb-encryption");
-  const encryptedTrend = report.trend
-    ? (encryptJsonbFields(report.trend) as unknown as typeof report.trend)
-    : null;
 
   const reportData = {
     user_id: userId,
@@ -80,7 +75,7 @@ export async function saveDailyReport(
     insight_report: encryptedNewReports.insight_report || null,
     feedback_report: encryptedNewReports.feedback_report || null,
     final_report: encryptedNewReports.final_report || null,
-    trend: encryptedTrend, // trend 필드 추가
+    trend: encryptedNewReports.trend || null, // trend 필드 추가
     is_ai_generated: true,
   };
 
