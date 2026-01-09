@@ -49,11 +49,6 @@ export type VividReport = {
       context: string;
       related_keywords: string[];
     }>; // 기존 vision_keywords_trend와 동일한 구조, 최대 8개, 홀수 개수(4, 6, 8개)
-    top_10_keywords: Array<{
-      keyword: string;
-      frequency: number;
-      dates: string[];
-    }>;
   };
 
   // 4. 앞으로의 모습 종합 분석

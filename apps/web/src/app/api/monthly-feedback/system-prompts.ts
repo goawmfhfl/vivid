@@ -115,7 +115,7 @@ export const SYSTEM_PROMPT_CLOSING = `
 - 이 달의 데이터를 충분히 인정해주면서, 다음 달을 향한 방향성을 중심으로 작성해주세요.
 
 📅 데이터 작성 규칙:
-- 일일 final_report들을 종합하여 월간 마무리 리포트를 작성해주세요.
+- 일일 vivid_report들을 종합하여 월간 마무리 리포트를 작성해주세요.
 - 중요한 전환점과 다음 달 포커스를 정리하세요.
 - 실제 일일 피드백 데이터에 없는 내용을 상상해서 만들지 마세요.
 - Pro 멤버십인 경우 this_month_identity.visualization.characteristics_radar 데이터를 생성하세요.

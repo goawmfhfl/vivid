@@ -11,33 +11,44 @@ export function buildInsightReportPrompt(
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 인사이트 데이터입니다. 
-일일 insight_report들을 종합하여 월간 인사이트 리포트(insight_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 비비드 데이터입니다. 
+일일 vivid_report들을 종합하여 월간 인사이트 리포트(insight_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
   dailyFeedbacks.forEach((df, idx) => {
     prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const ir = df.insight_report;
-    if (ir) {
-      if (Array.isArray(ir.core_insights) && ir.core_insights.length > 0) {
-        prompt += `핵심 인사이트: ${ir.core_insights
-          .map((i) => `${i.insight} (출처: ${i.source})`)
-          .join(", ")}\n`;
+    // vivid_report 데이터 사용 (insight_report 대신)
+    if (df.vivid_report) {
+      const vivid = df.vivid_report;
+      if (vivid.current_summary) {
+        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
       }
-      if (ir.meta_question) {
-        prompt += `메타 질문: ${ir.meta_question}\n`;
+      if (vivid.future_summary) {
+        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
       }
-      if (ir.insight_ai_comment) {
-        prompt += `AI 코멘트: ${ir.insight_ai_comment}\n`;
-      }
-      // Pro 전용 필드
       if (
-        Array.isArray(ir.insight_next_actions) &&
-        ir.insight_next_actions.length > 0
+        Array.isArray(vivid.current_keywords) &&
+        vivid.current_keywords.length > 0
       ) {
-        prompt += `추천 행동: ${ir.insight_next_actions
-          .map((a) => `${a.label} (난이도: ${a.difficulty})`)
-          .join(", ")}\n`;
+        prompt += `오늘의 비비드 키워드: ${vivid.current_keywords.join(", ")}\n`;
+      }
+      if (
+        Array.isArray(vivid.future_keywords) &&
+        vivid.future_keywords.length > 0
+      ) {
+        prompt += `기대하는 모습 키워드: ${vivid.future_keywords.join(", ")}\n`;
+      }
+      if (
+        Array.isArray(vivid.user_characteristics) &&
+        vivid.user_characteristics.length > 0
+      ) {
+        prompt += `사용자 특성: ${vivid.user_characteristics.join(", ")}\n`;
+      }
+      if (
+        Array.isArray(vivid.aspired_traits) &&
+        vivid.aspired_traits.length > 0
+      ) {
+        prompt += `지향하는 모습: ${vivid.aspired_traits.join(", ")}\n`;
       }
     }
 

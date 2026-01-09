@@ -7,6 +7,9 @@ import {
   Sparkles,
   Zap,
   Eye,
+  ArrowUp,
+  ArrowDown,
+  Calendar,
 } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS } from "@/lib/design-system";
@@ -29,11 +32,13 @@ import {
 type VividSectionProps = {
   vividReport: VividReport;
   isPro?: boolean;
+  userName?: string;
 };
 
 export function VividSection({
   vividReport,
   isPro: _isPro = false,
+  userName,
 }: VividSectionProps) {
   // 색상 팔레트
   const vividColor = "#A3BFD9"; // 파스텔 블루
@@ -101,16 +106,54 @@ export function VividSection({
             {vividReport.weekly_vivid_summary.next_week_vision_key_points &&
               vividReport.weekly_vivid_summary.next_week_vision_key_points
                 .length > 0 && (
-                <KeywordCard
-                  icon={Target}
-                  iconColor={vividColor}
-                  label="다음주 비전 핵심 포인트"
-                  keywords={vividReport.weekly_vivid_summary.next_week_vision_key_points}
-                  gradientColor="163, 191, 217"
-                  badgeColor="rgba(163, 191, 217, 0.15)"
-                  badgeTextColor="#5A7A9A"
-                  duration={15}
-                />
+                <GradientCard gradientColor="163, 191, 217">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: `${vividColor}20`,
+                        border: `1.5px solid ${vividColor}40`,
+                      }}
+                    >
+                      <Target className="w-4 h-4" style={{ color: vividColor }} />
+                    </div>
+                    <p
+                      className="text-xs font-semibold uppercase"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      다음주 비전 핵심 포인트
+                    </p>
+                  </div>
+                  <div
+                    className="p-4 rounded-xl"
+                    style={{
+                      backgroundColor: "rgba(255, 255, 255, 0.6)",
+                      border: `1px solid rgba(163, 191, 217, 0.3)`,
+                    }}
+                  >
+                    <ul className="space-y-2.5">
+                      {vividReport.weekly_vivid_summary.next_week_vision_key_points.map(
+                        (point, index) => (
+                          <li key={index} className="flex items-start gap-2.5">
+                            <div
+                              className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                              style={{ backgroundColor: vividColor }}
+                            />
+                            <p
+                              className="text-sm"
+                              style={{
+                                color: COLORS.text.primary,
+                                lineHeight: "1.6",
+                              }}
+                            >
+                              {point}
+                            </p>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                </GradientCard>
               )}
           </div>
         )}
@@ -185,62 +228,120 @@ export function VividSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {vividReport.weekly_vivid_evaluation.highest_day && (
                 <div
-                  className="p-3 rounded-lg"
+                  className="p-4 rounded-lg transition-all duration-200"
                   style={{
-                    backgroundColor: "rgba(200, 230, 201, 0.3)",
-                    border: "1px solid rgba(200, 230, 201, 0.5)",
+                    backgroundColor: COLORS.background.cardElevated,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#4CAF50";
+                    e.currentTarget.style.backgroundColor = COLORS.background.hoverLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.border.light;
+                    e.currentTarget.style.backgroundColor = COLORS.background.cardElevated;
                   }}
                 >
+                  <div className="flex items-start gap-3">
+                    <ArrowUp
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                      style={{ color: "#4CAF50" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          가장 높았던 날
+                        </p>
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: "#4CAF50" }}
+                        >
+                          {vividReport.weekly_vivid_evaluation.highest_day.score}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Calendar
+                          className="w-3 h-3"
+                          style={{ color: COLORS.text.tertiary }}
+                        />
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {vividReport.weekly_vivid_evaluation.highest_day.date}
+                        </p>
+                      </div>
                       <p
-                        className="text-xs font-semibold mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        가장 높았던 날
-                      </p>
-                      <p
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {vividReport.weekly_vivid_evaluation.highest_day.date} (
-                        {vividReport.weekly_vivid_evaluation.highest_day.score}점)
-                      </p>
-                      <p
-                        className="text-xs"
+                        className="text-sm leading-relaxed"
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.weekly_vivid_evaluation.highest_day.reason}
                       </p>
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
               {vividReport.weekly_vivid_evaluation.lowest_day && (
                 <div
-                  className="p-3 rounded-lg"
+                  className="p-4 rounded-lg transition-all duration-200"
                   style={{
-                    backgroundColor: "rgba(255, 224, 178, 0.3)",
-                    border: "1px solid rgba(255, 224, 178, 0.5)",
+                    backgroundColor: COLORS.background.cardElevated,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#FF9800";
+                    e.currentTarget.style.backgroundColor = COLORS.background.hoverLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.border.light;
+                    e.currentTarget.style.backgroundColor = COLORS.background.cardElevated;
                   }}
                 >
+                  <div className="flex items-start gap-3">
+                    <ArrowDown
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                      style={{ color: "#FF9800" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          가장 낮았던 날
+                        </p>
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: "#FF9800" }}
+                        >
+                          {vividReport.weekly_vivid_evaluation.lowest_day.score}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Calendar
+                          className="w-3 h-3"
+                          style={{ color: COLORS.text.tertiary }}
+                        />
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {vividReport.weekly_vivid_evaluation.lowest_day.date}
+                        </p>
+                      </div>
                       <p
-                        className="text-xs font-semibold mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        가장 낮았던 날
-                      </p>
-                      <p
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {vividReport.weekly_vivid_evaluation.lowest_day.date} (
-                        {vividReport.weekly_vivid_evaluation.lowest_day.score}점)
-                      </p>
-                      <p
-                        className="text-xs"
+                        className="text-sm leading-relaxed"
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.weekly_vivid_evaluation.lowest_day.reason}
                       </p>
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
             </div>
           </GradientCard>
         )}
@@ -270,7 +371,9 @@ export function VividSection({
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {vividReport.weekly_keywords_analysis.vision_keywords_trend.map(
+                    {[...vividReport.weekly_keywords_analysis.vision_keywords_trend]
+                      .sort((a, b) => b.days - a.days)
+                      .map(
                       (keyword, idx) => (
                         <div
                           key={idx}
@@ -329,22 +432,6 @@ export function VividSection({
                     )}
                   </div>
                 </GradientCard>
-              )}
-            {vividReport.weekly_keywords_analysis.top_10_keywords &&
-              vividReport.weekly_keywords_analysis.top_10_keywords.length >
-                0 && (
-                <KeywordCard
-                  icon={Zap}
-                  iconColor={vividColor}
-                  label="Top 10 키워드"
-                  keywords={vividReport.weekly_keywords_analysis.top_10_keywords.map(
-                    (k) => `${k.keyword} (${k.frequency}회)`
-                  )}
-                  gradientColor="163, 191, 217"
-                  badgeColor="rgba(163, 191, 217, 0.15)"
-                  badgeTextColor="#5A7A9A"
-                  duration={15}
-                />
               )}
           </div>
         )}
@@ -531,84 +618,120 @@ export function VividSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {vividReport.alignment_trend_analysis.highest_alignment_day && (
                 <div
-                  className="p-3 rounded-lg"
+                  className="p-4 rounded-lg transition-all duration-200"
                   style={{
-                    backgroundColor: "rgba(200, 230, 201, 0.3)",
-                    border: "1px solid rgba(200, 230, 201, 0.5)",
+                    backgroundColor: COLORS.background.cardElevated,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#4CAF50";
+                    e.currentTarget.style.backgroundColor = COLORS.background.hoverLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.border.light;
+                    e.currentTarget.style.backgroundColor = COLORS.background.cardElevated;
                   }}
                 >
+                  <div className="flex items-start gap-3">
+                    <ArrowUp
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                      style={{ color: "#4CAF50" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          가장 높았던 날
+                        </p>
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: "#4CAF50" }}
+                        >
+                          {vividReport.alignment_trend_analysis.highest_alignment_day.score}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Calendar
+                          className="w-3 h-3"
+                          style={{ color: COLORS.text.tertiary }}
+                        />
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {vividReport.alignment_trend_analysis.highest_alignment_day.date}
+                        </p>
+                      </div>
                       <p
-                        className="text-xs font-semibold mb-1"
+                        className="text-sm leading-relaxed"
                         style={{ color: COLORS.text.secondary }}
                       >
-                        가장 높았던 날
+                        {vividReport.alignment_trend_analysis.highest_alignment_day.pattern}
                       </p>
-                      <p
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {
-                          vividReport.alignment_trend_analysis.highest_alignment_day
-                            .date
-                        }{" "}
-                        (
-                        {
-                          vividReport.alignment_trend_analysis.highest_alignment_day
-                            .score
-                        }
-                        점)
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        {
-                          vividReport.alignment_trend_analysis.highest_alignment_day
-                            .pattern
-                        }
-                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
               {vividReport.alignment_trend_analysis.lowest_alignment_day && (
                 <div
-                  className="p-3 rounded-lg"
+                  className="p-4 rounded-lg transition-all duration-200"
                   style={{
-                    backgroundColor: "rgba(255, 224, 178, 0.3)",
-                    border: "1px solid rgba(255, 224, 178, 0.5)",
+                    backgroundColor: COLORS.background.cardElevated,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#FF9800";
+                    e.currentTarget.style.backgroundColor = COLORS.background.hoverLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = COLORS.border.light;
+                    e.currentTarget.style.backgroundColor = COLORS.background.cardElevated;
                   }}
                 >
+                  <div className="flex items-start gap-3">
+                    <ArrowDown
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                      style={{ color: "#FF9800" }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          가장 낮았던 날
+                        </p>
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: "#FF9800" }}
+                        >
+                          {vividReport.alignment_trend_analysis.lowest_alignment_day.score}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Calendar
+                          className="w-3 h-3"
+                          style={{ color: COLORS.text.tertiary }}
+                        />
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {vividReport.alignment_trend_analysis.lowest_alignment_day.date}
+                        </p>
+                      </div>
                       <p
-                        className="text-xs font-semibold mb-1"
+                        className="text-sm leading-relaxed"
                         style={{ color: COLORS.text.secondary }}
                       >
-                        가장 낮았던 날
-                      </p>
-                      <p
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {
-                          vividReport.alignment_trend_analysis.lowest_alignment_day
-                            .date
-                        }{" "}
-                        (
-                        {
-                          vividReport.alignment_trend_analysis.lowest_alignment_day
-                            .score
-                        }
-                        점)
-                      </p>
-                      <p
-                        className="text-xs"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        {
-                          vividReport.alignment_trend_analysis.lowest_alignment_day
-                            .pattern
-                        }
+                        {vividReport.alignment_trend_analysis.lowest_alignment_day.pattern}
                       </p>
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
             </div>
           </GradientCard>
         )}
@@ -620,7 +743,11 @@ export function VividSection({
               icon={Users}
               iconColor={vividColor}
               label="사용자 특징 심화 분석"
-              content={vividReport.user_characteristics_analysis.consistency_summary}
+              content={
+                userName
+                  ? `${userName}${vividReport.user_characteristics_analysis.consistency_summary}`
+                  : vividReport.user_characteristics_analysis.consistency_summary
+              }
               gradientColor="163, 191, 217"
             />
             {vividReport.user_characteristics_analysis.top_5_characteristics &&
@@ -631,7 +758,7 @@ export function VividSection({
                     className="text-xs mb-3 font-semibold uppercase"
                     style={{ color: COLORS.text.secondary }}
                   >
-                    Top 5 특징
+                    {userName ? `${userName}의 ` : ""}Top 5 특징
                   </p>
                   <div className="space-y-3">
                     {vividReport.user_characteristics_analysis.top_5_characteristics.map(
@@ -974,15 +1101,23 @@ export function VividSection({
                                     근거:
                                   </p>
                                   <ul className="list-disc list-inside space-y-1">
-                                    {pattern.evidence.map((ev, eIdx) => (
-                                      <li
-                                        key={eIdx}
-                                        className="text-xs"
-                                        style={{ color: COLORS.text.secondary }}
-                                      >
-                                        {ev}
-                                      </li>
-                                    ))}
+                                    {pattern.evidence.map((ev, eIdx) => {
+                                      // 날짜 형식 (YYYY-MM-DD) 감지 및 변환
+                                      const datePattern = /(\d{4}-\d{2}-\d{2})/g;
+                                      const formattedEvidence = ev.replace(
+                                        datePattern,
+                                        (match) => `${match}일의 기록`
+                                      );
+                                      return (
+                                        <li
+                                          key={eIdx}
+                                          className="text-xs"
+                                          style={{ color: COLORS.text.secondary }}
+                                        >
+                                          {formattedEvidence}
+                                        </li>
+                                      );
+                                    })}
                                   </ul>
                                 </div>
                               )}

@@ -6,6 +6,7 @@ import type { WeeklyReportData } from "./report/types";
 import { VividSection } from "./report/VividSection";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { TestPanel } from "./TestPanel";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // 타입 재export
 export type { WeeklyReportData } from "./report/types";
@@ -24,6 +25,12 @@ export function WeeklyFeedbackReport({
   onTogglePro = () => {},
 }: WeeklyFeedbackReportProps) {
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
+  const userName =
+    currentUser?.user_metadata?.name &&
+    typeof currentUser.user_metadata.name === "string"
+      ? currentUser.user_metadata.name
+      : undefined;
 
   const handleGoToAnalysis = () => {
     router.push("/reports/weekly");
@@ -51,7 +58,11 @@ export function WeeklyFeedbackReport({
         {data.vivid_report && (
           <ScrollAnimation delay={200}>
             <div className="mb-64">
-              <VividSection vividReport={data.vivid_report} isPro={isPro} />
+              <VividSection
+                vividReport={data.vivid_report}
+                isPro={isPro}
+                userName={userName}
+              />
             </div>
           </ScrollAnimation>
         )}

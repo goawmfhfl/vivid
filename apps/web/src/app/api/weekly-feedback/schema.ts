@@ -59,7 +59,7 @@ export const SYSTEM_PROMPT_VIVID = `
 - 8개의 섹션을 모두 완성해주세요:
   1. weekly_vivid_summary: 7일간의 비비드 기록 종합 (300자 내외), 핵심 포인트는 날짜와 함께 표시
   2. weekly_vivid_evaluation: 일일 평가 변화 추이, 주간 평균, 가장 높았던/낮았던 날
-  3. weekly_keywords_analysis: 비전 키워드 트렌드(기존 형식 유지), Top 10 키워드
+  3. weekly_keywords_analysis: 비전 키워드 트렌드(기존 형식 유지)
   4. future_vision_analysis: 앞으로의 모습 종합 분석, 일관성 분석, 평가 점수 추이
   5. alignment_trend_analysis: 일치도 트렌드 분석, 개선/악화 추세
   6. user_characteristics_analysis: 사용자 특징 심화 분석, Top 5, 변화 패턴

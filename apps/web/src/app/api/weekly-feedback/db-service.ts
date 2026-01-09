@@ -8,7 +8,6 @@ import { API_ENDPOINTS } from "@/constants";
 import {
   encryptWeeklyFeedback,
   decryptWeeklyFeedback,
-  decryptJsonbFields,
 } from "@/lib/jsonb-encryption";
 
 /**
@@ -196,6 +195,26 @@ export async function saveWeeklyFeedback(
     feedback
   ) as unknown as WeeklyFeedback;
 
+  // DB 스키마가 요구하는 필수 필드들에 대한 기본값 설정
+  // (WeeklyFeedback 타입에는 없지만 DB 스키마가 NOT NULL로 요구하는 경우)
+  const defaultSummaryReport = {
+    title: `${encryptedFeedback.week_range.start} ~ ${encryptedFeedback.week_range.end} 주간 피드백`,
+    summary: "이번 주 피드백이 생성되었습니다.",
+    key_points: [],
+    trend_analysis: null,
+  };
+
+  const defaultEmotionReport = null;
+  const defaultDailyLifeReport = { summary: "" };
+  const defaultInsightReport = { core_insights: [] };
+  const defaultExecutionReport = {
+    feedback_patterns: {
+      positives_categories: [],
+      improvements_categories: [],
+    },
+    ai_feedback_summary: "",
+  };
+
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .upsert(
@@ -204,6 +223,11 @@ export async function saveWeeklyFeedback(
         week_start: encryptedFeedback.week_range.start,
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
+        summary_report: defaultSummaryReport,
+        emotion_report: defaultEmotionReport,
+        daily_life_report: defaultDailyLifeReport,
+        insight_report: defaultInsightReport,
+        execution_report: defaultExecutionReport,
         vivid_report: encryptedFeedback.vivid_report,
         closing_report: encryptedFeedback.closing_report,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,

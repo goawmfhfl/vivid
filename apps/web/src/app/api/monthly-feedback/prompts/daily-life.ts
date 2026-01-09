@@ -11,96 +11,44 @@ export function buildDailyLifeReportPrompt(
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 일상 데이터입니다. 
-일일 daily_report들을 종합하여 월간 일상 리포트(daily_life_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 비비드 데이터입니다. 
+일일 vivid_report들을 종합하여 월간 일상 리포트(daily_life_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
   dailyFeedbacks.forEach((df, idx) => {
     prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const dr = df.daily_report;
-    if (dr) {
-      if (dr.summary) {
-        prompt += `일상 요약: ${dr.summary}\n`;
+    // vivid_report 데이터 사용
+    if (df.vivid_report) {
+      const vivid = df.vivid_report;
+      if (vivid.current_summary) {
+        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
       }
-      if (Array.isArray(dr.daily_events) && dr.daily_events.length > 0) {
-        prompt += `오늘 있었던 일: ${dr.daily_events.join(", ")}\n`;
+      if (
+        Array.isArray(vivid.current_keywords) &&
+        vivid.current_keywords.length > 0
+      ) {
+        prompt += `오늘의 비비드 키워드: ${vivid.current_keywords.join(", ")}\n`;
       }
-      if (Array.isArray(dr.keywords) && dr.keywords.length > 0) {
-        prompt += `키워드: ${dr.keywords.join(", ")}\n`;
+      if (vivid.future_summary) {
+        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
       }
-      if (dr.ai_comment) {
-        prompt += `AI 코멘트: ${dr.ai_comment}\n`;
+      if (
+        Array.isArray(vivid.future_keywords) &&
+        vivid.future_keywords.length > 0
+      ) {
+        prompt += `기대하는 모습 키워드: ${vivid.future_keywords.join(", ")}\n`;
       }
-      // Pro 전용 필드
-      if (dr.emotion_triggers) {
-        if (
-          Array.isArray(dr.emotion_triggers.self) &&
-          dr.emotion_triggers.self.length > 0
-        ) {
-          prompt += `자기 관련 트리거: ${dr.emotion_triggers.self.join(
-            ", "
-          )}\n`;
-        }
-        if (
-          Array.isArray(dr.emotion_triggers.work) &&
-          dr.emotion_triggers.work.length > 0
-        ) {
-          prompt += `업무 관련 트리거: ${dr.emotion_triggers.work.join(
-            ", "
-          )}\n`;
-        }
-        if (
-          Array.isArray(dr.emotion_triggers.people) &&
-          dr.emotion_triggers.people.length > 0
-        ) {
-          prompt += `사람 관련 트리거: ${dr.emotion_triggers.people.join(
-            ", "
-          )}\n`;
-        }
-        if (
-          Array.isArray(dr.emotion_triggers.environment) &&
-          dr.emotion_triggers.environment.length > 0
-        ) {
-          prompt += `환경 관련 트리거: ${dr.emotion_triggers.environment.join(
-            ", "
-          )}\n`;
-        }
+      if (
+        Array.isArray(vivid.user_characteristics) &&
+        vivid.user_characteristics.length > 0
+      ) {
+        prompt += `사용자 특성: ${vivid.user_characteristics.join(", ")}\n`;
       }
-      if (dr.behavioral_clues) {
-        if (
-          Array.isArray(dr.behavioral_clues.avoidance) &&
-          dr.behavioral_clues.avoidance.length > 0
-        ) {
-          prompt += `회피 행동: ${dr.behavioral_clues.avoidance.join(", ")}\n`;
-        }
-        if (
-          Array.isArray(dr.behavioral_clues.routine_attempt) &&
-          dr.behavioral_clues.routine_attempt.length > 0
-        ) {
-          prompt += `루틴 시도: ${dr.behavioral_clues.routine_attempt.join(
-            ", "
-          )}\n`;
-        }
-        if (
-          Array.isArray(dr.behavioral_clues.routine_failure) &&
-          dr.behavioral_clues.routine_failure.length > 0
-        ) {
-          prompt += `루틴 실패: ${dr.behavioral_clues.routine_failure.join(
-            ", "
-          )}\n`;
-        }
-        if (
-          Array.isArray(dr.behavioral_clues.impulsive) &&
-          dr.behavioral_clues.impulsive.length > 0
-        ) {
-          prompt += `즉흥 행동: ${dr.behavioral_clues.impulsive.join(", ")}\n`;
-        }
-        if (
-          Array.isArray(dr.behavioral_clues.planned) &&
-          dr.behavioral_clues.planned.length > 0
-        ) {
-          prompt += `계획적 행동: ${dr.behavioral_clues.planned.join(", ")}\n`;
-        }
+      if (
+        Array.isArray(vivid.aspired_traits) &&
+        vivid.aspired_traits.length > 0
+      ) {
+        prompt += `지향하는 모습: ${vivid.aspired_traits.join(", ")}\n`;
       }
     }
 

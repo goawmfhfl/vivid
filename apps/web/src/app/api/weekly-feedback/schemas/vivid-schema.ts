@@ -125,27 +125,8 @@ export function getVividReportSchema(isPro: boolean) {
             maxItems: 8,
             description: "비전 키워드 트렌드 (홀수 개수: 4, 6, 8개)",
           },
-          top_10_keywords: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                keyword: { type: "string" },
-                frequency: { type: "integer", minimum: 0 },
-                dates: {
-                  type: "array",
-                  items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-                },
-              },
-              required: ["keyword", "frequency", "dates"],
-            },
-            minItems: 0,
-            maxItems: 10,
-            description: "7일간 가장 자주 등장한 키워드 Top 10",
-          },
         },
-        required: ["vision_keywords_trend", "top_10_keywords"],
+        required: ["vision_keywords_trend"],
       },
 
       // 4. 앞으로의 모습 종합 분석

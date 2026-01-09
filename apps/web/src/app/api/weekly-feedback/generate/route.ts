@@ -9,9 +9,6 @@ import type { WeeklyFeedback } from "@/types/weekly-feedback";
 import type { WithTracking } from "../../types";
 import type { ApiError } from "../../types";
 
-/**
- * 추적 정보 제거 (DB 저장 전)
- */
 function removeTrackingInfo(
   feedback: WithTracking<WeeklyFeedback>
 ): WeeklyFeedback {
@@ -71,12 +68,28 @@ export async function POST(request: NextRequest) {
     // Pro 멤버십 확인 (요청에 포함되어 있으면 사용, 없으면 서버에서 확인)
     const isPro = isProFromRequest ?? (await verifySubscription(userId)).isPro;
 
+    // 사용자 이름 조회
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", userId)
+      .single();
+    const userName = profile?.name || undefined;
+
     // 1️⃣ Daily Feedback 데이터 조회
     const dailyFeedbacks = await fetchDailyFeedbacksByRange(
       supabase,
       userId,
       start,
       end
+    );
+
+    // 조회된 데이터 로깅
+    console.log(`[Weekly Feedback Generate] 날짜 범위: ${start} ~ ${end}`);
+    console.log(`[Weekly Feedback Generate] 조회된 daily feedback 개수: ${dailyFeedbacks.length}`);
+    console.log(
+      `[Weekly Feedback Generate] 조회된 날짜 목록:`,
+      dailyFeedbacks.map((f) => f.report_date).join(", ")
     );
 
     if (dailyFeedbacks.length === 0) {
@@ -91,7 +104,8 @@ export async function POST(request: NextRequest) {
       dailyFeedbacks,
       { start, end, timezone },
       isPro,
-      userId // AI 사용량 로깅을 위한 userId 전달
+      userId, // AI 사용량 로깅을 위한 userId 전달
+      userName // 사용자 이름 전달
     );
 
     // 추적 정보 제거 (DB 저장 전)

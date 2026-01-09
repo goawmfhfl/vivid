@@ -14,11 +14,11 @@ import { Card } from "../../ui/card";
 import type { EmotionReport } from "@/types/monthly-feedback-new";
 import { COLORS } from "@/lib/design-system";
 import { useRouter } from "next/navigation";
-import { EmotionChart } from "../../weeklyFeedback/report/emotionSection/EmotionChart";
+import { EmotionChart } from "./emotionSection/EmotionChart";
 import {
   TooltipProvider,
   useTooltip,
-} from "../../weeklyFeedback/report/emotionSection/TooltipContext";
+} from "./emotionSection/TooltipContext";
 
 type EmotionSectionProps = {
   emotionReport: EmotionReport;

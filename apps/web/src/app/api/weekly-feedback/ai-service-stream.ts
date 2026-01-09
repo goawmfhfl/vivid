@@ -372,9 +372,10 @@ async function generateVividReport(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  userId?: string
+  userId?: string,
+  userName?: string
 ): Promise<VividReport> {
-  const prompt = buildVividPrompt(dailyFeedbacks, range);
+  const prompt = buildVividPrompt(dailyFeedbacks, range, userName);
   const schema = getWeeklyFeedbackSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
@@ -551,20 +552,18 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean = false,
-  userId?: string
+  userId?: string,
+  userName?: string
 ): Promise<WeeklyFeedback> {
   // vivid_report만 AI로 생성
   const vividReport = await generateVividReport(
     dailyFeedbacks,
     range,
     isPro,
-    userId
+    userId,
+    userName
   );
 
-  console.log(
-    "[generateWeeklyFeedbackFromDailyWithProgress] vividReport 생성 완료:",
-    !!vividReport
-  );
 
   // closing_report는 기본값으로 설정 (AI 요청하지 않음)
   const closingReport = createDefaultClosingReport();

@@ -11,29 +11,47 @@ export function buildClosingReportPrompt(
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 마무리 데이터입니다. 
-일일 final_report들을 종합하여 월간 마무리 리포트(closing_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  let prompt = `아래는 ${monthLabel} (${dateRange.start_date} ~ ${dateRange.end_date}) 한 달간의 일일 피드백의 비비드 데이터입니다. 
+일일 vivid_report들을 종합하여 월간 마무리 리포트(closing_report)를 생성하여 JSON만 출력하세요.\n\n`;
 
   dailyFeedbacks.forEach((df, idx) => {
     prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    const fr = df.final_report;
-    if (fr) {
-      if (fr.closing_message) {
-        prompt += `마무리 메시지: ${fr.closing_message}\n`;
+    // vivid_report 데이터 사용
+    if (df.vivid_report) {
+      const vivid = df.vivid_report;
+      if (vivid.current_summary) {
+        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
       }
-      // Pro 전용 필드
-      if (fr.tomorrow_focus) {
-        prompt += `내일 집중점: ${fr.tomorrow_focus}\n`;
-      }
-      if (Array.isArray(fr.growth_points) && fr.growth_points.length > 0) {
-        prompt += `성장 포인트: ${fr.growth_points.join(", ")}\n`;
+      if (vivid.future_summary) {
+        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
       }
       if (
-        Array.isArray(fr.adjustment_points) &&
-        fr.adjustment_points.length > 0
+        Array.isArray(vivid.current_keywords) &&
+        vivid.current_keywords.length > 0
       ) {
-        prompt += `조정 포인트: ${fr.adjustment_points.join(", ")}\n`;
+        prompt += `오늘의 비비드 키워드: ${vivid.current_keywords.join(", ")}\n`;
+      }
+      if (
+        Array.isArray(vivid.future_keywords) &&
+        vivid.future_keywords.length > 0
+      ) {
+        prompt += `기대하는 모습 키워드: ${vivid.future_keywords.join(", ")}\n`;
+      }
+      if (vivid.alignment_score !== null && vivid.alignment_score !== undefined) {
+        prompt += `일치도 점수: ${vivid.alignment_score}\n`;
+      }
+      if (
+        Array.isArray(vivid.user_characteristics) &&
+        vivid.user_characteristics.length > 0
+      ) {
+        prompt += `사용자 특성: ${vivid.user_characteristics.join(", ")}\n`;
+      }
+      if (
+        Array.isArray(vivid.aspired_traits) &&
+        vivid.aspired_traits.length > 0
+      ) {
+        prompt += `지향하는 모습: ${vivid.aspired_traits.join(", ")}\n`;
       }
     }
 

@@ -31,35 +31,27 @@ export function buildSummaryReportPrompt(
   dailyFeedbacks.forEach((df, idx) => {
     prompt += `[일일 피드백 ${idx + 1} - ${df.report_date}]\n`;
 
-    // Summary Report 데이터
-    if (df.summary_report?.summary) {
-      prompt += `요약: ${df.summary_report.summary}\n`;
-    }
-    if (
-      Array.isArray(df.summary_report?.key_points) &&
-      df.summary_report.key_points.length > 0
-    ) {
-      prompt += `핵심 포인트: ${df.summary_report.key_points.join(", ")}\n`;
-    }
-    if (df.summary_report?.trend_analysis) {
-      prompt += `트렌드 분석: ${df.summary_report.trend_analysis}\n`;
-    }
+    // Summary Report는 더 이상 사용하지 않음 (vivid_report 사용)
 
     // Daily Report에서 주요 정보 추출
-    if (df.daily_report?.summary) {
-      prompt += `일상 요약: ${df.daily_report.summary}\n`;
+    // vivid_report 데이터 사용 (daily_report 대신)
+    if (df.vivid_report?.current_summary) {
+      prompt += `오늘의 비비드 요약: ${df.vivid_report.current_summary}\n`;
     }
     if (
-      Array.isArray(df.daily_report?.daily_events) &&
-      df.daily_report.daily_events.length > 0
+      Array.isArray(df.vivid_report?.current_keywords) &&
+      df.vivid_report.current_keywords.length > 0
     ) {
-      prompt += `오늘 있었던 일: ${df.daily_report.daily_events.join(", ")}\n`;
+      prompt += `오늘의 비비드 키워드: ${df.vivid_report.current_keywords.join(", ")}\n`;
+    }
+    if (df.vivid_report?.future_summary) {
+      prompt += `기대하는 모습 요약: ${df.vivid_report.future_summary}\n`;
     }
     if (
-      Array.isArray(df.daily_report?.keywords) &&
-      df.daily_report.keywords.length > 0
+      Array.isArray(df.vivid_report?.future_keywords) &&
+      df.vivid_report.future_keywords.length > 0
     ) {
-      prompt += `키워드: ${df.daily_report.keywords.join(", ")}\n`;
+      prompt += `기대하는 모습 키워드: ${df.vivid_report.future_keywords.join(", ")}\n`;
     }
 
     // Emotion Report에서 주요 정보 추출
@@ -78,28 +70,11 @@ export function buildSummaryReportPrompt(
       }
     }
 
-    // Feedback Report에서 주요 정보 추출
-    if (df.feedback_report) {
-      if (df.feedback_report.core_feedback) {
-        prompt += `핵심 피드백: ${df.feedback_report.core_feedback}\n`;
-      }
-      if (
-        Array.isArray(df.feedback_report?.positives) &&
-        df.feedback_report.positives.length > 0
-      ) {
-        prompt += `긍정적 측면: ${df.feedback_report.positives.join(", ")}\n`;
-      }
-      if (
-        Array.isArray(df.feedback_report?.improvements) &&
-        df.feedback_report.improvements.length > 0
-      ) {
-        prompt += `개선점: ${df.feedback_report.improvements.join(", ")}\n`;
-      }
-    }
+    // Feedback Report는 더 이상 사용하지 않음 (vivid_report 사용)
 
-    // Final Report에서 주요 정보 추출
-    if (df.final_report?.closing_message) {
-      prompt += `마무리 메시지: ${df.final_report.closing_message}\n`;
+    // Vivid Report에서 주요 정보 추출 (final_report 대신 vivid_report 사용)
+    if (df.vivid_report?.future_summary) {
+      prompt += `기대하는 모습 요약: ${df.vivid_report.future_summary}\n`;
     }
 
     prompt += `\n`;

@@ -54,8 +54,25 @@ const createWeeklyFeedback = async (
     body: JSON.stringify({ userId, ...params }),
   });
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Failed to create weekly feedback");
+    let errorMessage = "주간 피드백 생성에 실패했습니다.";
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      // JSON 파싱 실패 시 텍스트로 시도
+      const text = await res.text().catch(() => "");
+      if (text) {
+        try {
+          const parsed = JSON.parse(text);
+          errorMessage = parsed.message || parsed.error || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+      }
+    }
+    const error = new Error(errorMessage);
+    (error as { status?: number }).status = res.status;
+    throw error;
   }
   const data = await res.json();
 
