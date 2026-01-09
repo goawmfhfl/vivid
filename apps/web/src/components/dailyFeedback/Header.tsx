@@ -1,7 +1,5 @@
 "use client";
 
-import { Lightbulb } from "lucide-react";
-import { Card } from "../ui/card";
 import { SectionProps } from "./types";
 
 export function HeaderSection({ view }: SectionProps) {

@@ -25,7 +25,6 @@ import {
 import {
   SectionHeader,
   ContentCard,
-  KeywordCard,
   GradientCard,
 } from "@/components/common/feedback";
 

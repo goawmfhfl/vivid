@@ -57,7 +57,7 @@ export function WeeklyFeedbackReport({
         {/* 이번 주 비비드 */}
         {data.vivid_report && (
           <ScrollAnimation delay={200}>
-            <div className="mb-64">
+            <div className="mb-12">
               <VividSection
                 vividReport={data.vivid_report}
                 isPro={isPro}
@@ -76,7 +76,7 @@ export function WeeklyFeedbackReport({
         )}
 
         {/* Bottom Action */}
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-8">
           <Button
             onClick={handleGoToAnalysis}
             className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"

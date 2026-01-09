@@ -96,15 +96,7 @@ export async function fetchWeeklyFeedbacksByMonth(
         end: row.week_end,
         timezone: row.timezone || "Asia/Seoul",
       },
-      summary_report: row.summary_report as WeeklyFeedback["summary_report"],
-      daily_life_report:
-        row.daily_life_report as WeeklyFeedback["daily_life_report"],
-      emotion_report:
-        (row.emotion_report as WeeklyFeedback["emotion_report"]) ?? null,
       vivid_report: (row.vivid_report ?? rowWithLegacy.vision_report) as WeeklyFeedback["vivid_report"],
-      insight_report: row.insight_report as WeeklyFeedback["insight_report"],
-      execution_report:
-        row.execution_report as WeeklyFeedback["execution_report"],
       closing_report: row.closing_report as WeeklyFeedback["closing_report"],
       is_ai_generated: row.is_ai_generated ?? undefined,
       created_at: row.created_at ?? undefined,

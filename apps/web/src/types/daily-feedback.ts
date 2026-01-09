@@ -27,6 +27,7 @@ export interface EmotionReport {
   emotion_quadrant_explanation: string | null;
   emotion_timeline: EmotionTimelineItem[];
   emotion_events?: EmotionEvent[] | null;
+  ai_comment?: string | null;
 }
 
 

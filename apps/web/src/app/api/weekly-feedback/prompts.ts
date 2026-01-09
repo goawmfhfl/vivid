@@ -1,18 +1,6 @@
 import type { DailyFeedbackForWeekly } from "./types";
 
 /**
- * 날짜 포맷 변환: YYYY-MM-DD -> 11/24월 형식
- */
-function formatDateForEmotion(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00+09:00");
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-  const weekday = weekdays[date.getDay()];
-  return `${month}/${day}${weekday}`;
-}
-
-/**
  * 모든 섹션을 포함하는 통합 프롬프트 생성
  * 단 한 번의 요청으로 모든 주간 피드백 섹션을 생성하기 위한 프롬프트
  */

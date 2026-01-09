@@ -97,8 +97,9 @@ export function WeeklyCandidatesSection() {
 
   // 컴포넌트 언마운트 시 모든 타이머 정리
   useEffect(() => {
+    const intervals = timerIntervalsRef.current;
     return () => {
-      Object.values(timerIntervalsRef.current).forEach((interval) => {
+      Object.values(intervals).forEach((interval) => {
         clearInterval(interval);
       });
     };
@@ -327,20 +328,6 @@ export function WeeklyCandidatesSection() {
             const progressPercentage = isComplete
               ? 100
               : Math.min(Math.max(timerPercentage, serverPercentage), 99);
-
-            // 섹션 이름을 한글로 변환 (브랜딩 컨셉에 맞게 친절하게)
-            const getSectionNameKR = (sectionName: string) => {
-              const names: Record<string, string> = {
-                SummaryReport: "전체 요약",
-                DailyLifeReport: "일상 분석",
-                EmotionReport: "감정 분석",
-                VisionReport: "비전 분석",
-                InsightReport: "인사이트",
-                ExecutionReport: "실행 분석",
-                ClosingReport: "최종 정리",
-              };
-              return names[sectionName] || sectionName;
-            };
 
             return (
               <div
