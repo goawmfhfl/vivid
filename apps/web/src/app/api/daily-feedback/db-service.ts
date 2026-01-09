@@ -65,7 +65,7 @@ export async function saveDailyReport(
   // trend는 별도로 암호화 (trend는 최근 동향 섹션에서만 사용되므로)
   const { encryptJsonbFields } = await import("@/lib/jsonb-encryption");
   const encryptedTrend = report.trend
-    ? (encryptJsonbFields(report.trend) as typeof report.trend)
+    ? (encryptJsonbFields(report.trend) as unknown as typeof report.trend)
     : null;
 
   const reportData = {

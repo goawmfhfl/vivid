@@ -4,7 +4,7 @@ import { encrypt, decrypt, isEncrypted } from "./encryption";
 const NUMBER_MARKER = "__ENCRYPTED_NUMBER__:";
 
 // JSONB 값의 가능한 타입
-type JsonbValue =
+export type JsonbValue =
   | string
   | number
   | boolean
@@ -155,6 +155,9 @@ export function encryptWeeklyFeedback(
     execution_report: feedback.execution_report
       ? encryptJsonbFields(feedback.execution_report as JsonbValue)
       : null,
+    trend: feedback.trend
+      ? encryptJsonbFields(feedback.trend as JsonbValue)
+      : null,
     // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };
 }
@@ -185,6 +188,9 @@ export function decryptWeeklyFeedback(
       : null,
     execution_report: feedback.execution_report
       ? decryptJsonbFields(feedback.execution_report as JsonbValue)
+      : null,
+    trend: feedback.trend
+      ? decryptJsonbFields(feedback.trend as JsonbValue)
       : null,
     // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };

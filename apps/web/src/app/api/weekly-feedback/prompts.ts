@@ -1,5 +1,5 @@
 import type { DailyFeedbackForWeekly } from "./types";
-import type { VividReport, WeeklyTrendData } from "@/types/weekly-feedback";
+import type { VividReport } from "@/types/weekly-feedback";
 
 /**
  * 모든 섹션을 포함하는 통합 프롬프트 생성

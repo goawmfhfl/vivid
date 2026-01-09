@@ -6,7 +6,9 @@ import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { WeeklySummariesTab } from "@/components/summaries/WeeklySummariesTab";
+import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";
 import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
+import { useWeeklyTrends } from "@/hooks/useWeeklyTrends";
 import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
 import type { PeriodSummary } from "@/types/Entry";
 import {
@@ -59,6 +61,13 @@ function WeeklyReportsPage() {
     refetch: refetchWeekly,
   } = useWeeklyFeedbackList();
 
+  // 주간 흐름 데이터 조회
+  const {
+    data: weeklyTrendsData,
+    isLoading: isLoadingTrends,
+    error: trendsError,
+  } = useWeeklyTrends();
+
   // 주간 피드백을 PeriodSummary로 변환
   const weeklySummaries = useMemo(() => {
     return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
@@ -84,6 +93,15 @@ function WeeklyReportsPage() {
           <Calendar className="w-4 h-4 mr-2" />
           월간 리포트 보기
         </Button>
+      </div>
+
+      {/* 나의 주간 흐름 */}
+      <div className="mb-12">
+        <WeeklyTrendsSection
+          data={weeklyTrendsData}
+          isLoading={isLoadingTrends}
+          error={trendsError}
+        />
       </div>
 
       {/* 주간 리포트 리스트 */}

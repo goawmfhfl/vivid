@@ -129,6 +129,7 @@ export async function fetchWeeklyFeedbackByDate(
     },
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
     title: data.title || undefined,
+    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -175,6 +176,7 @@ export async function fetchWeeklyFeedbackDetail(
     },
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
     title: data.title || undefined,
+    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -194,6 +196,8 @@ export async function saveWeeklyFeedback(
   const encryptedFeedback = encryptWeeklyFeedback(
     feedback
   ) as unknown as WeeklyFeedback;
+
+  // trend는 encryptWeeklyFeedback에서 이미 암호화됨
 
   // DB 스키마가 요구하는 필수 필드들에 대한 기본값 설정
   // (WeeklyFeedback 타입에는 없지만 DB 스키마가 NOT NULL로 요구하는 경우)
@@ -231,6 +235,7 @@ export async function saveWeeklyFeedback(
         execution_report: defaultExecutionReport,
         vivid_report: encryptedFeedback.vivid_report,
         closing_report: null,
+        trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,week_start" }
