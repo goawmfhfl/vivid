@@ -132,8 +132,7 @@ export function SummaryList({
                     }}
                   >
                     {summary.period}{" "}
-                    {summary.type === "weekly" ? "주간" : "월간"} 인사이트 &
-                    피드백
+                    {summary.type === "weekly" ? "주간 vivid" : "월간 인사이트 & 피드백"}
                   </p>
                 </div>
               </div>

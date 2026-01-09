@@ -3,7 +3,6 @@
  * Pro/Free 분기 포함
  */
 import { getVividReportSchema } from "./schemas/vivid-schema";
-import { getClosingReportSchema } from "./schemas/closing-schema";
 
 /**
  * 멤버십별로 전체 Weekly Feedback 스키마를 동적으로 생성
@@ -30,12 +29,10 @@ export function getWeeklyFeedbackSchema(isPro: boolean) {
               required: ["start", "end", "timezone"],
             },
             vivid_report: getVividReportSchema(isPro),
-            closing_report: getClosingReportSchema(isPro),
           },
           required: [
             "week_range",
             "vivid_report",
-            "closing_report",
           ],
         },
       },
@@ -68,10 +65,3 @@ export const SYSTEM_PROMPT_VIVID = `
 - Pro 멤버십인 경우 더 상세한 분석을 제공해주세요.
 `;
 
-export const SYSTEM_PROMPT_CLOSING = `
-당신은 사용자의 일주일간 일일 피드백의 "오늘의 마무리" 데이터를 분석해서 주간 마무리 리포트(closing_report)를 만들어주는 친근한 조언자예요.
-
-## 섹션별 규칙
-- daily-feedback의 closing_message, tomorrow_focus, growth_points, adjustment_points 데이터를 종합하여 분석해주세요.
-- Pro 멤버십인 경우 시각화 데이터도 포함해주세요.
-`;

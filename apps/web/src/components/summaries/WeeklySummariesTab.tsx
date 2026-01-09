@@ -76,7 +76,7 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
                 color: COLORS.text.secondary,
               }}
             >
-              AI가 분석한 주간 인사이트와 피드백을 확인하세요
+              AI가 분석한 주간 vivid를 확인하세요
             </p>
           </div>
           <SummaryList

@@ -155,9 +155,7 @@ export function encryptWeeklyFeedback(
     execution_report: feedback.execution_report
       ? encryptJsonbFields(feedback.execution_report as JsonbValue)
       : null,
-    closing_report: feedback.closing_report
-      ? encryptJsonbFields(feedback.closing_report as JsonbValue)
-      : null,
+    // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };
 }
 
@@ -188,9 +186,7 @@ export function decryptWeeklyFeedback(
     execution_report: feedback.execution_report
       ? decryptJsonbFields(feedback.execution_report as JsonbValue)
       : null,
-    closing_report: feedback.closing_report
-      ? decryptJsonbFields(feedback.closing_report as JsonbValue)
-      : null,
+    // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };
 }
 

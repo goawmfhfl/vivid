@@ -66,12 +66,6 @@ export function getVividReportSchema(isPro: boolean) {
             maxItems: 7,
             description: "7일간의 current_evaluation 점수 추이",
           },
-          weekly_average_score: {
-            type: "number",
-            minimum: 0,
-            maximum: 100,
-            description: "주간 평균 평가 점수",
-          },
           highest_day: {
             type: "object",
             additionalProperties: false,
@@ -95,7 +89,6 @@ export function getVividReportSchema(isPro: boolean) {
         },
         required: [
           "daily_evaluation_trend",
-          "weekly_average_score",
           "highest_day",
           "lowest_day",
         ],
@@ -198,12 +191,6 @@ export function getVividReportSchema(isPro: boolean) {
             maxItems: 7,
             description: "7일간 일치도 점수 변화",
           },
-          average_alignment_score: {
-            type: "number",
-            minimum: 0,
-            maximum: 100,
-            description: "평균 일치도 점수",
-          },
           highest_alignment_day: {
             type: "object",
             additionalProperties: false,
@@ -232,7 +219,6 @@ export function getVividReportSchema(isPro: boolean) {
         },
         required: [
           "daily_alignment_scores",
-          "average_alignment_score",
           "highest_alignment_day",
           "lowest_alignment_day",
           "trend",
@@ -323,12 +309,6 @@ export function getVividReportSchema(isPro: boolean) {
             maxLength: isPro ? 300 : 200,
             description: "7일간 지향하는 모습의 일관성 요약",
           },
-          average_score: {
-            type: "number",
-            minimum: 0,
-            maximum: 100,
-            description: "지향하는 모습 점수 평균",
-          },
           top_5_aspired_traits: {
             type: "array",
             items: {
@@ -376,7 +356,6 @@ export function getVividReportSchema(isPro: boolean) {
         },
         required: [
           "consistency_summary",
-          "average_score",
           "top_5_aspired_traits",
           "evolution_process",
         ],

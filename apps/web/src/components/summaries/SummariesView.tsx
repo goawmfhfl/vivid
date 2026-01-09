@@ -10,10 +10,10 @@ import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
 import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
 import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
 import {
-  calculateWeekNumber,
   formatDateRange,
   formatPeriod,
   createPeriodSummaryFromWeeklyFeedback,
+  calculateWeekNumberInMonth,
 } from "./weekly-feedback-mapper";
 import { convertMonthlyFeedbackToPeriodSummary } from "./monthly-feedback-mapper";
 import { COLORS, SPACING } from "@/lib/design-system";
@@ -28,10 +28,12 @@ function convertWeeklyFeedbackToPeriodSummary(
   const startDate = new Date(item.week_range.start);
   const endDate = new Date(item.week_range.end);
 
-  const weekNumber = calculateWeekNumber(startDate);
-  const year = startDate.getFullYear();
   const dateRange = formatDateRange(startDate, endDate);
-  const period = formatPeriod(startDate, weekNumber);
+  const period = formatPeriod(startDate, endDate);
+  
+  // 월 기준 주차 계산
+  const { weekNumber, month, year } = calculateWeekNumberInMonth(startDate, endDate);
+  
   const title = item.title;
 
   return createPeriodSummaryFromWeeklyFeedback({

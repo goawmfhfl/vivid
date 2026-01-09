@@ -28,7 +28,6 @@ export type VividReport = {
       date: string;
       evaluation_score: number; // current_evaluation에서 추출한 점수
     }>;
-    weekly_average_score: number;
     highest_day: {
       date: string;
       score: number;
@@ -71,7 +70,6 @@ export type VividReport = {
       date: string;
       score: number;
     }>;
-    average_alignment_score: number;
     highest_alignment_day: {
       date: string;
       score: number;
@@ -108,7 +106,6 @@ export type VividReport = {
   // 7. 지향하는 모습 심화 분석
   aspired_traits_analysis: {
     consistency_summary: string;
-    average_score: number;
     top_5_aspired_traits: Array<{
       trait: string;
       frequency: number;
@@ -140,78 +137,13 @@ export type VividReport = {
 };
 
 // ============================================
-// Closing Report
-// ============================================
-export type ClosingReport = {
-  call_to_action: {
-    weekly_one_liner: string;
-    next_week_objective: string;
-    actions: string[]; // 3-5개
-  };
-  this_week_identity: {
-    core_characteristics: Array<{
-      characteristic: string;
-      description: string;
-      evidence: string[];
-      frequency: number;
-    }>;
-    growth_story: {
-      summary: string;
-      narrative: string;
-    };
-    strengths_highlighted: {
-      summary: string;
-      top_strengths: Array<{
-        strength: string;
-        description: string;
-        impact: string;
-      }>;
-    };
-    areas_of_awareness: {
-      summary: string;
-      key_areas: Array<{
-        area: string;
-        description: string;
-        action_taken: string;
-      }>;
-    };
-    visualization?: {
-      characteristics_radar: {
-        type: "radar";
-        data: Array<{
-          characteristic: string;
-          value: number;
-        }>;
-      };
-      growth_journey: {
-        type: "timeline";
-        data: Array<{
-          phase: string;
-          description: string;
-          response: string;
-        }>;
-      };
-    };
-  };
-  next_week_identity_intention: {
-    summary: string;
-    intention: string;
-    focus_areas: Array<{
-      area: string;
-      reason: string;
-      identity_shift: string;
-    }>;
-  };
-};
-
-// ============================================
 // Weekly Feedback (메인 타입)
 // ============================================
 export type WeeklyFeedback = {
   id?: string;
   week_range: WeekRange;
   vivid_report: VividReport;
-  closing_report: ClosingReport;
+  title?: string; // "~ 했던 주" 형식의 제목 (예: "개발과 운동에 집중했던 주")
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;

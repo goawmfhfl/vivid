@@ -274,9 +274,7 @@ export function WeeklyCandidatesSection() {
                     lineHeight: "1.5",
                   }}
                 >
-                  {candidatesForCreation.length}개의 주간 vivid를 생성할 수
-                  있어요. 기록을 통해 나를 이해하고, 나답게 성장하는 시간을
-                  가져보세요.
+                  기록으로 만든 이번 주의 비비드를 확인해보세요.
                 </p>
               </div>
               <div

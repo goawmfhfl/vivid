@@ -1,4 +1,5 @@
 import type { DailyFeedbackForWeekly } from "./types";
+import type { VividReport } from "@/types/weekly-feedback";
 
 /**
  * 모든 섹션을 포함하는 통합 프롬프트 생성
@@ -9,7 +10,7 @@ export function buildUnifiedWeeklyFeedbackPrompt(
   weekRange: { start: string; end: string; timezone: string }
 ): string {
   let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 
-위 스키마에 따라 주간 피드백의 모든 섹션(vivid_report, closing_report)을 한 번에 생성하여 JSON만 출력하세요.\n\n`;
+위 스키마에 따라 주간 피드백의 vivid_report를 생성하여 JSON만 출력하세요.\n\n`;
 
   // 일일 피드백 데이터를 종합하여 제공 (vivid_report만 사용)
   dailyFeedbacks.forEach((feedback, idx) => {
@@ -80,7 +81,6 @@ export function buildUnifiedWeeklyFeedbackPrompt(
 
 **섹션별 요구사항:**
 1. vivid_report: 일주일간의 비비드 분석 - 8개 섹션 모두 포함 (주간 비비드 요약, 평가, 키워드 분석, 앞으로의 모습 분석, 일치도 트렌드, 사용자 특징 분석, 지향하는 모습 분석, 주간 인사이트)
-2. closing_report: 이번 주를 마무리하는 종합 리포트
 
 모든 섹션을 스키마에 맞게 완전히 작성해주세요.`;
 
@@ -175,7 +175,6 @@ export function buildVividPrompt(
 
 2. **weekly_vivid_evaluation (주간 비비드 평가)**
    - daily_evaluation_trend: ${weekRange.start}부터 ${weekRange.end}까지의 current_evaluation 점수 추이 (점수가 텍스트인 경우 숫자로 변환 필요)
-   - weekly_average_score: 주간 평균 평가 점수 계산
    - highest_day/lowest_day: 가장 높았던/낮았던 날과 그 이유
 
 3. **weekly_keywords_analysis (주간 키워드 분석)**
@@ -188,7 +187,6 @@ export function buildVividPrompt(
 
 5. **alignment_trend_analysis (일치도 트렌드 분석)**
    - daily_alignment_scores: ${weekRange.start}부터 ${weekRange.end}까지 일치도 점수 변화 (alignment_score 추이)
-   - average_alignment_score: 평균 일치도 점수
    - highest_alignment_day/lowest_alignment_day: 일치도가 높았던/낮았던 날의 패턴
    - trend: "improving" | "declining" | "stable" 중 하나
 
@@ -199,7 +197,6 @@ export function buildVividPrompt(
 
 7. **aspired_traits_analysis (지향하는 모습 심화 분석)**
    - consistency_summary: ${weekRange.start}부터 ${weekRange.end}까지 지향하는 모습의 일관성 요약
-   - average_score: 지향하는 모습 점수 평균
    - top_5_aspired_traits: 가장 자주 언급된 지향 모습 Top 5 (frequency와 dates 포함)
    - evolution_process: 지향 모습의 진화 과정 (stages 배열)
 
@@ -212,28 +209,43 @@ export function buildVividPrompt(
   return prompt;
 }
 
-
-export function buildClosingPrompt(
-  dailyFeedbacks: DailyFeedbackForWeekly,
-  weekRange: { start: string; end: string; timezone: string }
+/**
+ * 주간 피드백 제목 생성 프롬프트
+ * vivid_report 분석 결과를 바탕으로 "~ 했던 주" 형식의 제목 생성
+ */
+export function buildWeeklyTitlePrompt(
+  vividReport: VividReport,
+  weekRange: { start: string; end: string; timezone: string },
+  userName?: string
 ): string {
-  let prompt = `아래는 ${weekRange.start}부터 ${weekRange.end}까지의 일주일간 일일 피드백 데이터입니다. 위 스키마에 따라 주간 마무리 리포트(closing_report)를 생성하여 JSON만 출력하세요.\n\n`;
+  const dateRangeText = `${weekRange.start}부터 ${weekRange.end}까지`;
+  
+  let prompt = `${userName ? `${userName}님의 ` : ""}${dateRangeText} 주간 피드백 분석 결과를 바탕으로, 이번 주를 한 문장으로 요약하는 제목을 생성해주세요.
 
-  dailyFeedbacks.forEach((feedback, idx) => {
-    prompt += `\n[일일 피드백 ${idx + 1} - ${feedback.report_date}]\n`;
+**제목 형식: "~ 했던 주" 또는 "~ 했던 한 주"**
+**예시:**
+- "개발과 운동에 집중했던 주"
+- "새로운 습관이 만들어 진 주"
+- "자기계발과 휴식의 균형을 찾았던 주"
+- "프로젝트 완성과 성장을 동시에 이뤘던 주"
 
-    // vivid_report 데이터만 사용
-    if (feedback.vivid_report) {
-      const vivid = feedback.vivid_report;
-      if (vivid.current_summary) {
-        prompt += `오늘의 비비드 요약: ${vivid.current_summary}\n`;
-      }
-      if (vivid.future_summary) {
-        prompt += `기대하는 모습 요약: ${vivid.future_summary}\n`;
-      }
-    }
-  });
+**분석 결과 요약:**
+${vividReport.weekly_vivid_summary?.summary || ""}
 
-  prompt += `\n\n위 데이터를 종합하여 이번 주를 마무리하는 종합 리포트(closing_report)를 생성하세요.`;
+**핵심 포인트:**
+${vividReport.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
+
+**주요 키워드:**
+${vividReport.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
+
+**사용자 특징:**
+${vividReport.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
+
+위 분석 결과를 바탕으로, 이번 주의 가장 핵심적인 특징을 담은 제목을 "~ 했던 주" 형식으로 생성해주세요.
+제목은 간결하고 명확하며, 이번 주의 가장 중요한 활동이나 변화를 잘 표현해야 합니다.
+JSON 형식으로 {"title": "제목"}만 출력해주세요.`;
+
   return prompt;
 }
+
+

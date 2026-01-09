@@ -92,65 +92,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       ],
       condition: "vivid_report !== null",
     },
-    {
-      name: "Closing",
-      component: "ClosingSection",
-      description: "이번 주의 마무리 리포트",
-      fields: [
-        {
-          name: "weekly_one_liner",
-          path: "view.closing_report.call_to_action?.weekly_one_liner",
-          isPro: false,
-        },
-        {
-          name: "next_week_objective",
-          path: "view.closing_report.call_to_action?.next_week_objective",
-          isPro: false,
-        },
-        {
-          name: "actions",
-          path: "view.closing_report.call_to_action?.actions",
-          isPro: false,
-        },
-        {
-          name: "this_week_identity",
-          path: "view.closing_report.this_week_identity",
-          isPro: true,
-        },
-        {
-          name: "this_week_identity.core_characteristics",
-          path: "view.closing_report.this_week_identity?.core_characteristics",
-          isPro: true,
-        },
-        {
-          name: "this_week_identity.growth_story",
-          path: "view.closing_report.this_week_identity?.growth_story",
-          isPro: true,
-        },
-        {
-          name: "this_week_identity.strengths_highlighted",
-          path: "view.closing_report.this_week_identity?.strengths_highlighted",
-          isPro: true,
-        },
-        {
-          name: "this_week_identity.areas_of_awareness",
-          path: "view.closing_report.this_week_identity?.areas_of_awareness",
-          isPro: true,
-        },
-        {
-          name: "this_week_identity.identity_evolution",
-          path: "view.closing_report.this_week_identity?.identity_evolution",
-          isPro: true,
-        },
-        {
-          name: "next_week_identity_intention",
-          path: "view.closing_report.next_week_identity_intention",
-          isPro: true,
-        },
-      ],
-      condition:
-        "closing_report.call_to_action?.weekly_one_liner.trim() !== ''",
-    },
   ];
 
   // 필드 값 가져오기 헬퍼
@@ -180,11 +121,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       switch (def.name) {
         case "Vivid":
           return view.vivid_report !== null;
-        case "Closing":
-          return !!(
-            view.closing_report?.call_to_action?.weekly_one_liner &&
-            view.closing_report.call_to_action.weekly_one_liner.trim()
-          );
         default:
           return false;
       }

@@ -97,7 +97,6 @@ export async function fetchWeeklyFeedbacksByMonth(
         timezone: row.timezone || "Asia/Seoul",
       },
       vivid_report: (row.vivid_report ?? rowWithLegacy.vision_report) as WeeklyFeedback["vivid_report"],
-      closing_report: row.closing_report as WeeklyFeedback["closing_report"],
       is_ai_generated: row.is_ai_generated ?? undefined,
       created_at: row.created_at ?? undefined,
     };

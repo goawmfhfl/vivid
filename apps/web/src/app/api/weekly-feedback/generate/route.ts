@@ -16,7 +16,6 @@ function removeTrackingInfo(
 
   const sections = [
     "vivid_report",
-    "closing_report",
   ];
 
   for (const key of sections) {

@@ -67,18 +67,18 @@ export async function fetchWeeklyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
     .select(
-      "id, week_start, week_end, is_ai_generated, created_at"
+      "id, week_start, week_end, title, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
-    .order("week_start", { ascending: false });
+    .order("week_start", { ascending: true });
 
   if (error) {
     throw new Error(`Failed to fetch weekly feedback list: ${error.message}`);
   }
 
   return (data || []).map((row) => {
-    // 날짜 범위를 title로 사용
-    const title = `${row.week_start} ~ ${row.week_end}`;
+    // title이 있으면 사용, 없으면 날짜 범위를 title로 사용 (하위 호환성)
+    const title = row.title || `${row.week_start} ~ ${row.week_end}`;
 
     return {
       id: String(row.id),
@@ -128,7 +128,7 @@ export async function fetchWeeklyFeedbackByDate(
       timezone: data.timezone || "Asia/Seoul",
     },
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
-    closing_report: data.closing_report as WeeklyFeedback["closing_report"],
+    title: data.title || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -174,7 +174,7 @@ export async function fetchWeeklyFeedbackDetail(
       timezone: data.timezone || "Asia/Seoul",
     },
     vivid_report: data.vivid_report as WeeklyFeedback["vivid_report"],
-    closing_report: data.closing_report as WeeklyFeedback["closing_report"],
+    title: data.title || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -223,13 +223,14 @@ export async function saveWeeklyFeedback(
         week_start: encryptedFeedback.week_range.start,
         week_end: encryptedFeedback.week_range.end,
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
+        title: encryptedFeedback.title || null,
         summary_report: defaultSummaryReport,
         emotion_report: defaultEmotionReport,
         daily_life_report: defaultDailyLifeReport,
         insight_report: defaultInsightReport,
         execution_report: defaultExecutionReport,
         vivid_report: encryptedFeedback.vivid_report,
-        closing_report: encryptedFeedback.closing_report,
+        closing_report: null,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,week_start" }

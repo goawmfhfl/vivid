@@ -178,17 +178,6 @@ export function VividSection({
               </p>
             </div>
             <div className="mb-4">
-              <p
-                className="text-sm mb-2"
-                style={{ color: COLORS.text.primary }}
-              >
-                주간 평균 점수:{" "}
-                <span className="font-semibold">
-                  {vividReport.weekly_vivid_evaluation.weekly_average_score.toFixed(
-                    1
-                  )}
-                </span>
-              </p>
                   {vividReport.weekly_vivid_evaluation.daily_evaluation_trend &&
                     vividReport.weekly_vivid_evaluation.daily_evaluation_trend
                       .length > 0 && (
@@ -558,17 +547,6 @@ export function VividSection({
             </div>
             <div className="mb-4">
               <p
-                className="text-sm mb-2"
-                style={{ color: COLORS.text.primary }}
-              >
-                평균 일치도 점수:{" "}
-                <span className="font-semibold">
-                  {vividReport.alignment_trend_analysis.average_alignment_score.toFixed(
-                    1
-                  )}
-                </span>
-              </p>
-              <p
                 className="text-xs mb-3"
                 style={{ color: COLORS.text.secondary }}
               >
@@ -914,19 +892,10 @@ export function VividSection({
                 </p>
               </div>
               <p
-                className="text-sm leading-relaxed mb-2"
+                className="text-sm leading-relaxed mb-4"
                 style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
               >
                 {vividReport.aspired_traits_analysis.consistency_summary}
-              </p>
-              <p
-                className="text-sm mb-4"
-                style={{ color: COLORS.text.primary }}
-              >
-                평균 점수:{" "}
-                <span className="font-semibold">
-                  {vividReport.aspired_traits_analysis.average_score.toFixed(1)}
-                </span>
               </p>
             </GradientCard>
             {vividReport.aspired_traits_analysis.top_5_aspired_traits &&

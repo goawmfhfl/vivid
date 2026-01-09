@@ -2,17 +2,15 @@ import OpenAI from "openai";
 import {
   getWeeklyFeedbackSchema,
   SYSTEM_PROMPT_VIVID,
-  SYSTEM_PROMPT_CLOSING,
 } from "./schema";
 import type { DailyFeedbackForWeekly } from "./types";
 import {
   buildVividPrompt,
-  buildClosingPrompt,
+  buildWeeklyTitlePrompt,
 } from "./prompts";
 import type {
   WeeklyFeedback,
   VividReport,
-  ClosingReport,
 } from "@/types/weekly-feedback";
 import {
   generateCacheKey,
@@ -439,114 +437,62 @@ async function generateVividReport(
 }
 
 
+
 /**
- * Closing Report 생성 (사용되지 않음 - 기본값 사용)
+ * 주간 피드백 제목 생성
  */
-async function _generateClosingReport(
-  dailyFeedbacks: DailyFeedbackForWeekly,
+async function generateWeeklyTitle(
+  vividReport: VividReport,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
-  userId?: string
-): Promise<ClosingReport> {
-  const prompt = buildClosingPrompt(dailyFeedbacks, range);
-  const schema = getWeeklyFeedbackSchema(isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_CLOSING, prompt);
+  userId?: string,
+  userName?: string
+): Promise<string> {
+  const prompt = buildWeeklyTitlePrompt(vividReport, range, userName);
+  const cacheKey = generateCacheKey("weekly_title", prompt);
 
-  const response = await generateSection<{ closing_report: ClosingReport }>(
-    SYSTEM_PROMPT_CLOSING,
-    prompt,
-    {
-      name: "ClosingReportResponse",
-      schema: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          closing_report:
-            schema.schema.properties.weekly_feedback.properties.closing_report,
-        },
-        required: ["closing_report"],
-      },
-      strict: true,
-    },
-    cacheKey,
-    isPro,
-    "closing_report",
-    userId
-  );
-
-  if (!response) {
-    console.error("[generateClosingReport] response is null or undefined");
-    throw new Error("Closing report response is null or undefined");
-  }
-
-  // response가 직접 ClosingReport인 경우 처리
-  if (
-    typeof response === "object" &&
-    response !== null &&
-    !Array.isArray(response) &&
-    ("call_to_action" in response || "this_week_identity" in response) &&
-    !("closing_report" in response)
-  ) {
-    console.log(
-      "[generateClosingReport] Response appears to be ClosingReport directly, using it"
-    );
-    return response as ClosingReport;
-  }
-
-  if (!response.closing_report) {
-    console.error(
-      "[generateClosingReport] response.closing_report is missing",
+  try {
+    const response = await generateSection<{ title: string }>(
+      "당신은 주간 피드백을 분석하여 간결하고 명확한 제목을 생성하는 전문가입니다.",
+      prompt,
       {
-        response,
-        responseKeys: Object.keys(response || {}),
-        responseType: typeof response,
-        responseValues: Object.values(response || {}),
-        responseStringified: JSON.stringify(response, null, 2),
-      }
+        name: "WeeklyTitleResponse",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            title: {
+              type: "string",
+              minLength: 5,
+              maxLength: 50,
+              description: '"~ 했던 주" 형식의 주간 피드백 제목',
+            },
+          },
+          required: ["title"],
+        },
+        strict: true,
+      },
+      cacheKey,
+      isPro,
+      "weekly_title",
+      userId
     );
-    throw new Error("Closing report data is missing from response");
+
+    if (!response || !response.title) {
+      // 기본 제목 반환
+      return `${range.start} ~ ${range.end} 주간`;
+    }
+
+    return response.title;
+  } catch (error) {
+    console.error("[generateWeeklyTitle] 제목 생성 실패:", error);
+    // 기본 제목 반환
+    return `${range.start} ~ ${range.end} 주간`;
   }
-
-  console.log(
-    "[generateClosingReport] closing_report 추출 완료:",
-    !!response.closing_report
-  );
-  return response.closing_report;
-}
-
-
-function createDefaultClosingReport(): ClosingReport {
-  return {
-    call_to_action: {
-      weekly_one_liner: "",
-      next_week_objective: "",
-      actions: [],
-    },
-    this_week_identity: {
-      core_characteristics: [],
-      growth_story: {
-        summary: "",
-        narrative: "",
-      },
-      strengths_highlighted: {
-        summary: "",
-        top_strengths: [],
-      },
-      areas_of_awareness: {
-        summary: "",
-        key_areas: [],
-      },
-    },
-    next_week_identity_intention: {
-      summary: "",
-      intention: "",
-      focus_areas: [],
-    },
-  };
 }
 
 /**
- * Daily Feedback 배열을 기반으로 주간 피드백 생성 (vivid_report만 AI 생성)
+ * Daily Feedback 배열을 기반으로 주간 피드백 생성 (vivid_report와 title 생성)
  */
 export async function generateWeeklyFeedbackFromDailyWithProgress(
   dailyFeedbacks: DailyFeedbackForWeekly,
@@ -555,7 +501,7 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
   userId?: string,
   userName?: string
 ): Promise<WeeklyFeedback> {
-  // vivid_report만 AI로 생성
+  // vivid_report AI로 생성
   const vividReport = await generateVividReport(
     dailyFeedbacks,
     range,
@@ -564,15 +510,20 @@ export async function generateWeeklyFeedbackFromDailyWithProgress(
     userName
   );
 
-
-  // closing_report는 기본값으로 설정 (AI 요청하지 않음)
-  const closingReport = createDefaultClosingReport();
+  // vivid_report를 바탕으로 title 생성
+  const title = await generateWeeklyTitle(
+    vividReport,
+    range,
+    isPro,
+    userId,
+    userName
+  );
 
   // 최종 Weekly Feedback 조합
   const weeklyFeedback: WeeklyFeedback = {
     week_range: range,
     vivid_report: vividReport,
-    closing_report: closingReport,
+    title,
     is_ai_generated: true,
   };
 

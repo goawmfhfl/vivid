@@ -67,14 +67,6 @@ export function WeeklyFeedbackReport({
           </ScrollAnimation>
         )}
 
-        {/* 마무리 */}
-        {data.closing_report && (
-          <ScrollAnimation delay={200}>
-            <div className="mb-12">
-            </div>
-          </ScrollAnimation>
-        )}
-
         {/* Bottom Action */}
         <div className="flex justify-center pt-8">
           <Button

@@ -10,6 +10,5 @@ export function mapWeeklyFeedbackToReportData(
   return {
     week_range: feedback.week_range,
     vivid_report: feedback.vivid_report,
-    closing_report: feedback.closing_report,
   };
 }
