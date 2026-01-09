@@ -7,4 +7,5 @@ function ContentStatsPageWrapper() {
   return <ContentStatsPage />;
 }
 
-export default withAdminAuth(ContentStatsPageWrapper);
+const WrappedPage = withAdminAuth(ContentStatsPageWrapper);
+export default WrappedPage;

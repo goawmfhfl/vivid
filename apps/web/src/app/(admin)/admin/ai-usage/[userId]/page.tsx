@@ -13,4 +13,5 @@ function UserAIUsageDetailPage({
   return <UserAIUsageDetail userId={userId} />;
 }
 
-export default withAdminAuth(UserAIUsageDetailPage);
+const WrappedPage = withAdminAuth(UserAIUsageDetailPage);
+export default WrappedPage;

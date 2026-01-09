@@ -1,10 +1,10 @@
 import { Calendar } from "lucide-react";
 import { Card } from "../../../ui/card";
-import type { DailyEmotion } from "@/types/weekly-feedback";
+import type { MonthlyMoodTimelineItem } from "@/types/monthly-feedback-new";
 import { useTooltip } from "./TooltipContext";
 
 type EmotionChartProps = {
-  dailyEmotions: DailyEmotion[];
+  dailyEmotions: MonthlyMoodTimelineItem[];
   valence: number;
   arousal: number;
   chartContainerRef: React.RefObject<HTMLDivElement | null>;

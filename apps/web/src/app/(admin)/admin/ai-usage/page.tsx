@@ -7,4 +7,5 @@ function AIUsagePageWrapper() {
   return <AIUsagePage />;
 }
 
-export default withAdminAuth(AIUsagePageWrapper);
+const WrappedPage = withAdminAuth(AIUsagePageWrapper);
+export default WrappedPage;

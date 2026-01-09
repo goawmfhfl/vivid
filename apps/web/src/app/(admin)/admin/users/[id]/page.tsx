@@ -9,4 +9,5 @@ function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return <UserDetail userId={id} />;
 }
 
-export default withAdminAuth(UserDetailPage);
+const WrappedPage = withAdminAuth(UserDetailPage);
+export default WrappedPage;

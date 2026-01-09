@@ -7,4 +7,5 @@ function SubscriptionListPage() {
   return <SubscriptionList />;
 }
 
-export default withAdminAuth(SubscriptionListPage);
+const WrappedPage = withAdminAuth(SubscriptionListPage);
+export default WrappedPage;

@@ -7,12 +7,13 @@ import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-cand
 import { SummaryList } from "./SummaryList";
 import { EmptyState } from "./EmptyState";
 import { Pagination } from "./Pagination";
+import { COLORS, SPACING } from "@/lib/design-system";
 
 interface WeeklySummariesTabProps {
   summaries: PeriodSummary[];
 }
 
-const WEEKLY_COLOR = "#A8BBA8";
+const WEEKLY_COLOR = COLORS.brand.primary;
 const ITEMS_PER_PAGE = 10;
 
 export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
@@ -58,24 +59,21 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
       {currentSummaries.length > 0 && (
         <div
           className={hasCandidatesSection ? "pt-6 border-t" : "pt-0"}
-          style={{ borderColor: "#EFE9E3" }}
+          style={{ borderColor: COLORS.border.light }}
         >
           <div className="mb-4">
             <h2
+              className="text-lg font-semibold mb-1"
               style={{
-                color: "#333333",
-                fontSize: "1.1rem",
-                fontWeight: "600",
-                marginBottom: "4px",
+                color: COLORS.text.primary,
               }}
             >
               주간 vivid 리스트
             </h2>
             <p
+              className="text-sm"
               style={{
-                color: "#4E4B46",
-                opacity: 0.7,
-                fontSize: "0.85rem",
+                color: COLORS.text.secondary,
               }}
             >
               AI가 분석한 주간 인사이트와 피드백을 확인하세요

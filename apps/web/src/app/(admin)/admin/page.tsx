@@ -7,4 +7,5 @@ function AdminDashboardPage() {
   return <AdminDashboard />;
 }
 
-export default withAdminAuth(AdminDashboardPage);
+const WrappedPage = withAdminAuth(AdminDashboardPage);
+export default WrappedPage;

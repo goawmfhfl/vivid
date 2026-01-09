@@ -7,4 +7,5 @@ function UserListPage() {
   return <UserList />;
 }
 
-export default withAdminAuth(UserListPage);
+const WrappedPage = withAdminAuth(UserListPage);
+export default WrappedPage;
