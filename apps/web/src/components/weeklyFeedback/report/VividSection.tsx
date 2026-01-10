@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Target,
   Lightbulb,
@@ -12,7 +13,8 @@ import {
   Calendar,
 } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
-import { COLORS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 import {
   LineChart,
   Line,
@@ -33,6 +35,58 @@ type VividSectionProps = {
   isPro?: boolean;
   userName?: string;
 };
+
+/**
+ * 키워드 텍스트와 툴팁을 함께 표시하는 컴포넌트
+ */
+function KeywordWithTooltip({ keyword }: { keyword: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <span
+      className={cn(TYPOGRAPHY.body.fontSize, "font-semibold flex-1 min-w-0 cursor-help relative line-clamp-2")}
+      style={{ 
+        color: COLORS.text.primary,
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        wordBreak: "break-word",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {keyword}
+      {isHovered && (
+        <div
+          className="absolute left-0 bottom-full mb-2 z-50 px-3 py-2 rounded-lg shadow-lg pointer-events-none"
+          style={{
+            backgroundColor: COLORS.text.primary,
+            color: COLORS.text.white || "#FFFFFF",
+            maxWidth: "300px",
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            minWidth: "150px",
+          }}
+        >
+          <div className={cn(TYPOGRAPHY.body.fontSize, "font-medium")}>
+            {keyword}
+          </div>
+          <div
+            className="absolute left-4 bottom-0 transform translate-y-full"
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: "6px solid transparent",
+              borderRight: "6px solid transparent",
+              borderTop: `6px solid ${COLORS.text.primary}`,
+            }}
+          />
+        </div>
+      )}
+    </span>
+  );
+}
 
 export function VividSection({
   vividReport,
@@ -66,7 +120,7 @@ export function VividSection({
               vividReport.weekly_vivid_summary.key_points.length > 0 && (
                 <GradientCard gradientColor="163, 191, 217">
                   <p
-                    className="text-xs font-semibold mb-3 uppercase"
+                    className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                     style={{ color: COLORS.text.secondary }}
                   >
                     핵심 포인트
@@ -83,14 +137,14 @@ export function VividSection({
                           }}
                         >
                           <p
-                            className="text-sm mb-1"
+                            className={cn(TYPOGRAPHY.body.fontSize, "font-semibold mb-1.5")}
                             style={{ color: COLORS.text.primary }}
                           >
                             {point.point}
                           </p>
                           {point.dates && point.dates.length > 0 && (
                             <p
-                              className="text-xs mt-1"
+                              className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-1")}
                               style={{ color: COLORS.text.secondary }}
                             >
                               {point.dates.join(", ")}
@@ -117,7 +171,7 @@ export function VividSection({
                       <Target className="w-4 h-4" style={{ color: vividColor }} />
                     </div>
                     <p
-                      className="text-xs font-semibold uppercase"
+                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                       style={{ color: COLORS.text.secondary }}
                     >
                       다음주 비전 핵심 포인트
@@ -139,10 +193,9 @@ export function VividSection({
                               style={{ backgroundColor: vividColor }}
                             />
                             <p
-                              className="text-sm"
+                              className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                               style={{
                                 color: COLORS.text.primary,
-                                lineHeight: "1.6",
                               }}
                             >
                               {point}
@@ -171,7 +224,7 @@ export function VividSection({
                 <TrendingUp className="w-4 h-4" style={{ color: vividColor }} />
               </div>
               <p
-                className="text-xs font-semibold uppercase"
+                className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                 style={{ color: COLORS.text.secondary }}
               >
                 주간 비비드 평가
@@ -238,13 +291,13 @@ export function VividSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <p
-                          className="text-xs font-medium uppercase tracking-wide"
+                          className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                           style={{ color: COLORS.text.secondary }}
                         >
                           가장 높았던 날
                         </p>
                         <span
-                          className="text-base font-bold"
+                          className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
                           style={{ color: "#4CAF50" }}
                         >
                           {vividReport.weekly_vivid_evaluation.highest_day.score}
@@ -256,14 +309,14 @@ export function VividSection({
                           style={{ color: COLORS.text.tertiary }}
                         />
                         <p
-                          className="text-sm font-medium"
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
                           style={{ color: COLORS.text.primary }}
                         >
                           {vividReport.weekly_vivid_evaluation.highest_day.date}
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed"
+                        className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.weekly_vivid_evaluation.highest_day.reason}
@@ -296,13 +349,13 @@ export function VividSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <p
-                          className="text-xs font-medium uppercase tracking-wide"
+                          className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                           style={{ color: COLORS.text.secondary }}
                         >
                           가장 낮았던 날
                         </p>
                         <span
-                          className="text-base font-bold"
+                          className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
                           style={{ color: "#FF9800" }}
                         >
                           {vividReport.weekly_vivid_evaluation.lowest_day.score}
@@ -314,14 +367,14 @@ export function VividSection({
                           style={{ color: COLORS.text.tertiary }}
                         />
                         <p
-                          className="text-sm font-medium"
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
                           style={{ color: COLORS.text.primary }}
                         >
                           {vividReport.weekly_vivid_evaluation.lowest_day.date}
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed"
+                        className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.weekly_vivid_evaluation.lowest_day.reason}
@@ -352,7 +405,7 @@ export function VividSection({
                       <Zap className="w-4 h-4" style={{ color: vividColor }} />
                     </div>
                     <p
-                      className="text-xs font-semibold uppercase"
+                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                       style={{ color: COLORS.text.secondary }}
                     >
                       비전 키워드 트렌드
@@ -371,15 +424,10 @@ export function VividSection({
                             border: "1px solid rgba(163, 191, 217, 0.2)",
                           }}
                         >
-                              <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center justify-between gap-2 mb-2 relative">
+                                <KeywordWithTooltip keyword={keyword.keyword} />
                                 <span
-                                  className="text-sm font-semibold"
-                                  style={{ color: COLORS.text.primary }}
-                                >
-                                  {keyword.keyword}
-                                </span>
-                                <span
-                                  className="px-2 py-0.5 rounded text-xs"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "px-2 py-0.5 rounded flex-shrink-0 whitespace-nowrap")}
                                   style={{
                                     backgroundColor: "#E8F0F8",
                                     color: "#5A7A9A",
@@ -390,8 +438,16 @@ export function VividSection({
                               </div>
                               {keyword.context && (
                                 <p
-                                  className="text-xs mb-2"
-                                  style={{ color: COLORS.text.secondary }}
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "mb-2 line-clamp-2")}
+                                  style={{ 
+                                    color: COLORS.text.secondary,
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                    wordBreak: "break-word",
+                                  }}
+                                  title={keyword.context}
                                 >
                                   {keyword.context}
                                 </p>
@@ -403,7 +459,7 @@ export function VividSection({
                                       (related, rIdx) => (
                                         <span
                                           key={rIdx}
-                                          className="px-2 py-0.5 rounded text-xs"
+                                          className={cn(TYPOGRAPHY.bodySmall.fontSize, "px-2 py-0.5 rounded")}
                                           style={{
                                             backgroundColor: "#E8F0F8",
                                             color: "#5A7A9A",
@@ -437,7 +493,7 @@ export function VividSection({
             {vividReport.future_vision_analysis.consistency_analysis && (
               <GradientCard gradientColor="163, 191, 217">
                 <p
-                  className="text-xs mb-3 font-semibold uppercase"
+                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                   style={{ color: COLORS.text.secondary }}
                 >
                   일관성 분석
@@ -448,31 +504,38 @@ export function VividSection({
                     vividReport.future_vision_analysis.consistency_analysis
                       .consistent_themes.length > 0 && (
                       <div
-                        className="p-3 rounded-lg"
+                        className="p-4 rounded-xl"
                         style={{
-                          backgroundColor: "rgba(200, 230, 201, 0.3)",
-                          border: "1px solid rgba(200, 230, 201, 0.5)",
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                          border: "1px solid rgba(163, 191, 217, 0.2)",
                         }}
                       >
                             <p
-                              className="text-xs font-semibold mb-2"
+                              className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                               style={{ color: COLORS.text.secondary }}
                             >
                               일관성 있는 비전
                             </p>
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="space-y-2">
                               {vividReport.future_vision_analysis.consistency_analysis.consistent_themes.map(
                                 (theme, idx) => (
-                                  <span
+                                  <div
                                     key={idx}
-                                    className="px-2 py-0.5 rounded text-xs"
-                                    style={{
-                                      backgroundColor: "#C8E6C9",
-                                      color: "#2E7D32",
-                                    }}
+                                    className="flex items-start gap-2"
                                   >
-                                    {theme}
-                                  </span>
+                                    <div
+                                      className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                                      style={{ backgroundColor: "#4CAF50" }}
+                                    />
+                                    <p
+                                      className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
+                                      style={{ 
+                                        color: COLORS.text.primary,
+                                      }}
+                                    >
+                                      {theme}
+                                    </p>
+                                  </div>
                                 )
                               )}
                             </div>
@@ -483,31 +546,38 @@ export function VividSection({
                     vividReport.future_vision_analysis.consistency_analysis
                       .changing_themes.length > 0 && (
                       <div
-                        className="p-3 rounded-lg"
+                        className="p-4 rounded-xl"
                         style={{
-                          backgroundColor: "rgba(255, 224, 178, 0.3)",
-                          border: "1px solid rgba(255, 224, 178, 0.5)",
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                          border: "1px solid rgba(163, 191, 217, 0.2)",
                         }}
                       >
                             <p
-                              className="text-xs font-semibold mb-2"
+                              className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                               style={{ color: COLORS.text.secondary }}
                             >
                               변화하는 비전
                             </p>
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="space-y-2">
                               {vividReport.future_vision_analysis.consistency_analysis.changing_themes.map(
                                 (theme, idx) => (
-                                  <span
+                                  <div
                                     key={idx}
-                                    className="px-2 py-0.5 rounded text-xs"
-                                    style={{
-                                      backgroundColor: "#FFE0B2",
-                                      color: "#E65100",
-                                    }}
+                                    className="flex items-start gap-2"
                                   >
-                                    {theme}
-                                  </span>
+                                    <div
+                                      className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                                      style={{ backgroundColor: "#FF9800" }}
+                                    />
+                                    <p
+                                      className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
+                                      style={{ 
+                                        color: COLORS.text.primary,
+                                      }}
+                                    >
+                                      {theme}
+                                    </p>
+                                  </div>
                                 )
                               )}
                             </div>
@@ -515,8 +585,10 @@ export function VividSection({
                     )}
                 </div>
                 <p
-                  className="text-xs mt-3"
-                  style={{ color: COLORS.text.secondary }}
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mt-3")}
+                  style={{ 
+                    color: COLORS.text.secondary,
+                  }}
                 >
                   {vividReport.future_vision_analysis.consistency_analysis.analysis}
                 </p>
@@ -539,7 +611,7 @@ export function VividSection({
                 <BarChart3 className="w-4 h-4" style={{ color: vividColor }} />
               </div>
               <p
-                className="text-xs font-semibold uppercase"
+                className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                 style={{ color: COLORS.text.secondary }}
               >
                 일치도 트렌드 분석
@@ -547,15 +619,17 @@ export function VividSection({
             </div>
             <div className="mb-4">
               <p
-                className="text-xs mb-3"
+                className={cn(TYPOGRAPHY.bodySmall.fontSize, "mb-3 font-medium")}
                 style={{ color: COLORS.text.secondary }}
               >
                 추세:{" "}
-                {vividReport.alignment_trend_analysis.trend === "improving"
-                  ? "개선 중"
-                  : vividReport.alignment_trend_analysis.trend === "declining"
-                  ? "악화 중"
-                  : "안정"}
+                <span style={{ color: COLORS.text.primary }}>
+                  {vividReport.alignment_trend_analysis.trend === "improving"
+                    ? "개선 중"
+                    : vividReport.alignment_trend_analysis.trend === "declining"
+                    ? "악화 중"
+                    : "안정"}
+                </span>
               </p>
               {vividReport.alignment_trend_analysis.daily_alignment_scores &&
                 vividReport.alignment_trend_analysis.daily_alignment_scores
@@ -617,13 +691,13 @@ export function VividSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <p
-                          className="text-xs font-medium uppercase tracking-wide"
+                          className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                           style={{ color: COLORS.text.secondary }}
                         >
                           가장 높았던 날
                         </p>
                         <span
-                          className="text-base font-bold"
+                          className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
                           style={{ color: "#4CAF50" }}
                         >
                           {vividReport.alignment_trend_analysis.highest_alignment_day.score}
@@ -635,14 +709,14 @@ export function VividSection({
                           style={{ color: COLORS.text.tertiary }}
                         />
                         <p
-                          className="text-sm font-medium"
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
                           style={{ color: COLORS.text.primary }}
                         >
                           {vividReport.alignment_trend_analysis.highest_alignment_day.date}
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed"
+                        className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.alignment_trend_analysis.highest_alignment_day.pattern}
@@ -675,13 +749,13 @@ export function VividSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <p
-                          className="text-xs font-medium uppercase tracking-wide"
+                          className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                           style={{ color: COLORS.text.secondary }}
                         >
                           가장 낮았던 날
                         </p>
                         <span
-                          className="text-base font-bold"
+                          className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
                           style={{ color: "#FF9800" }}
                         >
                           {vividReport.alignment_trend_analysis.lowest_alignment_day.score}
@@ -693,14 +767,14 @@ export function VividSection({
                           style={{ color: COLORS.text.tertiary }}
                         />
                         <p
-                          className="text-sm font-medium"
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
                           style={{ color: COLORS.text.primary }}
                         >
                           {vividReport.alignment_trend_analysis.lowest_alignment_day.date}
                         </p>
                       </div>
                       <p
-                        className="text-sm leading-relaxed"
+                        className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                         style={{ color: COLORS.text.secondary }}
                       >
                         {vividReport.alignment_trend_analysis.lowest_alignment_day.pattern}
@@ -732,7 +806,7 @@ export function VividSection({
                 .length > 0 && (
                 <GradientCard gradientColor="163, 191, 217">
                   <p
-                    className="text-xs mb-3 font-semibold uppercase"
+                    className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                     style={{ color: COLORS.text.secondary }}
                   >
                     {userName ? `${userName}의 ` : ""}Top 5 특징
@@ -748,15 +822,15 @@ export function VividSection({
                             border: "1px solid rgba(163, 191, 217, 0.2)",
                           }}
                         >
-                              <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-start justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap">
                                 <span
-                                  className="text-sm font-semibold"
+                                  className={cn(TYPOGRAPHY.body.fontSize, "font-semibold flex-1 min-w-0 break-words", TYPOGRAPHY.body.lineHeight)}
                                   style={{ color: COLORS.text.primary }}
                                 >
                                   {char.characteristic}
                                 </span>
                                 <span
-                                  className="px-2 py-0.5 rounded text-xs"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "px-2 py-0.5 rounded flex-shrink-0 whitespace-nowrap")}
                                   style={{
                                     backgroundColor: "#E8F0F8",
                                     color: "#5A7A9A",
@@ -767,7 +841,7 @@ export function VividSection({
                               </div>
                               {char.dates && char.dates.length > 0 && (
                                 <p
-                                  className="text-xs mt-1"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-1")}
                                   style={{ color: COLORS.text.secondary }}
                                 >
                                   {char.dates.join(", ")}
@@ -782,44 +856,59 @@ export function VividSection({
             {vividReport.user_characteristics_analysis.change_patterns && (
               <GradientCard gradientColor="163, 191, 217">
                 <p
-                  className="text-xs mb-3 font-semibold uppercase"
+                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-4 uppercase")}
                   style={{ color: COLORS.text.secondary }}
                 >
                   변화 패턴
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {vividReport.user_characteristics_analysis.change_patterns
                     .new_characteristics &&
                     vividReport.user_characteristics_analysis.change_patterns
                       .new_characteristics.length > 0 && (
                       <div
-                        className="p-3 rounded-lg"
+                        className="p-4 rounded-xl"
                         style={{
-                          backgroundColor: "rgba(200, 230, 201, 0.3)",
-                          border: "1px solid rgba(200, 230, 201, 0.5)",
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                          border: "1px solid rgba(163, 191, 217, 0.2)",
                         }}
                       >
-                            <p
-                              className="text-xs font-semibold mb-2"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              새로 나타난 특징
-                            </p>
-                            <div className="space-y-1">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: "#4CAF50" }}
+                              />
+                              <p
+                                className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                새로 나타난 특징
+                              </p>
+                            </div>
+                            <div className="space-y-2.5">
                               {vividReport.user_characteristics_analysis.change_patterns.new_characteristics.map(
                                 (char, idx) => (
-                                  <div key={idx} className="text-xs">
-                                    <span
-                                      style={{ color: COLORS.text.primary }}
+                                  <div 
+                                    key={idx} 
+                                    className="pb-2.5 border-b last:border-b-0 last:pb-0"
+                                    style={{ 
+                                      borderColor: "rgba(163, 191, 217, 0.1)",
+                                    }}
+                                  >
+                                    <p
+                                      className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mb-1")}
+                                      style={{ 
+                                        color: COLORS.text.primary,
+                                      }}
                                     >
                                       {char.characteristic}
-                                    </span>
-                                    <span
-                                      className="ml-2"
-                                      style={{ color: COLORS.text.secondary }}
+                                    </p>
+                                    <p
+                                      className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                                      style={{ color: COLORS.text.tertiary || "#9CA3AF" }}
                                     >
-                                      ({char.first_appeared})
-                                    </span>
+                                      {char.first_appeared}
+                                    </p>
                                   </div>
                                 )
                               )}
@@ -831,33 +920,48 @@ export function VividSection({
                     vividReport.user_characteristics_analysis.change_patterns
                       .disappeared_characteristics.length > 0 && (
                       <div
-                        className="p-3 rounded-lg"
+                        className="p-4 rounded-xl"
                         style={{
-                          backgroundColor: "rgba(255, 224, 178, 0.3)",
-                          border: "1px solid rgba(255, 224, 178, 0.5)",
+                          backgroundColor: "rgba(255, 255, 255, 0.8)",
+                          border: "1px solid rgba(163, 191, 217, 0.2)",
                         }}
                       >
-                            <p
-                              className="text-xs font-semibold mb-2"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              사라진 특징
-                            </p>
-                            <div className="space-y-1">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: "#FF9800" }}
+                              />
+                              <p
+                                className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                사라진 특징
+                              </p>
+                            </div>
+                            <div className="space-y-2.5">
                               {vividReport.user_characteristics_analysis.change_patterns.disappeared_characteristics.map(
                                 (char, idx) => (
-                                  <div key={idx} className="text-xs">
-                                    <span
-                                      style={{ color: COLORS.text.primary }}
+                                  <div 
+                                    key={idx} 
+                                    className="pb-2.5 border-b last:border-b-0 last:pb-0"
+                                    style={{ 
+                                      borderColor: "rgba(163, 191, 217, 0.1)",
+                                    }}
+                                  >
+                                    <p
+                                      className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mb-1")}
+                                      style={{ 
+                                        color: COLORS.text.primary,
+                                      }}
                                     >
                                       {char.characteristic}
-                                    </span>
-                                    <span
-                                      className="ml-2"
-                                      style={{ color: COLORS.text.secondary }}
+                                    </p>
+                                    <p
+                                      className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                                      style={{ color: COLORS.text.tertiary || "#9CA3AF" }}
                                     >
-                                      ({char.last_appeared})
-                                    </span>
+                                      {char.last_appeared}
+                                    </p>
                                   </div>
                                 )
                               )}
@@ -885,15 +989,15 @@ export function VividSection({
                   <Lightbulb className="w-4 h-4" style={{ color: vividColor }} />
                 </div>
                 <p
-                  className="text-xs font-semibold uppercase"
+                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                   style={{ color: COLORS.text.secondary }}
                 >
                   지향하는 모습 심화 분석
                 </p>
               </div>
               <p
-                className="text-sm leading-relaxed mb-4"
-                style={{ color: COLORS.text.primary, lineHeight: "1.7" }}
+                className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mb-4")}
+                style={{ color: COLORS.text.primary }}
               >
                 {vividReport.aspired_traits_analysis.consistency_summary}
               </p>
@@ -903,7 +1007,7 @@ export function VividSection({
                 0 && (
                 <GradientCard gradientColor="163, 191, 217">
                   <p
-                    className="text-xs mb-3 font-semibold uppercase"
+                    className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                     style={{ color: COLORS.text.secondary }}
                   >
                     Top 5 지향 모습
@@ -919,15 +1023,15 @@ export function VividSection({
                             border: "1px solid rgba(163, 191, 217, 0.2)",
                           }}
                         >
-                              <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-start justify-between gap-2 mb-1 flex-wrap sm:flex-nowrap">
                                 <span
-                                  className="text-sm font-semibold"
+                                  className={cn(TYPOGRAPHY.body.fontSize, "font-semibold flex-1 min-w-0 break-words", TYPOGRAPHY.body.lineHeight)}
                                   style={{ color: COLORS.text.primary }}
                                 >
                                   {trait.trait}
                                 </span>
                                 <span
-                                  className="px-2 py-0.5 rounded text-xs"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "px-2 py-0.5 rounded flex-shrink-0 whitespace-nowrap")}
                                   style={{
                                     backgroundColor: "#E8F0F8",
                                     color: "#5A7A9A",
@@ -938,7 +1042,7 @@ export function VividSection({
                               </div>
                               {trait.dates && trait.dates.length > 0 && (
                                 <p
-                                  className="text-xs mt-1"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-1")}
                                   style={{ color: COLORS.text.secondary }}
                                 >
                                   {trait.dates.join(", ")}
@@ -953,14 +1057,16 @@ export function VividSection({
             {vividReport.aspired_traits_analysis.evolution_process && (
               <GradientCard gradientColor="163, 191, 217">
                 <p
-                  className="text-xs mb-3 font-semibold uppercase"
+                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "mb-3 uppercase")}
                   style={{ color: COLORS.text.secondary }}
                 >
                   진화 과정
                 </p>
                 <p
-                  className="text-xs mb-3"
-                  style={{ color: COLORS.text.secondary }}
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mb-3")}
+                  style={{ 
+                    color: COLORS.text.secondary,
+                  }}
                 >
                   {vividReport.aspired_traits_analysis.evolution_process.summary}
                 </p>
@@ -979,7 +1085,7 @@ export function VividSection({
                             }}
                           >
                                 <p
-                                  className="text-xs font-semibold mb-1"
+                                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-semibold mb-1")}
                                   style={{ color: COLORS.text.secondary }}
                                 >
                                   {stage.period}
@@ -988,7 +1094,7 @@ export function VividSection({
                                   {stage.traits.map((trait, tIdx) => (
                                     <span
                                       key={tIdx}
-                                      className="px-2 py-0.5 rounded text-xs"
+                                      className={cn(TYPOGRAPHY.bodySmall.fontSize, "px-2 py-0.5 rounded")}
                                       style={{
                                         backgroundColor: "#E8F0F8",
                                         color: "#5A7A9A",
@@ -999,7 +1105,7 @@ export function VividSection({
                                   ))}
                                 </div>
                                 <p
-                                  className="text-xs"
+                                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
                                   style={{ color: COLORS.text.primary }}
                                 >
                                   {stage.description}
@@ -1031,7 +1137,7 @@ export function VividSection({
                       <Lightbulb className="w-4 h-4" style={{ color: vividColor }} />
                     </div>
                     <p
-                      className="text-xs font-semibold uppercase"
+                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                       style={{ color: COLORS.text.secondary }}
                     >
                       발견한 패턴
@@ -1049,26 +1155,22 @@ export function VividSection({
                           }}
                         >
                               <p
-                                className="text-sm font-semibold mb-1"
+                                className={cn(TYPOGRAPHY.body.fontSize, "font-semibold mb-1.5")}
                                 style={{ color: COLORS.text.primary }}
                               >
                                 {pattern.pattern}
                               </p>
                               <p
-                                className="text-xs mb-2"
-                                style={{ color: COLORS.text.secondary }}
+                                className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "mb-2")}
+                                style={{ 
+                                  color: COLORS.text.secondary,
+                                }}
                               >
                                 {pattern.description}
                               </p>
                               {pattern.evidence && pattern.evidence.length > 0 && (
-                                <div className="mt-2">
-                                  <p
-                                    className="text-xs mb-1"
-                                    style={{ color: COLORS.text.secondary }}
-                                  >
-                                    근거:
-                                  </p>
-                                  <ul className="list-disc list-inside space-y-1">
+                                <div className="mt-3 pt-3 border-t" style={{ borderColor: "rgba(163, 191, 217, 0.15)" }}>
+                                  <div className="flex flex-wrap gap-1.5">
                                     {pattern.evidence.map((ev, eIdx) => {
                                       // 날짜 형식 (YYYY-MM-DD) 감지 및 변환
                                       const datePattern = /(\d{4}-\d{2}-\d{2})/g;
@@ -1077,16 +1179,20 @@ export function VividSection({
                                         (match) => `${match}일의 기록`
                                       );
                                       return (
-                                        <li
+                                        <span
                                           key={eIdx}
-                                          className="text-xs"
-                                          style={{ color: COLORS.text.secondary }}
+                                          className={cn(TYPOGRAPHY.caption.fontSize, "px-2 py-1 rounded leading-tight")}
+                                          style={{ 
+                                            color: COLORS.text.tertiary || "#9CA3AF",
+                                            backgroundColor: "rgba(163, 191, 217, 0.08)",
+                                            border: "1px solid rgba(163, 191, 217, 0.12)",
+                                          }}
                                         >
                                           {formattedEvidence}
-                                        </li>
+                                        </span>
                                       );
                                     })}
-                                  </ul>
+                                  </div>
                                 </div>
                               )}
                         </div>
@@ -1109,7 +1215,7 @@ export function VividSection({
                       <Lightbulb className="w-4 h-4" style={{ color: "#F9A825" }} />
                     </div>
                     <p
-                      className="text-xs font-semibold uppercase"
+                      className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, TYPOGRAPHY.label.letterSpacing, "uppercase")}
                       style={{ color: COLORS.text.secondary }}
                     >
                       예상치 못한 연결점
@@ -1120,31 +1226,47 @@ export function VividSection({
                       (connection, idx) => (
                         <div
                           key={idx}
-                          className="p-3 rounded-lg"
+                          className="p-4 rounded-lg"
                           style={{
                             backgroundColor: "rgba(255, 249, 196, 0.5)",
                             border: "1px solid rgba(255, 245, 157, 0.5)",
                           }}
                         >
                               <p
-                                className="text-sm font-semibold mb-1"
+                                className={cn(TYPOGRAPHY.body.fontSize, "font-semibold mb-2.5", TYPOGRAPHY.body.lineHeight)}
                                 style={{ color: COLORS.text.primary }}
                               >
                                 {connection.connection}
                               </p>
                               <p
-                                className="text-xs mb-2"
-                                style={{ color: COLORS.text.secondary }}
+                                className={cn(TYPOGRAPHY.body.fontSize, "mb-3", TYPOGRAPHY.body.lineHeight)}
+                                style={{ 
+                                  color: COLORS.text.secondary,
+                                }}
                               >
                                 {connection.description}
                               </p>
-                              <p
-                                className="text-xs"
-                                style={{ color: COLORS.text.secondary }}
+                              <div 
+                                className="pt-2 border-t"
+                                style={{ 
+                                  borderColor: "rgba(255, 245, 157, 0.3)",
+                                }}
                               >
-                                <span className="font-semibold">의미:</span>{" "}
-                                {connection.significance}
-                              </p>
+                                <p
+                                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                                  style={{ 
+                                    color: COLORS.text.secondary,
+                                  }}
+                                >
+                                  <span 
+                                    className="font-semibold"
+                                    style={{ color: COLORS.text.primary }}
+                                  >
+                                    의미:
+                                  </span>{" "}
+                                  {connection.significance}
+                                </p>
+                              </div>
                         </div>
                       )
                     )}

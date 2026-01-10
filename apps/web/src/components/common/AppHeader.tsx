@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LogOut, Settings, Crown, ChevronDown } from "lucide-react";
+import { User, LogOut, Settings, Crown, ChevronDown, ArrowLeft } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,8 @@ interface AppHeaderProps {
   currentMonth?: { year: number; month: number }; // 현재 표시 중인 월
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
+  showBackButton?: boolean; // 뒤로 가기 버튼 표시 여부
+  onBack?: () => void; // 뒤로 가기 버튼 클릭 핸들러
 }
 
 export function AppHeader({
@@ -37,6 +39,8 @@ export function AppHeader({
   currentMonth,
   recordDates = [],
   aiFeedbackDates = [],
+  showBackButton = false,
+  onBack,
 }: AppHeaderProps) {
   const router = useRouter();
   const [showDatePickerSheet, setShowDatePickerSheet] = useState(false);
@@ -63,15 +67,71 @@ export function AppHeader({
     }
   };
 
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      router.back();
+    }
+  };
+
   return (
     <>
       <header className="mb-6">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
+        <div className="flex items-center justify-between mb-2 relative">
+          {/* 왼쪽: 뒤로 가기 버튼 */}
+          <div className="flex-shrink-0" style={{ width: showBackButton ? "44px" : "0px" }}>
+            {showBackButton && (
+              <button
+                onClick={handleBack}
+                className="flex items-center justify-center w-10 h-10 rounded-xl transition-all relative overflow-hidden group"
+                style={{
+                  backgroundColor: COLORS.background.base,
+                  border: `1.5px solid ${COLORS.border.light}`,
+                  color: COLORS.text.primary,
+                  boxShadow: `
+                    0 1px 3px rgba(0,0,0,0.08),
+                    0 1px 2px rgba(0,0,0,0.04),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.background.hover;
+                  e.currentTarget.style.transform = "translateX(-2px)";
+                  e.currentTarget.style.boxShadow = `
+                    0 2px 6px rgba(0,0,0,0.12),
+                    0 1px 3px rgba(0,0,0,0.06),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.background.base;
+                  e.currentTarget.style.transform = "translateX(0)";
+                  e.currentTarget.style.boxShadow = `
+                    0 1px 3px rgba(0,0,0,0.08),
+                    0 1px 2px rgba(0,0,0,0.04),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }}
+              >
+                {/* 배경 그라데이션 효과 */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{
+                    background: `linear-gradient(135deg, ${COLORS.brand.light}15 0%, ${COLORS.brand.primary}15 100%)`,
+                  }}
+                />
+                <ArrowLeft className="w-5 h-5 relative z-10 transition-transform group-hover:-translate-x-0.5" />
+              </button>
+            )}
+          </div>
+
+          {/* 중앙: 제목 */}
+          <div className="flex-1 flex flex-col items-center justify-center text-center absolute left-0 right-0 pointer-events-none">
             {showDatePicker ? (
               <button
                 onClick={() => setShowDatePickerSheet(true)}
-                className="flex items-center gap-1.5 mb-2"
+                className="flex items-center gap-1.5 mb-2 pointer-events-auto"
                 style={{ color: COLORS.text.primary }}
               >
                 <span className="text-lg font-semibold">{monthLabel}</span>
@@ -99,7 +159,9 @@ export function AppHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* 오른쪽: 프로필 버튼 */}
+          <div className="flex-shrink-0">
+            <div className="flex items-center gap-2">
             {/* 프로필 드롭다운 */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -286,6 +348,7 @@ export function AppHeader({
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </div>
         </div>
       </header>

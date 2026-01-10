@@ -126,25 +126,25 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const progress = dailyFeedbackProgress[activeDate] || null;
   const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null || timerProgress !== null;
   
-  // 타이머 기반 progress 계산 (0% → 99%, 36초 동안)
+  // 타이머 기반 progress 계산 (0% → 99%, 15초 동안)
   useEffect(() => {
     if (timerStartTime === null) return;
 
-    const DURATION_MS = 33000; // 33초
+    const DURATION_MS = 15000; // 15초
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - timerStartTime;
       
-      // 36초가 넘어가면 99%에 고정
+      // 15초가 넘어가면 99%에 고정
       if (elapsed >= DURATION_MS) {
         setTimerProgress(TARGET_PERCENTAGE);
         clearInterval(interval);
         return;
       }
       
-      // 36초 이내일 때만 진행률 계산
+      // 15초 이내일 때만 진행률 계산
       const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
       setTimerProgress(progress);
     }, UPDATE_INTERVAL);

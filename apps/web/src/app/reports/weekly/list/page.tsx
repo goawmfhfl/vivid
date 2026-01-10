@@ -1,0 +1,105 @@
+"use client";
+
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { AppHeader } from "@/components/common/AppHeader";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
+import { WeeklySummariesTab } from "@/components/summaries/WeeklySummariesTab";
+import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
+import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
+import type { PeriodSummary } from "@/types/Entry";
+import {
+  formatDateRange,
+  formatPeriod,
+  createPeriodSummaryFromWeeklyFeedback,
+  calculateWeekNumberInMonth,
+} from "@/components/summaries/weekly-feedback-mapper";
+import { SPACING } from "@/lib/design-system";
+import { withAuth } from "@/components/auth";
+
+/**
+ * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
+ */
+function convertWeeklyFeedbackToPeriodSummary(
+  item: WeeklyFeedbackListItem
+): PeriodSummary {
+  const startDate = new Date(item.week_range.start);
+  const endDate = new Date(item.week_range.end);
+
+  const dateRange = formatDateRange(startDate, endDate);
+  const period = formatPeriod(startDate, endDate);
+  
+  // 월 기준 주차 계산
+  const result = calculateWeekNumberInMonth(startDate, endDate);
+  const { weekNumber, year } = result;
+  
+  const title = item.title;
+
+  return createPeriodSummaryFromWeeklyFeedback({
+    item,
+    weekNumber,
+    year,
+    dateRange,
+    period,
+    title,
+  });
+}
+
+function WeeklyListPage() {
+  const router = useRouter();
+
+  // 주간 피드백 리스트 조회
+  const {
+    data: weeklyFeedbackList = [],
+    isLoading: isLoadingWeekly,
+    error: weeklyError,
+    refetch: refetchWeekly,
+  } = useWeeklyFeedbackList();
+
+  // 주간 피드백을 PeriodSummary로 변환
+  const weeklySummaries = useMemo(() => {
+    return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
+  }, [weeklyFeedbackList]);
+
+  return (
+    <div
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+    >
+      <AppHeader 
+        title="주간 VIVID 리스트" 
+        showBackButton={true}
+      />
+
+      {/* 주간 리포트 리스트 */}
+      {isLoadingWeekly ? (
+        <div className="flex justify-center items-center py-12">
+          <LoadingSpinner
+            message="주간 vivid를 불러오는 중..."
+            size="md"
+            showMessage={true}
+          />
+        </div>
+      ) : weeklyError ? (
+        <div className="py-12">
+          <ErrorDisplay
+            message={
+              weeklyError instanceof Error
+                ? weeklyError.message
+                : "주간 vivid를 불러오는 중 오류가 발생했습니다."
+            }
+            size="md"
+            onRetry={() => {
+              refetchWeekly();
+            }}
+            retryLabel="다시 시도"
+          />
+        </div>
+      ) : (
+        <WeeklySummariesTab summaries={weeklySummaries} />
+      )}
+    </div>
+  );
+}
+
+export default withAuth(WeeklyListPage);

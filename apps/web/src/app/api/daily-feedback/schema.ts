@@ -174,10 +174,26 @@ export const TrendDataSchema = {
   schema: {
     type: "object",
     properties: {
-      aspired_self: { type: "string" }, // 내가 지향하는 모습 1개
-      interest: { type: "string" }, // 나의 관심사 1개
-      immersion_moment: { type: "string" }, // 몰입 희망 순간 1개
-      personality_trait: { type: "string" }, // 나라는 사람의 성향 1개
+      aspired_self: { 
+        type: "string",
+        minLength: 1,
+        description: "내가 지향하는 모습을 한 문장으로 작성 (빈 문자열 금지)"
+      }, // 내가 지향하는 모습 1개
+      interest: { 
+        type: "string",
+        minLength: 1,
+        description: "나의 관심사를 한 문장으로 작성 (빈 문자열 금지)"
+      }, // 나의 관심사 1개
+      immersion_moment: { 
+        type: "string",
+        minLength: 1,
+        description: "몰입 희망 순간을 한 문장으로 작성 (빈 문자열 금지)"
+      }, // 몰입 희망 순간 1개
+      personality_trait: { 
+        type: "string",
+        minLength: 1,
+        description: "나라는 사람의 성향을 한 문장으로 작성 (빈 문자열 금지)"
+      }, // 나라는 사람의 성향 1개
     },
     required: ["aspired_self", "interest", "immersion_moment", "personality_trait"],
     additionalProperties: false,
@@ -201,14 +217,21 @@ export const SYSTEM_PROMPT_TREND = `
 - 각 항목은 1개씩만 작성합니다.
 - VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
 - 간결하고 명확하게 작성하세요.
+- **절대 빈 문자열("")을 반환하지 마세요. 모든 필드는 반드시 의미 있는 내용을 포함해야 합니다.**
 
 ## 필드별 요구사항
 - aspired_self: 오늘의 VIVID 기록(Q2 중심)에서 드러난 가장 핵심적인 지향 모습을 한 문장으로 작성합니다.
   예: "균형 잡힌 삶을 추구하는 사람"
+  **주의: 빈 문자열이 아닌 실제 내용을 반드시 작성하세요.**
 - interest: 오늘의 VIVID 기록(Q1, Q2 모두)에서 드러난 가장 중요한 관심사나 흥미를 한 문장으로 작성합니다.
   예: "창의적인 문제 해결과 학습"
+  **주의: 빈 문자열이 아닌 실제 내용을 반드시 작성하세요.**
 - immersion_moment: 오늘의 VIVID 기록에서 드러난 몰입하고 싶은 순간이나 상황을 한 문장으로 작성합니다.
   예: "깊이 몰입하는 작업을 할 때"
+  **주의: 빈 문자열이 아닌 실제 내용을 반드시 작성하세요.**
 - personality_trait: 오늘의 VIVID 기록을 통해 드러난 사용자의 핵심 성향을 한 문장으로 작성합니다.
   예: "자기 성찰을 중시하는 사람"
+  **주의: 빈 문자열이 아닌 실제 내용을 반드시 작성하세요.**
+
+만약 VIVID 기록에서 특정 정보를 추출하기 어렵다면, 기록의 맥락을 바탕으로 합리적으로 추론하여 작성하세요. 절대 빈 문자열을 반환하지 마세요.
 `;

@@ -52,8 +52,9 @@ export async function generateSection<T>(
   const openai = getOpenAIClient();
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
+  // Monthly Feedback은 gpt-5.2를 사용하여 실패 없이 안정적으로 동작
   // Daily 점수 기반으로 정확도 향상 및 일관성 보정 역할
-  const model = "gpt-5-mini";
+  const model = "gpt-5.2";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(

@@ -108,8 +108,8 @@ export function WeeklyCandidatesSection() {
   const handleCreateFeedback = async (weekStart: string) => {
     setGeneratingWeek(weekStart);
 
-    // 타이머 시작 (165초 동안 0% → 99%)
-    const DURATION_MS = 165000; // 165초
+    // 타이머 시작 (90초 동안 0% → 99%)
+    const DURATION_MS = 90000; // 90초 (1분 30초)
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
     const startTime = Date.now();
@@ -119,7 +119,7 @@ export function WeeklyCandidatesSection() {
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
 
-      // 165초가 넘어가면 99%에 고정
+      // 90초가 넘어가면 99%에 고정
       if (elapsed >= DURATION_MS) {
         setTimerProgress((prev) => ({ ...prev, [weekStart]: TARGET_PERCENTAGE }));
         clearInterval(interval);
@@ -127,7 +127,7 @@ export function WeeklyCandidatesSection() {
         return;
       }
 
-      // 165초 이내일 때만 진행률 계산
+      // 90초 이내일 때만 진행률 계산
       const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
       setTimerProgress((prev) => ({ ...prev, [weekStart]: progress }));
     }, UPDATE_INTERVAL);

@@ -3,63 +3,16 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
-import { WeeklySummariesTab } from "@/components/summaries/WeeklySummariesTab";
 import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";
-import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
+import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
 import { useWeeklyTrends } from "@/hooks/useWeeklyTrends";
-import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
-import type { PeriodSummary } from "@/types/Entry";
-import {
-  formatDateRange,
-  formatPeriod,
-  createPeriodSummaryFromWeeklyFeedback,
-  calculateWeekNumberInMonth,
-} from "@/components/summaries/weekly-feedback-mapper";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { SPACING, COLORS } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
-
-/**
- * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
- */
-function convertWeeklyFeedbackToPeriodSummary(
-  item: WeeklyFeedbackListItem
-): PeriodSummary {
-  const startDate = new Date(item.week_range.start);
-  const endDate = new Date(item.week_range.end);
-
-  const dateRange = formatDateRange(startDate, endDate);
-  const period = formatPeriod(startDate, endDate);
-  
-  // 월 기준 주차 계산
-  const result = calculateWeekNumberInMonth(startDate, endDate);
-  const { weekNumber, year } = result;
-  
-  const title = item.title;
-
-  return createPeriodSummaryFromWeeklyFeedback({
-    item,
-    weekNumber,
-    year,
-    dateRange,
-    period,
-    title,
-  });
-}
+import { List } from "lucide-react";
 
 function WeeklyReportsPage() {
   const router = useRouter();
-
-  // 주간 피드백 리스트 조회
-  const {
-    data: weeklyFeedbackList = [],
-    isLoading: isLoadingWeekly,
-    error: weeklyError,
-    refetch: refetchWeekly,
-  } = useWeeklyFeedbackList();
 
   // 주간 흐름 데이터 조회
   const {
@@ -68,30 +21,67 @@ function WeeklyReportsPage() {
     error: trendsError,
   } = useWeeklyTrends();
 
-  // 주간 피드백을 PeriodSummary로 변환
-  const weeklySummaries = useMemo(() => {
-    return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
-  }, [weeklyFeedbackList]);
-
   return (
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
     >
-      <AppHeader title="주간 리포트" />
+      <AppHeader 
+        title="주간 VIVID 리포트" 
+        showBackButton={true}
+      />
 
-      {/* 월간 리포트 보기 버튼 */}
-      <div className="mb-6">
+      {/* 아직 생성되지 않은 주간 vivid 알림 */}
+      <div className="mb-8">
+        <WeeklyCandidatesSection />
+      </div>
+
+      {/* 주간 리스트 보러가기 버튼 */}
+      <div className="mb-12">
         <Button
-          variant="outline"
-          onClick={() => router.push("/reports/monthly")}
-          className="w-full sm:w-auto"
+          onClick={() => router.push("/reports/weekly/list")}
+          className="w-full relative overflow-hidden group"
           style={{
-            borderColor: COLORS.brand.primary,
-            color: COLORS.brand.primary,
+            backgroundColor: COLORS.brand.primary,
+            color: "white",
+            padding: "1rem 1.5rem",
+            borderRadius: "12px",
+            border: "none",
+            boxShadow: `
+              0 2px 8px rgba(107, 122, 111, 0.2),
+              0 1px 3px rgba(107, 122, 111, 0.1),
+              inset 0 1px 0 rgba(255,255,255,0.2)
+            `,
+            transition: "all 0.2s ease",
+            fontWeight: "600",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = `
+              0 4px 12px rgba(107, 122, 111, 0.3),
+              0 2px 6px rgba(107, 122, 111, 0.15),
+              inset 0 1px 0 rgba(255,255,255,0.2)
+            `;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = `
+              0 2px 8px rgba(107, 122, 111, 0.2),
+              0 1px 3px rgba(107, 122, 111, 0.1),
+              inset 0 1px 0 rgba(255,255,255,0.2)
+            `;
           }}
         >
-          <Calendar className="w-4 h-4 mr-2" />
-          월간 리포트 보기
+          {/* 배경 그라데이션 오버레이 */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{
+              background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.light} 100%)`,
+            }}
+          />
+          <div className="relative z-10 flex items-center justify-center gap-2">
+            <List className="w-5 h-5" />
+            <span>주간 VIVID 리스트 보러가기</span>
+          </div>
         </Button>
       </div>
 
@@ -103,34 +93,6 @@ function WeeklyReportsPage() {
           error={trendsError}
         />
       </div>
-
-      {/* 주간 리포트 리스트 */}
-      {isLoadingWeekly ? (
-        <div className="flex justify-center items-center py-12">
-          <LoadingSpinner
-            message="주간 vivid를 불러오는 중..."
-            size="md"
-            showMessage={true}
-          />
-        </div>
-      ) : weeklyError ? (
-        <div className="py-12">
-          <ErrorDisplay
-            message={
-              weeklyError instanceof Error
-                ? weeklyError.message
-                : "주간 vivid를 불러오는 중 오류가 발생했습니다."
-            }
-            size="md"
-            onRetry={() => {
-              refetchWeekly();
-            }}
-            retryLabel="다시 시도"
-          />
-        </div>
-      ) : (
-        <WeeklySummariesTab summaries={weeklySummaries} />
-      )}
     </div>
   );
 }

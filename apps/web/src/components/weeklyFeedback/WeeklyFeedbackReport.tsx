@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { WeeklyReportData } from "./report/types";
 import { VividSection } from "./report/VividSection";
 import { COLORS, SPACING } from "@/lib/design-system";
-import { TestPanel } from "./TestPanel";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // 타입 재export
@@ -82,9 +81,6 @@ export function WeeklyFeedbackReport({
           </Button>
         </div>
       </div>
-
-      {/* TestPanel 추가 */}
-      <TestPanel view={data} isPro={isPro} onTogglePro={onTogglePro} />
     </div>
   );
 }

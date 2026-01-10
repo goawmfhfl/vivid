@@ -69,7 +69,7 @@ async function generateSection<T>(
   const openai = getOpenAIClient();
   const promptCacheKey = generatePromptCacheKey(systemPrompt);
 
-  const model = "gpt-5-mini";
+  const model = "gpt-5.2";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -360,15 +360,55 @@ async function generateTrendData(
   const prompt = buildVividPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_TREND, prompt);
 
-  return generateSection<TrendData>(
-    SYSTEM_PROMPT_TREND,
-    prompt,
-    TrendDataSchema,
-    cacheKey,
-    isPro,
-    "trend",
-    userId
-  );
+  try {
+    const result = await generateSection<TrendData>(
+      SYSTEM_PROMPT_TREND,
+      prompt,
+      TrendDataSchema,
+      cacheKey,
+      isPro,
+      "trend",
+      userId
+    );
+
+    // 빈 문자열 검증 및 필터링
+    if (!result) {
+      console.warn("[generateTrendData] 결과가 null입니다.");
+      return null;
+    }
+
+    // 모든 필드가 빈 문자열이 아닌지 확인
+    const hasEmptyString = 
+      !result.aspired_self?.trim() ||
+      !result.interest?.trim() ||
+      !result.immersion_moment?.trim() ||
+      !result.personality_trait?.trim();
+
+    if (hasEmptyString) {
+      console.warn("[generateTrendData] 빈 문자열이 포함된 응답을 받았습니다:", {
+        aspired_self: result.aspired_self,
+        interest: result.interest,
+        immersion_moment: result.immersion_moment,
+        personality_trait: result.personality_trait,
+      });
+      
+      // 빈 문자열 필드를 기본값으로 대체
+      const sanitizedResult: TrendData = {
+        aspired_self: result.aspired_self?.trim() || "자기 성찰과 성장을 추구하는",
+        interest: result.interest?.trim() || "일상의 의미 있는 경험",
+        immersion_moment: result.immersion_moment?.trim() || "집중할 수 있는 순간",
+        personality_trait: result.personality_trait?.trim() || "성찰적인",
+      };
+
+      console.log("[generateTrendData] 빈 문자열을 기본값으로 대체했습니다.");
+      return sanitizedResult;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("[generateTrendData] trend 데이터 생성 실패:", error);
+    return null;
+  }
 }
 
 
