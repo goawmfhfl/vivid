@@ -22,11 +22,28 @@ const nextConfig: NextConfig = {
     }
     
     // Vercel 빌드 시 webpack 캐시 오류 완전 방지
-    // 프로덕션 빌드에서 캐시를 완전히 비활성화하여 안정성 확보
-    // 이는 빌드 시간을 약간 늘릴 수 있지만, 빌드 실패를 완전히 방지합니다
+    // 프로덕션 빌드에서 모든 캐시를 완전히 비활성화하여 안정성 확보
     if (!dev) {
-      // webpack 캐시 완전 비활성화 (Vercel 빌드 오류 근본 해결)
+      // webpack 캐시 완전 비활성화 (서버/클라이언트 모두)
+      // Vercel 환경에서 캐시 관련 오류를 근본적으로 해결
+      delete config.cache;
       config.cache = false;
+      
+      // 병렬 처리 제한 (Vercel 환경에서 안정성 향상)
+      // 너무 많은 병렬 처리가 캐시 충돌을 일으킬 수 있음
+      if (config.parallelism && config.parallelism > 4) {
+        config.parallelism = 4;
+      }
+      
+      // webpack의 최적화 설정에서 캐시 관련 옵션 제거
+      if (config.optimization) {
+        config.optimization = {
+          ...config.optimization,
+          // 모듈 ID를 deterministic으로 설정하여 캐시 의존성 제거
+          moduleIds: 'deterministic',
+          chunkIds: 'deterministic',
+        };
+      }
     }
     
     return config;
