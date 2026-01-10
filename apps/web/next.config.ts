@@ -44,6 +44,52 @@ const nextConfig: NextConfig = {
           chunkIds: 'deterministic',
         };
       }
+      
+      // CSS 로더와 PostCSS 로더의 캐시 명시적으로 비활성화
+      // globals.css 처리 시 발생하는 캐시 오류 방지
+      const rules = config.module?.rules;
+      if (rules && Array.isArray(rules)) {
+        rules.forEach((rule: any) => {
+          if (rule.oneOf && Array.isArray(rule.oneOf)) {
+            rule.oneOf.forEach((oneOf: any) => {
+              if (oneOf.use && Array.isArray(oneOf.use)) {
+                oneOf.use.forEach((use: any) => {
+                  // CSS 로더 캐시 완전 비활성화
+                  if (use.loader && typeof use.loader === 'string' && use.loader.includes('css-loader')) {
+                    if (!use.options) {
+                      use.options = {};
+                    }
+                    // CSS 로더의 모든 캐시 옵션 제거
+                    delete use.options.cache;
+                    use.options = {
+                      ...use.options,
+                      importLoaders: use.options?.importLoaders || 1,
+                      modules: use.options?.modules || false,
+                      // 캐시 관련 옵션 명시적 비활성화
+                      esModule: true,
+                    };
+                  }
+                  // PostCSS 로더 캐시 완전 비활성화
+                  if (use.loader && typeof use.loader === 'string' && use.loader.includes('postcss-loader')) {
+                    if (!use.options) {
+                      use.options = {};
+                    }
+                    // PostCSS 로더의 모든 캐시 옵션 제거
+                    delete use.options.cache;
+                    use.options = {
+                      ...use.options,
+                      postcssOptions: {
+                        ...use.options?.postcssOptions,
+                        // 캐시 완전 비활성화
+                      },
+                    };
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
     }
     
     return config;
