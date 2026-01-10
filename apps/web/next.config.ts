@@ -21,22 +21,12 @@ const nextConfig: NextConfig = {
       };
     }
     
-    // webpack 캐시 안정화 설정
-    // Vercel 빌드 시 캐시 오류 방지를 위한 설정
+    // Vercel 빌드 시 webpack 캐시 오류 완전 방지
+    // 프로덕션 빌드에서 캐시를 완전히 비활성화하여 안정성 확보
+    // 이는 빌드 시간을 약간 늘릴 수 있지만, 빌드 실패를 완전히 방지합니다
     if (!dev) {
-      // 프로덕션 빌드 시 캐시를 더 안정적으로 관리
-      config.cache = {
-        ...config.cache,
-        type: 'filesystem',
-        // 캐시 무결성 검증 비활성화 (빌드 오류 방지)
-        buildDependencies: {
-          config: [__filename],
-        },
-        // 캐시 디렉토리 명시적 설정
-        cacheDirectory: path.join(__dirname, '.next/cache/webpack'),
-        // 캐시 압축 비활성화 (성능과 안정성 균형)
-        compression: false,
-      };
+      // webpack 캐시 완전 비활성화 (Vercel 빌드 오류 근본 해결)
+      config.cache = false;
     }
     
     return config;
