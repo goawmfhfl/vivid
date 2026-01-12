@@ -15,10 +15,10 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { COLORS } from "@/lib/design-system";
-import type { MonthlyFeedback } from "@/types/monthly-feedback";
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 
 interface TestPanelProps {
-  view: MonthlyFeedback;
+  view: MonthlyFeedbackNew;
   isPro: boolean;
   onTogglePro: (isPro: boolean) => void;
 }
@@ -47,351 +47,48 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
     {
       name: "Header",
       component: "MonthlyReportHeader",
-      description: "월간 범위, 월간 요약, 핵심 테마, 월간 점수",
+      description: "월간 범위, 제목",
       fields: [
         { name: "month_label", path: "view.month_label", isPro: false },
         { name: "date_range", path: "view.date_range", isPro: false },
-        {
-          name: "summary_title",
-          path: "view.summary_report.summary_title",
-          isPro: false,
-        },
-        {
-          name: "summary_description",
-          path: "view.summary_report.summary_description",
-          isPro: false,
-        },
-        {
-          name: "main_themes",
-          path: "view.summary_report.main_themes",
-          isPro: false,
-        },
-        {
-          name: "monthly_score",
-          path: "view.summary_report.monthly_score",
-          isPro: false,
-        },
-        {
-          name: "life_balance_score",
-          path: "view.summary_report.life_balance_score",
-          isPro: true,
-        },
-        {
-          name: "execution_score",
-          path: "view.summary_report.execution_score",
-          isPro: true,
-        },
-        {
-          name: "rest_score",
-          path: "view.summary_report.rest_score",
-          isPro: true,
-        },
-        {
-          name: "relationship_score",
-          path: "view.summary_report.relationship_score",
-          isPro: true,
-        },
-        {
-          name: "summary_ai_comment",
-          path: "view.summary_report.summary_ai_comment",
-          isPro: false,
-        },
+        { name: "title", path: "view.title", isPro: false },
+        { name: "recorded_days", path: "view.recorded_days", isPro: false },
+        { name: "total_days", path: "view.total_days", isPro: false },
       ],
       condition: "항상 표시",
     },
     {
-      name: "Daily Life",
-      component: "DailyLifeSection",
-      description: "이번 달의 일상 리포트",
+      name: "Vivid Report",
+      component: "VividSection",
+      description: "월간 비비드 리포트 (5개 섹션)",
       fields: [
         {
-          name: "summary",
-          path: "view.daily_life_report.summary",
-          isPro: false,
-          description: "리스트 형태의 요약 (각 항목은 한 문장)",
-        },
-        {
-          name: "daily_summaries_trend",
-          path: "view.daily_life_report.daily_summaries_trend",
-          isPro: true,
-        },
-        {
-          name: "events_pattern",
-          path: "view.daily_life_report.events_pattern",
-          isPro: true,
-        },
-        {
-          name: "emotion_triggers_analysis",
-          path: "view.daily_life_report.emotion_triggers_analysis",
-          isPro: true,
-        },
-        {
-          name: "behavioral_patterns",
-          path: "view.daily_life_report.behavioral_patterns",
-          isPro: true,
-        },
-        {
-          name: "keywords_analysis",
-          path: "view.daily_life_report.keywords_analysis",
-          isPro: true,
-        },
-        {
-          name: "daily_rhythm",
-          path: "view.daily_life_report.daily_rhythm",
-          isPro: true,
-        },
-        {
-          name: "visualization",
-          path: "view.daily_life_report.visualization",
-          isPro: true,
-        },
-        {
-          name: "ai_comment",
-          path: "view.daily_life_report.ai_comment",
-          isPro: true,
-        },
-      ],
-      condition: "daily_life_report.summary !== ''",
-    },
-    {
-      name: "Emotion",
-      component: "EmotionSection",
-      description: "월간 감정 개요, 감정 패턴, 트리거 분석",
-      fields: [
-        {
-          name: "emotion_quadrant_analysis_summary",
-          path: "view.emotion_report.emotion_quadrant_analysis_summary",
+          name: "vision_evolution",
+          path: "view.vivid_report.vision_evolution",
           isPro: false,
         },
         {
-          name: "emotion_quadrant_dominant",
-          path: "view.emotion_report.emotion_quadrant_dominant",
+          name: "alignment_analysis",
+          path: "view.vivid_report.alignment_analysis",
           isPro: false,
         },
         {
-          name: "emotion_quadrant_distribution",
-          path: "view.emotion_report.emotion_quadrant_distribution",
+          name: "daily_life_patterns",
+          path: "view.vivid_report.daily_life_patterns",
           isPro: false,
         },
         {
-          name: "emotion_stability_score",
-          path: "view.emotion_report.emotion_stability_score",
+          name: "identity_alignment",
+          path: "view.vivid_report.identity_alignment",
           isPro: false,
         },
         {
-          name: "emotion_stability_explanation",
-          path: "view.emotion_report.emotion_stability_explanation",
-          isPro: false,
-        },
-        {
-          name: "emotion_pattern_summary",
-          path: "view.emotion_report.emotion_pattern_summary",
-          isPro: false,
-        },
-        {
-          name: "positive_triggers",
-          path: "view.emotion_report.positive_triggers",
-          isPro: false,
-        },
-        {
-          name: "negative_triggers",
-          path: "view.emotion_report.negative_triggers",
-          isPro: false,
-        },
-        {
-          name: "monthly_ai_mood_valence_avg",
-          path: "view.emotion_report.monthly_ai_mood_valence_avg",
-          isPro: true,
-        },
-        {
-          name: "monthly_ai_mood_arousal_avg",
-          path: "view.emotion_report.monthly_ai_mood_arousal_avg",
-          isPro: true,
-        },
-        {
-          name: "emotion_stability_score_reason",
-          path: "view.emotion_report.emotion_stability_score_reason",
-          isPro: true,
-        },
-        {
-          name: "emotion_stability_guidelines",
-          path: "view.emotion_report.emotion_stability_guidelines",
-          isPro: true,
-        },
-        {
-          name: "emotion_ai_comment",
-          path: "view.emotion_report.emotion_ai_comment",
-          isPro: false,
-        },
-        {
-          name: "monthly_mood_timeline",
-          path: "view.emotion_report.monthly_mood_timeline",
+          name: "next_month_plan",
+          path: "view.vivid_report.next_month_plan",
           isPro: false,
         },
       ],
-      condition: "emotion_report.emotion_quadrant_analysis_summary !== ''",
-    },
-    {
-      name: "Vision",
-      component: "VisionSection",
-      description: "월간 비전 키워드 트렌드",
-      fields: [
-        {
-          name: "vision_progress_comment",
-          path: "view.vision_report.vision_progress_comment",
-          isPro: false,
-        },
-        {
-          name: "core_visions",
-          path: "view.vision_report.core_visions",
-          isPro: true,
-        },
-        {
-          name: "vision_ai_feedbacks",
-          path: "view.vision_report.vision_ai_feedbacks",
-          isPro: true,
-        },
-        {
-          name: "desired_self",
-          path: "view.vision_report.desired_self",
-          isPro: true,
-        },
-        {
-          name: "vision_days_count",
-          path: "view.vision_report.vision_days_count",
-          isPro: true,
-        },
-        {
-          name: "vision_records_count",
-          path: "view.vision_report.vision_records_count",
-          isPro: true,
-        },
-      ],
-      condition: "vision_report.vision_progress_comment !== null",
-    },
-    {
-      name: "Insight",
-      component: "InsightSection",
-      description: "핵심 인사이트, 패턴 발견, 성장 영역",
-      fields: [
-        {
-          name: "core_insights",
-          path: "view.insight_report.core_insights",
-          isPro: false,
-        },
-        {
-          name: "top_insights",
-          path: "view.insight_report.top_insights",
-          isPro: true,
-        },
-        {
-          name: "insight_comprehensive_summary",
-          path: "view.insight_report.insight_comprehensive_summary",
-          isPro: true,
-        },
-        {
-          name: "insight_inspiration",
-          path: "view.insight_report.insight_inspiration",
-          isPro: true,
-        },
-        {
-          name: "insight_days_count",
-          path: "view.insight_report.insight_days_count",
-          isPro: true,
-        },
-        {
-          name: "insight_records_count",
-          path: "view.insight_report.insight_records_count",
-          isPro: true,
-        },
-      ],
-      condition: "insight_report.core_insights.length > 0",
-    },
-    {
-      name: "Execution",
-      component: "ExecutionSection",
-      description: "잘한 점, 개선 영역, 실행 계획",
-      fields: [
-        {
-          name: "recurring_positives",
-          path: "view.execution_report.recurring_positives",
-          isPro: false,
-        },
-        {
-          name: "core_feedback_for_month",
-          path: "view.execution_report.core_feedback_for_month",
-          isPro: true,
-        },
-        {
-          name: "habit_scores",
-          path: "view.execution_report.habit_scores",
-          isPro: true,
-        },
-        {
-          name: "core_feedbacks",
-          path: "view.execution_report.core_feedbacks",
-          isPro: true,
-        },
-        {
-          name: "recurring_improvements_with_frequency",
-          path: "view.execution_report.recurring_improvements_with_frequency",
-          isPro: true,
-        },
-        {
-          name: "feedback_ai_comment",
-          path: "view.execution_report.feedback_ai_comment",
-          isPro: true,
-        },
-        {
-          name: "feedback_days_count",
-          path: "view.execution_report.feedback_days_count",
-          isPro: true,
-        },
-        {
-          name: "feedback_records_count",
-          path: "view.execution_report.feedback_records_count",
-          isPro: true,
-        },
-      ],
-      condition: "execution_report.recurring_positives.length > 0",
-    },
-    {
-      name: "Closing",
-      component: "ClosingSection",
-      description: "월간 마무리, 다음 달 방향, 실행 계획",
-      fields: [
-        {
-          name: "monthly_title",
-          path: "view.closing_report.monthly_title",
-          isPro: false,
-        },
-        {
-          name: "monthly_summary",
-          path: "view.closing_report.monthly_summary",
-          isPro: false,
-        },
-        {
-          name: "turning_points",
-          path: "view.closing_report.turning_points",
-          isPro: false,
-        },
-        {
-          name: "next_month_focus",
-          path: "view.closing_report.next_month_focus",
-          isPro: false,
-        },
-        {
-          name: "ai_encouragement_message",
-          path: "view.closing_report.ai_encouragement_message",
-          isPro: false,
-        },
-        {
-          name: "this_month_identity",
-          path: "view.closing_report.this_month_identity",
-          isPro: true,
-        },
-      ],
-      condition: "closing_report.monthly_title !== null",
+      condition: "vivid_report !== null",
     },
   ];
 
@@ -422,38 +119,10 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
       switch (section.name) {
         case "Header":
           return true;
-        case "Daily Life":
+        case "Vivid Report":
           return !!(
-            view.daily_life_report?.summary &&
-            Array.isArray(view.daily_life_report.summary) &&
-            view.daily_life_report.summary.length > 0
-          );
-        case "Emotion":
-          return !!(
-            view.emotion_report?.emotion_quadrant_analysis_summary &&
-            view.emotion_report.emotion_quadrant_analysis_summary.trim() !== ""
-          );
-        case "Vision":
-          return !!(
-            view.vision_report?.vision_progress_comment !== null &&
-            view.vision_report?.vision_progress_comment !== undefined
-          );
-        case "Insight":
-          return !!(
-            view.insight_report?.core_insights &&
-            Array.isArray(view.insight_report.core_insights) &&
-            view.insight_report.core_insights.length > 0
-          );
-        case "Execution":
-          return !!(
-            view.execution_report?.recurring_positives &&
-            Array.isArray(view.execution_report.recurring_positives) &&
-            view.execution_report.recurring_positives.length > 0
-          );
-        case "Closing":
-          return !!(
-            view.closing_report?.monthly_title !== null &&
-            view.closing_report?.monthly_title !== undefined
+            view.vivid_report !== null &&
+            view.vivid_report !== undefined
           );
         default:
           return false;

@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
-  MonthlyFeedback,
+  MonthlyFeedbackNew,
+} from "@/types/monthly-feedback-new";
+import type {
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
 import { API_ENDPOINTS } from "@/constants";
@@ -20,7 +22,7 @@ export async function fetchMonthlyFeedbackList(
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select(
-      "id, month, month_label, date_range, recorded_days, summary_report, is_ai_generated, created_at"
+      "id, month, month_label, date_range, recorded_days, title, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("month", { ascending: false });
@@ -30,15 +32,11 @@ export async function fetchMonthlyFeedbackList(
   }
 
   return (data || []).map((row) => {
-    // summary_report 복호화
-    const decryptedSummaryReport = decryptJsonbFields(row.summary_report) as {
-      summary_title?: string;
-      monthly_score?: number;
-    } | null;
+    // title 복호화
+    const decryptedTitle = decryptJsonbFields(row.title) as string | null;
 
-    const title =
-      decryptedSummaryReport?.summary_title || row.month_label || "";
-    const monthlyScore = decryptedSummaryReport?.monthly_score || 0;
+    const title = decryptedTitle || row.month_label || "";
+    const monthlyScore = 0; // vivid_report에서 계산 가능하지만 리스트에서는 0으로 설정
     const dateRange = row.date_range as {
       start_date: string;
       end_date: string;
@@ -68,7 +66,7 @@ export async function fetchMonthlyFeedbackByMonth(
   supabase: SupabaseClient,
   userId: string,
   month: string // "YYYY-MM"
-): Promise<MonthlyFeedback | null> {
+): Promise<MonthlyFeedbackNew | null> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select("*")
@@ -87,23 +85,16 @@ export async function fetchMonthlyFeedbackByMonth(
     return null;
   }
 
-  // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedback 타입으로 변환
+  // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedbackNew 타입으로 변환
   const rawFeedback = {
     id: String(data.id),
     month: data.month,
     month_label: data.month_label,
-    date_range: data.date_range as MonthlyFeedback["date_range"],
+    date_range: data.date_range as MonthlyFeedbackNew["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    summary_report: data.summary_report as MonthlyFeedback["summary_report"],
-    daily_life_report:
-      data.daily_life_report as MonthlyFeedback["daily_life_report"],
-    emotion_report: data.emotion_report as MonthlyFeedback["emotion_report"],
-    insight_report: data.insight_report as MonthlyFeedback["insight_report"],
-    execution_report:
-      data.execution_report as MonthlyFeedback["execution_report"],
-    vision_report: data.vision_report as MonthlyFeedback["vision_report"],
-    closing_report: data.closing_report as MonthlyFeedback["closing_report"],
+    title: data.title as string,
+    vivid_report: data.vivid_report as MonthlyFeedbackNew["vivid_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -111,7 +102,7 @@ export async function fetchMonthlyFeedbackByMonth(
   // 복호화 처리
   return decryptMonthlyFeedback(
     rawFeedback as unknown as { [key: string]: unknown }
-  ) as unknown as MonthlyFeedback;
+  ) as unknown as MonthlyFeedbackNew;
 }
 
 /**
@@ -121,7 +112,7 @@ export async function fetchMonthlyFeedbackDetail(
   supabase: SupabaseClient,
   userId: string,
   id: string
-): Promise<MonthlyFeedback | null> {
+): Promise<MonthlyFeedbackNew | null> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select("*")
@@ -140,23 +131,16 @@ export async function fetchMonthlyFeedbackDetail(
     return null;
   }
 
-  // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedback 타입으로 변환
+  // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyFeedbackNew 타입으로 변환
   const rawFeedback = {
     id: String(data.id),
     month: data.month,
     month_label: data.month_label,
-    date_range: data.date_range as MonthlyFeedback["date_range"],
+    date_range: data.date_range as MonthlyFeedbackNew["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    summary_report: data.summary_report as MonthlyFeedback["summary_report"],
-    daily_life_report:
-      data.daily_life_report as MonthlyFeedback["daily_life_report"],
-    emotion_report: data.emotion_report as MonthlyFeedback["emotion_report"],
-    insight_report: data.insight_report as MonthlyFeedback["insight_report"],
-    execution_report:
-      data.execution_report as MonthlyFeedback["execution_report"],
-    vision_report: data.vision_report as MonthlyFeedback["vision_report"],
-    closing_report: data.closing_report as MonthlyFeedback["closing_report"],
+    title: data.title as string,
+    vivid_report: data.vivid_report as MonthlyFeedbackNew["vivid_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -164,7 +148,7 @@ export async function fetchMonthlyFeedbackDetail(
   // 복호화 처리
   return decryptMonthlyFeedback(
     rawFeedback as unknown as { [key: string]: unknown }
-  ) as unknown as MonthlyFeedback;
+  ) as unknown as MonthlyFeedbackNew;
 }
 
 /**
@@ -173,7 +157,7 @@ export async function fetchMonthlyFeedbackDetail(
 export async function saveMonthlyFeedback(
   supabase: SupabaseClient,
   userId: string,
-  feedback: MonthlyFeedback
+  feedback: MonthlyFeedbackNew
 ): Promise<string> {
   // 암호화 처리
   const encryptedFeedback = encryptMonthlyFeedback(feedback);
@@ -188,13 +172,8 @@ export async function saveMonthlyFeedback(
         date_range: encryptedFeedback.date_range,
         total_days: encryptedFeedback.total_days,
         recorded_days: encryptedFeedback.recorded_days,
-        daily_life_report: encryptedFeedback.daily_life_report,
-        summary_report: encryptedFeedback.summary_report,
-        emotion_report: encryptedFeedback.emotion_report,
-        insight_report: encryptedFeedback.insight_report,
-        execution_report: encryptedFeedback.execution_report,
-        vision_report: encryptedFeedback.vision_report,
-        closing_report: encryptedFeedback.closing_report,
+        title: encryptedFeedback.title,
+        vivid_report: encryptedFeedback.vivid_report,
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,month" }

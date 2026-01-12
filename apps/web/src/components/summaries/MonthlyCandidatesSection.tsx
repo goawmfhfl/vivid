@@ -7,7 +7,7 @@ import { QUERY_KEYS } from "@/constants";
 import { filterMonthlyCandidatesForCreation } from "../monthlyFeedback/monthly-candidate-filter";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
-import type { MonthlyFeedback } from "@/types/monthly-feedback";
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 
 export function MonthlyCandidatesSection({
   referenceDate,
@@ -34,139 +34,77 @@ export function MonthlyCandidatesSection({
   }, [candidates, referenceDate]);
 
   const handleCreateFeedback = async (month: string) => {
-    const currentEsRef: { current: EventSource | null } = { current: null };
-
     try {
       const userId = await getCurrentUserId();
-
-      const sectionNames = [
-        "SummaryReport",
-        "DailyLifeReport",
-        "EmotionReport",
-        "VisionReport",
-        "InsightReport",
-        "ExecutionReport",
-        "ClosingReport",
-      ];
 
       // 진행 상황 초기화 (전역 상태)
       setMonthlyFeedbackProgress(month, {
         month,
         current: 0,
-        total: sectionNames.length,
-        currentStep: sectionNames[0],
+        total: 2, // vivid_report, title
+        currentStep: "vivid_report",
       });
 
-      // SSE를 사용하여 진행 상황 수신
-      await new Promise<void>((resolve, reject) => {
-        const params = new URLSearchParams({
+      // POST 요청으로 월간 피드백 생성
+      const response = await fetch("/api/monthly-feedback/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           userId,
           month,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "월간 피드백 생성에 실패했습니다.");
+      }
+
+      const result = await response.json();
+      const feedbackData = result.data as MonthlyFeedbackNew & { id: string };
+
+      // 완료 처리
+      setMonthlyFeedbackProgress(month, {
+        month,
+        current: 2,
+        total: 2,
+        currentStep: "완료",
+      });
+
+      // MONTHLY_CANDIDATES에서 해당 월의 monthly_feedback_id 업데이트
+      queryClient.setQueryData<
+        import("@/types/monthly-candidate").MonthlyCandidate[]
+      >([QUERY_KEYS.MONTHLY_CANDIDATES], (oldCandidates = []) => {
+        return oldCandidates.map((candidate) => {
+          if (candidate.month === feedbackData.month) {
+            return {
+              ...candidate,
+              monthly_feedback_id: feedbackData.id || null,
+            };
+          }
+          return candidate;
         });
+      });
 
-        const es = new EventSource(
-          `/api/monthly-feedback/generate-extream?${params.toString()}`
-        );
-        currentEsRef.current = es;
-
-        // Promise 완료/실패 시 EventSource 정리
-        const cleanup = () => {
-          try {
-            if (es && es.readyState !== EventSource.CLOSED) {
-              es.close();
-            }
-          } catch {
-            // 무시
-          }
-          currentEsRef.current = null;
-        };
-
-        es.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-
-            if (data.type === "progress") {
-              // 진행 상황 업데이트 (서버에서 실제 섹션 생성 시점에 전송됨) - 전역 상태
-              // 완료 전이므로 99%를 넘지 않도록 제한
-              setMonthlyFeedbackProgress(month, {
-                month,
-                current: data.current,
-                total: data.total,
-                currentStep: data.sectionName,
-              });
-            } else if (data.type === "complete") {
-              // 완료 처리 - 99%에서 멈추도록 설정
-              setMonthlyFeedbackProgress(month, {
-                month,
-                current: data.total, // 전체 섹션 수
-                total: data.total,
-                currentStep: "완료",
-              });
-
-              cleanup();
-
-              // EventSource로 받은 데이터를 기반으로 캐시 직접 업데이트
-              if (data.data) {
-                const feedbackData = data.data as MonthlyFeedback;
-
-                // MONTHLY_CANDIDATES에서 해당 월의 monthly_feedback_id 업데이트
-                queryClient.setQueryData<
-                  import("@/types/monthly-candidate").MonthlyCandidate[]
-                >([QUERY_KEYS.MONTHLY_CANDIDATES], (oldCandidates = []) => {
-                  return oldCandidates.map((candidate) => {
-                    if (candidate.month === feedbackData.month) {
-                      return {
-                        ...candidate,
-                        monthly_feedback_id: feedbackData.id || null,
-                      };
-                    }
-                    return candidate;
-                  });
-                });
-              } else {
-                // 데이터가 없는 경우 무효화로 폴백
-                queryClient.invalidateQueries({
-                  queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
-                });
-              }
-
-              resolve();
-            } else if (data.type === "error") {
-              // 에러 처리
-              cleanup();
-              reject(new Error(data.error));
-            }
-          } catch (error) {
-            console.error("SSE 메시지 파싱 오류:", error);
-          }
-        };
-
-        es.onerror = (error) => {
-          cleanup();
-          reject(error);
-        };
+      // 쿼리 무효화로 최신 데이터 가져오기
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
       });
     } catch (error) {
       console.error("월간 vivid 생성 실패:", error);
 
-      // EventSource 정리
-      const esToClose = currentEsRef.current;
-      try {
-        if (esToClose && esToClose.readyState !== EventSource.CLOSED) {
-          esToClose.close();
-        }
-      } catch {
-        // 무시
-      }
-      currentEsRef.current = null;
-
       // 진행 상황 초기화 (전역 상태)
       clearMonthlyFeedbackProgress(month);
 
-      alert("월간 vivid 생성에 실패했습니다. 다시 시도해주세요.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "월간 vivid 생성에 실패했습니다. 다시 시도해주세요."
+      );
     } finally {
       setGeneratingMonth(null);
-      // 진행 상황은 완료/에러 핸들러에서 이미 처리됨
     }
   };
 
@@ -263,13 +201,9 @@ export function MonthlyCandidatesSection({
             // 섹션 이름을 한글로 변환 (브랜딩 컨셉에 맞게 친절하게)
             const getSectionNameKR = (sectionName: string) => {
               const names: Record<string, string> = {
-                SummaryReport: "전체 요약",
-                DailyLifeReport: "일상 분석",
-                EmotionReport: "감정 분석",
-                VisionReport: "비전 분석",
-                InsightReport: "인사이트",
-                ExecutionReport: "실행 분석",
-                ClosingReport: "최종 정리",
+                vivid_report: "비비드 리포트",
+                title: "제목",
+                완료: "완료",
               };
               return names[sectionName] || sectionName;
             };

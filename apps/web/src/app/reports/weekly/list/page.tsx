@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -47,7 +46,6 @@ function convertWeeklyFeedbackToPeriodSummary(
 }
 
 function WeeklyListPage() {
-  const router = useRouter();
 
   // 주간 피드백 리스트 조회
   const {

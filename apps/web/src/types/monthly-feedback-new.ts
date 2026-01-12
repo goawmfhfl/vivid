@@ -12,15 +12,10 @@ export type MonthlyFeedbackNew = {
   };
   total_days: number;
   recorded_days: number; // weekly feedback 개수
+  title: string; // "~ 한 달" 형식의 제목
 
-  // 7개 영역별 리포트
-  summary_report: SummaryReport;
-  daily_life_report: DailyLifeReport;
-  emotion_report: EmotionReport;
-  vision_report: VisionReport;
-  insight_report: InsightReport;
-  execution_report: ExecutionReport;
-  closing_report: ClosingReport;
+  // Vivid Report
+  vivid_report: VividReport;
 
   is_ai_generated?: boolean;
   created_at?: string;
@@ -373,8 +368,150 @@ export type EmotionVisualization = {
 };
 
 // ============================================
-// 4. Vision Report (서버 스키마 기반)
+// 4. Vivid Report (새로운 구조)
 // ============================================
+export type VividReport = {
+  // 1. 비전 진화 스토리 (30%)
+  vision_evolution: {
+    core_visions: Array<{
+      vision: string;
+      consistency: number; // 0-1
+      first_date: string;
+      last_date: string;
+      evolution_story: string;
+    }>;
+    clarity_trend: "구체화" | "모호해짐" | "유지";
+    clarity_explanation: string;
+    priority_shifts: Array<{
+      from: string;
+      to: string;
+      when: string;
+      why: string;
+    }>;
+  };
+
+  // 2. 현재-미래 일치도 분석 (25%)
+  alignment_analysis: {
+    score_timeline: Array<{
+      week: number;
+      average_score: number;
+      trend: "상승" | "하락" | "유지";
+    }>;
+    score_drivers: {
+      improved_areas: Array<{
+        area: string;
+        impact: string;
+        evidence: string[];
+      }>;
+      declined_areas: Array<{
+        area: string;
+        reason: string;
+        evidence: string[];
+      }>;
+    };
+    gap_analysis: {
+      biggest_gaps: Array<{
+        current_state: string;
+        desired_state: string;
+        gap_description: string;
+        actionable_steps: string[];
+      }>;
+    };
+  };
+
+  // 3. 하루 패턴 인사이트 (20%)
+  daily_life_patterns: {
+    recurring_patterns: Array<{
+      pattern: string;
+      frequency: number;
+      days: string[];
+      impact: "positive" | "neutral" | "negative";
+      why_it_matters: string;
+    }>;
+    weekly_evolution: Array<{
+      week: number;
+      dominant_activities: string[];
+      dominant_keywords: string[];
+      narrative: string;
+    }>;
+    evaluation_themes: {
+      strengths: Array<{
+        theme: string;
+        frequency: number;
+        examples: string[];
+        how_to_maintain: string;
+      }>;
+      improvements: Array<{
+        theme: string;
+        frequency: number;
+        examples: string[];
+        actionable_steps: string[];
+      }>;
+    };
+  };
+
+  // 4. 특성-비전 매칭 (15%)
+  identity_alignment: {
+    trait_mapping: Array<{
+      current: string;
+      aspired: string;
+      match_score: number; // 0-1
+      gap_description: string;
+      progress_evidence: string[];
+    }>;
+    trait_evolution: {
+      strengthened: Array<{
+        trait: string;
+        early_month: string;
+        late_month: string;
+        evidence: string[];
+      }>;
+      emerging: Array<{
+        trait: string;
+        first_date: string;
+        frequency: number;
+      }>;
+      fading: Array<{
+        trait: string;
+        last_appeared: string;
+        why: string;
+      }>;
+    };
+    focus_traits: Array<{
+      trait: string;
+      current_state: string;
+      desired_state: string;
+      monthly_action: string;
+    }>;
+  };
+
+  // 5. 실행 가능한 다음 달 플랜 (10%)
+  next_month_plan: {
+    focus_areas: Array<{
+      area: string;
+      why: string;
+      current_state: string;
+      desired_state: string;
+      weekly_actions: Array<{
+        week: number;
+        action: string;
+        success_metric: string;
+      }>;
+    }>;
+    maintain_patterns: Array<{
+      pattern: string;
+      why_important: string;
+      how_to_maintain: string;
+    }>;
+    experiment_patterns: Array<{
+      pattern: string;
+      why_suggested: string;
+      how_to_start: string;
+    }>;
+  };
+};
+
+// 하위 호환성을 위한 레거시 타입들 (사용되지 않을 수 있음)
 export type VisionReport = {
   vision_days_count: number;
   vision_records_count: number;

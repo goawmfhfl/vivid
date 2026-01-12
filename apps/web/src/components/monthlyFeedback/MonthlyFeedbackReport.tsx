@@ -4,20 +4,14 @@ import { ArrowLeft, BarChart3 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
-import type { MonthlyFeedback } from "@/types/monthly-feedback";
-import type { InsightReport } from "@/types/monthly-feedback-new";
-import { MonthlyReportHeader } from "./report/MonthlyReportHeader";
-import { DailyLifeSection } from "./report/DailyLifeSection";
-import { EmotionSection } from "./report/EmotionSection";
-import { VisionSection } from "./report/VisionSection";
-import { InsightSection } from "./report/InsightSection";
-import { ExecutionSection } from "./report/ExecutionSection";
-import { ClosingSection } from "./report/ClosingSection";
-import { COLORS, SPACING } from "@/lib/design-system";
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
 import { TestPanel } from "./TestPanel";
+import { VividSection } from "./report/VividSection";
+import { cn } from "@/lib/utils";
 
 type MonthlyFeedbackReportProps = {
-  data: MonthlyFeedback;
+  data: MonthlyFeedbackNew;
   onBack: () => void;
   isPro?: boolean;
   onTogglePro?: (isPro: boolean) => void;
@@ -55,109 +49,59 @@ export function MonthlyFeedbackReport({
           돌아가기
         </Button>
 
-        {/* Header Section - 명확히 분리된 헤더 영역 */}
+        {/* Title Section */}
+        {data.title && (
+          <section className="mb-8 sm:mb-12">
+            <ScrollAnimation>
+              <div className="text-center">
+                <h1
+                  className={cn(
+                    TYPOGRAPHY.h1.fontSize,
+                    TYPOGRAPHY.h1.fontWeight,
+                    "mb-2"
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  {data.title}
+                </h1>
+                <p
+                  className={cn(
+                    TYPOGRAPHY.body.fontSize,
+                    TYPOGRAPHY.body.lineHeight
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {data.month_label} ({data.recorded_days}일 기록)
+                </p>
+              </div>
+            </ScrollAnimation>
+          </section>
+        )}
+
+        {/* Vivid Section */}
         <section className="mb-16 sm:mb-20">
           <ScrollAnimation>
-            <MonthlyReportHeader
-              monthLabel={data.month_label}
-              dateRange={data.date_range}
-              summaryReport={data.summary_report}
+            <VividSection
+              vividReport={data.vivid_report}
               isPro={isPro}
             />
           </ScrollAnimation>
         </section>
 
-        {/* Body Section - 명확히 분리된 바디 영역 */}
-        <section className="max-w-3xl mx-auto px-4 py-6">
-          {/* Daily Life Report */}
-          {data?.daily_life_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-64">
-                <DailyLifeSection
-                  dailyLifeReport={data.daily_life_report}
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Emotion Report */}
-          {data?.emotion_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-64">
-                <EmotionSection
-                  emotionReport={data.emotion_report}
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Vision Report */}
-          {data?.vision_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-64">
-                <VisionSection
-                  visionReport={data.vision_report}
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Insight Report */}
-          {data?.insight_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-64">
-                <InsightSection
-                  insightReport={
-                    data.insight_report as unknown as InsightReport
-                  }
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Execution Report */}
-          {data?.execution_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-64">
-                <ExecutionSection
-                  executionReport={data.execution_report}
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Closing Report */}
-          {data?.closing_report && (
-            <ScrollAnimation delay={200}>
-              <div className="mb-12">
-                <ClosingSection
-                  closingReport={data.closing_report}
-                  isPro={isPro}
-                />
-              </div>
-            </ScrollAnimation>
-          )}
-
-          {/* Bottom Action */}
-          <div className="flex justify-center pt-4">
-            <Button
-              onClick={handleGoToAnalysis}
-              className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
-              style={{
-                backgroundColor: "#6B7A6F",
-                color: "white",
-              }}
-            >
-              <BarChart3 className="w-4 h-4" />
-              분석 페이지로 이동
-            </Button>
-          </div>
-        </section>
+        {/* Bottom Action */}
+        <div className="flex justify-center pt-8">
+          <Button
+            onClick={handleGoToAnalysis}
+            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
+            style={{
+              backgroundColor: COLORS.brand.primary,
+              color: "white",
+            }}
+          >
+            <BarChart3 className="w-4 h-4" />
+            분석 페이지로 이동
+          </Button>
+        </div>
       </div>
 
       {/* TestPanel 추가 */}

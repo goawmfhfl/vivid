@@ -1,13 +1,13 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import {
   fetchDailyFeedbacksByMonth,
   saveMonthlyFeedback,
-} from "../../db-service";
-import { generateMonthlyFeedbackFromDailyWithProgress } from "../../ai-service-extream";
+} from "../db-service";
+import { generateMonthlyFeedbackFromDailyWithProgress } from "../ai-service";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
-import type { MonthlyFeedback } from "@/types/monthly-feedback";
+// MonthlyFeedbackNew 타입은 사용하지 않지만 타입 정의를 위해 유지
 
 /**
  * 월의 시작일과 종료일 계산 (KST 기준)
@@ -26,55 +26,36 @@ function getMonthDateRange(month: string): {
   };
 }
 
-/**
- * SSE 스트림 콜백 타입 정의
- */
-export type SSEProgressCallback = (
-  step: number,
-  total: number,
-  sectionName: string
-) => void;
-
-export type SSECompleteCallback = (
-  data: MonthlyFeedback & { id: string }
-) => void;
-
-export type SSEErrorCallback = (error: string) => void;
+// Next.js API Route 타임아웃 설정 (최대 5분)
+export const maxDuration = 300;
 
 /**
- * GET 핸들러: 월간 피드백 생성 (SSE 스트리밍)
+ * POST 핸들러: 월간 피드백 생성
  *
  * 플로우:
  * 1. Daily Feedback 조회
- * 2. AI로 Monthly Feedback 생성 (각 섹션 생성 시점에 진행 상황 전송)
+ * 2. AI로 Monthly Feedback 생성
  * 3. DB 저장
  */
-export async function handleGenerateMonthlyFeedback(
-  request: NextRequest,
-  callbacks: {
-    sendProgress: SSEProgressCallback;
-    sendComplete: SSECompleteCallback;
-    sendError: SSEErrorCallback;
-  }
-): Promise<void> {
-  const { sendProgress, sendComplete, sendError } = callbacks;
-
+export async function POST(request: NextRequest) {
   try {
-    // GET 요청에서 쿼리 파라미터로 데이터 받기
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-    const month = searchParams.get("month");
+    const body = await request.json();
+    const { userId, month }: { userId: string; month: string } = body;
 
     // 요청 검증
     if (!userId || !month) {
-      sendError("userId and month are required");
-      return;
+      return NextResponse.json(
+        { error: "userId and month are required" },
+        { status: 400 }
+      );
     }
 
     // 월 형식 검증
     if (!/^\d{4}-\d{2}$/.test(month)) {
-      sendError("month must be in YYYY-MM format");
-      return;
+      return NextResponse.json(
+        { error: "month must be in YYYY-MM format" },
+        { status: 400 }
+      );
     }
 
     const supabase = getServiceSupabase();
@@ -95,18 +76,20 @@ export async function handleGenerateMonthlyFeedback(
 
     // 최소 1개 이상의 daily-feedback이 있어야 함
     if (dailyFeedbacks.length < 1) {
-      sendError(`일일 피드백이 필요합니다. 현재: ${dailyFeedbacks.length}개`);
-      return;
+      return NextResponse.json(
+        { error: `일일 피드백이 필요합니다. 현재: ${dailyFeedbacks.length}개` },
+        { status: 400 }
+      );
     }
 
-    // 2️⃣ AI 요청: Monthly Feedback 생성 (진행 상황 콜백 포함)
+    // 2️⃣ AI 요청: Monthly Feedback 생성
     const monthlyFeedback = await generateMonthlyFeedbackFromDailyWithProgress(
       dailyFeedbacks,
       month,
       dateRange,
       isPro,
-      sendProgress, // 진행 상황 콜백 전달
-      userId // AI 사용량 로깅을 위한 userId 전달
+      undefined, // progressCallback 제거
+      userId
     );
 
     // month_label 설정 (없는 경우)
@@ -120,18 +103,26 @@ export async function handleGenerateMonthlyFeedback(
       monthlyFeedback.date_range = dateRange;
     }
 
-    // 4️⃣ Supabase monthly_feedback 테이블에 저장
+    // 3️⃣ Supabase monthly_feedback 테이블에 저장
     const savedId = await saveMonthlyFeedback(
       supabase,
       userId,
       monthlyFeedback
     );
 
-    // 완료 메시지 전송
-    sendComplete({ ...monthlyFeedback, id: savedId });
+    return NextResponse.json(
+      {
+        message: "Monthly feedback generated successfully",
+        data: { ...monthlyFeedback, id: savedId },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    sendError(errorMessage);
+    return NextResponse.json(
+      { error: "Internal server error", details: errorMessage },
+      { status: 500 }
+    );
   }
 }

@@ -204,26 +204,11 @@ export function encryptMonthlyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    summary_report: feedback.summary_report
-      ? encryptJsonbFields(feedback.summary_report as JsonbValue)
+    title: feedback.title
+      ? encryptJsonbFields(feedback.title as JsonbValue)
       : null,
-    daily_life_report: feedback.daily_life_report
-      ? encryptJsonbFields(feedback.daily_life_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? encryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    execution_report: feedback.execution_report
-      ? encryptJsonbFields(feedback.execution_report as JsonbValue)
-      : null,
-    vision_report: feedback.vision_report
-      ? encryptJsonbFields(feedback.vision_report as JsonbValue)
-      : null,
-    closing_report: feedback.closing_report
-      ? encryptJsonbFields(feedback.closing_report as JsonbValue)
+    vivid_report: feedback.vivid_report
+      ? encryptJsonbFields(feedback.vivid_report as JsonbValue)
       : null,
   };
 }
@@ -236,26 +221,11 @@ export function decryptMonthlyFeedback(
 ): Record<string, unknown> {
   return {
     ...feedback,
-    summary_report: feedback.summary_report
-      ? decryptJsonbFields(feedback.summary_report as JsonbValue)
+    title: feedback.title
+      ? decryptJsonbFields(feedback.title as JsonbValue)
       : null,
-    daily_life_report: feedback.daily_life_report
-      ? decryptJsonbFields(feedback.daily_life_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? decryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    execution_report: feedback.execution_report
-      ? decryptJsonbFields(feedback.execution_report as JsonbValue)
-      : null,
-    vision_report: feedback.vision_report
-      ? decryptJsonbFields(feedback.vision_report as JsonbValue)
-      : null,
-    closing_report: feedback.closing_report
-      ? decryptJsonbFields(feedback.closing_report as JsonbValue)
+    vivid_report: feedback.vivid_report
+      ? decryptJsonbFields(feedback.vivid_report as JsonbValue)
       : null,
   };
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";

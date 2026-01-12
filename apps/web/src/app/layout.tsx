@@ -3,6 +3,7 @@ import "./globals.css";
 import { JournalProvider } from "./providers";
 import { BottomNavigation } from "../components/common/BottomNavigation";
 import { GlobalModals } from "../components/ui/modals/GlobalModals";
+import { Footer } from "../components/common/Footer";
 
 export const metadata: Metadata = {
   title: "vivid",
@@ -30,8 +31,9 @@ export default function RootLayout({
     <html lang="ko">
       <body className="antialiased">
         <JournalProvider>
-          <div className="min-h-screen" style={{ backgroundColor: "#e4e2dd" }}>
-            <main>{children}</main>
+          <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#e4e2dd" }}>
+            <main className="flex-1">{children}</main>
+            <Footer />
             <BottomNavigation />
             <GlobalModals />
           </div>

@@ -2,15 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
 import type {
-  MonthlyFeedback,
   MonthlyFeedbackListItem,
 } from "@/types/monthly-feedback";
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 
 /**
  * 월간 vivid 조회 (month 기반)
  */
 export function useGetMonthlyFeedback(month: string | null) {
-  return useQuery({
+  return useQuery<MonthlyFeedbackNew | null>({
     queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, month],
     queryFn: async () => {
       if (!month) return null;
@@ -43,7 +43,7 @@ export function useGetMonthlyFeedback(month: string | null) {
       }
 
       const detailResult = await detailResponse.json();
-      return detailResult.data as MonthlyFeedback;
+      return detailResult.data as MonthlyFeedbackNew;
     },
     enabled: !!month,
   });
@@ -53,7 +53,7 @@ export function useGetMonthlyFeedback(month: string | null) {
  * 월간 vivid 조회 (id 기반)
  */
 export function useGetMonthlyFeedbackById(id: string | null) {
-  return useQuery({
+  return useQuery<MonthlyFeedbackNew | null>({
     queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "id", id],
     queryFn: async () => {
       if (!id) return null;
@@ -67,7 +67,7 @@ export function useGetMonthlyFeedbackById(id: string | null) {
       }
 
       const result = await response.json();
-      return result.data as MonthlyFeedback;
+      return result.data as MonthlyFeedbackNew;
     },
     enabled: !!id,
   });

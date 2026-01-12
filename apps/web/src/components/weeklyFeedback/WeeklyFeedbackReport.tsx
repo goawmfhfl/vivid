@@ -21,7 +21,7 @@ export function WeeklyFeedbackReport({
   data,
   onBack,
   isPro = false,
-  onTogglePro = () => {},
+  onTogglePro: _onTogglePro = () => {},
 }: WeeklyFeedbackReportProps) {
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();

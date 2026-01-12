@@ -57,6 +57,9 @@ export function DailyFeedbackView({
 
   const view = data ? mapDailyFeedbackRowToReport(data) : null;
   const { isPro } = useSubscription();
+  
+console.log(view);
+
 
   if (isLoading) {
     return (

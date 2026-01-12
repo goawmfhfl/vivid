@@ -18,990 +18,415 @@ export const MonthlyReportSchema = {
       },
       total_days: { type: "integer", minimum: 0 },
       recorded_days: { type: "integer", minimum: 0 },
-
-      // 1. 월간 요약 섹션
-      summary_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          monthly_score: { type: "integer", minimum: 0, maximum: 100 },
-          summary_title: { type: "string" },
-          summary_description: { type: "string" },
-          main_themes: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 7,
-          },
-          main_themes_reason: {
-            type: "string",
-            description: "주요 테마를 7개 이하로 정한 이유 설명",
-          },
-          integrity_trend: {
-            anyOf: [
-              { type: "string", enum: ["상승", "하락", "유지", "불규칙"] },
-              { type: "null" },
-            ],
-          },
-          record_coverage_rate: { type: "number", minimum: 0, maximum: 1 },
-          life_balance_score: { type: "integer", minimum: 0, maximum: 10 },
-          life_balance_reason: {
-            type: "string",
-            description: "생활 밸런스 점수가 나온 이유 (데이터 출처 기반)",
-          },
-          life_balance_feedback: {
-            type: "string",
-            description: "생활 밸런스에 대한 피드백",
-          },
-          execution_score: { type: "integer", minimum: 0, maximum: 10 },
-          execution_reason: {
-            type: "string",
-            description: "실행력 점수가 나온 이유 (데이터 출처 기반)",
-          },
-          execution_feedback: {
-            type: "string",
-            description: "실행력에 대한 피드백",
-          },
-          rest_score: { type: "integer", minimum: 0, maximum: 10 },
-          rest_reason: {
-            type: "string",
-            description: "휴식/회복 점수가 나온 이유 (데이터 출처 기반)",
-          },
-          rest_feedback: {
-            type: "string",
-            description: "휴식/회복에 대한 피드백",
-          },
-          relationship_score: { type: "integer", minimum: 0, maximum: 10 },
-          relationship_reason: {
-            type: "string",
-            description: "관계/소통 점수가 나온 이유 (데이터 출처 기반)",
-          },
-          relationship_feedback: {
-            type: "string",
-            description: "관계/소통에 대한 피드백",
-          },
-          summary_ai_comment: { type: "string", nullable: true },
-        },
-        required: [
-          "monthly_score",
-          "summary_title",
-          "summary_description",
-          "main_themes",
-          "main_themes_reason",
-          "integrity_trend",
-          "record_coverage_rate",
-          "life_balance_score",
-          "life_balance_reason",
-          "life_balance_feedback",
-          "execution_score",
-          "execution_reason",
-          "execution_feedback",
-          "rest_score",
-          "rest_reason",
-          "rest_feedback",
-          "relationship_score",
-          "relationship_reason",
-          "relationship_feedback",
-          "summary_ai_comment",
-        ],
+      title: {
+        type: "string",
+        description: "월간 피드백 제목 ('~ 한 달' 형식)",
       },
 
-      // 2. 감정 섹션
-      emotion_report: {
+      // Vivid Report
+      vivid_report: {
         type: "object",
         additionalProperties: false,
         properties: {
-          monthly_ai_mood_valence_avg: { type: "number", nullable: true },
-          monthly_ai_mood_arousal_avg: { type: "number", nullable: true },
-          emotion_quadrant_dominant: {
-            anyOf: [
-              {
-                type: "string",
-                enum: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온"],
-              },
-              { type: "null" },
-            ],
-          },
-          emotion_quadrant_distribution: {
-            type: "array",
-            minItems: 4,
-            maxItems: 4,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                quadrant: {
-                  type: "string",
-                  enum: ["몰입·설렘", "불안·초조", "슬픔·무기력", "안도·평온"],
-                },
-                count: { type: "integer", minimum: 0 },
-                ratio: { type: "number", minimum: 0, maximum: 1 },
-                explanation: {
-                  type: "string",
-                  description:
-                    "해당 사분면이 이 비율을 차지하는 이유에 대한 월간 데이터 분석 기반 설명",
-                },
-              },
-              required: ["quadrant", "count", "ratio", "explanation"],
-            },
-          },
-          emotion_quadrant_analysis_summary: {
-            type: "string",
-            description: "4개 사분면 분포를 종합적으로 분석한 피드백",
-          },
-          emotion_pattern_summary: { type: "string", nullable: true },
-          positive_triggers: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 7,
-            description: "반복적으로 긍정 감정을 만들어낸 행동/상황 (최대 7개)",
-          },
-          negative_triggers: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 10,
-          },
-          emotion_stability_score: { type: "integer", minimum: 0, maximum: 10 },
-          emotion_stability_explanation: {
-            type: "string",
-            description: "감정 안정성 점수가 의미하는 바에 대한 설명",
-          },
-          emotion_stability_score_reason: {
-            type: "string",
-            description: "왜 그 점수인지 월간 데이터 분석 기반 설명",
-          },
-          emotion_stability_guidelines: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 5,
-            description:
-              "감정 안정성 점수를 더 높이기 위한 구체적인 가이드라인",
-          },
-          emotion_ai_comment: { type: "string", nullable: true },
-          monthly_mood_timeline: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                date: {
-                  type: "string",
-                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                  description: "날짜 (YYYY-MM-DD 형식)",
-                },
-                weekday: {
-                  type: "string",
-                  description: "요일 (예: '월요일', '화요일')",
-                },
-                ai_mood_arousal: { type: "number", nullable: true },
-                ai_mood_valence: { type: "number", nullable: true },
-                dominant_emotion: { type: "string", nullable: true },
-              },
-              required: [
-                "date",
-                "weekday",
-                "ai_mood_arousal",
-                "ai_mood_valence",
-                "dominant_emotion",
-              ],
-            },
-            minItems: 0,
-            description: "월간 감정 좌표 타임라인 (30일 전체 데이터)",
-          },
-        },
-        required: [
-          "monthly_ai_mood_valence_avg",
-          "monthly_ai_mood_arousal_avg",
-          "emotion_quadrant_dominant",
-          "emotion_quadrant_distribution",
-          "emotion_quadrant_analysis_summary",
-          "emotion_pattern_summary",
-          "positive_triggers",
-          "negative_triggers",
-          "emotion_stability_score",
-          "emotion_stability_explanation",
-          "emotion_stability_score_reason",
-          "emotion_stability_guidelines",
-          "emotion_ai_comment",
-          "monthly_mood_timeline",
-        ],
-      },
-
-      // 3. 일상 생활 섹션
-      daily_life_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          summary: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 1,
-            maxItems: 10,
-            description:
-              "이번 달의 일상을 요약한 리스트 (각 항목은 한 문장으로 작성)",
-          },
-          daily_summaries_trend: {
+          // 1. 비전 진화 스토리 (30%)
+          vision_evolution: {
             type: "object",
             additionalProperties: false,
             properties: {
-              overall_narrative: { type: "string" },
-              key_highlights: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 0,
-                maxItems: 5,
-              },
-            },
-            required: ["overall_narrative", "key_highlights"],
-          },
-          events_pattern: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              most_frequent_events: {
+              core_visions: {
                 type: "array",
                 items: {
                   type: "object",
                   additionalProperties: false,
                   properties: {
-                    event: { type: "string" },
+                    vision: { type: "string" },
+                    consistency: { type: "number", minimum: 0, maximum: 1 },
+                    first_date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                    last_date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                    evolution_story: { type: "string" },
+                  },
+                  required: ["vision", "consistency", "first_date", "last_date", "evolution_story"],
+                },
+                minItems: 0,
+              },
+              clarity_trend: {
+                type: "string",
+                enum: ["구체화", "모호해짐", "유지"],
+              },
+              clarity_explanation: { type: "string" },
+              priority_shifts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    from: { type: "string" },
+                    to: { type: "string" },
+                    when: { type: "string" },
+                    why: { type: "string" },
+                  },
+                  required: ["from", "to", "when", "why"],
+                },
+                minItems: 0,
+              },
+            },
+            required: ["core_visions", "clarity_trend", "clarity_explanation", "priority_shifts"],
+          },
+          // 2. 현재-미래 일치도 분석 (25%)
+          alignment_analysis: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              score_timeline: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    week: { type: "integer", minimum: 1 },
+                    average_score: { type: "number", minimum: 0, maximum: 100 },
+                    trend: {
+                      type: "string",
+                      enum: ["상승", "하락", "유지"],
+                    },
+                  },
+                  required: ["week", "average_score", "trend"],
+                },
+                minItems: 0,
+              },
+              score_drivers: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  improved_areas: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        area: { type: "string" },
+                        impact: { type: "string" },
+                        evidence: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                      required: ["area", "impact", "evidence"],
+                    },
+                    minItems: 0,
+                  },
+                  declined_areas: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        area: { type: "string" },
+                        reason: { type: "string" },
+                        evidence: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                      required: ["area", "reason", "evidence"],
+                    },
+                    minItems: 0,
+                  },
+                },
+                required: ["improved_areas", "declined_areas"],
+              },
+              gap_analysis: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  biggest_gaps: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        current_state: { type: "string" },
+                        desired_state: { type: "string" },
+                        gap_description: { type: "string" },
+                        actionable_steps: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                      required: ["current_state", "desired_state", "gap_description", "actionable_steps"],
+                    },
+                    minItems: 0,
+                  },
+                },
+                required: ["biggest_gaps"],
+              },
+            },
+            required: ["score_timeline", "score_drivers", "gap_analysis"],
+          },
+          // 3. 하루 패턴 인사이트 (20%)
+          daily_life_patterns: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              recurring_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    pattern: { type: "string" },
                     frequency: { type: "integer", minimum: 0 },
                     days: {
                       type: "array",
-                      items: {
-                        type: "string",
-                        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                      },
+                      items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
                     },
-                    context: { type: "string" },
+                    impact: {
+                      type: "string",
+                      enum: ["positive", "neutral", "negative"],
+                    },
+                    why_it_matters: { type: "string" },
                   },
-                  required: ["event", "frequency", "days", "context"],
+                  required: ["pattern", "frequency", "days", "impact", "why_it_matters"],
                 },
                 minItems: 0,
-                maxItems: 10,
               },
-              event_categories: {
+              weekly_evolution: {
                 type: "array",
                 items: {
                   type: "object",
                   additionalProperties: false,
                   properties: {
-                    category: { type: "string" },
-                    count: { type: "integer", minimum: 0 },
-                    examples: {
+                    week: { type: "integer", minimum: 1 },
+                    dominant_activities: {
                       type: "array",
                       items: { type: "string" },
                     },
-                  },
-                  required: ["category", "count", "examples"],
-                },
-                minItems: 0,
-                maxItems: 10,
-              },
-              timing_patterns: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    time_range: { type: "string" },
-                    common_events: {
+                    dominant_keywords: {
                       type: "array",
                       items: { type: "string" },
                     },
-                    pattern_description: { type: "string" },
+                    narrative: { type: "string" },
                   },
-                  required: [
-                    "time_range",
-                    "common_events",
-                    "pattern_description",
-                  ],
+                  required: ["week", "dominant_activities", "dominant_keywords", "narrative"],
                 },
                 minItems: 0,
-                maxItems: 5,
               },
-            },
-            required: [
-              "most_frequent_events",
-              "event_categories",
-              "timing_patterns",
-            ],
-          },
-          emotion_triggers_analysis: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              summary: { type: "string" },
-              category_distribution: {
+              evaluation_themes: {
                 type: "object",
                 additionalProperties: false,
                 properties: {
-                  self: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      top_triggers: {
-                        type: "array",
-                        items: { type: "string" },
+                  strengths: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        theme: { type: "string" },
+                        frequency: { type: "integer", minimum: 0 },
+                        examples: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                        how_to_maintain: { type: "string" },
                       },
-                      insight: { type: "string", nullable: true },
+                      required: ["theme", "frequency", "examples", "how_to_maintain"],
                     },
-                    required: [
-                      "count",
-                      "percentage",
-                      "top_triggers",
-                      "insight",
-                    ],
+                    minItems: 0,
                   },
-                  work: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      top_triggers: {
-                        type: "array",
-                        items: { type: "string" },
+                  improvements: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        theme: { type: "string" },
+                        frequency: { type: "integer", minimum: 0 },
+                        examples: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                        actionable_steps: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
                       },
-                      insight: { type: "string", nullable: true },
+                      required: ["theme", "frequency", "examples", "actionable_steps"],
                     },
-                    required: [
-                      "count",
-                      "percentage",
-                      "top_triggers",
-                      "insight",
-                    ],
-                  },
-                  people: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      top_triggers: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: [
-                      "count",
-                      "percentage",
-                      "top_triggers",
-                      "insight",
-                    ],
-                  },
-                  environment: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      top_triggers: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: [
-                      "count",
-                      "percentage",
-                      "top_triggers",
-                      "insight",
-                    ],
+                    minItems: 0,
                   },
                 },
-                required: ["self", "work", "people", "environment"],
+                required: ["strengths", "improvements"],
               },
             },
-            required: ["summary", "category_distribution"],
+            required: ["recurring_patterns", "weekly_evolution", "evaluation_themes"],
           },
-          behavioral_patterns: {
+          // 4. 특성-비전 매칭 (15%)
+          identity_alignment: {
             type: "object",
             additionalProperties: false,
             properties: {
-              summary: { type: "string" },
-              pattern_distribution: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  planned: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      examples: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: ["count", "percentage", "examples", "insight"],
-                  },
-                  impulsive: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      examples: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: ["count", "percentage", "examples", "insight"],
-                  },
-                  routine_attempt: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      examples: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: ["count", "percentage", "examples", "insight"],
-                  },
-                  avoidance: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      examples: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: ["count", "percentage", "examples", "insight"],
-                  },
-                  routine_failure: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      count: { type: "integer", minimum: 0 },
-                      percentage: { type: "number", minimum: 0, maximum: 100 },
-                      examples: {
-                        type: "array",
-                        items: { type: "string" },
-                      },
-                      insight: { type: "string", nullable: true },
-                    },
-                    required: ["count", "percentage", "examples", "insight"],
-                  },
-                },
-                required: [
-                  "planned",
-                  "impulsive",
-                  "routine_attempt",
-                  "avoidance",
-                  "routine_failure",
-                ],
-              },
-              behavior_emotion_correlation: {
+              trait_mapping: {
                 type: "array",
                 items: {
                   type: "object",
                   additionalProperties: false,
                   properties: {
-                    behavior: { type: "string" },
-                    associated_emotions: {
+                    current: { type: "string" },
+                    aspired: { type: "string" },
+                    match_score: { type: "number", minimum: 0, maximum: 1 },
+                    gap_description: { type: "string" },
+                    progress_evidence: {
                       type: "array",
                       items: { type: "string" },
                     },
-                    insight: { type: "string" },
                   },
-                  required: ["behavior", "associated_emotions", "insight"],
+                  required: ["current", "aspired", "match_score", "gap_description", "progress_evidence"],
                 },
                 minItems: 0,
-                maxItems: 5,
               },
-            },
-            required: [
-              "summary",
-              "pattern_distribution",
-              "behavior_emotion_correlation",
-            ],
-          },
-          keywords_analysis: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              top_keywords: {
+              trait_evolution: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  strengthened: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        trait: { type: "string" },
+                        early_month: { type: "string" },
+                        late_month: { type: "string" },
+                        evidence: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                      required: ["trait", "early_month", "late_month", "evidence"],
+                    },
+                    minItems: 0,
+                  },
+                  emerging: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        trait: { type: "string" },
+                        first_date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                        frequency: { type: "integer", minimum: 0 },
+                      },
+                      required: ["trait", "first_date", "frequency"],
+                    },
+                    minItems: 0,
+                  },
+                  fading: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        trait: { type: "string" },
+                        last_appeared: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                        why: { type: "string" },
+                      },
+                      required: ["trait", "last_appeared", "why"],
+                    },
+                    minItems: 0,
+                  },
+                },
+                required: ["strengthened", "emerging", "fading"],
+              },
+              focus_traits: {
                 type: "array",
                 items: {
                   type: "object",
                   additionalProperties: false,
                   properties: {
-                    keyword: { type: "string" },
-                    frequency: { type: "integer", minimum: 0 },
-                    days: {
+                    trait: { type: "string" },
+                    current_state: { type: "string" },
+                    desired_state: { type: "string" },
+                    monthly_action: { type: "string" },
+                  },
+                  required: ["trait", "current_state", "desired_state", "monthly_action"],
+                },
+                minItems: 0,
+              },
+            },
+            required: ["trait_mapping", "trait_evolution", "focus_traits"],
+          },
+          // 5. 실행 가능한 다음 달 플랜 (10%)
+          next_month_plan: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              focus_areas: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    area: { type: "string" },
+                    why: { type: "string" },
+                    current_state: { type: "string" },
+                    desired_state: { type: "string" },
+                    weekly_actions: {
                       type: "array",
                       items: {
-                        type: "string",
-                        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                      },
-                    },
-                    context: { type: "string" },
-                    sentiment: {
-                      type: "string",
-                      enum: ["positive", "negative", "neutral"],
-                    },
-                  },
-                  required: [
-                    "keyword",
-                    "frequency",
-                    "days",
-                    "context",
-                    "sentiment",
-                  ],
-                },
-                minItems: 0,
-                maxItems: 15,
-              },
-              keyword_categories: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    category: { type: "string" },
-                    keywords: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
-                    count: { type: "integer", minimum: 0 },
-                  },
-                  required: ["category", "keywords", "count"],
-                },
-                minItems: 0,
-                maxItems: 10,
-              },
-            },
-            required: ["top_keywords", "keyword_categories"],
-          },
-          daily_rhythm: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              summary: { type: "string" },
-              time_patterns: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    time_period: { type: "string" },
-                    common_activities: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
-                    typical_emotions: {
-                      type: "array",
-                      items: { type: "string" },
-                    },
-                    pattern_description: { type: "string" },
-                  },
-                  required: [
-                    "time_period",
-                    "common_activities",
-                    "typical_emotions",
-                    "pattern_description",
-                  ],
-                },
-                minItems: 0,
-                maxItems: 5,
-              },
-            },
-            required: ["summary", "time_patterns"],
-          },
-          ai_comment: { type: "string", nullable: true },
-        },
-        required: [
-          "summary",
-          "daily_summaries_trend",
-          "events_pattern",
-          "emotion_triggers_analysis",
-          "behavioral_patterns",
-          "keywords_analysis",
-          "daily_rhythm",
-          "ai_comment",
-        ],
-      },
-
-      // 4. 인사이트 섹션
-      insight_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          insight_days_count: { type: "integer", minimum: 0 },
-          insight_records_count: { type: "integer", minimum: 0 },
-          top_insights: {
-            type: "array",
-            minItems: 0,
-            maxItems: 20,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                first_date: {
-                  type: "string",
-                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                  nullable: true,
-                },
-                last_date: {
-                  type: "string",
-                  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
-                  nullable: true,
-                },
-                frequency: { type: "integer", minimum: 0 },
-              },
-              required: ["summary", "first_date", "last_date", "frequency"],
-            },
-          },
-          core_insights: {
-            type: "array",
-            minItems: 0,
-            maxItems: 5,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                explanation: {
-                  type: "string",
-                  description: "이 인사이트가 핵심인 이유 설명",
-                },
-                frequency: { type: "integer", minimum: 1 },
-              },
-              required: ["summary", "explanation", "frequency"],
-            },
-            description: "이번 달의 핵심 인사이트 최대 5개 (frequency 포함)",
-          },
-          insight_comprehensive_summary: {
-            type: "string",
-            nullable: true,
-            description: "모든 인사이트를 종합한 종합적인 인사이트 분석",
-          },
-          insight_inspiration: {
-            type: "object",
-            nullable: true,
-            additionalProperties: false,
-            properties: {
-              has_inspiration: {
-                type: "boolean",
-                description: "특별한 영감이 감지되었는지 여부",
-              },
-              ideas: {
-                type: "array",
-                items: { type: "string" },
-                minItems: 0,
-                maxItems: 5,
-                description: "제안할 아이디어 리스트 (최대 5개)",
-              },
-              explanation: {
-                type: "string",
-                nullable: true,
-                description: "왜 이 아이디어를 제안했는지 설명",
-              },
-            },
-            required: ["has_inspiration", "ideas", "explanation"],
-            description:
-              "인사이트를 기반으로 한 아이디어 제안 (특별한 영감이 감지된 경우에만 생성)",
-          },
-        },
-        required: [
-          "insight_days_count",
-          "insight_records_count",
-          "top_insights",
-          "core_insights",
-          "insight_comprehensive_summary",
-          "insight_inspiration",
-        ],
-      },
-
-      // 5. 피드백 섹션
-      execution_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          feedback_days_count: { type: "integer", minimum: 0 },
-          feedback_records_count: { type: "integer", minimum: 0 },
-          recurring_positives: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 10,
-          },
-          recurring_improvements: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 10,
-          },
-          habit_scores: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              health: { type: "integer", minimum: 0, maximum: 10 },
-              health_reason: {
-                type: "string",
-                description:
-                  "건강 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
-              },
-              work: { type: "integer", minimum: 0, maximum: 10 },
-              work_reason: {
-                type: "string",
-                description:
-                  "일/학습 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
-              },
-              relationship: { type: "integer", minimum: 0, maximum: 10 },
-              relationship_reason: {
-                type: "string",
-                description:
-                  "관계 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
-              },
-              self_care: { type: "integer", minimum: 0, maximum: 10 },
-              self_care_reason: {
-                type: "string",
-                description:
-                  "자기 돌봄 점수가 나온 이유를 월간 데이터 분석 기반으로 구체적으로 설명",
-              },
-            },
-            required: [
-              "health",
-              "health_reason",
-              "work",
-              "work_reason",
-              "relationship",
-              "relationship_reason",
-              "self_care",
-              "self_care_reason",
-            ],
-          },
-          core_feedbacks: {
-            type: "array",
-            minItems: 0,
-            maxItems: 5,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                frequency: { type: "integer", minimum: 1 },
-              },
-              required: ["summary", "frequency"],
-            },
-            description:
-              "이번 달의 핵심 피드백 최대 5개 (가장 중요하고 반복적으로 등장한 피드백)",
-          },
-          recurring_improvements_with_frequency: {
-            type: "array",
-            minItems: 0,
-            maxItems: 10,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                frequency: { type: "integer", minimum: 1 },
-              },
-              required: ["summary", "frequency"],
-            },
-            description:
-              "반복된 개선점과 각각의 등장 횟수 (최소 2회 이상 등장한 것만 포함)",
-          },
-          core_feedback_for_month: { type: "string" },
-          feedback_ai_comment: { type: "string", nullable: true },
-        },
-        required: [
-          "feedback_days_count",
-          "feedback_records_count",
-          "recurring_positives",
-          "recurring_improvements",
-          "habit_scores",
-          "core_feedbacks",
-          "recurring_improvements_with_frequency",
-          "core_feedback_for_month",
-          "feedback_ai_comment",
-        ],
-      },
-
-      // 6. 시각화(비전) 섹션
-      vision_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          vision_days_count: { type: "integer", minimum: 0 },
-          vision_records_count: { type: "integer", minimum: 0 },
-          core_visions: {
-            type: "array",
-            minItems: 0,
-            maxItems: 7,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                summary: { type: "string" },
-                frequency: { type: "integer", minimum: 1 },
-              },
-              required: ["summary", "frequency"],
-            },
-            description:
-              "이번 달의 핵심 비전 최대 7개 (가장 중요하고 반복적으로 등장한 비전)",
-          },
-          vision_progress_comment: {
-            type: "string",
-            nullable: true,
-            maxLength: 300,
-            description:
-              "비전과 실제 일상 행동 사이의 거리감, 조금이라도 나아간 부분을 솔직하게 정리 (300자 이내)",
-          },
-          vision_ai_feedbacks: {
-            type: "array",
-            minItems: 0,
-            maxItems: 5,
-            items: { type: "string" },
-            description:
-              "AI가 제공하는 비전 관련 피드백 리스트 (최대 5개, 각각 실행 가능한 구체적인 피드백)",
-          },
-          desired_self: {
-            type: "object",
-            nullable: true,
-            additionalProperties: false,
-            properties: {
-              characteristics: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    trait: {
-                      type: "string",
-                      description:
-                        "내가 되고싶은 사람의 특성 (예: '기록을 통해 나를 이해하고 성장하는 사람')",
-                    },
-                  },
-                  required: ["trait"],
-                },
-                minItems: 1,
-                maxItems: 5,
-                description: "내가 되고싶은 사람의 특성 리스트 (최대 5개)",
-              },
-              historical_figure: {
-                type: "object",
-                nullable: true,
-                additionalProperties: false,
-                properties: {
-                  name: {
-                    type: "string",
-                    description:
-                      "역사적 위인의 이름 (예: '레오나르도 다 빈치')",
-                  },
-                  reason: {
-                    type: "string",
-                    description:
-                      "왜 이 인물을 선택했는지, 사용자의 현재 모습과의 연결점 설명",
-                  },
-                },
-                required: ["name", "reason"],
-                description: "내가 되고싶은 모습을 대표하는 역사적 위인",
-              },
-            },
-            required: ["characteristics", "historical_figure"],
-            description:
-              "내가 되고싶은 사람에 대한 섹션 (비전 기록이 충분한 경우에만 생성)",
-          },
-        },
-        required: [
-          "vision_days_count",
-          "vision_records_count",
-          "core_visions",
-          "vision_progress_comment",
-          "vision_ai_feedbacks",
-          "desired_self",
-        ],
-      },
-
-      // 7. 마무리 섹션
-      closing_report: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          monthly_title: { type: "string" },
-          monthly_summary: { type: "string" },
-          turning_points: {
-            type: "array",
-            items: { type: "string" },
-            minItems: 0,
-            maxItems: 5,
-          },
-          next_month_focus: { type: "string" },
-          ai_encouragement_message: { type: "string" },
-          // Pro 모드에서만 제공되는 정체성 분석
-          this_month_identity: {
-            anyOf: [
-              {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  visualization: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      characteristics_radar: {
                         type: "object",
                         additionalProperties: false,
                         properties: {
-                          type: { type: "string", enum: ["radar"] },
-                          data: {
-                            type: "array",
-                            items: {
-                              type: "object",
-                              additionalProperties: false,
-                              properties: {
-                                characteristic: { type: "string" },
-                                value: {
-                                  type: "number",
-                                  minimum: 0,
-                                  maximum: 10,
-                                },
-                              },
-                              required: ["characteristic", "value"],
-                            },
-                          },
+                          week: { type: "integer", minimum: 1 },
+                          action: { type: "string" },
+                          success_metric: { type: "string" },
                         },
-                        required: ["type", "data"],
+                        required: ["week", "action", "success_metric"],
                       },
+                      minItems: 0,
                     },
-                    required: ["characteristics_radar"],
                   },
+                  required: ["area", "why", "current_state", "desired_state", "weekly_actions"],
                 },
-                required: ["visualization"],
+                minItems: 0,
               },
-              { type: "null" },
-            ],
+              maintain_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    pattern: { type: "string" },
+                    why_important: { type: "string" },
+                    how_to_maintain: { type: "string" },
+                  },
+                  required: ["pattern", "why_important", "how_to_maintain"],
+                },
+                minItems: 0,
+              },
+              experiment_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    pattern: { type: "string" },
+                    why_suggested: { type: "string" },
+                    how_to_start: { type: "string" },
+                  },
+                  required: ["pattern", "why_suggested", "how_to_start"],
+                },
+                minItems: 0,
+              },
+            },
+            required: ["focus_areas", "maintain_patterns", "experiment_patterns"],
           },
         },
         required: [
-          "monthly_title",
-          "monthly_summary",
-          "turning_points",
-          "next_month_focus",
-          "ai_encouragement_message",
-          "this_month_identity",
+          "vision_evolution",
+          "alignment_analysis",
+          "daily_life_patterns",
+          "identity_alignment",
+          "next_month_plan",
         ],
       },
     },
@@ -1011,13 +436,8 @@ export const MonthlyReportSchema = {
       "date_range",
       "total_days",
       "recorded_days",
-      "summary_report",
-      "daily_life_report",
-      "emotion_report",
-      "insight_report",
-      "execution_report",
-      "vision_report",
-      "closing_report",
+      "title",
+      "vivid_report",
     ],
   },
   strict: true,
