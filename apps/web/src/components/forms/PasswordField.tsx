@@ -22,6 +22,13 @@ export function PasswordField({
   disabled = false,
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const borderColor = error 
+    ? COLORS.status.error 
+    : isFocused || value
+      ? COLORS.brand.primary 
+      : COLORS.border.light;
 
   return (
     <div>
@@ -35,14 +42,16 @@ export function PasswordField({
         <Lock
           className="absolute left-0 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors"
           style={{ 
-            color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary),
-            opacity: value ? 1 : 0.4,
+            color: error ? COLORS.status.error : (value || isFocused ? COLORS.brand.primary : COLORS.text.tertiary),
+            opacity: value || isFocused ? 1 : 0.4,
           }}
         />
         <Input
           type={showPassword ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
           className="pl-8 pr-10 py-3.5 border-0 border-b-2 rounded-none transition-all focus:ring-0 focus:outline-none"
           disabled={disabled}
@@ -50,21 +59,17 @@ export function PasswordField({
             backgroundColor: "transparent",
             fontSize: "16px",
             paddingLeft: "2rem",
-            borderBottomColor: error 
-              ? COLORS.status.error 
-              : value 
-                ? COLORS.brand.primary 
-                : COLORS.border.light,
+            borderBottomColor: borderColor,
             borderBottomWidth: "2px",
           }}
         />
         <div 
           className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
           style={{
-            width: error || value ? "100%" : "0%",
+            width: error || value || isFocused ? "100%" : "0%",
             backgroundColor: error 
               ? COLORS.status.error 
-              : value 
+              : value || isFocused
                 ? COLORS.brand.primary 
                 : "transparent",
           }}
