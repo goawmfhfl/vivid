@@ -15,6 +15,237 @@ import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 import { useCountUp } from "@/hooks/useCountUp";
 
+// 주간 후보 아이템 컴포넌트
+function WeeklyCandidateItem({
+  candidate,
+  generatingWeek,
+  progress,
+  timerProgress,
+  handleCreateFeedback,
+  getWeekRange,
+}: {
+  candidate: { week_start: string; record_count: number };
+  generatingWeek: string | null;
+  progress: { current: number; total: number; currentStep: string } | null;
+  timerProgress: Record<string, number>;
+  handleCreateFeedback: (weekStart: string) => void;
+  getWeekRange: (weekStart: string) => string;
+}) {
+  const isGenerating =
+    generatingWeek === candidate.week_start || progress !== null || timerProgress[candidate.week_start] !== undefined;
+
+  const timerPercentage = timerProgress[candidate.week_start] ?? 0;
+  const serverPercentage = progress
+    ? Math.round((progress.current / progress.total) * 100)
+    : 0;
+  
+  const isComplete = progress && progress.current >= progress.total;
+  const progressPercentage = isComplete
+    ? 100
+    : Math.min(Math.max(timerPercentage, serverPercentage), 99);
+  
+  const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
+
+  return (
+    <div
+      className="flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 relative overflow-hidden group"
+      style={{
+        backgroundColor: COLORS.background.base,
+        border: `1.5px solid ${COLORS.border.light}`,
+        borderRadius: "12px",
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `,
+        backgroundImage: `
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 27px,
+            rgba(127, 143, 122, 0.06) 27px,
+            rgba(127, 143, 122, 0.06) 28px
+          ),
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(127, 143, 122, 0.01) 2px,
+            rgba(127, 143, 122, 0.01) 4px
+          )
+        `,
+        backgroundSize: "100% 28px, 8px 8px",
+        backgroundPosition: "0 2px, 0 0",
+        filter: "contrast(1.02) brightness(1.01)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
+        e.currentTarget.style.boxShadow = `
+          0 4px 16px rgba(127, 143, 122, 0.12),
+          0 2px 6px rgba(0,0,0,0.04),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.borderColor = COLORS.border.light;
+        e.currentTarget.style.boxShadow = `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `;
+      }}
+    >
+      {/* 종이 질감 오버레이 */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-xl"
+        style={{
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+          `,
+          mixBlendMode: "overlay",
+          opacity: 0.5,
+        }}
+      />
+
+      {/* 왼쪽 브랜드 컬러 액센트 라인 */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300"
+        style={{
+          backgroundColor: COLORS.brand.primary,
+          opacity: 0.6,
+        }}
+      />
+
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10 pl-4">
+        <div
+          className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 transition-all duration-300"
+          style={{
+            backgroundColor: COLORS.brand.primary,
+            boxShadow: `0 0 8px ${COLORS.brand.primary}40`,
+          }}
+        />
+        <div className="flex-1 min-w-0">
+          <p
+            className="truncate text-sm sm:text-base mb-0.5"
+            style={{
+              color: COLORS.text.primary,
+              fontSize: "0.9rem",
+              fontWeight: "600",
+              lineHeight: "1.4",
+            }}
+          >
+            {getWeekRange(candidate.week_start)}
+          </p>
+          <p
+            className="text-xs sm:text-sm"
+            style={{
+              color: COLORS.text.tertiary,
+              fontSize: "0.75rem",
+              lineHeight: "1.4",
+            }}
+          >
+            {candidate.record_count}개의 일일 피드백
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+        {/* 진행 상황 표시 (버튼 옆에) */}
+        {(progress || timerProgress[candidate.week_start] !== undefined) && (
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex flex-col items-end gap-0.5 sm:gap-1">
+              <p
+                className="text-xs sm:text-sm"
+                style={{
+                  color: COLORS.text.secondary,
+                  fontSize: "0.6rem",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span className="sm:hidden">
+                  {progress?.currentStep || "생성 중"}
+                </span>
+                <span className="hidden sm:inline">
+                  {progress?.currentStep || "생성 중"}
+                </span>
+              </p>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div
+                  className="h-1 sm:h-1.5 rounded-full overflow-hidden"
+                  style={{
+                    width: "60px",
+                    backgroundColor: COLORS.border.light,
+                  }}
+                >
+                  <div
+                    className="h-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${animatedProgress}%`,
+                      backgroundColor: COLORS.brand.primary,
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-xs"
+                  style={{
+                    color: COLORS.text.secondary,
+                    fontSize: "0.65rem",
+                    fontWeight: "600",
+                    minWidth: "28px",
+                    textAlign: "right",
+                  }}
+                >
+                  {Math.round(animatedProgress)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        <Button
+          onClick={() => handleCreateFeedback(candidate.week_start)}
+          disabled={isGenerating}
+          className="rounded-full px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 text-xs sm:text-sm relative"
+          style={{
+            backgroundColor: isGenerating ? "#9CA89C" : COLORS.brand.primary,
+            color: "white",
+            fontSize: "0.7rem",
+            fontWeight: "500",
+            transition: "all 0.2s",
+            minWidth: "70px",
+          }}
+          onMouseEnter={(e) => {
+            if (!isGenerating) {
+              e.currentTarget.style.backgroundColor = "#5A675A";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isGenerating) {
+              e.currentTarget.style.backgroundColor = COLORS.brand.primary;
+            }
+          }}
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              <span className="hidden sm:inline">생성 중</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">생성하기</span>
+              <span className="sm:hidden">생성</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function WeeklyCandidatesSection() {
   const router = useRouter();
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
@@ -309,241 +540,17 @@ export function WeeklyCandidatesSection() {
         }}
       >
         <div className="space-y-2">
-          {candidatesForCreation.map((candidate) => {
-            const progress =
-              weeklyFeedbackProgress[candidate.week_start] || null;
-            // 진행 상황이 있거나 현재 생성 중이면 로딩 상태로 표시
-            const isGenerating =
-              generatingWeek === candidate.week_start || progress !== null || timerProgress[candidate.week_start] !== undefined;
-
-            // 타이머 기반 progress와 서버 progress 병합
-            const timerPercentage = timerProgress[candidate.week_start] ?? 0;
-            const serverPercentage = progress
-              ? Math.round((progress.current / progress.total) * 100)
-              : 0;
-            
-            // 서버 응답이 완료되면 100%, 그렇지 않으면 타이머와 서버 중 더 높은 값 (최대 99%)
-            const isComplete = progress && progress.current >= progress.total;
-            const progressPercentage = isComplete
-              ? 100
-              : Math.min(Math.max(timerPercentage, serverPercentage), 99);
-            
-            // useCountUp을 사용한 애니메이션 적용
-            const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
-
-            return (
-              <div
-                key={candidate.week_start}
-                className="flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 relative overflow-hidden group"
-                style={{
-                  backgroundColor: COLORS.background.base,
-                  border: `1.5px solid ${COLORS.border.light}`,
-                  borderRadius: "12px",
-                  boxShadow: `
-                    0 2px 8px rgba(0,0,0,0.04),
-                    0 1px 3px rgba(0,0,0,0.02),
-                    inset 0 1px 0 rgba(255,255,255,0.6)
-                  `,
-                  // 종이 질감 배경 패턴
-                  backgroundImage: `
-                    /* 가로 줄무늬 (프로젝트 그린 톤) */
-                    repeating-linear-gradient(
-                      to bottom,
-                      transparent 0px,
-                      transparent 27px,
-                      rgba(127, 143, 122, 0.06) 27px,
-                      rgba(127, 143, 122, 0.06) 28px
-                    ),
-                    /* 종이 텍스처 노이즈 */
-                    repeating-linear-gradient(
-                      45deg,
-                      transparent,
-                      transparent 2px,
-                      rgba(127, 143, 122, 0.01) 2px,
-                      rgba(127, 143, 122, 0.01) 4px
-                    )
-                  `,
-                  backgroundSize: "100% 28px, 8px 8px",
-                  backgroundPosition: "0 2px, 0 0",
-                  filter: "contrast(1.02) brightness(1.01)",
-                }}
-                onClick={(e) => e.stopPropagation()}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
-                  e.currentTarget.style.boxShadow = `
-                    0 4px 16px rgba(127, 143, 122, 0.12),
-                    0 2px 6px rgba(0,0,0,0.04),
-                    inset 0 1px 0 rgba(255,255,255,0.6)
-                  `;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.borderColor = COLORS.border.light;
-                  e.currentTarget.style.boxShadow = `
-                    0 2px 8px rgba(0,0,0,0.04),
-                    0 1px 3px rgba(0,0,0,0.02),
-                    inset 0 1px 0 rgba(255,255,255,0.6)
-                  `;
-                }}
-              >
-                {/* 종이 질감 오버레이 */}
-                <div
-                  className="absolute inset-0 pointer-events-none rounded-xl"
-                  style={{
-                    background: `
-                      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                      radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
-                    `,
-                    mixBlendMode: "overlay",
-                    opacity: 0.5,
-                  }}
-                />
-
-                {/* 왼쪽 브랜드 컬러 액센트 라인 */}
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300"
-                  style={{
-                    backgroundColor: COLORS.brand.primary,
-                    opacity: 0.6,
-                  }}
-                />
-
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10 pl-4">
-                  <div
-                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 transition-all duration-300"
-                    style={{
-                      backgroundColor: COLORS.brand.primary,
-                      boxShadow: `0 0 8px ${COLORS.brand.primary}40`,
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="truncate text-sm sm:text-base mb-0.5"
-                      style={{
-                        color: COLORS.text.primary,
-                        fontSize: "0.9rem",
-                        fontWeight: "600",
-                        lineHeight: "1.4",
-                      }}
-                    >
-                      {getWeekRange(candidate.week_start)}
-                    </p>
-                    <p
-                      className="text-xs sm:text-sm"
-                      style={{
-                        color: COLORS.text.tertiary,
-                        fontSize: "0.75rem",
-                        lineHeight: "1.4",
-                      }}
-                    >
-                      {candidate.record_count}개의 일일 피드백
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-                  {/* 진행 상황 표시 (버튼 옆에) */}
-                  {(progress || timerProgress[candidate.week_start] !== undefined) && (
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <div className="flex flex-col items-end gap-0.5 sm:gap-1">
-                        <p
-                          className="text-xs sm:text-sm"
-                          style={{
-                            color: COLORS.text.secondary,
-                            fontSize: "0.6rem",
-                            fontWeight: "500",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          <span className="sm:hidden">
-                            {progress?.currentStep || "생성 중"}
-                          </span>
-                          <span className="hidden sm:inline">
-                            {progress?.currentStep || "생성 중"}
-                          </span>
-                        </p>
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <div
-                            className="h-1 sm:h-1.5 rounded-full overflow-hidden"
-                            style={{
-                              width: "60px",
-                              backgroundColor: COLORS.border.light,
-                            }}
-                          >
-                            <div
-                              className="h-full transition-all duration-1000 ease-out"
-                              style={{
-                                width: `${animatedProgress}%`,
-                                backgroundColor: COLORS.brand.primary,
-                              }}
-                            />
-                          </div>
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: COLORS.text.secondary,
-                              fontSize: "0.65rem",
-                              fontWeight: "600",
-                              minWidth: "28px",
-                              textAlign: "right",
-                            }}
-                          >
-                            {Math.round(animatedProgress)}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <Button
-                    onClick={() => handleCreateFeedback(candidate.week_start)}
-                    disabled={isGenerating}
-                    className="rounded-full px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 sm:gap-1.5 flex-shrink-0 text-xs relative"
-                    style={{
-                      backgroundColor: isGenerating
-                        ? COLORS.brand.light
-                        : COLORS.brand.primary,
-                      color: "white",
-                      fontSize: "0.7rem",
-                      fontWeight: "500",
-                      transition: "all 0.2s",
-                      minWidth: "70px",
-                      boxShadow: isGenerating
-                        ? "none"
-                        : `0 2px 4px ${COLORS.brand.primary}30`,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isGenerating) {
-                        e.currentTarget.style.backgroundColor = COLORS.brand.secondary;
-                        e.currentTarget.style.boxShadow = `0 4px 8px ${COLORS.brand.primary}40`;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isGenerating) {
-                        e.currentTarget.style.backgroundColor = COLORS.brand.primary;
-                        e.currentTarget.style.boxShadow = `0 2px 4px ${COLORS.brand.primary}30`;
-                      }
-                    }}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
-                        <span className="text-[0.65rem] sm:text-[0.7rem]">
-                          생성 중
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="text-[0.65rem] sm:text-[0.7rem]">
-                          생성하기
-                        </span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+          {candidatesForCreation.map((candidate) => (
+            <WeeklyCandidateItem
+              key={candidate.week_start}
+              candidate={candidate}
+              generatingWeek={generatingWeek}
+              progress={weeklyFeedbackProgress[candidate.week_start] || null}
+              timerProgress={timerProgress}
+              handleCreateFeedback={handleCreateFeedback}
+              getWeekRange={getWeekRange}
+            />
+          ))}
         </div>
       </div>
     </div>

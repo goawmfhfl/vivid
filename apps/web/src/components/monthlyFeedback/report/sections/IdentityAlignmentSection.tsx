@@ -17,6 +17,135 @@ import {
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 
+// 특성 매핑 아이템 컴포넌트
+function TraitMappingItem({
+  mapping,
+  idx,
+  vividColor,
+}: {
+  mapping: VividReport["identity_alignment"]["trait_mapping"][number];
+  idx: number;
+  vividColor: string;
+}) {
+  const matchPercent = Math.round(mapping.match_score * 100);
+  const animatedPercent = useCountUp(matchPercent, 1200);
+  const animatedWidth = useCountUp(matchPercent, 1200);
+
+  return (
+    <div
+      className="relative p-4 rounded-lg overflow-visible"
+      style={{
+        backgroundColor: "rgba(255, 255, 255, 0.6)",
+        border: "1px solid rgba(163, 191, 217, 0.3)",
+      }}
+    >
+      {/* 번호 표시 - 포스트잇 스타일 (왼쪽 위, 작게) */}
+      <div
+        className="absolute -left-2 -top-2 w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+        style={{
+          backgroundColor: `${vividColor}`,
+          border: `2px solid white`,
+          boxShadow: `0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)`,
+          transform: `rotate(-3deg)`,
+        }}
+      >
+        <span
+          className={cn(
+            TYPOGRAPHY.caption.fontSize,
+            TYPOGRAPHY.caption.fontWeight
+          )}
+          style={{ color: "white" }}
+        >
+          {idx + 1}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div>
+          <p
+            className={cn(
+              TYPOGRAPHY.bodySmall.fontSize,
+              "mb-1 uppercase"
+            )}
+            style={{ color: COLORS.text.tertiary }}
+          >
+            현재 나의 모습
+          </p>
+          <p
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              "font-medium"
+            )}
+            style={{ color: COLORS.text.primary }}
+          >
+            {mapping.current}
+          </p>
+        </div>
+        <div>
+          <p
+            className={cn(
+              TYPOGRAPHY.bodySmall.fontSize,
+              "mb-1 uppercase"
+            )}
+            style={{ color: COLORS.text.tertiary }}
+          >
+            목표하는 모습
+          </p>
+          <p
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              "font-medium"
+            )}
+            style={{ color: COLORS.text.primary }}
+          >
+            {mapping.aspired}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="flex-1 h-2 rounded-full overflow-hidden"
+          style={{ backgroundColor: "#E8F0F8" }}
+        >
+          <div
+            className="h-full transition-all duration-1000 ease-out"
+            style={{
+              width: `${animatedWidth}%`,
+              backgroundColor: vividColor,
+            }}
+          />
+        </div>
+        <span
+          className={cn(
+            TYPOGRAPHY.bodySmall.fontSize,
+            "font-semibold whitespace-nowrap"
+          )}
+          style={{ color: vividColor }}
+        >
+          {animatedPercent}%
+        </span>
+      </div>
+      <p
+        className={cn(
+          TYPOGRAPHY.body.fontSize,
+          TYPOGRAPHY.body.lineHeight,
+          "mb-2"
+        )}
+        style={{ color: COLORS.text.secondary }}
+      >
+        {mapping.gap_description}
+      </p>
+      {mapping.progress_evidence &&
+        mapping.progress_evidence.length > 0 && (
+          <EvidenceDropdown
+            evidence={mapping.progress_evidence}
+            color="163, 191, 217"
+            label="진행 증거"
+          />
+        )}
+    </div>
+  );
+}
+
 type IdentityAlignmentSectionProps = {
   identityAlignment: VividReport["identity_alignment"];
   vividColor: string;
@@ -106,126 +235,9 @@ export function IdentityAlignmentSection({
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {identityAlignment.trait_mapping.map((mapping, idx) => {
-                    const matchPercent = Math.round(mapping.match_score * 100);
-                    const animatedPercent = useCountUp(matchPercent, 1200);
-                    const animatedWidth = useCountUp(matchPercent, 1200);
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className="relative p-4 rounded-lg overflow-visible"
-                        style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.6)",
-                          border: "1px solid rgba(163, 191, 217, 0.3)",
-                        }}
-                      >
-                        {/* 번호 표시 - 포스트잇 스타일 (왼쪽 위, 작게) */}
-                        <div
-                          className="absolute -left-2 -top-2 w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                          style={{
-                            backgroundColor: `${vividColor}`,
-                            border: `2px solid white`,
-                            boxShadow: `0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)`,
-                            transform: `rotate(-3deg)`,
-                          }}
-                        >
-                          <span
-                            className={cn(
-                              TYPOGRAPHY.caption.fontSize,
-                              TYPOGRAPHY.caption.fontWeight
-                            )}
-                            style={{ color: "white" }}
-                          >
-                            {idx + 1}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <p
-                              className={cn(
-                                TYPOGRAPHY.bodySmall.fontSize,
-                                "mb-1 uppercase"
-                              )}
-                              style={{ color: COLORS.text.tertiary }}
-                            >
-                              현재 나의 모습
-                            </p>
-                            <p
-                              className={cn(
-                                TYPOGRAPHY.body.fontSize,
-                                "font-medium"
-                              )}
-                              style={{ color: COLORS.text.primary }}
-                            >
-                              {mapping.current}
-                            </p>
-                          </div>
-                          <div>
-                            <p
-                              className={cn(
-                                TYPOGRAPHY.bodySmall.fontSize,
-                                "mb-1 uppercase"
-                              )}
-                              style={{ color: COLORS.text.tertiary }}
-                            >
-                              목표하는 모습
-                            </p>
-                            <p
-                              className={cn(
-                                TYPOGRAPHY.body.fontSize,
-                                "font-medium"
-                              )}
-                              style={{ color: COLORS.text.primary }}
-                            >
-                              {mapping.aspired}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <div
-                            className="flex-1 h-2 rounded-full overflow-hidden"
-                            style={{ backgroundColor: "#E8F0F8" }}
-                          >
-                            <div
-                              className="h-full transition-all duration-1000 ease-out"
-                              style={{
-                                width: `${animatedWidth}%`,
-                                backgroundColor: vividColor,
-                              }}
-                            />
-                          </div>
-                          <span
-                            className={cn(
-                              TYPOGRAPHY.bodySmall.fontSize,
-                              "font-semibold whitespace-nowrap"
-                            )}
-                            style={{ color: vividColor }}
-                          >
-                            {animatedPercent}%
-                          </span>
-                        </div>
-                        <p
-                          className={cn(
-                            TYPOGRAPHY.body.fontSize,
-                            TYPOGRAPHY.body.lineHeight,
-                            "mb-2"
-                          )}
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          {mapping.gap_description}
-                        </p>
-                        {mapping.progress_evidence &&
-                          mapping.progress_evidence.length > 0 && (
-                            <EvidenceDropdown
-                              evidence={mapping.progress_evidence}
-                              color="163, 191, 217"
-                              label="진행 증거"
-                            />
-                          )}
-                      </div>
-                    );
-                  })}
+                  {identityAlignment.trait_mapping.map((mapping, idx) => (
+                    <TraitMappingItem key={idx} mapping={mapping} idx={idx} vividColor={vividColor} />
+                  ))}
                 </div>
               </div>
             </ScrollAnimation>
