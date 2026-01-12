@@ -19,10 +19,11 @@ export async function fetchMonthlyFeedbackList(
   supabase: SupabaseClient,
   userId: string
 ): Promise<MonthlyFeedbackListItem[]> {
+  // title 컬럼이 없을 수 있으므로 먼저 기본 필드만 조회
   const { data, error } = await supabase
     .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
     .select(
-      "id, month, month_label, date_range, recorded_days, title, is_ai_generated, created_at"
+      "id, month, month_label, date_range, recorded_days, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
     .order("month", { ascending: false });
@@ -31,10 +32,44 @@ export async function fetchMonthlyFeedbackList(
     throw new Error(`Failed to fetch monthly feedback list: ${error.message}`);
   }
 
-  return (data || []).map((row) => {
-    // title 복호화
-    const decryptedTitle = decryptJsonbFields(row.title) as string | null;
+  // title 컬럼이 있는지 확인하고, 있으면 별도로 조회
+  const rows = data || [];
+  const titleMap = new Map<string, string | null>();
 
+  if (rows.length > 0) {
+    try {
+      // title 컬럼 존재 여부 확인을 위해 첫 번째 행으로 테스트
+      const testQuery = await supabase
+        .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
+        .select("id, title")
+        .eq("id", rows[0].id)
+        .single();
+
+      // title 컬럼이 존재하는 경우 모든 행의 title 조회
+      if (!testQuery.error && testQuery.data?.title !== undefined) {
+        const ids = rows.map((row) => row.id);
+        const { data: titleData } = await supabase
+          .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
+          .select("id, title")
+          .eq("user_id", userId)
+          .in("id", ids);
+
+        if (titleData) {
+          titleData.forEach((item) => {
+            if (item.title) {
+              const decryptedTitle = decryptJsonbFields(item.title) as string | null;
+              titleMap.set(String(item.id), decryptedTitle);
+            }
+          });
+        }
+      }
+    } catch {
+      // title 컬럼이 없는 경우 무시하고 계속 진행
+    }
+  }
+
+  return rows.map((row) => {
+    const decryptedTitle = titleMap.get(String(row.id));
     const title = decryptedTitle || row.month_label || "";
     const monthlyScore = 0; // vivid_report에서 계산 가능하지만 리스트에서는 0으로 설정
     const dateRange = row.date_range as {
@@ -93,7 +128,7 @@ export async function fetchMonthlyFeedbackByMonth(
     date_range: data.date_range as MonthlyFeedbackNew["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    title: data.title as string,
+    title: (data.title as string | undefined) || data.month_label || "",
     vivid_report: data.vivid_report as MonthlyFeedbackNew["vivid_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
@@ -139,7 +174,7 @@ export async function fetchMonthlyFeedbackDetail(
     date_range: data.date_range as MonthlyFeedbackNew["date_range"],
     total_days: data.total_days,
     recorded_days: data.recorded_days,
-    title: data.title as string,
+    title: (data.title as string | undefined) || data.month_label || "",
     vivid_report: data.vivid_report as MonthlyFeedbackNew["vivid_report"],
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,

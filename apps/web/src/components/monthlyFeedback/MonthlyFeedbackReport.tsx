@@ -6,7 +6,6 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
-import { TestPanel } from "./TestPanel";
 import { VividSection } from "./report/VividSection";
 import { cn } from "@/lib/utils";
 
@@ -14,14 +13,12 @@ type MonthlyFeedbackReportProps = {
   data: MonthlyFeedbackNew;
   onBack: () => void;
   isPro?: boolean;
-  onTogglePro?: (isPro: boolean) => void;
 };
 
 export function MonthlyFeedbackReport({
   data,
   onBack,
   isPro = false,
-  onTogglePro = () => {},
 }: MonthlyFeedbackReportProps) {
   const router = useRouter();
 
@@ -51,28 +48,50 @@ export function MonthlyFeedbackReport({
 
         {/* Title Section */}
         {data.title && (
-          <section className="mb-8 sm:mb-12">
+          <section className="mb-8 sm:mb-10">
             <ScrollAnimation>
-              <div className="text-center">
-                <h1
-                  className={cn(
-                    TYPOGRAPHY.h1.fontSize,
-                    TYPOGRAPHY.h1.fontWeight,
-                    "mb-2"
-                  )}
-                  style={{ color: COLORS.text.primary }}
+              <div className="relative">
+                <div
+                  className="rounded-2xl p-6 sm:p-8 border"
+                  style={{
+                    background: `linear-gradient(135deg, rgba(163, 191, 217, 0.12) 0%, rgba(163, 191, 217, 0.06) 50%, rgba(255, 255, 255, 1) 100%)`,
+                    borderColor: "rgba(163, 191, 217, 0.3)",
+                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(163, 191, 217, 0.12)",
+                  }}
                 >
-                  {data.title}
-                </h1>
-                <p
-                  className={cn(
-                    TYPOGRAPHY.body.fontSize,
-                    TYPOGRAPHY.body.lineHeight
-                  )}
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  {data.month_label} ({data.recorded_days}일 기록)
-                </p>
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ backgroundColor: "rgba(163, 191, 217, 0.15)" }}>
+                      <span
+                        className={cn(
+                          TYPOGRAPHY.caption.fontSize,
+                          TYPOGRAPHY.caption.fontWeight,
+                          "uppercase tracking-wide"
+                        )}
+                        style={{ color: COLORS.brand.primary }}
+                      >
+                        {data.month_label}
+                      </span>
+                    </div>
+                    <h1
+                      className={cn(
+                        TYPOGRAPHY.h2.fontSize,
+                        TYPOGRAPHY.h2.fontWeight,
+                        "mb-3 leading-tight"
+                      )}
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      {data.title}
+                    </h1>
+                    <p
+                      className={cn(
+                        TYPOGRAPHY.body.fontSize
+                      )}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      {data.recorded_days}일간의 기록을 바탕으로 분석했습니다
+                    </p>
+                  </div>
+                </div>
               </div>
             </ScrollAnimation>
           </section>
@@ -103,9 +122,6 @@ export function MonthlyFeedbackReport({
           </Button>
         </div>
       </div>
-
-      {/* TestPanel 추가 */}
-      <TestPanel view={data} isPro={isPro} onTogglePro={onTogglePro} />
     </div>
   );
 }

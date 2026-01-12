@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -45,10 +44,6 @@ export function MonthlyFeedbackView({
   const refetch = isValidId ? refetchById : refetchByMonth;
 
   const { isPro: subscriptionIsPro } = useSubscription();
-  const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
-
-  // 테스트 모드가 활성화되어 있으면 테스트 값을 사용, 아니면 실제 구독 상태 사용
-  const isPro = testIsPro !== null ? testIsPro : subscriptionIsPro;
 
   if (isLoading) {
     return (
@@ -138,8 +133,7 @@ export function MonthlyFeedbackView({
     <MonthlyFeedbackReport
       data={data}
       onBack={onBack}
-      isPro={isPro}
-      onTogglePro={(newIsPro) => setTestIsPro(newIsPro)}
+      isPro={subscriptionIsPro}
     />
   );
 }

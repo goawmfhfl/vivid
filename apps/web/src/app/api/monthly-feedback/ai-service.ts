@@ -1,14 +1,9 @@
 import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
-import type { ProgressCallback, DailyFeedbackForMonthly } from "./types";
+import type { DailyFeedbackForMonthly } from "./types";
 import {
   generateVividReport,
   generateTitle,
 } from "./sections";
-
-/**
- * 진행 상황 콜백 타입 (re-export)
- */
-export type { ProgressCallback } from "./types";
 
 /**
  * Daily Feedback 배열을 기반으로 월간 피드백 생성
@@ -20,7 +15,6 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback,
   userId?: string
 ): Promise<MonthlyFeedbackNew> {
   const [year, monthNum] = month.split("-");
@@ -40,8 +34,6 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
     month,
     dateRange,
     isPro,
-    progressCallback,
-    1,
     userId
   );
 
@@ -52,8 +44,6 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
     month,
     dateRange,
     isPro,
-    progressCallback,
-    2,
     userId
   );
 

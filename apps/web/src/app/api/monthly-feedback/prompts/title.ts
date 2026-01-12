@@ -24,7 +24,6 @@ export function buildTitlePrompt(
 
 **비전 진화 스토리 요약:**
 - 핵심 비전: ${vividReport.vision_evolution.core_visions.map(v => v.vision).slice(0, 3).join(", ")}
-- 명확도 추세: ${vividReport.vision_evolution.clarity_trend}
 
 **일치도 분석 요약:**
 - 평균 일치도: ${vividReport.alignment_analysis.score_timeline.length > 0 

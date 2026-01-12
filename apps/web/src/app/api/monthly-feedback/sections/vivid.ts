@@ -1,5 +1,5 @@
 import type { VividReport } from "@/types/monthly-feedback-new";
-import type { ProgressCallback, DailyFeedbackForMonthly } from "../types";
+import type { DailyFeedbackForMonthly } from "../types";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
 import { SYSTEM_PROMPT_VIVID } from "../system-prompts";
@@ -14,14 +14,8 @@ export async function generateVividReport(
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback,
-  step: number = 1,
   userId?: string
 ): Promise<VividReport> {
-  if (progressCallback) {
-    progressCallback(step, 2, "vivid_report");
-  }
-
   const schema = getSectionSchema("vivid_report", isPro);
   const userPrompt = buildVividReportPrompt(dailyFeedbacks, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, userPrompt);

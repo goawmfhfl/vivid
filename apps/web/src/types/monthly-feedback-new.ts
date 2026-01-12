@@ -380,8 +380,6 @@ export type VividReport = {
       last_date: string;
       evolution_story: string;
     }>;
-    clarity_trend: "구체화" | "모호해짐" | "유지";
-    clarity_explanation: string;
     priority_shifts: Array<{
       from: string;
       to: string;
@@ -492,11 +490,6 @@ export type VividReport = {
       why: string;
       current_state: string;
       desired_state: string;
-      weekly_actions: Array<{
-        week: number;
-        action: string;
-        success_metric: string;
-      }>;
     }>;
     maintain_patterns: Array<{
       pattern: string;

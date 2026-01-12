@@ -13,6 +13,7 @@ import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
+import { useCountUp } from "@/hooks/useCountUp";
 
 export function WeeklyCandidatesSection() {
   const router = useRouter();
@@ -326,6 +327,9 @@ export function WeeklyCandidatesSection() {
             const progressPercentage = isComplete
               ? 100
               : Math.min(Math.max(timerPercentage, serverPercentage), 99);
+            
+            // useCountUp을 사용한 애니메이션 적용
+            const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
 
             return (
               <div
@@ -467,9 +471,9 @@ export function WeeklyCandidatesSection() {
                             }}
                           >
                             <div
-                              className="h-full transition-all duration-500 ease-out"
+                              className="h-full transition-all duration-1000 ease-out"
                               style={{
-                                width: `${progressPercentage}%`,
+                                width: `${animatedProgress}%`,
                                 backgroundColor: COLORS.brand.primary,
                               }}
                             />
@@ -484,7 +488,7 @@ export function WeeklyCandidatesSection() {
                               textAlign: "right",
                             }}
                           >
-                            {Math.round(progressPercentage)}%
+                            {Math.round(animatedProgress)}%
                           </span>
                         </div>
                       </div>

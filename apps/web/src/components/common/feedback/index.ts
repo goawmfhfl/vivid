@@ -9,3 +9,6 @@ export type { ContentCardProps } from "./ContentCard";
 
 export { KeywordCard } from "./KeywordCard";
 export type { KeywordCardProps } from "./KeywordCard";
+
+export { StrengthsWeaknessesCard, EvidenceDropdown } from "./StrengthsWeaknessesCard";
+export type { StrengthsWeaknessesCardProps, AreaItem } from "./StrengthsWeaknessesCard";

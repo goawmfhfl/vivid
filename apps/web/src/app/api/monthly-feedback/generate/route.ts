@@ -40,7 +40,17 @@ export const maxDuration = 300;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, month }: { userId: string; month: string } = body;
+    const { 
+      userId, 
+      month, 
+      start_date, 
+      end_date 
+    }: { 
+      userId: string; 
+      month: string;
+      start_date?: string;
+      end_date?: string;
+    } = body;
 
     // 요청 검증
     if (!userId || !month) {
@@ -63,8 +73,10 @@ export async function POST(request: NextRequest) {
     // Pro 멤버십 확인
     const isPro = (await verifySubscription(userId)).isPro;
 
-    // 날짜 범위 계산
-    const dateRange = getMonthDateRange(month);
+    // 날짜 범위 계산 (커스텀 날짜가 있으면 사용, 없으면 월 전체)
+    const dateRange = start_date && end_date
+      ? { start_date, end_date }
+      : getMonthDateRange(month);
 
     // 1️⃣ Daily Feedback 데이터 조회
     const dailyFeedbacks = await fetchDailyFeedbacksByMonth(
@@ -88,7 +100,6 @@ export async function POST(request: NextRequest) {
       month,
       dateRange,
       isPro,
-      undefined, // progressCallback 제거
       userId
     );
 

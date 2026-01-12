@@ -1,20 +1,16 @@
 "use client";
 
 import { MonthlyFeedbackView } from "@/components/monthlyFeedback/MonthlyFeedbackView";
-import { useRouter } from "next/navigation";
-import { use } from "react";
+import { useRouter, useParams } from "next/navigation";
 
-export default function MonthlyViewPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function MonthlyViewPage() {
   const router = useRouter();
-  const resolvedParams = use(params);
+  const params = useParams();
+  const id = params?.id as string;
 
   const handleBack = () => {
     router.push("/reports/monthly");
   };
 
-  return <MonthlyFeedbackView id={resolvedParams.id} onBack={handleBack} />;
+  return <MonthlyFeedbackView id={id} onBack={handleBack} />;
 }

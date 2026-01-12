@@ -8,6 +8,7 @@ import { filterMonthlyCandidatesForCreation } from "../monthlyFeedback/monthly-c
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
 import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import { useCountUp } from "@/hooks/useCountUp";
 
 export function MonthlyCandidatesSection({
   referenceDate,
@@ -197,6 +198,9 @@ export function MonthlyCandidatesSection({
               ? Math.round((progress.current / progress.total) * 100)
               : 0;
             const progressPercentage = Math.min(actualPercentage, 99);
+            
+            // useCountUp을 사용한 애니메이션 적용
+            const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
 
             // 섹션 이름을 한글로 변환 (브랜딩 컨셉에 맞게 친절하게)
             const getSectionNameKR = (sectionName: string) => {
@@ -277,9 +281,9 @@ export function MonthlyCandidatesSection({
                             }}
                           >
                             <div
-                              className="h-full transition-all duration-500 ease-out"
+                              className="h-full transition-all duration-1000 ease-out"
                               style={{
-                                width: `${progressPercentage}%`,
+                                width: `${animatedProgress}%`,
                                 backgroundColor: "#6B7A6F",
                               }}
                             />
@@ -294,7 +298,7 @@ export function MonthlyCandidatesSection({
                               textAlign: "right",
                             }}
                           >
-                            {progressPercentage}%
+                            {Math.round(animatedProgress)}%
                           </span>
                         </div>
                       </div>

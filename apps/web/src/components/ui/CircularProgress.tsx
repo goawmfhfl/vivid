@@ -1,5 +1,7 @@
 "use client";
 
+import { useCountUp } from "@/hooks/useCountUp";
+
 interface CircularProgressProps {
   percentage: number;
   size?: number;
@@ -7,6 +9,8 @@ interface CircularProgressProps {
   showText?: boolean;
   textSize?: "sm" | "md" | "lg";
   className?: string;
+  animated?: boolean;
+  duration?: number;
 }
 
 export function CircularProgress({
@@ -16,10 +20,13 @@ export function CircularProgress({
   showText = true,
   textSize = "md",
   className = "",
+  animated = true,
+  duration = 1000,
 }: CircularProgressProps) {
+  const animatedPercentage = useCountUp(percentage, duration, animated);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (percentage / 100) * circumference;
+  const offset = circumference - (animatedPercentage / 100) * circumference;
 
   const textSizeClasses = {
     sm: "text-xs",
@@ -58,9 +65,9 @@ export function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="transition-all duration-500 ease-out"
+          className="transition-all duration-1000 ease-out"
           style={{
-            transition: "stroke-dashoffset 0.5s ease-out",
+            transition: "stroke-dashoffset 1s ease-out",
           }}
         />
       </svg>
@@ -73,7 +80,7 @@ export function CircularProgress({
             fontWeight: "600",
           }}
         >
-          {Math.round(percentage)}%
+          {Math.round(animatedPercentage)}%
         </div>
       )}
     </div>

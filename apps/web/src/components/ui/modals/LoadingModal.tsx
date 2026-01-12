@@ -4,6 +4,7 @@ import { BaseModal } from "./BaseModal";
 import { DialogTitle } from "../dialog";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { COLORS } from "@/lib/design-system";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface LoadingModalProps {
   open: boolean;
@@ -27,6 +28,8 @@ export function LoadingModal({
   const progressPercentage = progress
     ? Math.round((progress.current / progress.total) * 100)
     : undefined;
+  
+  const animatedProgress = useCountUp(progressPercentage ?? 0, 1000, !!progress);
 
   return (
     <BaseModal open={open} closable={closable} onClose={onClose}>
@@ -45,9 +48,9 @@ export function LoadingModal({
                 }}
               >
                 <div
-                  className="h-full transition-all duration-300 ease-out"
+                  className="h-full transition-all duration-1000 ease-out"
                   style={{
-                    width: `${progressPercentage}%`,
+                    width: `${animatedProgress}%`,
                     backgroundColor: COLORS.brand.primary,
                   }}
                 />
@@ -60,7 +63,7 @@ export function LoadingModal({
                 className="text-sm font-medium"
                 style={{ color: COLORS.text.primary }}
               >
-                {progressPercentage}% 완료
+                {animatedProgress}% 완료
               </div>
               <div
                 className="text-xs mt-1"

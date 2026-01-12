@@ -1,4 +1,4 @@
-import type { ProgressCallback, DailyFeedbackForMonthly } from "../types";
+import type { DailyFeedbackForMonthly } from "../types";
 import type { VividReport } from "@/types/monthly-feedback-new";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
@@ -15,19 +15,13 @@ export async function generateTitle(
   month: string,
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
-  progressCallback?: ProgressCallback,
-  step: number = 2,
   userId?: string
 ): Promise<string> {
-  if (progressCallback) {
-    progressCallback(step, 2, "title");
-  }
-
   const schema = getSectionSchema("title", isPro);
   const userPrompt = buildTitlePrompt(dailyFeedbacks, vividReport, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_TITLE, userPrompt);
 
-  const result = await generateSection<{ title: string }>(
+  const result = await generateSection<string>(
     SYSTEM_PROMPT_TITLE,
     userPrompt,
     schema,
@@ -38,5 +32,5 @@ export async function generateTitle(
     "monthly_feedback"
   );
 
-  return result.title;
+  return result;
 }

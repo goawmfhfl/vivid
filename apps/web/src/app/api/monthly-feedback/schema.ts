@@ -49,11 +49,6 @@ export const MonthlyReportSchema = {
                 },
                 minItems: 0,
               },
-              clarity_trend: {
-                type: "string",
-                enum: ["구체화", "모호해짐", "유지"],
-              },
-              clarity_explanation: { type: "string" },
               priority_shifts: {
                 type: "array",
                 items: {
@@ -70,7 +65,7 @@ export const MonthlyReportSchema = {
                 minItems: 0,
               },
             },
-            required: ["core_visions", "clarity_trend", "clarity_explanation", "priority_shifts"],
+            required: ["core_visions", "priority_shifts"],
           },
           // 2. 현재-미래 일치도 분석 (25%)
           alignment_analysis: {
@@ -370,22 +365,8 @@ export const MonthlyReportSchema = {
                     why: { type: "string" },
                     current_state: { type: "string" },
                     desired_state: { type: "string" },
-                    weekly_actions: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          week: { type: "integer", minimum: 1 },
-                          action: { type: "string" },
-                          success_metric: { type: "string" },
-                        },
-                        required: ["week", "action", "success_metric"],
-                      },
-                      minItems: 0,
-                    },
                   },
-                  required: ["area", "why", "current_state", "desired_state", "weekly_actions"],
+                  required: ["area", "why", "current_state", "desired_state"],
                 },
                 minItems: 0,
               },

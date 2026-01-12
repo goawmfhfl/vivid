@@ -1,0 +1,425 @@
+"use client";
+
+import {
+  Target,
+  Calendar,
+  TrendingUp,
+} from "lucide-react";
+import type { VividReport } from "@/types/monthly-feedback-new";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
+import {
+  GradientCard,
+} from "@/components/common/feedback";
+import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
+import { useCountUp } from "@/hooks/useCountUp";
+
+type VisionEvolutionSectionProps = {
+  visionEvolution: VividReport["vision_evolution"];
+  vividColor: string;
+};
+
+export function VisionEvolutionSection({
+  visionEvolution,
+  vividColor,
+}: VisionEvolutionSectionProps) {
+  if (!visionEvolution) return null;
+
+  return (
+    <div className="space-y-6">
+      <GradientCard gradientColor="163, 191, 217">
+        <div className="flex items-center gap-3 mb-6">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${vividColor}, ${vividColor}dd)`,
+              border: `2px solid ${vividColor}40`,
+              boxShadow: `0 2px 8px ${vividColor}20`,
+            }}
+          >
+            <span
+              className={cn(
+                TYPOGRAPHY.h4.fontSize,
+                TYPOGRAPHY.h4.fontWeight
+              )}
+              style={{ color: "white" }}
+            >
+              1
+            </span>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="w-5 h-5" style={{ color: vividColor }} />
+              <p
+                className={cn(
+                  TYPOGRAPHY.h3.fontSize,
+                  TYPOGRAPHY.h3.fontWeight
+                )}
+                style={{ color: COLORS.text.primary }}
+              >
+                한 달간의 목표 변화
+              </p>
+            </div>
+            <p
+              className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+              style={{ color: COLORS.text.secondary }}
+            >
+              이번 달에 목표가 어떻게 변화했는지 시간순으로 확인합니다
+            </p>
+          </div>
+        </div>
+
+        {/* 핵심 비전들 */}
+        {visionEvolution.core_visions &&
+          visionEvolution.core_visions.length > 0 && (
+            <ScrollAnimation>
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${vividColor}20`,
+                      border: `1px solid ${vividColor}40`,
+                    }}
+                  >
+                    <span
+                      className={cn(
+                        TYPOGRAPHY.bodySmall.fontSize,
+                        TYPOGRAPHY.bodySmall.fontWeight
+                      )}
+                      style={{ color: vividColor }}
+                    >
+                      1-1
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      TYPOGRAPHY.h3.fontSize,
+                      TYPOGRAPHY.h3.fontWeight
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    핵심 비전들
+                  </p>
+                </div>
+                <div className="space-y-6">
+                  {visionEvolution.core_visions.map((vision, idx) => {
+                    const consistencyPercent = Math.round(vision.consistency * 100);
+                    const animatedPercent = useCountUp(consistencyPercent, 1200);
+                    const animatedWidth = useCountUp(consistencyPercent, 1200);
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className="relative p-5 rounded-xl transition-all duration-300 hover:shadow-lg overflow-visible"
+                        style={{
+                          background: `linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7))`,
+                          border: `1.5px solid rgba(163, 191, 217, 0.3)`,
+                          boxShadow: `0 2px 8px rgba(163, 191, 217, 0.1)`,
+                        }}
+                      >
+                        {/* 번호 표시 - 포스트잇 스타일 (왼쪽 위, 작게) */}
+                        <div
+                          className="absolute -left-2 -top-2 w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: `${vividColor}`,
+                            border: `2px solid white`,
+                            boxShadow: `0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)`,
+                            transform: `rotate(-3deg)`,
+                          }}
+                        >
+                          <span
+                            className={cn(
+                              TYPOGRAPHY.caption.fontSize,
+                              TYPOGRAPHY.caption.fontWeight
+                            )}
+                            style={{ color: "white" }}
+                          >
+                            {idx + 1}
+                          </span>
+                        </div>
+                        {/* 1. 일관성 프로그래스 바 */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4" style={{ color: vividColor }} />
+                              <span
+                                className={cn(
+                                  TYPOGRAPHY.bodySmall.fontSize,
+                                  TYPOGRAPHY.bodySmall.fontWeight
+                                )}
+                                style={{ color: COLORS.text.secondary }}
+                              >
+                                일관성
+                              </span>
+                            </div>
+                            <span
+                              className={cn(
+                                TYPOGRAPHY.bodySmall.fontSize,
+                                TYPOGRAPHY.bodySmall.fontWeight
+                              )}
+                              style={{ color: vividColor }}
+                            >
+                              {animatedPercent}%
+                            </span>
+                          </div>
+                          <div
+                            className="w-full h-2 rounded-full overflow-hidden"
+                            style={{
+                              backgroundColor: `${vividColor}15`,
+                            }}
+                          >
+                            <div
+                              className="h-full rounded-full transition-all duration-1000 ease-out"
+                              style={{
+                                width: `${animatedWidth}%`,
+                                background: `linear-gradient(90deg, ${vividColor}, ${vividColor}dd)`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                      {/* 2. 제목 */}
+                      <p
+                        className={cn(
+                          TYPOGRAPHY.body.fontSize,
+                          TYPOGRAPHY.body.fontWeight,
+                          "mb-3"
+                        )}
+                        style={{ color: COLORS.text.primary }}
+                      >
+                        {vision.vision}
+                      </p>
+
+                      {/* 3. 날짜 */}
+                      <div className="flex items-center gap-1.5 mb-4">
+                        <Calendar className="w-4 h-4" style={{ color: vividColor }} />
+                        <p
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          {vision.first_date} ~ {vision.last_date}
+                        </p>
+                      </div>
+
+                      {/* 4. 설명 */}
+                      <div
+                        className="pt-4 border-t"
+                        style={{ borderColor: `${vividColor}20` }}
+                      >
+                        <p
+                          className={cn(
+                            TYPOGRAPHY.body.fontSize,
+                            TYPOGRAPHY.body.lineHeight,
+                            "leading-relaxed"
+                          )}
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          {vision.evolution_story}
+                        </p>
+                      </div>
+                    </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </ScrollAnimation>
+          )}
+
+        {/* 우선순위 변화 - 모던한 디자인 */}
+        {visionEvolution.priority_shifts &&
+          visionEvolution.priority_shifts.length > 0 && (
+            <ScrollAnimation>
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      backgroundColor: `${vividColor}20`,
+                      border: `1px solid ${vividColor}40`,
+                    }}
+                  >
+                    <span
+                      className={cn(
+                        TYPOGRAPHY.bodySmall.fontSize,
+                        TYPOGRAPHY.bodySmall.fontWeight
+                      )}
+                      style={{ color: vividColor }}
+                    >
+                      1-3
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      TYPOGRAPHY.h3.fontSize,
+                      TYPOGRAPHY.h3.fontWeight
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    우선순위 변화
+                  </p>
+                </div>
+                <div className="mb-6">
+                  <div className="space-y-4">
+                    {visionEvolution.priority_shifts.map((shift, idx) => (
+                      <div
+                        key={idx}
+                        className="group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))`,
+                          border: `1.5px solid ${vividColor}30`,
+                          boxShadow: `0 2px 8px ${vividColor}15`,
+                        }}
+                      >
+                        {/* 번호 표시 - 포스트잇 스타일 (왼쪽 위, 작게) */}
+                        <div
+                          className="absolute -left-2 -top-2 w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: `${vividColor}`,
+                            border: `2px solid white`,
+                            boxShadow: `0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1)`,
+                            transform: `rotate(-3deg)`,
+                          }}
+                        >
+                          <span
+                            className={cn(
+                              TYPOGRAPHY.caption.fontSize,
+                              TYPOGRAPHY.caption.fontWeight
+                            )}
+                            style={{ color: "white" }}
+                          >
+                            {idx + 1}
+                          </span>
+                        </div>
+                        {/* 헤더: 변화 방향 */}
+                        <div
+                          className="p-4 pb-4 border-b"
+                          style={{ borderColor: `${vividColor}20` }}
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* 이전 우선순위 */}
+                            <div
+                              className="p-4 rounded-lg"
+                              style={{
+                                backgroundColor: `rgba(163, 191, 217, 0.12)`,
+                                border: `1px solid rgba(163, 191, 217, 0.25)`,
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: `${vividColor}60` }}
+                                />
+                                <p
+                                  className={cn(
+                                    TYPOGRAPHY.bodySmall.fontSize,
+                                    TYPOGRAPHY.bodySmall.fontWeight,
+                                    "uppercase"
+                                  )}
+                                  style={{ color: COLORS.text.tertiary }}
+                                >
+                                  이전
+                                </p>
+                              </div>
+                              <p
+                                className={cn(
+                                  TYPOGRAPHY.body.fontSize,
+                                  TYPOGRAPHY.body.fontWeight,
+                                  "leading-snug"
+                                )}
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {shift.from}
+                              </p>
+                            </div>
+
+                            {/* 새로운 우선순위 */}
+                            <div
+                              className="p-4 rounded-lg"
+                              style={{
+                                backgroundColor: `rgba(163, 191, 217, 0.12)`,
+                                border: `1px solid rgba(163, 191, 217, 0.25)`,
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: vividColor }}
+                                />
+                                <p
+                                  className={cn(
+                                    TYPOGRAPHY.bodySmall.fontSize,
+                                    TYPOGRAPHY.bodySmall.fontWeight,
+                                    "uppercase"
+                                  )}
+                                  style={{ color: COLORS.text.tertiary }}
+                                >
+                                  이후
+                                </p>
+                              </div>
+                              <p
+                                className={cn(
+                                  TYPOGRAPHY.body.fontSize,
+                                  TYPOGRAPHY.body.fontWeight,
+                                  "leading-snug"
+                                )}
+                                style={{ color: COLORS.text.primary }}
+                              >
+                                {shift.to}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 바디: 시간과 이유 */}
+                        <div className="p-4 pt-3">
+                          {/* 시간 정보 */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <div
+                              className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+                            style={{
+                              backgroundColor: `rgba(163, 191, 217, 0.12)`,
+                              border: `1px solid rgba(163, 191, 217, 0.25)`,
+                            }}
+                            >
+                              <Calendar className="w-3 h-3" style={{ color: vividColor }} />
+                            </div>
+                            <p
+                              className={cn(
+                                TYPOGRAPHY.bodySmall.fontSize,
+                                TYPOGRAPHY.bodySmall.fontWeight
+                              )}
+                              style={{ color: COLORS.text.secondary }}
+                            >
+                              {shift.when}
+                            </p>
+                          </div>
+
+                          {/* 이유 */}
+                          <div
+                            className="pt-3 border-t"
+                            style={{ borderColor: `${vividColor}15` }}
+                          >
+                            <p
+                              className={cn(
+                                TYPOGRAPHY.body.fontSize,
+                                TYPOGRAPHY.body.lineHeight,
+                                "leading-relaxed"
+                              )}
+                              style={{ color: COLORS.text.secondary }}
+                            >
+                              {shift.why}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </ScrollAnimation>
+          )}
+      </GradientCard>
+    </div>
+  );
+}
