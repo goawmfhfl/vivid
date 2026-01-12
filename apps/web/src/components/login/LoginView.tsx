@@ -110,18 +110,26 @@ export function LoginView() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 py-8"
+      className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div className="w-full max-w-md">
         <AuthHeader subtitle="하루 10분 기록으로, 나를 선명하게" />
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-          aria-busy={loginMutation.isPending}
+        {/* Form Card */}
+        <div
+          className="rounded-2xl p-8"
+          style={{
+            backgroundColor: COLORS.surface.elevated,
+            boxShadow: `0 4px 24px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)`,
+            border: `1px solid ${COLORS.border.light}`,
+          }}
         >
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            aria-busy={loginMutation.isPending}
+          >
           {/* General Error */}
           {errors.general && (
             <div
@@ -198,18 +206,18 @@ export function LoginView() {
           </div>
 
           {/* 회원가입하기 버튼 - 이메일/비밀번호 찾기 자리 */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 pt-2">
             <button
               type="button"
               onClick={() => router.push("/signup")}
-              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              className={cn("underline hover:opacity-70 transition-opacity", TYPOGRAPHY.body.fontSize)}
               style={{ color: COLORS.brand.primary }}
             >
               계정이 없으신가요? 회원가입하기
             </button>
           </div>
 
-          <div className="relative py-3">
+          <div className="relative py-4">
             <div className="absolute inset-0 flex items-center">
               <div
                 className="w-full border-t"
@@ -220,9 +228,8 @@ export function LoginView() {
               <span
                 className={cn("px-4", TYPOGRAPHY.caption.fontSize)}
                 style={{
-                  backgroundColor: COLORS.background.base,
-                  color: COLORS.text.secondary,
-                  opacity: 0.6,
+                  backgroundColor: COLORS.surface.elevated,
+                  color: COLORS.text.tertiary,
                 }}
               >
                 간편 로그인
@@ -230,51 +237,51 @@ export function LoginView() {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-4">
-            <div className="flex flex-col items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  kakaoLoginMutation.mutate();
-                }}
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:opacity-80"
-                style={{
-                  backgroundColor: "#FEE500",
-                }}
-                title="카카오 로그인"
-                disabled={kakaoLoginMutation.isPending}
-              >
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
-                    fill="#000000"
-                  />
-                </svg>
-              </button>
-            </div>
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                kakaoLoginMutation.mutate();
+              }}
+              className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:opacity-80 hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: "#FEE500",
+                boxShadow: `0 2px 12px rgba(254, 229, 0, 0.3)`,
+              }}
+              title="카카오 로그인"
+              disabled={kakaoLoginMutation.isPending}
+            >
+              <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
+                  fill="#000000"
+                />
+              </svg>
+            </button>
           </div>
 
           {/* 이메일/비밀번호 찾기 - 아래로 이동 */}
-          <div className="flex items-center justify-center gap-3 pt-2">
+          <div className="flex items-center justify-center gap-3 pt-4">
             <button
               type="button"
               onClick={() => setFindEmailDialogOpen(true)}
-              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              className={cn("underline hover:opacity-70 transition-opacity", TYPOGRAPHY.bodySmall.fontSize)}
               style={{ color: COLORS.brand.primary }}
             >
               이메일 찾기
             </button>
-            <span style={{ color: COLORS.brand.primary }}>|</span>
+            <span style={{ color: COLORS.text.tertiary }}>|</span>
             <button
               type="button"
               onClick={() => setFindPasswordDialogOpen(true)}
-              className={cn("underline", TYPOGRAPHY.bodySmall.fontSize)}
+              className={cn("underline hover:opacity-70 transition-opacity", TYPOGRAPHY.bodySmall.fontSize)}
               style={{ color: COLORS.brand.primary }}
             >
               비밀번호 찾기
             </button>
           </div>
         </form>
+        </div>
 
         {/* 이메일 찾기 다이얼로그 */}
         <FindEmailDialog

@@ -26,50 +26,71 @@ export function PasswordField({
   return (
     <div>
       <label
-        className={cn("block mb-2", TYPOGRAPHY.body.fontSize)}
+        className={cn("block mb-3", TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}
         style={{ color: COLORS.text.primary }}
       >
         비밀번호
       </label>
-      <div className="relative">
+      <div className="relative group">
         <Lock
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-          style={{ color: COLORS.brand.primary, opacity: 0.5 }}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors"
+          style={{ 
+            color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary),
+            opacity: value ? 1 : 0.4,
+          }}
         />
         <Input
           type={showPassword ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="pl-11 pr-10"
+          className="pl-8 pr-10 py-3.5 border-0 border-b-2 rounded-none transition-all focus:ring-0 focus:outline-none"
           disabled={disabled}
           style={{
-            borderColor: error ? COLORS.status.error : COLORS.border.light,
-            backgroundColor: COLORS.surface.elevated,
+            backgroundColor: "transparent",
+            fontSize: "16px",
+            paddingLeft: "2rem",
+            borderBottomColor: error 
+              ? COLORS.status.error 
+              : value 
+                ? COLORS.brand.primary 
+                : COLORS.border.light,
+            borderBottomWidth: "2px",
+          }}
+        />
+        <div 
+          className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
+          style={{
+            width: error || value ? "100%" : "0%",
+            backgroundColor: error 
+              ? COLORS.status.error 
+              : value 
+                ? COLORS.brand.primary 
+                : "transparent",
           }}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2"
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 p-1 hover:opacity-70 transition-opacity"
           disabled={disabled}
         >
           {showPassword ? (
             <EyeOff
               className="w-5 h-5"
-              style={{ color: COLORS.brand.primary, opacity: 0.5 }}
+              style={{ color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary) }}
             />
           ) : (
             <Eye
               className="w-5 h-5"
-              style={{ color: COLORS.brand.primary, opacity: 0.5 }}
+              style={{ color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary) }}
             />
           )}
         </button>
       </div>
       {error && (
         <p
-          className={cn("mt-1.5 flex items-center gap-1", TYPOGRAPHY.caption.fontSize)}
+          className={cn("mt-2 flex items-center gap-1.5", TYPOGRAPHY.caption.fontSize)}
           style={{ color: COLORS.status.error }}
         >
           <AlertCircle className="w-3.5 h-3.5" />

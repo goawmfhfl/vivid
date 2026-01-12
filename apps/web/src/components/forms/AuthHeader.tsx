@@ -11,19 +11,23 @@ interface AuthHeaderProps {
 
 export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
   return (
-    <div className="text-center mb-8">
-      <div className="flex justify-center mb-4">
+    <div className="text-center mb-12">
+      <div className="flex justify-center mb-8">
         <Image
           src="/vivid.svg"
-          alt="vivid logo"
-          width={120}
-          height={120}
+          alt="VIVID"
+          width={160}
+          height={160}
           priority
+          className="drop-shadow-lg"
+          style={{
+            filter: `drop-shadow(0 4px 12px ${COLORS.brand.primary}25)`,
+          }}
         />
       </div>
       {title && (
         <h1
-          className={cn("mb-2", TYPOGRAPHY.h1.fontSize, TYPOGRAPHY.h1.fontWeight)}
+          className={cn("mb-3", TYPOGRAPHY.h1.fontSize, TYPOGRAPHY.h1.fontWeight)}
           style={{ color: COLORS.brand.primary }}
         >
           {title}
@@ -31,7 +35,10 @@ export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
       )}
       <p
         className={cn(TYPOGRAPHY.bodyLarge.fontSize)}
-        style={{ color: COLORS.text.secondary, opacity: 0.8 }}
+        style={{ 
+          color: COLORS.text.secondary,
+          lineHeight: "1.6",
+        }}
       >
         {subtitle}
       </p>
