@@ -22,7 +22,7 @@ export function VividSection({
 }: VividSectionProps) {
   const vividColor = "#A3BFD9"; // 파스텔 블루
   const improvedColor = "#7f8f7a"; // 세이지 그린 (개선된 영역)
-  const declinedColor = "#b5674a"; // 테리코타 (악화된 영역)
+  const declinedColor = "#b5674a"; // 테리코타 (개선 영역)
 
   return (
     <div className="space-y-8">

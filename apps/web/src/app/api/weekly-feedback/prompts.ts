@@ -160,7 +160,7 @@ export function buildVividPrompt(
     }
   });
 
-  prompt += `\n\n위 데이터를 종합하여 주간 비비드 리포트(vivid_report)의 8개 섹션을 모두 생성하세요:
+  prompt += `\n\n위 데이터를 종합하여 주간 비비드 리포트(vivid_report)의 7개 섹션을 모두 생성하세요:
 
 **⚠️ 중요: 반드시 ${weekRange.start}부터 ${weekRange.end}까지의 전체 기간을 분석해야 합니다.**
 **실제 포함된 일일 피드백 날짜: ${actualDatesText} (총 ${dailyFeedbacks.length}개)**
@@ -173,34 +173,30 @@ export function buildVividPrompt(
    - key_points: 핵심 포인트를 날짜와 함께 표시 (예: "집 꾸리기·이사 실무 집중: 배송·설치·다이소 쇼핑·실내자전거 이동 등 구체적 행동이 반복됨(2025-12-17, 2025-12-18, 2025-12-21)")
    - next_week_vision_key_points: 다음주 비전의 핵심 포인트 포함
 
-2. **weekly_vivid_evaluation (주간 비비드 평가)**
-   - daily_evaluation_trend: ${weekRange.start}부터 ${weekRange.end}까지의 current_evaluation 점수 추이 (점수가 텍스트인 경우 숫자로 변환 필요)
-   - highest_day/lowest_day: 가장 높았던/낮았던 날과 그 이유
-
-3. **weekly_keywords_analysis (주간 키워드 분석)**
+2. **weekly_keywords_analysis (주간 키워드 분석)**
    - vision_keywords_trend: 기존 vision_keywords_trend와 동일한 구조 (keyword, days, context, related_keywords), 최대 8개, 홀수 개수(4, 6, 8개)
 
-4. **future_vision_analysis (앞으로의 모습 종합 분석)**
+3. **future_vision_analysis (앞으로의 모습 종합 분석)**
    - integrated_summary: ${weekRange.start}부터 ${weekRange.end}까지의 "앞으로의 모습" 요약 통합
    - consistency_analysis: 일관성 있는 비전 vs 변화하는 비전 분석
    - evaluation_trend: 주간 비전 평가 점수 추이 (future_evaluation 점수 추이)
 
-5. **alignment_trend_analysis (일치도 트렌드 분석)**
+4. **alignment_trend_analysis (일치도 트렌드 분석)**
    - daily_alignment_scores: ${weekRange.start}부터 ${weekRange.end}까지 일치도 점수 변화 (alignment_score 추이)
    - highest_alignment_day/lowest_alignment_day: 일치도가 높았던/낮았던 날의 패턴
    - trend: "improving" | "declining" | "stable" 중 하나
 
-6. **user_characteristics_analysis (사용자 특징 심화 분석)**
+5. **user_characteristics_analysis (사용자 특징 심화 분석)**
    - consistency_summary: ${userName ? `"${userName}님"` : "사용자"}을(를) 명시적으로 언급하며, ${weekRange.start}부터 ${weekRange.end}까지 특징의 일관성을 요약${userName ? ` (예: "${userName}님은 이번 주 동안...")` : ""}
    - top_5_characteristics: ${userName ? `"${userName}님"` : "사용자"}의 이름을 기반으로 명확하게 어떤 특징이 있는지 분석한 Top 5 (frequency와 dates 포함${userName ? `, 각 특징 설명 시 "${userName}님"을 포함` : ""})
    - change_patterns: 새로 나타난 특징, 사라진 특징 분석
 
-7. **aspired_traits_analysis (지향하는 모습 심화 분석)**
+6. **aspired_traits_analysis (지향하는 모습 심화 분석)**
    - consistency_summary: ${weekRange.start}부터 ${weekRange.end}까지 지향하는 모습의 일관성 요약
    - top_5_aspired_traits: 가장 자주 언급된 지향 모습 Top 5 (frequency와 dates 포함)
    - evolution_process: 지향 모습의 진화 과정 (stages 배열)
 
-8. **weekly_insights (주간 인사이트)**
+7. **weekly_insights (주간 인사이트)**
    - patterns: ${weekRange.start}부터 ${weekRange.end}까지의 기록에서 발견한 패턴 (pattern, description, evidence)
    - unexpected_connections: 예상치 못한 연결점 (connection, description, significance)
 

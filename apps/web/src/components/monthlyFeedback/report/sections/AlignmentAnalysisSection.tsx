@@ -6,16 +6,25 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  HelpCircle,
 } from "lucide-react";
 import type { VividReport } from "@/types/monthly-feedback-new";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import {
   GradientCard,
-  StrengthsWeaknessesCard,
 } from "@/components/common/feedback";
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 type AlignmentAnalysisSectionProps = {
   alignmentAnalysis: VividReport["alignment_analysis"];
@@ -30,14 +39,17 @@ function WeekScoreItem({
   improvedColor,
   declinedColor,
   getScoreColor,
+  getScoreGradient,
 }: {
   item: VividReport["alignment_analysis"]["score_timeline"][number];
   improvedColor: string;
   declinedColor: string;
   getScoreColor: (score: number) => string;
+  getScoreGradient: (score: number) => string;
 }) {
   const weekScore = Math.round(item.average_score);
   const weekScoreColor = getScoreColor(weekScore);
+  const weekScoreGradient = getScoreGradient(weekScore);
   const animatedWeekScore = useCountUp(weekScore, 1200);
   const animatedWeekWidth = useCountUp(weekScore, 1200);
 
@@ -110,7 +122,7 @@ function WeekScoreItem({
           className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{
             width: `${animatedWeekWidth}%`,
-            background: `linear-gradient(90deg, ${weekScoreColor}, ${weekScoreColor}cc)`,
+            background: weekScoreGradient,
             boxShadow: `0 1px 3px ${weekScoreColor}40`,
           }}
         />
@@ -124,10 +136,12 @@ function ScoreSummaryContent({
   scoreTimeline,
   improvedColor,
   declinedColor,
+  vividColor,
 }: {
   scoreTimeline: VividReport["alignment_analysis"]["score_timeline"];
   improvedColor: string;
   declinedColor: string;
+  vividColor: string;
 }) {
   const averageScore = Math.round(
     scoreTimeline.reduce((sum, item) => sum + item.average_score, 0) /
@@ -139,19 +153,62 @@ function ScoreSummaryContent({
   const isImproving = diff > 0;
   const isDeclining = diff < 0;
 
-  // 점수에 따른 색상 결정 - 초록색 계열
+  // 점수에 따른 색상 결정 - 프로젝트 세이지 그린 계열 그라데이션
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "#66BB6A"; // 밝은 초록
-    if (score >= 60) return "#81C784"; // 중간 초록
-    return "#A5D6A7"; // 연한 초록
+    if (score >= 80) return "#7f8f7a"; // 메인 세이지 그린
+    if (score >= 60) return "#9da688"; // 밝은 세이지 그린
+    return "#b9c0a3"; // 더 밝은 세이지 그린
+  };
+
+  // 점수에 따른 그라데이션 색상
+  const getScoreGradient = (score: number) => {
+    if (score >= 80) return "linear-gradient(135deg, #7f8f7a 0%, #5f6b3a 100%)"; // 메인 -> 올리브 그린
+    if (score >= 60) return "linear-gradient(135deg, #9da688 0%, #7f8f7a 100%)"; // 밝은 -> 메인
+    return "linear-gradient(135deg, #b9c0a3 0%, #9da688 100%)"; // 더 밝은 -> 밝은
   };
 
   const scoreColor = getScoreColor(averageScore);
+  const scoreGradient = getScoreGradient(averageScore);
   const animatedAverageScore = useCountUp(averageScore, 1200);
   const animatedAverageWidth = useCountUp(averageScore, 1200);
 
   return (
     <div className="mb-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+            boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
+          }}
+        >
+          <span
+            className={cn(
+              TYPOGRAPHY.bodySmall.fontSize,
+              TYPOGRAPHY.bodySmall.fontWeight,
+              "relative z-10"
+            )}
+            style={{ color: "white" }}
+          >
+            2-1
+          </span>
+          <div
+            className="absolute inset-0 opacity-25"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+            }}
+          />
+        </div>
+        <h3
+          className={cn(
+            TYPOGRAPHY.h3.fontSize,
+            TYPOGRAPHY.h3.fontWeight
+          )}
+          style={{ color: COLORS.text.primary }}
+        >
+          일치도 점수 요약
+        </h3>
+      </div>
       <div
         className="p-5 rounded-xl transition-all duration-300"
         style={{
@@ -163,16 +220,18 @@ function ScoreSummaryContent({
         {/* 평균 점수 - 원형 게이지 스타일 */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex-1">
-            <p
-              className={cn(
-                TYPOGRAPHY.bodySmall.fontSize,
-                TYPOGRAPHY.bodySmall.fontWeight,
-                "mb-2"
-              )}
-              style={{ color: COLORS.text.secondary }}
-            >
-              한 달 평균 일치도
-            </p>
+              <div className="flex items-center gap-2 mb-2">
+              <p
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.bodySmall.fontWeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                한 달 평균 일치도
+              </p>
+              <AlignmentScoreInfoDialog vividColor={vividColor} />
+            </div>
             <div className="flex items-baseline gap-3">
               <div className="relative">
                 {/* 원형 프로그레스 - SVG 사용 */}
@@ -192,13 +251,33 @@ function ScoreSummaryContent({
                       stroke="rgba(226, 232, 240, 0.5)"
                       strokeWidth="6"
                     />
-                    {/* 진행 원 */}
+                    {/* 진행 원 - 그라데이션 적용을 위한 정의 */}
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        {averageScore >= 80 ? (
+                          <>
+                            <stop offset="0%" stopColor="#7f8f7a" />
+                            <stop offset="100%" stopColor="#5f6b3a" />
+                          </>
+                        ) : averageScore >= 60 ? (
+                          <>
+                            <stop offset="0%" stopColor="#9da688" />
+                            <stop offset="100%" stopColor="#7f8f7a" />
+                          </>
+                        ) : (
+                          <>
+                            <stop offset="0%" stopColor="#b9c0a3" />
+                            <stop offset="100%" stopColor="#9da688" />
+                          </>
+                        )}
+                      </linearGradient>
+                    </defs>
                     <circle
                       cx="40"
                       cy="40"
                       r="36"
                       fill="none"
-                      stroke={scoreColor}
+                      stroke="url(#scoreGradient)"
                       strokeWidth="6"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 36}`}
@@ -247,7 +326,7 @@ function ScoreSummaryContent({
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{
                       width: `${animatedAverageWidth}%`,
-                      background: `linear-gradient(90deg, ${scoreColor}, ${scoreColor}dd)`,
+                      background: scoreGradient,
                       boxShadow: `0 1px 3px ${scoreColor}50`,
                     }}
                   />
@@ -341,11 +420,173 @@ function ScoreSummaryContent({
               improvedColor={improvedColor}
               declinedColor={declinedColor}
               getScoreColor={getScoreColor}
+              getScoreGradient={getScoreGradient}
             />
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+// 일치도 점수 설명 팝업 컴포넌트
+function AlignmentScoreInfoDialog({ vividColor }: { vividColor: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center justify-center w-5 h-5 rounded-full transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style={{ 
+            color: COLORS.text.tertiary,
+          }}
+          aria-label="일치도 점수 평가 기준 보기"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm mx-4">
+        <DialogHeader>
+          <DialogTitle
+            className={cn(
+              TYPOGRAPHY.h3.fontSize,
+              TYPOGRAPHY.h3.fontWeight
+            )}
+            style={{ color: COLORS.text.primary }}
+          >
+            일치도 점수란?
+          </DialogTitle>
+          <DialogDescription
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.lineHeight,
+              "mt-4"
+            )}
+            style={{ color: COLORS.text.secondary }}
+          >
+            일치도 점수는 오늘의 계획이 미래 목표와 얼마나 잘 정렬되어 있는지를 평가한 점수입니다 (0-100점).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <div>
+            <p
+              className={cn(
+                TYPOGRAPHY.bodySmall.fontSize,
+                TYPOGRAPHY.bodySmall.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
+            >
+              평가 기준
+            </p>
+            <ul className="space-y-2 ml-4 list-disc">
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                오늘 계획한 활동/방향이 미래 목표 달성에 도움이 되는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                오늘의 우선순위가 미래 비전과 정렬되어 있는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                구체적인 행동 계획이 미래 목표로 이어지는가?
+              </li>
+            </ul>
+          </div>
+          <div className="pt-4 border-t" style={{ borderColor: COLORS.border.light }}>
+            <p
+              className={cn(
+                TYPOGRAPHY.bodySmall.fontSize,
+                TYPOGRAPHY.bodySmall.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
+            >
+              점수 구간
+            </p>
+            <div className="space-y-2">
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  높은 점수 (80점 이상):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  오늘의 계획이 미래 목표와 잘 정렬되어 있음
+                </span>
+              </div>
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  중간 점수 (50-79점):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  부분적으로 정렬되어 있으나 개선 여지 있음
+                </span>
+              </div>
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  낮은 점수 (50점 미만):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  오늘의 계획과 미래 목표 사이에 큰 격차가 있음
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -360,44 +601,59 @@ export function AlignmentAnalysisSection({
   return (
     <div className="space-y-5">
       <GradientCard gradientColor="163, 191, 217">
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${vividColor}, ${vividColor}dd)`,
-              border: `2px solid ${vividColor}40`,
-              boxShadow: `0 2px 8px ${vividColor}20`,
-            }}
-          >
-            <span
-              className={cn(
-                TYPOGRAPHY.h4.fontSize,
-                TYPOGRAPHY.h4.fontWeight
-              )}
-              style={{ color: "white" }}
-            >
-              2
-            </span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <BarChart3 className="w-5 h-5" style={{ color: vividColor }} />
-              <p
+        <div className="relative mb-8 pb-6 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.2)` }}>
+          <div className="flex items-start gap-4">
+            {/* 번호 배지 - 더 세련된 스타일 */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${vividColor}, ${vividColor}cc)`,
+                  boxShadow: `0 4px 12px ${vividColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+                }}
+              >
+                <span
+                  className={cn(
+                    TYPOGRAPHY.h3.fontSize,
+                    TYPOGRAPHY.h3.fontWeight,
+                    "relative z-10"
+                  )}
+                  style={{ color: "white" }}
+                >
+                  2
+                </span>
+                {/* 미묘한 그라데이션 오버레이 */}
+                <div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)`,
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* 텍스트 영역 */}
+            <div className="flex-1 pt-1">
+              <h2
                 className={cn(
-                  TYPOGRAPHY.h3.fontSize,
-                  TYPOGRAPHY.h3.fontWeight
+                  TYPOGRAPHY.h2.fontSize,
+                  TYPOGRAPHY.h2.fontWeight,
+                  "mb-2"
                 )}
                 style={{ color: COLORS.text.primary }}
               >
                 현재-미래 일치도 분석
+              </h2>
+              <p
+                className={cn(
+                  TYPOGRAPHY.body.fontSize,
+                  "leading-relaxed"
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                현재 상태와 미래 목표 간의 일치도를 분석합니다
               </p>
             </div>
-            <p
-              className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-              style={{ color: COLORS.text.secondary }}
-            >
-              현재 상태와 미래 목표 간의 일치도를 분석합니다
-            </p>
           </div>
         </div>
 
@@ -408,81 +664,41 @@ export function AlignmentAnalysisSection({
               scoreTimeline={alignmentAnalysis.score_timeline}
               improvedColor={improvedColor}
               declinedColor={declinedColor}
+              vividColor={vividColor}
             />
           )}
-
-        {/* 개선/악화 영역 */}
-        <ScrollAnimation>
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{
-                  backgroundColor: `${vividColor}20`,
-                  border: `1px solid ${vividColor}40`,
-                }}
-              >
-                <span
-                  className={cn(
-                    TYPOGRAPHY.bodySmall.fontSize,
-                    TYPOGRAPHY.bodySmall.fontWeight
-                  )}
-                  style={{ color: vividColor }}
-                >
-                  {alignmentAnalysis.score_timeline && alignmentAnalysis.score_timeline.length > 0 ? "2-2" : "2-1"}
-                </span>
-              </div>
-              <p
-                className={cn(
-                  TYPOGRAPHY.h3.fontSize,
-                  TYPOGRAPHY.h3.fontWeight
-                )}
-                style={{ color: COLORS.text.primary }}
-              >
-                강점/악화 영역
-              </p>
-            </div>
-            <StrengthsWeaknessesCard
-              strengths={alignmentAnalysis.score_drivers?.improved_areas?.map((area) => ({
-                area: area.area,
-                impact: area.impact,
-                evidence: area.evidence || [],
-              }))}
-              weaknesses={alignmentAnalysis.score_drivers?.declined_areas?.map((area) => ({
-                area: area.area,
-                reason: area.reason,
-                evidence: area.evidence || [],
-              }))}
-              strengthsColor="127, 143, 122"
-              weaknessesColor="181, 103, 74"
-            />
-          </div>
-        </ScrollAnimation>
 
         {/* 격차 분석 */}
         {alignmentAnalysis.gap_analysis?.biggest_gaps &&
           alignmentAnalysis.gap_analysis.biggest_gaps.length > 0 && (
             <div>
               <div className="mb-6">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-3 pb-3 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                     style={{
-                      backgroundColor: `${vividColor}20`,
-                      border: `1px solid ${vividColor}40`,
+                      background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                      boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                     }}
                   >
                     <span
                       className={cn(
                         TYPOGRAPHY.bodySmall.fontSize,
-                        TYPOGRAPHY.bodySmall.fontWeight
+                        TYPOGRAPHY.bodySmall.fontWeight,
+                        "relative z-10"
                       )}
-                      style={{ color: vividColor }}
+                      style={{ color: "white" }}
                     >
-                      {alignmentAnalysis.score_timeline && alignmentAnalysis.score_timeline.length > 0 ? "2-3" : "2-2"}
+                      2-2
                     </span>
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                      }}
+                    />
                   </div>
-                  <p
+                  <h3
                     className={cn(
                       TYPOGRAPHY.h3.fontSize,
                       TYPOGRAPHY.h3.fontWeight
@@ -490,7 +706,7 @@ export function AlignmentAnalysisSection({
                     style={{ color: COLORS.text.primary }}
                   >
                     주요 격차
-                  </p>
+                  </h3>
                 </div>
                 <p
                   className={cn(

@@ -29,7 +29,7 @@ export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
               제1조 (수집 및 활용 목적)
             </h3>
             <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
-              서비스는 이용자의 기록 데이터를 바탕으로 AI 피드백을 제공합니다.
+              서비스는 이용자의 기록 데이터를 바탕으로 AI VIVID를 제공합니다.
               AI 품질 향상을 위해 일부 데이터는 익명화 처리 후 학습 데이터로
               활용될 수 있으며, 전체 서비스 인프라는 데이터 무결성과 가용성을
               확보한 보안 체계 위에서 운영됩니다.

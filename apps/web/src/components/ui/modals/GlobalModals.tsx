@@ -4,7 +4,9 @@ import { LoadingModal } from "./LoadingModal";
 import { ErrorModal } from "./ErrorModal";
 import { SuccessModal } from "./SuccessModal";
 import { AICostModal } from "./AICostModal";
+import { Toast } from "../Toast";
 import { useModalStore } from "@/store/useModalStore";
+import { useToastStore } from "@/store/useToastStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 
 /**
@@ -29,6 +31,9 @@ export function GlobalModals() {
     (state) => state.successModal.onConfirm
   );
 
+  const toast = useToastStore((state) => state.toast);
+  const hideToast = useToastStore((state) => state.hideToast);
+
   return (
     <>
       <LoadingModal
@@ -49,6 +54,12 @@ export function GlobalModals() {
         onClose={closeSuccessModal}
         message={successModal.message || undefined}
         onConfirm={successConfirmHandler}
+      />
+      <Toast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+        duration={toast.duration}
       />
       {isDevelopment && <AICostModal />}
     </>

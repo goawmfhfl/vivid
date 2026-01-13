@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Heart,
   Zap,
+  HelpCircle,
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
@@ -19,6 +20,176 @@ import {
   ContentCard,
   KeywordCard,
 } from "../common/feedback";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { useState } from "react";
+
+// 일치도 점수 설명 팝업 컴포넌트
+function AlignmentScoreInfoDialog({ alignmentColor }: { alignmentColor: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center justify-center w-5 h-5 rounded-full transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style={{ 
+            color: COLORS.text.tertiary,
+          }}
+          aria-label="일치도 점수 평가 기준 보기"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm mx-4">
+        <DialogHeader>
+          <DialogTitle
+            className={cn(
+              TYPOGRAPHY.h3.fontSize,
+              TYPOGRAPHY.h3.fontWeight
+            )}
+            style={{ color: COLORS.text.primary }}
+          >
+            일치도 점수란?
+          </DialogTitle>
+          <DialogDescription
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.lineHeight,
+              "mt-4"
+            )}
+            style={{ color: COLORS.text.secondary }}
+          >
+            일치도 점수는 오늘의 계획이 미래 목표와 얼마나 잘 정렬되어 있는지를 평가한 점수입니다 (0-100점).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <div>
+            <p
+              className={cn(
+                TYPOGRAPHY.bodySmall.fontSize,
+                TYPOGRAPHY.bodySmall.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
+            >
+              평가 기준
+            </p>
+            <ul className="space-y-2 ml-4 list-disc">
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                오늘 계획한 활동/방향이 미래 목표 달성에 도움이 되는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                오늘의 우선순위가 미래 비전과 정렬되어 있는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                구체적인 행동 계획이 미래 목표로 이어지는가?
+              </li>
+            </ul>
+          </div>
+          <div className="pt-4 border-t" style={{ borderColor: COLORS.border.light }}>
+            <p
+              className={cn(
+                TYPOGRAPHY.bodySmall.fontSize,
+                TYPOGRAPHY.bodySmall.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
+            >
+              점수 구간
+            </p>
+            <div className="space-y-2">
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  높은 점수 (80점 이상):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  오늘의 계획이 미래 목표와 잘 정렬되어 있음
+                </span>
+              </div>
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  중간 점수 (50-79점):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  부분적으로 정렬되어 있으나 개선 여지 있음
+                </span>
+              </div>
+              <div>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    TYPOGRAPHY.bodySmall.fontWeight
+                  )}
+                  style={{ color: COLORS.text.primary }}
+                >
+                  낮은 점수 (50점 미만):
+                </span>
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "ml-2"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  오늘의 계획과 미래 목표 사이에 큰 격차가 있음
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
   const hasCurrentData = !!(
@@ -218,6 +389,7 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
                 >
                   일치도 점수
                 </p>
+                <AlignmentScoreInfoDialog alignmentColor={alignmentColor} />
               </div>
               <div className="mb-4">
                 <div className="flex items-center gap-4 mb-3">

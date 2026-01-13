@@ -89,47 +89,6 @@ export const MonthlyReportSchema = {
                 },
                 minItems: 0,
               },
-              score_drivers: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  improved_areas: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: {
-                        area: { type: "string" },
-                        impact: { type: "string" },
-                        evidence: {
-                          type: "array",
-                          items: { type: "string" },
-                        },
-                      },
-                      required: ["area", "impact", "evidence"],
-                    },
-                    minItems: 0,
-                  },
-                  declined_areas: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: false,
-                      properties: {
-                        area: { type: "string" },
-                        reason: { type: "string" },
-                        evidence: {
-                          type: "array",
-                          items: { type: "string" },
-                        },
-                      },
-                      required: ["area", "reason", "evidence"],
-                    },
-                    minItems: 0,
-                  },
-                },
-                required: ["improved_areas", "declined_areas"],
-              },
               gap_analysis: {
                 type: "object",
                 additionalProperties: false,
@@ -156,7 +115,7 @@ export const MonthlyReportSchema = {
                 required: ["biggest_gaps"],
               },
             },
-            required: ["score_timeline", "score_drivers", "gap_analysis"],
+            required: ["score_timeline", "gap_analysis"],
           },
           // 3. 하루 패턴 인사이트 (20%)
           daily_life_patterns: {

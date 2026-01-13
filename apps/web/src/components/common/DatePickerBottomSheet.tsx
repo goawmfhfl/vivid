@@ -307,8 +307,8 @@ export function DatePickerBottomSheet({
                               className="w-1.5 h-1.5 rounded-full"
                               style={{
                                 backgroundColor: isActive
-                                  ? COLORS.text.white
-                                  : COLORS.brand.primary,
+                                  ? COLORS.accent[300] // 액티브 상태에서는 더 연한 파란색
+                                  : COLORS.accent[500], // 더스티 블루
                               }}
                             />
                           )}

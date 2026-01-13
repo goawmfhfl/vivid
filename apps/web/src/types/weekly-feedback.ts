@@ -22,25 +22,7 @@ export type VividReport = {
     next_week_vision_key_points: string[];
   };
 
-  // 2. 주간 비비드 평가
-  weekly_vivid_evaluation: {
-    daily_evaluation_trend: Array<{
-      date: string;
-      evaluation_score: number; // current_evaluation에서 추출한 점수
-    }>;
-    highest_day: {
-      date: string;
-      score: number;
-      reason: string;
-    };
-    lowest_day: {
-      date: string;
-      score: number;
-      reason: string;
-    };
-  };
-
-  // 3. 주간 키워드 분석
+  // 2. 주간 키워드 분석
   weekly_keywords_analysis: {
     vision_keywords_trend: Array<{
       keyword: string;
@@ -50,7 +32,7 @@ export type VividReport = {
     }>; // 기존 vision_keywords_trend와 동일한 구조, 최대 8개, 홀수 개수(4, 6, 8개)
   };
 
-  // 4. 앞으로의 모습 종합 분석
+  // 3. 앞으로의 모습 종합 분석
   future_vision_analysis: {
     integrated_summary: string;
     consistency_analysis: {
@@ -64,7 +46,7 @@ export type VividReport = {
     }>;
   };
 
-  // 5. 일치도 트렌드 분석
+  // 4. 일치도 트렌드 분석
   alignment_trend_analysis: {
     daily_alignment_scores: Array<{
       date: string;
@@ -83,7 +65,7 @@ export type VividReport = {
     trend: "improving" | "declining" | "stable";
   };
 
-  // 6. 사용자 특징 심화 분석
+  // 5. 사용자 특징 심화 분석
   user_characteristics_analysis: {
     consistency_summary: string;
     top_5_characteristics: Array<{
@@ -103,7 +85,7 @@ export type VividReport = {
     };
   };
 
-  // 7. 지향하는 모습 심화 분석
+  // 6. 지향하는 모습 심화 분석
   aspired_traits_analysis: {
     consistency_summary: string;
     top_5_aspired_traits: Array<{
@@ -121,7 +103,7 @@ export type VividReport = {
     };
   };
 
-  // 8. 주간 인사이트
+  // 7. 주간 인사이트
   weekly_insights: {
     patterns: Array<{
       pattern: string;

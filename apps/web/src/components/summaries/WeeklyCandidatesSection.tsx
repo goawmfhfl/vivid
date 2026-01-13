@@ -421,7 +421,7 @@ export function WeeklyCandidatesSection() {
         // 성공 시 전역 모달로 알림 및 라우팅
         const weekRange = `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`;
         openSuccessModal(
-          `${weekRange} 주간 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.`,
+          `${weekRange} 주간 VIVID가 생성되었습니다!\n확인 버튼을 누르면 VIVID를 확인할 수 있습니다.`,
           () => {
             router.push(`/analysis/feedback/weekly/${feedbackData.id}`);
           }
@@ -443,7 +443,7 @@ export function WeeklyCandidatesSection() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "주간 피드백 생성에 실패했습니다.";
+          : "주간 VIVID 생성에 실패했습니다.";
 
       // 전역 에러 모달 표시 (재시도 없음)
       openErrorModal(errorMessage);

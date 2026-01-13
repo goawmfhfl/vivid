@@ -80,7 +80,7 @@ console.log(view);
 
           <div className="py-16">
             <LoadingSpinner
-              message="데일리 피드백을 불러오는 중..."
+              message="데일리 VIVID를 불러오는 중..."
               size="md"
             />
           </div>
@@ -111,7 +111,7 @@ console.log(view);
               size="md"
               showMessage={true}
               onRetry={() => refetch()}
-              message="데일리 피드백을 불러오는 중 오류가 발생했습니다."
+              message="데일리 VIVID를 불러오는 중 오류가 발생했습니다."
             />
           </div>
         </div>

@@ -225,7 +225,7 @@ export function RecentTrendsSection({
     return (
       <div className="py-12 text-center">
         <p style={{ color: COLORS.text.muted }}>
-          아직 데이터가 없습니다. 일일 피드백을 생성하면 최근 동향을 확인할 수
+          아직 데이터가 없습니다. 일일 VIVID를 생성하면 최근 동향을 확인할 수
           있습니다.
         </p>
       </div>

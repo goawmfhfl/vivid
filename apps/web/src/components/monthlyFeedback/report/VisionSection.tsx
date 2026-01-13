@@ -493,7 +493,7 @@ export function VisionSection({
                     )}
                     style={{ color: COLORS.text.primary }}
                   >
-                    AI 비전 피드백
+                    AI 비전 VIVID
                   </p>
                 </div>
 
@@ -586,7 +586,7 @@ export function VisionSection({
                   color: COLORS.text.secondary,
                 }}
               >
-                Pro 멤버십에서는 이번 달의 핵심 비전 분석, AI 피드백을 확인할 수
+                Pro 멤버십에서는 이번 달의 핵심 비전 분석, AI VIVID를 확인할 수
                 있습니다. 기록을 성장으로 바꾸는 당신만의 비전 지도를 함께
                 만들어보세요.
               </p>

@@ -27,7 +27,7 @@ export function CreateDailyFeedbackButton({
 
       // 생성된 피드백 ID 확인
       if (!createdFeedback?.id) {
-        throw new Error("생성된 피드백에 ID가 없습니다.");
+        throw new Error("생성된 VIVID에 ID가 없습니다.");
       }
 
       // DB 동기화를 위한 짧은 딜레이 추가

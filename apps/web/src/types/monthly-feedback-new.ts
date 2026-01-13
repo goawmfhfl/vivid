@@ -395,18 +395,6 @@ export type VividReport = {
       average_score: number;
       trend: "상승" | "하락" | "유지";
     }>;
-    score_drivers: {
-      improved_areas: Array<{
-        area: string;
-        impact: string;
-        evidence: string[];
-      }>;
-      declined_areas: Array<{
-        area: string;
-        reason: string;
-        evidence: string[];
-      }>;
-    };
     gap_analysis: {
       biggest_gaps: Array<{
         current_state: string;

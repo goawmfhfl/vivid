@@ -32,15 +32,6 @@ export async function GET(_request: NextRequest) {
     const databaseId = process.env.NOTION_NOTICE_DATABASE_ID;
     const notionToken = process.env.NOTION_TOKEN;
 
-    // 디버깅: 환경 변수 확인
-    console.log("환경 변수 확인:", {
-      hasDatabaseId: !!databaseId,
-      hasNotionToken: !!notionToken,
-      databaseIdLength: databaseId?.length || 0,
-      tokenLength: notionToken?.length || 0,
-      allEnvKeys: Object.keys(process.env).filter(key => key.includes('NOTION')),
-    });
-
     if (!databaseId || !notionToken) {
       const missingVars = [];
       if (!databaseId) missingVars.push("NOTION_NOTICE_DATABASE_ID");
@@ -108,17 +99,12 @@ export async function GET(_request: NextRequest) {
 
     const data = (await response.json()) as NotionDatabaseQueryResponse;
 
-    // 디버깅: 노션 응답 로그
-    console.log("Notion API 응답:", JSON.stringify(data, null, 2));
-    console.log("조회된 페이지 수:", data.results?.length || 0);
 
     // 노션 데이터를 정제하여 반환
     const policies = data.results.map((page: NotionPage) => {
       // 페이지 상세 정보 가져오기
       const properties: NotionPageProperties = page.properties || {};
       
-      // 디버깅: 각 페이지의 properties 로그
-      console.log("페이지 properties:", Object.keys(properties));
       
       // name 필드 추출 (노션의 name 속성은 배열 형태)
       const nameProperty = (properties.name || properties["name"] || properties["제목"] || properties["Title"] || properties["title"]) as NotionPageProperties["name"] | NotionPageProperties["title"] | undefined;
@@ -142,8 +128,6 @@ export async function GET(_request: NextRequest) {
                          (typeProperty && "name" in typeProperty && typeProperty.name) ||
                          "";
 
-      // 디버깅: 추출된 데이터 로그
-      console.log("추출된 데이터:", { name, title, type: policyType, id: page.id });
 
       return {
         id: page.id,

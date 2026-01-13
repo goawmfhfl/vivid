@@ -20,7 +20,7 @@ export function DailyFeedbackButton({
       router.push(`/analysis/feedback/daily/${feedback.id}`);
     } else {
       // 피드백이 없으면 생성 페이지로 이동하거나 에러 처리
-      console.error("피드백을 찾을 수 없습니다.");
+      console.error("VIVID를 찾을 수 없습니다.");
     }
   };
 

@@ -198,6 +198,21 @@ select {
   }
 }
 
+/* 숫자 입력 필드 스피너 버튼 숨김 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
 /* Swiper Cards Effect Custom Styles */
 .swiper-cards {
   overflow: visible;

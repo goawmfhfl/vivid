@@ -9,6 +9,7 @@ import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
 import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 import { useCountUp } from "@/hooks/useCountUp";
+import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 
 // 월간 후보 아이템 컴포넌트
 function MonthlyCandidateItem({
@@ -42,25 +43,94 @@ function MonthlyCandidateItem({
 
   return (
     <div
-      className="flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:shadow-sm"
+      className="flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 relative overflow-hidden group"
       style={{
-        backgroundColor: "white",
-        border: "1px solid #EFE9E3",
+        backgroundColor: COLORS.background.base,
+        border: `1.5px solid ${COLORS.border.light}`,
+        borderRadius: "12px",
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `,
+        backgroundImage: `
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 27px,
+            rgba(127, 143, 122, 0.06) 27px,
+            rgba(127, 143, 122, 0.06) 28px
+          ),
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(127, 143, 122, 0.01) 2px,
+            rgba(127, 143, 122, 0.01) 4px
+          )
+        `,
+        backgroundSize: "100% 28px, 8px 8px",
+        backgroundPosition: "0 2px, 0 0",
+        filter: "contrast(1.02) brightness(1.01)",
       }}
       onClick={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
+        e.currentTarget.style.boxShadow = `
+          0 4px 16px rgba(127, 143, 122, 0.12),
+          0 2px 6px rgba(0,0,0,0.04),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.borderColor = COLORS.border.light;
+        e.currentTarget.style.boxShadow = `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `;
+      }}
     >
-      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+      {/* 종이 질감 오버레이 */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-xl"
+        style={{
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+          `,
+          mixBlendMode: "overlay",
+          opacity: 0.5,
+        }}
+      />
+
+      {/* 왼쪽 브랜드 컬러 액센트 라인 */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300"
+        style={{
+          backgroundColor: COLORS.brand.primary,
+          opacity: 0.6,
+        }}
+      />
+
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10 pl-4">
         <div
-          className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: "#6B7A6F" }}
+          className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 transition-all duration-300"
+          style={{
+            backgroundColor: COLORS.brand.primary,
+            boxShadow: `0 0 8px ${COLORS.brand.primary}40`,
+          }}
         />
         <div className="flex-1 min-w-0">
           <p
-            className="truncate text-sm sm:text-base"
+            className="truncate text-sm sm:text-base mb-0.5"
             style={{
-              color: "#333333",
-              fontSize: "0.85rem",
-              fontWeight: "500",
+              color: COLORS.text.primary,
+              fontSize: "0.9rem",
+              fontWeight: "600",
+              lineHeight: "1.4",
             }}
           >
             {candidate.month_label}
@@ -68,10 +138,9 @@ function MonthlyCandidateItem({
           <p
             className="text-xs sm:text-sm"
             style={{
-              color: "#4E4B46",
-              opacity: 0.6,
-              fontSize: "0.7rem",
-              marginTop: "2px",
+              color: COLORS.text.tertiary,
+              fontSize: "0.75rem",
+              lineHeight: "1.4",
             }}
           >
             {candidate.daily_feedback_count || 0}개의 일일 피드백
@@ -86,7 +155,7 @@ function MonthlyCandidateItem({
               <p
                 className="text-xs sm:text-sm"
                 style={{
-                  color: "#6B7A6F",
+                  color: COLORS.text.secondary,
                   fontSize: "0.6rem",
                   fontWeight: "500",
                   whiteSpace: "nowrap",
@@ -104,21 +173,21 @@ function MonthlyCandidateItem({
                   className="h-1 sm:h-1.5 rounded-full overflow-hidden"
                   style={{
                     width: "60px",
-                    backgroundColor: "#EFE9E3",
+                    backgroundColor: COLORS.border.light,
                   }}
                 >
                   <div
                     className="h-full transition-all duration-1000 ease-out"
                     style={{
                       width: `${animatedProgress}%`,
-                      backgroundColor: "#6B7A6F",
+                      backgroundColor: COLORS.brand.primary,
                     }}
                   />
                 </div>
                 <span
                   className="text-xs"
                   style={{
-                    color: "#6B7A6F",
+                    color: COLORS.text.secondary,
                     fontSize: "0.65rem",
                     fontWeight: "600",
                     minWidth: "28px",
@@ -134,9 +203,9 @@ function MonthlyCandidateItem({
         <Button
           onClick={() => handleCreateFeedback(candidate.month)}
           disabled={isGenerating}
-          className="rounded-full px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 sm:gap-1.5 flex-shrink-0 text-xs relative"
+          className="rounded-full px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 text-xs sm:text-sm relative"
           style={{
-            backgroundColor: isGenerating ? "#9CA89C" : "#6B7A6F",
+            backgroundColor: isGenerating ? "#9CA89C" : COLORS.brand.primary,
             color: "white",
             fontSize: "0.7rem",
             fontWeight: "500",
@@ -150,23 +219,20 @@ function MonthlyCandidateItem({
           }}
           onMouseLeave={(e) => {
             if (!isGenerating) {
-              e.currentTarget.style.backgroundColor = "#6B7A6F";
+              e.currentTarget.style.backgroundColor = COLORS.brand.primary;
             }
           }}
         >
           {isGenerating ? (
             <>
-              <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
-              <span className="text-[0.65rem] sm:text-[0.7rem]">
-                생성 중
-              </span>
+              <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+              <span className="hidden sm:inline">생성 중</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <span className="text-[0.65rem] sm:text-[0.7rem]">
-                생성하기
-              </span>
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">생성하기</span>
+              <span className="sm:hidden">생성</span>
             </>
           )}
         </Button>
@@ -225,7 +291,7 @@ export function MonthlyCandidatesSection({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "월간 피드백 생성에 실패했습니다.");
+        throw new Error(errorData.error || "월간 VIVID 생성에 실패했습니다.");
       }
 
       const result = await response.json();
@@ -282,17 +348,29 @@ export function MonthlyCandidatesSection({
     <div className="mb-8">
       {/* Notice 형태의 알림 박스 (클릭 가능) */}
       <div
-        className="rounded-xl p-4 cursor-pointer transition-all hover:shadow-md"
+        className="rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg"
         style={{
-          backgroundColor: "#F0F2F0",
-          border: "1px solid #6B7A6F",
+          backgroundColor: COLORS.background.card,
+          border: `1.5px solid ${COLORS.brand.primary}40`,
+          boxShadow: `0 2px 8px ${COLORS.brand.primary}15`,
         }}
         onClick={toggleMonthlyCandidatesDropdown}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
+          e.currentTarget.style.boxShadow = `0 4px 12px ${COLORS.brand.primary}20`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = `${COLORS.brand.primary}40`;
+          e.currentTarget.style.boxShadow = `0 2px 8px ${COLORS.brand.primary}15`;
+        }}
       >
         <div className="flex items-start gap-3">
           <div
-            className="p-2 rounded-lg flex-shrink-0 mt-0.5"
-            style={{ backgroundColor: "#6B7A6F" }}
+            className="p-2 rounded-lg flex-shrink-0 mt-0.5 transition-all duration-300"
+            style={{
+              background: GRADIENT_UTILS.iconBadge(COLORS.brand.primary),
+              boxShadow: `0 2px 8px ${COLORS.brand.primary}30`,
+            }}
           >
             <AlertCircle className="w-4 h-4" style={{ color: "white" }} />
           </div>
@@ -302,7 +380,7 @@ export function MonthlyCandidatesSection({
                 <h3
                   className="mb-1"
                   style={{
-                    color: "#333333",
+                    color: COLORS.text.primary,
                     fontSize: "0.95rem",
                     fontWeight: "600",
                   }}
@@ -311,8 +389,7 @@ export function MonthlyCandidatesSection({
                 </h3>
                 <p
                   style={{
-                    color: "#4E4B46",
-                    opacity: 0.8,
+                    color: COLORS.text.secondary,
                     fontSize: "0.85rem",
                     lineHeight: "1.5",
                   }}
@@ -328,9 +405,10 @@ export function MonthlyCandidatesSection({
                   transform: monthlyCandidatesDropdown.isExpanded
                     ? "rotate(180deg)"
                     : "rotate(0deg)",
+                  color: COLORS.brand.primary,
                 }}
               >
-                <ChevronDown className="w-5 h-5" style={{ color: "#6B7A6F" }} />
+                <ChevronDown className="w-5 h-5" style={{ color: COLORS.brand.primary }} />
               </div>
             </div>
           </div>

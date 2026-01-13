@@ -29,7 +29,6 @@ export function buildTitlePrompt(
 - 평균 일치도: ${vividReport.alignment_analysis.score_timeline.length > 0 
   ? Math.round(vividReport.alignment_analysis.score_timeline.reduce((sum, item) => sum + item.average_score, 0) / vividReport.alignment_analysis.score_timeline.length)
   : "N/A"}
-- 주요 개선 영역: ${vividReport.alignment_analysis.score_drivers.improved_areas.map(a => a.area).slice(0, 2).join(", ") || "없음"}
 
 **하루 패턴 요약:**
 - 주요 패턴: ${vividReport.daily_life_patterns.recurring_patterns.map(p => p.pattern).slice(0, 2).join(", ") || "없음"}

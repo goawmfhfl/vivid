@@ -41,7 +41,7 @@ export function EmptyState({ onBack }: { onBack: () => void }) {
         style={{ backgroundColor: "#F5F7F5", border: "1px solid #E0E5E0" }}
       >
         <p style={{ color: "#4E4B46" }}>
-          해당 날짜의 피드백 데이터가 없습니다.
+          해당 날짜의 VIVID 데이터가 없습니다.
         </p>
       </Card>
       <div className="mt-4">

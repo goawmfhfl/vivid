@@ -117,8 +117,8 @@ export function Calendar({
                       className="h-1.5 w-1.5 rounded-full"
                       style={{
                         backgroundColor: isSelected
-                          ? COLORS.text.white
-                          : COLORS.brand.primary,
+                          ? COLORS.accent[300] // 액티브 상태에서는 더 연한 파란색
+                          : COLORS.accent[500], // 더스티 블루
                       }}
                     />
                   )}

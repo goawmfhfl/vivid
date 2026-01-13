@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export type AreaItem = {
   area: string;
   impact?: string; // 강점 영역용
-  reason?: string; // 악화 영역용
+  reason?: string; // 개선 영역용
   evidence: string[];
 };
 
@@ -87,16 +87,16 @@ export function EvidenceDropdown({
 export interface StrengthsWeaknessesCardProps {
   /** 강점 영역 목록 */
   strengths?: AreaItem[];
-  /** 악화 영역 목록 */
+  /** 개선 영역 목록 */
   weaknesses?: AreaItem[];
   /** 강점 영역 색상 (RGB 값, 예: "127, 143, 122") */
   strengthsColor?: string;
-  /** 악화 영역 색상 (RGB 값, 예: "181, 103, 74") */
+  /** 개선 영역 색상 (RGB 값, 예: "181, 103, 74") */
   weaknessesColor?: string;
 }
 
 /**
- * 강점/악화 영역을 나란히 표시하는 카드 컴포넌트
+ * 강점/개선 영역을 나란히 표시하는 카드 컴포넌트
  * 월간 피드백 리포트에서 공통으로 사용
  */
 export function StrengthsWeaknessesCard({
@@ -245,7 +245,7 @@ export function StrengthsWeaknessesCard({
         </div>
       )}
 
-      {/* 악화 영역 */}
+      {/* 개선 영역 */}
       {hasWeaknesses && (
         <div
           className="rounded-xl transition-all duration-300"
@@ -280,7 +280,7 @@ export function StrengthsWeaknessesCard({
                 )}
                 style={{ color: COLORS.text.primary }}
               >
-                악화
+                개선
               </p>
             </div>
           </div>

@@ -39,9 +39,9 @@ export function DeleteRecordDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
-        className="max-w-[calc(100vw-2rem)] sm:max-w-md"
+        className="sm:max-w-md [&>button]:z-[110]"
         style={{
-          maxWidth: "calc(100vw - 2rem)",
+          maxWidth: "672px",
           width: "calc(100vw - 2rem)",
           left: "50%",
           right: "auto",
@@ -79,7 +79,10 @@ export function DeleteRecordDialog({
           filter: "contrast(1.02) brightness(1.01)",
         }}
       >
-        <div className="relative overflow-hidden rounded-lg">
+        <div
+          className="relative overflow-hidden rounded-lg"
+          style={{ zIndex: 1 }}
+        >
           {/* 종이 질감 오버레이 */}
           <div
             className="absolute inset-0 pointer-events-none rounded-lg"
@@ -90,10 +93,11 @@ export function DeleteRecordDialog({
               `,
               mixBlendMode: "overlay",
               opacity: 0.5,
+              zIndex: 0,
             }}
           />
 
-          <div className="relative z-10">
+          <div className="relative" style={{ zIndex: 1 }}>
             <AlertDialogHeader className="pb-3 sm:pb-4">
               <AlertDialogTitle
                 className="text-base sm:text-lg"

@@ -17,7 +17,7 @@ export function WeeklyFeedbackEmptyState({
             marginBottom: "1rem",
           }}
         >
-          주간 피드백 데이터를 찾을 수 없습니다.
+          주간 VIVID 데이터를 찾을 수 없습니다.
         </p>
         <Button
           onClick={onBack}

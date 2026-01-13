@@ -49,6 +49,29 @@ export function RecordItem({
   // 편집/삭제 기능이 있는지 확인
   const hasActions = showActions && (onEdit || onDelete);
 
+  // vivid 타입(dream)일 때 Q1, Q2 분리
+  const parseVividContent = (content: string | null) => {
+    if (!content || recordType !== "dream") {
+      return { q1: null, q2: null, hasSeparated: false };
+    }
+
+    // Q1과 Q2 패턴 찾기
+    const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*(.*?)(?=\n\nQ2\.|$)/s);
+    const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*(.*?)$/s);
+
+    if (q1Match && q2Match) {
+      return {
+        q1: q1Match[1].trim(),
+        q2: q2Match[1].trim(),
+        hasSeparated: true,
+      };
+    }
+
+    return { q1: null, q2: null, hasSeparated: false };
+  };
+
+  const { q1, q2, hasSeparated } = parseVividContent(record.content);
+
   return (
     <div
       className={`${SPACING.card.paddingSmall} ${CARD_STYLES.hover.transition} relative`}
@@ -254,18 +277,108 @@ export function RecordItem({
             </DropdownMenu>
           )}
         </div>
-        <p
-          className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}
-          style={{
-            color: COLORS.text.primary,
-            lineHeight: "28px", // 줄무늬 간격(28px)과 일치
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
-          }}
-        >
-          {record.content}
-        </p>
+        
+        {/* vivid 타입일 때 Q1, Q2 분리 표시 */}
+        {hasSeparated ? (
+          <div className="space-y-6">
+            {/* Q1 섹션 */}
+            {q1 && (
+              <div className="space-y-3">
+                <div className="flex items-baseline gap-3 pb-2 border-b" style={{ borderColor: COLORS.border.light }}>
+                  <span
+                    className={cn(
+                      TYPOGRAPHY.h4.fontSize,
+                      "font-bold tracking-tight"
+                    )}
+                    style={{ 
+                      color: COLORS.text.primary,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    Q1
+                  </span>
+                  <h3
+                    className={cn(
+                      TYPOGRAPHY.body.fontSize,
+                      TYPOGRAPHY.body.fontWeight,
+                      "flex-1"
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    오늘 하루를 어떻게 보낼까?
+                  </h3>
+                </div>
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize)}
+                  style={{
+                    color: COLORS.text.primary,
+                    lineHeight: "28px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    paddingTop: "2px",
+                  }}
+                >
+                  {q1}
+                </p>
+              </div>
+            )}
+
+            {/* Q2 섹션 */}
+            {q2 && (
+              <div className="space-y-3">
+                <div className="flex items-baseline gap-3 pb-2 border-b" style={{ borderColor: COLORS.border.light }}>
+                  <span
+                    className={cn(
+                      TYPOGRAPHY.h4.fontSize,
+                      "font-bold tracking-tight"
+                    )}
+                    style={{ 
+                      color: COLORS.text.primary,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    Q2
+                  </span>
+                  <h3
+                    className={cn(
+                      TYPOGRAPHY.body.fontSize,
+                      TYPOGRAPHY.body.fontWeight,
+                      "flex-1"
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    앞으로의 나는 어떤 모습일까?
+                  </h3>
+                </div>
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize)}
+                  style={{
+                    color: COLORS.text.primary,
+                    lineHeight: "28px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    paddingTop: "2px",
+                  }}
+                >
+                  {q2}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p
+            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}
+            style={{
+              color: COLORS.text.primary,
+              lineHeight: "28px", // 줄무늬 간격(28px)과 일치
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
+            }}
+          >
+            {record.content}
+          </p>
+        )}
       </div>
     </div>
   );

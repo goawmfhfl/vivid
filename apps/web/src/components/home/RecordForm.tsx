@@ -11,6 +11,8 @@ import {
   RECORD_TYPES,
   type RecordType,
 } from "../signup/RecordTypeCard";
+import { Timer } from "./Timer";
+import { useTimer } from "@/hooks/useTimer";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -36,6 +38,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const isUserScrollingRef = useRef(false);
   const { data: currentUser } = useCurrentUser();
   const { subscription } = useSubscription();
+  const { state: timerState } = useTimer();
 
   // 날짜 상태 계산
   const todayIso = getKSTDateString();
@@ -521,10 +524,44 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   }
 
   return (
-    <div className="mb-6">
-      {/* 모던한 타입 라벨 - 텍스트에어리어 위쪽 */}
-      {recordType && (
-        <div className="mb-3 flex justify-end relative">
+    <>
+      {/* Sticky 타이머 바 (타이머 실행 중일 때만 표시) */}
+      {timerState.isRunning && recordType && (
+        <div
+          className="sticky top-0 z-50 mb-3"
+          style={{
+            backgroundColor: COLORS.background.base,
+            paddingTop: "1rem",
+            paddingBottom: "0.75rem",
+            marginTop: "-1rem",
+            marginLeft: "-1rem",
+            marginRight: "-1rem",
+            paddingLeft: "1rem",
+            paddingRight: "1rem",
+            marginBottom: "0.75rem",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)",
+            borderBottom: `1px solid ${COLORS.border.light}`,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div className="flex justify-between items-center">
+            <Timer />
+            <div style={{ width: "1px" }} /> {/* 타입 선택 버튼 공간 확보 */}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6">
+        {/* 모던한 타입 라벨 - 텍스트에어리어 위쪽 */}
+        {recordType && (
+          <div
+            className={`mb-3 flex justify-between items-center relative ${
+              timerState.isRunning ? "hidden" : ""
+            }`}
+          >
+            {/* 타이머 */}
+            <Timer />
           <div
             data-type-label
             className="cursor-pointer inline-flex relative overflow-hidden"
@@ -1114,6 +1151,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

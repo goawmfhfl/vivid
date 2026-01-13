@@ -63,7 +63,7 @@ export function MonthlyFeedbackView({
           </Button>
 
           <div className="py-16">
-            <LoadingSpinner message="월간 피드백을 불러오는 중..." size="md" />
+            <LoadingSpinner message="월간 VIVID를 불러오는 중..." size="md" />
           </div>
         </div>
       </div>
@@ -116,12 +116,12 @@ export function MonthlyFeedbackView({
 
           <div className="py-16 text-center">
             <p className="text-lg mb-2" style={{ color: "#6B7A6F" }}>
-              월간 피드백을 찾을 수 없습니다
+              월간 VIVID를 찾을 수 없습니다
             </p>
             <p className="text-sm" style={{ color: "#6B7A6F" }}>
               {month
-                ? `${month}의 월간 피드백이 아직 생성되지 않았습니다.`
-                : "해당 월간 피드백이 존재하지 않습니다."}
+                ? `${month}의 월간 VIVID가 아직 생성되지 않았습니다.`
+                : "해당 월간 VIVID가 존재하지 않습니다."}
             </p>
           </div>
         </div>

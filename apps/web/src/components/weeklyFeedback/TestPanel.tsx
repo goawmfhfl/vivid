@@ -55,11 +55,6 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
-          name: "weekly_vivid_evaluation",
-          path: "view.vivid_report.weekly_vivid_evaluation",
-          isPro: false,
-        },
-        {
           name: "weekly_keywords_analysis",
           path: "view.vivid_report.weekly_keywords_analysis",
           isPro: false,

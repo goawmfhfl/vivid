@@ -194,7 +194,7 @@ export function ProfileSettingsView() {
                 disabled={updateProfileMutation.isPending}
               />
               <p className="mt-1 text-xs text-[#6B7A6F]">
-                이메일 찾기와 맞춤 피드백에 사용됩니다.
+                이메일 찾기와 맞춤 VIVID에 사용됩니다.
               </p>
             </div>
 
@@ -215,8 +215,8 @@ export function ProfileSettingsView() {
           </SectionCard>
 
           <SectionCard
-            title="맞춤 피드백 정보"
-            description="정확한 AI 피드백을 위해 선택 정보를 입력해주세요."
+            title="맞춤 VIVID 정보"
+            description="정확한 AI VIVID를 위해 선택 정보를 입력해주세요."
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>

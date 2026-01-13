@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BarChart3 } from "lucide-react";
+import { ArrowLeft, List } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
@@ -24,8 +24,8 @@ export function MonthlyFeedbackReport({
 
   // 각 영역별 데이터 존재 여부 체크
 
-  const handleGoToAnalysis = () => {
-    router.push("/reports/monthly");
+  const handleGoToList = () => {
+    router.push("/reports/monthly/list");
   };
 
   return (
@@ -110,15 +110,50 @@ export function MonthlyFeedbackReport({
         {/* Bottom Action */}
         <div className="flex justify-center pt-8">
           <Button
-            onClick={handleGoToAnalysis}
-            className="rounded-full px-6 py-5 sm:px-8 sm:py-6 text-sm sm:text-base flex items-center gap-2"
+            onClick={handleGoToList}
+            className="w-full sm:w-auto relative overflow-hidden group"
             style={{
               backgroundColor: COLORS.brand.primary,
               color: "white",
+              padding: "1rem 1.5rem",
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: `
+                0 2px 8px rgba(107, 122, 111, 0.2),
+                0 1px 3px rgba(107, 122, 111, 0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2)
+              `,
+              transition: "all 0.2s ease",
+              fontWeight: "600",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = `
+                0 4px 12px rgba(107, 122, 111, 0.3),
+                0 2px 6px rgba(107, 122, 111, 0.15),
+                inset 0 1px 0 rgba(255,255,255,0.2)
+              `;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = `
+                0 2px 8px rgba(107, 122, 111, 0.2),
+                0 1px 3px rgba(107, 122, 111, 0.1),
+                inset 0 1px 0 rgba(255,255,255,0.2)
+              `;
             }}
           >
-            <BarChart3 className="w-4 h-4" />
-            분석 페이지로 이동
+            {/* 배경 그라데이션 오버레이 */}
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{
+                background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.light} 100%)`,
+              }}
+            />
+            <div className="relative z-10 flex items-center justify-center gap-2">
+              <List className="w-5 h-5" />
+              <span>월간 VIVID 리스트 보러가기</span>
+            </div>
           </Button>
         </div>
       </div>

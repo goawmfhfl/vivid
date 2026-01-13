@@ -53,7 +53,7 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
     <div className="space-y-6">
       <MonthlyCandidatesSection />
 
-      {/* 월간 피드백 리스트 섹션 */}
+      {/* 월간 VIVID 리스트 섹션 */}
       {currentSummaries.length > 0 && (
         <div
           className={hasCandidatesSection ? "pt-6 border-t" : "pt-0"}
@@ -77,7 +77,7 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
                 fontSize: "0.85rem",
               }}
             >
-              AI가 분석한 월간 인사이트와 피드백을 확인하세요
+              AI가 분석한 월간 인사이트와 VIVID를 확인하세요
             </p>
           </div>
           <SummaryList

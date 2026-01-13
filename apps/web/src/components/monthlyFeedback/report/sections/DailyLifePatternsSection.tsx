@@ -97,44 +97,59 @@ export function DailyLifePatternsSection({
   return (
     <div className="space-y-5">
       <GradientCard gradientColor="163, 191, 217">
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${vividColor}, ${vividColor}dd)`,
-              border: `2px solid ${vividColor}40`,
-              boxShadow: `0 2px 8px ${vividColor}20`,
-            }}
-          >
-            <span
-              className={cn(
-                TYPOGRAPHY.h4.fontSize,
-                TYPOGRAPHY.h4.fontWeight
-              )}
-              style={{ color: "white" }}
-            >
-              3
-            </span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="w-5 h-5" style={{ color: vividColor }} />
-              <p
+        <div className="relative mb-8 pb-6 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.2)` }}>
+          <div className="flex items-start gap-4">
+            {/* 번호 배지 - 더 세련된 스타일 */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${vividColor}, ${vividColor}cc)`,
+                  boxShadow: `0 4px 12px ${vividColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+                }}
+              >
+                <span
+                  className={cn(
+                    TYPOGRAPHY.h3.fontSize,
+                    TYPOGRAPHY.h3.fontWeight,
+                    "relative z-10"
+                  )}
+                  style={{ color: "white" }}
+                >
+                  3
+                </span>
+                {/* 미묘한 그라데이션 오버레이 */}
+                <div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)`,
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* 텍스트 영역 */}
+            <div className="flex-1 pt-1">
+              <h2
                 className={cn(
-                  TYPOGRAPHY.h3.fontSize,
-                  TYPOGRAPHY.h3.fontWeight
+                  TYPOGRAPHY.h2.fontSize,
+                  TYPOGRAPHY.h2.fontWeight,
+                  "mb-2"
                 )}
                 style={{ color: COLORS.text.primary }}
               >
                 하루 패턴 인사이트
+              </h2>
+              <p
+                className={cn(
+                  TYPOGRAPHY.body.fontSize,
+                  "leading-relaxed"
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                일상에서 반복되는 패턴과 변화를 분석합니다
               </p>
             </div>
-            <p
-              className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-              style={{ color: COLORS.text.secondary }}
-            >
-              일상에서 반복되는 패턴과 변화를 분석합니다
-            </p>
           </div>
         </div>
 
@@ -142,25 +157,32 @@ export function DailyLifePatternsSection({
         {dailyLifePatterns.recurring_patterns &&
           dailyLifePatterns.recurring_patterns.length > 0 && (
             <div className="mb-6">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                   style={{
-                    backgroundColor: `${vividColor}20`,
-                    border: `1px solid ${vividColor}40`,
+                    background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                    boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                   }}
                 >
                   <span
                     className={cn(
                       TYPOGRAPHY.bodySmall.fontSize,
-                      TYPOGRAPHY.bodySmall.fontWeight
+                      TYPOGRAPHY.bodySmall.fontWeight,
+                      "relative z-10"
                     )}
-                    style={{ color: vividColor }}
+                    style={{ color: "white" }}
                   >
                     3-1
                   </span>
+                  <div
+                    className="absolute inset-0 opacity-25"
+                    style={{
+                      background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                    }}
+                  />
                 </div>
-                <p
+                <h3
                   className={cn(
                     TYPOGRAPHY.h3.fontSize,
                     TYPOGRAPHY.h3.fontWeight
@@ -168,7 +190,7 @@ export function DailyLifePatternsSection({
                   style={{ color: COLORS.text.primary }}
                 >
                   반복되는 패턴
-                </p>
+                </h3>
               </div>
               <div className="space-y-3">
                 {dailyLifePatterns.recurring_patterns.map((pattern, idx) => (
@@ -267,25 +289,32 @@ export function DailyLifePatternsSection({
         {dailyLifePatterns.weekly_evolution &&
           dailyLifePatterns.weekly_evolution.length > 0 && (
             <div className="mb-6">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                   style={{
-                    backgroundColor: `${vividColor}20`,
-                    border: `1px solid ${vividColor}40`,
+                    background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                    boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                   }}
                 >
                   <span
                     className={cn(
                       TYPOGRAPHY.bodySmall.fontSize,
-                      TYPOGRAPHY.bodySmall.fontWeight
+                      TYPOGRAPHY.bodySmall.fontWeight,
+                      "relative z-10"
                     )}
-                    style={{ color: vividColor }}
+                    style={{ color: "white" }}
                   >
                     3-2
                   </span>
+                  <div
+                    className="absolute inset-0 opacity-25"
+                    style={{
+                      background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                    }}
+                  />
                 </div>
-                <p
+                <h3
                   className={cn(
                     TYPOGRAPHY.h3.fontSize,
                     TYPOGRAPHY.h3.fontWeight
@@ -293,7 +322,7 @@ export function DailyLifePatternsSection({
                   style={{ color: COLORS.text.primary }}
                 >
                   주차별 진화
-                </p>
+                </h3>
               </div>
               <div className="space-y-4">
                 {dailyLifePatterns.weekly_evolution.map((week, idx) => (
@@ -403,25 +432,32 @@ export function DailyLifePatternsSection({
           <ScrollAnimation>
             <div className="mb-8">
               <div className="mb-6">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-3 pb-3 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                     style={{
-                      backgroundColor: `${vividColor}20`,
-                      border: `1px solid ${vividColor}40`,
+                      background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                      boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                     }}
                   >
                     <span
                       className={cn(
                         TYPOGRAPHY.bodySmall.fontSize,
-                        TYPOGRAPHY.bodySmall.fontWeight
+                        TYPOGRAPHY.bodySmall.fontWeight,
+                        "relative z-10"
                       )}
-                      style={{ color: vividColor }}
+                      style={{ color: "white" }}
                     >
                       3-3
                     </span>
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                      }}
+                    />
                   </div>
-                  <p
+                  <h3
                     className={cn(
                       TYPOGRAPHY.h3.fontSize,
                       TYPOGRAPHY.h3.fontWeight
@@ -429,7 +465,7 @@ export function DailyLifePatternsSection({
                     style={{ color: COLORS.text.primary }}
                   >
                     평가 테마
-                  </p>
+                  </h3>
                 </div>
                 <p
                   className={cn(
@@ -462,26 +498,32 @@ export function DailyLifePatternsSection({
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                             style={{
-                              backgroundColor: `rgba(127, 143, 122, 0.25)`,
-                              border: `1.5px solid rgba(127, 143, 122, 0.4)`,
+                              background: `linear-gradient(135deg, ${improvedColor}dd, ${improvedColor}bb)`,
+                              boxShadow: `0 2px 8px ${improvedColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                             }}
                           >
                             <CheckCircle2
-                              className="w-4 h-4"
-                              style={{ color: improvedColor }}
+                              className="w-4 h-4 relative z-10"
+                              style={{ color: "white" }}
+                            />
+                            <div
+                              className="absolute inset-0 opacity-25"
+                              style={{
+                                background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                              }}
                             />
                           </div>
-                          <p
+                          <h3
                             className={cn(
-                              TYPOGRAPHY.body.fontSize,
-                              TYPOGRAPHY.body.fontWeight
+                              TYPOGRAPHY.h3.fontSize,
+                              TYPOGRAPHY.h3.fontWeight
                             )}
                             style={{ color: COLORS.text.primary }}
                           >
                             강점
-                          </p>
+                          </h3>
                         </div>
                       </div>
 
@@ -646,26 +688,32 @@ export function DailyLifePatternsSection({
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                             style={{
-                              backgroundColor: `rgba(181, 103, 74, 0.25)`,
-                              border: `1.5px solid rgba(181, 103, 74, 0.4)`,
+                              background: `linear-gradient(135deg, ${declinedColor}dd, ${declinedColor}bb)`,
+                              boxShadow: `0 2px 8px ${declinedColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                             }}
                           >
                             <TrendingUp
-                              className="w-4 h-4"
-                              style={{ color: declinedColor }}
+                              className="w-4 h-4 relative z-10"
+                              style={{ color: "white" }}
+                            />
+                            <div
+                              className="absolute inset-0 opacity-25"
+                              style={{
+                                background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                              }}
                             />
                           </div>
-                          <p
+                          <h3
                             className={cn(
-                              TYPOGRAPHY.body.fontSize,
-                              TYPOGRAPHY.body.fontWeight
+                              TYPOGRAPHY.h3.fontSize,
+                              TYPOGRAPHY.h3.fontWeight
                             )}
                             style={{ color: COLORS.text.primary }}
                           >
                             개선점
-                          </p>
+                          </h3>
                         </div>
                       </div>
 

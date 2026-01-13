@@ -202,7 +202,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </h3>
             <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
               <p>
-                서비스는 기록 데이터 분석 및 피드백 생성을 위해 AI 모델과
+                서비스는 기록 데이터 분석 및 VIVID 생성을 위해 AI 모델과
                 연동되며, 이 과정에서 입력된 문장이 암호화되어 저장·처리됩니다.
               </p>
               <ul className="list-disc pl-5 space-y-1">

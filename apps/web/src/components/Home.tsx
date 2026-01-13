@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -118,84 +118,73 @@ export function Home({ selectedDate }: HomeProps = {}) {
     (state) => state.clearDailyFeedbackProgress
   );
 
-  // 타이머 기반 progress 상태
-  const [timerProgress, setTimerProgress] = useState<number | null>(null);
-  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+  // 스크롤 방향 감지 (버튼 숨김/표시용)
+  const [isScrolledDown, setIsScrolledDown] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const lastScrollY = useRef(0);
 
   // 진행 상황 확인
   const progress = dailyFeedbackProgress[activeDate] || null;
-  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null || timerProgress !== null;
-  
-  // 타이머 기반 progress 계산 (0% → 99%, 15초 동안)
+  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null;
+
+  // 스크롤 이벤트 핸들러
   useEffect(() => {
-    if (timerStartTime === null) return;
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollThreshold = 10; // 최상단 판단 임계값
+      const scrollDelta = 5; // 스크롤 방향 감지를 위한 최소 변화량
 
-    const DURATION_MS = 15000; // 15초
-    const TARGET_PERCENTAGE = 99; // 최대 99%
-    const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
+      // 최상단 여부 확인
+      setIsAtTop(currentScrollY < scrollThreshold);
 
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - timerStartTime;
+      // 스크롤 방향 확인 (최소 변화량 이상일 때만)
+      const scrollDifference = currentScrollY - lastScrollY.current;
       
-      // 15초가 넘어가면 99%에 고정
-      if (elapsed >= DURATION_MS) {
-        setTimerProgress(TARGET_PERCENTAGE);
-        clearInterval(interval);
-        return;
+      if (scrollDifference > scrollDelta && currentScrollY > scrollThreshold) {
+        // 아래로 스크롤 중 (임계값 이상)
+        setIsScrolledDown(true);
+      } else if (scrollDifference < -scrollDelta) {
+        // 위로 스크롤 중
+        setIsScrolledDown(false);
       }
-      
-      // 15초 이내일 때만 진행률 계산
-      const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
-      setTimerProgress(progress);
-    }, UPDATE_INTERVAL);
 
-    return () => clearInterval(interval);
-  }, [timerStartTime]);
-
-  // activeDate가 변경되거나 컴포넌트 언마운트 시 타이머 정리
-  useEffect(() => {
-    return () => {
-      setTimerStartTime(null);
-      setTimerProgress(null);
+      lastScrollY.current = currentScrollY;
     };
-  }, [activeDate]);
 
-  // 타이머 progress와 실제 서버 progress 병합 (더 높은 값 사용)
-  const serverProgressPercentage = progress
+    // 초기 스크롤 위치 설정
+    lastScrollY.current = window.scrollY;
+    setIsAtTop(window.scrollY < 10);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // 서버 progress 계산
+  const progressPercentage = progress
     ? Math.round((progress.current / progress.total) * 100)
     : 0;
-  
-  // 서버 응답이 완료되면 100%, 그렇지 않으면 타이머와 서버 중 더 높은 값 (최대 99%)
-  const isComplete = progress && progress.current >= progress.total;
-  const progressPercentage = isComplete
-    ? 100
-    : Math.min(
-        Math.max(timerProgress ?? 0, serverProgressPercentage),
-        99
-      );
 
 
   const handleOpenDailyFeedback = async () => {
     try {
       if (hasDateFeedback) {
-        // 기존 피드백이 있으면 id로 라우팅
+        // 기존 VIVID가 있으면 id로 라우팅
         if (!dateFeedback.id) {
-          throw new Error("피드백 ID를 찾을 수 없습니다.");
+          throw new Error("VIVID ID를 찾을 수 없습니다.");
         }
         router.push(`/analysis/feedback/daily/${dateFeedback.id}`);
         return;
       }
-
-      // 타이머 시작
-      setTimerStartTime(Date.now());
-      setTimerProgress(0);
 
       // 진행 상황 초기화
       setDailyFeedbackProgress(activeDate, {
         date: activeDate,
         current: 0,
         total: 1,
-        currentStep: "피드백 생성 중",
+        currentStep: "VIVID 생성 중",
       });
 
       try {
@@ -203,10 +192,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
           date: activeDate,
         });
 
-        // 타이머 정리
-        setTimerStartTime(null);
-        setTimerProgress(null);
-        
         // 진행 상황 초기화
         clearDailyFeedbackProgress(activeDate);
 
@@ -220,41 +205,33 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 day: "numeric",
               });
           openSuccessModal(
-            `${dateLabel} 피드백이 생성되었습니다!\n확인 버튼을 누르면 피드백을 확인할 수 있습니다.`,
+            `${dateLabel} VIVID가 생성되었습니다!\n확인 버튼을 누르면 VIVID를 확인할 수 있습니다.`,
             () => {
               router.push(`/analysis/feedback/daily/${feedbackData.id}`);
             }
           );
         } else {
-          throw new Error("생성된 피드백에 ID가 없습니다.");
+          throw new Error("생성된 VIVID에 ID가 없습니다.");
         }
       } catch (error) {
-        console.error("피드백 생성 실패:", error);
+        console.error("VIVID 생성 실패:", error);
 
-        // 타이머 정리
-        setTimerStartTime(null);
-        setTimerProgress(null);
-        
         // 진행 상황 초기화
         clearDailyFeedbackProgress(activeDate);
 
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "피드백 생성에 실패했습니다. 다시 시도해주세요.";
+            : "VIVID 생성에 실패했습니다. 다시 시도해주세요.";
 
         openErrorModal(errorMessage);
       }
     } catch (e) {
       // 동기 에러 처리
       const base =
-        e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
+        e instanceof Error ? e.message : "VIVID 생성 중 오류가 발생했습니다.";
       const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
       openErrorModal(message);
-      
-      // 타이머 정리
-      setTimerStartTime(null);
-      setTimerProgress(null);
       
       clearDailyFeedbackProgress(activeDate);
     }
@@ -295,7 +272,16 @@ export function Home({ selectedDate }: HomeProps = {}) {
       />
 
       {hasDateRecords && (
-        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4">
+        <div 
+          className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4"
+          style={{
+            transform: isScrolledDown && !isAtTop ? "translateY(100%)" : "translateY(0)",
+            opacity: isScrolledDown && !isAtTop ? 0 : 1,
+            pointerEvents: isScrolledDown && !isAtTop ? "none" : "auto",
+            transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            willChange: "transform, opacity",
+          }}
+        >
           <div
             className="relative cursor-pointer transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
             onClick={
@@ -374,7 +360,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
             {/* 버튼 내용 */}
             <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
               {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
-              {(progress || timerProgress !== null) && (
+              {progress && (
                 <CircularProgress
                   percentage={progressPercentage}
                   size={40}
@@ -386,7 +372,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
               )}
               <Sparkles
                 className={`flex-shrink-0 ${
-                  (progress || timerProgress !== null) ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
+                  progress ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
                 }`}
                 style={{ color: COLORS.brand.primary }}
               />
@@ -395,22 +381,22 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   className="text-sm sm:text-base"
                   style={{
                     color: COLORS.brand.primary,
-                    fontSize: (progress || timerProgress !== null) ? "0.875rem" : "1rem",
+                    fontSize: progress ? "0.875rem" : "1rem",
                     fontWeight: "600",
                     lineHeight: "1.2",
                   }}
                 >
-                  {(progress || timerProgress !== null)
-                    ? "피드백 생성 중..."
+                  {progress
+                    ? "VIVID 생성 중..."
                     : hasDateFeedback
                     ? isToday
-                      ? "오늘 피드백 보기"
-                      : "피드백 보기"
+                      ? "오늘의 VIVID 보기"
+                      : "VIVID 보기"
                     : isToday
-                    ? "오늘 피드백 생성하기"
-                    : "피드백 생성하기"}
+                    ? "오늘의 VIVID 생성하기"
+                    : "VIVID 생성하기"}
                 </span>
-                {(progress || timerProgress !== null) && (
+                {progress && (
                   <span
                     className="text-xs sm:text-sm"
                     style={{
@@ -419,7 +405,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                       fontWeight: "500",
                     }}
                   >
-                    {progress?.currentStep || "피드백 생성 중"}
+                    {progress.currentStep || "VIVID 생성 중"}
                   </span>
                 )}
               </div>

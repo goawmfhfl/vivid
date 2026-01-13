@@ -190,14 +190,14 @@ function PriorityShiftItem({
           <div
             className="p-4 rounded-lg"
             style={{
-              backgroundColor: `rgba(163, 191, 217, 0.12)`,
-              border: `1px solid rgba(163, 191, 217, 0.25)`,
+              backgroundColor: `rgba(148, 163, 184, 0.06)`,
+              border: `1px solid rgba(148, 163, 184, 0.15)`,
             }}
           >
             <div className="flex items-center gap-2 mb-2">
               <div
                 className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: `${vividColor}60` }}
+                style={{ backgroundColor: `rgba(148, 163, 184, 0.5)` }}
               />
               <p
                 className={cn(
@@ -226,8 +226,8 @@ function PriorityShiftItem({
           <div
             className="p-4 rounded-lg"
             style={{
-              backgroundColor: `rgba(163, 191, 217, 0.12)`,
-              border: `1px solid rgba(163, 191, 217, 0.25)`,
+              backgroundColor: `${vividColor}20`,
+              border: `1.5px solid ${vividColor}45`,
             }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -319,44 +319,59 @@ export function VisionEvolutionSection({
   return (
     <div className="space-y-6">
       <GradientCard gradientColor="163, 191, 217">
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${vividColor}, ${vividColor}dd)`,
-              border: `2px solid ${vividColor}40`,
-              boxShadow: `0 2px 8px ${vividColor}20`,
-            }}
-          >
-            <span
-              className={cn(
-                TYPOGRAPHY.h4.fontSize,
-                TYPOGRAPHY.h4.fontWeight
-              )}
-              style={{ color: "white" }}
-            >
-              1
-            </span>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="w-5 h-5" style={{ color: vividColor }} />
-              <p
+        <div className="relative mb-8 pb-6 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.2)` }}>
+          <div className="flex items-start gap-4">
+            {/* 번호 배지 - 더 세련된 스타일 */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, ${vividColor}, ${vividColor}cc)`,
+                  boxShadow: `0 4px 12px ${vividColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+                }}
+              >
+                <span
+                  className={cn(
+                    TYPOGRAPHY.h3.fontSize,
+                    TYPOGRAPHY.h3.fontWeight,
+                    "relative z-10"
+                  )}
+                  style={{ color: "white" }}
+                >
+                  1
+                </span>
+                {/* 미묘한 그라데이션 오버레이 */}
+                <div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)`,
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* 텍스트 영역 */}
+            <div className="flex-1 pt-1">
+              <h2
                 className={cn(
-                  TYPOGRAPHY.h3.fontSize,
-                  TYPOGRAPHY.h3.fontWeight
+                  TYPOGRAPHY.h2.fontSize,
+                  TYPOGRAPHY.h2.fontWeight,
+                  "mb-2"
                 )}
                 style={{ color: COLORS.text.primary }}
               >
                 한 달간의 목표 변화
+              </h2>
+              <p
+                className={cn(
+                  TYPOGRAPHY.body.fontSize,
+                  "leading-relaxed"
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                이번 달에 목표가 어떻게 변화했는지 시간순으로 확인합니다
               </p>
             </div>
-            <p
-              className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-              style={{ color: COLORS.text.secondary }}
-            >
-              이번 달에 목표가 어떻게 변화했는지 시간순으로 확인합니다
-            </p>
           </div>
         </div>
 
@@ -365,25 +380,32 @@ export function VisionEvolutionSection({
           visionEvolution.core_visions.length > 0 && (
             <ScrollAnimation>
               <div className="mb-8">
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                     style={{
-                      backgroundColor: `${vividColor}20`,
-                      border: `1px solid ${vividColor}40`,
+                      background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                      boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                     }}
                   >
                     <span
                       className={cn(
                         TYPOGRAPHY.bodySmall.fontSize,
-                        TYPOGRAPHY.bodySmall.fontWeight
+                        TYPOGRAPHY.bodySmall.fontWeight,
+                        "relative z-10"
                       )}
-                      style={{ color: vividColor }}
+                      style={{ color: "white" }}
                     >
                       1-1
                     </span>
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                      }}
+                    />
                   </div>
-                  <p
+                  <h3
                     className={cn(
                       TYPOGRAPHY.h3.fontSize,
                       TYPOGRAPHY.h3.fontWeight
@@ -391,7 +413,7 @@ export function VisionEvolutionSection({
                     style={{ color: COLORS.text.primary }}
                   >
                     핵심 비전들
-                  </p>
+                  </h3>
                 </div>
                 <div className="space-y-6">
                   {visionEvolution.core_visions.map((vision, idx) => (
@@ -407,25 +429,32 @@ export function VisionEvolutionSection({
           visionEvolution.priority_shifts.length > 0 && (
             <ScrollAnimation>
               <div>
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.15)` }}>
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden"
                     style={{
-                      backgroundColor: `${vividColor}20`,
-                      border: `1px solid ${vividColor}40`,
+                      background: `linear-gradient(135deg, ${vividColor}dd, ${vividColor}bb)`,
+                      boxShadow: `0 2px 8px ${vividColor}25, inset 0 1px 0 rgba(255, 255, 255, 0.15)`,
                     }}
                   >
                     <span
                       className={cn(
                         TYPOGRAPHY.bodySmall.fontSize,
-                        TYPOGRAPHY.bodySmall.fontWeight
+                        TYPOGRAPHY.bodySmall.fontWeight,
+                        "relative z-10"
                       )}
-                      style={{ color: vividColor }}
+                      style={{ color: "white" }}
                     >
-                      1-3
+                      1-2
                     </span>
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 70%)`,
+                      }}
+                    />
                   </div>
-                  <p
+                  <h3
                     className={cn(
                       TYPOGRAPHY.h3.fontSize,
                       TYPOGRAPHY.h3.fontWeight
@@ -433,7 +462,7 @@ export function VisionEvolutionSection({
                     style={{ color: COLORS.text.primary }}
                   >
                     우선순위 변화
-                  </p>
+                  </h3>
                 </div>
                 <div className="mb-6">
                   <div className="space-y-4">

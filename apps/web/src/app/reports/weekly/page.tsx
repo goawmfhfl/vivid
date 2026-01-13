@@ -42,44 +42,46 @@ function WeeklyReportsPage() {
           style={{
             backgroundColor: COLORS.brand.primary,
             color: "white",
-            padding: "1rem 1.5rem",
-            borderRadius: "12px",
+            padding: "1.5rem 2rem",
+            borderRadius: "16px",
             border: "none",
+            fontSize: "1.125rem",
             boxShadow: `
-              0 2px 8px rgba(107, 122, 111, 0.2),
-              0 1px 3px rgba(107, 122, 111, 0.1),
+              0 4px 16px rgba(107, 122, 111, 0.25),
+              0 2px 8px rgba(107, 122, 111, 0.15),
               inset 0 1px 0 rgba(255,255,255,0.2)
             `,
-            transition: "all 0.2s ease",
-            fontWeight: "600",
+            transition: "all 0.3s ease",
+            fontWeight: "700",
+            letterSpacing: "0.01em",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
             e.currentTarget.style.boxShadow = `
-              0 4px 12px rgba(107, 122, 111, 0.3),
-              0 2px 6px rgba(107, 122, 111, 0.15),
-              inset 0 1px 0 rgba(255,255,255,0.2)
+              0 8px 24px rgba(107, 122, 111, 0.35),
+              0 4px 12px rgba(107, 122, 111, 0.2),
+              inset 0 1px 0 rgba(255,255,255,0.3)
             `;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.transform = "translateY(0) scale(1)";
             e.currentTarget.style.boxShadow = `
-              0 2px 8px rgba(107, 122, 111, 0.2),
-              0 1px 3px rgba(107, 122, 111, 0.1),
+              0 4px 16px rgba(107, 122, 111, 0.25),
+              0 2px 8px rgba(107, 122, 111, 0.15),
               inset 0 1px 0 rgba(255,255,255,0.2)
             `;
           }}
         >
           {/* 배경 그라데이션 오버레이 */}
           <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{
               background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.light} 100%)`,
             }}
           />
-          <div className="relative z-10 flex items-center justify-center gap-2">
-            <List className="w-5 h-5" />
-            <span>주간 VIVID 리스트 보러가기</span>
+          <div className="relative z-10 flex items-center justify-center gap-3">
+            <List className="w-6 h-6" />
+            <span className="text-lg font-bold">주간 VIVID 리스트 보러가기</span>
           </div>
         </Button>
       </div>

@@ -55,7 +55,7 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
     <div className="space-y-6">
       <WeeklyCandidatesSection />
 
-      {/* 주간 피드백 리스트 섹션 */}
+      {/* 주간 VIVID 리스트 섹션 */}
       {currentSummaries.length > 0 && (
         <div
           className={hasCandidatesSection ? "pt-6 border-t" : "pt-0"}

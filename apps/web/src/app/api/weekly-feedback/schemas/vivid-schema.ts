@@ -46,55 +46,7 @@ export function getVividReportSchema(isPro: boolean) {
         required: ["summary", "key_points", "next_week_vision_key_points"],
       },
 
-      // 2. 주간 비비드 평가
-      weekly_vivid_evaluation: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          daily_evaluation_trend: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-                evaluation_score: { type: "number", minimum: 0, maximum: 100 },
-              },
-              required: ["date", "evaluation_score"],
-            },
-            minItems: 0,
-            maxItems: 7,
-            description: "7일간의 current_evaluation 점수 추이",
-          },
-          highest_day: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-              score: { type: "number", minimum: 0, maximum: 100 },
-              reason: { type: "string" },
-            },
-            required: ["date", "score", "reason"],
-          },
-          lowest_day: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-              score: { type: "number", minimum: 0, maximum: 100 },
-              reason: { type: "string" },
-            },
-            required: ["date", "score", "reason"],
-          },
-        },
-        required: [
-          "daily_evaluation_trend",
-          "highest_day",
-          "lowest_day",
-        ],
-      },
-
-      // 3. 주간 키워드 분석
+      // 2. 주간 키워드 분석
       weekly_keywords_analysis: {
         type: "object",
         additionalProperties: false,
@@ -122,7 +74,7 @@ export function getVividReportSchema(isPro: boolean) {
         required: ["vision_keywords_trend"],
       },
 
-      // 4. 앞으로의 모습 종합 분석
+      // 3. 앞으로의 모습 종합 분석
       future_vision_analysis: {
         type: "object",
         additionalProperties: false,
@@ -171,7 +123,7 @@ export function getVividReportSchema(isPro: boolean) {
         ],
       },
 
-      // 5. 일치도 트렌드 분석
+      // 4. 일치도 트렌드 분석
       alignment_trend_analysis: {
         type: "object",
         additionalProperties: false,
@@ -214,7 +166,7 @@ export function getVividReportSchema(isPro: boolean) {
           trend: {
             type: "string",
             enum: ["improving", "declining", "stable"],
-            description: "일치도 개선/악화 추세",
+            description: "일치도 개선 추세",
           },
         },
         required: [
@@ -225,7 +177,7 @@ export function getVividReportSchema(isPro: boolean) {
         ],
       },
 
-      // 6. 사용자 특징 심화 분석
+      // 5. 사용자 특징 심화 분석
       user_characteristics_analysis: {
         type: "object",
         additionalProperties: false,
@@ -299,7 +251,7 @@ export function getVividReportSchema(isPro: boolean) {
         ],
       },
 
-      // 7. 지향하는 모습 심화 분석
+      // 6. 지향하는 모습 심화 분석
       aspired_traits_analysis: {
         type: "object",
         additionalProperties: false,
@@ -361,7 +313,7 @@ export function getVividReportSchema(isPro: boolean) {
         ],
       },
 
-      // 8. 주간 인사이트
+      // 7. 주간 인사이트
       weekly_insights: {
         type: "object",
         additionalProperties: false,
@@ -407,7 +359,6 @@ export function getVividReportSchema(isPro: boolean) {
     },
     required: [
       "weekly_vivid_summary",
-      "weekly_vivid_evaluation",
       "weekly_keywords_analysis",
       "future_vision_analysis",
       "alignment_trend_analysis",

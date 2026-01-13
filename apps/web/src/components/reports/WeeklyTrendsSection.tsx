@@ -225,7 +225,7 @@ export function WeeklyTrendsSection({
     return (
       <div className="py-12 text-center">
         <p style={{ color: COLORS.text.muted }}>
-          아직 데이터가 없습니다. 주간 피드백을 생성하면 주간 흐름을 확인할 수
+          아직 데이터가 없습니다. 주간 VIVID를 생성하면 주간 흐름을 확인할 수
           있습니다.
         </p>
       </div>
