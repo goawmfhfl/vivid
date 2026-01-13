@@ -6,6 +6,7 @@ import type { WeeklyReportData } from "./report/types";
 import { VividSection } from "./report/VividSection";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { VividFeedbackSection } from "../feedback/VividFeedbackSection";
 
 // 타입 재export
 export type { WeeklyReportData } from "./report/types";
@@ -65,6 +66,11 @@ export function WeeklyFeedbackReport({
             </div>
           </ScrollAnimation>
         )}
+
+        {/* 피드백 섹션 */}
+        <ScrollAnimation delay={300}>
+          <VividFeedbackSection pageType="weekly" />
+        </ScrollAnimation>
 
         {/* Bottom Action */}
         <div className="flex justify-center pt-8">

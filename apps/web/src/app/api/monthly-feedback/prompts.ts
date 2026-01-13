@@ -197,7 +197,7 @@ ${vividReport.daily_life_patterns?.recurring_patterns?.slice(0, 3).map((p: { pat
 **특성 변화:**
 ${vividReport.identity_alignment?.trait_evolution?.strengthened?.slice(0, 2).map((t: { trait: string }) => `- ${t.trait}`).join("\n") || ""}
 
-위 분석 결과를 바탕으로, 이번 달의 가장 핵심적인 특징을 담은 5가지 인사이트를 생성해주세요.
+위 분석 결과를 바탕으로, 이번 달의 가장 핵심적인 특징을 담은 5가지 인사트를 생성해주세요.
 각 필드는 1줄의 자연스러운 인사이트로 작성하되, "~패턴이 반복됨", "~데이터가 확인됨" 같은 기계적인 표현을 사용하지 마세요.
 실제 데이터를 바탕으로 자연스럽고 인간적인 말투로 작성하세요.
 JSON 형식으로 {"breakdown_moments": "...", "recovery_moments": "...", "energy_sources": "...", "missing_future_elements": "...", "top_keywords": "..."}만 출력해주세요.`;

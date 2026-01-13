@@ -14,6 +14,7 @@ import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
+import { VividFeedbackSection } from "../feedback/VividFeedbackSection";
 
 type DailyFeedbackViewProps = {
   date?: string;
@@ -184,6 +185,12 @@ console.log(view);
             </div>
           </ScrollAnimation>
         )}
+
+        {/* 피드백 섹션 */}
+        <ScrollAnimation delay={300}>
+          <VividFeedbackSection pageType="daily" />
+        </ScrollAnimation>
+
         <div className="flex justify-center pt-4 pb-32">
           <Button
             onClick={() => router.push("/")}

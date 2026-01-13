@@ -8,6 +8,7 @@ import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
 import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
 import { VividSection } from "./report/VividSection";
 import { cn } from "@/lib/utils";
+import { VividFeedbackSection } from "../feedback/VividFeedbackSection";
 
 type MonthlyFeedbackReportProps = {
   data: MonthlyFeedbackNew;
@@ -106,6 +107,11 @@ export function MonthlyFeedbackReport({
             />
           </ScrollAnimation>
         </section>
+
+        {/* 피드백 섹션 */}
+        <ScrollAnimation delay={300}>
+          <VividFeedbackSection pageType="monthly" />
+        </ScrollAnimation>
 
         {/* Bottom Action */}
         <div className="flex justify-center pt-8">
