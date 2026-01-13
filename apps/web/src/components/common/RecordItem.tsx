@@ -56,8 +56,8 @@ export function RecordItem({
     }
 
     // Q1과 Q2 패턴 찾기
-    const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*(.*?)(?=\n\nQ2\.|$)/s);
-    const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*(.*?)$/s);
+    const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/);
+    const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/);
 
     if (q1Match && q2Match) {
       return {
