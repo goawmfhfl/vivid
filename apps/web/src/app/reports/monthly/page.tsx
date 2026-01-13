@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { MonthlyCandidatesSection } from "@/components/summaries/MonthlyCandidatesSection";
+import { MonthlyTrendsSection } from "@/components/reports/MonthlyTrendsSection";
+import { useMonthlyTrends } from "@/hooks/useMonthlyTrends";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,13 @@ import { List } from "lucide-react";
 function MonthlyReportsPage() {
   const router = useRouter();
 
+  // 월간 흐름 데이터 조회
+  const {
+    data: monthlyTrendsData,
+    isLoading: isLoadingTrends,
+    error: trendsError,
+  } = useMonthlyTrends();
+
   return (
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
@@ -18,6 +27,7 @@ function MonthlyReportsPage() {
       <AppHeader 
         title="월간 VIVID 리포트" 
         showBackButton={true}
+        onBack={() => router.push("/reports")}
       />
 
       {/* 아직 생성되지 않은 월간 vivid 알림 */}
@@ -75,6 +85,15 @@ function MonthlyReportsPage() {
             <span className="text-lg font-bold">월간 VIVID 리스트 보러가기</span>
           </div>
         </Button>
+      </div>
+
+      {/* 나의 월간 흐름 */}
+      <div className="mb-12">
+        <MonthlyTrendsSection
+          data={monthlyTrendsData ?? null}
+          isLoading={isLoadingTrends}
+          error={trendsError}
+        />
       </div>
     </div>
   );

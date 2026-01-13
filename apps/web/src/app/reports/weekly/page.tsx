@@ -27,6 +27,7 @@ function WeeklyReportsPage() {
       <AppHeader 
         title="주간 VIVID 리포트" 
         showBackButton={true}
+        onBack={() => router.push("/reports")}
       />
 
       {/* 아직 생성되지 않은 주간 vivid 알림 */}

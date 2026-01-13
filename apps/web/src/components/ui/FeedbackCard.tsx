@@ -104,18 +104,18 @@ export function FeedbackCard({
             <div
               className={cn(
                 "rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110",
-                variant === "compact" ? "w-10 h-10" : "w-12 h-12"
+                variant === "compact" ? "w-8 h-8" : "w-10 h-10"
               )}
               style={{
                 background: GRADIENT_UTILS.iconBadge(iconColor, 0.1),
                 boxShadow: `0 4px 12px ${iconColor}30`,
               }}
             >
-              <div className="text-white">
+              <div className="flex items-center justify-center text-white w-full h-full">
                 {variant === "compact" ? (
-                  <div className="w-5 h-5">{icon}</div>
+                  <div className="w-3.5 h-3.5 flex items-center justify-center">{icon}</div>
                 ) : (
-                  <div className="w-6 h-6">{icon}</div>
+                  <div className="w-4 h-4 flex items-center justify-center">{icon}</div>
                 )}
               </div>
             </div>
