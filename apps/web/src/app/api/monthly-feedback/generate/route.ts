@@ -8,7 +8,7 @@ import { generateMonthlyFeedbackFromDailyWithProgress } from "../ai-service";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
-import type { WithTracking } from "../types";
+import type { WithTracking } from "../../types";
 
 /**
  * __tracking 정보 제거 (DB 저장 전)
