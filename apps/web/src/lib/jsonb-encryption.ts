@@ -210,6 +210,9 @@ export function encryptMonthlyFeedback(
     vivid_report: feedback.vivid_report
       ? encryptJsonbFields(feedback.vivid_report as JsonbValue)
       : null,
+    trend: feedback.trend
+      ? encryptJsonbFields(feedback.trend as JsonbValue)
+      : null,
   };
 }
 
@@ -226,6 +229,9 @@ export function decryptMonthlyFeedback(
       : null,
     vivid_report: feedback.vivid_report
       ? decryptJsonbFields(feedback.vivid_report as JsonbValue)
+      : null,
+    trend: feedback.trend
+      ? decryptJsonbFields(feedback.trend as JsonbValue)
       : null,
   };
 }

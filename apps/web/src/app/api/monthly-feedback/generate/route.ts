@@ -7,7 +7,77 @@ import {
 import { generateMonthlyFeedbackFromDailyWithProgress } from "../ai-service";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
-// MonthlyFeedbackNew 타입은 사용하지 않지만 타입 정의를 위해 유지
+import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { WithTracking } from "../types";
+
+/**
+ * __tracking 정보 제거 (DB 저장 전)
+ */
+function removeTrackingInfo(
+  feedback: WithTracking<MonthlyFeedbackNew>
+): MonthlyFeedbackNew {
+  const cleaned = { ...feedback } as Record<string, unknown>;
+
+  // __tracking 제거
+  if ("__tracking" in cleaned) {
+    delete cleaned.__tracking;
+  }
+
+  // title이 객체인 경우 처리 (__tracking 제거 및 title 추출)
+  if (cleaned.title && typeof cleaned.title === "object" && cleaned.title !== null) {
+    const titleObj = cleaned.title as Record<string, unknown> & { __tracking?: unknown; title?: string };
+    if (titleObj.title && typeof titleObj.title === "string") {
+      cleaned.title = titleObj.title;
+    } else {
+      // title 필드가 없으면 __tracking만 제거
+      const { __tracking: _, ...rest } = titleObj;
+      cleaned.title = rest;
+    }
+  }
+
+  // vivid_report에서 __tracking 제거 (재귀적으로)
+  if (cleaned.vivid_report && typeof cleaned.vivid_report === "object" && cleaned.vivid_report !== null) {
+    cleaned.vivid_report = removeTrackingFromObject(cleaned.vivid_report as Record<string, unknown>);
+  }
+
+  // trend에서 __tracking 제거
+  if (cleaned.trend && typeof cleaned.trend === "object" && cleaned.trend !== null) {
+    const { __tracking: _, ...rest } = cleaned.trend as Record<
+      string,
+      unknown
+    > & { __tracking?: unknown };
+    cleaned.trend = rest;
+  }
+
+  return cleaned as MonthlyFeedbackNew;
+}
+
+/**
+ * 객체에서 재귀적으로 __tracking 제거
+ */
+function removeTrackingFromObject(obj: Record<string, unknown>): unknown {
+  const cleaned = { ...obj };
+  
+  if ("__tracking" in cleaned) {
+    delete cleaned.__tracking;
+  }
+
+  // 모든 속성을 순회하며 재귀적으로 처리
+  for (const key in cleaned) {
+    if (cleaned[key] && typeof cleaned[key] === "object" && !Array.isArray(cleaned[key])) {
+      cleaned[key] = removeTrackingFromObject(cleaned[key] as Record<string, unknown>);
+    } else if (Array.isArray(cleaned[key])) {
+      cleaned[key] = (cleaned[key] as unknown[]).map(item => {
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+          return removeTrackingFromObject(item as Record<string, unknown>);
+        }
+        return item;
+      });
+    }
+  }
+
+  return cleaned;
+}
 
 /**
  * 월의 시작일과 종료일 계산 (KST 기준)
@@ -114,17 +184,20 @@ export async function POST(request: NextRequest) {
       monthlyFeedback.date_range = dateRange;
     }
 
+    // __tracking 정보 제거 (DB 저장 전)
+    const cleanedFeedback = removeTrackingInfo(monthlyFeedback);
+
     // 3️⃣ Supabase monthly_feedback 테이블에 저장
     const savedId = await saveMonthlyFeedback(
       supabase,
       userId,
-      monthlyFeedback
+      cleanedFeedback
     );
 
     return NextResponse.json(
       {
         message: "Monthly feedback generated successfully",
-        data: { ...monthlyFeedback, id: savedId },
+        data: { ...cleanedFeedback, id: savedId },
       },
       { status: 200 }
     );

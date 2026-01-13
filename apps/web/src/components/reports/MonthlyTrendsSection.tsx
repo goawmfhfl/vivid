@@ -22,7 +22,7 @@ interface TrendCardProps {
   title: string;
   icon: React.ReactNode;
   iconColor: string;
-  trends: MonthlyTrendsResponse["breakdown_moments"];
+  trends: MonthlyTrendsResponse["breakdown_moments"]; // MonthlyTrendItem[]
   emptyMessage?: string;
   isLocked?: boolean;
 }
@@ -66,54 +66,39 @@ function TrendCard({
         title={title}
         gradientColor={iconColor}
       >
-        <div className="space-y-3">
-          {trends.map((trend, trendIdx) => (
-            <div key={trendIdx} className="space-y-2">
-              <p
-                className={cn(
-                  TYPOGRAPHY.body.fontSize,
-                  "font-semibold"
-                )}
-                style={{ color: COLORS.text.primary }}
-              >
-                {trend.insight}
-              </p>
-              <ul className="space-y-2">
-                {trend.answers.map((answer, answerIdx) => (
-                  <li key={answerIdx} className="flex items-start gap-2">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                      style={{ backgroundColor: iconColor }}
-                    />
-                    <div className="flex-1">
-                      <span
-                        className={cn(
-                          TYPOGRAPHY.bodySmall.fontSize,
-                          "font-semibold mr-2"
-                        )}
-                        style={{ color: iconColor }}
-                      >
-                        [{answer.month}]
-                      </span>
-                      <p
-                        className={cn(
-                          TYPOGRAPHY.body.fontSize,
-                          "inline"
-                        )}
-                        style={{
-                          color: COLORS.text.primary,
-                          lineHeight: "1.6",
-                        }}
-                      >
-                        {answer.answer}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <ul className="space-y-2">
+          {trends.map((item, idx) => (
+            <li key={idx} className="flex items-start gap-2">
+              <div
+                className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+                style={{ backgroundColor: iconColor }}
+              />
+              <div className="flex-1">
+                <span
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "font-semibold mr-2"
+                  )}
+                  style={{ color: iconColor }}
+                >
+                  [{item.month}]
+                </span>
+                <p
+                  className={cn(
+                    TYPOGRAPHY.body.fontSize,
+                    "inline"
+                  )}
+                  style={{
+                    color: COLORS.text.primary,
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {item.answer}
+                </p>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </FeedbackCard>
 
       {/* 카드 전체를 덮는 blur 오버레이 */}

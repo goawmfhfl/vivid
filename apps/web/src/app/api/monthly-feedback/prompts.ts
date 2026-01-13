@@ -164,23 +164,43 @@ export function buildMonthlyFeedbackPrompt(
     });
   }
 
-  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 summary_report, emotion_report, insight_report, execution_report, vision_report, closing_report를 작성하세요.\n`;
+  prompt += `\n\n위 데이터를 종합하여 월간 리포트를 생성하세요. 전체 한 달의 패턴과 트렌드를 분석하여 vivid_report를 작성하세요.\n`;
 
-  // 월간 흐름 생성 지시 추가
-  prompt += `\n\n=== 월간 흐름 (monthly_trends) 생성 ===\n`;
-  prompt += `이번 달(${monthLabel})의 데이터를 분석하여 다음 5가지 질문에 대한 인사이트를 생성하세요.\n`;
-  prompt += `각 질문에 대해 해당 월의 데이터를 기반으로 1-2줄의 인사이트를 작성하고, month 필드에는 "${month}" 형식으로 저장하세요.\n\n`;
-  prompt += `질문 리스트:\n`;
-  prompt += `1. breakdown_moments: 나는 어떤 순간에서 가장 무너지는가\n`;
-  prompt += `2. recovery_moments: 나는 어떤 순간에서 가장 회복되는가\n`;
-  prompt += `3. energy_sources: 내가 실제로 에너지를 얻는 방향\n`;
-  prompt += `4. missing_future_elements: 내가 미래를 그릴 때 빠뜨리는 요소\n`;
-  prompt += `5. top_keywords: 이 달에서 가장 자주 등장하는 키워드 5가지\n\n`;
-  prompt += `각 질문에 대해:\n`;
-  prompt += `- insight: 질문 내용 (위의 질문 텍스트 그대로)\n`;
-  prompt += `- answers: 배열 형태로, month는 "${month}", answer는 1-2줄의 인사이트\n`;
-  prompt += `- answer는 실제 데이터를 기반으로 작성하며, 구체적이고 실행 가능한 인사이트여야 합니다.\n`;
-  prompt += `- top_keywords의 경우, 이 달에 가장 자주 등장한 키워드 5가지를 나열하세요.\n\n`;
+  return prompt;
+}
 
+import type { VividReport } from "@/types/monthly-feedback-new";
+
+/**
+ * 월간 흐름 데이터(trend) 생성 프롬프트
+ * vivid_report 분석 결과를 바탕으로 월간 흐름 데이터 생성
+ */
+export function buildMonthlyTrendPrompt(
+  vividReport: VividReport,
+  month: string,
+  monthLabel: string,
+  userName?: string
+): string {
+  const prompt = `${userName ? `${userName}님의 ` : ""}${monthLabel} 월간 비비드 리포트를 분석하여, 이번 달의 흐름을 나타내는 5가지 인사이트를 생성해주세요.
+
+**분석 결과 요약:**
+
+**비전 진화:**
+${vividReport.vision_evolution?.core_visions?.slice(0, 3).map((v: { vision: string }) => `- ${v.vision}`).join("\n") || ""}
+
+**일치도 분석:**
+${vividReport.alignment_analysis?.gap_analysis?.biggest_gaps?.slice(0, 2).map((g: { gap_description: string }) => `- ${g.gap_description}`).join("\n") || ""}
+
+**하루 패턴:**
+${vividReport.daily_life_patterns?.recurring_patterns?.slice(0, 3).map((p: { pattern: string }) => `- ${p.pattern}`).join("\n") || ""}
+
+**특성 변화:**
+${vividReport.identity_alignment?.trait_evolution?.strengthened?.slice(0, 2).map((t: { trait: string }) => `- ${t.trait}`).join("\n") || ""}
+
+위 분석 결과를 바탕으로, 이번 달의 가장 핵심적인 특징을 담은 5가지 인사이트를 생성해주세요.
+각 필드는 1줄의 자연스러운 인사이트로 작성하되, "~패턴이 반복됨", "~데이터가 확인됨" 같은 기계적인 표현을 사용하지 마세요.
+실제 데이터를 바탕으로 자연스럽고 인간적인 말투로 작성하세요.
+JSON 형식으로 {"breakdown_moments": "...", "recovery_moments": "...", "energy_sources": "...", "missing_future_elements": "...", "top_keywords": "..."}만 출력해주세요.`;
+  
   return prompt;
 }

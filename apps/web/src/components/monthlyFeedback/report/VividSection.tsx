@@ -36,8 +36,6 @@ export function VividSection({
       <AlignmentAnalysisSection
         alignmentAnalysis={vividReport.alignment_analysis}
         vividColor={vividColor}
-        improvedColor={improvedColor}
-        declinedColor={declinedColor}
       />
 
       {/* 3. 하루 패턴 인사이트 (20%) */}

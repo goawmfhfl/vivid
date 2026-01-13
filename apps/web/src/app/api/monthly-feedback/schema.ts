@@ -72,23 +72,6 @@ export const MonthlyReportSchema = {
             type: "object",
             additionalProperties: false,
             properties: {
-              score_timeline: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    week: { type: "integer", minimum: 1 },
-                    average_score: { type: "number", minimum: 0, maximum: 100 },
-                    trend: {
-                      type: "string",
-                      enum: ["상승", "하락", "유지"],
-                    },
-                  },
-                  required: ["week", "average_score", "trend"],
-                },
-                minItems: 0,
-              },
               gap_analysis: {
                 type: "object",
                 additionalProperties: false,
@@ -115,7 +98,7 @@ export const MonthlyReportSchema = {
                 required: ["biggest_gaps"],
               },
             },
-            required: ["score_timeline", "gap_analysis"],
+            required: ["gap_analysis"],
           },
           // 3. 하루 패턴 인사이트 (20%)
           daily_life_patterns: {
@@ -361,144 +344,6 @@ export const MonthlyReportSchema = {
             required: ["focus_areas", "maintain_patterns", "experiment_patterns"],
           },
           // 6. 월간 흐름 (최근 4달간의 트렌드)
-          monthly_trends: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              breakdown_moments: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    insight: { type: "string" },
-                    answers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
-                          answer: { type: "string" },
-                        },
-                        required: ["month", "answer"],
-                      },
-                      minItems: 0,
-                    },
-                  },
-                  required: ["insight", "answers"],
-                },
-                minItems: 0,
-              },
-              recovery_moments: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    insight: { type: "string" },
-                    answers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
-                          answer: { type: "string" },
-                        },
-                        required: ["month", "answer"],
-                      },
-                      minItems: 0,
-                    },
-                  },
-                  required: ["insight", "answers"],
-                },
-                minItems: 0,
-              },
-              energy_sources: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    insight: { type: "string" },
-                    answers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
-                          answer: { type: "string" },
-                        },
-                        required: ["month", "answer"],
-                      },
-                      minItems: 0,
-                    },
-                  },
-                  required: ["insight", "answers"],
-                },
-                minItems: 0,
-              },
-              missing_future_elements: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    insight: { type: "string" },
-                    answers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
-                          answer: { type: "string" },
-                        },
-                        required: ["month", "answer"],
-                      },
-                      minItems: 0,
-                    },
-                  },
-                  required: ["insight", "answers"],
-                },
-                minItems: 0,
-              },
-              top_keywords: {
-                type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    insight: { type: "string" },
-                    answers: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        additionalProperties: false,
-                        properties: {
-                          month: { type: "string", pattern: "^\\d{4}-\\d{2}$" },
-                          answer: { type: "string" },
-                        },
-                        required: ["month", "answer"],
-                      },
-                      minItems: 0,
-                    },
-                  },
-                  required: ["insight", "answers"],
-                },
-                minItems: 0,
-              },
-            },
-            required: [
-              "breakdown_moments",
-              "recovery_moments",
-              "energy_sources",
-              "missing_future_elements",
-              "top_keywords",
-            ],
-          },
         },
         required: [
           "vision_evolution",
@@ -506,7 +351,6 @@ export const MonthlyReportSchema = {
           "daily_life_patterns",
           "identity_alignment",
           "next_month_plan",
-          "monthly_trends",
         ],
       },
     },
@@ -522,6 +366,59 @@ export const MonthlyReportSchema = {
   },
   strict: true,
 } as const;
+
+/**
+ * Monthly Trend Data 스키마 (별도 컬럼)
+ */
+export const MonthlyTrendDataSchema = {
+  name: "MonthlyTrendData",
+  schema: {
+    type: "object",
+    properties: {
+      breakdown_moments: { type: "string" }, // 나는 어떤 순간에서 가장 무너지는가
+      recovery_moments: { type: "string" }, // 나는 어떤 순간에서 가장 회복되는가
+      energy_sources: { type: "string" }, // 내가 실제로 에너지를 얻는 방향
+      missing_future_elements: { type: "string" }, // 내가 미래를 그릴 때 빠뜨리는 요소
+      top_keywords: { type: "string" }, // 이 달에서 가장 자주 등장하는 키워드 5가지
+    },
+    required: ["breakdown_moments", "recovery_moments", "energy_sources", "missing_future_elements", "top_keywords"],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
+export const SYSTEM_PROMPT_MONTHLY_TREND = `
+당신은 사용자의 월간 비비드 리포트를 분석하여 월간 흐름 데이터를 생성합니다.
+
+📝 출력 형식 규칙:
+- 반드시 JSON 형식 하나만 출력해주세요.
+- 아래 스키마의 모든 키와 타입을 정확하게 지켜주세요.
+- 모든 필드를 반드시 포함해주세요.
+
+## 필드별 요구사항
+각 필드는 이번 달의 데이터를 분석하여 1줄의 자연스러운 인사이트로 작성합니다.
+
+- breakdown_moments: 나는 어떤 순간에서 가장 무너지는가
+  예: "유튜브 업로드·결제 시스템·사람 모으기 때문에 조급함과 부담을 느끼기도 하면서 인간관계 기대/열등감/인정 욕구가 무너지는 요인이에요"
+
+- recovery_moments: 나는 어떤 순간에서 가장 회복되는가
+  예: "컨디션을 지키면서도 꾸준히 지속 가능한 실행과 삶-일 균형을 추구하는 가치가 있음"
+
+- energy_sources: 내가 실제로 에너지를 얻는 방향
+  예: "새로운 기술을 학습하거나 프로젝트에 몰입할 때 에너지가 상승하고 성취감을 느낌"
+
+- missing_future_elements: 내가 미래를 그릴 때 빠뜨리는 요소
+  예: "완벽보다 시작을 택하되 진정성·정직한 메시지와 관계·휴식의 균형으로 꾸준함을 지키는 가치를 가장 중요하게 여깁니다"
+
+- top_keywords: 이 달에서 가장 자주 등장하는 키워드 5가지
+  예: "기록, 성장, 루틴, 운동, 독서가 이번 달에 가장 자주 등장한 키워드였어요"
+
+## 작성 스타일
+- "~패턴이 반복됨", "~데이터가 확인됨" 같은 기계적인 표현을 사용하지 마세요.
+- 실제 데이터를 바탕으로 자연스럽고 인간적인 말투로 작성하세요.
+- 구체적인 상황, 감정, 가치, 행동을 자연스럽게 연결하여 작성하세요.
+- 각 필드는 1줄로 간결하게 작성하세요.
+`;
 
 export const SYSTEM_PROMPT_MONTHLY = `
 당신은 사용자의 "월간 기록"을 분석해, 위에 정의된 MonthlyReportResponse 스키마에 맞는 JSON 리포트를 생성합니다.
@@ -1143,74 +1040,6 @@ export const SYSTEM_PROMPT_MONTHLY = `
   "이번 달은 기록이 적어서 패턴을 읽기 어려웠다" 는 점을 솔직하고 부드럽게 언급할 수 있습니다.
 
 --------------------------------
-
-[8. vivid_report.monthly_trends (월간 흐름)]
-
-월간 흐름은 이번 달의 데이터를 분석하여 5가지 질문에 대한 인사이트를 생성합니다.
-
-각 질문에 대해:
-
-1) breakdown_moments (나는 어떤 순간에서 가장 무너지는가):
-
-  - 이번 달 일일 피드백 데이터를 분석하여 무너지는 순간의 패턴을 찾습니다.
-
-  - insight: "나는 어떤 순간에서 가장 무너지는가" (질문 텍스트 그대로)
-
-  - answers: 배열 형태로, month는 현재 월("YYYY-MM" 형식), answer는 1-2줄의 구체적인 인사이트
-
-  - answer 예시: "업무 마감일이 다가올 때 수면 시간을 줄이고 식사를 건너뛰는 패턴이 반복되었습니다. 특히 화요일과 수요일에 집중적으로 나타났습니다."
-
-2) recovery_moments (나는 어떤 순간에서 가장 회복되는가):
-
-  - 이번 달 일일 피드백 데이터를 분석하여 회복되는 순간의 패턴을 찾습니다.
-
-  - insight: "나는 어떤 순간에서 가장 회복되는가" (질문 텍스트 그대로)
-
-  - answers: 배열 형태로, month는 현재 월("YYYY-MM" 형식), answer는 1-2줄의 구체적인 인사이트
-
-  - answer 예시: "주말 아침 산책 후 독서 시간을 가진 날에는 감정 안정도가 높고 에너지가 회복되었습니다. 총 8일 중 6일에서 이 패턴이 확인되었습니다."
-
-3) energy_sources (내가 실제로 에너지를 얻는 방향):
-
-  - 이번 달 일일 피드백 데이터를 분석하여 실제로 에너지를 얻는 활동이나 상황을 찾습니다.
-
-  - insight: "내가 실제로 에너지를 얻는 방향" (질문 텍스트 그대로)
-
-  - answers: 배열 형태로, month는 현재 월("YYYY-MM" 형식), answer는 1-2줄의 구체적인 인사이트
-
-  - answer 예시: "새로운 기술을 학습하거나 프로젝트에 몰입할 때 에너지가 상승했습니다. 특히 오후 시간대에 집중력이 높았고, 성취감을 느낀 날이 많았습니다."
-
-4) missing_future_elements (내가 미래를 그릴 때 빠뜨리는 요소):
-
-  - 이번 달 일일 피드백의 future_summary와 future_keywords를 분석하여 미래 비전에서 빠뜨리는 요소를 찾습니다.
-
-  - insight: "내가 미래를 그릴 때 빠뜨리는 요소" (질문 텍스트 그대로)
-
-  - answers: 배열 형태로, month는 현재 월("YYYY-MM" 형식), answer는 1-2줄의 구체적인 인사이트
-
-  - answer 예시: "미래 비전에서 건강 관리와 휴식 시간에 대한 구체적인 계획이 부족했습니다. 업무와 성장에만 집중하여 일상의 균형을 고려하지 않은 경우가 많았습니다."
-
-5) top_keywords (이 달에서 가장 자주 등장하는 키워드 5가지):
-
-  - 이번 달 일일 피드백의 current_keywords와 future_keywords를 분석하여 가장 자주 등장한 키워드 5가지를 선별합니다.
-
-  - insight: "이 달에서 가장 자주 등장하는 키워드 5가지" (질문 텍스트 그대로)
-
-  - answers: 배열 형태로, month는 현재 월("YYYY-MM" 형식), answer는 키워드 5개를 나열한 1-2줄의 텍스트
-
-  - answer 예시: "기록(12회), 성장(10회), 루틴(8회), 운동(7회), 독서(6회)가 이번 달에 가장 자주 등장한 키워드였습니다."
-
-중요 원칙:
-
-- 모든 인사이트는 실제 일일 피드백 데이터를 기반으로 작성해야 합니다.
-
-- 상상으로 만들어내지 마세요.
-
-- 각 answer는 1-2줄로 간결하게 작성하되, 구체적이고 실행 가능한 인사이트여야 합니다.
-
-- month 필드는 반드시 "YYYY-MM" 형식으로 작성하세요 (예: "2024-01").
-
-- 각 질문에 대해 answers 배열에는 최소 1개의 항목이 있어야 합니다 (현재 월에 대한 답변).
 
 --------------------------------
 

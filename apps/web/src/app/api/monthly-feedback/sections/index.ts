@@ -3,3 +3,4 @@
  */
 export { generateVividReport } from "./vivid";
 export { generateTitle } from "./title";
+export { generateMonthlyTrend } from "./trend";

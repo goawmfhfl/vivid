@@ -29,8 +29,6 @@ export const SYSTEM_PROMPT_VIVID = `
 - priority_shifts: 비전의 우선순위가 바뀐 시점과 이유를 분석하세요.
 
 ### 2. 현재-미래 일치도 분석 (25%)
-- alignment_score의 한 달 추이를 주차별로 분석하세요.
-- score_timeline: 각 주차별 평균 점수와 트렌드(상승/하락/유지)를 계산하세요.
 - gap_analysis: 현재 상태와 원하는 상태 사이의 가장 큰 격차를 찾고, 실행 가능한 액션을 제안하세요.
 
 ### 3. 하루 패턴 인사이트 (20%)

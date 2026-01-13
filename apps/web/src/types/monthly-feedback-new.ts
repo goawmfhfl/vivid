@@ -17,6 +17,9 @@ export type MonthlyFeedbackNew = {
   // Vivid Report
   vivid_report: VividReport;
 
+  // Trend Data (별도 컬럼)
+  trend?: MonthlyTrendData | null;
+
   is_ai_generated?: boolean;
   created_at?: string;
 };
@@ -390,11 +393,6 @@ export type VividReport = {
 
   // 2. 현재-미래 일치도 분석 (25%)
   alignment_analysis: {
-    score_timeline: Array<{
-      week: number;
-      average_score: number;
-      trend: "상승" | "하락" | "유지";
-    }>;
     gap_analysis: {
       biggest_gaps: Array<{
         current_state: string;
@@ -492,13 +490,6 @@ export type VividReport = {
   };
 
   // 6. 월간 흐름 (최근 4달간의 트렌드)
-  monthly_trends: {
-    breakdown_moments: MonthlyTrends; // 나는 어떤 순간에서 가장 무너지는가
-    recovery_moments: MonthlyTrends; // 나는 어떤 순간에서 가장 회복되는가
-    energy_sources: MonthlyTrends; // 내가 실제로 에너지를 얻는 방향
-    missing_future_elements: MonthlyTrends; // 내가 미래를 그릴 때 빠뜨리는 요소
-    top_keywords: MonthlyTrends; // 이 달에서 가장 자주 등장하는 키워드 5가지
-  };
 };
 
 // 하위 호환성을 위한 레거시 타입들 (사용되지 않을 수 있음)
@@ -621,22 +612,28 @@ export type ClosingReport = {
 };
 
 // ============================================
-// 8. Monthly Trends (월간 흐름)
+// 8. Monthly Trend Data (월간 흐름 - 별도 컬럼)
 // ============================================
-export type MonthlyTrend = {
-  insight: string; // 인사이트 제목 (질문)
-  answers: Array<{
-    month: string; // "YYYY-MM" 형식
-    answer: string; // 1-2줄 인사이트
-  }>;
+export type MonthlyTrendData = {
+  breakdown_moments: string; // 나는 어떤 순간에서 가장 무너지는가
+  recovery_moments: string; // 나는 어떤 순간에서 가장 회복되는가
+  energy_sources: string; // 내가 실제로 에너지를 얻는 방향
+  missing_future_elements: string; // 내가 미래를 그릴 때 빠뜨리는 요소
+  top_keywords: string; // 이 달에서 가장 자주 등장하는 키워드 5가지
 };
 
-export type MonthlyTrends = MonthlyTrend[];
+// ============================================
+// 9. Monthly Trends Response (최근 4달 데이터)
+// ============================================
+export type MonthlyTrendItem = {
+  month: string; // "YYYY-MM" 형식
+  answer: string; // 해당 월의 인사이트
+};
 
 export type MonthlyTrendsResponse = {
-  breakdown_moments: MonthlyTrends; // 나는 어떤 순간에서 가장 무너지는가
-  recovery_moments: MonthlyTrends; // 나는 어떤 순간에서 가장 회복되는가
-  energy_sources: MonthlyTrends; // 내가 실제로 에너지를 얻는 방향
-  missing_future_elements: MonthlyTrends; // 내가 미래를 그릴 때 빠뜨리는 요소
-  top_keywords: MonthlyTrends; // 이 달에서 가장 자주 등장하는 키워드 5가지
+  breakdown_moments: MonthlyTrendItem[];
+  recovery_moments: MonthlyTrendItem[];
+  energy_sources: MonthlyTrendItem[];
+  missing_future_elements: MonthlyTrendItem[];
+  top_keywords: MonthlyTrendItem[];
 };

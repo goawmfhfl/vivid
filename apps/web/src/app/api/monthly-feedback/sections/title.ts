@@ -21,7 +21,7 @@ export async function generateTitle(
   const userPrompt = buildTitlePrompt(dailyFeedbacks, vividReport, month, dateRange);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_TITLE, userPrompt);
 
-  const result = await generateSection<string>(
+  const result = await generateSection<{ title: string }>(
     SYSTEM_PROMPT_TITLE,
     userPrompt,
     schema,
@@ -32,5 +32,22 @@ export async function generateTitle(
     "monthly_feedback"
   );
 
-  return result;
+  // result가 직접 문자열인 경우와 객체인 경우 모두 처리
+  if (typeof result === "string") {
+    return result;
+  }
+
+  if (result && typeof result === "object" && "title" in result) {
+    return result.title;
+  }
+
+  // __tracking이 포함된 경우 제거
+  if (result && typeof result === "object") {
+    const { __tracking: _, ...rest } = result as { title?: string; __tracking?: unknown };
+    if (rest.title) {
+      return rest.title;
+    }
+  }
+
+  throw new Error("Failed to extract title from result");
 }

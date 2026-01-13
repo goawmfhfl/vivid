@@ -80,7 +80,7 @@ export function MonthlyFeedbackReport({
                       )}
                       style={{ color: COLORS.text.primary }}
                     >
-                      {data.title}
+                      {typeof data.title === "string" ? data.title : (data.title as { title?: string })?.title || data.month_label}
                     </h1>
                     <p
                       className={cn(

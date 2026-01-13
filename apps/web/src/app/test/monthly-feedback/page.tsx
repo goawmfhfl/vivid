@@ -26,6 +26,12 @@ export default function MonthlyFeedbackTestPage() {
   const [dailyFeedbacks, setDailyFeedbacks] = useState<DailyFeedbackRow[]>([]);
   const [isLoadingDailyFeedbacks, setIsLoadingDailyFeedbacks] = useState(false);
   const [dailyFeedbackError, setDailyFeedbackError] = useState<string | null>(null);
+  const [isGeneratingTrend, setIsGeneratingTrend] = useState(false);
+  const [trendResult, setTrendResult] = useState<{
+    success: boolean;
+    message: string;
+    data?: unknown;
+  } | null>(null);
 
   // 일일 피드백 조회 함수 (Supabase에서 직접 월별 필터링)
   const fetchDailyFeedbacks = async () => {
@@ -155,6 +161,52 @@ export default function MonthlyFeedbackTestPage() {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateTrend = async () => {
+    if (!user?.id) {
+      setTrendResult({
+        success: false,
+        message: "사용자 정보를 불러올 수 없습니다.",
+      });
+      return;
+    }
+
+    setIsGeneratingTrend(true);
+    setTrendResult(null);
+
+    try {
+      const response = await fetch("/api/monthly-feedback/test-trend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          month,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || "Trend 생성에 실패했습니다.");
+      }
+
+      setTrendResult({
+        success: true,
+        message: `Trend가 성공적으로 생성되었습니다!`,
+        data: data.trend,
+      });
+    } catch (error) {
+      console.error("Trend 생성 실패:", error);
+      setTrendResult({
+        success: false,
+        message: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
+      });
+    } finally {
+      setIsGeneratingTrend(false);
     }
   };
 
@@ -363,26 +415,112 @@ export default function MonthlyFeedbackTestPage() {
           </div>
 
           {/* 생성 버튼 */}
-          <div className="flex justify-center">
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating || !user || !month}
-              className="px-8 py-3"
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-center gap-4">
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating || !user || !month}
+                className="px-8 py-3"
+                style={{
+                  backgroundColor: COLORS.brand.primary,
+                  color: "white",
+                }}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    생성 중...
+                  </>
+                ) : (
+                  "월간 피드백 생성"
+                )}
+              </Button>
+              <Button
+                onClick={handleGenerateTrend}
+                disabled={isGeneratingTrend || !user || !month}
+                className="px-8 py-3"
+                variant="outline"
+                style={{
+                  borderColor: COLORS.brand.secondary,
+                  color: COLORS.brand.secondary,
+                }}
+              >
+                {isGeneratingTrend ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    생성 중...
+                  </>
+                ) : (
+                  "Trend만 생성 (테스트)"
+                )}
+              </Button>
+            </div>
+            <p
+              className={cn("text-center text-sm", TYPOGRAPHY.caption.fontSize)}
+              style={{ color: COLORS.text.tertiary }}
+            >
+              ⚠️ Trend만 생성 버튼은 테스트용입니다. 기존 월간 피드백의 vivid_report가 있어야 동작합니다.
+            </p>
+          </div>
+
+          {/* Trend 생성 결과 표시 */}
+          {trendResult && (
+            <div
+              className={cn(
+                "p-6 rounded-lg",
+                trendResult.success ? "border-green-500" : "border-red-500"
+              )}
               style={{
-                backgroundColor: COLORS.brand.primary,
-                color: "white",
+                backgroundColor: trendResult.success
+                  ? `${COLORS.status.success}15`
+                  : `${COLORS.status.error}15`,
+                border: `2px solid ${trendResult.success ? COLORS.status.success : COLORS.status.error}`,
               }}
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  생성 중...
-                </>
-              ) : (
-                "월간 피드백 생성"
-              )}
-            </Button>
-          </div>
+              <div className="flex items-start gap-3">
+                {trendResult.success ? (
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: COLORS.status.success }} />
+                ) : (
+                  <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: COLORS.status.error }} />
+                )}
+                <div className="flex-1">
+                  <h3
+                    className={cn("mb-2", TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+                    style={{
+                      color: trendResult.success ? COLORS.status.success : COLORS.status.error,
+                    }}
+                  >
+                    {trendResult.success ? "Trend 생성 성공" : "Trend 생성 실패"}
+                  </h3>
+                  <p
+                    className={cn("mb-3", TYPOGRAPHY.body.fontSize)}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {trendResult.message}
+                  </p>
+                  {trendResult.success && trendResult.data ? (
+                    <details className="mt-4">
+                      <summary
+                        className={cn("cursor-pointer", TYPOGRAPHY.body.fontSize)}
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        생성된 Trend 데이터 보기
+                      </summary>
+                      <pre
+                        className="mt-2 p-4 rounded overflow-auto text-xs"
+                        style={{
+                          backgroundColor: COLORS.surface.default,
+                          color: COLORS.text.primary,
+                        }}
+                      >
+                        {JSON.stringify(trendResult.data, null, 2)}
+                      </pre>
+                    </details>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 결과 표시 */}
           {result && (

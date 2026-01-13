@@ -209,6 +209,7 @@ export async function saveMonthlyFeedback(
         recorded_days: encryptedFeedback.recorded_days,
         title: encryptedFeedback.title,
         vivid_report: encryptedFeedback.vivid_report,
+        trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
       },
       { onConflict: "user_id,month" }

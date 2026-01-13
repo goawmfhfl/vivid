@@ -53,7 +53,7 @@ export async function GET(_request: NextRequest) {
 
     const headers = getNotionHeaders();
 
-    // 노션 API 호출
+  // 노션 API 호출
     const response = await fetch(
       `${NOTION_API_BASE}/databases/${databaseId}/query`,
       {

@@ -3,6 +3,7 @@ import type { DailyFeedbackForMonthly } from "./types";
 import {
   generateVividReport,
   generateTitle,
+  generateMonthlyTrend,
 } from "./sections";
 
 /**
@@ -47,6 +48,15 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
     userId
   );
 
+  // 3. Trend 생성 (vivid_report 기반)
+  const trend = await generateMonthlyTrend(
+    vividReport,
+    month,
+    monthLabel,
+    isPro,
+    userId
+  );
+
   const monthlyFeedback: MonthlyFeedbackNew = {
     month,
     month_label: monthLabel,
@@ -55,6 +65,7 @@ export async function generateMonthlyFeedbackFromDailyWithProgress(
     recorded_days: dailyFeedbacks.length,
     title,
     vivid_report: vividReport,
+    trend: trend || null,
     is_ai_generated: true,
   };
 

@@ -97,8 +97,83 @@ export async function generateSection<T>(
     }
 
     const parsed = JSON.parse(content);
-    // 스키마가 래퍼 객체를 반환하므로, 실제 섹션 데이터 추출
-    const result = parsed[sectionName] as T;
+
+    let result: T;
+
+    // parsed가 이미 직접 객체인 경우 (래퍼 없이)
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      Object.keys(parsed).length > 0
+    ) {
+      const firstValue = Object.values(parsed)[0];
+
+      // 첫 번째 값이 객체인 경우
+      if (
+        firstValue !== null &&
+        firstValue !== undefined &&
+        typeof firstValue === "object" &&
+        !Array.isArray(firstValue)
+      ) {
+        result = firstValue as T;
+      } else if (typeof firstValue === "string") {
+        // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
+        console.warn(
+          `[${schema.name}] First value is string, checking parsed structure:`,
+          {
+            parsed,
+            parsedKeys: Object.keys(parsed),
+            firstValue,
+          }
+        );
+
+        // parsed가 직접 원하는 구조인지 확인 (예: { summary_report: {...} })
+        // 또는 다른 키를 확인
+        const keys = Object.keys(parsed);
+        const objectValue = keys.find(
+          (key) =>
+            parsed[key] !== null &&
+            parsed[key] !== undefined &&
+            typeof parsed[key] === "object" &&
+            !Array.isArray(parsed[key])
+        );
+
+        if (objectValue) {
+          result = parsed[objectValue] as T;
+        } else {
+          // parsed 자체가 원하는 객체인 경우
+          result = parsed as T;
+        }
+      } else {
+        // 그 외의 경우 parsed 자체를 사용
+        result = parsed as T;
+      }
+    } else {
+      // parsed가 배열이거나 null인 경우
+      result = parsed as T;
+    }
+
+    // 결과 검증 및 로깅
+    if (
+      result === null ||
+      result === undefined ||
+      typeof result !== "object" ||
+      Array.isArray(result)
+    ) {
+      console.error(`generateSection: result is invalid for ${schema.name}`, {
+        resultType: typeof result,
+        result,
+        parsed,
+        parsedKeys: Object.keys(parsed || {}),
+        parsedValues: Object.values(parsed || {}),
+      });
+      throw new Error(
+        `Invalid response format for ${
+          schema.name
+        }: expected object but got ${typeof result}. This may indicate a schema mismatch.`
+      );
+    }
 
     // 캐시에 저장 (멤버십별로 구분)
     setCache(proCacheKey, result);

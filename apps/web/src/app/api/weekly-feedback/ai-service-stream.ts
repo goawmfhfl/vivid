@@ -88,15 +88,6 @@ async function generateSection<T>(
   const userPromptSize = userPrompt.length;
   const totalPromptSize = systemPromptSize + userPromptSize;
   
-  console.log(`[${sectionName}] API 요청 시작:`, {
-    model,
-    schemaName: schema.name,
-    systemPromptSize,
-    userPromptSize,
-    totalPromptSize,
-    estimatedTokens: Math.ceil(totalPromptSize / 4), // 대략적인 토큰 수 추정 (1 토큰 ≈ 4 문자)
-    timestamp: new Date().toISOString(),
-  });
 
   // Promise를 반환하여 비동기 요청 시작
   return openai.chat.completions
@@ -138,11 +129,6 @@ async function generateSection<T>(
 
       const parsed = JSON.parse(content);
 
-      // 파싱된 결과에서 실제 데이터 추출
-      // OpenAI는 다양한 형태로 반환할 수 있음:
-      // 1. { "SummaryReportResponse": { summary_report: {...} } }
-      // 2. { "summary_report": {...} }
-      // 3. { "SummaryReportResponse": {...} } (직접 객체)
       let result: T;
 
       // parsed가 이미 직접 객체인 경우 (래퍼 없이)
