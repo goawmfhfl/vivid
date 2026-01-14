@@ -404,28 +404,33 @@ export default function MembershipPage() {
             className="relative overflow-hidden rounded-3xl p-6 sm:p-8 md:p-10 cursor-pointer"
             onClick={() => router.push("/membership")}
             style={{
-              background: `linear-gradient(135deg, #10B98120 0%, #05966915 50%, #10B98110 100%)`,
-              border: `2px solid #10B98150`,
-              boxShadow: `0 12px 40px #10B98120, 0 6px 20px #10B98115, inset 0 1px 0 rgba(255,255,255,0.6)`,
+              background: `linear-gradient(135deg, ${COLORS.brand.primary}15 0%, ${
+                COLORS.brand.light || COLORS.brand.primary
+              }10 50%, ${COLORS.background.card} 100%)`,
+              border: `2px solid ${COLORS.brand.primary}40`,
+              boxShadow: `0 12px 40px ${COLORS.brand.primary}26, 0 6px 20px ${COLORS.brand.primary}1F, inset 0 1px 0 rgba(255,255,255,0.7)`,
             }}
           >
             {/* 배경 장식 */}
             <div
-              className="absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 opacity-16 pointer-events-none"
+              className="absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 opacity-12 pointer-events-none"
               style={{
-                background: `radial-gradient(circle, #10B981 0%, transparent 70%)`,
+                background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.8),
                 borderRadius: "50%",
                 transform: "translate(25%, -25%)",
-                filter: "blur(50px)",
+                filter: "blur(42px)",
               }}
             />
             <div
-              className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 opacity-12 pointer-events-none"
+              className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 opacity-10 pointer-events-none"
               style={{
-                background: `radial-gradient(circle, #059669 0%, transparent 60%)`,
+                background: GRADIENT_UTILS.decoration(
+                  COLORS.brand.secondary || COLORS.brand.primary,
+                  0.7
+                ),
                 borderRadius: "50%",
                 transform: "translate(-20%, 20%)",
-                filter: "blur(40px)",
+                filter: "blur(34px)",
               }}
             />
 
@@ -434,8 +439,10 @@ export default function MembershipPage() {
                 <div
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: `linear-gradient(135deg, #10B981 0%, #059669 100%)`,
-                    boxShadow: `0 8px 24px #10B98150, 0 4px 12px #10B98130`,
+                    background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${
+                      COLORS.brand.secondary || COLORS.brand.primary
+                    } 100%)`,
+                    boxShadow: `0 8px 24px ${COLORS.brand.primary}4D, 0 4px 12px ${COLORS.brand.primary}33`,
                   }}
                 >
                   <Sparkles
@@ -447,10 +454,7 @@ export default function MembershipPage() {
                   <h3
                     className="text-xl sm:text-2xl md:text-3xl font-bold mb-3"
                     style={{
-                      background: `linear-gradient(135deg, ${COLORS.text.primary} 0%, #10B981 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
+                      color: COLORS.text.primary,
                     }}
                   >
                     Pro 멤버십으로 업그레이드

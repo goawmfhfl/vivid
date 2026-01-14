@@ -23,10 +23,10 @@ export function CircularProgress({
   animated = true,
   duration = 1000,
 }: CircularProgressProps) {
-  // animated가 false이거나 percentage가 빠르게 변경되는 경우 직접 값 사용
-  const animatedPercentage = animated && duration > 0
-    ? useCountUp(percentage, duration, true)
-    : percentage;
+  // 훅은 항상 동일한 순서로 호출해야 하므로 무조건 먼저 호출하고, 값만 조건부로 사용
+  const countedPercentage = useCountUp(percentage, duration, true);
+  const animatedPercentage =
+    animated && duration > 0 ? countedPercentage : percentage;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (animatedPercentage / 100) * circumference;

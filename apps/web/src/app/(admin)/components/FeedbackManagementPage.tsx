@@ -435,15 +435,18 @@ export function FeedbackManagementPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredFeedbacks.map((feedback) => (
-                <div
-                  key={feedback.id}
-                  className="p-4 rounded-lg border"
-                  style={{
-                    backgroundColor: COLORS.background.cardElevated,
-                    borderColor: COLORS.border.light,
-                  }}
-                >
+              {filteredFeedbacks.map((feedback) => {
+                const rating = feedback.rating ?? 0;
+
+                return (
+                  <div
+                    key={feedback.id}
+                    className="p-4 rounded-lg border"
+                    style={{
+                      backgroundColor: COLORS.background.cardElevated,
+                      borderColor: COLORS.border.light,
+                    }}
+                  >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-3">
@@ -463,7 +466,7 @@ export function FeedbackManagementPage() {
                             className="text-sm font-semibold"
                             style={{ color: COLORS.brand.primary }}
                           >
-                            {feedback.rating}점
+                            {rating}점
                           </span>
                           <div className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((starValue) => (
@@ -472,14 +475,14 @@ export function FeedbackManagementPage() {
                                 className="w-3 h-3"
                                 style={{
                                   fill:
-                                    starValue <= feedback.rating
+                                    starValue <= rating
                                       ? COLORS.brand.primary
                                       : "transparent",
                                   color:
-                                    starValue <= feedback.rating
+                                    starValue <= rating
                                       ? COLORS.brand.primary
                                       : COLORS.border.light,
-                                  strokeWidth: starValue <= feedback.rating ? 0 : 1,
+                                  strokeWidth: starValue <= rating ? 0 : 1,
                                 }}
                               />
                             ))}
@@ -506,9 +509,10 @@ export function FeedbackManagementPage() {
                         </span>
                       </div>
                     </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

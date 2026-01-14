@@ -5,9 +5,9 @@ import type {
   NotionPageProperties,
 } from "@/lib/types/notion-api";
 
-// ISR: 프로덕션에서는 30일(2592000초) 단위로 재검증, 개발에서는 매 요청마다
-export const revalidate =
-  process.env.NODE_ENV === "development" ? 0 : 60 * 60 * 24 * 30;
+// ISR: Next.js 15에서는 revalidate 값이 빌드 타임에 정적인 값이어야 함
+// 환경별 캐시는 아래 Cache-Control 헤더로 제어하므로 여기서는 0으로 고정
+export const revalidate = 0;
 
 const NOTION_API_BASE = "https://api.notion.com/v1";
 

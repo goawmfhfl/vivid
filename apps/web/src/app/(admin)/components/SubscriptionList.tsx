@@ -475,6 +475,8 @@ export function SubscriptionList() {
                                   plan: "",
                                   status: "",
                                   expires_at: "",
+                                  current_period_start: "",
+                                  cancel_at_period_end: false,
                                 });
                               }}
                               className="px-3 py-1 rounded border text-sm"

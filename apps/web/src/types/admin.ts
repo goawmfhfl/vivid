@@ -25,6 +25,8 @@ export interface UserListItem {
     plan: "free" | "pro";
     status: "active" | "canceled" | "expired" | "past_due";
     expires_at: string | null;
+    current_period_start?: string | null;
+    cancel_at_period_end?: boolean | null;
   };
   aiUsage?: {
     total_requests: number;
