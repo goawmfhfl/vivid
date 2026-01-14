@@ -65,7 +65,16 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     // Pro 멤버십 확인 (요청에 포함되어 있으면 사용, 없으면 서버에서 확인)
-    const isPro = isProFromRequest ?? (await verifySubscription(userId)).isPro;
+    const subscriptionVerification = await verifySubscription(userId);
+    const isPro = isProFromRequest ?? subscriptionVerification.isPro;
+
+    // Pro 멤버십이 아니면 403 에러 반환
+    if (!isPro) {
+      return NextResponse.json(
+        { error: "Pro 멤버십이 필요합니다. 주간 VIVID 생성은 Pro 플랜에서만 사용할 수 있습니다." },
+        { status: 403 }
+      );
+    }
 
     // 사용자 이름 조회
     const { data: profile } = await supabase

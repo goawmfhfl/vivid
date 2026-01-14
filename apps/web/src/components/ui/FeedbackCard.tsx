@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import {
   COLORS,
@@ -9,6 +10,7 @@ import {
   GRADIENT_UTILS,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
+import { Lock } from "lucide-react";
 
 export interface FeedbackCardProps {
   // 헤더
@@ -28,6 +30,7 @@ export interface FeedbackCardProps {
   // 옵션
   showHeader?: boolean; // 헤더 표시 여부 (기본: true)
   showBackgroundDecoration?: boolean; // 배경 장식 표시 여부 (기본: true)
+  isLocked?: boolean; // Pro 잠금 표시 여부 (기본: false)
   className?: string;
 }
 
@@ -46,8 +49,10 @@ export function FeedbackCard({
   children,
   showHeader = true,
   showBackgroundDecoration = true,
+  isLocked = false,
   className,
 }: FeedbackCardProps) {
+  const router = useRouter();
   // 기본 색상 설정
   const defaultGradientColor = gradientColor || COLORS.brand.primary;
   const defaultBorderColor =
@@ -132,6 +137,26 @@ export function FeedbackCard({
                 >
                   {title}
                 </p>
+                {isLocked && (
+                  <div
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                    style={{
+                      background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary || COLORS.brand.primary} 100%)`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push("/membership");
+                    }}
+                  >
+                    <Lock className="w-3 h-3" style={{ color: COLORS.text.white }} />
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: COLORS.text.white }}
+                    >
+                      Pro
+                    </span>
+                  </div>
+                )}
               </div>
               {subtitle && (
                 <p

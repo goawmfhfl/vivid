@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RecentTrendsSection } from "@/components/reports/RecentTrendsSection";
 import { useRecentTrends } from "@/hooks/useRecentTrends";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   COLORS,
   SPACING,
@@ -12,10 +13,11 @@ import {
   SHADOWS,
 } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
-import { Calendar, TrendingUp } from "lucide-react";
+import { Calendar, TrendingUp, Lock } from "lucide-react";
 
 function ReportsPage() {
   const router = useRouter();
+  const { isPro } = useSubscription();
 
   // 최근 동향 데이터 조회
   const {
@@ -36,8 +38,14 @@ function ReportsPage() {
       <div className="grid grid-cols-2 gap-4 mt-8">
         {/* 주간 리포트 버튼 */}
         <button
-          onClick={() => router.push("/reports/weekly")}
-          className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98]"
+          onClick={() => {
+            if (isPro) {
+              router.push("/reports/weekly");
+            } else {
+              router.push("/membership");
+            }
+          }}
+          className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98] cursor-pointer"
           style={{
             background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
             border: `1.5px solid ${GRADIENT_UTILS.borderColor(
@@ -65,10 +73,10 @@ function ReportsPage() {
               background: GRADIENT_UTILS.decoration(COLORS.brand.light, 0.6),
             }}
           />
-          <div className="relative z-10 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
+          <div className="relative z-10 flex flex-col gap-2">
+            <div className="flex items-center gap-2.5">
               <div
-                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{
                   background: GRADIENT_UTILS.iconBadge(
                     COLORS.brand.light,
@@ -78,7 +86,7 @@ function ReportsPage() {
                 }}
               >
                 <Calendar
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   style={{ color: COLORS.text.white }}
                 />
               </div>
@@ -86,12 +94,28 @@ function ReportsPage() {
                 className={TYPOGRAPHY.h3.fontSize}
                 style={{
                   ...TYPOGRAPHY.h3,
-                  fontSize: "0.95rem",
+                  fontSize: "0.9rem",
                   whiteSpace: "nowrap",
                 }}
               >
-                주간 리포트
+                주간 VIVID
               </h3>
+              {!isPro && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md ml-auto"
+                  style={{
+                    background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary || COLORS.brand.primary} 100%)`,
+                  }}
+                >
+                  <Lock className="w-3 h-3" style={{ color: COLORS.text.white }} />
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.white }}
+                  >
+                    Pro
+                  </span>
+                </div>
+              )}
             </div>
             <p
               className="text-xs leading-relaxed"
@@ -99,17 +123,24 @@ function ReportsPage() {
                 color: COLORS.text.secondary,
                 opacity: 0.85,
                 lineHeight: "1.4",
+                fontSize: "0.75rem",
               }}
             >
-              일주일간의 기록을 분석하여 패턴과 인사이트를 확인하세요
+              일주일간의 기록 분석
             </p>
           </div>
         </button>
 
         {/* 월간 리포트 버튼 */}
         <button
-          onClick={() => router.push("/reports/monthly")}
-          className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98]"
+          onClick={() => {
+            if (isPro) {
+              router.push("/reports/monthly");
+            } else {
+              router.push("/membership");
+            }
+          }}
+          className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98] cursor-pointer"
           style={{
             background: GRADIENT_UTILS.cardBackground(
               COLORS.brand.primary,
@@ -140,10 +171,10 @@ function ReportsPage() {
               background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.6),
             }}
           />
-          <div className="relative z-10 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
+          <div className="relative z-10 flex flex-col gap-2">
+            <div className="flex items-center gap-2.5">
               <div
-                className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{
                   background: GRADIENT_UTILS.iconBadge(
                     COLORS.brand.primary,
@@ -153,7 +184,7 @@ function ReportsPage() {
                 }}
               >
                 <TrendingUp
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   style={{ color: COLORS.text.white }}
                 />
               </div>
@@ -161,12 +192,28 @@ function ReportsPage() {
                 className={TYPOGRAPHY.h3.fontSize}
                 style={{
                   ...TYPOGRAPHY.h3,
-                  fontSize: "0.95rem",
+                  fontSize: "0.9rem",
                   whiteSpace: "nowrap",
                 }}
               >
-                월간 리포트
+                월간 VIVID
               </h3>
+              {!isPro && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md ml-auto"
+                  style={{
+                    background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary || COLORS.brand.primary} 100%)`,
+                  }}
+                >
+                  <Lock className="w-3 h-3" style={{ color: COLORS.text.white }} />
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: COLORS.text.white }}
+                  >
+                    Pro
+                  </span>
+                </div>
+              )}
             </div>
             <p
               className="text-xs leading-relaxed"
@@ -174,9 +221,10 @@ function ReportsPage() {
                 color: COLORS.text.secondary,
                 opacity: 0.85,
                 lineHeight: "1.4",
+                fontSize: "0.75rem",
               }}
             >
-              한 달간의 기록을 종합 분석하여 성장과 변화를 확인하세요
+              한 달간의 기록 분석
             </p>
           </div>
         </button>

@@ -31,21 +31,21 @@ export function TermsAgreement({
   const allChecked = agreeTerms && agreeAI && agreeMarketing;
 
   return (
-    <div className="space-y-4 pt-2">
-      <div className="flex items-start gap-3">
+    <div className="space-y-4 pt-2 px-2 sm:px-0">
+      <div className="flex items-start gap-2">
         <Checkbox
           id="terms"
           checked={agreeTerms}
           onCheckedChange={(checked) => onTermsChange(checked === true)}
-          className="mt-0.5"
+          className="mt-0.5 flex-shrink-0"
         />
         <label
           htmlFor="terms"
           className="flex-1 cursor-pointer"
-          style={{ color: "#333333", fontSize: "0.9rem" }}
+          style={{ color: "#333333", fontSize: "0.75rem", lineHeight: "1.4" }}
         >
-          <span style={{ color: "#EF4444" }}>[필수]</span> 이용약관 및 개인정보
-          수집·이용 동의{" "}
+          <span style={{ color: "#EF4444" }}>[필수]</span>{" "}
+          <span>이용약관 및 개인정보처리</span>{" "}
           <button
             type="button"
             onClick={(e) => {
@@ -60,20 +60,20 @@ export function TermsAgreement({
         </label>
       </div>
 
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         <Checkbox
           id="ai"
           checked={agreeAI}
           onCheckedChange={(checked) => onAIChange(checked === true)}
-          className="mt-0.5"
+          className="mt-0.5 flex-shrink-0"
         />
         <label
           htmlFor="ai"
           className="flex-1 cursor-pointer"
-          style={{ color: "#333333", fontSize: "0.9rem" }}
+          style={{ color: "#333333", fontSize: "0.75rem", lineHeight: "1.4" }}
         >
-          <span style={{ color: "#EF4444" }}>[필수]</span> AI 피드백 데이터 학습
-          활용 동의{" "}
+          <span style={{ color: "#EF4444" }}>[필수]</span>{" "}
+          <span>AI 피드백 데이터 학습 활용</span>{" "}
           <button
             type="button"
             onClick={(e) => {
@@ -88,23 +88,20 @@ export function TermsAgreement({
         </label>
       </div>
 
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2">
         <Checkbox
           id="marketing"
           checked={agreeMarketing}
           onCheckedChange={(checked) => onMarketingChange(checked === true)}
-          className="mt-0.5"
+          className="mt-0.5 flex-shrink-0"
         />
         <label
           htmlFor="marketing"
           className="flex-1 cursor-pointer"
-          style={{ color: "#333333", fontSize: "0.9rem" }}
+          style={{ color: "#333333", fontSize: "0.75rem", lineHeight: "1.4" }}
         >
-          <span style={{ color: "#6B7A6F" }}>[선택]</span> 마케팅 정보
-          (문자·이메일) 수신 동의
-          <p style={{ fontSize: "0.75rem", color: "#6B7A6F" }}>
-            신규 기능, 서비스 팁, 이벤트 소식을 보내드려요.
-          </p>
+          <span style={{ color: "#6B7A6F" }}>[선택]</span>{" "}
+          <span>마케팅 정보 (문자·이메일) 수신 동의</span>
         </label>
       </div>
 

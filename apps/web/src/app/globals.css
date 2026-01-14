@@ -369,6 +369,30 @@ input[type="number"] {
   }
 }
 
+/* Button Fade In Slide Up Animation */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button Fade In Slide Down Animation */
+@keyframes fadeInSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Pro Badge Pulse Glow Animation */
 @keyframes pulse-glow {
   0%,

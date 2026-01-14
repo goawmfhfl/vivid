@@ -19,6 +19,8 @@ interface Subscription {
   expires_at: string | null;
   started_at: string | null;
   canceled_at: string | null;
+  current_period_start: string | null;
+  cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -52,10 +54,14 @@ export function SubscriptionList() {
     plan: "free" | "pro" | "";
     status: "active" | "canceled" | "expired" | "past_due" | "";
     expires_at: string;
+    current_period_start: string;
+    cancel_at_period_end: boolean;
   }>({
     plan: "",
     status: "",
     expires_at: "",
+    current_period_start: "",
+    cancel_at_period_end: false,
   });
 
   useEffect(() => {
@@ -97,6 +103,12 @@ export function SubscriptionList() {
           ...(editData.plan && { plan: editData.plan }),
           ...(editData.status && { status: editData.status }),
           ...(editData.expires_at && { expires_at: editData.expires_at }),
+          ...(editData.current_period_start && {
+            current_period_start: editData.current_period_start,
+          }),
+          ...(editData.cancel_at_period_end !== undefined && {
+            cancel_at_period_end: editData.cancel_at_period_end,
+          }),
         }),
       });
 
@@ -105,7 +117,13 @@ export function SubscriptionList() {
       }
 
       setIsEditing(null);
-      setEditData({ plan: "", status: "", expires_at: "" });
+      setEditData({
+        plan: "",
+        status: "",
+        expires_at: "",
+        current_period_start: "",
+        cancel_at_period_end: false,
+      });
       // 목록 새로고침
       const params = new URLSearchParams({
         page: page.toString(),
@@ -481,6 +499,12 @@ export function SubscriptionList() {
                                       .toISOString()
                                       .split("T")[0]
                                   : "",
+                                current_period_start: sub.current_period_start
+                                  ? new Date(sub.current_period_start)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : "",
+                                cancel_at_period_end: sub.cancel_at_period_end,
                               });
                             }}
                             className="p-1 rounded hover:bg-opacity-50"
@@ -725,6 +749,8 @@ export function SubscriptionList() {
                               plan: "",
                               status: "",
                               expires_at: "",
+                              current_period_start: "",
+                              cancel_at_period_end: false,
                             });
                           }}
                           className="flex-1 px-3 py-2 rounded border text-sm font-medium"
@@ -750,6 +776,12 @@ export function SubscriptionList() {
                                 .toISOString()
                                 .split("T")[0]
                             : "",
+                          current_period_start: sub.current_period_start
+                            ? new Date(sub.current_period_start)
+                                .toISOString()
+                                .split("T")[0]
+                            : "",
+                          cancel_at_period_end: sub.cancel_at_period_end,
                         });
                       }}
                       className="w-full px-3 py-2 rounded border text-sm font-medium flex items-center justify-center gap-2"

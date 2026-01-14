@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Compass, Heart, Zap, User, Lock } from "lucide-react";
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -33,6 +34,7 @@ function TrendCard({
   emptyMessage,
   isLocked = false,
 }: TrendCardProps) {
+  const router = useRouter();
   if (items.length === 0) {
     if (emptyMessage) {
       return (
@@ -42,6 +44,7 @@ function TrendCard({
             iconColor={iconColor}
             title={title}
             gradientColor={iconColor}
+            isLocked={isLocked}
           >
             <p
               className={TYPOGRAPHY.body.fontSize}
@@ -63,6 +66,7 @@ function TrendCard({
         iconColor={iconColor}
         title={title}
         gradientColor={iconColor}
+        isLocked={isLocked}
       >
         <ul className="space-y-2">
           {items.map((item, index) => (
@@ -101,10 +105,13 @@ function TrendCard({
               WebkitBackdropFilter: "blur(12px)",
             }}
           />
-          {/* 중앙 잠금 배지 */}
-          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl pointer-events-none">
+          {/* 중앙 잠금 배지 - 클릭 가능 */}
+          <div 
+            className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
+            onClick={() => router.push("/membership")}
+          >
             <div
-              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
                 backdropFilter: "blur(8px)",

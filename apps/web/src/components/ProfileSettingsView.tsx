@@ -193,9 +193,6 @@ export function ProfileSettingsView() {
                 error={errors.name}
                 disabled={updateProfileMutation.isPending}
               />
-              <p className="mt-1 text-xs text-[#6B7A6F]">
-                이메일 찾기와 맞춤 VIVID에 사용됩니다.
-              </p>
             </div>
 
             <div>
@@ -208,9 +205,6 @@ export function ProfileSettingsView() {
                 error={errors.phone}
                 disabled={updateProfileMutation.isPending}
               />
-              <p className="mt-1 text-xs text-[#6B7A6F]">
-                비밀번호 재설정 등 중요한 알림을 받습니다.
-              </p>
             </div>
           </SectionCard>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { BaseModal } from "./BaseModal";
 import { DialogDescription, DialogTitle } from "../dialog";
 import { Button } from "../button";
@@ -29,10 +29,25 @@ export function SuccessModal({
       <DialogTitle className="sr-only">성공</DialogTitle>
       <div className="flex flex-col items-center justify-center py-6">
         <div
-          className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-          style={{ backgroundColor: "#F0FDF4" }}
+          className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center relative"
+          style={{
+            background: `linear-gradient(135deg, ${COLORS.brand.primary}15 0%, ${COLORS.brand.light}15 100%)`,
+            border: `2px solid ${COLORS.brand.primary}30`,
+          }}
         >
-          <CheckCircle2 className="w-8 h-8" style={{ color: "#10B981" }} />
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${COLORS.brand.primary}20 0%, transparent 70%)`,
+            }}
+          />
+          <Sparkles
+            className="w-10 h-10 relative z-10"
+            style={{
+              color: COLORS.brand.primary,
+              filter: `drop-shadow(0 2px 8px ${COLORS.brand.primary}40)`,
+            }}
+          />
         </div>
         <DialogDescription
           className={`${TYPOGRAPHY.body.fontSize} text-center mb-6`}

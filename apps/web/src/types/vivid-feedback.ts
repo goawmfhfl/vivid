@@ -1,4 +1,4 @@
-export type PageType = 'daily' | 'weekly' | 'monthly';
+export type PageType = 'daily' | 'weekly' | 'monthly' | 'improvement';
 
 /**
  * 유저 피드백 인터페이스
@@ -7,9 +7,12 @@ export type PageType = 'daily' | 'weekly' | 'monthly';
 export interface VividFeedback {
   id: string;
   page_type: PageType;
-  rating: number; // 1-5
+  rating: number | null; // 1-5 (개선점 피드백은 null)
   comment: string | null;
+  content?: string | null; // 개선점 피드백용
+  user_id?: string | null; // 개선점 피드백은 필수, 일반 피드백은 null
   created_at: string;
+  updated_at?: string;
 }
 
 export interface SubmitFeedbackRequest {

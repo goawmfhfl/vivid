@@ -17,6 +17,7 @@ export interface SignUpData {
   agreeAI: boolean;
   agreeMarketing: boolean;
   isSocialOnboarding?: boolean; // 소셜 로그인 완료 플래그
+  couponCode?: string; // 쿠폰 코드 (선택)
 }
 
 // 회원가입 응답 타입 정의
@@ -46,6 +47,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     agreeAI,
     agreeMarketing,
     isSocialOnboarding = false,
+    couponCode,
   } = data;
 
   // 공통 필드 검증
@@ -93,12 +95,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       const mergedMetadata = {
         ...(currentUser.user_metadata || {}),
         name,
-        phone,
+        phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호
         birthYear,
         gender,
         agreeTerms,
         agreeAI,
         agreeMarketing,
+        phone_verified: true, // 핸드폰 인증 완료
+        phone_verified_at: new Date().toISOString(),
       };
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -127,9 +131,11 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
             agreeAI,
             agreeMarketing,
             name,
-            phone,
+            phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호
             birthYear,
             gender,
+            phone_verified: true, // 핸드폰 인증 완료
+            phone_verified_at: new Date().toISOString(),
           },
         },
       });
@@ -190,30 +196,49 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       // (이미 존재하는 경우 등은 정상 처리)
     }
 
-    // 3. 기본 구독 생성 (free 플랜)
+    // 3. 기본 구독 생성 (free 플랜) 또는 쿠폰 적용
     // 세션이 있는 경우에만 구독 생성 (일반 회원가입은 이메일 인증 후 세션이 생성됨)
     if (session) {
       try {
-        const subscriptionResponse = await fetch("/api/subscriptions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            plan: "free",
-            status: "active",
-            expires_at: null,
-          }),
-        });
+        if (couponCode) {
+          // 쿠폰이 있으면 쿠폰 적용
+          const couponResponse = await fetch("/api/coupons/apply", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ code: couponCode }),
+          });
 
-        if (!subscriptionResponse.ok) {
-          const errorData = await subscriptionResponse.json();
-          console.error("구독 생성 실패:", errorData);
-          // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+          if (!couponResponse.ok) {
+            const errorData = await couponResponse.json();
+            console.error("쿠폰 적용 실패:", errorData);
+            // 쿠폰 적용 실패는 에러로 처리하지 않고 로그만 남김
+          }
+        } else {
+          // 쿠폰이 없으면 기본 free 플랜 생성
+          const subscriptionResponse = await fetch("/api/subscriptions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              plan: "free",
+              status: "active",
+              expires_at: null,
+            }),
+          });
+
+          if (!subscriptionResponse.ok) {
+            const errorData = await subscriptionResponse.json();
+            console.error("구독 생성 실패:", errorData);
+            // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+          }
         }
       } catch (subscriptionError) {
-        console.error("구독 생성 중 오류:", subscriptionError);
+        console.error("구독/쿠폰 처리 중 오류:", subscriptionError);
         // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
       }
     }

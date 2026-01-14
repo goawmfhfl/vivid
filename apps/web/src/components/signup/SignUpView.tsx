@@ -48,6 +48,9 @@ export function SignUpView({
     gender: "",
   });
 
+  // 핸드폰 인증 완료 여부
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+
   // 에러 상태
   const [errors, setErrors] = useState<{
     email?: string;
@@ -57,6 +60,7 @@ export function SignUpView({
     birthYear?: string;
     gender?: string;
     terms?: string;
+    code?: string;
   }>({});
 
   // 모달 상태
@@ -64,6 +68,9 @@ export function SignUpView({
     showTerms: false,
     showAI: false,
   });
+
+  // 쿠폰 코드 저장
+  const [couponCode, setCouponCode] = useState<string | null>(null);
 
   const signUpMutation = useSignUp(isSocialOnboarding);
 
@@ -146,6 +153,11 @@ export function SignUpView({
           newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
         }
       }
+
+      // 핸드폰 인증 검증
+      if (!isPhoneVerified) {
+        newErrors.phone = "핸드폰 인증을 완료해주세요.";
+      }
     } else if (step === 3) {
       // 맞춤형 피드백 정보 검증
       if (!formData.birthYear) {
@@ -195,7 +207,7 @@ export function SignUpView({
       // 현재 단계의 에러 초기화
       const stepErrors: (keyof typeof errors)[] = [];
       if (currentStep === 2) {
-        stepErrors.push("name", "phone");
+        stepErrors.push("name", "phone", "code");
       } else if (currentStep === 3) {
         stepErrors.push("birthYear", "gender");
       } else if (currentStep === 4) {
@@ -222,8 +234,10 @@ export function SignUpView({
       birthYear: formData.birthYear,
       gender: formData.gender,
       isSocialOnboarding,
+      couponCode: couponCode || undefined,
     });
   };
+
 
   // 현재 단계가 유효한지 확인
   const isCurrentStepValid = () => {
@@ -239,7 +253,8 @@ export function SignUpView({
       return (
         Boolean(formData.name?.trim()) &&
         Boolean(formData.phone?.trim()) &&
-        formData.phone.replace(/\s/g, "").length >= 10
+        formData.phone.replace(/\s/g, "").length >= 10 &&
+        isPhoneVerified
       );
     } else if (currentStep === 3) {
       return Boolean(formData.birthYear && formData.gender);
@@ -291,22 +306,24 @@ export function SignUpView({
               }}
             >
               {currentStep === 1 && (
-                <LoginInfoStep
-                  email={formData.email}
-                  password={formData.password}
-                  emailError={errors.email}
-                  passwordError={errors.password}
-                  isSocialMode={isSocialOnboarding}
-                  onEmailChange={(value) => {
-                    updateFormData("email", value);
-                    clearFieldError("email");
-                  }}
-                  onPasswordChange={(value) => {
-                    updateFormData("password", value);
-                    clearFieldError("password");
-                  }}
-                  onClearError={clearFieldError}
-                />
+                <>
+                  <LoginInfoStep
+                    email={formData.email}
+                    password={formData.password}
+                    emailError={errors.email}
+                    passwordError={errors.password}
+                    isSocialMode={isSocialOnboarding}
+                    onEmailChange={(value) => {
+                      updateFormData("email", value);
+                      clearFieldError("email");
+                    }}
+                    onPasswordChange={(value) => {
+                      updateFormData("password", value);
+                      clearFieldError("password");
+                    }}
+                    onClearError={clearFieldError}
+                  />
+                </>
               )}
 
               {currentStep === 2 && (
@@ -322,7 +339,15 @@ export function SignUpView({
                   onPhoneChange={(value) => {
                     updateFormData("phone", value);
                     clearFieldError("phone");
+                    // 전화번호가 변경되면 인증 상태 초기화
+                    setIsPhoneVerified(false);
                   }}
+                  onVerificationComplete={() => {
+                    setIsPhoneVerified(true);
+                    clearFieldError("phone");
+                    clearFieldError("code");
+                  }}
+                  isPhoneVerified={isPhoneVerified}
                   onClearError={clearFieldError}
                 />
               )}
@@ -333,6 +358,8 @@ export function SignUpView({
                   gender={formData.gender}
                   birthYearError={errors.birthYear}
                   genderError={errors.gender}
+                  couponCode={couponCode}
+                  onCouponCodeChange={(code) => setCouponCode(code)}
                   onBirthYearChange={(value) => {
                     updateFormData("birthYear", value);
                     clearFieldError("birthYear");

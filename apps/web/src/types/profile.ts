@@ -11,6 +11,7 @@ export interface Profile {
   role: "user" | "admin" | "moderator";
   is_active: boolean;
   last_login_at: string | null;
+  used_coupons: string[];
   created_at: string;
   updated_at: string;
 }

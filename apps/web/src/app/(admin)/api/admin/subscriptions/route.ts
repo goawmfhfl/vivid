@@ -82,6 +82,8 @@ export async function GET(request: NextRequest) {
             expires_at: sub.expires_at,
             started_at: sub.started_at,
             canceled_at: sub.canceled_at,
+            current_period_start: sub.current_period_start,
+            cancel_at_period_end: sub.cancel_at_period_end,
             created_at: sub.created_at,
             updated_at: sub.updated_at,
           };
@@ -114,7 +116,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, plan, status, expires_at } = body;
+    const {
+      userId,
+      plan,
+      status,
+      expires_at,
+      current_period_start,
+      cancel_at_period_end,
+    } = body;
 
     if (!userId || !plan) {
       return NextResponse.json(
@@ -145,6 +154,8 @@ export async function POST(request: NextRequest) {
       status:
         (status as "active" | "canceled" | "expired" | "past_due") || "active",
       expires_at: expires_at || null,
+      current_period_start: current_period_start || null,
+      cancel_at_period_end: cancel_at_period_end ?? false,
     });
 
     return NextResponse.json({
@@ -174,7 +185,14 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, plan, status, expires_at } = body;
+    const {
+      userId,
+      plan,
+      status,
+      expires_at,
+      current_period_start,
+      cancel_at_period_end,
+    } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -204,6 +222,8 @@ export async function PATCH(request: NextRequest) {
       status?: string;
       expires_at?: string | null;
       canceled_at?: string;
+      current_period_start?: string | null;
+      cancel_at_period_end?: boolean;
     } = {};
     if (plan) {
       if (!["free", "pro"].includes(plan)) {
@@ -229,6 +249,12 @@ export async function PATCH(request: NextRequest) {
     if (expires_at !== undefined) {
       updateData.expires_at = expires_at;
     }
+    if (current_period_start !== undefined) {
+      updateData.current_period_start = current_period_start;
+    }
+    if (cancel_at_period_end !== undefined) {
+      updateData.cancel_at_period_end = cancel_at_period_end;
+    }
 
     const { data: updated, error } = await supabase
       .from("subscriptions")
@@ -250,6 +276,8 @@ export async function PATCH(request: NextRequest) {
       plan: updated.plan as "free" | "pro",
       status: updated.status as "active" | "canceled" | "expired" | "past_due",
       expires_at: updated.expires_at,
+      current_period_start: updated.current_period_start,
+      cancel_at_period_end: updated.cancel_at_period_end,
     });
 
     return NextResponse.json({

@@ -56,13 +56,19 @@ export function RecordItem({
     }
 
     // Q1과 Q2 패턴 찾기
+    // Q1: Q1.로 시작하고 Q2.가 나오기 전까지 또는 끝까지
     const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/);
+    // Q2: Q2.로 시작하고 끝까지
     const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/);
 
-    if (q1Match && q2Match) {
+    const q1 = q1Match ? q1Match[1].trim() : null;
+    const q2 = q2Match ? q2Match[1].trim() : null;
+
+    // Q1 또는 Q2 중 하나라도 있으면 분리된 UI로 표시
+    if (q1 || q2) {
       return {
-        q1: q1Match[1].trim(),
-        q2: q2Match[1].trim(),
+        q1,
+        q2,
         hasSeparated: true,
       };
     }

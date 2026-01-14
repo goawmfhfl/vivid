@@ -118,66 +118,76 @@ export function Home({ selectedDate }: HomeProps = {}) {
     (state) => state.clearDailyFeedbackProgress
   );
 
-  // 스크롤 방향 감지 (버튼 숨김/표시용)
-  const [isScrolledDown, setIsScrolledDown] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true);
-  const lastScrollY = useRef(0);
+  // 타이머 기반 progress 상태
+  const [timerProgress, setTimerProgress] = useState<number | null>(null);
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
 
   // 진행 상황 확인
   const progress = dailyFeedbackProgress[activeDate] || null;
-  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null;
-
-  // 스크롤 이벤트 핸들러
+  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null || timerProgress !== null;
+  
+  // 타이머 기반 progress 계산 (0% → 99%, 15초 동안)
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollThreshold = 10; // 최상단 판단 임계값
-      const scrollDelta = 5; // 스크롤 방향 감지를 위한 최소 변화량
+    if (timerStartTime === null) return;
 
-      // 최상단 여부 확인
-      setIsAtTop(currentScrollY < scrollThreshold);
+    const DURATION_MS = 15000; // 15초
+    const TARGET_PERCENTAGE = 99; // 최대 99%
+    const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 
-      // 스크롤 방향 확인 (최소 변화량 이상일 때만)
-      const scrollDifference = currentScrollY - lastScrollY.current;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - timerStartTime;
       
-      if (scrollDifference > scrollDelta && currentScrollY > scrollThreshold) {
-        // 아래로 스크롤 중 (임계값 이상)
-        setIsScrolledDown(true);
-      } else if (scrollDifference < -scrollDelta) {
-        // 위로 스크롤 중
-        setIsScrolledDown(false);
+      // 15초가 넘어가면 99%에 고정
+      if (elapsed >= DURATION_MS) {
+        setTimerProgress(TARGET_PERCENTAGE);
+        clearInterval(interval);
+        return;
       }
+      
+      // 15초 이내일 때만 진행률 계산
+      const calculatedProgress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
+      setTimerProgress(calculatedProgress);
+    }, UPDATE_INTERVAL);
 
-      lastScrollY.current = currentScrollY;
-    };
+    return () => clearInterval(interval);
+  }, [timerStartTime]);
 
-    // 초기 스크롤 위치 설정
-    lastScrollY.current = window.scrollY;
-    setIsAtTop(window.scrollY < 10);
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
+  // 컴포넌트 언마운트 시에만 타이머 정리 (activeDate 변경 시에는 유지)
+  useEffect(() => {
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      // 컴포넌트 언마운트 시에만 정리
     };
   }, []);
 
-  // 서버 progress 계산
-  const progressPercentage = progress
+  // 타이머 progress와 실제 서버 progress 병합 (더 높은 값 사용)
+  const serverProgressPercentage = progress
     ? Math.round((progress.current / progress.total) * 100)
     : 0;
+  
+  // 서버 응답이 완료되면 100%, 그렇지 않으면 타이머와 서버 중 더 높은 값 (최대 99%)
+  const isComplete = progress && progress.current >= progress.total;
+  const progressPercentage = isComplete
+    ? 100
+    : Math.min(
+        Math.max(timerProgress ?? 0, serverProgressPercentage),
+        99
+      );
 
 
   const handleOpenDailyFeedback = async () => {
     try {
       if (hasDateFeedback) {
-        // 기존 VIVID가 있으면 id로 라우팅
+        // 기존 피드백이 있으면 id로 라우팅
         if (!dateFeedback.id) {
-          throw new Error("VIVID ID를 찾을 수 없습니다.");
+          throw new Error("피드백 ID를 찾을 수 없습니다.");
         }
         router.push(`/analysis/feedback/daily/${dateFeedback.id}`);
         return;
       }
+
+      // 타이머 시작
+      setTimerStartTime(Date.now());
+      setTimerProgress(0);
 
       // 진행 상황 초기화
       setDailyFeedbackProgress(activeDate, {
@@ -192,6 +202,10 @@ export function Home({ selectedDate }: HomeProps = {}) {
           date: activeDate,
         });
 
+        // 타이머 정리
+        setTimerStartTime(null);
+        setTimerProgress(null);
+        
         // 진행 상황 초기화
         clearDailyFeedbackProgress(activeDate);
 
@@ -214,24 +228,32 @@ export function Home({ selectedDate }: HomeProps = {}) {
           throw new Error("생성된 VIVID에 ID가 없습니다.");
         }
       } catch (error) {
-        console.error("VIVID 생성 실패:", error);
+        console.error("피드백 생성 실패:", error);
 
+        // 타이머 정리
+        setTimerStartTime(null);
+        setTimerProgress(null);
+        
         // 진행 상황 초기화
         clearDailyFeedbackProgress(activeDate);
 
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "VIVID 생성에 실패했습니다. 다시 시도해주세요.";
+            : "피드백 생성에 실패했습니다. 다시 시도해주세요.";
 
         openErrorModal(errorMessage);
       }
     } catch (e) {
       // 동기 에러 처리
       const base =
-        e instanceof Error ? e.message : "VIVID 생성 중 오류가 발생했습니다.";
+        e instanceof Error ? e.message : "피드백 생성 중 오류가 발생했습니다.";
       const message = `${base}\n다시 시도 후에도 오류가 반복적으로 발생하면 문의 부탁드립니다.`;
       openErrorModal(message);
+      
+      // 타이머 정리
+      setTimerStartTime(null);
+      setTimerProgress(null);
       
       clearDailyFeedbackProgress(activeDate);
     }
@@ -273,20 +295,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
       {hasDateRecords && (
         <div 
-          className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4"
-          style={{
-            transform: isScrolledDown && !isAtTop ? "translateY(100%)" : "translateY(0)",
-            opacity: isScrolledDown && !isAtTop ? 0 : 1,
-            pointerEvents: isScrolledDown && !isAtTop ? "none" : "auto",
-            transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            willChange: "transform, opacity",
-          }}
+          className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50"
         >
           <div
-            className="relative cursor-pointer transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
-            onClick={
-              !isGeneratingFeedback ? handleOpenDailyFeedback : undefined
-            }
+            className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
+            onClick={!isGeneratingFeedback ? handleOpenDailyFeedback : undefined}
             style={{
               backgroundColor: "#FAFAF8",
               border: `1.5px solid ${COLORS.border.light}`,
@@ -300,6 +313,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
               overflow: "hidden",
               opacity: isGeneratingFeedback ? 0.9 : 1,
               pointerEvents: isGeneratingFeedback ? "none" : "auto",
+              cursor: isGeneratingFeedback ? "default" : "pointer",
               // 종이 질감 배경 패턴
               backgroundImage: `
                 /* 가로 줄무늬 (프로젝트 그린 톤) */
@@ -360,7 +374,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
             {/* 버튼 내용 */}
             <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
               {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
-              {progress && (
+              {(progress || timerProgress !== null) && (
                 <CircularProgress
                   percentage={progressPercentage}
                   size={40}
@@ -368,11 +382,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   showText={true}
                   textSize="sm"
                   className="flex-shrink-0"
+                  animated={false}
                 />
               )}
               <Sparkles
                 className={`flex-shrink-0 ${
-                  progress ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
+                  (progress || timerProgress !== null) ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
                 }`}
                 style={{ color: COLORS.brand.primary }}
               />
@@ -381,12 +396,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   className="text-sm sm:text-base"
                   style={{
                     color: COLORS.brand.primary,
-                    fontSize: progress ? "0.875rem" : "1rem",
+                    fontSize: (progress || timerProgress !== null) ? "0.875rem" : "1rem",
                     fontWeight: "600",
                     lineHeight: "1.2",
                   }}
                 >
-                  {progress
+                  {(progress || timerProgress !== null)
                     ? "VIVID 생성 중..."
                     : hasDateFeedback
                     ? isToday
@@ -396,18 +411,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
                     ? "오늘의 VIVID 생성하기"
                     : "VIVID 생성하기"}
                 </span>
-                {progress && (
-                  <span
-                    className="text-xs sm:text-sm"
-                    style={{
-                      color: "#6B7A6F",
-                      fontSize: "0.7rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {progress.currentStep || "VIVID 생성 중"}
-                  </span>
-                )}
               </div>
             </div>
           </div>

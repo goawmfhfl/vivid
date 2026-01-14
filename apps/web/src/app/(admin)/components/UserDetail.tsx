@@ -102,6 +102,8 @@ export function UserDetail({ userId }: UserDetailProps) {
     plan: "" as "free" | "pro" | "",
     status: "" as "active" | "canceled" | "expired" | "past_due" | "",
     expires_at: "",
+    current_period_start: "",
+    cancel_at_period_end: false,
   });
 
   useEffect(() => {
@@ -292,6 +294,8 @@ export function UserDetail({ userId }: UserDetailProps) {
         plan?: string;
         status?: string;
         expires_at?: string | null;
+        current_period_start?: string | null;
+        cancel_at_period_end?: boolean;
       } = {
         userId: user.id,
       };
@@ -304,6 +308,12 @@ export function UserDetail({ userId }: UserDetailProps) {
       }
       if (subscriptionEditData.expires_at !== undefined) {
         updatePayload.expires_at = subscriptionEditData.expires_at || null;
+      }
+      if (subscriptionEditData.current_period_start) {
+        updatePayload.current_period_start = subscriptionEditData.current_period_start || null;
+      }
+      if (subscriptionEditData.cancel_at_period_end !== undefined) {
+        updatePayload.cancel_at_period_end = subscriptionEditData.cancel_at_period_end;
       }
 
       const response = await adminApiFetch("/api/admin/subscriptions", {
@@ -330,6 +340,8 @@ export function UserDetail({ userId }: UserDetailProps) {
         plan: "",
         status: "",
         expires_at: "",
+        current_period_start: "",
+        cancel_at_period_end: false,
       });
       alert("구독 정보가 성공적으로 수정되었습니다.");
     } catch (err) {
@@ -718,6 +730,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                           .toISOString()
                           .split("T")[0]
                       : "",
+                    current_period_start: user.subscription!.current_period_start
+                      ? new Date(user.subscription!.current_period_start)
+                          .toISOString()
+                          .split("T")[0]
+                      : "",
+                    cancel_at_period_end: user.subscription!.cancel_at_period_end ?? false,
                   });
                 }}
                 className="text-sm px-3 py-1 rounded-lg"
@@ -816,6 +834,56 @@ export function UserDetail({ userId }: UserDetailProps) {
                       }}
                     />
                   </div>
+                  <div>
+                    <label
+                      className="text-xs font-medium block mb-2"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      현재 구독 기간 시작일
+                    </label>
+                    <input
+                      type="date"
+                      value={subscriptionEditData.current_period_start}
+                      onChange={(e) =>
+                        setSubscriptionEditData({
+                          ...subscriptionEditData,
+                          current_period_start: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2.5 rounded-lg border text-base"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-xs font-medium block mb-2"
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      기간 종료 시 취소 예정
+                    </label>
+                    <select
+                      value={subscriptionEditData.cancel_at_period_end ? "true" : "false"}
+                      onChange={(e) =>
+                        setSubscriptionEditData({
+                          ...subscriptionEditData,
+                          cancel_at_period_end: e.target.value === "true",
+                        })
+                      }
+                      className="w-full px-4 py-2.5 rounded-lg border text-base"
+                      style={{
+                        borderColor: COLORS.border.input,
+                        backgroundColor: COLORS.background.card,
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      <option value="false">아니오</option>
+                      <option value="true">예</option>
+                    </select>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={handleUpdateSubscription}
@@ -835,6 +903,8 @@ export function UserDetail({ userId }: UserDetailProps) {
                           plan: "",
                           status: "",
                           expires_at: "",
+                          current_period_start: "",
+                          cancel_at_period_end: false,
                         });
                       }}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg border"

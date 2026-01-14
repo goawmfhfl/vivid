@@ -10,6 +10,22 @@ export async function verifySubscription(
 ): Promise<SubscriptionVerification> {
   const supabase = getServiceSupabase();
 
+  // Admin role 체크
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  // Admin이면 항상 Pro 멤버십
+  if (profile?.role === "admin") {
+    return {
+      isPro: true,
+      subscription: null,
+      isExpired: false,
+    };
+  }
+
   const { data: subscription, error } = await supabase
     .from("subscriptions")
     .select("*")
@@ -25,12 +41,42 @@ export async function verifySubscription(
     };
   }
 
-  // 만료일 체크
-  const isExpired = subscription.expires_at
-    ? new Date(subscription.expires_at) < new Date()
-    : false;
+  // 만료일 체크 및 자동 업데이트
+  const now = new Date();
+  const expiresAt = subscription.expires_at
+    ? new Date(subscription.expires_at)
+    : null;
+  const isExpired = expiresAt ? expiresAt < now : false;
+
+  // expires_at이 지났고 status가 active면 expired로 업데이트
+  // cancel_at_period_end가 true인 경우에도 기간 종료 시 expired로 변경
+  if (isExpired && subscription.status === "active") {
+    const updateData: {
+      status: "expired";
+      cancel_at_period_end?: boolean;
+    } = { status: "expired" };
+    
+    // cancel_at_period_end가 true였던 경우, 기간 종료 시 false로 변경
+    if (subscription.cancel_at_period_end) {
+      updateData.cancel_at_period_end = false;
+    }
+
+    const { data: updated } = await supabase
+      .from("subscriptions")
+      .update(updateData)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (updated) {
+      subscription.status = "expired";
+      subscription.cancel_at_period_end = false;
+    }
+  }
 
   // Pro 멤버십 체크
+  // cancel_at_period_end가 true여도 기간이 유효하면 active 상태로 Pro 멤버십 유지
+  // 단, expires_at이 지나면 expired로 변경되므로 Pro 멤버십이 해제됨
   const isPro =
     subscription.plan === "pro" &&
     subscription.status === "active" &&
@@ -39,7 +85,7 @@ export async function verifySubscription(
   return {
     isPro,
     subscription: subscription as Subscription,
-    isExpired,
+    isExpired: subscription.status === "expired" || isExpired,
   };
 }
 
@@ -109,6 +155,8 @@ export async function upsertSubscription(
     stripe_subscription_id?: string | null;
     expires_at?: string | null;
     started_at?: string;
+    current_period_start?: string | null;
+    cancel_at_period_end?: boolean;
   }
 ): Promise<Subscription> {
   const supabase = getServiceSupabase();
@@ -119,6 +167,12 @@ export async function upsertSubscription(
     .eq("user_id", userId)
     .single();
 
+  // current_period_start가 없으면 started_at을 기본값으로 사용
+  const currentPeriodStart =
+    subscriptionData.current_period_start !== undefined
+      ? subscriptionData.current_period_start
+      : subscriptionData.started_at || existing?.started_at || new Date().toISOString();
+
   const subscriptionPayload = {
     user_id: userId,
     plan: subscriptionData.plan,
@@ -126,6 +180,8 @@ export async function upsertSubscription(
     stripe_subscription_id: subscriptionData.stripe_subscription_id || null,
     expires_at: subscriptionData.expires_at || null,
     started_at: subscriptionData.started_at || new Date().toISOString(),
+    current_period_start: currentPeriodStart,
+    cancel_at_period_end: subscriptionData.cancel_at_period_end ?? existing?.cancel_at_period_end ?? false,
     ...(subscriptionData.status === "canceled" && !existing?.canceled_at
       ? { canceled_at: new Date().toISOString() }
       : {}),

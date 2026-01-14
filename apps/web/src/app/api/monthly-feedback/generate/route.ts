@@ -141,7 +141,16 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     // Pro 멤버십 확인
-    const isPro = (await verifySubscription(userId)).isPro;
+    const subscriptionVerification = await verifySubscription(userId);
+    const isPro = subscriptionVerification.isPro;
+
+    // Pro 멤버십이 아니면 403 에러 반환
+    if (!isPro) {
+      return NextResponse.json(
+        { error: "Pro 멤버십이 필요합니다. 월간 VIVID 생성은 Pro 플랜에서만 사용할 수 있습니다." },
+        { status: 403 }
+      );
+    }
 
     // 날짜 범위 계산 (커스텀 날짜가 있으면 사용, 없으면 월 전체)
     const dateRange = start_date && end_date

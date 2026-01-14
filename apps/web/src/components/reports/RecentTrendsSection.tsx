@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Target, Sparkles, Zap, User, Lock } from "lucide-react";
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -33,6 +34,7 @@ function TrendCard({
   emptyMessage,
   isLocked = false,
 }: TrendCardProps) {
+  const router = useRouter();
   if (items.length === 0) {
     if (emptyMessage) {
       return (
@@ -42,6 +44,7 @@ function TrendCard({
             iconColor={iconColor}
             title={title}
             gradientColor={iconColor}
+            isLocked={isLocked}
           >
             <p
               className={TYPOGRAPHY.body.fontSize}
@@ -63,6 +66,7 @@ function TrendCard({
         iconColor={iconColor}
         title={title}
         gradientColor={iconColor}
+        isLocked={isLocked}
       >
         <ul className="space-y-2">
           {items.map((item, index) => (
@@ -101,10 +105,13 @@ function TrendCard({
               WebkitBackdropFilter: "blur(12px)",
             }}
           />
-          {/* 중앙 잠금 배지 */}
-          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-xl pointer-events-none">
+          {/* 중앙 잠금 배지 - 클릭 가능 */}
+          <div 
+            className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
+            onClick={() => router.push("/membership")}
+          >
             <div
-              className="flex items-center gap-2 px-4 py-2 rounded-lg"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
                 backdropFilter: "blur(8px)",
@@ -131,20 +138,32 @@ function TrendCard({
 // 임시 데이터 (프로가 아닐 경우 사용)
 const mockData = {
   aspired_self: [
-    "창의적인 문제 해결자",
-    "균형잡힌 삶을 추구하는 사람",
-    "성장을 지속하는 학습자",
+    "서두르지 않고 깊이 있게 사고하며, 실용적인 솔루션을 통해 사람들에게 가치를 전달하는 사람",
+    "일상의 기록과 꾸준한 반성을 통해 내면의 평화를 찾고, 이를 바탕으로 타인에게 따뜻한 인사이트를 나누는 사람",
+    "성급함을 자제하고 여유를 갖추며, 진솔한 커뮤니케이션으로 사람들에게 긍정적인 변화를 이끌어내는 사람",
+    "완벽주의를 버리고 지속 가능한 성장을 추구하며, 작은 실천으로 큰 변화를 만들어내는 사람",
+    "계획을 세우는 것에 그치지 않고, 실제로 행동으로 옮겨 사람들에게 실질적인 도움을 주는 사람",
   ],
-  interests: ["독서와 학습", "자연 속에서의 휴식", "새로운 경험 탐색"],
+  interests: [
+    "제품 개발과 콘텐츠 기획을 통해 사용자 경험을 개선하고, 지속 가능한 성장 전략을 수립하는 일",
+    "일기와 감정 기록을 통해 내면을 탐구하고, 이를 바탕으로 정서적 안정을 찾아가는 과정",
+    "커뮤니티 운영과 온라인 강의를 통해 지식을 공유하고, 사람들과 의미 있는 연결을 만드는 일",
+    "운동과 명상을 통해 몸과 마음을 단련하며, 건강한 라이프스타일을 만들어가는 실천",
+    "독서와 학습을 통해 새로운 관점을 얻고, 이를 실제 프로젝트에 적용해 성과를 만들어내는 일",
+  ],
   immersion_moments: [
-    "깊이 몰입하는 작업을 할 때",
-    "새로운 아이디어를 발견할 때",
-    "목표를 향해 나아갈 때",
+    "코드 리뷰와 디버깅을 통해 문제의 근본 원인을 찾아내고, 깔끔한 해결책을 구현해내는 순간",
+    "아침 운동과 명상 후 하루의 우선순위를 명확히 정하고, 집중력이 최고조에 달한 작업 시간",
+    "일기 작성으로 하루를 정리한 뒤, 복잡했던 문제들이 하나씩 해결되며 흐름이 생기는 순간",
+    "팀 미팅 후 피드백을 정리하고, 제품의 핵심 기능을 설계하며 전체 시스템이 연결되는 작업 시간",
+    "주간 회고와 다음 주 계획을 세우며, 장기 목표와 단기 실행 사이의 균형을 잡아가는 순간",
   ],
   personality_traits: [
-    "자기 성찰을 중시하는 사람",
-    "미래 지향적인 사람",
-    "감정 표현이 풍부한 사람",
+    "불안과 긴장감을 인지하면서도 포기하지 않고, 체계적인 계획을 세워 꾸준히 실행해나가는 성향",
+    "결정에 대한 책임을 지고 끝까지 밀어붙이며, 서두르지 않고 단계적으로 쌓아가려는 신중한 성향",
+    "목표 의식이 뚜렷하면서도 자신의 감정 상태를 관찰하고, 더 나은 습관으로 조절하려는 자기 관리형 성향",
+    "성장 욕구가 강하고 사람들에게 진정성을 전하려 하며, 속도보다는 방향성을 중시하는 성향",
+    "자신에 대한 믿음이 높고, 반복적인 실행과 피드백을 통해 지속적으로 개선해나가는 학습형 성향",
   ],
 };
 

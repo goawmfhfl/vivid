@@ -52,13 +52,19 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
       return ["dream", "emotion"];
     }
     
-    // 프리 플랜: 사용자의 recordTypes 사용, 없으면 기본값 "daily"
+    // 프리 플랜: VIVID 기록(dream) 사용 가능
+    // 사용자의 recordTypes가 있으면 사용하되, dream이 포함되어 있지 않으면 dream 추가
     if (currentUser?.user_metadata?.recordTypes) {
-      return currentUser.user_metadata.recordTypes as RecordType[];
+      const userTypes = currentUser.user_metadata.recordTypes as RecordType[];
+      // dream이 포함되어 있지 않으면 dream 추가
+      if (!userTypes.includes("dream")) {
+        return ["dream", ...userTypes];
+      }
+      return userTypes;
     }
     
-    // 기본값: "daily"
-    return ["daily"];
+    // 기본값: VIVID 기록(dream)
+    return ["dream"];
   }, [subscription, currentUser]);
 
   // 첫 번째 타입을 기본값으로 설정
@@ -310,7 +316,18 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     // dream 타입일 때는 2개의 질문을 포맷팅해서 합치기
     if (recordType === "dream") {
       if (q1Content.trim() || q2Content.trim()) {
-        const formattedContent = `Q1. 오늘 하루를 어떻게 보낼까?\n${q1Content.trim() || ""}\n\nQ2. 앞으로의 나는 어떤 모습일까?\n${q2Content.trim() || ""}`;
+        // Q1과 Q2 중 내용이 있는 것만 포함
+        const parts: string[] = [];
+        
+        if (q1Content.trim()) {
+          parts.push(`Q1. 오늘 하루를 어떻게 보낼까?\n${q1Content.trim()}`);
+        }
+        
+        if (q2Content.trim()) {
+          parts.push(`Q2. 앞으로의 나는 어떤 모습일까?\n${q2Content.trim()}`);
+        }
+        
+        const formattedContent = parts.join("\n\n");
         
         createRecordMutation.mutate(
           {

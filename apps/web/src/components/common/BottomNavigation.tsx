@@ -77,6 +77,15 @@ export function BottomNavigation() {
   // 스크롤 애니메이션 적용
   const shouldHide = isScrolledDown && !isAtTop;
 
+  // 내정보 관련 페이지 경로 목록
+  const myInfoRelatedPaths = [
+    "/my-info",
+    "/coupon/register",
+    "/faq",
+    "/membership",
+    "/improvement",
+  ];
+
   const navItems = [
     {
       href: "/",
@@ -92,10 +101,11 @@ export function BottomNavigation() {
       isActive: pathname?.startsWith("/reports") ?? false,
     },
     {
-      href: "/user",
+      href: "/my-info",
       icon: User,
-      label: "프로필",
-      isActive: pathname?.startsWith("/user") ?? false,
+      label: "내정보",
+      isActive:
+        myInfoRelatedPaths.some((path) => pathname?.startsWith(path)) ?? false,
     },
   ];
 

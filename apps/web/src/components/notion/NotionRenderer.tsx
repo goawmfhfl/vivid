@@ -1,7 +1,9 @@
 "use client";
 
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { useState } from "react";
+import { COLORS, TYPOGRAPHY, CARD_STYLES, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { NotionBlock } from "@/lib/types/notion";
 import type { NotionBlockContent, NotionRichText } from "@/lib/types/notion-api";
 
@@ -308,27 +310,12 @@ function NotionBlock({ block }: { block: NotionBlock }) {
       );
 
     case "toggle":
-      const toggleText = getRichText(blockContent?.rich_text);
       return (
-        <details className="mb-2">
-          <summary
-            className={cn(
-              TYPOGRAPHY.body.fontSize,
-              TYPOGRAPHY.body.fontWeight,
-              "cursor-pointer list-none"
-            )}
-            style={{ color: COLORS.text.primary }}
-          >
-            {toggleText ? renderRichText(blockContent?.rich_text || []) : "토글"}
-          </summary>
-          {block.children && block.children.length > 0 && (
-            <div className="mt-2 ml-4 space-y-2">
-              {block.children.map((child) => (
-                <NotionBlock key={child.id} block={child} />
-              ))}
-            </div>
-          )}
-        </details>
+        <ToggleBlock
+          block={block}
+          blockContent={blockContent}
+          renderRichText={renderRichText}
+        />
       );
 
     case "quote":
@@ -487,4 +474,126 @@ function NotionBlock({ block }: { block: NotionBlock }) {
         </div>
       );
   }
+}
+
+/**
+ * 토글 블록을 드롭다운 형식으로 렌더링
+ */
+function ToggleBlock({
+  block,
+  blockContent,
+  renderRichText,
+}: {
+  block: NotionBlock;
+  blockContent: NotionBlockContent | undefined;
+  renderRichText: (richText: NotionRichText[] | undefined) => React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div
+      className="mb-4 rounded-xl overflow-hidden transition-all duration-200 relative"
+      style={{
+        backgroundColor: "#FAFAF8",
+        border: `1.5px solid ${COLORS.border.light}`,
+        borderRadius: "12px",
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `,
+        position: "relative",
+        overflow: "hidden",
+        // 종이 질감 배경 패턴
+        backgroundImage: `
+          /* 가로 줄무늬 (프로젝트 그린 톤) */
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 27px,
+            rgba(107, 122, 111, 0.08) 27px,
+            rgba(107, 122, 111, 0.08) 28px
+          ),
+          /* 종이 텍스처 노이즈 */
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(107, 122, 111, 0.01) 2px,
+            rgba(107, 122, 111, 0.01) 4px
+          )
+        `,
+        backgroundSize: "100% 28px, 8px 8px",
+        backgroundPosition: "0 2px, 0 0",
+        filter: "contrast(1.02) brightness(1.01)",
+      }}
+    >
+      {/* 종이 질감 오버레이 */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-xl"
+        style={{
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+          `,
+          mixBlendMode: "overlay",
+          opacity: 0.5,
+          overflow: "hidden",
+        }}
+      />
+
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-5 py-4 flex items-center justify-between text-left transition-all duration-200 relative z-10"
+        style={{
+          backgroundColor: "transparent",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.opacity = "0.85";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = "1";
+        }}
+      >
+        <div
+          className={cn(
+            TYPOGRAPHY.body.fontSize,
+            TYPOGRAPHY.body.fontWeight,
+            "flex-1 pr-4"
+          )}
+          style={{ color: COLORS.text.primary }}
+        >
+          {blockContent?.rich_text && blockContent.rich_text.length > 0
+            ? renderRichText(blockContent.rich_text)
+            : "토글"}
+        </div>
+        <div
+          className="flex-shrink-0 transition-transform duration-200"
+          style={{
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        >
+          <ChevronDown
+            className="w-5 h-5"
+            style={{ color: COLORS.text.secondary }}
+          />
+        </div>
+      </button>
+
+      {isOpen && block.children && block.children.length > 0 && (
+        <div
+          className="px-5 pb-4 pt-2 space-y-3 border-t relative z-10"
+          style={{
+            borderColor: COLORS.border.light + "40",
+            animation: "fadeInSlideDown 0.2s ease-out",
+            backgroundColor: "transparent",
+          }}
+        >
+          {block.children.map((child) => (
+            <NotionBlock key={child.id} block={child} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

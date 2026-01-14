@@ -34,7 +34,7 @@ export function TermsStep({
           className="text-xl font-semibold mb-2"
           style={{ color: COLORS.text.primary }}
         >
-          약관 및 알림 설정
+          이용약관
         </h2>
         <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
           필수 약관을 확인하고 선택 동의 여부를 설정할 수 있어요.

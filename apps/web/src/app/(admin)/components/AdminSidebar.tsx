@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Ticket,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -47,14 +48,20 @@ const menuItems = [
     enabled: true,
   },
   {
+    title: "쿠폰 관리",
+    href: "/admin/coupons",
+    icon: Ticket,
+    enabled: true,
+  },
+  {
     title: "콘텐츠 통계",
     href: "/admin/content",
     icon: FileText,
     enabled: true,
   },
   {
-    title: "피드백 관리",
-    href: "/admin/feedback",
+    title: "문의사항 관리",
+    href: "/admin/inquiries",
     icon: MessageSquare,
     enabled: true,
   },

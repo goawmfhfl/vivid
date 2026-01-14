@@ -324,6 +324,11 @@ export function MonthlyCandidatesSection({
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
       });
+
+      // 월간 피드백 리스트 무효화하여 최신 데이터 가져오기
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "list"],
+      });
     } catch (error) {
       console.error("월간 vivid 생성 실패:", error);
 

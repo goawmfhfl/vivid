@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { formatNotionPageId } from "@/lib/utils/notion";
-import type { NotionBlocksResponse, NotionBlockResponse } from "@/lib/types/notion-api";
+import type {
+  NotionBlocksResponse,
+  NotionBlockResponse,
+} from "@/lib/types/notion-api";
 
-// ISR: 하루(86400초)마다 재검증
-export const revalidate = 86400;
+// ISR: 프로덕션에서는 30일(2592000초) 단위로 재검증, 개발에서는 매 요청마다
+export const revalidate =
+  process.env.NODE_ENV === "development" ? 0 : 60 * 60 * 24 * 30;
 
 const NOTION_API_BASE = "https://api.notion.com/v1";
 
@@ -235,12 +239,18 @@ export async function GET(
 
     const flattenedBlocks = flattenBlocks(blocks);
 
+    // ISR / 캐시 설정 (프로덕션에서는 길게, 개발에서는 즉시 반영)
+    const isDev = process.env.NODE_ENV === "development";
+    const maxAge = isDev ? 0 : 60 * 60 * 24 * 30; // 30일
+
     return NextResponse.json(
       { data: { blocks: flattenedBlocks } },
       {
         status: 200,
         headers: {
-          'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=86400',
+          "Cache-Control": isDev
+            ? "no-store"
+            : `public, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
         },
       }
     );

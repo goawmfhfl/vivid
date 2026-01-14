@@ -80,9 +80,15 @@ async function generateSection<T>(
     isPro
   );
 
+  // Free 유저의 경우 토큰 사용량 제한 (비용 절감)
+  // Pro 유저는 제한 없음
+  // JSON 스키마 응답을 완성하기 위해 최소한의 토큰은 필요하므로 2000으로 설정
+  // gpt-5.2 모델은 max_tokens 대신 max_completion_tokens를 사용해야 함
+  const maxCompletionTokens = isPro ? undefined : 2000;
+
   const startTime = Date.now();
   try {
-    const completion = await openai.chat.completions.create({
+    const completionParams: any = {
       model,
       messages: [
         {
@@ -100,7 +106,14 @@ async function generateSection<T>(
         },
       },
       prompt_cache_key: promptCacheKey,
-    });
+    };
+
+    // Free 유저의 경우 max_completion_tokens 제한 적용 (gpt-5.2 모델용)
+    if (maxCompletionTokens !== undefined) {
+      completionParams.max_completion_tokens = maxCompletionTokens;
+    }
+
+    const completion = await openai.chat.completions.create(completionParams);
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;
@@ -323,21 +336,30 @@ async function generateVividReport(
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
   if (dreamRecords.length === 0) {
+    console.log("[generateVividReport] dreamRecords가 없어서 null 반환");
     return null;
   }
 
   const prompt = buildVividPrompt(records, date, dayOfWeek, isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
-  return generateSection<VividReport>(
-    SYSTEM_PROMPT_VIVID,
-    prompt,
-    VividReportSchema,
-    cacheKey,
-    isPro,
-    "vivid_report",
-    userId
-  );
+  try {
+    const result = await generateSection<VividReport>(
+      SYSTEM_PROMPT_VIVID,
+      prompt,
+      VividReportSchema,
+      cacheKey,
+      isPro,
+      "vivid_report",
+      userId
+    );
+    console.log(`[generateVividReport] 생성 완료 (Pro: ${isPro})`);
+    return result;
+  } catch (error) {
+    console.error("[generateVividReport] 생성 실패:", error);
+    // 에러가 발생해도 null을 반환하여 다른 리포트 생성에 영향을 주지 않도록 함
+    return null;
+  }
 }
 
 /**
@@ -433,6 +455,26 @@ export async function generateAllReportsWithProgress(
     (type) => type !== "vivid" && type !== "dream" && type !== "emotion"
   );
 
+  // Free 유저는 trend를 생성하지 않음 (비용 절감)
+  // Pro 유저만 trend 생성
+  if (!isPro) {
+    // Free 유저: vivid_report만 생성
+    const vividReport = await generateVividReport(
+      records,
+      date,
+      dayOfWeek,
+      isPro,
+      userId
+    );
+
+    return {
+      emotion_report: null,
+      vivid_report: vividReport,
+      trend: null,
+    };
+  }
+
+  // Pro 유저: vivid_report, emotion_report, trend 모두 생성
   // vivid 모드가 기본값: vivid_report, emotion_report, trend 생성
   if (!hasOtherTypes) {
     // vivid_report, emotion_report, trend 생성

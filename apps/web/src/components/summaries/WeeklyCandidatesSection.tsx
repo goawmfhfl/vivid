@@ -395,38 +395,43 @@ export function WeeklyCandidatesSection() {
         currentStep: "완료",
       });
 
-      // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
-      if (feedbackData.id) {
-        const weekStartDate = new Date(feedbackData.week_range.start);
-        const weekStartDateObj = getMondayOfWeek(weekStartDate);
-        const weekStartStr = weekStartDateObj.toISOString().split("T")[0];
+        // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
+        if (feedbackData.id) {
+          const weekStartDate = new Date(feedbackData.week_range.start);
+          const weekStartDateObj = getMondayOfWeek(weekStartDate);
+          const weekStartStr = weekStartDateObj.toISOString().split("T")[0];
 
-        queryClient.setQueryData<
-          import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]
-        >([QUERY_KEYS.WEEKLY_CANDIDATES], (oldCandidates = []) => {
-          return oldCandidates.map((candidate) => {
-            if (candidate.week_start === weekStartStr) {
-              return {
-                ...candidate,
-                weekly_feedback_id: feedbackData.id
-                  ? parseInt(feedbackData.id, 10)
-                  : null,
-                is_ai_generated: feedbackData.is_ai_generated ?? true,
-              };
-            }
-            return candidate;
+          queryClient.setQueryData<
+            import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]
+          >([QUERY_KEYS.WEEKLY_CANDIDATES], (oldCandidates = []) => {
+            return oldCandidates.map((candidate) => {
+              if (candidate.week_start === weekStartStr) {
+                return {
+                  ...candidate,
+                  weekly_feedback_id: feedbackData.id
+                    ? parseInt(feedbackData.id, 10)
+                    : null,
+                  is_ai_generated: feedbackData.is_ai_generated ?? true,
+                };
+              }
+              return candidate;
+            });
           });
-        });
 
-        // 성공 시 전역 모달로 알림 및 라우팅
-        const weekRange = `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`;
-        openSuccessModal(
-          `${weekRange} 주간 VIVID가 생성되었습니다!\n확인 버튼을 누르면 VIVID를 확인할 수 있습니다.`,
-          () => {
-            router.push(`/analysis/feedback/weekly/${feedbackData.id}`);
-          }
-        );
-      }
+          // 주간 피드백 리스트 무효화하여 최신 데이터 가져오기
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WEEKLY_FEEDBACK, "list"],
+          });
+
+          // 성공 시 전역 모달로 알림 및 라우팅
+          const weekRange = `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`;
+          openSuccessModal(
+            `${weekRange} 주간 VIVID가 생성되었습니다!\n확인 버튼을 누르면 VIVID를 확인할 수 있습니다.`,
+            () => {
+              router.push(`/analysis/feedback/weekly/${feedbackData.id}`);
+            }
+          );
+        }
 
       // 진행 상황 초기화
       clearWeeklyFeedbackProgress(weekStart);

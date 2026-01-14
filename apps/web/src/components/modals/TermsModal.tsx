@@ -16,29 +16,38 @@ interface TermsModalProps {
 export function TermsModal({ isOpen, onClose }: TermsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>이용약관 및 개인정보 수집·이용 동의</DialogTitle>
+      <DialogContent 
+        className="max-w-md max-h-[85vh] overflow-y-auto [&>button]:h-6 [&>button]:w-6 [&>button]:p-0.5 [&>button]:top-2.5 [&>button]:right-2.5 [&>button>svg]:h-3.5 [&>button>svg]:w-3.5"
+        style={{
+          width: "calc(100vw - 2rem)",
+          maxWidth: "28rem",
+          padding: "1.25rem",
+        }}
+      >
+        <DialogHeader className="pb-3 pr-8">
+          <DialogTitle className="text-base sm:text-lg pr-2">
+            이용약관 및 개인정보 수집·이용 동의
+          </DialogTitle>
         </DialogHeader>
         <DialogDescription
-          className="space-y-4"
+          className="space-y-4 pt-2"
           style={{ color: "#333333", lineHeight: "1.7" }}
         >
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제1조 (목적)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               본 약관은 vivid(이하 &quot;서비스&quot;)가 제공하는 기록 및 AI
               피드백 기능을 이용함에 있어, 이용자와 서비스 운영자 간의
               권리·의무를 규정함을 목적으로 합니다.
             </p>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제2조 (수집하는 개인정보 항목)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 서비스는 회원가입 및 기록 피드백 제공을 위해 아래 정보를
                 수집합니다.
@@ -156,10 +165,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </div>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제3조 (개인정보의 이용 목적)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>수집된 개인정보는 아래 목적으로 이용됩니다.</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>회원 식별 및 서비스 제공</li>
@@ -170,10 +179,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </div>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제4조 (보관 및 파기)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <ul className="list-disc pl-5 space-y-1">
                 <li>회원 탈퇴 시 모든 개인정보는 즉시 삭제됩니다.</li>
                 <li>
@@ -185,10 +194,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제5조 (이용자의 권리)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 이용자는 언제든지 자신의 개인정보를 조회, 수정, 삭제를 요청할 수
                 있으며, 문의 메일을 통해 요청할 수 있습니다.
@@ -197,10 +206,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제6조 (AI 데이터 처리 및 보안)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 서비스는 기록 데이터 분석 및 VIVID 생성을 위해 AI 모델과
                 연동되며, 이 과정에서 입력된 문장이 암호화되어 저장·처리됩니다.
@@ -220,10 +229,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제7조 (서비스 이용 제한 및 책임)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 이용자는 타인의 권리를 침해하는 내용, 허위 정보, 불법 복제물
                 등을 기록에 포함할 수 없으며, 이를 위반할 경우 서비스 이용이
@@ -237,10 +246,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제8조 (약관 변경 및 통지)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 약관이 변경되는 경우 서비스 공지 또는 이메일을 통해 사전
                 안내합니다. 변경된 약관 공지 이후에도 서비스를 계속 이용하는
@@ -250,23 +259,23 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제9조 (문의처)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 서비스 이용 중 궁금한 사항이나 개인정보 관련 요청은
-                support@todayrecord.app 로 문의해 주세요. 빠르게 검토 후
+                try.grit.official@gmail.com 로 문의해 주세요. 빠르게 검토 후
                 답변드리겠습니다.
               </p>
             </div>
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제10조 (마케팅 정보 수신 동의 [선택])
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 이용자는 문자·이메일 등으로 제공되는 서비스 소식, 이용 팁,
                 이벤트 안내 등을 위한 마케팅 정보 수신에 선택적으로 동의할 수
@@ -286,10 +295,10 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </div>
 
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제11조 (기타)
             </h3>
-            <div style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
                 기타 개인정보 처리에 관한 세부 내용은 별도의 「개인정보
                 처리방침」에 따르며, 본 약관과 상충하는 경우 개인정보 처리방침이

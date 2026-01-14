@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
   MONTHLY_FEEDBACK: "monthlyFeedback",
   MONTHLY_CANDIDATES: "monthlyCandidates",
   NOTION_POLICIES: "notionPolicies",
+  NOTION_QUESTIONS: "notionQuestions",
 } as const;
 
 // API Endpoints

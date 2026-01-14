@@ -10,7 +10,13 @@ import { upsertSubscription } from "@/lib/subscription-utils";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { plan = "free", status = "active", expires_at = null } = body;
+    const {
+      plan = "free",
+      status = "active",
+      expires_at = null,
+      current_period_start = null,
+      cancel_at_period_end = false,
+    } = body;
 
     // 현재 로그인한 사용자 ID 가져오기
     const userId = await getAuthenticatedUserId(request);
@@ -20,6 +26,8 @@ export async function POST(request: NextRequest) {
       plan: plan as "free" | "pro",
       status: status as "active" | "canceled" | "expired" | "past_due",
       expires_at: expires_at || null,
+      current_period_start: current_period_start || null,
+      cancel_at_period_end: cancel_at_period_end ?? false,
     });
 
     return NextResponse.json({

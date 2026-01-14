@@ -16,19 +16,28 @@ interface AIDataModalProps {
 export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>AI 피드백 데이터 학습 활용 동의</DialogTitle>
+      <DialogContent 
+        className="max-w-md max-h-[85vh] overflow-y-auto [&>button]:h-6 [&>button]:w-6 [&>button]:p-0.5 [&>button]:top-2.5 [&>button]:right-2.5 [&>button>svg]:h-3.5 [&>button>svg]:w-3.5"
+        style={{
+          width: "calc(100vw - 2rem)",
+          maxWidth: "28rem",
+          padding: "1.25rem",
+        }}
+      >
+        <DialogHeader className="pb-3 pr-8">
+          <DialogTitle className="text-base sm:text-lg pr-2">
+            AI 피드백 데이터 학습 활용 동의
+          </DialogTitle>
         </DialogHeader>
         <DialogDescription
-          className="space-y-4"
+          className="space-y-4 pt-2"
           style={{ color: "#333333", lineHeight: "1.7" }}
         >
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제1조 (수집 및 활용 목적)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               서비스는 이용자의 기록 데이터를 바탕으로 AI VIVID를 제공합니다.
               AI 품질 향상을 위해 일부 데이터는 익명화 처리 후 학습 데이터로
               활용될 수 있으며, 전체 서비스 인프라는 데이터 무결성과 가용성을
@@ -36,10 +45,10 @@ export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
             </p>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제2조 (수집 및 처리 범위)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               사용자가 작성한 기록의 본문 내용
               <br /> 피드백 결과 및 사용자 만족도 점수
               <br /> 비식별화된 메타데이터(날짜, 키워드 등)
@@ -48,10 +57,10 @@ export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
             </p>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제3조 (익명화·암호화 처리 방식)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               개인을 식별할 수 있는 정보(이메일, 이름 등)는 학습 전에 완전
               제거됩니다.
               <br /> AI 관련 데이터는 저장·전송 단계에서 최신 표준에 따른
@@ -61,10 +70,10 @@ export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
             </p>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제4조 (보관 기간 및 안전성)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               회원 탈퇴 시 학습용 데이터는 즉시 삭제되며, 이미 학습된 모델에
               반영된 데이터는 개별 삭제가 불가능합니다. 서비스는 정기적 보안
               점검과 접근 통제 정책을 유지해 데이터가 안전하게 관리되도록
@@ -72,12 +81,12 @@ export function AIDataModal({ isOpen, onClose }: AIDataModalProps) {
             </p>
           </div>
           <div>
-            <h3 className="mb-2" style={{ fontSize: "0.95rem" }}>
+            <h3 className="mb-2 font-semibold" style={{ fontSize: "0.9rem" }}>
               제5조 (문의처)
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "#4E4B46" }}>
+            <p style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               AI 데이터 처리 관련 문의는 아래로 연락 가능합니다.
-              <br /> ✉️ goawmfhfl1@naver.com
+              <br /> ✉️ try.grit.official@gmail.com
               <br /> 담당자: 개인정보보호 책임자 최재영
             </p>
           </div>
