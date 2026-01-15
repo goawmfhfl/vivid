@@ -7,7 +7,7 @@ import {
   TrendDataSchema,
   VividReportSchema,
 } from "./schema";
-import type { Record } from "./types";
+import type { Record as FeedbackRecord } from "./types";
 import { buildEmotionPrompt, buildVividPrompt } from "./prompts";
 import type {
   EmotionReport,
@@ -88,30 +88,29 @@ async function generateSection<T>(
 
   const startTime = Date.now();
   try {
-    const completionParams: any = {
-      model,
-      messages: [
-        {
-          role: "system",
-          content: enhancedSystemPrompt,
+    const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming =
+      {
+        model,
+        messages: [
+          {
+            role: "system",
+            content: enhancedSystemPrompt,
+          },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: schemaObj.name,
+            schema: schemaObj.schema,
+            strict: schemaObj.strict,
+          },
         },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: schemaObj.name,
-          schema: schemaObj.schema,
-          strict: schemaObj.strict,
-        },
-      },
-      prompt_cache_key: promptCacheKey,
-    };
-
-    // Free 유저의 경우 max_completion_tokens 제한 적용 (gpt-5.2 모델용)
-    if (maxCompletionTokens !== undefined) {
-      completionParams.max_completion_tokens = maxCompletionTokens;
-    }
+        prompt_cache_key: promptCacheKey,
+        ...(maxCompletionTokens !== undefined
+          ? { max_completion_tokens: maxCompletionTokens }
+          : {}),
+      };
 
     const completion = await openai.chat.completions.create(completionParams);
 
@@ -297,7 +296,7 @@ async function generateSection<T>(
  * 감정 기록 리포트 생성
  */
 async function generateEmotionReport(
-  records: Record[],
+  records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
@@ -327,7 +326,7 @@ async function generateEmotionReport(
  * VIVID 기록 리포트 생성
  */
 async function generateVividReport(
-  records: Record[],
+  records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
@@ -366,7 +365,7 @@ async function generateVividReport(
  * Trend 데이터 생성 (최근 동향 섹션용)
  */
 async function generateTrendData(
-  records: Record[],
+  records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
@@ -438,7 +437,7 @@ async function generateTrendData(
  * 모든 타입별 리포트 생성
  */
 export async function generateAllReportsWithProgress(
-  records: Record[],
+  records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,

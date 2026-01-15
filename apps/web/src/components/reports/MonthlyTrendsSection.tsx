@@ -10,7 +10,6 @@ import { FeedbackCard } from "@/components/ui/FeedbackCard";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import type { MonthlyTrendsResponse } from "@/types/monthly-feedback-new";
-import { useMonthlyTrends } from "@/hooks/useMonthlyTrends";
 import { useSubscription } from "@/hooks/useSubscription";
 
 interface MonthlyTrendsSectionProps {

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Zap } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";

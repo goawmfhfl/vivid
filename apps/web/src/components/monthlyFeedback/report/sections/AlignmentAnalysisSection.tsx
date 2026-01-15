@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import {
   GradientCard,
 } from "@/components/common/feedback";
-import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 
 type AlignmentAnalysisSectionProps = {
   alignmentAnalysis: VividReport["alignment_analysis"];

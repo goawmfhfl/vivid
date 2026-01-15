@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { useTimer } from "@/hooks/useTimer";
 import { useToast } from "@/hooks/useToast";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 
 export function Timer() {
   const { showToast } = useToast();

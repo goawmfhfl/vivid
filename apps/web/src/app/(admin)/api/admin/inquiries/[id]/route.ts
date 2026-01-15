@@ -47,7 +47,9 @@ export async function PUT(
     const supabase = getServiceSupabase();
 
     // 업데이트할 데이터 구성
-    const updateData: any = {};
+    const updateData: Partial<UpdateInquiryRequest> & {
+      admin_response_images?: string[];
+    } = {};
     if (status) {
       updateData.status = status;
     }

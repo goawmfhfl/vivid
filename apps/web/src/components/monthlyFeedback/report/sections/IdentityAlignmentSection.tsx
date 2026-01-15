@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Users,
   ArrowUp,
   ArrowDown,
   Sparkles,

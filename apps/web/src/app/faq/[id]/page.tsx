@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { cn } from "@/lib/utils";

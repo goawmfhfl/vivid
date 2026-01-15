@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   COLORS,
   CARD_STYLES,
   TYPOGRAPHY,
-  SPACING,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 import type { Inquiry, InquiryStatus, InquiryType } from "@/types/inquiry";
 import {
   INQUIRY_TYPE_LABELS,
@@ -77,7 +77,7 @@ export function InquiryList() {
     currentIndex: 0,
   });
 
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -108,11 +108,11 @@ export function InquiryList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, selectedStatus, selectedType]);
 
   useEffect(() => {
     fetchInquiries();
-  }, [page, selectedStatus, selectedType]);
+  }, [fetchInquiries]);
 
   // 이미지 모달 키보드 네비게이션
   useEffect(() => {
@@ -553,11 +553,15 @@ export function InquiryList() {
                                 borderColor: COLORS.border.light,
                               }}
                             >
-                              <img
-                                src={url}
-                                alt={`첨부 이미지 ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={url}
+                                  alt={`첨부 이미지 ${index + 1}`}
+                                  fill
+                                  sizes="(max-width: 768px) 33vw, 120px"
+                                  className="object-cover"
+                                />
+                              </div>
                             </button>
                           ))}
                         </div>
@@ -672,11 +676,15 @@ export function InquiryList() {
                                     })
                                   }
                                 >
-                                  <img
+                                <div className="relative w-full h-full">
+                                  <Image
                                     src={url}
                                     alt={`답변 이미지 ${index + 1}`}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    sizes="(max-width: 768px) 33vw, 120px"
+                                    className="object-cover"
                                   />
+                                </div>
                                 </button>
                                 <button
                                   type="button"
@@ -841,13 +849,13 @@ export function InquiryList() {
                   aspectRatio: "1 / 1",
                 }}
               >
-                <img
+                <Image
                   src={imageModal.images[imageModal.currentIndex]}
                   alt={`이미지 ${imageModal.currentIndex + 1}`}
-                  className="w-full h-full object-contain"
-                  style={{
-                    borderRadius: "8px",
-                  }}
+                  fill
+                  sizes="80vw"
+                  className="object-contain"
+                  style={{ borderRadius: "8px" }}
                 />
               </div>
             </div>

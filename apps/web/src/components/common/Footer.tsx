@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import { COLORS, SPACING } from "@/lib/design-system";
 import { shouldShowFooter } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useNotionPolicies } from "@/hooks/useNotionPolicies";

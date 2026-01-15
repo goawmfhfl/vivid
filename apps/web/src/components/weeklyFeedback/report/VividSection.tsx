@@ -56,7 +56,6 @@ export function VividSection({
         {/* 3. 앞으로의 모습 종합 분석 */}
         <FutureVisionAnalysisSection
           futureVisionAnalysis={vividReport.future_vision_analysis}
-          vividColor={vividColor}
         />
 
         {/* 4. 일치도 트렌드 분석 */}

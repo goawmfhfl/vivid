@@ -31,7 +31,7 @@ import {
 import { useState } from "react";
 
 // 일치도 점수 설명 팝업 컴포넌트
-function AlignmentScoreInfoDialog({ alignmentColor }: { alignmentColor: string }) {
+function AlignmentScoreInfoDialog() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -389,7 +389,7 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
                 >
                   일치도 점수
                 </p>
-                <AlignmentScoreInfoDialog alignmentColor={alignmentColor} />
+                <AlignmentScoreInfoDialog />
               </div>
               <div className="mb-4">
                 <div className="flex items-center gap-4 mb-3">

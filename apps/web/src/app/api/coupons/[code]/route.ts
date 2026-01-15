@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyCoupon } from "@/lib/coupon-utils";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import type { Coupon } from "@/types/coupon";
 
@@ -78,8 +77,12 @@ export async function GET(
             .eq("id", user.id)
             .single();
 
-          const usedCoupons = profile?.used_coupons || [];
-          isUsed = usedCoupons.includes(coupon.name);
+          const usedCoupons = Array.isArray(profile?.used_coupons)
+            ? profile?.used_coupons
+            : [];
+          isUsed =
+            usedCoupons.includes(coupon.code) ||
+            usedCoupons.includes(coupon.name);
         }
       } catch (authError) {
         // 인증 실패해도 쿠폰 정보는 반환 (사용 여부만 확인 불가)

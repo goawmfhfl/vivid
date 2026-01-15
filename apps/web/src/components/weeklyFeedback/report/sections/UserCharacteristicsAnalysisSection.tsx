@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";

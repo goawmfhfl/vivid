@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { COLORS, TYPOGRAPHY, CARD_STYLES, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { NotionBlock } from "@/lib/types/notion";
 import type { NotionBlockContent, NotionRichText } from "@/lib/types/notion-api";
 

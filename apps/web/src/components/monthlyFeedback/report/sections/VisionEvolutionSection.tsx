@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Target,
   Calendar,
   TrendingUp,
 } from "lucide-react";

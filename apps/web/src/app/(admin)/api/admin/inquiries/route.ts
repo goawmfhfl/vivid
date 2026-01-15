@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import type { Inquiry } from "@/types/inquiry";
+type InquiryRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  content: string;
+  images?: string[] | null;
+  status: string;
+  admin_response?: string | null;
+  admin_response_images?: string[] | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ProfileRow = {
+  id: string;
+  email: string;
+  name: string;
+};
 
 const INQUIRIES_BUCKET = "inquiries-images";
 
@@ -26,7 +44,10 @@ function extractInquiriesImagePath(value: string): string {
   }
 }
 
-async function toSignedUrls(supabase: any, values: string[]): Promise<string[]> {
+async function toSignedUrls(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  values: string[]
+): Promise<string[]> {
   const urls = await Promise.all(
     (values || []).map(async (v) => {
       const path = extractInquiriesImagePath(v);
@@ -87,10 +108,10 @@ export async function GET(request: NextRequest) {
 
     // 유저 정보 조회 (별도 쿼리)
     const userIds = Array.from(
-      new Set((inquiries || []).map((inquiry: any) => inquiry.user_id))
+      new Set((inquiries || []).map((inquiry: InquiryRow) => inquiry.user_id))
     );
-    
-    let userProfiles: any[] = [];
+
+    let userProfiles: ProfileRow[] = [];
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")
@@ -107,7 +128,7 @@ export async function GET(request: NextRequest) {
 
     // 프로필 정보 포함 + 이미지 signed url 변환
     const inquiriesWithUser = await Promise.all(
-      (inquiries || []).map(async (inquiry: any) => {
+      (inquiries || []).map(async (inquiry: InquiryRow) => {
         const userProfile = userMap.get(inquiry.user_id);
         return {
           id: inquiry.id,

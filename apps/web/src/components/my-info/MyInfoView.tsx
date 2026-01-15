@@ -1,12 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
   COLORS,
-  CARD_STYLES,
-  SPACING,
   TYPOGRAPHY,
   GRADIENT_UTILS,
   SHADOWS,
@@ -22,7 +19,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export function MyInfoView() {
-  const router = useRouter();
   const { data: currentUser, isLoading } = useCurrentUser();
   const { isPro } = useSubscription();
 

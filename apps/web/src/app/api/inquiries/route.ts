@@ -32,7 +32,10 @@ function extractInquiriesImagePath(value: string): string {
   }
 }
 
-async function toSignedUrls(supabase: any, values: string[]): Promise<string[]> {
+async function toSignedUrls(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  values: string[]
+): Promise<string[]> {
   const urls = await Promise.all(
     (values || []).map(async (v) => {
       const path = extractInquiriesImagePath(v);
@@ -163,7 +166,7 @@ export async function GET(request: NextRequest) {
     // images/admin_response_images는 DB에 path(또는 과거 signed url)가 저장되어 있을 수 있음
     // → 매 요청마다 fresh signed url로 변환해서 내려줌
     const inquiriesWithSignedUrls = await Promise.all(
-      (inquiries || []).map(async (inq: any) => ({
+      (inquiries || []).map(async (inq: Inquiry) => ({
         ...inq,
         images: await toSignedUrls(supabase, inq.images || []),
         admin_response_images: await toSignedUrls(

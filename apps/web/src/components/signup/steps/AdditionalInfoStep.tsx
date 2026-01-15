@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { PaperCard } from "../PaperCard";
 import { COLORS } from "@/lib/design-system";
-import { Search, CheckCircle2, XCircle } from "lucide-react";
+import { Search } from "lucide-react";
 import type { CouponVerification } from "@/types/coupon";
+import { supabase } from "@/lib/supabase";
+import { CouponTicket } from "@/components/coupon/CouponTicket";
 
 interface AdditionalInfoStepProps {
   birthYear: string;
@@ -33,17 +35,29 @@ export function AdditionalInfoStep({
   const [verification, setVerification] =
     useState<CouponVerification | null>(null);
 
+  const fetchCouponVerification = async (targetCode: string) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const response = await fetch(`/api/coupons/${targetCode.trim()}`, {
+      headers: session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined,
+    });
+
+    const data: CouponVerification = await response.json();
+    return data;
+  };
+
   // couponCode가 변경되면 입력값과 검증 상태 동기화
   useEffect(() => {
     if (couponCode) {
       setCouponInput(couponCode);
       // couponCode가 있으면 해당 쿠폰 정보 다시 조회
       if (couponCode.trim()) {
-        fetch(`/api/coupons/${couponCode.trim()}`)
-          .then((res) => res.json())
-          .then((data: CouponVerification) => {
-            setVerification(data);
-          })
+        fetchCouponVerification(couponCode)
+          .then((data) => setVerification(data))
           .catch(() => {
             // 조회 실패 시 무시
           });
@@ -58,8 +72,7 @@ export function AdditionalInfoStep({
 
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/coupons/${couponInput.trim()}`);
-      const data: CouponVerification = await response.json();
+      const data = await fetchCouponVerification(couponInput);
       setVerification(data);
       
       if (data.isValid && data.coupon) {
@@ -225,66 +238,31 @@ export function AdditionalInfoStep({
           </div>
 
           {verification && (
-            <div
-              className="mt-3 rounded-lg p-4"
-              style={{
-                backgroundColor: COLORS.background.hover,
-                border: `1px solid ${COLORS.border.light}`,
-              }}
-            >
-              {verification.isValid && verification.coupon ? (
-                <div className="flex items-start gap-2">
-                  <CheckCircle2
-                    className="w-5 h-5 flex-shrink-0 mt-0.5"
-                    style={{ color: COLORS.status.success }}
-                  />
-                  <div className="flex-1">
-                    <p
-                      className="text-sm font-medium mb-1"
-                      style={{ color: COLORS.text.primary }}
-                    >
-                      {verification.coupon.name}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      유효 기간: {verification.coupon.duration_days}일
-                    </p>
-                    {couponCode && (
-                      <p
-                        className="text-xs mt-1"
-                        style={{ color: COLORS.brand.primary }}
-                      >
-                        쿠폰이 등록되었습니다.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start gap-2">
-                  <XCircle
-                    className="w-5 h-5 flex-shrink-0 mt-0.5"
-                    style={{ color: COLORS.status.error }}
-                  />
-                  <div>
-                    <p
-                      className="text-sm"
-                      style={{ color: COLORS.status.error }}
-                    >
-                      {verification.message || "유효하지 않은 쿠폰입니다."}
-                    </p>
-                    {verification.isUsed && (
-                      <p
-                        className="text-xs mt-1"
-                        style={{ color: COLORS.text.tertiary }}
-                      >
-                        이미 사용한 쿠폰입니다.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="mt-3">
+              <CouponTicket
+                coupon={verification.coupon}
+                codeDisplay={verification.coupon?.code || "— — — —"}
+                isValid={Boolean(
+                  verification.coupon &&
+                    (verification.isValid ||
+                      verification.message?.includes("사용 횟수가 초과"))
+                )}
+                isUsed={Boolean(verification.isUsed)}
+                isSoldOut={Boolean(
+                  verification.message?.includes("사용 횟수가 초과")
+                )}
+                invalidMessage={verification.message}
+                size="compact"
+                statusMessage={
+                  verification.coupon &&
+                  (verification.isValid ||
+                    verification.message?.includes("사용 횟수가 초과")) &&
+                  !verification.isUsed &&
+                  !verification.message?.includes("사용 횟수가 초과")
+                    ? "적용되었습니다."
+                    : undefined
+                }
+              />
             </div>
           )}
         </div>

@@ -38,6 +38,22 @@ export async function getAuthenticatedUserId(
 }
 
 /**
+ * 요청에서 인증된 사용자 ID를 가져오는 함수
+ * Authorization 헤더가 없으면 쿠키 인증으로 폴백
+ */
+export async function getAuthenticatedUserIdFromRequest(
+  request: NextRequest
+): Promise<string> {
+  const authHeader = request.headers.get("authorization");
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return getAuthenticatedUserId(request);
+  }
+
+  return getAuthenticatedUserIdFromCookie();
+}
+
+/**
  * 쿠키에서 인증된 사용자 ID를 가져오는 함수
  * 클라이언트에서 쿠키를 통해 자동으로 인증 정보를 전달받는 경우 사용
  */

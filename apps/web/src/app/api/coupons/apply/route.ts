@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUserId } from "../../utils/auth";
+import { getAuthenticatedUserIdFromRequest } from "../../utils/auth";
 import { applyCoupon } from "@/lib/coupon-utils";
 
 /**
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 현재 로그인한 사용자 ID 가져오기
-    const userId = await getAuthenticatedUserId(request);
+    const userId = await getAuthenticatedUserIdFromRequest(request);
 
     // 쿠폰 적용
     const result = await applyCoupon(code, userId);
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       error instanceof Error ? error.message : "알 수 없는 오류";
     return NextResponse.json(
       { error: `쿠폰 적용 실패: ${errorMessage}` },
-      { status: 500 }
+      { status: errorMessage.startsWith("Unauthorized") ? 401 : 500 }
     );
   }
 }

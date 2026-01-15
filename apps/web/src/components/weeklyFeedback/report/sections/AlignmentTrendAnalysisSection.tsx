@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  BarChart3,
   ArrowUp,
   ArrowDown,
   Calendar,
@@ -35,7 +34,7 @@ type AlignmentTrendAnalysisSectionProps = {
 };
 
 // 일치도 점수 설명 팝업 컴포넌트
-function AlignmentScoreInfoDialog({ vividColor }: { vividColor: string }) {
+function AlignmentScoreInfoDialog() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -238,7 +237,7 @@ export function AlignmentTrendAnalysisSection({
             >
               일치도 트렌드 분석
             </p>
-            <AlignmentScoreInfoDialog vividColor={vividColor} />
+            <AlignmentScoreInfoDialog />
           </div>
         </div>
       <div className="mb-4">

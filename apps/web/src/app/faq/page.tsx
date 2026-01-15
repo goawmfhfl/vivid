@@ -12,7 +12,6 @@ import type { NotionBlock } from "@/lib/types/notion";
 const FAQ_PAGE_ID = "2e8834013f7080f58d62d7158a810b5c";
 
 export default function FAQPage() {
-  const [title, setTitle] = useState<string>("자주 묻는 질문");
   const [blocks, setBlocks] = useState<NotionBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

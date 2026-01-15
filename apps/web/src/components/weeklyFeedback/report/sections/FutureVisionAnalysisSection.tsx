@@ -1,4 +1,3 @@
-import { Eye } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -7,12 +6,10 @@ import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 
 type FutureVisionAnalysisSectionProps = {
   futureVisionAnalysis: VividReport["future_vision_analysis"];
-  vividColor: string;
 };
 
 export function FutureVisionAnalysisSection({
   futureVisionAnalysis,
-  vividColor,
 }: FutureVisionAnalysisSectionProps) {
   if (!futureVisionAnalysis) return null;
 

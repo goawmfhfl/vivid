@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  Rocket,
-  Repeat,
-  FlaskConical,
-} from "lucide-react";
 import type { VividReport } from "@/types/monthly-feedback-new";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";

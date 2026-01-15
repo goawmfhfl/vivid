@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Zap,
   Calendar,
   CheckCircle2,
   XCircle,
@@ -33,9 +32,6 @@ function DateListDropdown({
   const [isOpen, setIsOpen] = useState(false);
 
   if (dates.length === 0) return null;
-
-  const visibleDates = dates.slice(0, 5);
-  const hasMore = dates.length > 5;
 
   return (
     <div className="mt-2">

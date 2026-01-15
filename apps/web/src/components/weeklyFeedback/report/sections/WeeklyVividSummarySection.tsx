@@ -1,4 +1,4 @@
-import { Target, Sparkles } from "lucide-react";
+import { Target } from "lucide-react";
 import type { VividReport } from "@/types/weekly-feedback";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";

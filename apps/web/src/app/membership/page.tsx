@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppHeader } from "@/components/common/AppHeader";
-import { COLORS, CARD_STYLES, SPACING, GRADIENT_UTILS, SHADOWS, TYPOGRAPHY, hexToRgba } from "@/lib/design-system";
-import { Crown, CheckCircle2, XCircle, Calendar, Sparkles, Zap, TrendingUp, Users, Brain } from "lucide-react";
+import { COLORS, SPACING, GRADIENT_UTILS, hexToRgba } from "@/lib/design-system";
+import { Crown, Calendar, Sparkles, Zap, TrendingUp, Users } from "lucide-react";
 import { formatKSTDate } from "@/lib/date-utils";
 
 export default function MembershipPage() {

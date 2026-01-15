@@ -55,8 +55,11 @@ export async function verifyCoupon(
     .eq("id", userId)
     .single();
 
-  const usedCoupons = profile?.used_coupons || [];
-  const isUsed = usedCoupons.includes(coupon.name);
+  const usedCoupons = Array.isArray(profile?.used_coupons)
+    ? profile?.used_coupons
+    : [];
+  const isUsed =
+    usedCoupons.includes(coupon.code) || usedCoupons.includes(coupon.name);
 
   if (isUsed) {
     return {
@@ -118,8 +121,12 @@ export async function applyCoupon(
     .eq("id", userId)
     .single();
 
-  const currentUsedCoupons = profile?.used_coupons || [];
-  const updatedUsedCoupons = [...currentUsedCoupons, coupon.name];
+  const currentUsedCoupons = Array.isArray(profile?.used_coupons)
+    ? profile?.used_coupons
+    : [];
+  const updatedUsedCoupons = Array.from(
+    new Set([...currentUsedCoupons, coupon.code])
+  );
 
   const { error: profileError } = await supabase
     .from("profiles")

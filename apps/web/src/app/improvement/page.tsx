@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { COLORS, CARD_STYLES, SPACING, TYPOGRAPHY } from "@/lib/design-system";
@@ -610,19 +611,17 @@ export default function InquiryPage() {
                 {images.map((url, index) => (
                   <div
                     key={`uploaded-${index}`}
-                    className="relative group aspect-square"
+                    className="relative group aspect-square overflow-hidden rounded-lg border"
+                    style={{
+                      borderColor: COLORS.border.light,
+                    }}
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`첨부 이미지 ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg border"
-                      style={{
-                        borderColor: COLORS.border.light,
-                      }}
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        target.style.display = "none";
-                      }}
+                      fill
+                      sizes="(max-width: 768px) 33vw, 120px"
+                      className="object-cover"
                     />
                     <button
                       type="button"
@@ -648,14 +647,12 @@ export default function InquiryPage() {
                           : COLORS.border.input,
                       }}
                     >
-                      <img
+                      <Image
                         src={preview.url}
                         alt="미리보기"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.style.display = "none";
-                        }}
+                        fill
+                        sizes="(max-width: 768px) 33vw, 120px"
+                        className="object-cover"
                       />
                       {/* 업로드 중 오버레이 */}
                       {uploadingImages.includes(preview.id) && !preview.error && (
@@ -915,11 +912,15 @@ export default function InquiryPage() {
                                   className="block aspect-square overflow-hidden rounded-lg border hover:opacity-80 transition-opacity"
                                   style={{ borderColor: COLORS.border.light }}
                                 >
-                                  <img
-                                    src={url}
-                                    alt={`첨부 이미지 ${index + 1}`}
-                                    className="w-full h-full object-cover"
-                                  />
+                                  <div className="relative w-full h-full">
+                                    <Image
+                                      src={url}
+                                      alt={`첨부 이미지 ${index + 1}`}
+                                      fill
+                                      sizes="(max-width: 768px) 33vw, 120px"
+                                      className="object-cover"
+                                    />
+                                  </div>
                                 </button>
                               ))}
                             </div>
@@ -971,11 +972,15 @@ export default function InquiryPage() {
                                       className="block aspect-square overflow-hidden rounded-lg border hover:opacity-80 transition-opacity"
                                       style={{ borderColor: COLORS.border.light }}
                                     >
-                                      <img
-                                        src={url}
-                                        alt={`답변 이미지 ${index + 1}`}
-                                        className="w-full h-full object-cover"
-                                      />
+                                      <div className="relative w-full h-full">
+                                        <Image
+                                          src={url}
+                                          alt={`답변 이미지 ${index + 1}`}
+                                          fill
+                                          sizes="(max-width: 768px) 33vw, 120px"
+                                          className="object-cover"
+                                        />
+                                      </div>
                                     </button>
                                   ))}
                                 </div>
@@ -1070,10 +1075,12 @@ export default function InquiryPage() {
                       aspectRatio: "1 / 1",
                     }}
                   >
-                    <img
+                    <Image
                       src={imageModal.images[imageModal.currentIndex]}
                       alt={`이미지 ${imageModal.currentIndex + 1}`}
-                      className="w-full h-full object-contain"
+                      fill
+                      sizes="80vw"
+                      className="object-contain"
                       style={{
                         borderRadius: "8px",
                       }}

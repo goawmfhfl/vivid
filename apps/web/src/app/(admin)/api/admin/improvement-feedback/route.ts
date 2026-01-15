@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import type { VividFeedback } from "@/types/vivid-feedback";
+type ImprovementFeedbackRow = {
+  id: string;
+  user_id: string;
+  comment?: string | null;
+  content?: string | null;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    email: string;
+    name: string;
+  } | null;
+};
 
 /**
  * GET /api/admin/improvement-feedback
@@ -48,7 +60,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 프로필 정보 포함하여 반환
-    const feedbacksWithUser = (feedbacks || []).map((feedback: any) => ({
+    const feedbacksWithUser = (feedbacks || []).map(
+      (feedback: ImprovementFeedbackRow) => ({
       id: feedback.id,
       user_id: feedback.user_id,
       content: feedback.comment || feedback.content || "",
@@ -61,7 +74,8 @@ export async function GET(request: NextRequest) {
             name: feedback.profiles.name,
           }
         : null,
-    }));
+      })
+    );
 
     return NextResponse.json({
       feedbacks: feedbacksWithUser,

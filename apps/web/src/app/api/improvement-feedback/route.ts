@@ -4,6 +4,20 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { requireAdmin } from "@/app/(admin)/api/admin/util/admin-auth";
 import type { VividFeedback } from "@/types/vivid-feedback";
 
+type ImprovementFeedbackRow = {
+  id: string;
+  user_id: string;
+  comment?: string | null;
+  content?: string | null;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    email: string;
+    name: string;
+  } | null;
+};
+
 /**
  * POST /api/improvement-feedback
  * 개선점 피드백 생성
@@ -109,7 +123,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 프로필 정보 포함하여 반환
-    const feedbacksWithUser = (feedbacks || []).map((feedback: any) => ({
+    const feedbacksWithUser = (feedbacks || []).map(
+      (feedback: ImprovementFeedbackRow) => ({
       id: feedback.id,
       user_id: feedback.user_id,
       content: feedback.comment || feedback.content || "",
@@ -122,7 +137,8 @@ export async function GET(request: NextRequest) {
             name: feedback.profiles.name,
           }
         : null,
-    }));
+      })
+    );
 
     return NextResponse.json({
       feedbacks: feedbacksWithUser,

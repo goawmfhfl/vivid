@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PhoneField } from "@/components/forms/PhoneField";
 import { PaperCard } from "../PaperCard";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Loader2 } from "lucide-react";

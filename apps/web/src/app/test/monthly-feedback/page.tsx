@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { Loader2, CheckCircle2, XCircle, RefreshCw, Calendar } from "lucide-react";
@@ -45,7 +44,6 @@ export default function MonthlyFeedbackTestPage() {
     try {
       // 월의 시작일과 종료일 계산
       const [year, monthNum] = month.split("-").map(Number);
-      const startDate = new Date(year, monthNum - 1, 1);
       const endDate = new Date(year, monthNum, 0); // 다음 달 0일 = 이번 달 마지막 날
       
       // YYYY-MM-DD 형식으로 변환 (간단하게)
