@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { AppHeader } from "@/components/common/AppHeader";
-import { COLORS, CARD_STYLES, SPACING, GRADIENT_UTILS, SHADOWS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS, CARD_STYLES, SPACING, GRADIENT_UTILS, SHADOWS, TYPOGRAPHY, hexToRgba } from "@/lib/design-system";
 import { Crown, CheckCircle2, XCircle, Calendar, Sparkles, Zap, TrendingUp, Users, Brain } from "lucide-react";
 import { formatKSTDate } from "@/lib/date-utils";
 
@@ -29,11 +29,26 @@ export default function MembershipPage() {
           style={{
             background: isPro || isAdmin
               ? `linear-gradient(135deg, #3B82F612 0%, #60A5FA08 50%, ${COLORS.background.card} 100%)`
-              : `linear-gradient(135deg, ${COLORS.background.card} 0%, ${COLORS.background.base} 100%)`,
-            border: `2px solid ${isPro || isAdmin ? `#3B82F660` : COLORS.border.light}`,
+              : `linear-gradient(135deg, ${hexToRgba(
+                  COLORS.brand.primary,
+                  0.18
+                )} 0%, ${hexToRgba(COLORS.brand.light, 0.12)} 50%, ${
+                  COLORS.background.card
+                } 100%)`,
+            border: `2px solid ${
+              isPro || isAdmin
+                ? `#3B82F660`
+                : GRADIENT_UTILS.borderColor(COLORS.brand.primary, "40")
+            }`,
             boxShadow: isPro || isAdmin
               ? `0 8px 32px #3B82F625, 0 4px 16px #3B82F615, inset 0 1px 0 rgba(255,255,255,0.5)`
-              : `0 4px 16px rgba(0,0,0,0.08)`,
+              : `0 8px 24px ${hexToRgba(
+                  COLORS.brand.primary,
+                  0.18
+                )}, 0 4px 12px ${hexToRgba(
+                  COLORS.brand.primary,
+                  0.1
+                )}, inset 0 1px 0 ${hexToRgba(COLORS.text.white, 0.6)}`,
           }}
         >
           {/* 배경 장식 - 애니메이션 효과 */}
@@ -60,9 +75,9 @@ export default function MembershipPage() {
             </>
           ) : (
             <div
-              className="absolute top-0 right-0 w-40 h-40 opacity-3 pointer-events-none"
+              className="absolute top-0 right-0 w-40 h-40 opacity-6 pointer-events-none"
               style={{
-                background: GRADIENT_UTILS.decoration("#3B82F6", 0.3),
+                background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.35),
                 borderRadius: "50%",
                 transform: "translate(20%, -20%)",
               }}
@@ -76,10 +91,10 @@ export default function MembershipPage() {
                 style={{
                   background: isPro || isAdmin
                     ? `linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)`
-                    : COLORS.background.hover,
+                    : GRADIENT_UTILS.iconBadge(COLORS.brand.primary, 0.2),
                   boxShadow: isPro || isAdmin
                     ? `0 4px 12px #60A5FA40`
-                    : `0 2px 8px ${COLORS.border.light}`,
+                    : `0 4px 12px ${hexToRgba(COLORS.brand.primary, 0.3)}`,
                 }}
               >
                 {isPro || isAdmin ? (
@@ -90,7 +105,7 @@ export default function MembershipPage() {
                 ) : (
                   <Sparkles
                     className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
-                    style={{ color: "#3B82F6" }}
+                    style={{ color: COLORS.text.white }}
                   />
                 )}
               </div>
@@ -201,52 +216,7 @@ export default function MembershipPage() {
 
             {/* 핵심 기능 카드들 */}
             <div className="grid grid-cols-1 gap-4 sm:gap-5">
-              {/* 1. 상세한 일일 VIVID 리포트 */}
-              <div
-                className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
-                style={{
-                  background: GRADIENT_UTILS.cardBackground("#3B82F6", 0.18, COLORS.background.card),
-                  border: `1.5px solid ${GRADIENT_UTILS.borderColor("#3B82F6", "40")}`,
-                  boxShadow: `0 8px 24px #3B82F625, 0 4px 12px #3B82F615, inset 0 1px 0 rgba(255,255,255,0.6)`,
-                }}
-              >
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 opacity-10 pointer-events-none"
-                  style={{
-                    background: GRADIENT_UTILS.decoration("#3B82F6", 0.6),
-                    borderRadius: "50%",
-                    transform: "translate(20%, -20%)",
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: GRADIENT_UTILS.iconBadge("#60A5FA", 0.25),
-                        boxShadow: `0 2px 8px #60A5FA40`,
-                      }}
-                    >
-                      <Brain className="w-4 h-4" style={{ color: COLORS.text.white }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm sm:text-base font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        상세한 일일 VIVID 리포트
-                      </p>
-                      <p
-                        className="text-xs sm:text-sm leading-relaxed"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        하루의 기록을 바탕으로, 놓치기 쉬운 인사이트와
-                        다음 액션까지 정리된 리포트를 받아볼 수 있어요.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              
 
               {/* 2. 주간 · 월간 VIVID 리포트 */}
               <div
