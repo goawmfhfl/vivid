@@ -4,10 +4,10 @@ import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import { QUERY_KEYS } from "@/constants";
-import { filterMonthlyCandidatesForCreation } from "../monthlyFeedback/monthly-candidate-filter";
+import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivid-candidate-filter";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
-import type { MonthlyFeedbackNew } from "@/types/monthly-feedback-new";
+import type { MonthlyVivid } from "@/types/monthly-vivid";
 import { useCountUp } from "@/hooks/useCountUp";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 
@@ -18,7 +18,7 @@ function MonthlyCandidateItem({
   progress,
   handleCreateFeedback,
 }: {
-  candidate: { month: string; month_label: string; daily_feedback_count: number };
+  candidate: { month: string; month_label: string; daily_vivid_count: number };
   generatingMonth: string | null;
   progress: { current: number; total: number; currentStep: string } | null;
   handleCreateFeedback: (month: string) => void;
@@ -34,7 +34,7 @@ function MonthlyCandidateItem({
 
   const getSectionNameKR = (sectionName: string) => {
     const names: Record<string, string> = {
-      vivid_report: "비비드 리포트",
+      report: "비비드 리포트",
       title: "제목",
       완료: "완료",
     };
@@ -143,7 +143,7 @@ function MonthlyCandidateItem({
               lineHeight: "1.4",
             }}
           >
-            {candidate.daily_feedback_count || 0}개의 일일 피드백
+            {candidate.daily_vivid_count || 0}개의 일일 비비드
           </p>
         </div>
       </div>
@@ -250,9 +250,9 @@ export function MonthlyCandidatesSection({
   const [generatingMonth, setGeneratingMonth] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const {
-    monthlyFeedbackProgress,
-    setMonthlyFeedbackProgress,
-    clearMonthlyFeedbackProgress,
+    monthlyVividProgress,
+    setMonthlyVividProgress,
+    clearMonthlyVividProgress,
     monthlyCandidatesDropdown,
     toggleMonthlyCandidatesDropdown,
   } = useModalStore();
@@ -270,15 +270,15 @@ export function MonthlyCandidatesSection({
       const userId = await getCurrentUserId();
 
       // 진행 상황 초기화 (전역 상태)
-      setMonthlyFeedbackProgress(month, {
+      setMonthlyVividProgress(month, {
         month,
         current: 0,
-        total: 2, // vivid_report, title
-        currentStep: "vivid_report",
+        total: 2, // report, title
+        currentStep: "report",
       });
 
-      // POST 요청으로 월간 피드백 생성
-      const response = await fetch("/api/monthly-feedback/generate", {
+      // POST 요청으로 월간 비비드 생성
+      const response = await fetch("/api/monthly-vivid/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -295,17 +295,17 @@ export function MonthlyCandidatesSection({
       }
 
       const result = await response.json();
-      const feedbackData = result.data as MonthlyFeedbackNew & { id: string };
+      const feedbackData = result.data as MonthlyVivid & { id: string };
 
       // 완료 처리
-      setMonthlyFeedbackProgress(month, {
+      setMonthlyVividProgress(month, {
         month,
         current: 2,
         total: 2,
         currentStep: "완료",
       });
 
-      // MONTHLY_CANDIDATES에서 해당 월의 monthly_feedback_id 업데이트
+      // MONTHLY_CANDIDATES에서 해당 월의 monthly_vivid_id 업데이트
       queryClient.setQueryData<
         import("@/types/monthly-candidate").MonthlyCandidate[]
       >([QUERY_KEYS.MONTHLY_CANDIDATES], (oldCandidates = []) => {
@@ -313,7 +313,7 @@ export function MonthlyCandidatesSection({
           if (candidate.month === feedbackData.month) {
             return {
               ...candidate,
-              monthly_feedback_id: feedbackData.id || null,
+              monthly_vivid_id: feedbackData.id || null,
             };
           }
           return candidate;
@@ -325,15 +325,15 @@ export function MonthlyCandidatesSection({
         queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
       });
 
-      // 월간 피드백 리스트 무효화하여 최신 데이터 가져오기
+      // 월간 비비드 리스트 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "list"],
+        queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
       });
     } catch (error) {
       console.error("월간 vivid 생성 실패:", error);
 
       // 진행 상황 초기화 (전역 상태)
-      clearMonthlyFeedbackProgress(month);
+      clearMonthlyVividProgress(month);
 
       alert(
         error instanceof Error
@@ -440,7 +440,7 @@ export function MonthlyCandidatesSection({
               key={candidate.month}
               candidate={candidate}
               generatingMonth={generatingMonth}
-              progress={monthlyFeedbackProgress[candidate.month] || null}
+              progress={monthlyVividProgress[candidate.month] || null}
               handleCreateFeedback={handleCreateFeedback}
             />
           ))}

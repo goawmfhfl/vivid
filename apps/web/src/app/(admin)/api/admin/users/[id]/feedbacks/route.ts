@@ -25,9 +25,9 @@ export async function GET(
     const dailyLimit = parseInt(searchParams.get("dailyLimit") || "10", 10);
     const dailyOffset = (dailyPage - 1) * dailyLimit;
 
-    // Daily Feedback 목록 (메타데이터만, 페이지네이션)
-    const { data: dailyFeedbacks, count: dailyCount } = await supabase
-      .from("daily_feedback")
+    // Daily Vivid 목록 (메타데이터만, 페이지네이션)
+    const { data: dailyVividRows, count: dailyCount } = await supabase
+      .from("daily_vivid")
       .select(
         "id, report_date, day_of_week, created_at, updated_at, is_ai_generated",
         { count: "exact" }
@@ -36,18 +36,18 @@ export async function GET(
       .order("report_date", { ascending: false })
       .range(dailyOffset, dailyOffset + dailyLimit - 1);
 
-    // Weekly Feedback 목록 (메타데이터만)
-    const { data: weeklyFeedbacks } = await supabase
-      .from("weekly_feedback")
+    // Weekly Vivid 목록 (메타데이터만)
+    const { data: weeklyVividList } = await supabase
+      .from("weekly_vivid")
       .select(
         "id, week_start, week_end, created_at, updated_at, is_ai_generated"
       )
       .eq("user_id", userId)
       .order("week_start", { ascending: false });
 
-    // Monthly Feedback 목록 (메타데이터만)
-    const { data: monthlyFeedbacks } = await supabase
-      .from("monthly_feedback")
+    // Monthly Vivid 목록 (메타데이터만)
+    const { data: monthlyVividList } = await supabase
+      .from("monthly_vivid")
       .select(
         "id, month, month_label, date_range, created_at, updated_at, is_ai_generated"
       )
@@ -55,7 +55,7 @@ export async function GET(
       .order("month", { ascending: false });
 
     return NextResponse.json({
-      daily: (dailyFeedbacks || []).map((fb) => ({
+      daily: (dailyVividRows || []).map((fb) => ({
         id: fb.id,
         type: "daily" as const,
         date: fb.report_date,
@@ -70,7 +70,7 @@ export async function GET(
         total: dailyCount || 0,
         totalPages: Math.ceil((dailyCount || 0) / dailyLimit),
       },
-      weekly: (weeklyFeedbacks || []).map((fb) => ({
+      weekly: (weeklyVividList || []).map((fb) => ({
         id: fb.id,
         type: "weekly" as const,
         week_start: fb.week_start,
@@ -79,7 +79,7 @@ export async function GET(
         updated_at: fb.updated_at,
         is_ai_generated: fb.is_ai_generated,
       })),
-      monthly: (monthlyFeedbacks || []).map((fb) => ({
+      monthly: (monthlyVividList || []).map((fb) => ({
         id: fb.id,
         type: "monthly" as const,
         month: fb.month,

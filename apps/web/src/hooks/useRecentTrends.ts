@@ -14,7 +14,7 @@ const fetchRecentTrends = async (): Promise<RecentTrendsResponse> => {
     const userId = await getCurrentUserId();
 
     const response = await fetch(
-      `/api/daily-feedback/recent-trends?userId=${userId}`
+      `/api/daily-vivid/recent-trends?userId=${userId}`
     );
 
     if (!response.ok) {
@@ -32,7 +32,7 @@ const fetchRecentTrends = async (): Promise<RecentTrendsResponse> => {
 
 export const useRecentTrends = () => {
   return useQuery({
-    queryKey: [QUERY_KEYS.DAILY_FEEDBACK, "recent-trends"],
+    queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
     queryFn: fetchRecentTrends,
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
     gcTime: 1000 * 60 * 10, // 10분간 가비지 컬렉션 방지 (이전 cacheTime)

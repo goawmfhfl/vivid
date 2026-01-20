@@ -17,7 +17,7 @@ export interface GradientCardProps {
 
 /**
  * 그라디언트 배경을 가진 카드 컴포넌트
- * 데일리/주간/월간 피드백에서 공통으로 사용
+ * 데일리/주간/월간 비비드에서 공통으로 사용
  */
 export function GradientCard({
   gradientColor,

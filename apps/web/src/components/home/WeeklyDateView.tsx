@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
-import { getMondayOfWeek } from "@/components/weeklyFeedback/weekly-candidate-filter";
+import { getMondayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, TRANSITIONS, SHADOWS } from "@/lib/design-system";
 import { motion, AnimatePresence } from "framer-motion";
 import { DateButtonSkeleton } from "@/components/ui/Skeleton";

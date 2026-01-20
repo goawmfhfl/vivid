@@ -4,7 +4,7 @@ export type Entry = {
   timestamp: Date;
 };
 
-export type DailyFeedback = {
+export type DailyVivid = {
   date: string;
   summary: string;
   strengths: string[];
@@ -12,7 +12,7 @@ export type DailyFeedback = {
   recommendation: string;
 };
 
-export type DailyFeedbackPayload = {
+export type DailyVividPayload = {
   date: string; // "2025-10-21"
   lesson: string;
   keywords: string[]; // ["#몰입", "#자기효능감", "#루틴"]

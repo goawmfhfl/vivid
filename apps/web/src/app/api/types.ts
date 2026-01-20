@@ -79,14 +79,3 @@ export type ProgressCallback = (
   tracking?: TrackingInfo
 ) => void;
 
-/**
- * 월간 피드백 섹션 타입 (동적)
- */
-export type MonthlyFeedbackSection =
-  | "summary_report"
-  | "daily_life_report"
-  | "emotion_report"
-  | "vision_report"
-  | "insight_report"
-  | "execution_report"
-  | "closing_report";

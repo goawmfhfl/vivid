@@ -36,7 +36,7 @@ export interface FeedbackCardProps {
 
 /**
  * 피드백 리포트에서 사용하는 공통 Card 컴포넌트
- * 월간 피드백의 Card 디자인 패턴을 재사용 가능한 컴포넌트로 추출
+ * 월간 비비드의 Card 디자인 패턴을 재사용 가능한 컴포넌트로 추출
  */
 export function FeedbackCard({
   icon,

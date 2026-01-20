@@ -42,7 +42,7 @@ interface CostCalculation {
 export interface LogAIRequestParams {
   userId: string;
   model: string;
-  requestType: "daily_feedback" | "weekly_feedback" | "monthly_feedback";
+  requestType: "daily_vivid" | "weekly_vivid" | "monthly_vivid";
   sectionName: string | null;
   usage: AIUsageInfo;
   duration_ms: number;
@@ -123,11 +123,11 @@ export async function logAIRequest(
     let prefixedSectionName: string | null = null;
     if (sectionName) {
       const prefix =
-        requestType === "daily_feedback"
+        requestType === "daily_vivid"
           ? "[daily]"
-          : requestType === "weekly_feedback"
+          : requestType === "weekly_vivid"
           ? "[weekly]"
-          : "[monthly]";
+      : "[monthly]";
       prefixedSectionName = `${prefix} ${sectionName}`;
     }
 

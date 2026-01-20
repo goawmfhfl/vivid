@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import type { PeriodSummary } from "@/types/Entry";
 import { WeeklyCandidatesSection } from "./WeeklyCandidatesSection";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
-import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
+import { filterWeeklyCandidatesForCreation } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { SummaryList } from "./SummaryList";
 import { EmptyState } from "./EmptyState";
 import { Pagination } from "./Pagination";

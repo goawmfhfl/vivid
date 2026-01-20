@@ -1,17 +1,14 @@
 /**
- * Daily Feedback 복호화 문제 진단 스크립트
+ * Daily Vivid 복호화 문제 진단 스크립트
  *
  * 사용법:
  *   tsx scripts/diagnose-decryption-issues.ts
  *
- * 이 스크립트는 daily_feedback 테이블의 데이터 복호화 상태를 확인합니다.
+ * 이 스크립트는 daily_vivid 테이블의 데이터 복호화 상태를 확인합니다.
  */
 
 import { getServiceSupabase } from "../src/lib/supabase-service";
-import {
-  decryptDailyFeedback,
-  decryptJsonbFields,
-} from "../src/lib/jsonb-encryption";
+import { decryptDailyVivid, decryptJsonbFields } from "../src/lib/jsonb-encryption";
 import { isEncrypted } from "../src/lib/encryption";
 import { API_ENDPOINTS } from "../src/constants";
 
@@ -59,7 +56,7 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
     errors: [],
   };
 
-  console.log("🔍 Daily Feedback 복호화 상태 진단 시작...\n");
+  console.log("🔍 Daily Vivid 복호화 상태 진단 시작...\n");
 
   // ENCRYPTION_KEY 확인
   const encryptionKey = process.env.ENCRYPTION_KEY;
@@ -82,10 +79,8 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
 
   while (hasMore) {
     const { data: feedbacks, error } = await supabase
-      .from(API_ENDPOINTS.DAILY_FEEDBACK)
-      .select(
-        "id, emotion_overview, narrative_overview, insight_overview, vision_overview, feedback_overview, meta_overview"
-      )
+      .from(API_ENDPOINTS.DAILY_VIVID)
+      .select("id, report, trend")
       .range(offset, offset + batchSize - 1)
       .order("id", { ascending: true });
 
@@ -104,12 +99,8 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
 
       // 각 JSONB 필드 확인
       const fields = [
-        { name: "emotion_overview", value: feedback.emotion_overview },
-        { name: "narrative_overview", value: feedback.narrative_overview },
-        { name: "insight_overview", value: feedback.insight_overview },
-        { name: "vision_overview", value: feedback.vision_overview },
-        { name: "feedback_overview", value: feedback.feedback_overview },
-        { name: "meta_overview", value: feedback.meta_overview },
+        { name: "report", value: feedback.report },
+        { name: "trend", value: feedback.trend },
       ];
 
       let hasEncryptedField = false;
@@ -160,7 +151,7 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
 
       // 전체 복호화 시도
       try {
-        const decryptedFeedback = decryptDailyFeedback(feedback);
+        const decryptedFeedback = decryptDailyVivid(feedback);
         if (!hasDecryptionFailure) {
           // 복호화 성공
         }

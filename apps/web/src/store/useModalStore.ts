@@ -31,14 +31,14 @@ interface FeedbackGenerationState {
   finishGenerating: (date: string) => void;
 }
 
-interface WeeklyFeedbackProgress {
+interface WeeklyVividProgress {
   weekStart: string;
   current: number;
   total: number;
   currentStep: string;
 }
 
-interface DailyFeedbackProgress {
+interface DailyVividProgress {
   date: string;
   current: number;
   total: number;
@@ -51,7 +51,7 @@ interface WeeklyCandidatesDropdownState {
   setExpanded: (expanded: boolean) => void;
 }
 
-interface MonthlyFeedbackProgress {
+interface MonthlyVividProgress {
   month: string;
   current: number;
   total: number;
@@ -91,37 +91,37 @@ interface ModalStore {
   // Feedback Generation State
   feedbackGeneration: FeedbackGenerationState;
 
-  // Weekly Feedback Progress (전역 상태)
-  weeklyFeedbackProgress: Record<string, WeeklyFeedbackProgress>; // weekStart를 키로 사용
-  setWeeklyFeedbackProgress: (
+  // Weekly Vivid Progress (전역 상태)
+  weeklyVividProgress: Record<string, WeeklyVividProgress>; // weekStart를 키로 사용
+  setWeeklyVividProgress: (
     weekStart: string,
-    progress: WeeklyFeedbackProgress | null
+    progress: WeeklyVividProgress | null
   ) => void;
-  clearWeeklyFeedbackProgress: (weekStart: string) => void;
-  clearAllWeeklyFeedbackProgress: () => void;
+  clearWeeklyVividProgress: (weekStart: string) => void;
+  clearAllWeeklyVividProgress: () => void;
 
-  // Daily Feedback Progress (전역 상태)
-  dailyFeedbackProgress: Record<string, DailyFeedbackProgress>; // date를 키로 사용
-  setDailyFeedbackProgress: (
+  // Daily Vivid Progress (전역 상태)
+  dailyVividProgress: Record<string, DailyVividProgress>; // date를 키로 사용
+  setDailyVividProgress: (
     date: string,
-    progress: DailyFeedbackProgress | null
+    progress: DailyVividProgress | null
   ) => void;
-  clearDailyFeedbackProgress: (date: string) => void;
-  clearAllDailyFeedbackProgress: () => void;
+  clearDailyVividProgress: (date: string) => void;
+  clearAllDailyVividProgress: () => void;
 
   // Weekly Candidates Dropdown (전역 상태)
   weeklyCandidatesDropdown: WeeklyCandidatesDropdownState;
   toggleWeeklyCandidatesDropdown: () => void;
   setWeeklyCandidatesDropdownExpanded: (expanded: boolean) => void;
 
-  // Monthly Feedback Progress (전역 상태)
-  monthlyFeedbackProgress: Record<string, MonthlyFeedbackProgress>; // month를 키로 사용
-  setMonthlyFeedbackProgress: (
+  // Monthly Vivid Progress (전역 상태)
+  monthlyVividProgress: Record<string, MonthlyVividProgress>; // month를 키로 사용
+  setMonthlyVividProgress: (
     month: string,
-    progress: MonthlyFeedbackProgress | null
+    progress: MonthlyVividProgress | null
   ) => void;
-  clearMonthlyFeedbackProgress: (month: string) => void;
-  clearAllMonthlyFeedbackProgress: () => void;
+  clearMonthlyVividProgress: (month: string) => void;
+  clearAllMonthlyVividProgress: () => void;
 
   // Monthly Candidates Dropdown (전역 상태)
   monthlyCandidatesDropdown: MonthlyCandidatesDropdownState;
@@ -268,54 +268,54 @@ export const useModalStore = create<ModalStore>((set) => ({
       }),
   },
 
-  // Weekly Feedback Progress 초기 상태
-  weeklyFeedbackProgress: {},
+  // Weekly Vivid Progress 초기 상태
+  weeklyVividProgress: {},
 
-  setWeeklyFeedbackProgress: (weekStart, progress) =>
+  setWeeklyVividProgress: (weekStart, progress) =>
     set((state) => {
       if (progress === null) {
-        const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
-        return { weeklyFeedbackProgress: rest };
+        const { [weekStart]: _, ...rest } = state.weeklyVividProgress;
+        return { weeklyVividProgress: rest };
       }
       return {
-        weeklyFeedbackProgress: {
-          ...state.weeklyFeedbackProgress,
+        weeklyVividProgress: {
+          ...state.weeklyVividProgress,
           [weekStart]: progress,
         },
       };
     }),
 
-  clearWeeklyFeedbackProgress: (weekStart) =>
+  clearWeeklyVividProgress: (weekStart) =>
     set((state) => {
-      const { [weekStart]: _, ...rest } = state.weeklyFeedbackProgress;
-      return { weeklyFeedbackProgress: rest };
+      const { [weekStart]: _, ...rest } = state.weeklyVividProgress;
+      return { weeklyVividProgress: rest };
     }),
 
-  clearAllWeeklyFeedbackProgress: () => set({ weeklyFeedbackProgress: {} }),
+  clearAllWeeklyVividProgress: () => set({ weeklyVividProgress: {} }),
 
-  // Daily Feedback Progress 초기 상태
-  dailyFeedbackProgress: {},
-  setDailyFeedbackProgress: (date, progress) =>
+  // Daily Vivid Progress 초기 상태
+  dailyVividProgress: {},
+  setDailyVividProgress: (date, progress) =>
     set((state) => {
       if (progress === null) {
-        const { [date]: _, ...rest } = state.dailyFeedbackProgress;
-        return { dailyFeedbackProgress: rest };
+        const { [date]: _, ...rest } = state.dailyVividProgress;
+        return { dailyVividProgress: rest };
       }
       return {
-        dailyFeedbackProgress: {
-          ...state.dailyFeedbackProgress,
+        dailyVividProgress: {
+          ...state.dailyVividProgress,
           [date]: progress,
         },
       };
     }),
 
-  clearDailyFeedbackProgress: (date) =>
+  clearDailyVividProgress: (date) =>
     set((state) => {
-      const { [date]: _, ...rest } = state.dailyFeedbackProgress;
-      return { dailyFeedbackProgress: rest };
+      const { [date]: _, ...rest } = state.dailyVividProgress;
+      return { dailyVividProgress: rest };
     }),
 
-  clearAllDailyFeedbackProgress: () => set({ dailyFeedbackProgress: {} }),
+  clearAllDailyVividProgress: () => set({ dailyVividProgress: {} }),
 
   // Weekly Candidates Dropdown 초기 상태
   weeklyCandidatesDropdown: {
@@ -352,30 +352,30 @@ export const useModalStore = create<ModalStore>((set) => ({
       },
     })),
 
-  // Monthly Feedback Progress 초기 상태
-  monthlyFeedbackProgress: {},
+  // Monthly Vivid Progress 초기 상태
+  monthlyVividProgress: {},
 
-  setMonthlyFeedbackProgress: (month, progress) =>
+  setMonthlyVividProgress: (month, progress) =>
     set((state) => {
       if (progress === null) {
-        const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
-        return { monthlyFeedbackProgress: rest };
+        const { [month]: _, ...rest } = state.monthlyVividProgress;
+        return { monthlyVividProgress: rest };
       }
       return {
-        monthlyFeedbackProgress: {
-          ...state.monthlyFeedbackProgress,
+        monthlyVividProgress: {
+          ...state.monthlyVividProgress,
           [month]: progress,
         },
       };
     }),
 
-  clearMonthlyFeedbackProgress: (month) =>
+  clearMonthlyVividProgress: (month) =>
     set((state) => {
-      const { [month]: _, ...rest } = state.monthlyFeedbackProgress;
-      return { monthlyFeedbackProgress: rest };
+      const { [month]: _, ...rest } = state.monthlyVividProgress;
+      return { monthlyVividProgress: rest };
     }),
 
-  clearAllMonthlyFeedbackProgress: () => set({ monthlyFeedbackProgress: {} }),
+  clearAllMonthlyVividProgress: () => set({ monthlyVividProgress: {} }),
 
   // Monthly Candidates Dropdown 초기 상태
   monthlyCandidatesDropdown: {

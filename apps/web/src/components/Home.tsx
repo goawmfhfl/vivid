@@ -6,8 +6,8 @@ import { RecordForm } from "./home/RecordForm";
 import { RecordList } from "./home/RecordList";
 import { EditRecordDialog } from "./home/EditRecordDialog";
 import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
-import { useGetDailyFeedback } from "@/hooks/useGetDailyFeedback";
-import { useCreateDailyFeedback } from "@/hooks/useCreateDailyFeedback";
+import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
+import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
@@ -35,7 +35,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
-  const createDailyFeedback = useCreateDailyFeedback();
+  const createDailyVivid = useCreateDailyVivid();
 
   // KST 기준으로 오늘 날짜 계산
   const todayIso = getKSTDateString();
@@ -101,21 +101,21 @@ export function Home({ selectedDate }: HomeProps = {}) {
   };
 
   // 선택한 날짜의 피드백 존재 여부 조회
-  const { data: dateFeedback } = useGetDailyFeedback(activeDate);
+  const { data: dateFeedback } = useGetDailyVivid(activeDate);
 
   const hasDateFeedback = !!dateFeedback && dateFeedback.is_ai_generated;
 
   // 전역 모달 및 피드백 생성 상태 관리
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const openErrorModal = useModalStore((state) => state.openErrorModal);
-  const dailyFeedbackProgress = useModalStore(
-    (state) => state.dailyFeedbackProgress
+  const dailyVividProgress = useModalStore(
+    (state) => state.dailyVividProgress
   );
-  const setDailyFeedbackProgress = useModalStore(
-    (state) => state.setDailyFeedbackProgress
+  const setDailyVividProgress = useModalStore(
+    (state) => state.setDailyVividProgress
   );
-  const clearDailyFeedbackProgress = useModalStore(
-    (state) => state.clearDailyFeedbackProgress
+  const clearDailyVividProgress = useModalStore(
+    (state) => state.clearDailyVividProgress
   );
 
   // 타이머 기반 progress 상태
@@ -123,8 +123,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
 
   // 진행 상황 확인
-  const progress = dailyFeedbackProgress[activeDate] || null;
-  const isGeneratingFeedback = createDailyFeedback.isPending || progress !== null || timerProgress !== null;
+  const progress = dailyVividProgress[activeDate] || null;
+  const isGeneratingFeedback = createDailyVivid.isPending || progress !== null || timerProgress !== null;
   
   // 타이머 기반 progress 계산 (0% → 99%, 15초 동안)
   useEffect(() => {
@@ -174,7 +174,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       );
 
 
-  const handleOpenDailyFeedback = async () => {
+  const handleOpenDailyVivid = async () => {
     try {
       if (hasDateFeedback) {
         // 기존 피드백이 있으면 id로 라우팅
@@ -190,7 +190,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       setTimerProgress(0);
 
       // 진행 상황 초기화
-      setDailyFeedbackProgress(activeDate, {
+      setDailyVividProgress(activeDate, {
         date: activeDate,
         current: 0,
         total: 1,
@@ -198,7 +198,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       });
 
       try {
-        const feedbackData = await createDailyFeedback.mutateAsync({
+        const feedbackData = await createDailyVivid.mutateAsync({
           date: activeDate,
         });
 
@@ -207,7 +207,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         setTimerProgress(null);
         
         // 진행 상황 초기화
-        clearDailyFeedbackProgress(activeDate);
+        clearDailyVividProgress(activeDate);
 
         // 성공 시 전역 모달로 알림
         if (feedbackData?.id) {
@@ -235,7 +235,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         setTimerProgress(null);
         
         // 진행 상황 초기화
-        clearDailyFeedbackProgress(activeDate);
+        clearDailyVividProgress(activeDate);
 
         const errorMessage =
           error instanceof Error
@@ -255,7 +255,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       setTimerStartTime(null);
       setTimerProgress(null);
       
-      clearDailyFeedbackProgress(activeDate);
+      clearDailyVividProgress(activeDate);
     }
   };
 
@@ -299,7 +299,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         >
           <div
             className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
-            onClick={!isGeneratingFeedback ? handleOpenDailyFeedback : undefined}
+            onClick={!isGeneratingFeedback ? handleOpenDailyVivid : undefined}
             style={{
               backgroundColor: "#FAFAF8",
               border: `1.5px solid ${COLORS.border.light}`,

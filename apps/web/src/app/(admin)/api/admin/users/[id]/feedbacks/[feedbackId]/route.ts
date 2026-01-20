@@ -33,10 +33,10 @@ export async function DELETE(
     // 테이블 이름 결정
     const tableName =
       type === "daily"
-        ? "daily_feedback"
+        ? "daily_vivid"
         : type === "weekly"
-        ? "weekly_feedback"
-        : "monthly_feedback";
+        ? "weekly_vivid"
+        : "monthly_vivid";
 
     // 삭제 전 유저 확인
     const { data: feedback } = await supabase
@@ -113,10 +113,10 @@ export async function PATCH(
     // 테이블 이름 결정
     const tableName =
       type === "daily"
-        ? "daily_feedback"
+        ? "daily_vivid"
         : type === "weekly"
-        ? "weekly_feedback"
-        : "monthly_feedback";
+        ? "weekly_vivid"
+        : "monthly_vivid";
 
     // 수정 가능한 필드만 추출 (메타데이터만)
     const updateData: Record<string, unknown> = {};

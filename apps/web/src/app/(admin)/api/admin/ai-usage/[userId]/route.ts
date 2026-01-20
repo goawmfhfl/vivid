@@ -127,15 +127,15 @@ export async function GET(
     // 타입별 통계
     const dailyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "daily_feedback")
+        ?.filter((r) => r.request_type === "daily_vivid")
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
     const weeklyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "weekly_feedback")
+        ?.filter((r) => r.request_type === "weekly_vivid")
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
     const monthlyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "monthly_feedback")
+        ?.filter((r) => r.request_type === "monthly_vivid")
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
 
     const details: AIUsageDetail[] =
@@ -187,19 +187,19 @@ export async function GET(
         byType: {
           daily: {
             requests:
-              allRequests?.filter((r) => r.request_type === "daily_feedback")
+              allRequests?.filter((r) => r.request_type === "daily_vivid")
                 .length || 0,
             cost_krw: dailyTypeCost,
           },
           weekly: {
             requests:
-              allRequests?.filter((r) => r.request_type === "weekly_feedback")
+              allRequests?.filter((r) => r.request_type === "weekly_vivid")
                 .length || 0,
             cost_krw: weeklyTypeCost,
           },
           monthly: {
             requests:
-              allRequests?.filter((r) => r.request_type === "monthly_feedback")
+              allRequests?.filter((r) => r.request_type === "monthly_vivid")
                 .length || 0,
             cost_krw: monthlyTypeCost,
           },

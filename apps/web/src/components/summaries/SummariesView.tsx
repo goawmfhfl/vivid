@@ -6,24 +6,24 @@ import { ErrorDisplay } from "../ui/ErrorDisplay";
 import type { PeriodSummary } from "@/types/Entry";
 import { WeeklySummariesTab } from "./WeeklySummariesTab";
 import { MonthlySummariesTab } from "./MonthlySummariesTab";
-import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
-import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
-import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
+import { useWeeklyVividList } from "@/hooks/useWeeklyVivid";
+import { useMonthlyVividList } from "@/hooks/useMonthlyVivid";
+import type { WeeklyVividListItem } from "@/types/weekly-vivid";
 import {
   formatDateRange,
   formatPeriod,
-  createPeriodSummaryFromWeeklyFeedback,
+  createPeriodSummaryFromWeeklyVivid,
   calculateWeekNumberInMonth,
-} from "./weekly-feedback-mapper";
-import { convertMonthlyFeedbackToPeriodSummary } from "./monthly-feedback-mapper";
+} from "./weekly-vivid-mapper";
+import { convertMonthlyVividToPeriodSummary } from "./monthly-vivid-mapper";
 import { COLORS, SPACING } from "@/lib/design-system";
 import { AppHeader } from "../common/AppHeader";
 
 /**
- * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
+ * 주간 비비드 리스트 아이템을 PeriodSummary로 변환
  */
-function convertWeeklyFeedbackToPeriodSummary(
-  item: WeeklyFeedbackListItem
+function convertWeeklyVividToPeriodSummary(
+  item: WeeklyVividListItem
 ): PeriodSummary {
   const startDate = new Date(item.week_range.start);
   const endDate = new Date(item.week_range.end);
@@ -37,7 +37,7 @@ function convertWeeklyFeedbackToPeriodSummary(
   
   const title = item.title;
 
-  return createPeriodSummaryFromWeeklyFeedback({
+  return createPeriodSummaryFromWeeklyVivid({
     item,
     weekNumber,
     year,
@@ -58,19 +58,19 @@ export function SummariesView() {
 
   // 주간 피드백 리스트 조회 (기본값이므로 항상 조회)
   const {
-    data: weeklyFeedbackList = [],
+    data: weeklyVividList = [],
     isLoading: isLoadingWeekly,
     error: weeklyError,
     refetch: refetchWeekly,
-  } = useWeeklyFeedbackList();
+  } = useWeeklyVividList();
 
-  // 월간 피드백 리스트 조회 (월간 탭일 때만 조회)
+  // 월간 비비드 리스트 조회 (월간 탭일 때만 조회)
   const {
-    data: monthlyFeedbackList = [],
+    data: monthlyVividList = [],
     isLoading: isLoadingMonthly,
     error: monthlyError,
     refetch: refetchMonthly,
-  } = useGetMonthlyFeedbackList(activeTab === "monthly");
+  } = useMonthlyVividList(activeTab === "monthly");
 
   // 탭 변경 시 URL 업데이트
   const handleTabChange = (tab: string) => {
@@ -84,13 +84,13 @@ export function SummariesView() {
 
   // 주간 피드백을 PeriodSummary로 변환
   const weeklySummaries = useMemo(() => {
-    return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
-  }, [weeklyFeedbackList]);
+    return weeklyVividList.map(convertWeeklyVividToPeriodSummary);
+  }, [weeklyVividList]);
 
-  // 월간 피드백을 PeriodSummary로 변환
+  // 월간 비비드을 PeriodSummary로 변환
   const monthlySummaries = useMemo(() => {
-    return monthlyFeedbackList.map(convertMonthlyFeedbackToPeriodSummary);
-  }, [monthlyFeedbackList]);
+    return monthlyVividList.map(convertMonthlyVividToPeriodSummary);
+  }, [monthlyVividList]);
 
   return (
     <div

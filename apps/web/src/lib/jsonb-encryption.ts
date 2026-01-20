@@ -129,77 +129,43 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
 }
 
 /**
- * WeeklyFeedback 객체의 모든 JSONB 필드를 암호화
+ * WeeklyVivid 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptWeeklyFeedback(
+export function encryptWeeklyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
     ...feedback,
-    // 새로운 스키마 필드들
-    summary_report: feedback.summary_report
-      ? encryptJsonbFields(feedback.summary_report as JsonbValue)
-      : null,
-    daily_life_report: feedback.daily_life_report
-      ? encryptJsonbFields(feedback.daily_life_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    vision_report: feedback.vision_report
-      ? encryptJsonbFields(feedback.vision_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? encryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    execution_report: feedback.execution_report
-      ? encryptJsonbFields(feedback.execution_report as JsonbValue)
+    report: feedback.report
+      ? encryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? encryptJsonbFields(feedback.trend as JsonbValue)
       : null,
-    // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };
 }
 
 /**
- * WeeklyFeedback 객체의 모든 JSONB 필드를 복호화
+ * WeeklyVivid 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptWeeklyFeedback(
+export function decryptWeeklyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
     ...feedback,
-    // 새로운 스키마 필드들
-    summary_report: feedback.summary_report
-      ? decryptJsonbFields(feedback.summary_report as JsonbValue)
-      : null,
-    daily_life_report: feedback.daily_life_report
-      ? decryptJsonbFields(feedback.daily_life_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    vision_report: feedback.vision_report
-      ? decryptJsonbFields(feedback.vision_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? decryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    execution_report: feedback.execution_report
-      ? decryptJsonbFields(feedback.execution_report as JsonbValue)
+    report: feedback.report
+      ? decryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? decryptJsonbFields(feedback.trend as JsonbValue)
       : null,
-    // closing_report는 주간 피드백에서 제거됨 (월간 피드백만 사용)
   };
 }
 
 /**
- * MonthlyFeedback 객체의 모든 JSONB 필드를 암호화
+ * MonthlyVivid 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptMonthlyFeedback(
+export function encryptMonthlyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
@@ -207,8 +173,8 @@ export function encryptMonthlyFeedback(
     title: feedback.title
       ? encryptJsonbFields(feedback.title as JsonbValue)
       : null,
-    vivid_report: feedback.vivid_report
-      ? encryptJsonbFields(feedback.vivid_report as JsonbValue)
+    report: feedback.report
+      ? encryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? encryptJsonbFields(feedback.trend as JsonbValue)
@@ -217,9 +183,9 @@ export function encryptMonthlyFeedback(
 }
 
 /**
- * MonthlyFeedback 객체의 모든 JSONB 필드를 복호화
+ * MonthlyVivid 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptMonthlyFeedback(
+export function decryptMonthlyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
@@ -227,8 +193,8 @@ export function decryptMonthlyFeedback(
     title: feedback.title
       ? decryptJsonbFields(feedback.title as JsonbValue)
       : null,
-    vivid_report: feedback.vivid_report
-      ? decryptJsonbFields(feedback.vivid_report as JsonbValue)
+    report: feedback.report
+      ? decryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? decryptJsonbFields(feedback.trend as JsonbValue)
@@ -237,35 +203,15 @@ export function decryptMonthlyFeedback(
 }
 
 /**
- * DailyFeedback 객체의 모든 JSONB 필드를 암호화
- * 기존 필드와 새로운 타입별 리포트 필드를 모두 지원
+ * DailyVivid 객체의 모든 JSONB 필드를 암호화
  */
-export function encryptDailyFeedback(
+export function encryptDailyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
     ...feedback,
-    // 새로운 타입별 리포트 필드
-    summary_report: feedback.summary_report
-      ? encryptJsonbFields(feedback.summary_report as JsonbValue)
-      : null,
-    daily_report: feedback.daily_report
-      ? encryptJsonbFields(feedback.daily_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? encryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    vivid_report: feedback.vivid_report
-      ? encryptJsonbFields(feedback.vivid_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? encryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    feedback_report: feedback.feedback_report
-      ? encryptJsonbFields(feedback.feedback_report as JsonbValue)
-      : null,
-    final_report: feedback.final_report
-      ? encryptJsonbFields(feedback.final_report as JsonbValue)
+    report: feedback.report
+      ? encryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? encryptJsonbFields(feedback.trend as JsonbValue)
@@ -274,35 +220,15 @@ export function encryptDailyFeedback(
 }
 
 /**
- * DailyFeedback 객체의 모든 JSONB 필드를 복호화
- * 기존 필드와 새로운 타입별 리포트 필드를 모두 지원
+ * DailyVivid 객체의 모든 JSONB 필드를 복호화
  */
-export function decryptDailyFeedback(
+export function decryptDailyVivid(
   feedback: Record<string, unknown>
 ): Record<string, unknown> {
   return {
     ...feedback,
-    // 새로운 타입별 리포트 필드
-    summary_report: feedback.summary_report
-      ? decryptJsonbFields(feedback.summary_report as JsonbValue)
-      : null,
-    daily_report: feedback.daily_report
-      ? decryptJsonbFields(feedback.daily_report as JsonbValue)
-      : null,
-    emotion_report: feedback.emotion_report
-      ? decryptJsonbFields(feedback.emotion_report as JsonbValue)
-      : null,
-    vivid_report: feedback.vivid_report
-      ? decryptJsonbFields(feedback.vivid_report as JsonbValue)
-      : null,
-    insight_report: feedback.insight_report
-      ? decryptJsonbFields(feedback.insight_report as JsonbValue)
-      : null,
-    feedback_report: feedback.feedback_report
-      ? decryptJsonbFields(feedback.feedback_report as JsonbValue)
-      : null,
-    final_report: feedback.final_report
-      ? decryptJsonbFields(feedback.final_report as JsonbValue)
+    report: feedback.report
+      ? decryptJsonbFields(feedback.report as JsonbValue)
       : null,
     trend: feedback.trend
       ? decryptJsonbFields(feedback.trend as JsonbValue)

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { use } from "react";
-import { DailyFeedbackView } from "@/components/dailyFeedback/DailyFeedbackView";
+import { DailyVividView } from "@/components/dailyVivid/DailyVividView";
 
 export default function DailyViewPage({
   params,
@@ -16,5 +16,5 @@ export default function DailyViewPage({
     router.push("/");
   };
 
-  return <DailyFeedbackView id={resolvedParams.id} onBack={handleBack} />;
+  return <DailyVividView id={resolvedParams.id} onBack={handleBack} />;
 }

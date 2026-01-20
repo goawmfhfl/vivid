@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
-import type { MonthlyTrendsResponse } from "@/types/monthly-feedback-new";
+import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 
 const fetchMonthlyTrends = async (): Promise<MonthlyTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
 
     const response = await fetch(
-      `/api/monthly-feedback/recent-trends?userId=${userId}`
+      `/api/monthly-vivid/recent-trends?userId=${userId}`
     );
 
     if (!response.ok) {
@@ -26,7 +26,7 @@ const fetchMonthlyTrends = async (): Promise<MonthlyTrendsResponse> => {
 
 export const useMonthlyTrends = () => {
   return useQuery({
-    queryKey: [QUERY_KEYS.MONTHLY_FEEDBACK, "recent-trends"],
+    queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
     queryFn: fetchMonthlyTrends,
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
     gcTime: 1000 * 60 * 10, // 10분간 가비지 컬렉션 방지

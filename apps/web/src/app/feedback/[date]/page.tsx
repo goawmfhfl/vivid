@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { DailyFeedbackView } from "@/components/dailyFeedback/DailyFeedbackView";
+import { DailyVividView } from "@/components/dailyVivid/DailyVividView";
 import { withAuth } from "@/components/auth";
 
 function DateFeedbackPage() {
@@ -14,7 +14,7 @@ function DateFeedbackPage() {
     router.push("/logs");
   };
 
-  return <DailyFeedbackView date={dateStr} onBack={handleBack} />;
+  return <DailyVividView date={dateStr} onBack={handleBack} />;
 }
 
 export default withAuth(DateFeedbackPage);

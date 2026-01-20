@@ -77,7 +77,7 @@ export function Calendar({
 
             const isoDate = toISODate(date);
             const hasLog = logs[isoDate]?.hasLog || false;
-            const hasDailyFeedback = logs[isoDate]?.hasDailyFeedback || false;
+            const hasDailyVivid = logs[isoDate]?.hasDailyVivid || false;
             const isCurrentMonth = date.getMonth() === month - 1;
             const isTodayDate = isToday(date);
             const isSelected = isSameDay(date, selectedDate);
@@ -104,7 +104,7 @@ export function Calendar({
                 onClick={() => handleDateClick(date)}
                 onKeyDown={(e) => handleKeyDown(e, date)}
                 aria-label={`${isoDate}, ${hasLog ? "기록 있음" : "기록 없음"}${
-                  hasDailyFeedback ? ", AI 리뷰 있음" : ""
+                  hasDailyVivid ? ", AI 리뷰 있음" : ""
                 }${isTodayDate ? ", 오늘" : ""}${isSelected ? ", 선택됨" : ""}`}
                 tabIndex={0}
               >
@@ -122,7 +122,7 @@ export function Calendar({
                       }}
                     />
                   )}
-                  {hasDailyFeedback && (
+                  {hasDailyVivid && (
                     <div
                       className="h-1.5 w-1.5 rounded-full"
                       style={{

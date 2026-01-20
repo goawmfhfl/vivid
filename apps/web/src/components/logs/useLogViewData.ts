@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useRecordsByMonth } from "@/hooks/useRecordsByMonth";
-import { useDailyFeedbackDatesByMonth } from "@/hooks/useDailyFeedbackDatesByMonth";
+import { useDailyVividDatesByMonth } from "@/hooks/useDailyVividDatesByMonth";
 import {
   CalendarLogMap,
   getLocalStartOfDay,
@@ -20,10 +20,10 @@ export function useLogViewData(year: number, month: number) {
   } = useRecordsByMonth(year, month);
 
   const {
-    data: dailyFeedbackDates = [],
+    data: dailyVividDates = [],
     isLoading: isLoadingFeedback,
     error: feedbackError,
-  } = useDailyFeedbackDatesByMonth(year, month);
+  } = useDailyVividDatesByMonth(year, month);
 
   const isLoading = isLoadingRecords || isLoadingFeedback;
 
@@ -35,25 +35,25 @@ export function useLogViewData(year: number, month: number) {
     records.forEach((record: Record) => {
       const isoDate = record.kst_date;
       if (!logMap[isoDate]) {
-        logMap[isoDate] = { hasLog: false, hasDailyFeedback: false };
+        logMap[isoDate] = { hasLog: false, hasDailyVivid: false };
       }
       logMap[isoDate].hasLog = true;
     });
 
-    // Daily Feedback 표시
-    dailyFeedbackDates.forEach((date) => {
+    // Daily Vivid 표시
+    dailyVividDates.forEach((date) => {
       if (!logMap[date]) {
-        logMap[date] = { hasLog: false, hasDailyFeedback: false };
+        logMap[date] = { hasLog: false, hasDailyVivid: false };
       }
-      logMap[date].hasDailyFeedback = true;
+      logMap[date].hasDailyVivid = true;
     });
 
     return logMap;
-  }, [records, dailyFeedbackDates]);
+  }, [records, dailyVividDates]);
 
   return {
     records,
-    dailyFeedbackDates,
+    dailyVividDates,
     logs,
     isLoading,
     errors: { recordsError, feedbackError },
@@ -71,16 +71,16 @@ export function useSelectedDateRecords(records: Record[], selectedDate: Date) {
 }
 
 /**
- * 선택된 날짜에 daily-feedback이 있는지 확인
+ * 선택된 날짜에 daily-vivid가 있는지 확인
  */
-export function useHasDailyFeedback(
-  dailyFeedbackDates: string[],
+export function useHasDailyVivid(
+  dailyVividDates: string[],
   selectedDate: Date
 ) {
   return useMemo(() => {
     const selectedIsoDate = toISODate(selectedDate);
-    return dailyFeedbackDates.includes(selectedIsoDate);
-  }, [dailyFeedbackDates, selectedDate]);
+    return dailyVividDates.includes(selectedIsoDate);
+  }, [dailyVividDates, selectedDate]);
 }
 
 /**

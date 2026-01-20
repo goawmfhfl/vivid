@@ -97,7 +97,7 @@ export interface StrengthsWeaknessesCardProps {
 
 /**
  * 강점/개선 영역을 나란히 표시하는 카드 컴포넌트
- * 월간 피드백 리포트에서 공통으로 사용
+ * 월간 비비드 리포트에서 공통으로 사용
  */
 export function StrengthsWeaknessesCard({
   strengths = [],

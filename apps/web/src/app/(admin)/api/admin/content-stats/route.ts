@@ -5,16 +5,16 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 type PeriodType = "day" | "week" | "month";
 
 interface ContentStatsResponse {
-  daily_feedback: {
+  daily_vivid: {
     by_day: Array<{ date: string; count: number }>;
     by_week: Array<{ week: string; count: number }>;
     by_month: Array<{ month: string; count: number }>;
   };
-  weekly_feedback: {
+  weekly_vivid: {
     by_week: Array<{ week: string; count: number }>;
     by_month: Array<{ month: string; count: number }>;
   };
-  monthly_feedback: {
+  monthly_vivid: {
     by_month: Array<{ month: string; count: number }>;
   };
 }
@@ -43,36 +43,36 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
 
-    // Daily Feedback 통계
-    const { data: dailyFeedbacks } = await supabase
-      .from("daily_feedback")
+    // Daily Vivid 통계
+    const { data: dailyVividRows } = await supabase
+      .from("daily_vivid")
       .select("report_date, created_at")
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
       .order("report_date", { ascending: true });
 
-    // Weekly Feedback 통계
-    const { data: weeklyFeedbacks } = await supabase
-      .from("weekly_feedback")
+    // Weekly Vivid 통계
+    const { data: weeklyVividList } = await supabase
+      .from("weekly_vivid")
       .select("week_start, week_end, created_at")
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
       .order("week_start", { ascending: true });
 
-    // Monthly Feedback 통계
-    const { data: monthlyFeedbacks } = await supabase
-      .from("monthly_feedback")
+    // Monthly Vivid 통계
+    const { data: monthlyVividList } = await supabase
+      .from("monthly_vivid")
       .select("month, created_at")
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
       .order("month", { ascending: true });
 
-    // Daily Feedback 집계
+    // Daily Vivid 집계
     const dailyByDay = new Map<string, number>();
     const dailyByWeek = new Map<string, number>();
     const dailyByMonth = new Map<string, number>();
 
-    dailyFeedbacks?.forEach((fb) => {
+    dailyVividRows?.forEach((fb) => {
       const date = new Date(fb.report_date);
       const dayKey = date.toISOString().split("T")[0];
       const weekKey = getWeekKey(date);
@@ -85,11 +85,11 @@ export async function GET(request: NextRequest) {
       dailyByMonth.set(monthKey, (dailyByMonth.get(monthKey) || 0) + 1);
     });
 
-    // Weekly Feedback 집계
+    // Weekly Vivid 집계
     const weeklyByWeek = new Map<string, number>();
     const weeklyByMonth = new Map<string, number>();
 
-    weeklyFeedbacks?.forEach((fb) => {
+    weeklyVividList?.forEach((fb) => {
       const weekStart = new Date(fb.week_start);
       const weekKey = getWeekKey(weekStart);
       const monthKey = `${weekStart.getFullYear()}-${String(
@@ -100,16 +100,16 @@ export async function GET(request: NextRequest) {
       weeklyByMonth.set(monthKey, (weeklyByMonth.get(monthKey) || 0) + 1);
     });
 
-    // Monthly Feedback 집계
+    // Monthly Vivid 집계
     const monthlyByMonth = new Map<string, number>();
 
-    monthlyFeedbacks?.forEach((fb) => {
+    monthlyVividList?.forEach((fb) => {
       monthlyByMonth.set(fb.month, (monthlyByMonth.get(fb.month) || 0) + 1);
     });
 
     // 결과 포맷팅
     const stats: ContentStatsResponse = {
-      daily_feedback: {
+      daily_vivid: {
         by_day: Array.from(dailyByDay.entries())
           .map(([date, count]) => ({ date, count }))
           .sort((a, b) => a.date.localeCompare(b.date)),
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
           .map(([month, count]) => ({ month, count }))
           .sort((a, b) => a.month.localeCompare(b.month)),
       },
-      weekly_feedback: {
+      weekly_vivid: {
         by_week: Array.from(weeklyByWeek.entries())
           .map(([week, count]) => ({ week, count }))
           .sort((a, b) => a.week.localeCompare(b.week)),
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
           .map(([month, count]) => ({ month, count }))
           .sort((a, b) => a.month.localeCompare(b.month)),
       },
-      monthly_feedback: {
+      monthly_vivid: {
         by_month: Array.from(monthlyByMonth.entries())
           .map(([month, count]) => ({ month, count }))
           .sort((a, b) => a.month.localeCompare(b.month)),

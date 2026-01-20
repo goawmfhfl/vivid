@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   // Monorepo에서 올바른 root 경로 설정
   outputFileTracingRoot: path.join(__dirname, "../.."),
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "mogjqlhzxqjuvffdizlc.supabase.co",
+      },
+    ],
+  },
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

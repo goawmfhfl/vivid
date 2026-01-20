@@ -5,24 +5,24 @@ import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { MonthlySummariesTab } from "@/components/summaries/MonthlySummariesTab";
-import { useGetMonthlyFeedbackList } from "@/hooks/useGetMonthlyFeedback";
-import { convertMonthlyFeedbackToPeriodSummary } from "@/components/summaries/monthly-feedback-mapper";
+import { useMonthlyVividList } from "@/hooks/useMonthlyVivid";
+import { convertMonthlyVividToPeriodSummary } from "@/components/summaries/monthly-vivid-mapper";
 import { SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 
 function MonthlyListPage() {
-  // 월간 피드백 리스트 조회
+  // 월간 비비드 리스트 조회
   const {
-    data: monthlyFeedbackList = [],
+    data: monthlyVividList = [],
     isLoading: isLoadingMonthly,
     error: monthlyError,
     refetch: refetchMonthly,
-  } = useGetMonthlyFeedbackList(true);
+  } = useMonthlyVividList(true);
 
-  // 월간 피드백을 PeriodSummary로 변환
+  // 월간 비비드을 PeriodSummary로 변환
   const monthlySummaries = useMemo(() => {
-    return monthlyFeedbackList.map(convertMonthlyFeedbackToPeriodSummary);
-  }, [monthlyFeedbackList]);
+    return monthlyVividList.map(convertMonthlyVividToPeriodSummary);
+  }, [monthlyVividList]);
 
   return (
     <div

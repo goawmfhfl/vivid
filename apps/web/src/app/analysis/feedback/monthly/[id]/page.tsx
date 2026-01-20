@@ -1,6 +1,6 @@
 "use client";
 
-import { MonthlyFeedbackView } from "@/components/monthlyFeedback/MonthlyFeedbackView";
+import { MonthlyVividView } from "@/components/monthlyVivid/MonthlyVividView";
 import { useRouter, useParams } from "next/navigation";
 
 export default function MonthlyViewPage() {
@@ -12,5 +12,5 @@ export default function MonthlyViewPage() {
     router.push("/reports/monthly");
   };
 
-  return <MonthlyFeedbackView id={id} onBack={handleBack} />;
+  return <MonthlyVividView id={id} onBack={handleBack} />;
 }

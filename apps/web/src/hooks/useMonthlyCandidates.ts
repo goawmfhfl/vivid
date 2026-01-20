@@ -9,7 +9,7 @@ import type { MonthlyCandidate } from "@/types/monthly-candidate";
 const fetchMonthlyCandidates = async (): Promise<MonthlyCandidate[]> => {
   const userId = await getCurrentUserId();
 
-  const res = await fetch(`/api/monthly-feedback/candidates?userId=${userId}`);
+  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}`);
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to fetch monthly candidates");

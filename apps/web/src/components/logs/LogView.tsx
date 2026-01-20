@@ -5,14 +5,14 @@ import { getLocalStartOfDay, parseISODateToLocalDate } from "./calendar-utils";
 import {
   useLogViewData,
   useSelectedDateRecords,
-  useHasDailyFeedback,
+  useHasDailyVivid,
   useDateLabels,
 } from "./useLogViewData";
 import { AppHeader } from "../common/AppHeader";
 import { CalendarSection } from "./CalendarSection";
 import { SelectedDateSection } from "./SelectedDateSection";
-import { DailyFeedbackButton } from "./DailyFeedbackButton";
-import { CreateDailyFeedbackButton } from "./CreateDailyFeedbackButton";
+import { DailyVividButton } from "./DailyVividButton";
+import { CreateDailyVividButton } from "./CreateDailyVividButton";
 import { EditRecordDialog } from "../home/EditRecordDialog";
 import { DeleteRecordDialog } from "../home/DeleteRecordDialog";
 import { type Record } from "@/hooks/useRecords";
@@ -35,14 +35,14 @@ export function LogView({ onSelectDate }: LogViewProps) {
   const currentYear = selectedMonth.getFullYear();
   const currentMonth = selectedMonth.getMonth() + 1;
 
-  const { records, dailyFeedbackDates, logs, isLoading } = useLogViewData(
+  const { records, dailyVividDates, logs, isLoading } = useLogViewData(
     currentYear,
     currentMonth
   );
 
   const selectedDateRecords = useSelectedDateRecords(records, selectedDate);
-  const hasDailyFeedback = useHasDailyFeedback(
-    dailyFeedbackDates,
+  const hasDailyVivid = useHasDailyVivid(
+    dailyVividDates,
     selectedDate
   );
   const { isToday, selectedDateLabel, selectedMonthLabel } = useDateLabels(
@@ -117,11 +117,11 @@ export function LogView({ onSelectDate }: LogViewProps) {
           onDelete={handleDelete}
         />
 
-        {hasDailyFeedback ? (
-          <DailyFeedbackButton selectedDate={selectedDate} />
+        {hasDailyVivid ? (
+          <DailyVividButton selectedDate={selectedDate} />
         ) : (
           selectedDateRecords.length > 0 && (
-            <CreateDailyFeedbackButton selectedDate={selectedDate} />
+            <CreateDailyVividButton selectedDate={selectedDate} />
           )
         )}
       </div>

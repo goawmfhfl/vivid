@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
-import { useWeeklyFeedbackDetail } from "@/hooks/useWeeklyFeedback";
+import { useWeeklyVividDetail } from "@/hooks/useWeeklyVivid";
 import { useSubscription } from "@/hooks/useSubscription";
-import { WeeklyFeedbackReport } from "@/components/weeklyFeedback/WeeklyFeedbackReport";
-import { WeeklyFeedbackLoadingState } from "@/components/weeklyFeedback/LoadingState";
-import { WeeklyFeedbackErrorState } from "@/components/weeklyFeedback/ErrorState";
-import { WeeklyFeedbackEmptyState } from "@/components/weeklyFeedback/EmptyState";
-import { mapWeeklyFeedbackToReportData } from "@/components/weeklyFeedback/weekly-feedback-mapper";
+import { WeeklyVividReport } from "@/components/weeklyVivid/WeeklyVividReport";
+import { WeeklyVividLoadingState } from "@/components/weeklyVivid/LoadingState";
+import { WeeklyVividErrorState } from "@/components/weeklyVivid/ErrorState";
+import { WeeklyVividEmptyState } from "@/components/weeklyVivid/EmptyState";
+import { mapWeeklyVividToReportData } from "@/components/weeklyVivid/weekly-vivid-mapper";
 
 export default function WeeklyViewPage({
   params,
@@ -19,13 +19,13 @@ export default function WeeklyViewPage({
   const router = useRouter();
   const resolvedParams = use(params);
 
-  // useWeeklyFeedbackDetail 훅을 사용하여 서버에서 데이터 가져오기
+  // useWeeklyVividDetail 훅을 사용하여 서버에서 데이터 가져오기
   const {
-    data: weeklyFeedback,
+    data: weeklyVivid,
     isLoading,
     error,
     refetch,
-  } = useWeeklyFeedbackDetail(resolvedParams.id);
+  } = useWeeklyVividDetail(resolvedParams.id);
 
   const { isPro: subscriptionIsPro } = useSubscription();
   const [testIsPro, setTestIsPro] = useState<boolean | null>(null);
@@ -39,13 +39,13 @@ export default function WeeklyViewPage({
 
   // 로딩 상태
   if (isLoading) {
-    return <WeeklyFeedbackLoadingState />;
+    return <WeeklyVividLoadingState />;
   }
 
   // 에러 상태
   if (error) {
     return (
-      <WeeklyFeedbackErrorState
+      <WeeklyVividErrorState
         error={
           error instanceof Error
             ? error.message
@@ -58,15 +58,15 @@ export default function WeeklyViewPage({
   }
 
   // 데이터가 없는 경우
-  if (!weeklyFeedback) {
-    return <WeeklyFeedbackEmptyState onBack={handleBack} />;
+  if (!weeklyVivid) {
+    return <WeeklyVividEmptyState onBack={handleBack} />;
   }
 
-  // WeeklyFeedback을 WeeklyReportData로 변환
-  const reportData = mapWeeklyFeedbackToReportData(weeklyFeedback);
+  // WeeklyVivid를 WeeklyReportData로 변환
+  const reportData = mapWeeklyVividToReportData(weeklyVivid);
 
   return (
-    <WeeklyFeedbackReport
+    <WeeklyVividReport
       data={reportData}
       onBack={handleBack}
       isPro={isPro}

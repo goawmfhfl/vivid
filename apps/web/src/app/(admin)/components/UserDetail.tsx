@@ -1067,7 +1067,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   className="text-2xl font-bold"
                   style={{ color: COLORS.text.primary }}
                 >
-                  {user.stats.daily_feedback_count.toLocaleString()}
+                  {user.stats.daily_vivid_count.toLocaleString()}
                 </p>
               </div>
               <div
@@ -1084,7 +1084,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   className="text-2xl font-bold"
                   style={{ color: COLORS.text.primary }}
                 >
-                  {user.stats.weekly_feedback_count.toLocaleString()}
+                  {user.stats.weekly_vivid_count.toLocaleString()}
                 </p>
               </div>
               <div
@@ -1095,13 +1095,13 @@ export function UserDetail({ userId }: UserDetailProps) {
                   className="text-xs font-medium mb-1"
                   style={{ color: COLORS.text.secondary }}
                 >
-                  Monthly Feedback
+                  Monthly Vivid
                 </p>
                 <p
                   className="text-2xl font-bold"
                   style={{ color: COLORS.text.primary }}
                 >
-                  {user.stats.monthly_feedback_count.toLocaleString()}
+                  {user.stats.monthly_vivid_count.toLocaleString()}
                 </p>
               </div>
             </div>

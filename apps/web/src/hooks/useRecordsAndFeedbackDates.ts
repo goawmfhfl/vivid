@@ -31,7 +31,7 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
 
   // AI 피드백 날짜 조회 (is_ai_generated = true만)
   const { data: feedbacks, error: feedbackError } = await supabase
-    .from(API_ENDPOINTS.DAILY_FEEDBACK)
+    .from(API_ENDPOINTS.DAILY_VIVID)
     .select("report_date")
     .eq("user_id", userId)
     .eq("is_ai_generated", true)

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PeriodSummary } from "@/types/Entry";
 import { useMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
-import { filterMonthlyCandidatesForCreation } from "../monthlyFeedback/monthly-candidate-filter";
+import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivid-candidate-filter";
 import { SummaryList } from "./SummaryList";
 import { MonthlyCandidatesSection } from "./MonthlyCandidatesSection";
 import { EmptyState } from "./EmptyState";

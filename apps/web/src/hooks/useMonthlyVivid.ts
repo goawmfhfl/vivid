@@ -1,0 +1,96 @@
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUserId } from "./useCurrentUser";
+import { QUERY_KEYS } from "@/constants";
+import type {
+  MonthlyVividListItem,
+} from "@/types/monthly-vivid";
+import type { MonthlyVivid } from "@/types/monthly-vivid";
+
+/**
+ * 월간 vivid 조회 (month 기반)
+ */
+export function useMonthlyVivid(month: string | null) {
+  return useQuery<MonthlyVivid | null>({
+    queryKey: [QUERY_KEYS.MONTHLY_VIVID, month],
+    queryFn: async () => {
+      if (!month) return null;
+
+      const userId = await getCurrentUserId();
+      const response = await fetch(
+        `/api/monthly-vivid/list?userId=${userId}`
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch monthly vivid list: ${response.statusText}`
+        );
+      }
+
+      const result = await response.json();
+      const monthlyVivid = result.data.find(
+        (item: MonthlyVividListItem) => item.month === month
+      );
+
+      if (!monthlyVivid) {
+        return null;
+      }
+
+      // 상세 조회
+      const detailResponse = await fetch(
+        `/api/monthly-vivid/${monthlyVivid.id}?userId=${userId}`
+      );
+      if (!detailResponse.ok) {
+        throw new Error("Failed to fetch monthly vivid detail");
+      }
+
+      const detailResult = await detailResponse.json();
+      return detailResult.data as MonthlyVivid;
+    },
+    enabled: !!month,
+  });
+}
+
+/**
+ * 월간 vivid 조회 (id 기반)
+ */
+export function useMonthlyVividById(id: string | null) {
+  return useQuery<MonthlyVivid | null>({
+    queryKey: [QUERY_KEYS.MONTHLY_VIVID, "id", id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      const userId = await getCurrentUserId();
+      const response = await fetch(
+        `/api/monthly-vivid/${id}?userId=${userId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch monthly vivid");
+      }
+
+      const result = await response.json();
+      return result.data as MonthlyVivid;
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * 월간 vivid 리스트 조회
+ */
+export function useMonthlyVividList(enabled: boolean = true) {
+  return useQuery<MonthlyVividListItem[]>({
+    queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
+    queryFn: async () => {
+      const userId = await getCurrentUserId();
+      const response = await fetch(
+        `/api/monthly-vivid/list?userId=${userId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch monthly vivid list");
+      }
+
+      const result = await response.json();
+      return result.data as MonthlyVividListItem[];
+    },
+    enabled, // enabled 파라미터로 조건부 조회 제어
+  });
+}

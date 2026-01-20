@@ -44,24 +44,24 @@ export async function GET(
     // 통계 조회 (개수만, 내용은 조회하지 않음)
     const [
       recordsCount,
-      dailyFeedbackCount,
-      weeklyFeedbackCount,
-      monthlyFeedbackCount,
+      dailyVividCount,
+      weeklyVividCount,
+      monthlyVividCount,
     ] = await Promise.all([
       supabase
         .from("records")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId),
       supabase
-        .from("daily_feedback")
+        .from("daily_vivid")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId),
       supabase
-        .from("weekly_feedback")
+        .from("weekly_vivid")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId),
       supabase
-        .from("monthly_feedback")
+        .from("monthly_vivid")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId),
     ]);
@@ -90,9 +90,9 @@ export async function GET(
         : undefined,
       stats: {
         records_count: recordsCount.count || 0,
-        daily_feedback_count: dailyFeedbackCount.count || 0,
-        weekly_feedback_count: weeklyFeedbackCount.count || 0,
-        monthly_feedback_count: monthlyFeedbackCount.count || 0,
+        daily_vivid_count: dailyVividCount.count || 0,
+        weekly_vivid_count: weeklyVividCount.count || 0,
+      monthly_vivid_count: monthlyVividCount.count || 0,
       },
     };
 

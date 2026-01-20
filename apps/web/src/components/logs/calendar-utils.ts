@@ -1,6 +1,6 @@
 export type CalendarLogMap = Record<
   string,
-  { hasLog: boolean; hasDailyFeedback: boolean }
+  { hasLog: boolean; hasDailyVivid: boolean }
 >;
 
 export function getCalendarMatrix(

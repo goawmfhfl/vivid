@@ -4,14 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
-import { useCreateWeeklyFeedback } from "@/hooks/useWeeklyFeedback";
+import { useCreateWeeklyVivid } from "@/hooks/useWeeklyVivid";
 import { QUERY_KEYS } from "@/constants";
-import { filterWeeklyCandidatesForCreation } from "../weeklyFeedback/weekly-candidate-filter";
+import { filterWeeklyCandidatesForCreation } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useAIRequestStore } from "@/store/useAIRequestStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
-import { getMondayOfWeek } from "../weeklyFeedback/weekly-candidate-filter";
+import { getMondayOfWeek } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -251,13 +251,13 @@ export function WeeklyCandidatesSection() {
   const { data: candidates = [], isLoading } = useWeeklyCandidates();
   const [generatingWeek, setGeneratingWeek] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const createWeeklyFeedback = useCreateWeeklyFeedback();
+  const createWeeklyVivid = useCreateWeeklyVivid();
   const { requests, openModal } = useAIRequestStore();
   const { isTest } = useEnvironment();
   const {
-    weeklyFeedbackProgress,
-    setWeeklyFeedbackProgress,
-    clearWeeklyFeedbackProgress,
+    weeklyVividProgress,
+    setWeeklyVividProgress,
+    clearWeeklyVividProgress,
     weeklyCandidatesDropdown,
     toggleWeeklyCandidatesDropdown,
     openErrorModal,
@@ -367,7 +367,7 @@ export function WeeklyCandidatesSection() {
     timerIntervalsRef.current[weekStart] = interval;
 
     // 진행 상황 초기화 (전역 상태)
-    setWeeklyFeedbackProgress(weekStart, {
+    setWeeklyVividProgress(weekStart, {
       weekStart,
       current: 0,
       total: 2,
@@ -378,7 +378,7 @@ export function WeeklyCandidatesSection() {
       const weekEnd = getWeekEnd(weekStart);
 
       // 일반 API 호출
-      const feedbackData = await createWeeklyFeedback.mutateAsync({
+      const feedbackData = await createWeeklyVivid.mutateAsync({
         start: weekStart,
         end: weekEnd,
         timezone: "Asia/Seoul",
@@ -388,14 +388,14 @@ export function WeeklyCandidatesSection() {
       clearTimer(weekStart);
 
       // 진행 상황 완료 (100%로 설정)
-      setWeeklyFeedbackProgress(weekStart, {
+      setWeeklyVividProgress(weekStart, {
         weekStart,
         current: 2,
         total: 2,
         currentStep: "완료",
       });
 
-        // WEEKLY_CANDIDATES에서 해당 주의 weekly_feedback_id 업데이트
+        // WEEKLY_CANDIDATES에서 해당 주의 weekly_vivid_id 업데이트
         if (feedbackData.id) {
           const weekStartDate = new Date(feedbackData.week_range.start);
           const weekStartDateObj = getMondayOfWeek(weekStartDate);
@@ -408,7 +408,7 @@ export function WeeklyCandidatesSection() {
               if (candidate.week_start === weekStartStr) {
                 return {
                   ...candidate,
-                  weekly_feedback_id: feedbackData.id
+                  weekly_vivid_id: feedbackData.id
                     ? parseInt(feedbackData.id, 10)
                     : null,
                   is_ai_generated: feedbackData.is_ai_generated ?? true,
@@ -420,7 +420,7 @@ export function WeeklyCandidatesSection() {
 
           // 주간 피드백 리스트 무효화하여 최신 데이터 가져오기
           queryClient.invalidateQueries({
-            queryKey: [QUERY_KEYS.WEEKLY_FEEDBACK, "list"],
+            queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
           });
 
           // 성공 시 전역 모달로 알림 및 라우팅
@@ -434,7 +434,7 @@ export function WeeklyCandidatesSection() {
         }
 
       // 진행 상황 초기화
-      clearWeeklyFeedbackProgress(weekStart);
+      clearWeeklyVividProgress(weekStart);
     } catch (error) {
       console.error("주간 vivid 생성 실패:", error);
 
@@ -442,7 +442,7 @@ export function WeeklyCandidatesSection() {
       clearTimer(weekStart);
 
       // 진행 상황 초기화 (전역 상태)
-      clearWeeklyFeedbackProgress(weekStart);
+      clearWeeklyVividProgress(weekStart);
 
       // 에러 메시지 추출
       const errorMessage =
@@ -550,7 +550,7 @@ export function WeeklyCandidatesSection() {
               key={candidate.week_start}
               candidate={candidate}
               generatingWeek={generatingWeek}
-              progress={weeklyFeedbackProgress[candidate.week_start] || null}
+              progress={weeklyVividProgress[candidate.week_start] || null}
               timerProgress={timerProgress}
               handleCreateFeedback={handleCreateFeedback}
               getWeekRange={getWeekRange}

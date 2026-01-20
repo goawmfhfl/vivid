@@ -5,23 +5,23 @@ import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { WeeklySummariesTab } from "@/components/summaries/WeeklySummariesTab";
-import { useWeeklyFeedbackList } from "@/hooks/useWeeklyFeedback";
-import type { WeeklyFeedbackListItem } from "@/types/weekly-feedback";
+import { useWeeklyVividList } from "@/hooks/useWeeklyVivid";
+import type { WeeklyVividListItem } from "@/types/weekly-vivid";
 import type { PeriodSummary } from "@/types/Entry";
 import {
   formatDateRange,
   formatPeriod,
-  createPeriodSummaryFromWeeklyFeedback,
+  createPeriodSummaryFromWeeklyVivid,
   calculateWeekNumberInMonth,
-} from "@/components/summaries/weekly-feedback-mapper";
+} from "@/components/summaries/weekly-vivid-mapper";
 import { SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 
 /**
- * 주간 피드백 리스트 아이템을 PeriodSummary로 변환
+ * 주간 비비드 리스트 아이템을 PeriodSummary로 변환
  */
-function convertWeeklyFeedbackToPeriodSummary(
-  item: WeeklyFeedbackListItem
+function convertWeeklyVividToPeriodSummary(
+  item: WeeklyVividListItem
 ): PeriodSummary {
   const startDate = new Date(item.week_range.start);
   const endDate = new Date(item.week_range.end);
@@ -35,7 +35,7 @@ function convertWeeklyFeedbackToPeriodSummary(
   
   const title = item.title;
 
-  return createPeriodSummaryFromWeeklyFeedback({
+  return createPeriodSummaryFromWeeklyVivid({
     item,
     weekNumber,
     year,
@@ -49,16 +49,16 @@ function WeeklyListPage() {
 
   // 주간 피드백 리스트 조회
   const {
-    data: weeklyFeedbackList = [],
+    data: weeklyVividList = [],
     isLoading: isLoadingWeekly,
     error: weeklyError,
     refetch: refetchWeekly,
-  } = useWeeklyFeedbackList();
+  } = useWeeklyVividList();
 
   // 주간 피드백을 PeriodSummary로 변환
   const weeklySummaries = useMemo(() => {
-    return weeklyFeedbackList.map(convertWeeklyFeedbackToPeriodSummary);
-  }, [weeklyFeedbackList]);
+    return weeklyVividList.map(convertWeeklyVividToPeriodSummary);
+  }, [weeklyVividList]);
 
   return (
     <div

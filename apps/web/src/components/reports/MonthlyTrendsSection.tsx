@@ -9,7 +9,7 @@ import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { FeedbackCard } from "@/components/ui/FeedbackCard";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import type { MonthlyTrendsResponse } from "@/types/monthly-feedback-new";
+import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 import { useSubscription } from "@/hooks/useSubscription";
 
 interface MonthlyTrendsSectionProps {

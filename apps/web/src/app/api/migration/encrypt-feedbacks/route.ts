@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import {
   encryptJsonbFields,
-  encryptDailyFeedback,
+  encryptDailyVivid,
 } from "@/lib/jsonb-encryption";
 import { isEncrypted } from "@/lib/encryption";
 import { API_ENDPOINTS } from "@/constants";
@@ -40,7 +40,7 @@ function isJsonbEncrypted(obj: JsonbValue): boolean {
 }
 
 /**
- * POST 핸들러: 기존 Weekly/Monthly Feedback 데이터 암호화 마이그레이션
+ * POST 핸들러: 기존 Weekly/Monthly Vivid 데이터 암호화 마이그레이션
  *
  * 개발/테스트 환경에서만 사용 가능
  */
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       error: string;
     }> = [];
 
-    // Daily Feedback 마이그레이션
+    // Daily Vivid 마이그레이션
     if (
       tableType === "daily" ||
       tableType === "all" ||
@@ -113,10 +113,8 @@ export async function POST(request: NextRequest) {
       let offset = 0;
       let hasMore = true;
       let query = supabase
-        .from(API_ENDPOINTS.DAILY_FEEDBACK)
-        .select(
-          "id, emotion_overview, narrative_overview, insight_overview, vision_overview, feedback_overview, meta_overview, user_id"
-        );
+        .from(API_ENDPOINTS.DAILY_VIVID)
+        .select("id, report, trend, user_id");
 
       if (userId) {
         query = query.eq("user_id", userId);
@@ -129,7 +127,7 @@ export async function POST(request: NextRequest) {
 
         if (fetchError) {
           throw new Error(
-            `Failed to fetch daily feedbacks: ${fetchError.message}`
+            `Failed to fetch daily vivid: ${fetchError.message}`
           );
         }
 
@@ -144,12 +142,8 @@ export async function POST(request: NextRequest) {
           try {
             // 이미 암호화된 데이터인지 확인
             const isAlreadyEncrypted =
-              isJsonbEncrypted(feedback.emotion_overview) ||
-              isJsonbEncrypted(feedback.narrative_overview) ||
-              isJsonbEncrypted(feedback.insight_overview) ||
-              isJsonbEncrypted(feedback.vision_overview) ||
-              isJsonbEncrypted(feedback.feedback_overview) ||
-              isJsonbEncrypted(feedback.meta_overview);
+              isJsonbEncrypted(feedback.report) ||
+              isJsonbEncrypted(feedback.trend);
 
             if (isAlreadyEncrypted) {
               stats.daily.totalSkipped++;
@@ -163,18 +157,14 @@ export async function POST(request: NextRequest) {
             }
 
             // 암호화
-            const encryptedData = encryptDailyFeedback({
-              emotion_overview: feedback.emotion_overview,
-              narrative_overview: feedback.narrative_overview,
-              insight_overview: feedback.insight_overview,
-              vision_overview: feedback.vision_overview,
-              feedback_overview: feedback.feedback_overview,
-              meta_overview: feedback.meta_overview,
+            const encryptedData = encryptDailyVivid({
+              report: feedback.report,
+              trend: feedback.trend,
             });
 
             // 업데이트
             const { error: updateError } = await supabase
-              .from(API_ENDPOINTS.DAILY_FEEDBACK)
+              .from(API_ENDPOINTS.DAILY_VIVID)
               .update(encryptedData)
               .eq("id", feedback.id);
 
@@ -188,12 +178,12 @@ export async function POST(request: NextRequest) {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
             errors.push({
-              table: "daily_feedback",
+              table: "daily_vivid",
               id: String(feedback.id),
               error: errorMessage,
             });
             console.error(
-              `Error encrypting daily feedback ${feedback.id}:`,
+              `Error encrypting daily vivid ${feedback.id}:`,
               error
             );
           }
@@ -214,7 +204,7 @@ export async function POST(request: NextRequest) {
       let offset = 0;
       let hasMore = true;
       let query = supabase
-        .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+        .from(API_ENDPOINTS.WEEKLY_VIVID)
         .select(
           "id, weekly_overview, emotion_overview, growth_trends, insight_replay, vision_visualization_report, execution_reflection, closing_section, user_id"
         );
@@ -283,7 +273,7 @@ export async function POST(request: NextRequest) {
 
             // 업데이트
             const { error: updateError } = await supabase
-              .from(API_ENDPOINTS.WEEKLY_FEEDBACKS)
+              .from(API_ENDPOINTS.WEEKLY_VIVID)
               .update(encryptedData)
               .eq("id", feedback.id);
 
@@ -297,7 +287,7 @@ export async function POST(request: NextRequest) {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
             errors.push({
-              table: "weekly_feedback",
+              table: "weekly_vivid",
               id: String(feedback.id),
               error: errorMessage,
             });
@@ -313,7 +303,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Monthly Feedback 마이그레이션
+    // Monthly Vivid 마이그레이션
     if (
       tableType === "monthly" ||
       tableType === "both" ||
@@ -323,7 +313,7 @@ export async function POST(request: NextRequest) {
       let offset = 0;
       let hasMore = true;
       let query = supabase
-        .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
+        .from(API_ENDPOINTS.MONTHLY_VIVID)
         .select(
           "id, summary_overview, emotion_overview, insight_overview, feedback_overview, vision_overview, conclusion_overview, user_id"
         );
@@ -339,7 +329,7 @@ export async function POST(request: NextRequest) {
 
         if (fetchError) {
           throw new Error(
-            `Failed to fetch monthly feedbacks: ${fetchError.message}`
+            `Failed to fetch monthly vivids: ${fetchError.message}`
           );
         }
 
@@ -386,7 +376,7 @@ export async function POST(request: NextRequest) {
 
             // 업데이트
             const { error: updateError } = await supabase
-              .from(API_ENDPOINTS.MONTHLY_FEEDBACK)
+              .from(API_ENDPOINTS.MONTHLY_VIVID)
               .update(encryptedData)
               .eq("id", feedback.id);
 
@@ -400,12 +390,12 @@ export async function POST(request: NextRequest) {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
             errors.push({
-              table: "monthly_feedback",
+              table: "monthly_vivid",
               id: String(feedback.id),
               error: errorMessage,
             });
             console.error(
-              `Error encrypting monthly feedback ${feedback.id}:`,
+              `Error encrypting monthly vivid ${feedback.id}:`,
               error
             );
           }

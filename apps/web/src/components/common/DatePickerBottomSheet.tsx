@@ -140,7 +140,7 @@ export function DatePickerBottomSheet({
         <motion.div
           key="date-picker-sheet"
           data-date-picker-sheet
-          className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden max-w-md mx-auto"
+          className="fixed bottom-0 left-0 right-0 z-[120] rounded-t-3xl overflow-hidden max-w-md mx-auto"
           initial={{ y: "100%", opacity: 0 }}
           animate={{ y: 0, opacity: 1, pointerEvents: "auto" }}
           exit={{ y: "100%", opacity: 0, pointerEvents: "none" }}

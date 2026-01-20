@@ -17,16 +17,16 @@ import {
 } from "recharts";
 
 interface ContentStats {
-  daily_feedback: {
+  daily_vivid: {
     by_day: Array<{ date: string; count: number }>;
     by_week: Array<{ week: string; count: number }>;
     by_month: Array<{ month: string; count: number }>;
   };
-  weekly_feedback: {
+  weekly_vivid: {
     by_week: Array<{ week: string; count: number }>;
     by_month: Array<{ month: string; count: number }>;
   };
-  monthly_feedback: {
+  monthly_vivid: {
     by_month: Array<{ month: string; count: number }>;
   };
 }
@@ -87,15 +87,15 @@ export function ContentStatsPage() {
   }
 
   // 통계 요약 계산
-  const totalDaily = stats.daily_feedback.by_day.reduce(
+  const totalDaily = stats.daily_vivid.by_day.reduce(
     (sum, item) => sum + item.count,
     0
   );
-  const totalWeekly = stats.weekly_feedback.by_week.reduce(
+  const totalWeekly = stats.weekly_vivid.by_week.reduce(
     (sum, item) => sum + item.count,
     0
   );
-  const totalMonthly = stats.monthly_feedback.by_month.reduce(
+  const totalMonthly = stats.monthly_vivid.by_month.reduce(
     (sum, item) => sum + item.count,
     0
   );
@@ -103,7 +103,7 @@ export function ContentStatsPage() {
   // 차트 데이터 준비
   const getDailyChartData = () => {
     if (period === "day") {
-      return stats.daily_feedback.by_day.map((item) => ({
+      return stats.daily_vivid.by_day.map((item) => ({
         date: new Date(item.date).toLocaleDateString("ko-KR", {
           month: "short",
           day: "numeric",
@@ -111,12 +111,12 @@ export function ContentStatsPage() {
         count: item.count,
       }));
     } else if (period === "week") {
-      return stats.daily_feedback.by_week.map((item) => ({
+      return stats.daily_vivid.by_week.map((item) => ({
         week: item.week,
         count: item.count,
       }));
     } else {
-      return stats.daily_feedback.by_month.map((item) => ({
+      return stats.daily_vivid.by_month.map((item) => ({
         month: item.month,
         count: item.count,
       }));
@@ -125,12 +125,12 @@ export function ContentStatsPage() {
 
   const getWeeklyChartData = () => {
     if (period === "week") {
-      return stats.weekly_feedback.by_week.map((item) => ({
+      return stats.weekly_vivid.by_week.map((item) => ({
         week: item.week,
         count: item.count,
       }));
     } else {
-      return stats.weekly_feedback.by_month.map((item) => ({
+      return stats.weekly_vivid.by_month.map((item) => ({
         month: item.month,
         count: item.count,
       }));
@@ -138,7 +138,7 @@ export function ContentStatsPage() {
   };
 
   const getMonthlyChartData = () => {
-    return stats.monthly_feedback.by_month.map((item) => ({
+    return stats.monthly_vivid.by_month.map((item) => ({
       month: item.month,
       count: item.count,
     }));
@@ -287,7 +287,7 @@ export function ContentStatsPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* 월간 피드백 차트 */}
+      {/* 월간 비비드 차트 */}
       <div
         className="rounded-xl p-6"
         style={{

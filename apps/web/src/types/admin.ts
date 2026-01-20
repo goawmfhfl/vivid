@@ -42,9 +42,9 @@ export interface UserDetail extends UserListItem {
   gender: string | null;
   stats?: {
     records_count: number;
-    daily_feedback_count: number;
-    weekly_feedback_count: number;
-    monthly_feedback_count: number;
+    daily_vivid_count: number;
+    weekly_vivid_count: number;
+    monthly_vivid_count: number;
   };
 }
 
