@@ -3,6 +3,13 @@ import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
 
 // Record 타입 정의
+export interface EmotionRecordPayload {
+  intensity: number;
+  keywords: string[];
+  factors: string[];
+  reasonText?: string | null;
+}
+
 export interface Record {
   id: number;
   user_id: string;
@@ -10,6 +17,7 @@ export interface Record {
   created_at: string;
   kst_date: string;
   type?: string | null;
+  emotion?: EmotionRecordPayload | null;
 }
 
 // Record 생성 데이터 타입
@@ -17,12 +25,14 @@ export interface CreateRecordData {
   content: string;
   type: string;
   kst_date?: string; // YYYY-MM-DD 형식, 선택적
+  emotion?: EmotionRecordPayload;
 }
 
 // Record 업데이트 데이터 타입
 export interface UpdateRecordData {
   content?: string;
   type?: string;
+  emotion?: EmotionRecordPayload;
 }
 
 // 커스텀 에러 클래스
@@ -95,6 +105,7 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
       body: JSON.stringify({
         content: data.content,
         type: data.type,
+        emotion: data.emotion,
         ...(data.kst_date && { kst_date: data.kst_date }),
       }),
     });

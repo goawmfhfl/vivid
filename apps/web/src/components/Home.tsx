@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
+import { type RecordType } from "./signup/RecordTypeCard";
 import { RecordForm } from "./home/RecordForm";
 import { RecordList } from "./home/RecordList";
 import { EditRecordDialog } from "./home/EditRecordDialog";
@@ -24,6 +25,8 @@ interface HomeProps {
 
 export function Home({ selectedDate }: HomeProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const {
     data: allRecords = [],
@@ -35,6 +38,41 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
+  const [activeRecordType, setActiveRecordType] = useState<RecordType | null>(
+    null
+  );
+  const searchParamsString = searchParams.toString();
+  const initialRecordType = useMemo(() => {
+    const typeParam = searchParams.get("type");
+    if (typeParam === "emotion") {
+      return "emotion";
+    }
+    if (typeParam === "vivid") {
+      return "dream";
+    }
+    return null;
+  }, [searchParamsString, searchParams]);
+
+  useEffect(() => {
+    if (initialRecordType && activeRecordType === null) {
+      setActiveRecordType(initialRecordType);
+    }
+  }, [initialRecordType, activeRecordType]);
+
+  const handleTypeChange = useCallback(
+    (type: RecordType | null) => {
+      setActiveRecordType(type);
+      const params = new URLSearchParams(searchParamsString);
+      if (type) {
+        params.set("type", type === "dream" ? "vivid" : type);
+      } else {
+        params.delete("type");
+      }
+      const nextQuery = params.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    },
+    [router, pathname, searchParamsString]
+  );
   const createDailyVivid = useCreateDailyVivid();
 
   // KST 기준으로 오늘 날짜 계산
@@ -175,6 +213,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
 
   const handleOpenDailyVivid = async () => {
+    // TODO: 감정 타입 선택 시 emotion_records 기반 플로우로 분기 예정
     try {
       if (hasDateFeedback) {
         // 기존 피드백이 있으면 id로 라우팅
@@ -259,6 +298,28 @@ export function Home({ selectedDate }: HomeProps = {}) {
     }
   };
 
+  const getPrimaryButtonLabel = () => {
+    const isEmotion = activeRecordType === "emotion";
+    const baseLabel = isEmotion ? "감정" : "VIVID";
+
+    if (progress || timerProgress !== null) {
+      return `${baseLabel} 생성 중...`;
+    }
+
+    if (hasDateFeedback) {
+      if (isToday) {
+        return `오늘의 ${baseLabel} 보기`;
+      }
+      return `${baseLabel} 보기`;
+    }
+
+    if (isToday) {
+      return `오늘의 ${baseLabel} 생성하기`;
+    }
+
+    return `${baseLabel} 생성하기`;
+  };
+
   return (
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
@@ -282,7 +343,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
         isLoading={isLoadingDates}
       />
 
-      <RecordForm selectedDate={activeDate} />
+      <RecordForm
+        selectedDate={activeDate}
+        onTypeChange={handleTypeChange}
+        initialType={initialRecordType}
+      />
       <RecordList
         records={allRecords}
         isLoading={isLoading}
@@ -291,6 +356,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         onDelete={handleDelete}
         onRetry={() => refetchRecords()}
         selectedDate={activeDate}
+        activeRecordType={activeRecordType}
       />
 
       {hasDateRecords && (
@@ -401,15 +467,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                     lineHeight: "1.2",
                   }}
                 >
-                  {(progress || timerProgress !== null)
-                    ? "VIVID 생성 중..."
-                    : hasDateFeedback
-                    ? isToday
-                      ? "오늘의 VIVID 보기"
-                      : "VIVID 보기"
-                    : isToday
-                    ? "오늘의 VIVID 생성하기"
-                    : "VIVID 생성하기"}
+                  {getPrimaryButtonLabel()}
                 </span>
               </div>
             </div>

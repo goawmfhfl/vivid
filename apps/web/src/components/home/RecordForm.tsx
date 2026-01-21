@@ -13,25 +13,49 @@ import {
 } from "../signup/RecordTypeCard";
 import { Timer } from "./Timer";
 import { useTimer } from "@/hooks/useTimer";
+import { useToast } from "@/hooks/useToast";
+import { cn } from "@/lib/utils";
+import {
+  getEmotionIntensityLabel,
+  type EmotionIntensity,
+} from "@/lib/emotion-data";
+import { EmotionIntensityPicker } from "@/components/emotion/EmotionIntensityPicker";
+import { EmotionKeywordPicker } from "@/components/emotion/EmotionKeywordPicker";
+import { EmotionFactorPicker } from "@/components/emotion/EmotionFactorPicker";
+import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
+import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
 
 interface RecordFormProps {
   onSuccess?: () => void;
   selectedDate?: string; // YYYY-MM-DD
+  onTypeChange?: (type: RecordType | null) => void;
+  initialType?: RecordType | null;
 }
 
 const STORAGE_KEY = "record-form-draft";
 const STORAGE_KEY_Q1 = "record-form-draft-q1";
 const STORAGE_KEY_Q2 = "record-form-draft-q2";
 
-export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
+export function RecordForm({
+  onSuccess,
+  selectedDate,
+  onTypeChange,
+  initialType,
+}: RecordFormProps) {
   const [content, setContent] = useState("");
   const [q1Content, setQ1Content] = useState("");
   const [q2Content, setQ2Content] = useState("");
+  const [emotionIntensity, setEmotionIntensity] =
+    useState<EmotionIntensity | undefined>(4);
+  const [emotionKeywords, setEmotionKeywords] = useState<string[]>([]);
+  const [emotionFactors, setEmotionFactors] = useState<string[]>([]);
+  const [emotionReason, setEmotionReason] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
   const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasAppliedInitialTypeRef = useRef(false);
   const createRecordMutation = useCreateRecord();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollPositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -39,6 +63,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   const { data: currentUser } = useCurrentUser();
   const { subscription } = useSubscription();
   const { state: timerState } = useTimer();
+  const { showToast } = useToast();
 
   // 날짜 상태 계산
   const todayIso = getKSTDateString();
@@ -70,13 +95,29 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
   // 첫 번째 타입을 기본값으로 설정
   useEffect(() => {
     const allowedTypes = getAllowedRecordTypes();
-    if (allowedTypes.length > 0 && !selectedType) {
-      setSelectedType(allowedTypes[0] as RecordType);
-    } else if (selectedType && !allowedTypes.includes(selectedType)) {
+    if (!hasAppliedInitialTypeRef.current) {
+      if (initialType && allowedTypes.includes(initialType)) {
+        setSelectedType(initialType);
+        hasAppliedInitialTypeRef.current = true;
+        return;
+      }
+
+      if (allowedTypes.length > 0 && !selectedType) {
+        setSelectedType(allowedTypes[0] as RecordType);
+        hasAppliedInitialTypeRef.current = true;
+        return;
+      }
+    }
+
+    if (selectedType && !allowedTypes.includes(selectedType)) {
       // 현재 선택된 타입이 허용되지 않으면 첫 번째 타입으로 변경
       setSelectedType(allowedTypes[0] as RecordType);
     }
-  }, [getAllowedRecordTypes, selectedType]);
+  }, [getAllowedRecordTypes, selectedType, initialType]);
+
+  useEffect(() => {
+    onTypeChange?.(selectedType);
+  }, [onTypeChange, selectedType]);
 
   // localStorage에서 초기값 불러오기
   useEffect(() => {
@@ -309,9 +350,89 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
     }
   }, [q2Content]);
 
+  const handleToggleKeyword = (keyword: string) => {
+    setEmotionKeywords((prev) =>
+      prev.includes(keyword)
+        ? prev.filter((item) => item !== keyword)
+        : [...prev, keyword]
+    );
+  };
+
+  const handleIntensityChange = (value: EmotionIntensity) => {
+    setEmotionIntensity(value);
+    setEmotionKeywords([]);
+    setEmotionFactors([]);
+  };
+
+  const handleToggleFactor = (factor: string) => {
+    setEmotionFactors((prev) =>
+      prev.includes(factor)
+        ? prev.filter((item) => item !== factor)
+        : [...prev, factor]
+    );
+  };
+
+  const buildEmotionSummary = () => {
+    if (!emotionIntensity) return "";
+    const label = getEmotionIntensityLabel(emotionIntensity);
+    const keywordCount = emotionKeywords.length;
+    const factorCount = emotionFactors.length;
+    return `감정: ${label} · 키워드 ${keywordCount} · 요인 ${factorCount}`;
+  };
+
+  const handleEmotionSubmit = () => {
+    if (
+      !emotionIntensity ||
+      emotionKeywords.length === 0 ||
+      emotionFactors.length === 0 ||
+      isFuture ||
+      createRecordMutation.isPending
+    )
+      return;
+
+    const summary = buildEmotionSummary();
+    if (!summary) return;
+
+    createRecordMutation.mutate(
+      {
+        content: summary,
+        type: "emotion",
+        emotion: {
+          intensity: emotionIntensity,
+          keywords: emotionKeywords,
+          factors: emotionFactors,
+          reasonText: emotionReason.trim() || null,
+        },
+        ...(selectedDate && { kst_date: selectedDate }),
+      },
+      {
+        onSuccess: () => {
+          const message =
+            emotionReason.trim().length > 0
+              ? "오늘의 감정 단서가 저장됐어요."
+              : "감정은 저장됐어요. 다음엔 한 줄 남겨도 좋아요.";
+          showToast(message);
+          setEmotionIntensity(undefined);
+          setEmotionKeywords([]);
+          setEmotionFactors([]);
+          setEmotionReason("");
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error("감정 기록 생성 실패:", error.message);
+        },
+      }
+    );
+  };
+
   const handleSubmit = () => {
     if (isFuture) return;
     const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
+
+    if (recordType === "emotion") {
+      handleEmotionSubmit();
+      return;
+    }
     
     // dream 타입일 때는 2개의 질문을 포맷팅해서 합치기
     if (recordType === "dream") {
@@ -486,6 +607,12 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
 
   const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
   const availableTypes = getAllowedRecordTypes();
+
+  useEffect(() => {
+    if (recordType === "emotion" && !emotionIntensity) {
+      setEmotionIntensity(4);
+    }
+  }, [recordType, emotionIntensity]);
   
   // 프로젝트 기본 색상 (타입별 색상 변경 없이 고정)
   const defaultColors = {
@@ -571,69 +698,65 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
 
       <div className="mb-6">
         {/* 모던한 타입 라벨 - 텍스트에어리어 위쪽 */}
-        {recordType && (
-          <div
-            className={`mb-3 flex justify-between items-center relative ${
-              timerState.isRunning ? "hidden" : ""
-            }`}
-          >
+        {recordType && !timerState.isRunning && (
+          <div className="mb-3 flex justify-between items-center relative">
             {/* 타이머 */}
             <Timer />
-          <div
-            data-type-label
-            className="cursor-pointer inline-flex relative overflow-hidden"
-            onClick={() => setShowTypeSelector(!showTypeSelector)}
-            style={{
-              backgroundColor: defaultColors.background,
-              padding: "0.375rem 0.75rem",
-              borderRadius: "20px",
-              boxShadow: `
-                0 1px 3px rgba(0,0,0,0.08),
-                0 1px 2px rgba(0,0,0,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.6)
-              `,
-              border: `1px solid ${defaultColors.border}`,
-              transition: "all 0.2s ease",
-              // 종이 질감 배경 패턴
-              backgroundImage: `
-                /* 가로 줄무늬 */
-                repeating-linear-gradient(
-                  to bottom,
-                  transparent 0px,
-                  transparent 27px,
-                  ${defaultColors.lineColor} 27px,
-                  ${defaultColors.lineColor} 28px
-                ),
-                /* 종이 텍스처 노이즈 */
-                repeating-linear-gradient(
-                  45deg,
-                  transparent,
-                  transparent 2px,
-                  rgba(107, 122, 111, 0.01) 2px,
-                  rgba(107, 122, 111, 0.01) 4px
-                )
-              `,
-              backgroundSize: "100% 28px, 8px 8px",
-              backgroundPosition: "0 2px, 0 0",
-              filter: "contrast(1.02) brightness(1.01)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = `
-                0 2px 6px rgba(0,0,0,0.12),
-                0 1px 3px rgba(0,0,0,0.06),
-                inset 0 1px 0 rgba(255,255,255,0.6)
-              `;
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = `
-                0 1px 3px rgba(0,0,0,0.08),
-                0 1px 2px rgba(0,0,0,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.6)
-              `;
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
+            <div
+              data-type-label
+              className="cursor-pointer inline-flex relative overflow-hidden"
+              onClick={() => setShowTypeSelector(!showTypeSelector)}
+              style={{
+                backgroundColor: defaultColors.background,
+                padding: "0.375rem 0.75rem",
+                borderRadius: "20px",
+                boxShadow: `
+                  0 1px 3px rgba(0,0,0,0.08),
+                  0 1px 2px rgba(0,0,0,0.04),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `,
+                border: `1px solid ${defaultColors.border}`,
+                transition: "all 0.2s ease",
+                // 종이 질감 배경 패턴
+                backgroundImage: `
+                  /* 가로 줄무늬 */
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 27px,
+                    ${defaultColors.lineColor} 27px,
+                    ${defaultColors.lineColor} 28px
+                  ),
+                  /* 종이 텍스처 노이즈 */
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(107, 122, 111, 0.01) 2px,
+                    rgba(107, 122, 111, 0.01) 4px
+                  )
+                `,
+                backgroundSize: "100% 28px, 8px 8px",
+                backgroundPosition: "0 2px, 0 0",
+                filter: "contrast(1.02) brightness(1.01)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = `
+                  0 2px 6px rgba(0,0,0,0.12),
+                  0 1px 3px rgba(0,0,0,0.06),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `;
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = `
+                  0 1px 3px rgba(0,0,0,0.08),
+                  0 1px 2px rgba(0,0,0,0.04),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `;
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
             {/* 종이 질감 오버레이 */}
             <div
               className="absolute inset-0 pointer-events-none rounded-[20px]"
@@ -736,6 +859,7 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
                       type="button"
                       onClick={() => {
                         setSelectedType(type.id);
+                        onTypeChange?.(type.id);
                         setShowTypeSelector(false);
                       }}
                       className="w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2"
@@ -1029,6 +1153,63 @@ export function RecordForm({ onSuccess, selectedDate }: RecordFormProps) {
             </Button>
           </div>
         </>
+      ) : recordType === "emotion" ? (
+        <div
+          className={cn(
+            "flex flex-col gap-8",
+            SPACING.element.marginBottomLarge
+          )}
+        >
+          <div className={`flex flex-col ${SPACING.element.gapSmall}`}>
+            <p
+              className={cn(TYPOGRAPHY.bodySmall.fontSize, "text-center")}
+              style={{ color: COLORS.text.muted }}
+            >
+              생각하지 않아도 고를 수 있는 지금의 감정
+            </p>
+            <EmotionIntensityPicker
+              value={emotionIntensity}
+              onChange={handleIntensityChange}
+            />
+          </div>
+          <div
+            className="h-px w-full"
+            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
+          />
+          <EmotionKeywordPicker
+            intensity={emotionIntensity}
+            selectedKeywords={emotionKeywords}
+            onToggle={handleToggleKeyword}
+          />
+          <div
+            className="h-px w-full"
+            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
+          />
+          <EmotionFactorPicker
+            intensity={emotionIntensity}
+            selectedFactors={emotionFactors}
+            onToggle={handleToggleFactor}
+          />
+          <div
+            className="h-px w-full"
+            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
+          />
+          <EmotionReasonInput
+            value={emotionReason}
+            onChange={setEmotionReason}
+            onHelpOpen={() => {}}
+            accentColor={emotionIntensity ? COLORS.emotion.intensity[emotionIntensity] : COLORS.brand.primary}
+          />
+          <EmotionSaveButton
+            disabled={
+              !emotionIntensity ||
+              emotionKeywords.length === 0 ||
+              emotionFactors.length === 0
+            }
+            isSaving={createRecordMutation.isPending}
+            onClick={handleEmotionSubmit}
+          />
+        </div>
       ) : (
         /* 다른 타입일 때 기존 단일 입력 필드 */
         <div

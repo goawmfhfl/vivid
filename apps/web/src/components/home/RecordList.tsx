@@ -7,7 +7,7 @@ import { type Record } from "../../hooks/useRecords";
 import { RecordItemSkeleton } from "../ui/Skeleton";
 import { ErrorDisplay } from "../ui/ErrorDisplay";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
 interface RecordListProps {
@@ -18,6 +18,7 @@ interface RecordListProps {
   onDelete: (id: number) => void;
   onRetry?: () => void;
   selectedDate?: string; // YYYY-MM-DD 형식, 선택한 날짜
+  activeRecordType?: string | null;
 }
 
 export function RecordList({
@@ -28,6 +29,7 @@ export function RecordList({
   onDelete,
   onRetry,
   selectedDate,
+  activeRecordType,
 }: RecordListProps) {
   const [retryCount, setRetryCount] = useState(0);
 
@@ -45,6 +47,16 @@ export function RecordList({
       return total + (record.content?.length || 0);
     }, 0);
   }, [filteredRecords]);
+
+  const vividRecords = filteredRecords.filter(
+    (record) => (record.type || "dream") === "dream"
+  );
+  const emotionRecords = filteredRecords.filter(
+    (record) => (record.type || "dream") === "emotion"
+  );
+  const otherRecords = filteredRecords.filter(
+    (record) => !["dream", "emotion"].includes((record.type || "dream") as string)
+  );
 
   const handleRetry = () => {
     setRetryCount((c) => c + 1);
@@ -134,6 +146,16 @@ export function RecordList({
     );
   }
 
+  const normalizedActiveType = activeRecordType || null;
+  const title =
+    normalizedActiveType === "dream"
+      ? "오늘의 VIVID"
+      : normalizedActiveType === "emotion"
+      ? "오늘의 감정"
+      : isToday
+      ? "오늘의 타임라인"
+      : "타임라인";
+
   // Records List
   return (
     <div className="mb-6">
@@ -142,7 +164,7 @@ export function RecordList({
           className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
           style={{ color: COLORS.text.primary }}
         >
-          {isToday ? "오늘의 타임라인" : "타임라인"}
+          {title}
         </h2>
         {totalCharCount > 0 && (
           <span
@@ -157,15 +179,74 @@ export function RecordList({
         )}
       </div>
 
-      <div className="space-y-3">
-        {filteredRecords.map((record) => (
-          <RecordItem
-            key={record.id}
-            record={record}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+      <div className={cn("space-y-6", SPACING.element.marginBottomLarge)}>
+        {(normalizedActiveType === "dream" || !normalizedActiveType) && (
+          <div className="space-y-3">
+            {vividRecords.length > 0 ? (
+              vividRecords.map((record) => (
+                <RecordItem
+                  key={record.id}
+                  record={record}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  showMeta={false}
+                />
+              ))
+            ) : (
+              <div className="rounded-xl border p-4">
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                  style={{ color: COLORS.text.muted }}
+                >
+                  오늘의 VIVID가 아직 없어요
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(normalizedActiveType === "emotion" || !normalizedActiveType) && (
+          <div className="space-y-3">
+            {emotionRecords.length > 0 ? (
+              emotionRecords.map((record) => (
+                <RecordItem
+                  key={record.id}
+                  record={record}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ))
+            ) : (
+              <div className="rounded-xl border p-4">
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                  style={{ color: COLORS.text.muted }}
+                >
+                  아직 감정 데이터가 없어요
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {otherRecords.length > 0 && !normalizedActiveType && (
+          <div className="space-y-3">
+            <h3
+              className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
+              style={{ color: COLORS.text.primary }}
+            >
+              오늘의 기록
+            </h3>
+            {otherRecords.map((record) => (
+              <RecordItem
+                key={record.id}
+                record={record}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

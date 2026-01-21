@@ -98,6 +98,18 @@ export const COLORS = {
     errorDark: "#8b4a35",
     info: "#6f859c", // 더스티 블루
   },
+  // 감정 입력 전용 색상
+  emotion: {
+    intensity: {
+      1: "#6b5b95", // 아주 좋지 않음: 보라 톤
+      2: "#8aa6c1", // 좋지 않음: 창백한 파란빛
+      3: "#5d9aae", // 약간 불쾌함: 푸른 에메랄드
+      4: "#7ec8c1", // 보통: 에메랄드 아이스
+      5: "#a8cfa3", // 약간 기분 좋음: 연한 초록
+      6: "#e6d189", // 기분 좋음: 연한 노랑
+      7: "#e48a2a", // 아주 기분 좋음: 노란빛 주홍
+    },
+  },
   // 섹션별 컬러 (월간 비비드 리포트용) - 새로운 색상 시스템 적용
   section: {
     summary: {
@@ -365,6 +377,34 @@ export const TRANSITIONS = {
   fast: "transition-all duration-200",
   slow: "transition-all duration-500",
   colors: "transition-colors duration-200",
+} as const;
+
+// ============================================
+// 입력 필드 스타일
+// ============================================
+export const INPUT_STYLES = {
+  textareaMinHeight: "min-h-[120px]",
+} as const;
+
+// ============================================
+// 감정 강도 UI 스타일
+// ============================================
+export const EMOTION_INTENSITY_STYLES = {
+  ring: {
+    outer: "240px",
+    middle: "182px",
+    inner: "128px",
+    core: "14px",
+  },
+  glowOpacity: {
+    outer: 0.08,
+    middle: 0.12,
+    inner: 0.18,
+  },
+  slider: {
+    trackHeight: "10px",
+    thumbSize: "24px",
+  },
 } as const;
 
 // ============================================

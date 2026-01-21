@@ -5,7 +5,6 @@ import { useUpdateRecord, type Record } from "../../hooks/useRecords";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
 import { RECORD_TYPES, type RecordType } from "../signup/RecordTypeCard";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EditRecordDialogProps {
@@ -24,7 +23,6 @@ export function EditRecordDialog({
   const [q2Content, setQ2Content] = useState("");
   const [hasSeparated, setHasSeparated] = useState(false);
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
   const updateRecordMutation = useUpdateRecord();
   const { subscription } = useSubscription();
 
@@ -102,25 +100,6 @@ export function EditRecordDialog({
     }
   }, [record, allowedTypes]);
 
-  useEffect(() => {
-    if (!showTypeSelector) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const typeSelector = target.closest("[data-type-selector]");
-      const typeButton = target.closest("[data-type-selector-button]");
-
-      if (!typeSelector && !typeButton) {
-        setShowTypeSelector(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showTypeSelector]);
-
   const handleSaveEdit = () => {
     if (!record) return;
 
@@ -174,13 +153,7 @@ export function EditRecordDialog({
     setQ2Content("");
     setHasSeparated(false);
     setSelectedType(null);
-    setShowTypeSelector(false);
   };
-
-  // 선택된 타입 정보 가져오기
-  const selectedTypeInfo = selectedType
-    ? RECORD_TYPES.find((t) => t.id === selectedType)
-    : null;
 
   return (
     <Dialog
@@ -267,106 +240,6 @@ export function EditRecordDialog({
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* 타입 선택 */}
-              {allowedTypes && allowedTypes.length > 0 && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    data-type-selector-button
-                    onClick={() => setShowTypeSelector(!showTypeSelector)}
-                    className="w-full text-left p-3 rounded-lg border transition-all"
-                    style={{
-                      backgroundColor: "rgba(255, 255, 255, 0.8)",
-                      borderColor: COLORS.border.light,
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {selectedTypeInfo ? (
-                          <>
-                            <span className="text-lg">
-                              {selectedTypeInfo.icon}
-                            </span>
-                            <span className="text-sm font-medium">
-                              {selectedTypeInfo.title}
-                            </span>
-                          </>
-                        ) : (
-                          <span
-                            className="text-sm"
-                            style={{ color: COLORS.text.secondary }}
-                          >
-                            타입 선택
-                          </span>
-                        )}
-                      </div>
-                      <ChevronDown
-                        className="w-4 h-4"
-                        style={{
-                          color: COLORS.text.secondary,
-                          transform: showTypeSelector
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
-                          transition: "transform 0.2s",
-                        }}
-                      />
-                    </div>
-                  </button>
-
-                  {/* 타입 선택 드롭다운 */}
-                  {showTypeSelector && (
-                    <div
-                      data-type-selector
-                      className="absolute z-50 w-full mt-1 rounded-lg border shadow-lg overflow-hidden"
-                      style={{
-                        backgroundColor: COLORS.background.base,
-                        borderColor: COLORS.border.light,
-                        maxHeight: "300px",
-                        overflowY: "auto",
-                      }}
-                    >
-                      {allowedTypes.map((typeId) => {
-                        const typeInfo = RECORD_TYPES.find(
-                          (t) => t.id === typeId
-                        );
-                        if (!typeInfo) return null;
-
-                        const isSelected = selectedType === typeId;
-
-                        return (
-                          <button
-                            key={typeId}
-                            type="button"
-                            onClick={() => {
-                              setSelectedType(typeId);
-                              setShowTypeSelector(false);
-                            }}
-                            className="w-full text-left p-3 hover:bg-opacity-50 transition-colors"
-                            style={{
-                              backgroundColor: isSelected
-                                ? COLORS.background.hover
-                                : "transparent",
-                              color: COLORS.text.primary,
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{typeInfo.icon}</span>
-                              <span
-                                className="text-sm font-medium"
-                                style={{ color: COLORS.text.primary }}
-                              >
-                                {typeInfo.title}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Q1, Q2가 분리된 경우 */}
               {hasSeparated && selectedType === "dream" ? (
                 <div className="space-y-6">

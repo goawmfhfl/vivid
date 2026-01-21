@@ -44,10 +44,39 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch records: ${error.message}`);
     }
 
+    const recordIds = (records || []).map((record) => record.id);
+    let emotionMap = new Map<number, {
+      intensity: number;
+      keywords: string[];
+      factors: string[];
+      reasonText: string | null;
+    }>();
+
+    if (recordIds.length > 0) {
+      const { data: emotionRows, error: emotionError } = await supabase
+        .from("emotion_records")
+        .select("*")
+        .in("record_id", recordIds);
+
+      if (emotionError) {
+        console.warn("emotion_records 조회 실패:", emotionError.message);
+      } else {
+        (emotionRows || []).forEach((row) => {
+          emotionMap.set(row.record_id, {
+            intensity: row.intensity,
+            keywords: row.keywords || [],
+            factors: row.factors || [],
+            reasonText: row.reason_text ? decrypt(row.reason_text) : null,
+          });
+        });
+      }
+    }
+
     // 복호화 처리
     const decryptedRecords = (records || []).map((record) => ({
       ...record,
       content: decrypt(record.content),
+      emotion: emotionMap.get(record.id) || null,
     }));
 
     return NextResponse.json(
@@ -81,7 +110,7 @@ export async function POST(request: NextRequest) {
   try {
     const authenticatedUserId = await getAuthenticatedUserId(request);
     const body = await request.json();
-    const { content, type, kst_date } = body;
+    const { content, type, kst_date, emotion } = body;
 
     if (!content || typeof content !== "string") {
       return NextResponse.json(
@@ -95,6 +124,44 @@ export async function POST(request: NextRequest) {
         { error: "type is required and must be a string" },
         { status: 400 }
       );
+    }
+
+    if (type === "emotion") {
+      if (!emotion || typeof emotion !== "object") {
+        return NextResponse.json(
+          { error: "emotion payload is required for emotion type" },
+          { status: 400 }
+        );
+      }
+      if (
+        typeof emotion.intensity !== "number" ||
+        emotion.intensity < 1 ||
+        emotion.intensity > 7
+      ) {
+        return NextResponse.json(
+          { error: "emotion.intensity must be between 1 and 7" },
+          { status: 400 }
+        );
+      }
+      if (
+        (emotion.keywords && !Array.isArray(emotion.keywords)) ||
+        (emotion.factors && !Array.isArray(emotion.factors))
+      ) {
+        return NextResponse.json(
+          { error: "emotion.keywords and emotion.factors must be arrays" },
+          { status: 400 }
+        );
+      }
+      if (
+        emotion.reasonText !== undefined &&
+        emotion.reasonText !== null &&
+        typeof emotion.reasonText !== "string"
+      ) {
+        return NextResponse.json(
+          { error: "emotion.reasonText must be a string or null" },
+          { status: 400 }
+        );
+      }
     }
 
     const supabase = getServiceSupabase();
@@ -169,10 +236,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (type === "emotion") {
+      const keywords = Array.isArray(emotion?.keywords) ? emotion.keywords : [];
+      const factors = Array.isArray(emotion?.factors) ? emotion.factors : [];
+      const reasonText =
+        typeof emotion?.reasonText === "string" && emotion.reasonText.trim()
+          ? emotion.reasonText.trim()
+          : null;
+
+      const { error: emotionError } = await supabase
+        .from("emotion_records")
+        .insert({
+          record_id: newRecord.id,
+          intensity: emotion.intensity,
+          keywords,
+          factors,
+          reason_text: reasonText ? encrypt(reasonText) : null,
+        });
+
+      if (emotionError) {
+        await supabase.from(API_ENDPOINTS.RECORDS).delete().eq("id", newRecord.id);
+        throw new Error(`Failed to create emotion record: ${emotionError.message}`);
+      }
+    }
+
     // 반환 시 복호화
     const decryptedRecord = {
       ...newRecord,
       content: decrypt(newRecord.content),
+      emotion:
+        type === "emotion"
+          ? {
+              intensity: emotion.intensity,
+              keywords: emotion.keywords || [],
+              factors: emotion.factors || [],
+              reasonText: emotion.reasonText?.trim() || null,
+            }
+          : null,
     };
 
     // Records 조회 캐시 무효화
