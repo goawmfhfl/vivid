@@ -260,19 +260,19 @@ export function buildWeeklyTrendPrompt(
 ${report.weekly_vivid_summary?.summary || ""}
 
 **핵심 포인트:**
-${vividReport.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
+${report.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
 
 **주요 키워드:**
-${vividReport.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
+${report.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
 
 **사용자 특징:**
-${vividReport.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
+${report.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
 
 **지향하는 모습:**
-${vividReport.aspired_traits_analysis?.top_5_aspired_traits?.slice(0, 3).map((t: { trait: string; frequency: number; dates: string[] }) => `- ${t.trait}`).join("\n") || ""}
+${report.aspired_traits_analysis?.top_5_aspired_traits?.slice(0, 3).map((t: { trait: string; frequency: number; dates: string[] }) => `- ${t.trait}`).join("\n") || ""}
 
 **앞으로의 모습 종합:**
-${vividReport.future_vision_analysis?.integrated_summary || ""}
+${report.future_vision_analysis?.integrated_summary || ""}
 
 위 분석 결과를 바탕으로 다음 4가지 필드를 생성해주세요:
 

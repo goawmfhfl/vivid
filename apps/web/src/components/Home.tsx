@@ -51,7 +51,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       return "dream";
     }
     return null;
-  }, [searchParamsString, searchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (initialRecordType && activeRecordType === null) {

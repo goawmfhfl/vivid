@@ -452,3 +452,4 @@ export const SYSTEM_PROMPT_MONTHLY = `
 [2. 월간 리포트(report) 생성 규칙]
 - report 스키마를 준수하세요.
 - 실제 daily 데이터 기반으로만 작성하세요.
+`;

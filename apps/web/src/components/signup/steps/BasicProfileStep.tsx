@@ -48,7 +48,6 @@ export function BasicProfileStep({
     if (!message) {
       return { shouldForceResend: false, remainingAttempts: undefined };
     }
-    const normalizedMessage = message.replace(/[\s.]/g, "");
     const remainingMatch = message.match(/(\d+)회 남음/);
     const remainingAttempts = remainingMatch
       ? Number(remainingMatch[1])

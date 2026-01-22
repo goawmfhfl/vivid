@@ -258,7 +258,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 };
 
 // 회원가입 훅
-export const useSignUp = (isSocialOnboarding = false) => {
+export const useSignUp = () => {
   const router = useRouter();
 
   return useMutation({

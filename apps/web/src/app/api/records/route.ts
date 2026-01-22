@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     const recordIds = (records || []).map((record) => record.id);
-    let emotionMap = new Map<number, {
+    const emotionMap = new Map<number, {
       intensity: number;
       keywords: string[];
       factors: string[];

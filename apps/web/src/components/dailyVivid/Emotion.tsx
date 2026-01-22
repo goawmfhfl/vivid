@@ -69,7 +69,9 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
   };
 
   const pointPos = hasEmotionData ? getPointPosition(valence, arousal) : null;
-  const quadrant = view.emotion_quadrant;
+  const quadrant = view.emotion_quadrant ?? null;
+  const emotionTimeline = view.emotion_timeline ?? [];
+  const emotionCurve = view.emotion_curve ?? [];
   const quadrantColor = getQuadrantColor(quadrant);
 
   return (
@@ -653,7 +655,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
       )}
 
       {/* 감정 정보 통합 카드 */}
-      {(view.emotion_curve?.length > 0 ||
+      {(emotionCurve.length > 0 ||
         view.dominant_emotion ||
         (view.emotion_events && view.emotion_events.length > 0)) && (
         <Card
@@ -661,7 +663,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
           style={{ backgroundColor: "white", border: "1px solid #E6E4DE" }}
         >
           {/* 감정 곡선 */}
-          {view.emotion_curve && view.emotion_curve.length > 0 && (
+          {emotionCurve.length > 0 && (
             <div className="mb-5">
               <p
                 className="text-xs"
@@ -674,9 +676,9 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
                 하루 감정 흐름
               </p>
               {/* 시간대별 감정 흐름 표시 */}
-              {view.emotion_timeline && view.emotion_timeline.length > 0 ? (
+              {emotionTimeline.length > 0 ? (
                 <div className="space-y-3">
-                  {view.emotion_timeline.map((item, index) => (
+                  {emotionTimeline.map((item, index) => (
                     <div
                       key={index}
                       className="flex items-center gap-3"
@@ -705,7 +707,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
                             backgroundColor:
                               index === 0
                                 ? "#A8BBA8"
-                                : index === view.emotion_timeline.length - 1
+                                : index === emotionTimeline.length - 1
                                 ? "#E5B96B"
                                 : "#6B7A6F",
                             flexShrink: 0,
@@ -727,7 +729,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
               ) : (
                 /* 기존 방식 (시간 정보 없을 때) */
                 <div className="flex items-center gap-2 flex-wrap">
-                  {view.emotion_curve.map((emotion, index) => (
+                  {emotionCurve.map((emotion, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <div
                         className="relative text-sm px-3 py-1"
@@ -763,7 +765,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
                             backgroundColor:
                               index === 0
                                 ? "#A8BBA8"
-                                : index === view.emotion_curve.length - 1
+                                : index === emotionCurve.length - 1
                                 ? "#E5B96B"
                                 : "#6B7A6F",
                             flexShrink: 0,
@@ -771,7 +773,7 @@ export const EmotionSection = ({ view, isPro = false }: SectionProps) => {
                         />
                         <span>{emotion}</span>
                       </div>
-                      {index < view.emotion_curve.length - 1 && (
+                      {index < emotionCurve.length - 1 && (
                         <ArrowRight
                           className="w-4 h-4 flex-shrink-0"
                           style={{

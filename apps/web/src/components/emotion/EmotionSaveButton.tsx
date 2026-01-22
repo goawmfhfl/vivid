@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  COLORS,
   BUTTON_STYLES,
   TRANSITIONS,
   TYPOGRAPHY,

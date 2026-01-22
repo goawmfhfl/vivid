@@ -140,6 +140,23 @@ export type MonthlyReport = {
 
   // 5. 다음 달 계획 (10%)
   next_month_plan: {
+    focus_areas?: Array<{
+      area: string;
+      why: string;
+      current_state: string;
+      desired_state: string;
+      simple_action: string;
+    }>;
+    maintain_patterns?: Array<{
+      pattern: string;
+      why_important: string;
+      how_to_maintain: string;
+    }>;
+    experiment_patterns?: Array<{
+      pattern: string;
+      why_suggested: string;
+      how_to_start: string;
+    }>;
     top_3_focuses: Array<{
       focus: string;
       why_now: string;

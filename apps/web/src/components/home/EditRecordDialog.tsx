@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useUpdateRecord, type Record } from "../../hooks/useRecords";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
-import { RECORD_TYPES, type RecordType } from "../signup/RecordTypeCard";
+import { type RecordType } from "../signup/RecordTypeCard";
 import { cn } from "@/lib/utils";
 
 interface EditRecordDialogProps {

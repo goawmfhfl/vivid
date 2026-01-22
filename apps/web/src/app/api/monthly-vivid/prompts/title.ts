@@ -34,7 +34,7 @@ export function buildTitlePrompt(
 
 **특성 변화:**
 - 강해진 특성: ${report.identity_alignment.trait_evolution.strengthened.map(t => t.trait).slice(0, 2).join(", ") || "없음"}
-- 집중할 특성: ${report.identity_alignment.focus_traits.map(t => t.trait).slice(0, 2).join(", ") || "없음"}
+- 집중할 특성: ${(report.identity_alignment.focus_traits ?? []).map(t => t.trait).slice(0, 2).join(", ") || "없음"}
 
 위 분석 결과를 바탕으로, 이번 달의 가장 핵심적인 특징을 담은 제목을 "~ 한 달" 형식으로 생성해주세요.
 제목은 간결하고 명확하며, 이번 달의 가장 중요한 활동이나 변화를 잘 표현해야 합니다.

@@ -6,7 +6,7 @@ import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { useRouter } from "next/navigation";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
 import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
-import { VividSection } from "./report/VividSection";
+import { VividSection } from "../monthlyVivid/report/VividSection";
 import { cn } from "@/lib/utils";
 import { VividFeedbackSection } from "../feedback/VividFeedbackSection";
 

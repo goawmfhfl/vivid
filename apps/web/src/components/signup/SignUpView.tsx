@@ -72,7 +72,7 @@ export function SignUpView({
   // 쿠폰 코드 저장
   const [couponCode, setCouponCode] = useState<string | null>(null);
 
-  const signUpMutation = useSignUp(isSocialOnboarding);
+  const signUpMutation = useSignUp();
 
   // 이메일 중복 에러 처리: 1단계로 이동하고 이메일 에러 표시
   useEffect(() => {
