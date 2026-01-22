@@ -253,6 +253,7 @@ export default function ResetPasswordPage() {
               }}
               placeholder="새 비밀번호를 입력하세요 (6자 이상)"
               error={errors.password}
+              autocomplete="new-password"
             />
 
             <div>
@@ -279,6 +280,7 @@ export default function ResetPasswordPage() {
                     }));
                   }}
                   placeholder="비밀번호를 다시 입력하세요"
+                  autoComplete="new-password"
                   className="pl-11 pr-4"
                   style={{
                     borderColor: errors.confirmPassword ? "#EF4444" : "#EFE9E3",

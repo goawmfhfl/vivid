@@ -187,6 +187,7 @@ export function LoginView() {
             }}
             placeholder="비밀번호를 입력하세요"
             error={errors.password}
+            autocomplete="current-password"
           />
 
           {/* 이메일 저장 체크박스 */}

@@ -61,6 +61,7 @@ export function LoginInfoStep({
             }}
             placeholder="영문+숫자 8자 이상 입력"
             error={passwordError}
+            autocomplete="new-password"
           />
         )}
 

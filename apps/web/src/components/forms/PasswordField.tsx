@@ -12,6 +12,7 @@ interface PasswordFieldProps {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  autocomplete?: "current-password" | "new-password" | "off";
 }
 
 export function PasswordField({
@@ -20,6 +21,7 @@ export function PasswordField({
   placeholder = "비밀번호를 입력하세요",
   error,
   disabled = false,
+  autocomplete = "current-password",
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -53,6 +55,7 @@ export function PasswordField({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
+          autoComplete={autocomplete}
           className="pl-8 pr-10 py-3.5 border-0 border-b-2 rounded-none transition-all focus:ring-0 focus:outline-none"
           disabled={disabled}
           style={{
