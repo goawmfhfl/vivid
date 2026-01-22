@@ -68,7 +68,7 @@ export function ProfileSettingsView() {
   }>({});
   const [success, setSuccess] = useState(false);
   const [isPhoneEditOpen, setIsPhoneEditOpen] = useState(false);
-  const [linkSuccess, setLinkSuccess] = useState(false);
+  const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   // 카카오 연동 상태

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // user_metadata에서 구독 정보 추출 및 필터링
-    let subscriptions = users
+    const subscriptions = users
       .map((user) => {
         const subscription = user.user_metadata?.subscription;
         if (!subscription) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       status,
       expires_at,
       current_period_start,
-      cancel_at_period_end,
+      cancel_at_period_end: _cancel_at_period_end,
     } = body;
 
     if (!userId || !plan) {

@@ -113,7 +113,7 @@ export async function PATCH(
   try {
     const { id: userId } = await params;
     const body = await request.json();
-    const { name, phone, role, is_active } = body;
+    const { name, phone, role, is_active: _is_active } = body;
 
     const supabase = getServiceSupabase();
 

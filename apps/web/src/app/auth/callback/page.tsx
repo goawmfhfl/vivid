@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -41,7 +41,7 @@ const getRedirectUrl = (path: string): string => {
   return `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -296,7 +296,7 @@ export default function AuthCallback() {
     };
 
     handleAuthCallback();
-  }, [router]);
+  }, [router, searchParams]);
 
   return (
     <div
@@ -305,5 +305,22 @@ export default function AuthCallback() {
     >
       <LoadingSpinner message="로그인 중..." size="md" />
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center px-4 py-8"
+          style={{ backgroundColor: "#FAFAF8" }}
+        >
+          <LoadingSpinner message="로그인 중..." size="md" />
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

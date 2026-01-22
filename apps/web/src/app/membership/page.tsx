@@ -129,7 +129,7 @@ export default function MembershipPage() {
               </div>
             </div>
 
-            {isPro && subscription?.expiresAt && (
+            {isPro && subscription?.expires_at && (
               <div
                 className="mt-4 pt-4 border-t flex items-center gap-2"
                 style={{ borderColor: COLORS.border.light }}
@@ -139,7 +139,7 @@ export default function MembershipPage() {
                   className="text-sm"
                   style={{ color: COLORS.text.secondary }}
                 >
-                  만료일: {formatKSTDate(subscription.expiresAt)}
+                  만료일: {formatKSTDate(subscription.expires_at)}
                 </span>
               </div>
             )}

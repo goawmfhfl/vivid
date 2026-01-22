@@ -11,7 +11,6 @@ import {
   TYPOGRAPHY,
   SPACING,
   CARD_STYLES,
-  BUTTON_STYLES,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,6 @@ export default function UserRoleTestPage() {
   const { subscription, isPro, isLoading: subLoading } = useSubscription();
   const queryClient = useQueryClient();
 
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<{
     type: "success" | "error";

@@ -95,13 +95,6 @@ export async function POST(request: NextRequest) {
       codeLength: code.length,
     });
 
-    // 응답 객체 생성
-    const response = NextResponse.json({
-      success: true,
-      message: "인증이 완료되었습니다.",
-      verified: true,
-    });
-
     // 응답 객체 생성 (검증 성공 시 사용)
     const successResponse = NextResponse.json({
       success: true,
