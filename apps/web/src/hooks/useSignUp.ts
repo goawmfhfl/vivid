@@ -264,15 +264,7 @@ export const useSignUp = (isSocialOnboarding = false) => {
   return useMutation({
     mutationFn: signUpUser,
     onSuccess: () => {
-      if (isSocialOnboarding) {
-        // 소셜 로그인 완료 케이스: 홈으로 이동
-        router.push("/");
-      } else {
-        // 일반 회원가입 케이스: 로그인 페이지로 이동
-        router.push(
-          "/login?message=회원가입이 완료되었습니다. 이메일을 확인하여 계정을 활성화해주세요."
-        );
-      }
+      router.push("/");
     },
     onError: (error: SignUpError) => {
       console.error("회원가입 실패:", error.message);

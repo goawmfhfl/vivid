@@ -17,11 +17,8 @@ import { SubmitButton } from "./forms/SubmitButton";
 import { AuthHeader } from "./forms/AuthHeader";
 import { Input } from "./ui/Input";
 import { Checkbox } from "./ui/checkbox";
+import { PhoneVerificationModal } from "./profile/PhoneVerificationModal";
 import { COLORS } from "@/lib/design-system";
-import type { CouponVerification } from "@/types/coupon";
-import { supabase } from "@/lib/supabase";
-import { SystemModal } from "@/components/ui/modals/SystemModal";
-import { CouponTicket } from "@/components/coupon/CouponTicket";
 
 type SectionCardProps = {
   title: string;
@@ -63,16 +60,7 @@ export function ProfileSettingsView() {
     general?: string;
   }>({});
   const [success, setSuccess] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
-  const [couponVerification, setCouponVerification] =
-    useState<CouponVerification | null>(null);
-  const [isCouponSearching, setIsCouponSearching] = useState(false);
-  const [isCouponApplying, setIsCouponApplying] = useState(false);
-  const [couponModal, setCouponModal] = useState({
-    open: false,
-    title: "",
-    message: "",
-  });
+  const [isPhoneEditOpen, setIsPhoneEditOpen] = useState(false);
 
   useEffect(() => {
     if (currentUser?.user_metadata) {
@@ -90,99 +78,14 @@ export function ProfileSettingsView() {
   const updateField = (field: keyof typeof formData, value: string | boolean) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-  const openCouponModal = (title: string, message: string) => {
-    setCouponModal({ open: true, title, message });
+  const openPhoneEditModal = () => {
+    setIsPhoneEditOpen(true);
   };
 
-  const handleCouponSearch = async () => {
-    if (!couponCode.trim()) {
-      return;
-    }
-
-    setIsCouponSearching(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const response = await fetch(`/api/coupons/${couponCode.trim()}`, {
-        headers: session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
-      });
-      const data: CouponVerification = await response.json();
-      setCouponVerification(data);
-    } catch (error) {
-      console.error("쿠폰 조회 실패:", error);
-      setCouponVerification({
-        coupon: null,
-        isValid: false,
-        isUsed: false,
-        message: "쿠폰 조회 중 오류가 발생했습니다.",
-      });
-    } finally {
-      setIsCouponSearching(false);
-    }
+  const closePhoneEditModal = () => {
+    setIsPhoneEditOpen(false);
   };
 
-  const handleCouponApply = async () => {
-    if (!couponVerification?.coupon) {
-      return;
-    }
-
-    setIsCouponApplying(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("로그인이 필요합니다.");
-      }
-
-      const response = await fetch("/api/coupons/apply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ code: couponCode.trim() }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage =
-          errorData.error || "쿠폰 적용에 실패했습니다.";
-        if (errorMessage.includes("이미 사용한 쿠폰")) {
-          openCouponModal("쿠폰 등록", errorMessage);
-          setCouponVerification((prev) =>
-            prev && prev.coupon
-              ? { ...prev, isUsed: true, isValid: true }
-              : prev
-          );
-          return;
-        }
-        throw new Error(errorMessage);
-      }
-
-      setCouponVerification((prev) =>
-        prev && prev.coupon ? { ...prev, isUsed: true, isValid: true } : prev
-      );
-      openCouponModal("쿠폰 적용 완료", "쿠폰이 성공적으로 적용되었습니다.");
-    } catch (error) {
-      console.error("쿠폰 적용 실패:", error);
-      if (error instanceof Error) {
-        if (error.message.includes("이미 사용한 쿠폰")) {
-          openCouponModal("쿠폰 등록", error.message);
-          return;
-        }
-        openCouponModal("쿠폰 등록", error.message);
-        return;
-      }
-      openCouponModal("쿠폰 등록", "쿠폰 적용 중 오류가 발생했습니다.");
-    } finally {
-      setIsCouponApplying(false);
-    }
-  };
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -263,17 +166,13 @@ export function ProfileSettingsView() {
       className="min-h-screen px-4 py-8"
       style={{ backgroundColor: "#FAFAF8" }}
     >
-      <SystemModal
-        open={couponModal.open}
-        onClose={() =>
-          setCouponModal((prev) => ({
-            ...prev,
-            open: false,
-          }))
-        }
-        title={couponModal.title || "쿠폰 등록"}
-        message={couponModal.message || "처리 중 오류가 발생했습니다."}
-        closable={true}
+      <PhoneVerificationModal
+        open={isPhoneEditOpen}
+        onClose={closePhoneEditModal}
+        onApply={(phone) => {
+          updateField("phone", phone);
+          setIsPhoneEditOpen(false);
+        }}
       />
       <div className="mx-auto w-full max-w-2xl">
         <button
@@ -324,7 +223,24 @@ export function ProfileSettingsView() {
                   setErrors((prev) => ({ ...prev, phone: undefined }));
                 }}
                 error={errors.phone}
-                disabled={updateProfileMutation.isPending}
+                disabled={Boolean(formData.phone) || updateProfileMutation.isPending}
+                actionSlot={
+                  formData.phone ? (
+                    <button
+                      type="button"
+                      onClick={openPhoneEditModal}
+                      className="px-3 py-2 rounded-lg text-sm font-medium"
+                      style={{
+                        backgroundColor: COLORS.background.base,
+                        color: COLORS.text.secondary,
+                        border: `1px solid ${COLORS.border.light}`,
+                      }}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      수정
+                    </button>
+                  ) : null
+                }
               />
             </div>
           </SectionCard>
@@ -400,66 +316,6 @@ export function ProfileSettingsView() {
                 )}
               </div>
             </div>
-          </SectionCard>
-
-          <SectionCard
-            title="쿠폰 등록"
-            description="쿠폰을 입력하면 혜택이 즉시 적용됩니다."
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Input
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                placeholder="쿠폰 코드를 입력하세요"
-                className="w-full"
-                style={{
-                  borderColor: COLORS.border.input,
-                  backgroundColor: COLORS.background.base,
-                }}
-                disabled={isCouponSearching || isCouponApplying}
-              />
-              <button
-                type="button"
-                onClick={handleCouponSearch}
-                disabled={!couponCode.trim() || isCouponSearching}
-                className="px-4 py-3 rounded-lg text-sm font-medium disabled:opacity-50"
-                style={{
-                  backgroundColor: COLORS.brand.primary,
-                  color: COLORS.text.white,
-                }}
-              >
-                {isCouponSearching ? "검색 중..." : "검색"}
-              </button>
-            </div>
-
-            {couponVerification && (
-              <CouponTicket
-                coupon={couponVerification.coupon}
-                codeDisplay={couponVerification.coupon?.code || "— — — —"}
-                isValid={Boolean(
-                  couponVerification.coupon &&
-                    (couponVerification.isValid ||
-                      couponVerification.message?.includes("사용 횟수가 초과"))
-                )}
-                isUsed={Boolean(couponVerification.isUsed)}
-                isSoldOut={Boolean(
-                  couponVerification.message?.includes("사용 횟수가 초과")
-                )}
-                isApplying={isCouponApplying}
-                invalidMessage={couponVerification.message}
-                onApply={handleCouponApply}
-                size="compact"
-                statusMessage={
-                  couponVerification.coupon &&
-                  (couponVerification.isValid ||
-                    couponVerification.message?.includes("사용 횟수가 초과")) &&
-                  !couponVerification.isUsed &&
-                  !couponVerification.message?.includes("사용 횟수가 초과")
-                    ? "적용되었습니다."
-                    : undefined
-                }
-              />
-            )}
           </SectionCard>
 
           <SectionCard

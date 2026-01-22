@@ -73,6 +73,15 @@ export function Home({ selectedDate }: HomeProps = {}) {
     },
     [router, pathname, searchParamsString]
   );
+
+  const buildDatePath = useCallback(
+    (date: string) => {
+      const params = new URLSearchParams(searchParamsString);
+      const query = params.toString();
+      return query ? `/${date}?${query}` : `/${date}`;
+    },
+    [searchParamsString]
+  );
   const createDailyVivid = useCreateDailyVivid();
 
   // KST 기준으로 오늘 날짜 계산
@@ -328,7 +337,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         title={isToday ? "오늘의 기록" : "기록"}
         showDatePicker={true}
         selectedDate={activeDate}
-        onDateSelect={(date) => router.push(`/${date}`)}
+        onDateSelect={(date) => router.push(buildDatePath(date))}
         currentMonth={currentMonth}
         recordDates={recordDates}
         aiFeedbackDates={aiFeedbackDates}
@@ -336,7 +345,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
       <WeeklyDateView
         selectedDate={activeDate}
-        onDateSelect={(date) => router.push(`/${date}`)}
+        onDateSelect={(date) => router.push(buildDatePath(date))}
         recordDates={recordDates}
         aiFeedbackDates={aiFeedbackDates}
         onMonthChange={handleMonthChange}

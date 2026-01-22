@@ -4,12 +4,8 @@ import {
   storeVerificationCode,
   canResendCode,
 } from "@/lib/phone-verification-store";
-import { sendVerificationCode, sendSMSMock } from "@/lib/bizem-service";
+import { sendVerificationCode } from "@/lib/bizem-service";
 
-/**
- * POST /api/auth/phone/send
- * 핸드폰 인증번호 전송
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -45,30 +41,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
+    const isDev = runtimeEnv !== "production";
+    const testCode = "123456";
+
     // 인증번호 생성
-    const code = generateVerificationCode();
+    const code = isDev ? testCode : generateVerificationCode();
 
     // 인증번호 저장
     storeVerificationCode(phone, code);
 
-    // SMS 전송
-    // 개발 환경에서는 모의 전송 사용 (환경 변수 미설정 시)
-    const isDevelopment = process.env.NODE_ENV === "development";
-    const hasBizEMConfig =
-      process.env.BIZEM_API_KEY && process.env.BIZEM_SENDER_NUMBER;
-
-    let smsResult;
-    if (isDevelopment && !hasBizEMConfig) {
-      // 개발 환경 + 비즈엠 설정 없음 → 모의 전송
-      smsResult = await sendSMSMock(phone, `인증번호: ${code}`);
-    } else {
-      // 프로덕션 또는 비즈엠 설정 있음 → 실제 전송
-      smsResult = await sendVerificationCode(phone, code);
+    if (isDev) {
+      return NextResponse.json({
+        success: true,
+        message: "개발 환경용 인증번호가 전송되었습니다.",
+        testCode,
+      });
     }
+
+    const hasBizEMConfig =
+      process.env.BIZEM_API_BASE_URL &&
+      process.env.BIZEM_API_KEY &&
+      process.env.BIZEM_SENDER_KEY &&
+      process.env.BIZM_TEMPLATE_CODE_PHONE_VERIFICATION;
+
+    if (!hasBizEMConfig) {
+      return NextResponse.json(
+        { error: "SMS 서비스가 설정되지 않았습니다." },
+        { status: 500 }
+      );
+    }
+
+    const smsResult = await sendVerificationCode(phone, code);
+
+    const devPayload = isDev
+      ? { bizemResponse: smsResult.providerResponse }
+      : {};
 
     if (!smsResult.success) {
       return NextResponse.json(
-        { error: smsResult.error || "인증번호 전송에 실패했습니다." },
+        {
+          error: smsResult.error || "인증번호 전송에 실패했습니다.",
+          ...devPayload,
+        },
         { status: 500 }
       );
     }
@@ -76,8 +91,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "인증번호가 전송되었습니다.",
-      // 개발 환경에서는 인증번호도 반환 (테스트용)
-      ...(isDevelopment && !hasBizEMConfig && { code }),
+      ...(smsResult.messageId ? { messageId: smsResult.messageId } : {}),
+      ...devPayload,
     });
   } catch (error) {
     console.error("인증번호 전송 중 오류:", error);

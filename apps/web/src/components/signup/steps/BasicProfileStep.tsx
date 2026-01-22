@@ -33,20 +33,43 @@ export function BasicProfileStep({
   onVerificationComplete,
   isPhoneVerified = false,
 }: BasicProfileStepProps) {
+  const MAX_ATTEMPTS = 5;
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [timer, setTimer] = useState(0); // 5분 = 300초
-  const [generatedCode, setGeneratedCode] = useState<string>("");
+  const [isAttemptExceeded, setIsAttemptExceeded] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+
+  const getAttemptStateFromMessage = (message?: string) => {
+    if (!message) {
+      return { shouldForceResend: false, remainingAttempts: undefined };
+    }
+    const normalizedMessage = message.replace(/[\s.]/g, "");
+    const remainingMatch = message.match(/(\d+)회 남음/);
+    const remainingAttempts = remainingMatch
+      ? Number(remainingMatch[1])
+      : undefined;
+    const shouldForceResend =
+      message.includes("인증 시도 횟수를 초과했습니다.") ||
+      remainingAttempts === 0;
+    return { shouldForceResend, remainingAttempts };
+  };
+
+  const getRemainingSecondsFromMessage = (message?: string) => {
+    if (!message) {
+      return undefined;
+    }
+    const match = message.match(/(\d+)\s*초\s*후\s*가능/);
+    return match ? Number(match[1]) : undefined;
+  };
 
   // 전화번호가 11자리인지 확인 (하이픈 제거 후)
   const normalizedPhone = phone.replace(/[\s-]/g, "");
   const isPhoneComplete = normalizedPhone.length === 11;
-
-  // 개발 모드 확인
-  const isDevelopment = process.env.NODE_ENV === "development";
 
   // 전화번호가 완성되면 인증번호 입력 UI 표시
   const showVerificationUI = isPhoneComplete && !isPhoneVerified;
@@ -67,12 +90,30 @@ export function BasicProfileStep({
     }
   }, [timer]);
 
-  // 타이머 포맷팅 (MM:SS)
-  const formatTimer = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [resendCooldown]);
+
+  useEffect(() => {
+    const { shouldForceResend, remainingAttempts } =
+      getAttemptStateFromMessage(codeError);
+    if (shouldForceResend) {
+      setIsAttemptExceeded(true);
+    } else if (typeof remainingAttempts === "number") {
+      setIsAttemptExceeded(false);
+    }
+  }, [codeError]);
 
   // 인증번호 전송
   const handleSendCode = async () => {
@@ -82,21 +123,11 @@ export function BasicProfileStep({
 
     setIsSending(true);
     setCodeError(undefined);
+    setIsAttemptExceeded(false);
+    setResendCooldown(0);
     onClearError("phone");
 
     try {
-      // 개발 모드: 자동으로 인증번호 생성
-      if (isDevelopment) {
-        const autoCode = Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedCode(autoCode);
-        setIsCodeSent(true);
-        setTimer(10); // 테스트용: 10초
-        console.log("📱 [개발 모드] 인증번호:", autoCode);
-        setIsSending(false);
-        return;
-      }
-
-      // 프로덕션 모드: API 호출
       const response = await fetch("/api/auth/phone/send", {
         method: "POST",
         headers: {
@@ -112,19 +143,18 @@ export function BasicProfileStep({
       }
 
       setIsCodeSent(true);
-      setTimer(3); // 테스트용: 3초 (프로덕션에서는 300초로 변경)
-
-      // 개발 환경에서 인증번호가 반환된 경우
-      if (data.code) {
-        setGeneratedCode(data.code);
-        console.log("📱 인증번호:", data.code);
-      }
+      setTimer(300);
+      setAttemptsLeft(MAX_ATTEMPTS);
     } catch (error) {
-      setCodeError(
+      const message =
         error instanceof Error
           ? error.message
-          : "인증번호 전송에 실패했습니다."
-      );
+          : "인증번호 전송에 실패했습니다.";
+      setCodeError(message);
+      const remainingSeconds = getRemainingSecondsFromMessage(message);
+      if (typeof remainingSeconds === "number") {
+        setResendCooldown(remainingSeconds);
+      }
     } finally {
       setIsSending(false);
     }
@@ -148,20 +178,6 @@ export function BasicProfileStep({
     onClearError("code");
 
     try {
-      // 개발 모드에서는 생성된 코드와 비교
-      if (isDevelopment && generatedCode) {
-        if (code === generatedCode) {
-          // 인증 완료
-          onVerificationComplete();
-          setTimer(0);
-        } else {
-          setCodeError("인증번호가 일치하지 않습니다.");
-        }
-        setIsVerifying(false);
-        return;
-      }
-
-      // 프로덕션 모드: API 호출
       const response = await fetch("/api/auth/phone/verify", {
         method: "POST",
         headers: {
@@ -173,24 +189,63 @@ export function BasicProfileStep({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "인증번호가 일치하지 않습니다.");
+        const message = data.error || "인증번호가 일치하지 않습니다.";
+        const { shouldForceResend, remainingAttempts } =
+          getAttemptStateFromMessage(message);
+
+        if (typeof remainingAttempts === "number") {
+          setAttemptsLeft(remainingAttempts);
+        } else if (
+          /만료/.test(message) ||
+          /존재하지\s*않습니다/.test(message)
+        ) {
+          setAttemptsLeft((prev) => Math.max(prev - 1, 0));
+        }
+
+        if (shouldForceResend || remainingAttempts === 0) {
+          setIsAttemptExceeded(true);
+        } else if (typeof remainingAttempts === "number") {
+          setIsAttemptExceeded(false);
+        }
+        throw new Error(message);
       }
 
       // 인증 완료
       onVerificationComplete();
       setTimer(0);
     } catch (error) {
-      setCodeError(
-        error instanceof Error
-          ? error.message
-          : "인증번호가 일치하지 않습니다."
-      );
+      const message =
+        error instanceof Error ? error.message : "인증번호가 일치하지 않습니다.";
+      const { shouldForceResend, remainingAttempts } =
+        getAttemptStateFromMessage(message);
+
+      if (typeof remainingAttempts === "number") {
+        setAttemptsLeft(remainingAttempts);
+        setCodeError(message);
+      } else if (/만료/.test(message) || /존재하지\s*않습니다/.test(message)) {
+        setAttemptsLeft((prev) => Math.max(prev - 1, 0));
+        const nextRemaining = Math.max(attemptsLeft - 1, 0);
+        setCodeError(
+          `인증번호가 일치하지 않습니다. (${nextRemaining}회 남음)`
+        );
+      } else {
+        setCodeError(message);
+      }
+
+      if (shouldForceResend || remainingAttempts === 0 || attemptsLeft === 0) {
+        setIsAttemptExceeded(true);
+      } else if (typeof remainingAttempts === "number") {
+        setIsAttemptExceeded(false);
+      }
     } finally {
       setIsVerifying(false);
     }
   };
 
   const codeValid = code.length === 6;
+  const { shouldForceResend } = getAttemptStateFromMessage(codeError);
+  const showResendOnly =
+    isAttemptExceeded || shouldForceResend || attemptsLeft === 0;
 
   return (
     <PaperCard className="p-6 sm:p-8">
@@ -230,7 +285,7 @@ export function BasicProfileStep({
                 setIsCodeSent(false);
                 setCode("");
                 setTimer(0);
-                setGeneratedCode("");
+                setAttemptsLeft(MAX_ATTEMPTS);
               }
             }}
             error={phoneError}
@@ -251,7 +306,7 @@ export function BasicProfileStep({
             {!isCodeSent && (
               <Button
                 onClick={handleSendCode}
-                disabled={!isPhoneComplete || isSending}
+                disabled={!isPhoneComplete || isSending || resendCooldown > 0}
                 className="w-full"
                 style={{
                   backgroundColor: COLORS.brand.primary,
@@ -268,6 +323,11 @@ export function BasicProfileStep({
                   "인증번호 전송"
                 )}
               </Button>
+            )}
+            {!isCodeSent && resendCooldown > 0 && (
+              <p className="mt-2 text-xs" style={{ color: COLORS.text.tertiary }}>
+                {resendCooldown}초 후 다시 요청할 수 있어요.
+              </p>
             )}
 
             {/* 인증번호 입력 필드 (전송 후) */}
@@ -316,7 +376,7 @@ export function BasicProfileStep({
                     </p>
                   )}
                   
-                  {/* 카카오톡 메시지 안내 - 미니멀 디자인 */}
+                  {/* 문자 메시지 안내 - 미니멀 디자인 */}
                   <p
                     className="mt-2 text-xs"
                     style={{
@@ -324,38 +384,44 @@ export function BasicProfileStep({
                       animation: "fadeInSlideUp 0.2s ease-out",
                     }}
                   >
-                    인증번호는 <span style={{ color: COLORS.brand.primary, fontWeight: 600 }}>카카오톡 메시지</span>에서 확인하실 수 있습니다.
+                    인증번호는{" "}
+                    <span style={{ color: COLORS.brand.primary, fontWeight: 600 }}>
+                      카카오톡 메시지
+                    </span>
+                    에서 확인이 가능합니다.
                   </p>
                 </div>
 
-                {/* 타이머 및 개발 모드 표시 */}
-                <div 
-                  className="flex items-center justify-between text-sm"
-                  style={{
-                    animation: "fadeInSlideUp 0.3s ease-out",
-                    color: COLORS.text.secondary,
-                  }}
-                >
-                  <div>
-                    {timer > 0 ? (
-                      <span>유효시간 {formatTimer(timer)}</span>
-                    ) : null}
-                  </div>
-                  {isDevelopment && generatedCode && timer > 0 && (
-                    <div 
-                      className="text-xs font-mono"
-                      style={{ 
-                        color: COLORS.text.tertiary,
-                        opacity: 0.6,
+                {/* 타이머 표시 */}
+                {/* 만료 경고 및 재전송 UI */}
+                {showResendOnly ? (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setCode("");
+                        setCodeError(undefined);
+                        setIsAttemptExceeded(false);
+                        handleSendCode();
+                      }}
+                      disabled={isSending || resendCooldown > 0}
+                      className="w-full"
+                      style={{
+                        backgroundColor: COLORS.brand.primary,
+                        color: "white",
                       }}
                     >
-                      {generatedCode}
-                    </div>
-                  )}
-                </div>
-
-                {/* 만료 경고 및 재전송 UI */}
-                {timer === 0 ? (
+                      인증번호 다시 받기
+                    </Button>
+                    {resendCooldown > 0 && (
+                      <p
+                        className="mt-2 text-xs text-center"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        {resendCooldown}초 후 다시 받을 수 있어요.
+                      </p>
+                    )}
+                  </>
+                ) : timer === 0 ? (
                   <div
                     className="space-y-3 p-4 rounded-lg"
                     style={{
@@ -393,9 +459,9 @@ export function BasicProfileStep({
                       onClick={() => {
                         setIsCodeSent(false);
                         setCode("");
-                        setGeneratedCode("");
                         handleSendCode();
                       }}
+                      disabled={isSending || resendCooldown > 0}
                       className="w-full"
                       style={{
                         backgroundColor: COLORS.brand.primary,
@@ -404,13 +470,21 @@ export function BasicProfileStep({
                     >
                       인증번호 다시 받기
                     </Button>
+                    {resendCooldown > 0 && (
+                      <p
+                        className="text-xs text-center"
+                        style={{ color: COLORS.text.tertiary }}
+                      >
+                        {resendCooldown}초 후 다시 받을 수 있어요.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <>
                     {/* 인증하기 버튼 */}
                     <Button
                       onClick={handleVerifyCode}
-                      disabled={!codeValid || isVerifying}
+                      disabled={!codeValid || isVerifying || resendCooldown > 0}
                       className="w-full"
                       style={{
                         backgroundColor: COLORS.brand.primary,

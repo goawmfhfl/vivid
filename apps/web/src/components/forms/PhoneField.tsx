@@ -10,6 +10,7 @@ interface PhoneFieldProps {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  actionSlot?: React.ReactNode;
 }
 
 export function PhoneField({
@@ -18,6 +19,7 @@ export function PhoneField({
   placeholder, // 현재 사용되지 않음 (각 입력 필드에 하드코딩된 placeholder 사용)
   error,
   disabled = false,
+  actionSlot,
 }: PhoneFieldProps) {
   // placeholder는 현재 사용되지 않지만, 인터페이스 호환성을 위해 유지
   void placeholder;
@@ -186,6 +188,7 @@ export function PhoneField({
             backgroundColor: "white",
           }}
         />
+        {actionSlot && <div className="ml-2 flex-shrink-0">{actionSlot}</div>}
       </div>
       {error && (
         <p

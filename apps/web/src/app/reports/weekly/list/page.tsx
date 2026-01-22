@@ -46,7 +46,6 @@ function convertWeeklyVividToPeriodSummary(
 }
 
 function WeeklyListPage() {
-
   // 주간 피드백 리스트 조회
   const {
     data: weeklyVividList = [],

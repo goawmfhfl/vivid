@@ -256,15 +256,15 @@ input[type="number"] {
 @keyframes emotion-point-pulse {
   0% {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    opacity: 0.8;
   }
   50% {
     transform: translate(-50%, -50%) scale(1.3);
-    opacity: 0.8;
+    opacity: 0.6;
   }
   100% {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    opacity: 0.4;
   }
 }
 
@@ -274,7 +274,7 @@ input[type="number"] {
     opacity: 0.6;
   }
   100% {
-    transform: translate(-50%, -50%) scale(2.5);
+    transform: translate(-50%, -50%) scale(1.3);
     opacity: 0;
   }
 }
@@ -303,7 +303,7 @@ input[type="number"] {
 }
 
 .emotion-intensity-selected {
-  animation: emotion-intensity-pulse 0.6s ease-out;
+  animation: emotion-intensity-pulse 0.6s alternate-reverse;
 }
 
 .emotion-pulse-ring {
@@ -311,8 +311,8 @@ input[type="number"] {
   inset: 0;
   border-radius: 12px;
   border: 1px solid currentColor;
-  opacity: 0.4;
-  animation: emotion-pulse-ring 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  opacity: 0.6;
+  animation: emotion-pulse-ring 3.5s alternate-reverse infinite;
   pointer-events: none;
 }
 
@@ -340,8 +340,8 @@ input[type="number"] {
 }
 
 .emotion-aura {
-  animation: emotion-aura-pulse 2.5s alternate-reverse infinite;
-  box-shadow: 0 0 64px currentColor;
+  animation: emotion-aura-pulse 3.5s alternate-reverse infinite;
+  box-shadow: 0 0 8px currentColor;
   pointer-events: none;
 }
 
@@ -351,9 +351,10 @@ input[type="number"] {
   inset: 0;
   border-radius: 9999px;
   border: 1px solid currentColor;
-  animation: emotion-aura-pulse 2.5s alternate-reverse infinite;
-  animation-delay: 0.9s;
-  opacity: 1;
+  box-shadow: 0 0 8px currentColor;
+  animation: emotion-aura-pulse 3.5s alternate-reverse infinite;
+  animation-delay: 1.2s;
+  opacity: 0.9;
 }
 
 .emotion-aura::before {
@@ -362,13 +363,15 @@ input[type="number"] {
   inset: 0;
   border-radius: 9999px;
   border: 1px solid currentColor;
-  animation: emotion-aura-pulse 2.5s alternate-reverse infinite;
+  box-shadow: 0 0 8px currentColor;
+  animation: emotion-aura-pulse 3.5s alternate-reverse infinite;
   animation-delay: 1.2s;
   opacity: 0.9;
 }
 
 .emotion-core-pulse {
-  animation: emotion-core-pulse 2.4s alternate-reverse infinite;
+  animation: emotion-core-pulse 3.5s alternate-reverse infinite;
+  box-shadow: 0 0 32px currentColor;
 }
 
 .emotion-core-pulse::after,
@@ -377,23 +380,24 @@ input[type="number"] {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
+  box-shadow: 0 0 8px currentColor;
   border: 1px solid currentColor;
-  animation: emotion-core-pulse 2.4s alternate-reverse infinite;
-  opacity: 0.4;
+  animation: emotion-core-pulse 2.5s alternate-reverse infinite;
+  opacity: 0.9;
 }
 
 .emotion-core-pulse::after {
   animation-delay: 1.2s;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .emotion-core-pulse::before {
   animation-delay: 2.4s;
-  opacity: 0.4;
+  opacity: 0.7;
 }
 
 .emotion-core-inner {
-  animation: emotion-core-inner-pulse 2.4s alternate-reverse infinite;
+  animation: emotion-core-inner-pulse 3s alternate-reverse infinite;
 }
 
 .emotion-core-inner::after,
@@ -402,14 +406,15 @@ input[type="number"] {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
+  box-shadow: 0 0 8px currentColor;
   border: 1px solid currentColor;
-  animation: emotion-core-inner-pulse 2.4s alternate-reverse infinite;
-  opacity: 0.7;
+  animation: emotion-core-inner-pulse 25s alternate-reverse infinite;
+  opacity: 0.9;
 }
 
 .emotion-core-inner::after {
-  animation-delay: 1.1s;
-  opacity: 0.7;
+  animation-delay: 2.4s;
+  opacity: 0.8;
 }
 
 .emotion-core-inner::before {
@@ -433,42 +438,42 @@ input[type="number"] {
 }
 
 .emotion-core-deep::after {
-  animation-delay: 1s;
+  animation-delay: 2.4s;
   opacity: 0.7;
 }
 
 .emotion-core-deep::before {
-  animation-delay: 1s;
+  animation-delay: 1.2s;
   opacity: 0.6;
 }
 
 @keyframes emotion-core-pulse {
   0% {
     transform: scale(1);
-    opacity: 0.7;
+    opacity: 0.6;
   }
   60% {
     transform: scale(1.12);
     opacity: 0.4;
   }
   100% {
-    transform: scale(1);
-    opacity: 0.6;
+    transform: scale(0.8);
+    opacity: 0.8;
   }
 }
 
 @keyframes emotion-core-inner-pulse {
   0% {
     transform: scale(1);
-    opacity: 0.55;
+    opacity: 0.8;
   }
   60% {
     transform: scale(1.15);
-    opacity: 0.35;
+    opacity: 0.4;
   }
   100% {
     transform: scale(1);
-    opacity: 0.5;
+    opacity: 0.8;
   }
 }
 
@@ -482,8 +487,8 @@ input[type="number"] {
     opacity: 0.3;
   }
   100% {
-    transform: scale(1);
-    opacity: 0.45;
+    transform: scale(0.8);
+    opacity: 0.8;
   }
 }
 

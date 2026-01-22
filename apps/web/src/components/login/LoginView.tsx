@@ -9,11 +9,12 @@ import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";
 import { SubmitButton } from "../forms/SubmitButton";
 import { Checkbox } from "../ui/checkbox";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FindEmailDialog } from "./FindEmailDialog";
 import { FindPasswordDialog } from "./FindPasswordDialog";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
+import { useModalStore } from "@/store/useModalStore";
 
 const EMAIL_STORAGE_KEY = "login-saved-email";
 const REMEMBER_EMAIL_KEY = "login-remember-email";
@@ -32,8 +33,10 @@ export function LoginView() {
 
   // React Query mutation 사용
   const router = useRouter();
+  const searchParams = useSearchParams();
   const loginMutation = useLogin();
   const kakaoLoginMutation = useKakaoLogin();
+  const openSuccessModal = useModalStore((state) => state.openSuccessModal);
 
   // localStorage에서 저장된 이메일 불러오기
   useEffect(() => {
@@ -48,6 +51,15 @@ export function LoginView() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const message = searchParams.get("message");
+    if (!message) {
+      return;
+    }
+    openSuccessModal(message);
+    router.replace("/login");
+  }, [openSuccessModal, router, searchParams]);
 
   // Email validation
   const validateEmail = (email: string): boolean => {

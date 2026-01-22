@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
@@ -8,38 +8,26 @@ import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivi
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
-import { useCountUp } from "@/hooks/useCountUp";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 
 // 월간 후보 아이템 컴포넌트
 function MonthlyCandidateItem({
   candidate,
   generatingMonth,
-  progress,
+  timerProgress,
   handleCreateFeedback,
 }: {
   candidate: { month: string; month_label: string; daily_vivid_count: number };
   generatingMonth: string | null;
-  progress: { current: number; total: number; currentStep: string } | null;
+  timerProgress?: number;
   handleCreateFeedback: (month: string) => void;
 }) {
-  const isGenerating = generatingMonth === candidate.month || progress !== null;
-
-  const actualPercentage = progress
-    ? Math.round((progress.current / progress.total) * 100)
-    : 0;
-  const progressPercentage = Math.min(actualPercentage, 99);
-  
-  const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
-
-  const getSectionNameKR = (sectionName: string) => {
-    const names: Record<string, string> = {
-      report: "비비드 리포트",
-      title: "제목",
-      완료: "완료",
-    };
-    return names[sectionName] || sectionName;
-  };
+  const isGenerating =
+    generatingMonth === candidate.month || timerProgress !== undefined;
+  const isComplete = (timerProgress ?? 0) >= 100;
+  const progressPercentage = isComplete
+    ? 100
+    : Math.min(timerProgress ?? 0, 99);
 
   return (
     <div
@@ -149,7 +137,7 @@ function MonthlyCandidateItem({
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
         {/* 진행 상황 표시 (버튼 옆에) */}
-        {progress && (
+        {timerProgress !== undefined && (
           <div className="flex items-center gap-1 sm:gap-2">
             <div className="flex flex-col items-end gap-0.5 sm:gap-1">
               <p
@@ -162,10 +150,10 @@ function MonthlyCandidateItem({
                 }}
               >
                 <span className="sm:hidden">
-                  {getSectionNameKR(progress.currentStep)}
+                  {isComplete ? "완료" : "생성 중"}
                 </span>
                 <span className="hidden sm:inline">
-                  {getSectionNameKR(progress.currentStep)} 생성 중...
+                  {isComplete ? "완료" : "생성 중..."}
                 </span>
               </p>
               <div className="flex items-center gap-1 sm:gap-2">
@@ -179,7 +167,7 @@ function MonthlyCandidateItem({
                   <div
                     className="h-full transition-all duration-1000 ease-out"
                     style={{
-                      width: `${animatedProgress}%`,
+                      width: `${progressPercentage}%`,
                       backgroundColor: COLORS.brand.primary,
                     }}
                   />
@@ -194,7 +182,7 @@ function MonthlyCandidateItem({
                     textAlign: "right",
                   }}
                 >
-                  {Math.round(animatedProgress)}%
+                  {Math.round(progressPercentage)}%
                 </span>
               </div>
             </div>
@@ -249,13 +237,14 @@ export function MonthlyCandidatesSection({
   const { data: candidates = [], isLoading } = useMonthlyCandidates();
   const [generatingMonth, setGeneratingMonth] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const {
-    monthlyVividProgress,
-    setMonthlyVividProgress,
-    clearMonthlyVividProgress,
-    monthlyCandidatesDropdown,
-    toggleMonthlyCandidatesDropdown,
-  } = useModalStore();
+  const { monthlyCandidatesDropdown, toggleMonthlyCandidatesDropdown } =
+    useModalStore();
+
+  const [timerProgress, setTimerProgress] = useState<Record<string, number>>(
+    {}
+  );
+  const timerIntervalsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const completionTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 월간 vivid 필터링
   const candidatesForCreation = useMemo(() => {
@@ -265,17 +254,62 @@ export function MonthlyCandidatesSection({
     );
   }, [candidates, referenceDate]);
 
+  const clearTimer = (month: string) => {
+    if (timerIntervalsRef.current[month]) {
+      clearInterval(timerIntervalsRef.current[month]);
+      delete timerIntervalsRef.current[month];
+    }
+    if (completionTimeoutsRef.current[month]) {
+      clearTimeout(completionTimeoutsRef.current[month]);
+      delete completionTimeoutsRef.current[month];
+    }
+    setTimerProgress((prev) => {
+      const next = { ...prev };
+      delete next[month];
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const intervals = timerIntervalsRef.current;
+    const timeouts = completionTimeoutsRef.current;
+    return () => {
+      Object.values(intervals).forEach((interval) => clearInterval(interval));
+      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
+    };
+  }, []);
+
   const handleCreateFeedback = async (month: string) => {
     try {
       const userId = await getCurrentUserId();
 
-      // 진행 상황 초기화 (전역 상태)
-      setMonthlyVividProgress(month, {
-        month,
-        current: 0,
-        total: 2, // report, title
-        currentStep: "report",
-      });
+      setGeneratingMonth(month);
+      clearTimer(month);
+
+      // 타이머 시작 (90초 동안 0% → 99%)
+      const DURATION_MS = 150000;
+      const TARGET_PERCENTAGE = 99;
+      const UPDATE_INTERVAL = 100;
+      const startTime = Date.now();
+
+      setTimerProgress((prev) => ({ ...prev, [month]: 0 }));
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= DURATION_MS) {
+          setTimerProgress((prev) => ({
+            ...prev,
+            [month]: TARGET_PERCENTAGE,
+          }));
+          clearInterval(interval);
+          delete timerIntervalsRef.current[month];
+          return;
+        }
+        const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
+        setTimerProgress((prev) => ({ ...prev, [month]: progress }));
+      }, UPDATE_INTERVAL);
+
+      timerIntervalsRef.current[month] = interval;
 
       // POST 요청으로 월간 비비드 생성
       const response = await fetch("/api/monthly-vivid/generate", {
@@ -298,12 +332,11 @@ export function MonthlyCandidatesSection({
       const feedbackData = result.data as MonthlyVivid & { id: string };
 
       // 완료 처리
-      setMonthlyVividProgress(month, {
-        month,
-        current: 2,
-        total: 2,
-        currentStep: "완료",
-      });
+      clearTimer(month);
+      setTimerProgress((prev) => ({ ...prev, [month]: 100 }));
+      completionTimeoutsRef.current[month] = setTimeout(() => {
+        clearTimer(month);
+      }, 600);
 
       // MONTHLY_CANDIDATES에서 해당 월의 monthly_vivid_id 업데이트
       queryClient.setQueryData<
@@ -332,8 +365,7 @@ export function MonthlyCandidatesSection({
     } catch (error) {
       console.error("월간 vivid 생성 실패:", error);
 
-      // 진행 상황 초기화 (전역 상태)
-      clearMonthlyVividProgress(month);
+      clearTimer(month);
 
       alert(
         error instanceof Error
@@ -440,7 +472,7 @@ export function MonthlyCandidatesSection({
               key={candidate.month}
               candidate={candidate}
               generatingMonth={generatingMonth}
-              progress={monthlyVividProgress[candidate.month] || null}
+              timerProgress={timerProgress[candidate.month]}
               handleCreateFeedback={handleCreateFeedback}
             />
           ))}
