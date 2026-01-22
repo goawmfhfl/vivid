@@ -198,7 +198,7 @@ export async function generateSection<T>(
 
     // 추적 정보를 결과에 첨부 (테스트 환경에서만, 객체인 경우에만)
     if (
-      (process.env.NODE_ENV === "development" ||
+      (process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
         process.env.NEXT_PUBLIC_NODE_ENV === "development") &&
       result !== null &&
       typeof result === "object" &&

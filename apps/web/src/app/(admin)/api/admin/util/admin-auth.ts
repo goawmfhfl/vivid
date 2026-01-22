@@ -13,17 +13,16 @@ import {
 export async function isAdmin(userId: string): Promise<boolean> {
   const supabase = getServiceSupabase();
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
+  const { data: { user }, error } = await supabase.auth.admin.getUserById(
+    userId
+  );
 
-  if (error || !profile) {
+  if (error || !user) {
     return false;
   }
 
-  return profile.role === "admin";
+  const userRole = (user.user_metadata?.role as string) || "user";
+  return userRole === "admin";
 }
 
 /**

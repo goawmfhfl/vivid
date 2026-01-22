@@ -2,8 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
-import { createUserProfile } from "@/lib/profile-service";
-import type { CreateProfileRequest } from "@/types/profile";
 
 // 회원가입 데이터 타입 정의
 export interface SignUpData {
@@ -103,6 +101,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         agreeMarketing,
         phone_verified: true, // 핸드폰 인증 완료
         phone_verified_at: new Date().toISOString(),
+        role: "user", // 기본 역할
+        subscription: {
+          plan: "free",
+          status: "none",
+          started_at: null,
+          expires_at: null,
+          updated_at: new Date().toISOString(),
+        },
       };
 
       const { error: updateError } = await supabase.auth.updateUser({
@@ -136,6 +142,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
             gender,
             phone_verified: true, // 핸드폰 인증 완료
             phone_verified_at: new Date().toISOString(),
+            role: "user", // 기본 역할
+            subscription: {
+              plan: "free",
+              status: "none",
+              started_at: null,
+              expires_at: null,
+              updated_at: new Date().toISOString(),
+            },
           },
         },
       });
@@ -174,72 +188,36 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       throw new SignUpError("사용자 정보를 가져올 수 없습니다.");
     }
 
-    // 2. 프로필 생성
-    try {
-      const profileData: CreateProfileRequest = {
-        id: user.id,
-        email: user.email || email || "",
-        name,
-        phone,
-        birthYear,
-        gender,
-        agreeTerms,
-        agreeAI,
-        agreeMarketing,
-        role: "user",
-      };
-
-      await createUserProfile(profileData);
-    } catch (profileError) {
-      console.error("프로필 생성 중 오류:", profileError);
-      // 프로필 생성 실패는 에러로 처리하지 않고 로그만 남김
-      // (이미 존재하는 경우 등은 정상 처리)
-    }
-
-    // 3. 기본 구독 생성 (free 플랜) 또는 쿠폰 적용
-    // 세션이 있는 경우에만 구독 생성 (일반 회원가입은 이메일 인증 후 세션이 생성됨)
-    if (session) {
+    // 2. 쿠폰 적용 (쿠폰 코드가 있는 경우)
+    if (couponCode) {
       try {
-        if (couponCode) {
-          // 쿠폰이 있으면 쿠폰 적용
-          const couponResponse = await fetch("/api/coupons/apply", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({ code: couponCode }),
-          });
+        // 세션이 있으면 Authorization 헤더 사용, 없으면 서버 사이드에서 처리
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
 
-          if (!couponResponse.ok) {
-            const errorData = await couponResponse.json();
-            console.error("쿠폰 적용 실패:", errorData);
-            // 쿠폰 적용 실패는 에러로 처리하지 않고 로그만 남김
-          }
-        } else {
-          // 쿠폰이 없으면 기본 free 플랜 생성
-          const subscriptionResponse = await fetch("/api/subscriptions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              plan: "free",
-              status: "active",
-              expires_at: null,
-            }),
-          });
-
-          if (!subscriptionResponse.ok) {
-            const errorData = await subscriptionResponse.json();
-            console.error("구독 생성 실패:", errorData);
-            // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
-          }
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
         }
-      } catch (subscriptionError) {
-        console.error("구독/쿠폰 처리 중 오류:", subscriptionError);
-        // 구독 생성 실패는 에러로 처리하지 않고 로그만 남김
+
+        const couponResponse = await fetch("/api/coupons/apply", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ code: couponCode }),
+        });
+
+        if (!couponResponse.ok) {
+          const errorData = await couponResponse.json();
+          console.error("쿠폰 적용 실패:", errorData);
+          // 쿠폰 적용 실패는 에러로 처리하지 않고 로그만 남김
+          // (회원가입은 성공했으므로)
+        } else {
+          console.log("쿠폰이 성공적으로 적용되었습니다:", couponCode);
+        }
+      } catch (couponError) {
+        console.error("쿠폰 처리 중 오류:", couponError);
+        // 쿠폰 처리 실패는 에러로 처리하지 않고 로그만 남김
+        // (회원가입은 성공했으므로)
       }
     }
 

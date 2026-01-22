@@ -33,6 +33,7 @@ export function PhoneVerificationStep({
   const [isAttemptExceeded, setIsAttemptExceeded] = useState(false);
   const [verifyErrorResponse, setVerifyErrorResponse] = useState<unknown>();
 
+
   const getAttemptStateFromMessage = (message?: string) => {
     if (!message) {
       return { shouldForceResend: false, remainingAttempts: undefined };
@@ -284,7 +285,7 @@ export function PhoneVerificationStep({
               {codeError && (
                 <p className="mt-1 text-xs text-red-500">{codeError}</p>
               )}
-              {process.env.NODE_ENV !== "production" &&
+              {process.env.NEXT_PUBLIC_NODE_ENV !== "production" &&
                 Boolean(verifyErrorResponse) && (
                   <p
                     className="mt-1 text-xs whitespace-pre-wrap"

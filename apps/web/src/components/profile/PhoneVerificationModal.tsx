@@ -14,11 +14,11 @@
  } from "@/components/ui/dialog";
  import { COLORS } from "@/lib/design-system";
 
- interface PhoneVerificationModalProps {
-   open: boolean;
-   onClose: () => void;
-   onApply: (phone: string) => void;
- }
+interface PhoneVerificationModalProps {
+  open: boolean;
+  onClose: () => void;
+  onApply: (phone: string) => void | Promise<void>;
+}
 
  export function PhoneVerificationModal({
    open,
@@ -31,24 +31,26 @@
    const [isVerifyingCode, setIsVerifyingCode] = useState(false);
    const [phoneEditError, setPhoneEditError] = useState<string | undefined>();
    const [isCodeSent, setIsCodeSent] = useState(false);
-   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-   const [verificationAttempts, setVerificationAttempts] = useState(0);
-   const [resendCountdown, setResendCountdown] = useState(0);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [verificationAttempts, setVerificationAttempts] = useState(0);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [isApplying, setIsApplying] = useState(false);
 
    const normalizedNewPhone = newPhone.replace(/[\s-]/g, "");
    const canSendCode = normalizedNewPhone.length >= 10;
 
-   const resetState = () => {
-     setNewPhone("");
-     setVerificationCode("");
-     setIsSendingCode(false);
-     setIsVerifyingCode(false);
-     setPhoneEditError(undefined);
-     setIsCodeSent(false);
-     setIsPhoneVerified(false);
-     setVerificationAttempts(0);
-     setResendCountdown(0);
-   };
+  const resetState = () => {
+    setNewPhone("");
+    setVerificationCode("");
+    setIsSendingCode(false);
+    setIsVerifyingCode(false);
+    setPhoneEditError(undefined);
+    setIsCodeSent(false);
+    setIsPhoneVerified(false);
+    setVerificationAttempts(0);
+    setResendCountdown(0);
+    setIsApplying(false);
+  };
 
    useEffect(() => {
      if (!open) {
@@ -331,15 +333,25 @@
              </button>
              <button
                type="button"
-               onClick={() => onApply(newPhone)}
-               disabled={!isPhoneVerified}
+               onClick={async () => {
+                 if (!isPhoneVerified) return;
+                setIsApplying(true);
+                try {
+                  await onApply(newPhone);
+                } catch (error) {
+                  console.error("전화번호 적용 실패:", error);
+                } finally {
+                  setIsApplying(false);
+                }
+              }}
+               disabled={!isPhoneVerified || isApplying}
                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
                style={{
                  backgroundColor: COLORS.brand.primary,
                  color: COLORS.text.white,
                }}
              >
-               완료
+               {isApplying ? "저장 중..." : "완료"}
              </button>
            </div>
          </DialogFooter>

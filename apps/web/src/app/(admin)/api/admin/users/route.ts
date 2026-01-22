@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import type { UserListItem } from "@/types/admin";
+import type { SubscriptionMetadata } from "@/types/subscription";
 
 /**
  * GET /api/admin/users
- * 유저 목록 조회 (프라이버시 보호: 내용 필드 제외)
+ * 유저 목록 조회 (user_metadata 기반)
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -19,77 +20,58 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role") || "";
-    const isActive = searchParams.get("is_active");
-    const _subscriptionStatus = searchParams.get("subscription_status") || "";
 
     const supabase = getServiceSupabase();
     const offset = (page - 1) * limit;
 
-    // 기본 쿼리
-    let query = supabase
-      .from("profiles")
-      .select(
-        `
-        id,
-        email,
-        name,
-        role,
-        is_active,
-        created_at,
-        last_login_at
-      `,
-        { count: "exact" }
-      )
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    // 모든 사용자 조회 (페이지네이션 적용)
+    const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({
+      page: page,
+      perPage: limit,
+    });
 
-    // 검색 필터
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
-    }
-
-    // 역할 필터
-    if (role) {
-      query = query.eq("role", role);
-    }
-
-    // 활성 상태 필터
-    if (isActive !== null && isActive !== "") {
-      query = query.eq("is_active", isActive === "true");
-    }
-
-    const { data: profiles, error, count } = await query;
-
-    if (error) {
-      console.error("유저 목록 조회 실패:", error);
+    if (listError) {
+      console.error("유저 목록 조회 실패:", listError);
       return NextResponse.json(
         { error: "유저 목록을 불러오는데 실패했습니다." },
         { status: 500 }
       );
     }
 
-    // 구독 정보 및 AI 사용량 조회
-    const userIds = profiles?.map((p) => p.id) || [];
-    const [subscriptionsResult, aiUsageResult] = await Promise.all([
-      // 구독 정보 조회
-      supabase
-        .from("subscriptions")
-        .select("user_id, plan, status, expires_at")
-        .in("user_id", userIds),
-      // AI 사용량 집계
-      supabase
-        .from("ai_requests")
-        .select("user_id, total_tokens, cost_usd, cost_krw")
-        .in("user_id", userIds),
-    ]);
+    const allUsers = usersData.users || [];
+    let filteredUsers = allUsers;
 
-    const subscriptions = subscriptionsResult.data || [];
+    // 검색 필터 (이메일, 이름)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredUsers = filteredUsers.filter(
+        (user) =>
+          user.email?.toLowerCase().includes(searchLower) ||
+          (user.user_metadata?.name as string)?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // 역할 필터
+    if (role) {
+      filteredUsers = filteredUsers.filter(
+        (user) => (user.user_metadata?.role as string) === role
+      );
+    }
+
+    // 총 개수 계산 (필터링 후)
+    const totalCount = filteredUsers.length;
+
+    // 페이지네이션 적용
+    const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+
+    // AI 사용량 조회
+    const userIds = paginatedUsers.map((u) => u.id);
+    const aiUsageResult = await supabase
+      .from("ai_requests")
+      .select("user_id, total_tokens, cost_usd, cost_krw")
+      .in("user_id", userIds);
+
     const aiRequests = aiUsageResult.data || [];
-
-    // 구독 정보를 맵으로 변환
-    const subscriptionMap = new Map(
-      subscriptions.map((sub) => [sub.user_id, sub])
-    );
 
     // AI 사용량 집계
     interface UserAIUsage {
@@ -110,47 +92,46 @@ export async function GET(request: NextRequest) {
         });
       }
       const usage = aiUsageMap.get(userId);
-      if (!usage) {
-        // 이론적으로는 발생하지 않아야 하지만, 타입 안전성을 위해 체크
-        return;
+      if (usage) {
+        usage.total_requests += 1;
+        usage.total_tokens += Number(req.total_tokens || 0);
+        usage.total_cost_usd += Number(req.cost_usd || 0);
+        usage.total_cost_krw += Number(req.cost_krw || 0);
       }
-      usage.total_requests += 1;
-      usage.total_tokens += Number(req.total_tokens || 0);
-      usage.total_cost_usd += Number(req.cost_usd || 0);
-      usage.total_cost_krw += Number(req.cost_krw || 0);
     });
 
     // 결과 조합
-    const users: UserListItem[] =
-      profiles?.map((profile) => ({
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role as "user" | "admin" | "moderator",
-        is_active: profile.is_active,
-        created_at: profile.created_at,
-        last_login_at: profile.last_login_at,
-        subscription: subscriptionMap.get(profile.id)
+    const users: UserListItem[] = paginatedUsers.map((user) => {
+      const metadata = user.user_metadata || {};
+      const subscription = metadata.subscription as SubscriptionMetadata | undefined;
+      const userRole = (metadata.role as string) || "user";
+
+      return {
+        id: user.id,
+        email: user.email || "",
+        name: (metadata.name as string) || "",
+        role: userRole as "user" | "admin",
+        is_active: true, // user_metadata에 is_active가 없으면 기본값 true
+        created_at: user.created_at,
+        last_login_at: (metadata.last_login_at as string) || null,
+        subscription: subscription
           ? {
-              plan: subscriptionMap.get(profile.id)!.plan as "free" | "pro",
-              status: subscriptionMap.get(profile.id)!.status as
-                | "active"
-                | "canceled"
-                | "expired"
-                | "past_due",
-              expires_at: subscriptionMap.get(profile.id)!.expires_at,
+              plan: subscription.plan,
+              status: subscription.status === "none" ? "active" : subscription.status,
+              expires_at: subscription.expires_at,
             }
           : undefined,
-        aiUsage: aiUsageMap.get(profile.id),
-      })) || [];
+        aiUsage: aiUsageMap.get(user.id),
+      };
+    });
 
     return NextResponse.json({
       users,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
     });
   } catch (error) {

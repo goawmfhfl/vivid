@@ -17,26 +17,24 @@ class ResetPasswordError extends Error {
 // 환경에 따른 redirectTo URL 생성
 const getRedirectToUrl = (): string => {
   // 환경 변수 확인
-  const nodeEnv = process.env.NEXT_PUBLIC_NODE_ENV;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const nodeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
+  const isProduction = nodeEnv === "production";
+  const isDevelopment = nodeEnv === "development";
 
-  // test 환경이거나 baseUrl이 설정되어 있으면 해당 URL 사용
-  if (nodeEnv === "test" && baseUrl) {
-    return `${baseUrl}/auth/reset-password`;
+  let baseUrl: string;
+
+  if (isProduction) {
+    baseUrl = "https://vividlog.app";
+  } else if (isDevelopment) {
+    baseUrl = "http://localhost:3000";
+  } else {
+    // test 환경 또는 기타 환경
+    baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+      (typeof window !== "undefined" ? window.location.origin : null) ||
+      "http://localhost:3000";
   }
 
-  // 프로덕션 환경이고 baseUrl이 설정되어 있으면 사용
-  if (nodeEnv === "production" && baseUrl) {
-    return `${baseUrl}/auth/reset-password`;
-  }
-
-  // 기본값: 현재 window.location.origin 사용
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/auth/reset-password`;
-  }
-
-  // 서버 사이드에서는 기본 URL 사용 (fallback)
-  return "https://todayrecord.vercel.app/auth/reset-password";
+  return `${baseUrl}/auth/reset-password`;
 };
 
 // 비밀번호 재설정 함수

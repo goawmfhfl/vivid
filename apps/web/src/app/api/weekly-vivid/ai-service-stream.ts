@@ -226,7 +226,7 @@ async function generateSection<T>(
 
       // 추적 정보를 결과에 첨부 (테스트 환경에서만)
       if (
-        process.env.NODE_ENV === "development" ||
+        process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
         process.env.NEXT_PUBLIC_NODE_ENV === "development"
       ) {
         const usage = completion.usage as ExtendedUsage | undefined;

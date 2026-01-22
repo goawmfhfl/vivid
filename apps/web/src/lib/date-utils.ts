@@ -90,7 +90,7 @@ export function getKSTWeekdayShort(date: Date = new Date()): string {
 function _isProduction(): boolean {
   if (typeof window === "undefined") {
     // 서버 사이드에서는 process.env 사용
-    return process.env.NODE_ENV === "production";
+    return process.env.NEXT_PUBLIC_NODE_ENV === "production";
   }
   // 클라이언트 사이드에서는 NEXT_PUBLIC_ 접두사 변수 사용
   return process.env.NEXT_PUBLIC_NODE_ENV === "production";

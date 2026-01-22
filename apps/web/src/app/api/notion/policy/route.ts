@@ -105,7 +105,7 @@ export async function GET(_request: NextRequest) {
     const data = (await response.json()) as NotionDatabaseQueryResponse;
 
     // ISR / 캐시 설정 (프로덕션에서는 길게, 개발에서는 즉시 반영)
-    const isDev = process.env.NODE_ENV === "development";
+    const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
     const maxAge = isDev ? 0 : 60 * 60 * 24 * 30; // 30일
 
     // 노션 데이터를 정제하여 반환

@@ -15,7 +15,7 @@ type QuestionData = {
  * 노션 자주 묻는 질문 데이터 조회 훅
  */
 export function useNotionQuestions() {
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
   return useQuery<QuestionData[]>({
     queryKey: [QUERY_KEYS.NOTION_QUESTIONS],

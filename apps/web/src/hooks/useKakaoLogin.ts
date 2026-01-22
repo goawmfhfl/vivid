@@ -10,11 +10,24 @@ class KakaoLoginError extends Error {
 }
 
 // 리디렉션 URL 계산
-
 const getRedirectUrl = () => {
-  const base =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    (typeof window !== "undefined" ? window.location.origin : null);
+  // NEXT_PUBLIC_NODE_ENV에 따라 URL 설정
+  const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
+  const isProduction = runtimeEnv === "production";
+  const isDevelopment = runtimeEnv === "development";
+  
+  let base: string;
+  
+  if (isProduction) {
+    base = "https://vividlog.app";
+  } else if (isDevelopment) {
+    base = "http://localhost:3000";
+  } else {
+    // test 환경 또는 기타 환경
+    base = process.env.NEXT_PUBLIC_BASE_URL ||
+      (typeof window !== "undefined" ? window.location.origin : null) ||
+      "http://localhost:3000";
+  }
 
   if (!base) {
     throw new KakaoLoginError(
@@ -29,6 +42,16 @@ const getRedirectUrl = () => {
 const loginWithKakao = async (): Promise<void> => {
   try {
     const redirectTo = getRedirectUrl();
+    const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
+    
+    // 디버깅 정보 로깅
+    console.log("[Kakao Login Debug]", {
+      redirectTo,
+      runtimeEnv,
+      windowOrigin: typeof window !== "undefined" ? window.location.origin : null,
+      expectedCallbackUrl: redirectTo,
+    });
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
       options: {
@@ -37,11 +60,21 @@ const loginWithKakao = async (): Promise<void> => {
     });
 
     if (error) {
-      console.error("카카오 로그인 에러:", error);
+      console.error("[Kakao Login Error]", {
+        error: error.message,
+        code: error.code,
+        status: error.status,
+        redirectTo,
+      });
       throw new KakaoLoginError("카카오 로그인에 실패했습니다.");
     }
 
-    console.log("카카오 로그인 입니다용:", data);
+    // 실제 리다이렉션 URL 확인
+    console.log("[Kakao Login Success]", {
+      redirectTo,
+      actualRedirectUrl: data?.url,
+      note: "Supabase Redirect URLs에 다음이 등록되어 있어야 합니다: " + redirectTo,
+    });
   } catch (error) {
     if (error instanceof KakaoLoginError) {
       throw error;

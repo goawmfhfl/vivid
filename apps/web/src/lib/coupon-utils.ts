@@ -1,6 +1,6 @@
 import { getServiceSupabase } from "./supabase-service";
-import type { Coupon, CouponVerification } from "@/types/coupon";
-import { upsertSubscription } from "./subscription-utils";
+import type { Coupon, CouponVerification, UsedCoupon } from "@/types/coupon";
+import { updateSubscriptionMetadata } from "./subscription-utils";
 
 /**
  * 쿠폰 검증 함수
@@ -48,18 +48,41 @@ export async function verifyCoupon(
     };
   }
 
-  // 사용자가 이미 사용한 쿠폰인지 확인
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("used_coupons")
-    .eq("id", userId)
-    .single();
+  // 사용자가 이미 사용한 쿠폰인지 확인 (user_metadata에서)
+  const { data: { user }, error: getUserError } = await supabase.auth.admin.getUserById(
+    userId
+  );
 
-  const usedCoupons = Array.isArray(profile?.used_coupons)
-    ? profile?.used_coupons
-    : [];
-  const isUsed =
-    usedCoupons.includes(coupon.code) || usedCoupons.includes(coupon.name);
+  if (getUserError || !user) {
+    return {
+      coupon: coupon as Coupon,
+      isValid: false,
+      isUsed: false,
+      message: "사용자 정보를 확인할 수 없습니다.",
+    };
+  }
+
+  // used_coupons는 객체 배열 또는 문자열 배열(기존 데이터 호환)일 수 있음
+  const usedCouponsRaw = user.user_metadata?.used_coupons;
+  let isUsed = false;
+
+  if (Array.isArray(usedCouponsRaw)) {
+    // 객체 배열인 경우 (새 형식: {id, code})
+    if (usedCouponsRaw.length > 0 && typeof usedCouponsRaw[0] === "object") {
+      const usedCoupons = usedCouponsRaw as UsedCoupon[];
+      isUsed = usedCoupons.some(
+        (used) =>
+          used.id === coupon.id ||
+          used.code === coupon.code ||
+          used.code === coupon.name
+      );
+    } else {
+      // 문자열 배열인 경우 (기존 형식: ["WELCOME30"])
+      const usedCoupons = usedCouponsRaw as string[];
+      isUsed =
+        usedCoupons.includes(coupon.code) || usedCoupons.includes(coupon.name);
+    }
+  }
 
   if (isUsed) {
     return {
@@ -105,39 +128,74 @@ export async function applyCoupon(
   const expiresAt = new Date(now);
   expiresAt.setDate(expiresAt.getDate() + coupon.duration_days);
 
-  // subscriptions 업데이트
-  await upsertSubscription(userId, {
-    plan: "pro",
-    status: "active",
-    current_period_start: now.toISOString(),
-    expires_at: expiresAt.toISOString(),
-    cancel_at_period_end: true, // 쿠폰으로 등록한 경우 기간 종료 시 자동 취소
-  });
-
-  // profiles.used_coupons에 쿠폰명 추가
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("used_coupons")
-    .eq("id", userId)
-    .single();
-
-  const currentUsedCoupons = Array.isArray(profile?.used_coupons)
-    ? profile?.used_coupons
-    : [];
-  const updatedUsedCoupons = Array.from(
-    new Set([...currentUsedCoupons, coupon.code])
+  // user_metadata에서 기존 정보 가져오기
+  const { data: { user: currentUser }, error: getUserError } = await supabase.auth.admin.getUserById(
+    userId
   );
 
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({ used_coupons: updatedUsedCoupons })
-    .eq("id", userId);
-
-  if (profileError) {
-    console.error("프로필 업데이트 실패:", profileError);
+  if (getUserError || !currentUser) {
     return {
       success: false,
-      message: "프로필 업데이트 중 오류가 발생했습니다.",
+      message: "사용자 정보를 확인할 수 없습니다.",
+      expiresAt: null,
+    };
+  }
+
+  const currentMetadata = currentUser.user_metadata || {};
+  
+  // 기존 used_coupons를 객체 배열로 변환 (기존 데이터 호환)
+  const currentUsedCouponsRaw = currentMetadata.used_coupons;
+  let currentUsedCoupons: UsedCoupon[] = [];
+
+  if (Array.isArray(currentUsedCouponsRaw)) {
+    if (currentUsedCouponsRaw.length > 0 && typeof currentUsedCouponsRaw[0] === "object") {
+      // 이미 객체 배열인 경우
+      currentUsedCoupons = currentUsedCouponsRaw as UsedCoupon[];
+    } else {
+      // 문자열 배열인 경우 객체 배열로 변환 (기존 데이터 마이그레이션)
+      currentUsedCoupons = (currentUsedCouponsRaw as string[]).map((code) => ({
+        id: "", // 기존 데이터는 id가 없으므로 빈 문자열
+        code,
+      }));
+    }
+  }
+
+  // 중복 확인: id 또는 code로 확인
+  const isAlreadyUsed = currentUsedCoupons.some(
+    (used) => used.id === coupon.id || used.code === coupon.code
+  );
+
+  // 이미 사용한 쿠폰이 아니면 추가
+  const updatedUsedCoupons = isAlreadyUsed
+    ? currentUsedCoupons
+    : [...currentUsedCoupons, { id: coupon.id, code: coupon.code }];
+
+  // user_metadata에 구독 정보 및 used_coupons 업데이트
+  // phone_verified 등 기존 메타데이터는 보존
+  const { error: updateError } = await supabase.auth.admin.updateUserById(
+    userId,
+    {
+      user_metadata: {
+        ...currentMetadata,
+        subscription: {
+          plan: "pro",
+          status: "active",
+          started_at: now.toISOString(),
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        used_coupons: updatedUsedCoupons,
+        // phone_verified 정보 보존 (이미 true인 경우 유지)
+        phone_verified: currentMetadata.phone_verified ?? true,
+      },
+    }
+  );
+
+  if (updateError) {
+    console.error("구독 정보 업데이트 실패:", updateError);
+    return {
+      success: false,
+      message: "구독 정보 업데이트 중 오류가 발생했습니다.",
       expiresAt: null,
     };
   }

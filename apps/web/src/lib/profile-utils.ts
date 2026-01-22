@@ -30,17 +30,31 @@ export async function getCurrentUserProfile(): Promise<Profile | null> {
 
 /**
  * 로그인 시 last_login_at 업데이트
- * 클라이언트 사이드에서 직접 Supabase를 사용 (RLS 정책을 통해 자신의 프로필만 업데이트 가능)
+ * user_metadata에 저장 (profiles 테이블 대신)
  */
 export async function updateLastLoginAt(userId: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ last_login_at: new Date().toISOString() })
-      .eq("id", userId);
+    // 현재 사용자 정보 가져오기
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
-    if (error) {
-      console.error("last_login_at 업데이트 오류:", error);
+    if (getUserError || !user || user.id !== userId) {
+      // 현재 사용자가 아니거나 가져오기 실패 시 무시
+      return;
+    }
+
+    // 기존 user_metadata 가져오기
+    const currentMetadata = user.user_metadata || {};
+
+    // last_login_at 업데이트
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: {
+        ...currentMetadata,
+        last_login_at: new Date().toISOString(),
+      },
+    });
+
+    if (updateError) {
+      console.error("last_login_at 업데이트 오류:", updateError);
       // 에러가 발생해도 로그인은 계속 진행
     }
   } catch (error) {

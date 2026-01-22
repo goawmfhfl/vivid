@@ -12,6 +12,11 @@ export interface Coupon {
   updated_at: string;
 }
 
+export interface UsedCoupon {
+  id: string;
+  code: string;
+}
+
 export interface CouponVerification {
   coupon: Coupon | null;
   isValid: boolean;

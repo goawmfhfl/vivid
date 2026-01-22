@@ -5,7 +5,7 @@
 
 // 서버 사이드에서만 사용 가능한 환경 변수
 const isDevelopment =
-  process.env.NODE_ENV === "development" ||
+  process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
   process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
 /**

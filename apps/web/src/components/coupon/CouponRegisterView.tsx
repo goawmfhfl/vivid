@@ -219,7 +219,7 @@ export function CouponRegisterView() {
           onApply={handleApply}
           size="default"
           statusMessage={
-            isValidCoupon && !isUsedCoupon && !isSoldOutCoupon
+            isUsedCoupon
               ? "적용되었습니다."
               : undefined
           }

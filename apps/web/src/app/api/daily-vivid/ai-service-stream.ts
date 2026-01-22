@@ -216,7 +216,7 @@ async function generateSection<T>(
 
     // 개발 환경에서 추적 정보 추가 (객체인 경우에만)
     if (
-      (process.env.NODE_ENV === "development" ||
+      (process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
         process.env.NEXT_PUBLIC_NODE_ENV === "development") &&
       result !== null &&
       result !== undefined &&

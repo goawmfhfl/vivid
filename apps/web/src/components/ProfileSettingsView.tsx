@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import { NameField } from "./forms/NameField";
+import { EmailField } from "./forms/EmailField";
 import { PhoneField } from "./forms/PhoneField";
 import { SubmitButton } from "./forms/SubmitButton";
 import { AuthHeader } from "./forms/AuthHeader";
@@ -19,6 +20,12 @@ import { Input } from "./ui/Input";
 import { Checkbox } from "./ui/checkbox";
 import { PhoneVerificationModal } from "./profile/PhoneVerificationModal";
 import { COLORS } from "@/lib/design-system";
+import {
+  useKakaoIdentity,
+  useLinkKakao,
+  useUnlinkKakao,
+} from "@/hooks/useKakaoLinking";
+import { useToast } from "@/hooks/useToast";
 
 type SectionCardProps = {
   title: string;
@@ -61,6 +68,47 @@ export function ProfileSettingsView() {
   }>({});
   const [success, setSuccess] = useState(false);
   const [isPhoneEditOpen, setIsPhoneEditOpen] = useState(false);
+  const [linkSuccess, setLinkSuccess] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  // 카카오 연동 상태
+  const { data: kakaoIdentity, isLoading: isLoadingKakao } = useKakaoIdentity();
+  const linkKakaoMutation = useLinkKakao();
+  const unlinkKakaoMutation = useUnlinkKakao();
+  const isKakaoLinked = Boolean(kakaoIdentity);
+  const { showToast } = useToast();
+
+  // URL 파라미터에서 연동 성공/에러 메시지 확인
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      
+      // 연동 성공 메시지
+      if (params.get("linked") === "kakao") {
+        setLinkSuccess(true);
+        setLinkError(null);
+        // URL에서 파라미터 제거
+        router.replace("/user", { scroll: false });
+        // Toast 팝업으로 성공 메시지 표시
+        showToast("카카오 계정이 성공적으로 연동되었습니다.", 4000);
+        // 3초 후 상태 초기화
+        setTimeout(() => setLinkSuccess(false), 4000);
+      }
+      
+      // 연동 에러 메시지
+      if (params.get("error") === "kakao_already_linked") {
+        const errorMessage =
+          params.get("message") ||
+          "이 카카오 계정은 이미 다른 사용자에게 연결되어 있습니다.";
+        setLinkError(errorMessage);
+        setLinkSuccess(false);
+        // URL에서 파라미터 제거
+        router.replace("/user", { scroll: false });
+        // 5초 후 메시지 자동 숨김
+        setTimeout(() => setLinkError(null), 5000);
+      }
+    }
+  }, [router]);
 
   useEffect(() => {
     if (currentUser?.user_metadata) {
@@ -169,9 +217,21 @@ export function ProfileSettingsView() {
       <PhoneVerificationModal
         open={isPhoneEditOpen}
         onClose={closePhoneEditModal}
-        onApply={(phone) => {
-          updateField("phone", phone);
-          setIsPhoneEditOpen(false);
+        onApply={async (phone) => {
+          try {
+            await updateProfileMutation.mutateAsync({
+              phone: phone.trim(),
+            });
+            updateField("phone", phone);
+            setIsPhoneEditOpen(false);
+            setSuccess(true);
+          } catch (error) {
+            const message =
+              error instanceof Error
+                ? error.message
+                : "전화번호 업데이트에 실패했습니다.";
+            setErrors({ general: message });
+          }
         }}
       />
       <div className="mx-auto w-full max-w-2xl">
@@ -198,10 +258,23 @@ export function ProfileSettingsView() {
             </div>
           )}
 
+
+
           <SectionCard
             title="기본 프로필"
-            description="이름과 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+            description="이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
           >
+            <div>
+              <EmailField
+                value={currentUser?.email || ""}
+                onChange={() => {
+                  // 이메일은 수정 불가
+                }}
+                placeholder="이메일"
+                disabled={true}
+              />
+            </div>
+
             <div>
               <NameField
                 value={formData.name}
@@ -316,6 +389,105 @@ export function ProfileSettingsView() {
                 )}
               </div>
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title="소셜 로그인 연동"
+            description="카카오 계정을 연동하면 더 편리하게 로그인할 수 있어요."
+          >
+            <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: "#FEE500" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
+                      fill="#000000"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[#333333]">
+                    카카오 계정
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                    {isLoadingKakao
+                      ? "확인 중..."
+                      : isKakaoLinked
+                        ? "연동됨"
+                        : "연동되지 않음"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isKakaoLinked ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (kakaoIdentity) {
+                        try {
+                          await unlinkKakaoMutation.mutateAsync(kakaoIdentity);
+                          // 연동 해제 성공 시 상태 갱신
+                          setLinkSuccess(false);
+                          // Toast 팝업으로 성공 메시지 표시
+                          showToast("카카오 계정 연동이 해제되었습니다.", 4000);
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "연동 해제에 실패했습니다.";
+                          setErrors({ general: message });
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: COLORS.background.base,
+                      color: COLORS.text.secondary,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                    disabled={unlinkKakaoMutation.isPending || isLoadingKakao}
+                  >
+                    {unlinkKakaoMutation.isPending ? "해제 중..." : "연동 해제"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await linkKakaoMutation.mutateAsync();
+                      } catch (error) {
+                        const message =
+                          error instanceof Error
+                            ? error.message
+                            : "연동에 실패했습니다.";
+                        setErrors({ general: message });
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      backgroundColor: COLORS.brand.primary,
+                      color: "white",
+                    }}
+                    disabled={linkKakaoMutation.isPending || isLoadingKakao}
+                  >
+                    {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* 연동 에러 메시지 (연동하기 컴포넌트 바로 아래) */}
+            {linkError && (
+              <div className="mt-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-3 text-sm text-[#991B1B]">
+                <div className="flex items-center gap-2 font-medium">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{linkError}</span>
+                </div>
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard

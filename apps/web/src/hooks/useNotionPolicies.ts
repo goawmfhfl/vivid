@@ -15,7 +15,7 @@ type PolicyData = {
  * 노션 정책 데이터 조회 훅
  */
 export function useNotionPolicies() {
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
   return useQuery<PolicyData[]>({
     queryKey: [QUERY_KEYS.NOTION_POLICIES],

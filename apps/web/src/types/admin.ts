@@ -17,7 +17,7 @@ export interface UserListItem {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin" | "moderator";
+  role: "user" | "admin";
   is_active: boolean;
   created_at: string;
   last_login_at: string | null;

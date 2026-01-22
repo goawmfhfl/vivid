@@ -50,7 +50,7 @@ export function UserDetail({ userId }: UserDetailProps) {
   const [editData, setEditData] = useState({
     name: "",
     phone: "",
-    role: "" as "user" | "admin" | "moderator",
+    role: "" as "user" | "admin",
     is_active: true,
   });
   const [feedbacks, setFeedbacks] = useState<{
@@ -487,11 +487,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                         : COLORS.text.secondary,
                   }}
                 >
-                  {user.role === "admin"
-                    ? "관리자"
-                    : user.role === "moderator"
-                    ? "모더레이터"
-                    : "유저"}
+                  {user.role === "admin" ? "관리자" : "유저"}
                 </span>
               )}
               <span
@@ -613,7 +609,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   onChange={(e) =>
                     setEditData({
                       ...editData,
-                      role: e.target.value as "user" | "admin" | "moderator",
+                      role: e.target.value as "user" | "admin",
                     })
                   }
                   className="w-full px-4 py-2.5 rounded-lg border text-base"
@@ -625,7 +621,6 @@ export function UserDetail({ userId }: UserDetailProps) {
                 >
                   <option value="user">유저</option>
                   <option value="admin">관리자</option>
-                  <option value="moderator">모더레이터</option>
                 </select>
               </div>
             )}

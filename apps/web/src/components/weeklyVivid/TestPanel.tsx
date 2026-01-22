@@ -40,7 +40,7 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   // 개발 환경 체크 (프로덕션에서는 숨김)
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
   // 섹션별 상세 정보 정의
   const sectionDefinitions = [

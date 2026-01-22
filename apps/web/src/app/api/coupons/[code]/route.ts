@@ -71,18 +71,31 @@ export async function GET(
         const { data: { user } } = await supabase.auth.getUser(token);
         
         if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("used_coupons")
-            .eq("id", user.id)
-            .single();
-
-          const usedCoupons = Array.isArray(profile?.used_coupons)
-            ? profile?.used_coupons
-            : [];
-          isUsed =
-            usedCoupons.includes(coupon.code) ||
-            usedCoupons.includes(coupon.name);
+          // user_metadata에서 used_coupons 확인
+          const { data: { user: fullUser } } = await supabase.auth.admin.getUserById(user.id);
+          
+          if (fullUser) {
+            const usedCouponsRaw = fullUser.user_metadata?.used_coupons;
+            
+            if (Array.isArray(usedCouponsRaw)) {
+              // 객체 배열인 경우 (새 형식: {id, code})
+              if (usedCouponsRaw.length > 0 && typeof usedCouponsRaw[0] === "object") {
+                const usedCoupons = usedCouponsRaw as Array<{ id: string; code: string }>;
+                isUsed = usedCoupons.some(
+                  (used) =>
+                    used.id === coupon.id ||
+                    used.code === coupon.code ||
+                    used.code === coupon.name
+                );
+              } else {
+                // 문자열 배열인 경우 (기존 형식: ["WELCOME30"])
+                const usedCoupons = usedCouponsRaw as string[];
+                isUsed =
+                  usedCoupons.includes(coupon.code) ||
+                  usedCoupons.includes(coupon.name);
+              }
+            }
+          }
         }
       } catch (authError) {
         // 인증 실패해도 쿠폰 정보는 반환 (사용 여부만 확인 불가)

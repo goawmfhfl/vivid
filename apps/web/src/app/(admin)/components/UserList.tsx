@@ -141,7 +141,6 @@ export function UserList() {
               <option value="">모든 역할</option>
               <option value="user">유저</option>
               <option value="admin">관리자</option>
-              <option value="moderator">모더레이터</option>
             </select>
             <select
               value={activeFilter}
@@ -276,11 +275,7 @@ export function UserList() {
                                 : COLORS.text.secondary,
                           }}
                         >
-                          {user.role === "admin"
-                            ? "관리자"
-                            : user.role === "moderator"
-                            ? "모더레이터"
-                            : "유저"}
+                          {user.role === "admin" ? "관리자" : "유저"}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -403,11 +398,7 @@ export function UserList() {
                             : COLORS.text.secondary,
                       }}
                     >
-                      {user.role === "admin"
-                        ? "관리자"
-                        : user.role === "moderator"
-                        ? "모더레이터"
-                        : "유저"}
+                      {user.role === "admin" ? "관리자" : "유저"}
                     </span>
                     {user.subscription && (
                       <span

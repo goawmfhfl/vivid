@@ -149,7 +149,7 @@ export async function GET(_request: NextRequest) {
       };
     };
 
-    const isDev = process.env.NODE_ENV === "development";
+    const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
     const maxAge = 60 * 60 * 24 * 30; // 30일
 
     return NextResponse.json(

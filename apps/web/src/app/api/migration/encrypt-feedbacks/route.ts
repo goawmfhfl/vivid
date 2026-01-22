@@ -47,7 +47,7 @@ function isJsonbEncrypted(obj: JsonbValue): boolean {
 export async function POST(request: NextRequest) {
   // 개발 환경 체크
   const isDevelopment =
-    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_NODE_ENV === "development" ||
     process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
   if (!isDevelopment) {

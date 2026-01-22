@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { verifyCode } from "@/lib/phone-verification-store";
 import { getServiceSupabase } from "@/lib/supabase-service";
 
@@ -7,10 +8,11 @@ import { getServiceSupabase } from "@/lib/supabase-service";
  * 핸드폰 인증번호 검증 및 사용자 메타데이터 업데이트
  */
 export async function POST(request: NextRequest) {
+  const cookieStore = await cookies();
   try {
     const body = await request.json();
     const { phone, code, userId } = body;
-    const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
+    const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NEXT_PUBLIC_NODE_ENV;
     const isDev = runtimeEnv !== "production";
     const testCode = "123456";
 
@@ -21,6 +23,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 전화번호 정규화 (하이픈, 공백 제거)
+    const normalizedPhone = phone.replace(/[\s-]/g, "");
 
     const updateUserMetadata = async () => {
       if (!userId) {
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
         ...(user.user_metadata || {}),
         phone_verified: true,
         phone_verified_at: new Date().toISOString(),
-        phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호 저장
+        phone: normalizedPhone, // 정규화된 전화번호 저장
       };
 
       const { error: updateError } = await supabase.auth.admin.updateUserById(
@@ -82,8 +87,41 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 인증번호 검증
-    const verificationResult = verifyCode(phone, code);
+    // 디버깅: 전화번호와 인증번호 로그 출력
+    console.log("[PhoneVerification Verify]", {
+      originalPhone: phone,
+      normalizedPhone,
+      code,
+      codeLength: code.length,
+    });
+
+    // 응답 객체 생성
+    const response = NextResponse.json({
+      success: true,
+      message: "인증이 완료되었습니다.",
+      verified: true,
+    });
+
+    // 응답 객체 생성 (검증 성공 시 사용)
+    const successResponse = NextResponse.json({
+      success: true,
+      message: "인증이 완료되었습니다.",
+      verified: true,
+    });
+
+    // 인증번호 검증 (정규화된 전화번호 사용) - 쿠키에서 읽어서 검증
+    const verificationResult = verifyCode(
+      normalizedPhone,
+      code,
+      cookieStore,
+      successResponse
+    );
+
+    // 디버깅: 검증 결과 로그 출력
+    console.log("[PhoneVerification Verify Result]", {
+      success: verificationResult.success,
+      message: verificationResult.message,
+    });
 
     if (!verificationResult.success) {
       return NextResponse.json(
@@ -103,11 +141,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "인증이 완료되었습니다.",
-      verified: true,
-    });
+    return successResponse;
   } catch (error) {
     console.error("인증번호 검증 중 오류:", error);
     return NextResponse.json(

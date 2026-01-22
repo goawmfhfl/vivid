@@ -8,7 +8,7 @@ export interface Profile {
   agree_terms: boolean;
   agree_ai: boolean;
   agree_marketing: boolean;
-  role: "user" | "admin" | "moderator";
+  role: "user" | "admin";
   is_active: boolean;
   last_login_at: string | null;
   used_coupons: string[];
@@ -26,7 +26,7 @@ export interface CreateProfileRequest {
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
-  role?: "user" | "admin" | "moderator";
+  role?: "user" | "admin";
 }
 
 export interface UpdateProfileRequest {
@@ -35,7 +35,7 @@ export interface UpdateProfileRequest {
   birthYear?: string;
   gender?: string;
   agreeMarketing?: boolean;
-  role?: "user" | "admin" | "moderator";
+  role?: "user" | "admin";
   isActive?: boolean;
   lastLoginAt?: string;
 }

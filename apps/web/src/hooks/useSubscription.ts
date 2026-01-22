@@ -4,7 +4,9 @@ import type { SubscriptionMetadata, SubscriptionPlan, SubscriptionStatus } from 
 export interface SubscriptionInfo {
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
-  expiresAt: string | null;
+  started_at: string | null;
+  expires_at: string | null;
+  updated_at: string | null;
   isPro: boolean;
   isExpired: boolean;
 }
@@ -17,11 +19,27 @@ export const useSubscription = () => {
   const { data: currentUser, isLoading } = useCurrentUser();
 
   const subscription: SubscriptionInfo | null = (() => {
+    // Admin 체크: Admin이면 항상 Pro 멤버십
+    const isAdmin = currentUser?.user_metadata?.role === "admin";
+    if (isAdmin) {
+      return {
+        plan: "pro" as const,
+        status: "active" as const,
+        started_at: null,
+        expires_at: null,
+        updated_at: null,
+        isPro: true,
+        isExpired: false,
+      };
+    }
+
     if (!currentUser?.user_metadata?.subscription) {
       return {
         plan: "free",
-        status: "active",
-        expiresAt: null,
+        status: "none",
+        started_at: null,
+        expires_at: null,
+        updated_at: null,
         isPro: false,
         isExpired: false,
       };
@@ -29,22 +47,32 @@ export const useSubscription = () => {
 
     const sub = currentUser.user_metadata.subscription as SubscriptionMetadata;
     const plan = sub.plan || "free";
-    const status = sub.status || "active";
-    const expiresAt = sub.expiresAt || null;
+    const status = sub.status || "none";
+    const started_at = sub.started_at || null;
+    const expires_at = sub.expires_at || null;
+    const updated_at = sub.updated_at || null;
+
+    const now = new Date();
 
     // 만료일 체크
-    const isExpired = expiresAt ? new Date(expiresAt) < new Date() : false;
+    const isExpired = expires_at ? new Date(expires_at) < now : false;
 
     // Pro 멤버십 체크
+    // plan이 "pro", status가 "active", started_at이 현재보다 과거, expires_at이 현재보다 미래일 때 Pro 멤버십
     const isPro =
       plan === "pro" &&
       status === "active" &&
-      !isExpired;
+      started_at !== null &&
+      new Date(started_at) < now &&
+      expires_at !== null &&
+      new Date(expires_at) > now;
 
     return {
       plan,
       status,
-      expiresAt,
+      started_at,
+      expires_at,
+      updated_at,
       isPro,
       isExpired,
     };
