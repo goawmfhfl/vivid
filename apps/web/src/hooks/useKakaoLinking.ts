@@ -52,7 +52,7 @@ const linkKakaoAccount = async (): Promise<void> => {
     );
   }
 
-  const { data, error } = await supabase.auth.linkIdentity({
+  const { error } = await supabase.auth.linkIdentity({
     provider: "kakao",
     options: {
       redirectTo: `${redirectTo.replace(/\/$/, "")}/auth/callback?link=kakao`,

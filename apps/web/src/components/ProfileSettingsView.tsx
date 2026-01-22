@@ -108,7 +108,7 @@ export function ProfileSettingsView() {
         setTimeout(() => setLinkError(null), 5000);
       }
     }
-  }, [router]);
+  }, [router, showToast]);
 
   useEffect(() => {
     if (currentUser?.user_metadata) {

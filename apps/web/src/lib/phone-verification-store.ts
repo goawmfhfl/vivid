@@ -232,13 +232,6 @@ function normalizePhone(phone: string): string {
   return phone.replace(/[\s-]/g, "");
 }
 
-/**
- * 만료된 코드 정리
- * 쿠키는 자동으로 만료되므로 별도 정리 불필요
- */
-function cleanupExpiredCodes(): void {
-  // 쿠키는 maxAge로 자동 만료되므로 별도 정리 불필요
-}
 
 /**
  * 인증번호 생성 (6자리 랜덤 숫자)

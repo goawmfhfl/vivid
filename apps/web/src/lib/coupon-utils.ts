@@ -1,6 +1,5 @@
 import { getServiceSupabase } from "./supabase-service";
 import type { Coupon, CouponVerification, UsedCoupon } from "@/types/coupon";
-import { updateSubscriptionMetadata } from "./subscription-utils";
 
 /**
  * 쿠폰 검증 함수

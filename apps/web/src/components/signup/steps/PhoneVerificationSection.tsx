@@ -76,7 +76,7 @@ export function PhoneVerificationSection({
       setCodeError(undefined);
       setIsAttemptExceeded(false);
     }
-  }, [phone]);
+  }, [phone, isCodeSent]);
 
   // 타이머 카운트다운
   useEffect(() => {
