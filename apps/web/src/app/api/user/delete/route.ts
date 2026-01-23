@@ -50,15 +50,15 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    // 1. records 테이블에서 사용자 기록 삭제
+    // 1. vivid_records 테이블에서 사용자 기록 삭제
     const { error: recordsError } = await supabase
-      .from("records")
+      .from("vivid_records")
       .delete()
       .eq("user_id", userId);
 
     if (recordsError) {
       console.error("Records 삭제 실패:", recordsError);
-      throw new Error(`Failed to delete records: ${recordsError.message}`);
+      throw new Error(`Failed to delete vivid_records: ${recordsError.message}`);
     }
 
     // 2. daily_vivid 테이블에서 일일 리포트 삭제

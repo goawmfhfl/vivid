@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const errors: Array<{ id: number; error: string }> = [];
 
     // userId가 제공된 경우 해당 사용자만, 아니면 모든 사용자
-    let query = supabase.from("records").select("id, content, user_id");
+    let query = supabase.from("vivid_records").select("id, content, user_id");
 
     if (userId) {
       query = query.eq("user_id", userId);
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
           // 업데이트
           const { error: updateError } = await supabase
-            .from("records")
+            .from("vivid_records")
             .update({ content: encryptedContent })
             .eq("id", record.id);
 

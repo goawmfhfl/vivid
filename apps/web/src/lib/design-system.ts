@@ -391,10 +391,10 @@ export const INPUT_STYLES = {
 // ============================================
 export const EMOTION_INTENSITY_STYLES = {
   ring: {
-    outer: "240px",
-    middle: "182px",
-    inner: "128px",
-    core: "14px",
+    outer: "180px",
+    middle: "136px",
+    inner: "96px",
+    core: "12px",
   },
   glowOpacity: {
     outer: 0.08,

@@ -58,7 +58,7 @@ const fetchRecords = async (): Promise<Record[]> => {
     }
 
     // API 라우트를 통해 조회 (서버 사이드에서 복호화)
-    const response = await fetch("/api/records", {
+    const response = await fetch("/api/vivid-records", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${session.access_token}`,
@@ -96,7 +96,7 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
     }
 
     // API 라우트를 통해 생성 (서버 사이드에서 암호화)
-    const response = await fetch("/api/records", {
+    const response = await fetch("/api/vivid-records", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +144,7 @@ const updateRecord = async (
     }
 
     // API 라우트를 통해 수정 (서버 사이드에서 암호화)
-    const response = await fetch(`/api/records/${id}`, {
+    const response = await fetch(`/api/vivid-records/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -184,7 +184,7 @@ const deleteRecord = async (id: number): Promise<void> => {
     }
 
     // API 라우트를 통해 삭제
-    const response = await fetch(`/api/records/${id}`, {
+    const response = await fetch(`/api/vivid-records/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${session.access_token}`,

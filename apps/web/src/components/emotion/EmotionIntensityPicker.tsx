@@ -67,8 +67,8 @@ export function EmotionIntensityPicker({
         <div
           className="absolute rounded-full emotion-core-pulse"
           style={{
-            width: "104px",
-            height: "104px",
+            width: "76px",
+            height: "76px",
             border: `1px solid ${hexToRgba(activeColor, 0.4)}`,
             background: `radial-gradient(circle at 35% 30%, ${hexToRgba(
               activeColor,
@@ -79,7 +79,7 @@ export function EmotionIntensityPicker({
           aria-hidden="true"
         >
           <div
-            className="absolute inset-6 rounded-full emotion-core-inner"
+            className="absolute inset-4 rounded-full emotion-core-inner"
             style={{
               border: `1px solid ${hexToRgba(activeColor, 0.35)}`,
               background: hexToRgba(activeColor, 0.2),
@@ -87,7 +87,7 @@ export function EmotionIntensityPicker({
             }}
           >
             <div
-              className="absolute inset-4 rounded-full emotion-core-deep"
+              className="absolute inset-3 rounded-full emotion-core-deep"
               style={{
                 border: `1px solid ${hexToRgba(activeColor, 0.3)}`,
                 background: hexToRgba(activeColor, 0.18),

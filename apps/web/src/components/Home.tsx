@@ -331,7 +331,10 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   return (
     <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24 hide-scrollbar`}
+      style={{
+        overflowX: "hidden",
+      }}
     >
       <AppHeader
         title={isToday ? "오늘의 기록" : "기록"}

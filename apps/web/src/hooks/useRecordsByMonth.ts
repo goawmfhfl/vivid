@@ -30,7 +30,7 @@ const fetchRecordsByMonth = async (
   // API 라우트를 통해 조회 (서버 사이드에서 복호화)
   // 월별 조회는 쿼리 파라미터로 필터링
   const response = await fetch(
-    `/api/records?startDate=${startDate}&endDate=${endDate}`,
+    `/api/vivid-records?startDate=${startDate}&endDate=${endDate}`,
     {
       method: "GET",
       headers: {

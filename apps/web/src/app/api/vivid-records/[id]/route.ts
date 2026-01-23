@@ -165,7 +165,7 @@ export async function PATCH(
     };
 
     // Records 조회 캐시 무효화
-    revalidatePath("/api/records");
+    revalidatePath("/api/vivid-records");
 
     return NextResponse.json({ data: decryptedRecord }, { status: 200 });
   } catch (error) {
@@ -207,7 +207,7 @@ export async function DELETE(
     }
 
     // Records 조회 캐시 무효화
-    revalidatePath("/api/records");
+    revalidatePath("/api/vivid-records");
 
     return NextResponse.json(
       { message: "Record deleted successfully" },

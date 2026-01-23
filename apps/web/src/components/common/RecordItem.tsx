@@ -63,7 +63,7 @@ export function RecordItem({
   };
 
   // 편집/삭제 기능이 있는지 확인
-  const canEdit = !!onEdit && !isEmotion;
+  const canEdit = !!onEdit;
   const hasActions = showActions && (canEdit || onDelete);
 
   const actionsNode = hasActions ? (

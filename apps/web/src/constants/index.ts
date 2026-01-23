@@ -1,6 +1,6 @@
 // React Query Query Keys
 export const QUERY_KEYS = {
-  RECORDS: "records",
+  RECORDS: "vivid_records",
   CURRENT_USER: "currentUser",
   PROFILES: "profiles",
   DAILY_VIVID: "dailyVivid",
@@ -17,7 +17,7 @@ export const QUERY_KEYS = {
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  RECORDS: "records",
+  RECORDS: "vivid_records",
   PROFILES: "profiles",
   DAILY_VIVID: "daily_vivid",
   WEEKLY_SUMMARIES: "weekly_summaries",

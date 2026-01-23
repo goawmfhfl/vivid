@@ -29,10 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased">
+      <body className="antialiased hide-scrollbar">
         <JournalProvider>
           <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#e4e2dd" }}>
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 hide-scrollbar" style={{ overflowX: "hidden" }}>{children}</main>
             <Footer />
             <BottomNavigation />
             <GlobalModals />

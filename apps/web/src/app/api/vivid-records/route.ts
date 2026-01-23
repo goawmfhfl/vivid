@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (emotionError) {
-        await supabase.from(API_ENDPOINTS.RECORDS).delete().eq("id", newRecord.id);
+        await supabase.from("vivid_records").delete().eq("id", newRecord.id);
         throw new Error(`Failed to create emotion record: ${emotionError.message}`);
       }
     }
@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Records 조회 캐시 무효화
-    revalidatePath("/api/records");
+    revalidatePath("/api/vivid-records");
 
     return NextResponse.json({ data: decryptedRecord }, { status: 201 });
   } catch (error) {

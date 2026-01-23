@@ -16,7 +16,7 @@ export async function fetchRecordsByDate(
   date: string
 ): Promise<Record[]> {
   const { data: records, error } = await supabase
-    .from("records")
+    .from("vivid_records")
     .select("*")
     .eq("user_id", userId)
     .eq("kst_date", date);

@@ -844,3 +844,55 @@ input[type="number"] {
     animation: fade-in 0.6s ease-out forwards;
   }
 }
+
+/* 스크롤바 숨기기 (모든 브라우저 지원) */
+.hide-scrollbar {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE/Edge */
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 전체 페이지 스크롤바 숨기기 */
+html,
+body {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE/Edge */
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* textarea 스크롤바 숨기기 (모든 브라우저 지원) */
+textarea {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE/Edge */
+  -ms-overflow-style: none;
+}
+
+textarea::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* EditRecordDialog 기본 X 버튼 숨기기 */
+.edit-record-dialog > button[data-slot="dialog-close"] {
+  display: none !important;
+}

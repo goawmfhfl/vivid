@@ -58,6 +58,16 @@ export function RecordList({
     (record) => !["dream", "emotion"].includes((record.type || "dream") as string)
   );
 
+  const normalizedActiveType = activeRecordType || null;
+
+  // 표시할 통계 계산 (모든 훅은 early return 전에 호출되어야 함)
+  const displayStat = useMemo(() => {
+    if (normalizedActiveType === "emotion") {
+      return emotionRecords.length > 0 ? emotionRecords.length : null;
+    }
+    return totalCharCount > 0 ? totalCharCount : null;
+  }, [normalizedActiveType, emotionRecords.length, totalCharCount]);
+
   const handleRetry = () => {
     setRetryCount((c) => c + 1);
     if (onRetry) onRetry();
@@ -146,7 +156,6 @@ export function RecordList({
     );
   }
 
-  const normalizedActiveType = activeRecordType || null;
   const title =
     normalizedActiveType === "dream"
       ? "오늘의 VIVID"
@@ -166,7 +175,7 @@ export function RecordList({
         >
           {title}
         </h2>
-        {totalCharCount > 0 && (
+        {displayStat !== null && (
           <span
             className={cn(TYPOGRAPHY.caption.fontSize, TYPOGRAPHY.caption.fontWeight)}
             style={{
@@ -174,7 +183,9 @@ export function RecordList({
               opacity: 0.6,
             }}
           >
-            총 {totalCharCount.toLocaleString()}자
+            {normalizedActiveType === "emotion" 
+              ? `총 ${displayStat.toLocaleString()}개`
+              : `총 ${displayStat.toLocaleString()}자`}
           </span>
         )}
       </div>

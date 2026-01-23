@@ -44,7 +44,7 @@ export async function GET(
       monthlyVividCount,
     ] = await Promise.all([
       supabase
-        .from("records")
+        .from("vivid_records")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId),
       supabase
