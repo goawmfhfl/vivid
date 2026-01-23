@@ -11,11 +11,10 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { useDeleteAccount } from "@/hooks/useDeleteAccount";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { Checkbox } from "../ui/checkbox";
 import { AlertCircle, MessageSquare, HelpCircle } from "lucide-react";
 import { useModalStore } from "@/store/useModalStore";
-import { useToast } from "@/hooks/useToast";
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -46,7 +45,6 @@ export function DeleteAccountDialog({
   const [additionalComment, setAdditionalComment] = useState("");
   const openLoadingModal = useModalStore((state) => state.openLoadingModal);
   const closeLoadingModal = useModalStore((state) => state.closeLoadingModal);
-  const { showToast } = useToast();
   
   // Production 모드 체크 (Production에서만 실제 탈퇴 실행)
   const isProduction = process.env.NEXT_PUBLIC_NODE_ENV === "production";

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { COLORS, CARD_STYLES, TYPOGRAPHY } from "@/lib/design-system";
-import { Search, Calendar, Filter, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AccountDeletion {

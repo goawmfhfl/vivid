@@ -10,7 +10,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { type RecordType } from "../signup/RecordTypeCard";
 import { cn } from "@/lib/utils";
 import {
-  getEmotionIntensityLabel,
   type EmotionIntensity,
 } from "@/lib/emotion-data";
 import { EmotionIntensityPicker } from "@/components/emotion/EmotionIntensityPicker";
@@ -43,7 +42,7 @@ export function EditRecordDialog({
   onOpenChange,
 }: EditRecordDialogProps) {
   // 초기 상태 (record에서 받아온 원본 데이터)
-  const [initialState, setInitialState] = useState<EditState | null>(null);
+  const [_initialState, setInitialState] = useState<EditState | null>(null);
   
   // 수정 중 상태 (사용자가 입력하는 데이터)
   const [editState, setEditState] = useState<EditState>({
