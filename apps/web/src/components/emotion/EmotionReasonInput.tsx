@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { HelpCircle, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import {
   SPACING,
   TRANSITIONS,
   TYPOGRAPHY,
+  hexToRgba,
 } from "@/lib/design-system";
 
 interface EmotionReasonInputProps {
@@ -21,11 +22,6 @@ interface EmotionReasonInputProps {
   accentColor?: string;
 }
 
-const PLACEHOLDERS = [
-  "예) 회의가 예상보다 길어져서 많이 지쳤다",
-  "예) 혼자 산책하며 생각이 정리됐다",
-  "예) 별일 없었지만 하루가 무난했다",
-];
 
 export function EmotionReasonInput({
   value,
@@ -35,74 +31,126 @@ export function EmotionReasonInput({
   minEncourageLength = 10,
   accentColor = COLORS.brand.primary,
 }: EmotionReasonInputProps) {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const inputId = useId();
   const helpId = `${inputId}-help`;
   const assistId = `${inputId}-assist`;
-
-  useEffect(() => {
-    if (value.trim().length > 0) return;
-
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
-    }, 4500);
-
-    return () => clearInterval(interval);
-  }, [value]);
-
-  const placeholder = useMemo(
-    () => PLACEHOLDERS[placeholderIndex],
-    [placeholderIndex]
-  );
 
   const handleHelpToggle = () => {
     setShowHelp((prev) => !prev);
     onHelpOpen();
   };
 
+  // 종이 질감을 위한 색상 설정
+  const defaultColors = {
+    background: COLORS.background.card,
+    border: COLORS.border.light,
+    lineColor: "rgba(196, 190, 178, 0.12)",
+    overlay: "rgba(127, 143, 122, 0.08)",
+  };
+
   return (
     <div
       className={cn(
-        "rounded-2xl border emotion-reason-card",
+        "rounded-2xl emotion-reason-card relative overflow-hidden",
         SPACING.card.padding,
-        "flex flex-col gap-5"
+        "flex flex-col gap-6"
       )}
       style={{
-        borderColor: COLORS.border.light,
-        boxShadow: "0 16px 32px rgba(0,0,0,0.06)",
+        backgroundColor: defaultColors.background,
+        border: `1.5px solid ${defaultColors.border}`,
+        borderRadius: "12px",
+        boxShadow: `
+          0 2px 8px rgba(0,0,0,0.04),
+          0 1px 3px rgba(0,0,0,0.02),
+          inset 0 1px 0 rgba(255,255,255,0.6)
+        `,
+        position: "relative",
+        overflow: "hidden",
+        // 종이 질감 배경 패턴
+        backgroundImage: `
+          /* 가로 줄무늬 */
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 27px,
+            ${defaultColors.lineColor} 27px,
+            ${defaultColors.lineColor} 28px
+          ),
+          /* 종이 텍스처 노이즈 */
+          repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(107, 122, 111, 0.01) 2px,
+            rgba(107, 122, 111, 0.01) 4px
+          )
+        `,
+        backgroundSize: "100% 28px, 8px 8px",
+        backgroundPosition: "0 2px, 0 0",
+        filter: "contrast(1.02) brightness(1.01)",
         "--emotion-accent": accentColor,
       } as React.CSSProperties}
     >
-      <div className="flex items-start justify-between gap-3">
-        <label
-          htmlFor={inputId}
-          className={cn(
-            TYPOGRAPHY.body.fontSize,
-            TYPOGRAPHY.h4.fontWeight
-          )}
-          style={{ color: COLORS.text.primary }}
-        >
-          지금 감정을 만든 한 줄
-          <span
-            className={cn(TYPOGRAPHY.caption.fontSize, "ml-2")}
-            style={{ color: COLORS.text.tertiary }}
+      {/* 종이 질감 오버레이 */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+            radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
+          `,
+          mixBlendMode: "overlay",
+          opacity: 0.5,
+        }}
+      />
+      
+      <div className="flex items-start justify-between gap-3 relative z-10 mb-2">
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={inputId}
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              "font-semibold"
+            )}
+            style={{ 
+              color: COLORS.text.primary,
+              letterSpacing: "-0.01em",
+            }}
           >
-            (선택)
+            지금 감정에 대해서 어떻게 생각하세요?
+          </label>
+          <span
+            className={cn(TYPOGRAPHY.caption.fontSize)}
+            style={{ 
+              color: COLORS.text.tertiary,
+              opacity: 0.7,
+            }}
+          >
+            선택 사항
           </span>
-        </label>
+        </div>
         <button
           type="button"
           onClick={handleHelpToggle}
           aria-expanded={showHelp}
           aria-controls={helpId}
-          className={cn("flex items-center", TRANSITIONS.default)}
+          className={cn(
+            "flex items-center justify-center w-7 h-7 rounded-lg",
+            TRANSITIONS.default
+          )}
           style={{
             color: COLORS.text.tertiary,
+            backgroundColor: hexToRgba(COLORS.background.hover, 0.5),
             border: "none",
-            borderRadius: "0px",
-            padding: "0px",
-            backgroundColor: "transparent",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = hexToRgba(COLORS.background.hover, 0.8);
+            e.currentTarget.style.color = accentColor;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = hexToRgba(COLORS.background.hover, 0.5);
+            e.currentTarget.style.color = COLORS.text.tertiary;
           }}
         >
           <HelpCircle className="h-4 w-4" />
@@ -114,81 +162,116 @@ export function EmotionReasonInput({
           id={helpId}
           role="dialog"
           className={cn(
-            "rounded-xl border emotion-reason-help animate-emotion-reason-help",
+            "rounded-xl emotion-reason-help animate-emotion-reason-help relative z-10",
             SPACING.card.paddingSmall,
             TYPOGRAPHY.bodySmall.fontSize,
             TYPOGRAPHY.bodySmall.lineHeight
           )}
           style={{
-            borderColor: COLORS.border.light,
+            background: `linear-gradient(135deg, ${hexToRgba(accentColor, 0.06)} 0%, ${hexToRgba(accentColor, 0.02)} 100%)`,
+            border: `1px solid ${hexToRgba(accentColor, 0.15)}`,
             color: COLORS.text.secondary,
+            backdropFilter: "blur(8px)",
           }}
         >
-          <p className="mb-2" style={{ color: COLORS.text.primary }}>
+          <p className="mb-2.5" style={{ color: COLORS.text.primary, fontWeight: "500" }}>
             이 한 줄은 감정 그 자체보다,
             <br />
             그 감정이 만들어진 배경을 이해하는 데
             도움을 줘요.
           </p>
-          <p className="mb-2">
+          <p className="mb-2.5" style={{ opacity: 0.85 }}>
             기록이 쌓이면 감정 리포트에서
             <br />
             “아, 내가 이런 상황에서 이 감정을 느끼는구나”
             <br />
             라는 패턴을 발견할 수 있어요.
           </p>
-          <p className="mb-2">
+          <p className="mb-2.5" style={{ opacity: 0.85 }}>
             조금 더 적어주면 AI가 감정을 더 깊이 해석해서
             <br />더 풍부한 인사이트를
             전해줘요.
           </p>
-          <p>짧아도 괜찮고, 길어도 좋아요.</p>
+          <p style={{ opacity: 0.75 }}>짧아도 괜찮고, 길어도 좋아요.</p>
         </div>
       )}
 
-      <Textarea
-        id={inputId}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-describedby={`${helpId} ${assistId}`}
-        className={cn(
+      <div className="relative z-10">
+        <Textarea
+          id={inputId}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          aria-describedby={`${helpId} ${assistId}`}
+          className={cn(
             "w-full resize-none border-0 bg-transparent p-0 focus-visible:ring-0 rounded-none shadow-none",
-          INPUT_STYLES.textareaMinHeight,
-            TYPOGRAPHY.bodySmall.fontSize,
-            TYPOGRAPHY.bodySmall.lineHeight,
-            TYPOGRAPHY.bodySmall.fontWeight
-        )}
-        style={{
-          color: COLORS.text.primary,
+            INPUT_STYLES.textareaMinHeight,
+            TYPOGRAPHY.body.fontSize,
+            TYPOGRAPHY.body.fontWeight
+          )}
+          style={{
+            color: COLORS.text.primary,
             fontSize: "inherit",
-        }}
-      />
+            lineHeight: "28px", // 줄무늬 간격(28px)과 일치
+            paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
+            minHeight: "100px",
+            backgroundColor: "transparent",
+          }}
+        />
+      </div>
 
       <div
         id={assistId}
         className={cn(
-          "flex items-center justify-between",
+          "flex items-center justify-between pt-3 border-t relative z-10",
           TYPOGRAPHY.caption.fontSize
         )}
-        style={{ color: COLORS.text.muted }}
+        style={{ 
+          borderColor: hexToRgba(COLORS.border.light, 0.4),
+        }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {value.length >= minEncourageLength ? (
             <>
-              <Check className="h-4 w-4" style={{ color: COLORS.status.success }} />
-              <span style={{ color: COLORS.status.success }}>
+              <div 
+                className="flex items-center justify-center w-5 h-5 rounded-full"
+                style={{
+                  backgroundColor: hexToRgba(COLORS.status.success, 0.12),
+                }}
+              >
+                <Check className="h-3 w-3" style={{ color: COLORS.status.success }} />
+              </div>
+              <span 
+                className="font-medium"
+                style={{ 
+                  color: COLORS.status.success,
+                  letterSpacing: "-0.01em",
+                }}
+              >
                 좋아요, 단서가 생겼어요
               </span>
             </>
           ) : (
-            <span>한 줄이면 충분하지만, 상세하면 더 좋아요</span>
+            <span style={{ 
+              color: COLORS.text.tertiary,
+              opacity: 0.7,
+            }}>
+              한 줄이면 충분하지만, 상세하면 더 좋아요
+            </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <span>권장 {maxLengthSoft}자</span>
-          <span>{value.length}자</span>
-        </div>
+        <span 
+          className="font-semibold px-2.5 py-1 rounded-md"
+          style={{ 
+            color: value.length >= minEncourageLength 
+              ? COLORS.status.success 
+              : COLORS.text.secondary,
+            backgroundColor: hexToRgba(COLORS.background.hover, 0.4),
+            minWidth: "2.5rem",
+            textAlign: "right",
+          }}
+        >
+          {value.length}자
+        </span>
       </div>
     </div>
   );

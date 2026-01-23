@@ -877,6 +877,16 @@ body::-webkit-scrollbar {
   height: 0;
 }
 
+/* Emotion Save Button Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    transform: skewX(-20deg) translateX(-200%);
+  }
+  100% {
+    transform: skewX(-20deg) translateX(400%);
+  }
+}
+
 /* textarea 스크롤바 숨기기 (모든 브라우저 지원) */
 textarea {
   /* Firefox */
