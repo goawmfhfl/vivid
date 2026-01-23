@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useRef, useEffect } from "react";
 import { HelpCircle, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -35,11 +35,38 @@ export function EmotionReasonInput({
   const inputId = useId();
   const helpId = `${inputId}-help`;
   const assistId = `${inputId}-assist`;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleHelpToggle = () => {
     setShowHelp((prev) => !prev);
     onHelpOpen();
   };
+
+  const handleBoxClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // help 버튼이나 다른 클릭 가능한 요소를 클릭한 경우는 제외
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('[role="dialog"]') ||
+      target.tagName === 'BUTTON'
+    ) {
+      return;
+    }
+    // textarea에 포커스
+    textareaRef.current?.focus();
+  };
+
+  // textarea 높이 자동 조정
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.max(scrollHeight, 100);
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = "hidden";
+    }
+  }, [value]);
 
   // 종이 질감을 위한 색상 설정
   const defaultColors = {
@@ -54,8 +81,10 @@ export function EmotionReasonInput({
       className={cn(
         "rounded-2xl emotion-reason-card relative overflow-hidden",
         SPACING.card.padding,
-        "flex flex-col gap-6"
+        "flex flex-col gap-6",
+        "cursor-text"
       )}
+      onClick={handleBoxClick}
       style={{
         backgroundColor: defaultColors.background,
         border: `1.5px solid ${defaultColors.border}`,
@@ -132,7 +161,10 @@ export function EmotionReasonInput({
         </div>
         <button
           type="button"
-          onClick={handleHelpToggle}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleHelpToggle();
+          }}
           aria-expanded={showHelp}
           aria-controls={helpId}
           className={cn(
@@ -143,6 +175,7 @@ export function EmotionReasonInput({
             color: COLORS.text.tertiary,
             backgroundColor: hexToRgba(COLORS.background.hover, 0.5),
             border: "none",
+            cursor: "pointer",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = hexToRgba(COLORS.background.hover, 0.8);
@@ -198,6 +231,7 @@ export function EmotionReasonInput({
 
       <div className="relative z-10">
         <Textarea
+          ref={textareaRef}
           id={inputId}
           value={value}
           onChange={(event) => onChange(event.target.value)}
@@ -215,6 +249,7 @@ export function EmotionReasonInput({
             paddingTop: "2px", // 줄무늬와 정렬을 위한 미세 조정
             minHeight: "100px",
             backgroundColor: "transparent",
+            transition: "height 0.1s ease-out",
           }}
         />
       </div>
