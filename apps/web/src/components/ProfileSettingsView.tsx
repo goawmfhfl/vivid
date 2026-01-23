@@ -19,6 +19,7 @@ import { AuthHeader } from "./forms/AuthHeader";
 import { Input } from "./ui/Input";
 import { Checkbox } from "./ui/checkbox";
 import { PhoneVerificationModal } from "./profile/PhoneVerificationModal";
+import { DeleteAccountDialog } from "./profile/DeleteAccountDialog";
 import { COLORS } from "@/lib/design-system";
 import {
   useKakaoIdentity,
@@ -70,6 +71,7 @@ export function ProfileSettingsView() {
   const [isPhoneEditOpen, setIsPhoneEditOpen] = useState(false);
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // 카카오 연동 상태
   const { data: kakaoIdentity, isLoading: isLoadingKakao } = useKakaoIdentity();
@@ -547,7 +549,34 @@ export function ProfileSettingsView() {
             loadingText="저장 중..."
             defaultText="변경 사항 저장하기"
           />
+
+          {/* 회원 탈퇴 버튼 */}
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="text-xs transition-colors hover:underline"
+              style={{
+                color: COLORS.text.muted,
+              }}
+            >
+              회원 탈퇴
+            </button>
+          </div>
         </form>
+
+        {/* 회원 탈퇴 확인 다이얼로그 */}
+        <DeleteAccountDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onSuccess={() => {
+            // 탈퇴 성공 시 로그인 페이지로 리다이렉션 (Development/Production 모두)
+            // 로딩 모달이 완료 메시지를 표시한 후 리다이렉션
+            setTimeout(() => {
+              router.push("/login?deleted=true");
+            }, 500);
+          }}
+        />
       </div>
     </div>
   );

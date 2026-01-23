@@ -15,6 +15,7 @@ import { FindPasswordDialog } from "./FindPasswordDialog";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { useModalStore } from "@/store/useModalStore";
+import { useToast } from "@/hooks/useToast";
 
 const EMAIL_STORAGE_KEY = "login-saved-email";
 const REMEMBER_EMAIL_KEY = "login-remember-email";
@@ -37,6 +38,7 @@ export function LoginView() {
   const loginMutation = useLogin();
   const kakaoLoginMutation = useKakaoLogin();
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
+  const { showToast } = useToast();
 
   // localStorage에서 저장된 이메일 불러오기
   useEffect(() => {
@@ -54,12 +56,20 @@ export function LoginView() {
 
   useEffect(() => {
     const message = searchParams.get("message");
-    if (!message) {
+    if (message) {
+      openSuccessModal(message);
+      router.replace("/login");
       return;
     }
-    openSuccessModal(message);
-    router.replace("/login");
-  }, [openSuccessModal, router, searchParams]);
+
+    // 회원 탈퇴 완료 확인
+    const isDeleted = searchParams.get("deleted");
+    if (isDeleted === "true") {
+      // 토스트 팝업으로 완료 메시지 표시
+      showToast("회원 탈퇴가 완료되었습니다.", 4000);
+      router.replace("/login");
+    }
+  }, [openSuccessModal, router, searchParams, showToast]);
 
   // Email validation
   const validateEmail = (email: string): boolean => {

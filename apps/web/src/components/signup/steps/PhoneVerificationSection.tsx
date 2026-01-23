@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { COLORS } from "@/lib/design-system";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
@@ -67,8 +67,10 @@ export function PhoneVerificationSection({
   const showVerificationUI = isPhoneComplete && !isPhoneVerified;
 
   // 전화번호가 변경되면 인증 상태 초기화
+  const prevPhoneRef = useRef<string>(phone);
   useEffect(() => {
-    if (isCodeSent) {
+    // 전화번호가 실제로 변경되었을 때만 초기화
+    if (prevPhoneRef.current !== phone && isCodeSent) {
       setIsCodeSent(false);
       setCode("");
       setTimer(0);
@@ -76,6 +78,7 @@ export function PhoneVerificationSection({
       setCodeError(undefined);
       setIsAttemptExceeded(false);
     }
+    prevPhoneRef.current = phone;
   }, [phone, isCodeSent]);
 
   // 타이머 카운트다운

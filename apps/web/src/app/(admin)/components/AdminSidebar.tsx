@@ -66,6 +66,12 @@ const menuItems = [
     enabled: true,
   },
   {
+    title: "탈퇴 사유 관리",
+    href: "/admin/account-deletions",
+    icon: Users,
+    enabled: true,
+  },
+  {
     title: "시스템 설정",
     href: "/admin/settings",
     icon: Settings,
