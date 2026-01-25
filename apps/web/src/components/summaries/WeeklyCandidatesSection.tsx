@@ -27,14 +27,15 @@ function WeeklyCandidateItem({
   candidate: { week_start: string; record_count: number };
   generatingWeek: string | null;
   progress: { current: number; total: number; currentStep: string } | null;
-  timerProgress: Record<string, number>;
+  timerProgress: number | null;
   handleCreateFeedback: (weekStart: string) => void;
   getWeekRange: (weekStart: string) => string;
 }) {
-  const isGenerating =
-    generatingWeek === candidate.week_start || progress !== null || timerProgress[candidate.week_start] !== undefined;
+  const isGenerating = generatingWeek === candidate.week_start;
 
-  const timerPercentage = timerProgress[candidate.week_start] ?? 0;
+  // 현재 아이템이 생성 중인 주차와 일치할 때만 progress 값 사용
+  const currentTimerProgress = isGenerating ? (timerProgress ?? 0) : 0;
+
   const serverPercentage = progress
     ? Math.round((progress.current / progress.total) * 100)
     : 0;
@@ -42,9 +43,10 @@ function WeeklyCandidateItem({
   const isComplete = progress && progress.current >= progress.total;
   const progressPercentage = isComplete
     ? 100
-    : Math.min(Math.max(timerPercentage, serverPercentage), 99);
+    : Math.min(Math.max(currentTimerProgress, serverPercentage), 99);
   
-  const animatedProgress = useCountUp(progressPercentage, 1000, isGenerating);
+  // useCountUp 제거하고 progressPercentage 직접 사용
+  const animatedProgress = progressPercentage;
 
   return (
     <div
@@ -154,7 +156,7 @@ function WeeklyCandidateItem({
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
         {/* 진행 상황 표시 (버튼 옆에) */}
-        {(progress || timerProgress[candidate.week_start] !== undefined) && (
+        {(progress || (isGenerating && timerProgress !== null)) && (
           <div className="flex items-center gap-1 sm:gap-2">
             <div className="flex flex-col items-end gap-0.5 sm:gap-1">
               <p
@@ -264,9 +266,9 @@ export function WeeklyCandidatesSection() {
     openSuccessModal,
   } = useModalStore();
 
-  // 타이머 기반 progress 상태 (주별로 관리)
-  const [timerProgress, setTimerProgress] = useState<Record<string, number>>({});
-  const timerIntervalsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  // 타이머 기반 progress 상태 (주별로 관리 -> 현재 생성중인 주차에 대해서만 단일 값 관리)
+  const [timerProgress, setTimerProgress] = useState<number | null>(null);
+  const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
 
   // 진행 상태 추적 (테스트 환경에서만 - 요금 모달 자동 열기용)
   useEffect(() => {
@@ -284,6 +286,34 @@ export function WeeklyCandidatesSection() {
       }, 300);
     }
   }, [requests, isTest, openModal]);
+
+  // 타이머 로직 (Home.tsx 참고하여 useEffect로 관리)
+  useEffect(() => {
+    if (!generatingWeek || timerStartTime === null) return;
+
+    const DURATION_MS = 80000; // 80초
+    const TARGET_PERCENTAGE = 99; // 최대 99%
+    const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
+
+    // 초기값 설정
+    setTimerProgress(0);
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - timerStartTime;
+      
+      if (elapsed >= DURATION_MS) {
+        setTimerProgress(TARGET_PERCENTAGE);
+        clearInterval(interval);
+        return;
+      }
+      
+      // 15초 이내일 때만 진행률 계산
+      const calculatedProgress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
+      setTimerProgress(calculatedProgress);
+    }, UPDATE_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [generatingWeek, timerStartTime]);
 
   // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 주간 vivid 필터링
   const candidatesForCreation = useMemo(() => {
@@ -314,57 +344,15 @@ export function WeeklyCandidatesSection() {
     return getKSTDateString(endDate);
   };
 
-  // 타이머 정리 함수
-  const clearTimer = (weekStart: string) => {
-    if (timerIntervalsRef.current[weekStart]) {
-      clearInterval(timerIntervalsRef.current[weekStart]);
-      delete timerIntervalsRef.current[weekStart];
-    }
-    setTimerProgress((prev) => {
-      const next = { ...prev };
-      delete next[weekStart];
-      return next;
-    });
-  };
-
-  // 컴포넌트 언마운트 시 모든 타이머 정리
-  useEffect(() => {
-    const intervals = timerIntervalsRef.current;
-    return () => {
-      Object.values(intervals).forEach((interval) => {
-        clearInterval(interval);
-      });
-    };
-  }, []);
-
   const handleCreateFeedback = async (weekStart: string) => {
+    // 이미 생성 중이면 무시
+    if (generatingWeek) return;
+
+    const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
+
     setGeneratingWeek(weekStart);
-
-    // 타이머 시작 (90초 동안 0% → 99%)
-    const DURATION_MS = 90000; // 90초 (1분 30초)
-    const TARGET_PERCENTAGE = 99; // 최대 99%
-    const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
-    const startTime = Date.now();
-
-    setTimerProgress((prev) => ({ ...prev, [weekStart]: 0 }));
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-
-      // 90초가 넘어가면 99%에 고정
-      if (elapsed >= DURATION_MS) {
-        setTimerProgress((prev) => ({ ...prev, [weekStart]: TARGET_PERCENTAGE }));
-        clearInterval(interval);
-        delete timerIntervalsRef.current[weekStart];
-        return;
-      }
-
-      // 90초 이내일 때만 진행률 계산
-      const progress = (elapsed / DURATION_MS) * TARGET_PERCENTAGE;
-      setTimerProgress((prev) => ({ ...prev, [weekStart]: progress }));
-    }, UPDATE_INTERVAL);
-
-    timerIntervalsRef.current[weekStart] = interval;
+    setTimerStartTime(Date.now());
+    setTimerProgress(0);
 
     // 진행 상황 초기화 (전역 상태)
     setWeeklyVividProgress(weekStart, {
@@ -375,6 +363,38 @@ export function WeeklyCandidatesSection() {
     });
 
     try {
+      if (isDev) {
+        // 개발 환경 테스트용 Mock
+        console.log("Development mode: Mocking API call");
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+        
+        // Mock 성공 데이터
+        const weekEnd = getWeekEnd(weekStart);
+        const mockFeedbackData = {
+          id: "999",
+          week_range: { start: weekStart, end: weekEnd },
+          is_ai_generated: true,
+        };
+
+        // 성공 처리 로직 재사용
+        setTimerStartTime(null);
+        setTimerProgress(100);
+        setWeeklyVividProgress(weekStart, {
+          weekStart,
+          current: 2,
+          total: 2,
+          currentStep: "완료",
+        });
+        
+        openSuccessModal(
+          `[TEST] ${weekStart} ~ ${weekEnd} 주간 VIVID 생성 완료 (Mock)`,
+          () => console.log("Mock success modal closed")
+        );
+        
+        clearWeeklyVividProgress(weekStart);
+        return;
+      }
+
       const weekEnd = getWeekEnd(weekStart);
       const apiStartTime = Date.now();
 
@@ -403,8 +423,9 @@ export function WeeklyCandidatesSection() {
         }
       }
 
-      // 타이머 정리
-      clearTimer(weekStart);
+      // 타이머 정리 및 완료 표시
+      setTimerStartTime(null);
+      setTimerProgress(100);
 
       // 진행 상황 완료 (100%로 설정)
       setWeeklyVividProgress(weekStart, {
@@ -458,7 +479,8 @@ export function WeeklyCandidatesSection() {
       console.error("주간 vivid 생성 실패:", error);
 
       // 타이머 정리
-      clearTimer(weekStart);
+      setTimerStartTime(null);
+      setTimerProgress(null);
 
       // 진행 상황 초기화 (전역 상태)
       clearWeeklyVividProgress(weekStart);

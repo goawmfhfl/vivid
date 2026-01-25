@@ -4,6 +4,8 @@ import {
   SYSTEM_PROMPT_REPORT,
   SYSTEM_PROMPT_TREND,
   TrendDataSchema,
+  IntegratedDailyVividSchema,
+  SYSTEM_PROMPT_INTEGRATED,
 } from "./schema";
 import type { Record as FeedbackRecord } from "./types";
 import { buildReportPrompt } from "./prompts";
@@ -84,6 +86,90 @@ async function generateSection<T>(
       systemInstruction: enhancedSystemPrompt,
     });
 
+    // JSON 스키마를 Gemini API 형식으로 정리
+    // Gemini API는 additionalProperties, minItems, maxItems, pattern, description, maxLength 등을 지원하지 않음
+    // 재귀적으로 스키마를 정리하되, properties와 required는 반드시 보존
+    function cleanSchemaRecursive(schemaObj: unknown): unknown {
+      if (typeof schemaObj !== "object" || schemaObj === null) {
+        return schemaObj;
+      }
+
+      if (Array.isArray(schemaObj)) {
+        return schemaObj.map(cleanSchemaRecursive);
+      }
+
+      const obj = schemaObj as Record<string, unknown>;
+      const cleaned: Record<string, unknown> = {};
+
+      // Gemini API가 지원하는 필드만 유지
+      const allowedFields = new Set([
+        "type",
+        "properties",
+        "required",
+        "items",
+        "enum",
+      ]);
+
+      for (const [key, value] of Object.entries(obj)) {
+        // 지원하지 않는 필드 제거
+        if (!allowedFields.has(key)) {
+          continue;
+        }
+
+        // properties는 특별 처리: 각 속성을 재귀적으로 정리하되, properties 객체 자체는 반드시 보존
+        if (key === "properties" && value && typeof value === "object" && !Array.isArray(value)) {
+          const propertiesObj = value as Record<string, unknown>;
+          const cleanedProperties: Record<string, unknown> = {};
+          for (const [propKey, propValue] of Object.entries(propertiesObj)) {
+            const cleanedProp = cleanSchemaRecursive(propValue);
+            if (cleanedProp !== null && cleanedProp !== undefined) {
+              cleanedProperties[propKey] = cleanedProp;
+            }
+          }
+          // properties가 비어있지 않은 경우에만 추가
+          if (Object.keys(cleanedProperties).length > 0) {
+            cleaned[key] = cleanedProperties;
+          }
+        }
+        // items는 배열의 요소 스키마를 재귀적으로 정리
+        else if (key === "items" && value && typeof value === "object" && !Array.isArray(value)) {
+          cleaned[key] = cleanSchemaRecursive(value);
+        }
+        // required는 배열이므로 그대로 유지 (문자열 배열)
+        else if (key === "required" && Array.isArray(value)) {
+          cleaned[key] = value;
+        }
+        // type, enum은 그대로 유지
+        else if (key === "type" || key === "enum") {
+          cleaned[key] = value;
+        }
+        // 그 외의 객체는 재귀적으로 처리
+        else if (value && typeof value === "object") {
+          cleaned[key] = cleanSchemaRecursive(value);
+        } else {
+          cleaned[key] = value;
+        }
+      }
+
+      return cleaned;
+    }
+
+    // 스키마를 Gemini API 형식으로 정리
+    const cleanedSchema = cleanSchemaRecursive(schemaObj.schema) as {
+      type: string;
+      properties?: Record<string, unknown>;
+      required?: string[];
+    };
+
+    // 스키마 검증: properties가 비어있으면 에러
+    if (!cleanedSchema.properties || Object.keys(cleanedSchema.properties).length === 0) {
+      console.error(`[${sectionName}] Schema properties is empty after cleaning:`, {
+        originalSchema: schemaObj.schema,
+        cleanedSchema,
+      });
+      throw new Error(`Schema properties is empty for ${schemaObj.name}. This may indicate that cleanSchemaRecursive removed all properties.`);
+    }
+
     // JSON 스키마 설정
     // Gemini API는 additionalProperties를 직접 지원하지 않으므로 제거
     const responseSchema: {
@@ -92,13 +178,26 @@ async function generateSection<T>(
       required?: string[];
     } = {
       type: "object",
-      properties: schemaObj.schema.properties as Record<string, unknown>,
+      properties: cleanedSchema.properties as Record<string, unknown>,
     };
 
     // required 필드가 있고 비어있지 않을 때만 추가
-    const requiredFields = schemaObj.schema.required;
-    if (Array.isArray(requiredFields) && requiredFields.length > 0) {
-      responseSchema.required = requiredFields as string[];
+    // required에 있는 모든 필드가 properties에 존재하는지 확인
+    if (cleanedSchema.required && Array.isArray(cleanedSchema.required) && cleanedSchema.required.length > 0) {
+      const missingProperties = cleanedSchema.required.filter(
+        (req) => !(req in cleanedSchema.properties!)
+      );
+      if (missingProperties.length > 0) {
+        console.error(`[${sectionName}] Required properties not found in schema:`, {
+          missingProperties,
+          availableProperties: Object.keys(cleanedSchema.properties),
+          required: cleanedSchema.required,
+        });
+        throw new Error(
+          `Required properties [${missingProperties.join(", ")}] not found in schema properties for ${schemaObj.name}`
+        );
+      }
+      responseSchema.required = cleanedSchema.required as string[];
     }
 
     // 사용자 메시지 구성
@@ -109,6 +208,7 @@ async function generateSection<T>(
         parts: [{ text: userPrompt }],
       },
     ];
+
 
     // generationConfig를 별도로 구성하여 타입 오류 방지
     const generationConfig: {
@@ -155,47 +255,55 @@ async function generateSection<T>(
       !Array.isArray(parsed) &&
       Object.keys(parsed).length > 0
     ) {
-      const firstValue = Object.values(parsed)[0];
-
-      // 첫 번째 값이 객체인 경우
+      // 통합 리포트의 경우 (키워드 확인), parsed 자체를 사용
       if (
-        firstValue !== null &&
-        firstValue !== undefined &&
-        typeof firstValue === "object" &&
-        !Array.isArray(firstValue)
+        (sectionName === "integrated_report" || sectionName === "weekly_vivid_full") &&
+        ("report" in parsed || "weekly_vivid" in parsed)
       ) {
-        result = firstValue as T;
-      } else if (typeof firstValue === "string") {
-        // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
-        console.warn(
-          `[${schemaObj.name}] First value is string, checking parsed structure:`,
-          {
-            parsed,
-            parsedKeys: Object.keys(parsed),
-            firstValue,
+        result = parsed as T;
+      } else {
+        const firstValue = Object.values(parsed)[0];
+
+        // 첫 번째 값이 객체인 경우
+        if (
+          firstValue !== null &&
+          firstValue !== undefined &&
+          typeof firstValue === "object" &&
+          !Array.isArray(firstValue)
+        ) {
+          result = firstValue as T;
+        } else if (typeof firstValue === "string") {
+          // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
+          console.warn(
+            `[${schemaObj.name}] First value is string, checking parsed structure:`,
+            {
+              parsed,
+              parsedKeys: Object.keys(parsed),
+              firstValue,
+            }
+          );
+
+          // parsed가 직접 원하는 구조인지 확인 (예: { report: {...} })
+          // 또는 다른 키를 확인
+          const keys = Object.keys(parsed);
+          const objectValue = keys.find(
+            (key) =>
+              parsed[key] !== null &&
+              parsed[key] !== undefined &&
+              typeof parsed[key] === "object" &&
+              !Array.isArray(parsed[key])
+          );
+
+          if (objectValue) {
+            result = parsed[objectValue] as T;
+          } else {
+            // parsed 자체가 원하는 객체인 경우
+            result = parsed as T;
           }
-        );
-
-        // parsed가 직접 원하는 구조인지 확인 (예: { report: {...} })
-        // 또는 다른 키를 확인
-        const keys = Object.keys(parsed);
-        const objectValue = keys.find(
-          (key) =>
-            parsed[key] !== null &&
-            parsed[key] !== undefined &&
-            typeof parsed[key] === "object" &&
-            !Array.isArray(parsed[key])
-        );
-
-        if (objectValue) {
-          result = parsed[objectValue] as T;
         } else {
-          // parsed 자체가 원하는 객체인 경우
+          // 그 외의 경우 parsed 자체를 사용
           result = parsed as T;
         }
-      } else {
-        // 그 외의 경우 parsed 자체를 사용
-        result = parsed as T;
       }
     } else {
       // parsed가 배열이거나 null인 경우
@@ -221,6 +329,44 @@ async function generateSection<T>(
           schemaObj.name
         }: expected object but got ${typeof result}. This may indicate a schema mismatch.`
       );
+    }
+
+    // 결과 데이터 정리 (Trend 데이터의 경우 빈 문자열 확인 및 기본값 처리)
+    if (sectionName === "integrated_report" && result && typeof result === "object") {
+       // @ts-ignore
+       let trend = result.trend;
+       if (trend) {
+        const hasEmptyString =
+          !trend.aspired_self?.trim() ||
+          !trend.interest?.trim() ||
+          !trend.immersion_moment?.trim() ||
+          !trend.personality_trait?.trim();
+  
+        if (hasEmptyString) {
+          console.warn(
+            "[generateIntegratedReport] Trend 데이터에 빈 문자열이 포함되어 있습니다:",
+            {
+              aspired_self: trend.aspired_self,
+              interest: trend.interest,
+              immersion_moment: trend.immersion_moment,
+              personality_trait: trend.personality_trait,
+            }
+          );
+  
+          trend = {
+            aspired_self: trend.aspired_self?.trim() || "자기 성찰과 성장을 추구하는",
+            interest: trend.interest?.trim() || "일상의 의미 있는 경험",
+            immersion_moment:
+              trend.immersion_moment?.trim() || "집중할 수 있는 순간",
+            personality_trait: trend.personality_trait?.trim() || "성찰적인",
+          };
+          console.log(
+            "[generateIntegratedReport] 빈 문자열을 기본값으로 대체했습니다."
+          );
+          // @ts-ignore
+          result.trend = trend;
+        }
+      }
     }
 
     setCache(proCacheKey, result);
@@ -431,6 +577,48 @@ async function generateTrendData(
   }
 }
 
+/**
+ * 통합 리포트 생성 (Report + Trend) - Pro 유저용
+ */
+async function generateIntegratedReport(
+  records: FeedbackRecord[],
+  date: string,
+  dayOfWeek: string,
+  isPro: boolean,
+  userId?: string
+): Promise<{ report: Report | null; trend: TrendData | null }> {
+  const dreamRecords = records.filter(
+    (r) => r.type === "vivid" || r.type === "dream"
+  );
+
+  if (dreamRecords.length === 0) {
+    return { report: null, trend: null };
+  }
+
+  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_INTEGRATED, prompt);
+
+  try {
+    const result = await generateSection<{ report: Report; trend: TrendData }>(
+      SYSTEM_PROMPT_INTEGRATED,
+      prompt,
+      IntegratedDailyVividSchema,
+      cacheKey,
+      isPro,
+      "integrated_report",
+      userId
+    );
+    
+    // generateSection 내부에서 이미 처리되지만, 명시적으로 한 번 더 확인
+    return {
+      report: result.report,
+      trend: result.trend,
+    };
+  } catch (error) {
+    console.error("[generateIntegratedReport] 통합 생성 실패:", error);
+    return { report: null, trend: null };
+  }
+}
 
 /**
  * 모든 타입별 리포트 생성
@@ -463,7 +651,12 @@ export async function generateAllReportsWithProgress(
     };
   }
 
-  // Pro 유저: report, trend 생성
+  // Pro 유저: 통합 생성 함수 호출 (하나의 API 요청으로 Report와 Trend 동시 생성)
+  if (isPro) {
+    return await generateIntegratedReport(records, date, dayOfWeek, isPro, userId);
+  }
+
+  // Fallback (혹시 모를 상황 대비, 기존 병렬 처리 코드 - 도달할 일 없음)
   const [report, trendData] = await Promise.all([
     generateReport(records, date, dayOfWeek, isPro, userId),
     generateTrendData(records, date, dayOfWeek, isPro, userId),

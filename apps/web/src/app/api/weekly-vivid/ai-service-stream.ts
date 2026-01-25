@@ -59,8 +59,7 @@ async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  // Gemini 3 Flash Preview 사용 (daily-vivid와 동일한 모델)
-  const modelName = "gemini-3-flash-preview";
+  const modelName = "gemini-3-pro-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -222,7 +221,6 @@ async function generateSection<T>(
       console.log(`[${sectionName}] Cleaned schema properties count:`, Object.keys(cleanedSchema.properties || {}).length);
       console.log(`[${sectionName}] Final responseSchema:`, JSON.stringify(generationConfig.responseSchema, null, 2));
     }
-
     // 사용자 메시지 구성
     const contents = [
       {
@@ -482,127 +480,50 @@ async function generateSection<T>(
 }
 
 /**
- * Weekly Report 생성 (기록 기반)
+ * Weekly Vivid 전체 데이터 생성 (Records 기반, 통합 호출)
  */
-async function generateWeeklyReportFromRecords(
+async function generateWeeklyVividDataFromRecords(
   records: RecordsForWeekly,
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
   userId?: string,
   userName?: string
-): Promise<WeeklyReport> {
+): Promise<Partial<WeeklyVivid>> {
   const prompt = buildWeeklyVividPromptFromRecords(records, range, userName);
   const schema = getWeeklyVividSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
-  // report 스키마 추출
-  // getVividReportSchema는 이미 객체를 반환하므로 그대로 사용
-  const weeklyVividProps = schema.schema.properties.weekly_vivid as Record<string, unknown>;
-  const weeklyVividProperties = weeklyVividProps?.properties as Record<string, unknown> | undefined;
-  const reportSchemaRaw = weeklyVividProperties?.report as Record<string, unknown> | undefined;
-  
-  // report 스키마가 유효한지 확인
-  if (!reportSchemaRaw || typeof reportSchemaRaw !== "object") {
-    console.error("[generateWeeklyReportFromRecords] Invalid report schema:", {
-      reportSchemaRaw,
-      weeklyVividProps,
-      weeklyVividProperties,
-      schemaStructure: {
-        hasProperties: !!schema.schema.properties,
-        hasWeeklyVivid: !!schema.schema.properties.weekly_vivid,
-        weeklyVividKeys: schema.schema.properties.weekly_vivid ? Object.keys(schema.schema.properties.weekly_vivid as Record<string, unknown>) : [],
-      },
-    });
-    throw new Error("Invalid report schema structure: report schema not found");
-  }
-
-  // properties가 있는지 확인
-  if (!reportSchemaRaw.properties || typeof reportSchemaRaw.properties !== "object" || Object.keys(reportSchemaRaw.properties).length === 0) {
-    console.error("[generateWeeklyReportFromRecords] Report schema has no properties:", {
-      reportSchemaRaw,
-      reportSchemaType: typeof reportSchemaRaw,
-      reportSchemaKeys: Object.keys(reportSchemaRaw),
-      reportSchemaProperties: reportSchemaRaw.properties,
-    });
-    throw new Error("Report schema has no properties");
-  }
-
-  // 디버깅: 원본 스키마 구조 로깅
-  if (process.env.NODE_ENV === "development") {
-    const props = reportSchemaRaw.properties as Record<string, unknown> | undefined;
-    const sampleProperties: Record<string, unknown> = {};
-    if (props) {
-      for (const key of Object.keys(props).slice(0, 5)) {
-        const propValue = props[key] as Record<string, unknown> | undefined;
-        sampleProperties[key] = {
-          type: propValue?.type || 'unknown',
-        };
-      }
-    }
-    console.log("[generateWeeklyReportFromRecords] Report schema structure:", {
-      hasProperties: !!reportSchemaRaw.properties,
-      propertiesCount: props ? Object.keys(props).length : 0,
-      propertiesKeys: props ? Object.keys(props).slice(0, 10) : [],
-      reportSchemaType: reportSchemaRaw.type,
-      sampleProperties,
-    });
-  }
-
-  const response = await generateSection<{ report: WeeklyReport }>(
+  const response = await generateSection<{ weekly_vivid: Partial<WeeklyVivid> }>(
     SYSTEM_PROMPT_VIVID,
     prompt,
-    {
-      name: "WeeklyReportResponse",
-      schema: {
-        type: "object",
-        properties: {
-          report: reportSchemaRaw,
-        },
-        required: ["report"],
-      },
-      strict: true,
-    },
+    schema,
     cacheKey,
     isPro,
-    "report",
+    "weekly_vivid_full",
     userId
   );
 
   if (!response) {
-    console.error("[generateWeeklyReport] response is null or undefined");
-    throw new Error("Weekly report response is null or undefined");
+    console.error("[generateWeeklyVividData] response is null or undefined");
+    throw new Error("Weekly vivid response is null or undefined");
   }
 
-  // response가 직접 WeeklyReport인 경우 처리
+  // response가 직접 { weekly_vivid: ... } 구조인지 확인
+  if (response.weekly_vivid) {
+    return response.weekly_vivid;
+  }
+
+  // 혹시라도 구조가 다르게 왔을 경우 처리 (예: 직접 객체 반환)
   if (
     typeof response === "object" &&
-    response !== null &&
-    !Array.isArray(response) &&
-    "weekly_vivid_summary" in response &&
-    !("report" in response)
+    "report" in response &&
+    "title" in response
   ) {
-    console.log(
-      "[generateWeeklyReport] Response appears to be WeeklyReport directly, using it"
-    );
-    return response as WeeklyReport;
+    return response as unknown as Partial<WeeklyVivid>;
   }
 
-  if (!response.report) {
-    console.error("[generateWeeklyReport] response.report is missing", {
-      response,
-      responseKeys: Object.keys(response || {}),
-      responseType: typeof response,
-      responseValues: Object.values(response || {}),
-      responseStringified: JSON.stringify(response, null, 2),
-    });
-    throw new Error("Weekly report data is missing from response");
-  }
-
-  console.log(
-    "[generateWeeklyReport] report 추출 완료:",
-    !!response.report
-  );
-  return response.report;
+  console.error("[generateWeeklyVividData] Invalid response structure:", response);
+  throw new Error("Invalid response structure for Weekly Vivid");
 }
 
 
@@ -707,8 +628,8 @@ export async function generateWeeklyVividFromRecordsWithProgress(
   userId?: string,
   userName?: string
 ): Promise<WeeklyVivid> {
-  // report AI로 생성 (기록 기반)
-  const report = await generateWeeklyReportFromRecords(
+  // 한 번의 호출로 report, title, trend 모두 생성
+  const weeklyVividData = await generateWeeklyVividDataFromRecords(
     records,
     range,
     isPro,
@@ -716,30 +637,17 @@ export async function generateWeeklyVividFromRecordsWithProgress(
     userName
   );
 
-  // report를 바탕으로 title 생성
-  const title = await generateWeeklyTitle(
-    report,
-    range,
-    isPro,
-    userId,
-    userName
-  );
-
-  // report를 바탕으로 trend 생성
-  const trend = await generateWeeklyTrend(
-    report,
-    range,
-    isPro,
-    userId,
-    userName
-  );
+  // 데이터 검증 및 기본값 처리
+  if (!weeklyVividData.report) {
+    throw new Error("Failed to generate weekly report");
+  }
 
   // 최종 Weekly Vivid 조합
   const weeklyVivid: WeeklyVivid = {
     week_range: range,
-    report,
-    title,
-    trend: trend || null,
+    report: weeklyVividData.report as WeeklyReport,
+    title: weeklyVividData.title || `${range.start} ~ ${range.end} 주간`,
+    trend: weeklyVividData.trend as WeeklyTrendData | null,
     is_ai_generated: true,
   };
 

@@ -77,7 +77,10 @@ export type MonthlyReport = {
     recurring_patterns: Array<{
       pattern: string;
       frequency: number;
-      days: string[];
+      days: Array<{
+        date: string;
+        summary: string;
+      }>;
       impact: "positive" | "neutral" | "negative";
       why_it_matters: string;
     }>;

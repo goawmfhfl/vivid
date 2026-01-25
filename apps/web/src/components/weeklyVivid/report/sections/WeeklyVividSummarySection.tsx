@@ -1,4 +1,5 @@
-import { Target } from "lucide-react";
+import { useState } from "react";
+import { Target, ChevronDown, ChevronUp } from "lucide-react";
 import type { WeeklyReport } from "@/types/weekly-vivid";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,69 @@ type WeeklyVividSummarySectionProps = {
   weeklyVividSummary: WeeklyReport["weekly_vivid_summary"];
   vividColor: string;
 };
+
+/**
+ * 날짜 목록 드롭다운 컴포넌트
+ */
+function DateListDropdown({
+  days,
+  color,
+}: {
+  days: Array<{ date: string; summary: string }>;
+  color: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!days || days.length === 0) return null;
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between transition-all duration-200 hover:opacity-80"
+      >
+        <p
+          className={cn(
+            TYPOGRAPHY.caption.fontSize,
+            TYPOGRAPHY.caption.fontWeight
+          )}
+          style={{ color: COLORS.text.tertiary }}
+        >
+          기록 근거 보기 ({days.length}개)
+        </p>
+        <div className="flex items-center gap-1">
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4" style={{ color: color }} />
+          ) : (
+            <ChevronDown className="w-4 h-4" style={{ color: color }} />
+          )}
+        </div>
+      </button>
+      {isOpen && (
+        <div className="mt-2 space-y-2">
+          <div className="flex flex-col gap-2">
+            {days.map((day, idx) => (
+              <div key={idx} className="flex flex-col gap-0.5">
+                <p
+                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {day.date}
+                </p>
+                <p
+                  className={cn(TYPOGRAPHY.caption.fontSize)}
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  {day.summary}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function WeeklyVividSummarySection({
   weeklyVividSummary,
@@ -60,12 +124,7 @@ export function WeeklyVividSummarySection({
                     {point.point}
                   </p>
                   {point.dates && point.dates.length > 0 && (
-                    <p
-                      className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-1.5")}
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      {point.dates.join(", ")}
-                    </p>
+                    <DateListDropdown days={point.dates} color={vividColor} />
                   )}
                 </div>
               ))}

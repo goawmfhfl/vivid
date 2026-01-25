@@ -23,15 +23,15 @@ import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
  * 기본적으로 접혀있고, 클릭하면 펼쳐지는 형태
  */
 function DateListDropdown({
-  dates,
+  days,
   color,
 }: {
-  dates: string[];
+  days: Array<{ date: string; summary: string }>;
   color: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (dates.length === 0) return null;
+  if (!days || days.length === 0) return null;
 
   return (
     <div className="mt-2">
@@ -46,7 +46,7 @@ function DateListDropdown({
           )}
           style={{ color: COLORS.text.tertiary }}
         >
-          기록 일자 보기 ({dates.length}개)
+          기록 일자 보기 ({days.length}개)
         </p>
         <div className="flex items-center gap-1">
           {isOpen ? (
@@ -58,15 +58,25 @@ function DateListDropdown({
       </button>
       {isOpen && (
         <div className="mt-2 space-y-2">
-          <div className="flex flex-col gap-1.5">
-            {dates.map((date, idx) => (
-              <p
-                key={idx}
-                className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-                style={{ color: COLORS.text.tertiary }}
-              >
-                {date}
-              </p>
+          <div className="flex flex-col gap-2">
+            {days.map((day, idx) => (
+              <div key={idx} className="flex flex-col gap-0.5">
+                <p
+                  className={cn(
+                    TYPOGRAPHY.bodySmall.fontSize,
+                    "font-medium"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {day.date}
+                </p>
+                <p
+                  className={cn(TYPOGRAPHY.caption.fontSize)}
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  {day.summary}
+                </p>
+              </div>
             ))}
           </div>
         </div>
@@ -271,7 +281,7 @@ export function DailyLifePatternsSection({
                     </p>
                     {pattern.days && pattern.days.length > 0 && (
                       <DateListDropdown
-                        dates={pattern.days}
+                        days={pattern.days}
                         color={vividColor}
                       />
                     )}

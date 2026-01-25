@@ -170,7 +170,8 @@ export function buildWeeklyVividPrompt(
 
 1. **weekly_vivid_summary (주간 비비드 요약)**
    - ${weekRange.start}부터 ${weekRange.end}까지의 전체 기간의 비비드 기록을 종합하여 300자 내외로 요약
-   - key_points: 핵심 포인트를 날짜와 함께 표시 (예: "집 꾸리기·이사 실무 집중: 배송·설치·다이소 쇼핑·실내자전거 이동 등 구체적 행동이 반복됨(2025-12-17, 2025-12-18, 2025-12-21)")
+   - key_points: 핵심 포인트를 날짜와 해당 날짜의 기록 요약(summary)과 함께 표시
+     예: { point: "집 꾸리기·이사 실무 집중", dates: [{ date: "2025-12-17", summary: "배송·설치 확인" }, { date: "2025-12-18", summary: "다이소 쇼핑" }] }
    - next_week_vision_key_points: 다음주 비전의 핵심 포인트 포함
 
 2. **weekly_keywords_analysis (주간 키워드 분석)**
@@ -189,11 +190,13 @@ export function buildWeeklyVividPrompt(
 5. **user_characteristics_analysis (사용자 특징 심화 분석)**
    - consistency_summary: ${userName ? `"${userName}님"` : "사용자"}을(를) 명시적으로 언급하며, ${weekRange.start}부터 ${weekRange.end}까지 특징의 일관성을 요약${userName ? ` (예: "${userName}님은 이번 주 동안...")` : ""}
    - top_5_characteristics: ${userName ? `"${userName}님"` : "사용자"}의 이름을 기반으로 명확하게 어떤 특징이 있는지 분석한 Top 5 (frequency와 dates 포함${userName ? `, 각 특징 설명 시 "${userName}님"을 포함` : ""})
+   - dates: 특징이 나타난 **모든** 날짜(date)와 해당 날짜의 기록 내용을 한 줄로 명료하게 요약(summary)하여 포함하세요. **dates 배열의 길이는 frequency와 반드시 일치해야 합니다.** (예: 7회 발견 시 7개 항목 포함)
    - change_patterns: 새로 나타난 특징, 사라진 특징 분석
 
 6. **aspired_traits_analysis (지향하는 모습 심화 분석)**
    - consistency_summary: ${weekRange.start}부터 ${weekRange.end}까지 지향하는 모습의 일관성 요약
    - top_5_aspired_traits: 가장 자주 언급된 지향 모습 Top 5 (frequency와 dates 포함)
+   - dates: 지향하는 모습이 나타난 **모든** 날짜(date)와 해당 날짜의 기록 내용을 한 줄로 명료하게 요약(summary)하여 포함하세요. **dates 배열의 길이는 frequency와 반드시 일치해야 합니다.** (예: 7회 발견 시 7개 항목 포함)
    - evolution_process: 지향 모습의 진화 과정 (stages 배열)
 
 7. **weekly_insights (주간 인사이트)**
@@ -276,7 +279,8 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
 
 1. **weekly_vivid_summary (주간 비비드 요약)**
    - ${weekRange.start}부터 ${weekRange.end}까지의 전체 기간의 VIVID 기록을 종합하여 300자 내외로 요약
-   - key_points: 핵심 포인트를 날짜와 함께 표시 (예: "집 꾸리기·이사 실무 집중: 배송·설치·다이소 쇼핑·실내자전거 이동 등 구체적 행동이 반복됨(2025-12-17, 2025-12-18, 2025-12-21)")
+   - key_points: 핵심 포인트를 날짜와 해당 날짜의 기록 요약(summary)과 함께 표시
+     예: { point: "집 꾸리기·이사 실무 집중", dates: [{ date: "2025-12-17", summary: "배송·설치 확인" }, { date: "2025-12-18", summary: "다이소 쇼핑" }] }
    - next_week_vision_key_points: 다음주 비전의 핵심 포인트 포함
 
 2. **weekly_keywords_analysis (주간 키워드 분석)**
@@ -296,16 +300,29 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
 5. **user_characteristics_analysis (사용자 특징 심화 분석)**
    - consistency_summary: ${userName ? `"${userName}님"` : "사용자"}을(를) 명시적으로 언급하며, ${weekRange.start}부터 ${weekRange.end}까지 기록에서 드러난 특징의 일관성을 요약${userName ? ` (예: "${userName}님은 이번 주 동안...")` : ""}
    - top_5_characteristics: ${userName ? `"${userName}님"` : "사용자"}의 이름을 기반으로 기록에서 드러난 특징을 명확하게 분석한 Top 5 (frequency와 dates 포함${userName ? `, 각 특징 설명 시 "${userName}님"을 포함` : ""})
+   - dates: 특징이 나타난 **모든** 날짜(date)와 해당 날짜의 기록 내용을 한 줄로 명료하게 요약(summary)하여 포함하세요. **dates 배열의 길이는 frequency와 반드시 일치해야 합니다.** (예: 7회 발견 시 7개 항목 포함)
    - change_patterns: 새로 나타난 특징, 사라진 특징 분석
 
 6. **aspired_traits_analysis (지향하는 모습 심화 분석)**
    - consistency_summary: ${weekRange.start}부터 ${weekRange.end}까지 Q2 기록에서 드러난 지향하는 모습의 일관성 요약
    - top_5_aspired_traits: 가장 자주 언급된 지향 모습 Top 5 (frequency와 dates 포함)
+   - dates: 지향하는 모습이 나타난 **모든** 날짜(date)와 해당 날짜의 기록 내용을 한 줄로 명료하게 요약(summary)하여 포함하세요. **dates 배열의 길이는 frequency와 반드시 일치해야 합니다.** (예: 7회 발견 시 7개 항목 포함)
    - evolution_process: 지향 모습의 진화 과정 (stages 배열)
 
 7. **weekly_insights (주간 인사이트)**
    - patterns: ${weekRange.start}부터 ${weekRange.end}까지의 기록에서 발견한 패턴 (pattern, description, evidence)
    - unexpected_connections: 예상치 못한 연결점 (connection, description, significance)
+
+8. **title (주간 비비드 제목)**
+   - 이번 주를 한 문장으로 요약하는 제목을 "~ 했던 주" 또는 "~ 했던 한 주" 형식으로 생성하세요.
+   - 예시: "개발과 운동에 집중했던 주", "새로운 습관이 만들어 진 주", "자기계발과 휴식의 균형을 찾았던 주"
+   - 제목은 간결하고 명확하며, 이번 주의 가장 중요한 활동이나 변화를 잘 표현해야 합니다.
+
+9. **trend (주간 흐름 데이터)**
+   - direction: 이번 주의 기록을 통해 드러난 ${userName ? `${userName}님이 ` : "사용자가 "}가고 있는 방향 (예: "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람")
+   - core_value: 이번 주의 기록에서 가장 중요하게 여기는 가치 (예: "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치")
+   - driving_force: 이번 주를 움직인 실제 원동력 (예: "새로운 목표를 향한 호기심과 실행력")
+   - current_self: 요즘의 ${userName ? `${userName}님을 ` : "사용자를 "}한 문장으로 표현 (예: "변화를 두려워하지 않고 꾸준히 나아가는 사람")
 
 **최종 확인: 모든 섹션에서 ${weekRange.start}부터 ${weekRange.end}까지의 전체 기간을 분석했는지 확인하세요.**
 모든 섹션을 스키마에 맞게 완전히 작성해주세요.`;
@@ -336,13 +353,13 @@ export function buildWeeklyTitlePrompt(
 ${report.weekly_vivid_summary?.summary || ""}
 
 **핵심 포인트:**
-${report.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
+${report.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: Array<{ date: string; summary: string }> }) => `- ${kp.point}`).join("\n") || ""}
 
 **주요 키워드:**
 ${report.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
 
 **사용자 특징:**
-${report.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
+${report.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: Array<{ date: string; summary: string }> }) => `- ${c.characteristic}`).join("\n") || ""}
 
 위 분석 결과를 바탕으로, 이번 주의 가장 핵심적인 특징을 담은 제목을 "~ 했던 주" 형식으로 생성해주세요.
 제목은 간결하고 명확하며, 이번 주의 가장 중요한 활동이나 변화를 잘 표현해야 합니다.
@@ -368,16 +385,16 @@ export function buildWeeklyTrendPrompt(
 ${report.weekly_vivid_summary?.summary || ""}
 
 **핵심 포인트:**
-${report.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: string[] }) => `- ${kp.point}`).join("\n") || ""}
+${report.weekly_vivid_summary?.key_points?.map((kp: { point: string; dates: Array<{ date: string; summary: string }> }) => `- ${kp.point}`).join("\n") || ""}
 
 **주요 키워드:**
 ${report.weekly_keywords_analysis?.vision_keywords_trend?.slice(0, 5).map((kw: { keyword: string; days: number; context: string; related_keywords: string[] }) => `- ${kw.keyword} (${kw.days}일)`).join("\n") || ""}
 
 **사용자 특징:**
-${report.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: string[] }) => `- ${c.characteristic}`).join("\n") || ""}
+${report.user_characteristics_analysis?.top_5_characteristics?.slice(0, 3).map((c: { characteristic: string; frequency: number; dates: Array<{ date: string; summary: string }> }) => `- ${c.characteristic}`).join("\n") || ""}
 
 **지향하는 모습:**
-${report.aspired_traits_analysis?.top_5_aspired_traits?.slice(0, 3).map((t: { trait: string; frequency: number; dates: string[] }) => `- ${t.trait}`).join("\n") || ""}
+${report.aspired_traits_analysis?.top_5_aspired_traits?.slice(0, 3).map((t: { trait: string; frequency: number; dates: Array<{ date: string; summary: string }> }) => `- ${t.trait}`).join("\n") || ""}
 
 **앞으로의 모습 종합:**
 ${report.future_vision_analysis?.integrated_summary || ""}

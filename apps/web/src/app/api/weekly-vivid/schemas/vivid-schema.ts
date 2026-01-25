@@ -26,7 +26,15 @@ export function getVividReportSchema(isPro: boolean) {
                 point: { type: "string" },
                 dates: {
                   type: "array",
-                  items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                      summary: { type: "string" },
+                    },
+                    required: ["date", "summary"],
+                  },
                 },
               },
               required: ["point", "dates"],
@@ -197,14 +205,22 @@ export function getVividReportSchema(isPro: boolean) {
                 frequency: { type: "integer", minimum: 0 },
                 dates: {
                   type: "array",
-                  items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                      summary: { type: "string" },
+                    },
+                    required: ["date", "summary"],
+                  },
                 },
               },
               required: ["characteristic", "frequency", "dates"],
             },
             minItems: 0,
             maxItems: 5,
-            description: "가장 자주 언급된 특징 Top 5",
+            description: "가장 자주 언급된 특징 Top 5 (frequency와 dates의 개수가 일치해야 함)",
           },
           change_patterns: {
             type: "object",
@@ -271,14 +287,22 @@ export function getVividReportSchema(isPro: boolean) {
                 frequency: { type: "integer", minimum: 0 },
                 dates: {
                   type: "array",
-                  items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                      summary: { type: "string" },
+                    },
+                    required: ["date", "summary"],
+                  },
                 },
               },
               required: ["trait", "frequency", "dates"],
             },
             minItems: 0,
             maxItems: 5,
-            description: "가장 자주 언급된 지향 모습 Top 5",
+            description: "가장 자주 언급된 지향 모습 Top 5 (frequency와 dates의 개수가 일치해야 함)",
           },
           evolution_process: {
             type: "object",

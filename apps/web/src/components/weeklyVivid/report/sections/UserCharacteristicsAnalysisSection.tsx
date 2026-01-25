@@ -16,15 +16,15 @@ type UserCharacteristicsAnalysisSectionProps = {
  * 날짜 목록 드롭다운 컴포넌트
  */
 function DateListDropdown({
-  dates,
+  days,
   color,
 }: {
-  dates: string[];
+  days: Array<{ date: string; summary: string }>;
   color: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (dates.length === 0) return null;
+  if (!days || days.length === 0) return null;
 
   return (
     <div className="mt-2">
@@ -39,7 +39,7 @@ function DateListDropdown({
           )}
           style={{ color: COLORS.text.tertiary }}
         >
-          기록 일자 보기 ({dates.length}개)
+          기록 일자 보기 ({days.length}개)
         </p>
         <div className="flex items-center gap-1">
           {isOpen ? (
@@ -50,16 +50,23 @@ function DateListDropdown({
         </div>
       </button>
       {isOpen && (
-        <div className="mt-2 space-y-1.5">
-          <div className="flex flex-col gap-1.5">
-            {dates.map((date, idx) => (
-              <p
-                key={idx}
-                className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-                style={{ color: COLORS.text.tertiary }}
-              >
-                {date}
-              </p>
+        <div className="mt-2 space-y-2">
+          <div className="flex flex-col gap-2">
+            {days.map((day, idx) => (
+              <div key={idx} className="flex flex-col gap-0.5">
+                <p
+                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "font-medium")}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {day.date}
+                </p>
+                <p
+                  className={cn(TYPOGRAPHY.caption.fontSize)}
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  {day.summary}
+                </p>
+              </div>
             ))}
           </div>
         </div>
@@ -162,7 +169,7 @@ export function UserCharacteristicsAnalysisSection({
                         </span>
                       </div>
                       {char.dates && char.dates.length > 0 && (
-                        <DateListDropdown dates={char.dates} color={vividColor} />
+                        <DateListDropdown days={char.dates} color={vividColor} />
                       )}
                     </div>
                   </div>

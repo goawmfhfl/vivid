@@ -115,7 +115,15 @@ export const MonthlyReportSchema = {
                     frequency: { type: "integer", minimum: 0 },
                     days: {
                       type: "array",
-                      items: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                      items: {
+                        type: "object",
+                        additionalProperties: false,
+                        properties: {
+                          date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                          summary: { type: "string" },
+                        },
+                        required: ["date", "summary"],
+                      },
                     },
                     impact: {
                       type: "string",

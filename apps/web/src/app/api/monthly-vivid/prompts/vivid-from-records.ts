@@ -85,8 +85,9 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
 
 ### 3. 하루 패턴 인사이트 (20%)
 - Q1 기록("오늘 하루를 어떻게 보낼까?")을 분석하여 반복되는 패턴을 발견하세요.
-- recurring_patterns: 한 달 동안 반복된 하루 패턴을 찾고, 각 패턴의 영향(positive/neutral/negative)을 평가하세요. 패턴이 나타난 날짜를 포함하세요.
-- weekly_evolution: 주차별로 하루가 어떻게 달라졌는지 서사적으로 정리하세요.
+    - recurring_patterns: 한 달 동안 반복된 하루 패턴을 찾고, 각 패턴의 영향(positive/neutral/negative)을 평가하세요.
+    - days: 패턴이 나타난 **모든** 날짜(date)와 해당 날짜의 기록 내용을 한 줄로 명료하게 요약(summary)하여 포함하세요. **days 배열의 길이는 frequency와 반드시 일치해야 합니다.** (발견된 모든 날짜 포함)
+    - weekly_evolution: 주차별로 하루가 어떻게 달라졌는지 서사적으로 정리하세요.
 - evaluation_themes: 기록에서 반복되는 강점과 개선점을 추출하세요.
 
 ### 4. 특성-비전 매칭 (15%)

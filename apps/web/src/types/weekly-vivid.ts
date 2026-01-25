@@ -17,7 +17,10 @@ export type WeeklyReport = {
     summary: string; // 300자 내외
     key_points: Array<{
       point: string;
-      dates: string[]; // ["2025-12-17", "2025-12-18"]
+      dates: Array<{
+        date: string;
+        summary: string;
+      }>;
     }>;
     next_week_vision_key_points: string[];
   };
@@ -71,7 +74,10 @@ export type WeeklyReport = {
     top_5_characteristics: Array<{
       characteristic: string;
       frequency: number;
-      dates: string[];
+      dates: Array<{
+        date: string;
+        summary: string;
+      }>;
     }>;
     change_patterns: {
       new_characteristics: Array<{
@@ -91,7 +97,10 @@ export type WeeklyReport = {
     top_5_aspired_traits: Array<{
       trait: string;
       frequency: number;
-      dates: string[];
+      dates: Array<{
+        date: string;
+        summary: string;
+      }>;
     }>;
     evolution_process: {
       summary: string;
