@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { fetchDailyVividByRange, saveWeeklyVivid } from "../db-service";
-import { generateWeeklyVividFromDailyWithProgress } from "../ai-service-stream";
+import { fetchRecordsByDateRange, saveWeeklyVivid } from "../db-service";
+import { generateWeeklyVividFromRecordsWithProgress } from "../ai-service-stream";
 import type { WeeklyVividGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyVivid } from "@/types/weekly-vivid";
@@ -36,8 +36,8 @@ export const maxDuration = 180;
  * POST 핸들러: 주간 비비드 생성
  *
  * 플로우:
- * 1. Daily Vivid 조회
- * 2. AI로 Weekly Vivid 생성
+ * 1. Vivid Records 조회 (해당 주의 모든 기록)
+ * 2. AI로 Weekly Vivid 생성 (Gemini API 사용)
  * 3. DB 저장
  */
 
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       end,
       timezone = "Asia/Seoul",
       isPro: isProFromRequest,
+      generation_duration_seconds,
     }: WeeklyVividGenerateRequest = body;
 
     // 요청 검증
@@ -82,8 +83,8 @@ export async function POST(request: NextRequest) {
       .single();
     const userName = profile?.name || undefined;
 
-    // 1️⃣ Daily Vivid 데이터 조회
-    const dailyVividList = await fetchDailyVividByRange(
+    // 1️⃣ Vivid Records 데이터 조회 (해당 주의 모든 기록)
+    const records = await fetchRecordsByDateRange(
       supabase,
       userId,
       start,
@@ -93,23 +94,32 @@ export async function POST(request: NextRequest) {
     // 조회된 데이터 로깅
     console.log(`[Weekly Vivid Generate] 날짜 범위: ${start} ~ ${end}`);
     console.log(
-      `[Weekly Vivid Generate] 조회된 daily vivid 개수: ${dailyVividList.length}`
+      `[Weekly Vivid Generate] 조회된 기록 개수: ${records.length}`
     );
+    
+    // 날짜별 기록 개수 로깅
+    const recordsByDate = new Map<string, number>();
+    records.forEach((record) => {
+      const date = record.kst_date;
+      recordsByDate.set(date, (recordsByDate.get(date) || 0) + 1);
+    });
     console.log(
-      `[Weekly Vivid Generate] 조회된 날짜 목록:`,
-      dailyVividList.map((f) => f.report_date).join(", ")
+      `[Weekly Vivid Generate] 날짜별 기록 개수:`,
+      Array.from(recordsByDate.entries())
+        .map(([date, count]) => `${date}: ${count}개`)
+        .join(", ")
     );
 
-    if (dailyVividList.length === 0) {
+    if (records.length === 0) {
       return NextResponse.json(
-        { error: "No daily vivid found for this date range" },
+        { error: "No records found for this date range" },
         { status: 404 }
       );
     }
 
-    // 2️⃣ AI 요청: Weekly Vivid 생성 (report만 생성)
-    const weeklyVivid = await generateWeeklyVividFromDailyWithProgress(
-      dailyVividList,
+    // 2️⃣ AI 요청: Weekly Vivid 생성 (Gemini API 사용, 기록 기반)
+    const weeklyVivid = await generateWeeklyVividFromRecordsWithProgress(
+      records,
       { start, end, timezone },
       isPro,
       userId, // AI 사용량 로깅을 위한 userId 전달
@@ -120,7 +130,12 @@ export async function POST(request: NextRequest) {
     const cleanedFeedback = removeTrackingInfo(weeklyVivid);
 
     // 3️⃣ Supabase weekly_vivid 테이블에 저장
-    const savedId = await saveWeeklyVivid(supabase, userId, cleanedFeedback);
+    const savedId = await saveWeeklyVivid(
+      supabase,
+      userId,
+      cleanedFeedback,
+      generation_duration_seconds
+    );
 
     return NextResponse.json(
       {
@@ -141,11 +156,12 @@ export async function POST(request: NextRequest) {
       errorStatus === 429 ||
       errorCode === "INSUFFICIENT_QUOTA" ||
       errorMessage.includes("쿼터") ||
-      errorMessage.includes("quota")
+      errorMessage.includes("quota") ||
+      errorMessage.includes("RESOURCE_EXHAUSTED")
     ) {
       return NextResponse.json(
         {
-          error: "OpenAI API 쿼터가 초과되었습니다",
+          error: "Gemini API 쿼터가 초과되었습니다",
           message:
             "AI 서비스 사용량이 초과되었습니다. 잠시 후 다시 시도해주세요.",
           code: "INSUFFICIENT_QUOTA",
@@ -156,9 +172,12 @@ export async function POST(request: NextRequest) {
 
     // 에러 타입에 따른 상태 코드 결정
     const statusCode =
-        errorMessage.includes("No daily feedbacks") || errorStatus === 404
+        errorMessage.includes("No records found") || errorStatus === 404
         ? 404
-        : errorMessage.includes("No content from OpenAI") || errorStatus === 500
+        : errorMessage.includes("No content from Gemini") ||
+          errorMessage.includes("No content from Gemini") ||
+          errorMessage.includes("No content from OpenAI") ||
+          errorStatus === 500
         ? 500
         : errorMessage.includes("Failed to")
         ? 500

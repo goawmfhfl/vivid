@@ -43,4 +43,5 @@ export interface DailyVividRow {
   created_at: string;
   updated_at: string;
   is_ai_generated: boolean | null;
+  generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
 }

@@ -257,21 +257,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
         // 진행 상황 초기화
         clearDailyVividProgress(activeDate);
 
-        // 성공 시 전역 모달로 알림
+        // 성공 시 바로 라우팅 (모달 없이)
         if (feedbackData?.id) {
-          const dateLabel = isToday
-            ? "오늘의"
-            : getKSTDate(new Date(activeDate)).toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              });
-          openSuccessModal(
-            `${dateLabel} VIVID가 생성되었습니다!\n확인 버튼을 누르면 VIVID를 확인할 수 있습니다.`,
-            () => {
-              router.push(`/analysis/feedback/daily/${feedbackData.id}`);
-            }
-          );
+          // DB 동기화를 위한 짧은 딜레이 추가
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          router.push(`/analysis/feedback/daily/${feedbackData.id}`);
         } else {
           throw new Error("생성된 VIVID에 ID가 없습니다.");
         }

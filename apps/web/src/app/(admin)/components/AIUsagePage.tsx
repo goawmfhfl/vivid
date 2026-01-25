@@ -412,20 +412,20 @@ export function AIUsagePage() {
                 </div>
               </div>
 
-              {/* OpenAI API 접근 불가 안내 */}
+              {/* AI 사용량 정보 안내 */}
               {!creditInfo.openaiApiAccess.available && (
                 <div
                   className="p-4 rounded-lg mb-4"
                   style={{
-                    backgroundColor: COLORS.status.warning + "15",
-                    border: `1px solid ${COLORS.status.warning}40`,
+                    backgroundColor: COLORS.status.info + "15",
+                    border: `1px solid ${COLORS.status.info}40`,
                   }}
                 >
                   <p
                     className="text-sm font-medium mb-1"
-                    style={{ color: COLORS.status.warning }}
+                    style={{ color: COLORS.status.info }}
                   >
-                    ⚠️ OpenAI API 직접 조회 불가
+                    ℹ️ AI 사용량 정보
                   </p>
                   <p
                     className="text-xs"
@@ -890,9 +890,10 @@ export function AIUsagePage() {
                 }}
               >
                 <option value="">전체</option>
-                <option value="gpt-5-nano">gpt-5-nano</option>
-                <option value="gpt-5-mini">gpt-5-mini</option>
-                <option value="gpt-4-turbo">gpt-4-turbo</option>
+                <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
               </select>
             </div>
             <div>

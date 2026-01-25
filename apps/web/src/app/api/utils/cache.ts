@@ -54,12 +54,12 @@ export function setCache<T>(key: string, result: T): void {
 }
 
 /**
- * OpenAI CachedInput을 위한 prompt_cache_key 생성
+ * 프롬프트 캐시 키 생성 (하위 호환성 유지)
  * 시스템 프롬프트를 기반으로 고정된 캐시 키를 생성합니다.
- * 동일한 시스템 프롬프트에 대해 OpenAI가 서버 측에서 캐시를 확인하고 비용을 절감합니다.
+ * 참고: OpenAI CachedInput을 위한 함수였으나, 현재는 Gemini를 사용하며 이 함수는 하위 호환성을 위해 유지됩니다.
  *
  * @param systemPrompt 시스템 프롬프트 (고정된 값)
- * @returns OpenAI prompt_cache_key (32자리 해시)
+ * @returns 프롬프트 캐시 키 (32자리 해시)
  */
 export function generatePromptCacheKey(systemPrompt: string): string {
   return crypto

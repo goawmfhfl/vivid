@@ -3,7 +3,7 @@
  */
 
 /**
- * JSON Schema 타입 (OpenAI API용)
+ * JSON Schema 타입 (Gemini API용)
  */
 export type JsonSchema = Record<string, unknown>;
 
@@ -27,15 +27,21 @@ export type SchemaGenerator = (isPro: boolean) => ReportSchema;
 export type Schema = ReportSchema | SchemaGenerator;
 
 /**
- * OpenAI Usage 확장 타입 (prompt_tokens_details 포함)
+ * AI Usage 확장 타입 (Gemini 및 OpenAI 호환)
+ * Gemini API는 usageMetadata를 사용하며, OpenAI API는 usage를 사용 (하위 호환성)
  */
 export interface ExtendedUsage {
+  // OpenAI 형식
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
   prompt_tokens_details?: {
     cached_tokens?: number;
   };
+  // Gemini 형식
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
 }
 
 /**

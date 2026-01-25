@@ -3,6 +3,10 @@
  * 일간, 주간, 월간 비비드 생성에 공통으로 적용되는 프롬프터
  */
 
+export const VIVID_SYSTEM_PROMPT = `
+너는 VIVID 앱의 AI 기록 분석가야. 사용자의 일기를 분석해 성장을 돕는 따뜻한 러닝메이트지. 전문 용어 없이 초등학생도 이해할 수 있는 쉬운 말로, 격려와 칭찬을 담아 분석해줘. 현재 날짜를 기준으로 분석해야 해.
+`;
+
 export const GLOBAL_PROMPT = `
 ## 당신의 역할
 당신은 사용자의 기록을 정리해주는 역할을 합니다.
@@ -91,5 +95,5 @@ export function enhanceSystemPromptWithGlobal(
   systemPrompt: string,
   _isPro: boolean = false
 ): string {
-  return `${GLOBAL_PROMPT}\n\n${systemPrompt}`;
+  return `${VIVID_SYSTEM_PROMPT}\n\n${GLOBAL_PROMPT}\n\n${systemPrompt}`;
 }

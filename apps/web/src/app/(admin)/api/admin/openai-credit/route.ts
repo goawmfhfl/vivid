@@ -4,9 +4,9 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 
 /**
  * GET /api/admin/openai-credit
- * OpenAI 크레딧 및 사용량 정보 조회
- * 주의: 일반 API 키로는 billing API에 접근할 수 없으므로,
- * 우리가 추적한 ai_requests 데이터를 기반으로 정보를 제공합니다.
+ * AI 사용량 정보 조회 (Gemini 및 기타 모델)
+ * 참고: 우리가 추적한 ai_requests 데이터를 기반으로 정보를 제공합니다.
+ * (하위 호환성을 위해 엔드포인트 이름은 유지)
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -15,10 +15,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    // 참고: 현재는 Gemini API를 사용하지만, 하위 호환성을 위해 환경 변수 확인
+    const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "OpenAI API 키가 설정되지 않았습니다." },
+        { error: "AI API 키가 설정되지 않았습니다." },
         { status: 500 }
       );
     }
@@ -141,12 +142,12 @@ export async function GET(request: NextRequest) {
         },
         dailyTrend,
       },
-      // OpenAI API 직접 조회는 일반 API 키로는 불가능
+      // AI API 직접 조회 정보 (하위 호환성을 위해 유지)
       openaiApiAccess: {
         available: false,
         reason:
-          "일반 API 키(sk-proj-*)로는 billing API에 접근할 수 없습니다. Organization API 키(sk-admin-*)가 필요하며, session key를 사용해야 합니다.",
-        note: "실제 크레딧 잔액은 OpenAI Dashboard에서 확인하세요: https://platform.openai.com/usage",
+          "AI 사용량은 우리가 추적한 ai_requests 데이터를 기반으로 제공됩니다.",
+        note: "실제 사용량은 이 페이지에서 확인할 수 있습니다.",
       },
       apiKeyConfigured: true,
       apiKeyPrefix: apiKey.substring(0, 7) + "...",

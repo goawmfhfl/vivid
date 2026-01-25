@@ -5,17 +5,44 @@ import type { DailyVividRow } from "@/types/daily-vivid";
 
 const createDailyVivid = async (date: string): Promise<DailyVividRow> => {
   const userId = await getCurrentUserId();
+  const startTime = Date.now();
+  
   const res = await fetch("/api/daily-vivid", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, date }),
   });
+  
+  const endTime = Date.now();
+  const durationSeconds = (endTime - startTime) / 1000;
+  
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to create daily vivid");
   }
   const response = await res.json();
-  return response.data as DailyVividRow;
+  const result = response.data as DailyVividRow;
+  
+  // 생성 시간을 포함하여 다시 요청 (업데이트)
+  // 이미 생성된 피드백이므로 업데이트로 처리
+  if (result?.id) {
+    try {
+      await fetch("/api/daily-vivid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          userId, 
+          date,
+          generation_duration_seconds: durationSeconds,
+        }),
+      });
+    } catch (error) {
+      // 업데이트 실패해도 무시 (이미 생성은 완료됨)
+      console.warn("생성 시간 업데이트 실패:", error);
+    }
+  }
+  
+  return { ...result, generation_duration_seconds: durationSeconds };
 };
 
 export const useCreateDailyVivid = () => {

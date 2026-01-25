@@ -138,6 +138,7 @@ export type WeeklyVivid = {
   // 메타 정보
   is_ai_generated?: boolean;
   created_at?: string;
+  generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
 };
 
 // ============================================
@@ -161,4 +162,5 @@ export type WeeklyVividGenerateRequest = {
   start: string; // "YYYY-MM-DD"
   end: string; // "YYYY-MM-DD"
   timezone?: string; // default "Asia/Seoul"
+  generation_duration_seconds?: number; // 클라이언트에서 측정한 생성 시간 (초 단위)
 };

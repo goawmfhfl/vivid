@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../../../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import { API_ENDPOINTS } from "@/constants";
 
 /**
  * GET /api/admin/users/[id]/feedbacks
@@ -26,33 +27,69 @@ export async function GET(
     const dailyOffset = (dailyPage - 1) * dailyLimit;
 
     // Daily Vivid 목록 (메타데이터만, 페이지네이션)
-    const { data: dailyVividRows, count: dailyCount } = await supabase
-      .from("daily_vivid")
+    const { data: dailyVividRows, count: dailyCount, error: dailyError } = await supabase
+      .from(API_ENDPOINTS.DAILY_VIVID)
       .select(
-        "id, report_date, day_of_week, created_at, updated_at, is_ai_generated",
+        "id, report_date, day_of_week, created_at, updated_at, is_ai_generated, generation_duration_seconds",
         { count: "exact" }
       )
       .eq("user_id", userId)
       .order("report_date", { ascending: false })
       .range(dailyOffset, dailyOffset + dailyLimit - 1);
 
+    if (dailyError) {
+      console.error("[Admin Feedbacks API] Daily Vivid 조회 실패:", dailyError);
+    }
+
     // Weekly Vivid 목록 (메타데이터만)
-    const { data: weeklyVividList } = await supabase
-      .from("weekly_vivid")
+    // 주의: weekly_vivid 테이블에는 updated_at 컬럼이 없으므로 제외
+    const { data: weeklyVividList, error: weeklyError } = await supabase
+      .from(API_ENDPOINTS.WEEKLY_VIVID)
       .select(
-        "id, week_start, week_end, created_at, updated_at, is_ai_generated"
+        "id, week_start, week_end, created_at, is_ai_generated, generation_duration_seconds"
       )
       .eq("user_id", userId)
       .order("week_start", { ascending: false });
 
+    if (weeklyError) {
+      console.error("[Admin Feedbacks API] Weekly Vivid 조회 실패:", {
+        error: weeklyError,
+        message: weeklyError.message,
+        code: weeklyError.code,
+        details: weeklyError.details,
+        hint: weeklyError.hint,
+        userId,
+        tableName: API_ENDPOINTS.WEEKLY_VIVID,
+      });
+      // 에러가 발생해도 다른 데이터는 반환하도록 빈 배열 사용
+    }
+
     // Monthly Vivid 목록 (메타데이터만)
-    const { data: monthlyVividList } = await supabase
-      .from("monthly_vivid")
+    const { data: monthlyVividList, error: monthlyError } = await supabase
+      .from(API_ENDPOINTS.MONTHLY_VIVID)
       .select(
-        "id, month, month_label, date_range, created_at, updated_at, is_ai_generated"
+        "id, month, month_label, date_range, created_at, updated_at, is_ai_generated, generation_duration_seconds"
       )
       .eq("user_id", userId)
       .order("month", { ascending: false });
+
+    if (monthlyError) {
+      console.error("[Admin Feedbacks API] Monthly Vivid 조회 실패:", monthlyError);
+      // 에러가 발생해도 다른 데이터는 반환하도록 빈 배열 사용
+    }
+
+    // 응답 데이터 준비
+    const weeklyData = (weeklyVividList || []).map((fb) => ({
+      id: fb.id,
+      type: "weekly" as const,
+      week_start: fb.week_start,
+      week_end: fb.week_end,
+      created_at: fb.created_at,
+      updated_at: fb.created_at, // updated_at이 없으므로 created_at 사용
+      is_ai_generated: fb.is_ai_generated,
+      generation_duration_seconds: fb.generation_duration_seconds ?? null,
+    }));
+
 
     return NextResponse.json({
       daily: (dailyVividRows || []).map((fb) => ({
@@ -63,6 +100,7 @@ export async function GET(
         created_at: fb.created_at,
         updated_at: fb.updated_at,
         is_ai_generated: fb.is_ai_generated,
+        generation_duration_seconds: fb.generation_duration_seconds ?? null,
       })),
       dailyPagination: {
         page: dailyPage,
@@ -70,15 +108,7 @@ export async function GET(
         total: dailyCount || 0,
         totalPages: Math.ceil((dailyCount || 0) / dailyLimit),
       },
-      weekly: (weeklyVividList || []).map((fb) => ({
-        id: fb.id,
-        type: "weekly" as const,
-        week_start: fb.week_start,
-        week_end: fb.week_end,
-        created_at: fb.created_at,
-        updated_at: fb.updated_at,
-        is_ai_generated: fb.is_ai_generated,
-      })),
+      weekly: weeklyData,
       monthly: (monthlyVividList || []).map((fb) => ({
         id: fb.id,
         type: "monthly" as const,
@@ -88,6 +118,7 @@ export async function GET(
         created_at: fb.created_at,
         updated_at: fb.updated_at,
         is_ai_generated: fb.is_ai_generated,
+        generation_duration_seconds: fb.generation_duration_seconds ?? null,
       })),
     });
   } catch (error) {

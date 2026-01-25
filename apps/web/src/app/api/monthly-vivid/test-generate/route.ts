@@ -94,16 +94,23 @@ function getMonthDateRange(month: string): {
   };
 }
 
+
 // Next.js API Route 타임아웃 설정 (최대 5분)
 export const maxDuration = 300;
 
 /**
- * POST 핸들러: 월간 비비드 생성
- *
- * 플로우:
- * 1. Vivid Records 조회 (해당 월의 모든 기록)
- * 2. AI로 Monthly Vivid 생성 (Gemini 2.0 Flash Exp Pro 모델 사용)
- * 3. DB 저장
+ * 테스트용: 월간 비비드 생성 엔드포인트
+ * 
+ * 특징:
+ * - 월말 필터링 우회 (언제든지 생성 가능)
+ * - vivid-records를 기반으로 생성 (Gemini 2.0 Flash Exp Pro 모델 사용)
+ * - Pro 멤버십 체크는 유지
+ * 
+ * 사용법:
+ * POST /api/monthly-vivid/test-generate
+ * Body: { userId: string, month: string, start_date?: string, end_date?: string, generation_duration_seconds?: number }
+ * 
+ * 주의: 테스트용이므로 프로덕션에서는 사용하지 마세요!
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now(); // 전체 생성 시간 측정 시작
@@ -121,7 +128,7 @@ export async function POST(request: NextRequest) {
       month: string;
       start_date?: string;
       end_date?: string;
-      generation_duration_seconds?: number; // 클라이언트에서 측정한 생성 시간 (초 단위)
+      generation_duration_seconds?: number;
     } = body;
 
     // 요청 검증
@@ -167,7 +174,7 @@ export async function POST(request: NextRequest) {
       ? { start_date, end_date }
       : getMonthDateRange(month);
 
-    console.log(`[Monthly Vivid Generate] 날짜 범위: ${dateRange.start_date} ~ ${dateRange.end_date}`);
+    console.log(`[TEST] 월간 VIVID 생성 시작: ${month} (${dateRange.start_date} ~ ${dateRange.end_date})`);
 
     // 1️⃣ Vivid Records 데이터 조회 (해당 월의 모든 기록)
     const records = await fetchRecordsByDateRange(
@@ -178,7 +185,7 @@ export async function POST(request: NextRequest) {
     );
 
     // 조회된 데이터 로깅
-    console.log(`[Monthly Vivid Generate] 조회된 기록 개수: ${records.length}`);
+    console.log(`[TEST] 조회된 기록 개수: ${records.length}`);
     
     // 날짜별 기록 개수 로깅
     const recordsByDate = new Map<string, number>();
@@ -187,7 +194,7 @@ export async function POST(request: NextRequest) {
       recordsByDate.set(date, (recordsByDate.get(date) || 0) + 1);
     });
     console.log(
-      `[Monthly Vivid Generate] 날짜별 기록 개수:`,
+      `[TEST] 날짜별 기록 개수:`,
       Array.from(recordsByDate.entries())
         .map(([date, count]) => `${date}: ${count}개`)
         .join(", ")
@@ -229,7 +236,7 @@ export async function POST(request: NextRequest) {
     const serverDurationSeconds = (endTime - startTime) / 1000;
     const finalDurationSeconds = generation_duration_seconds ?? serverDurationSeconds;
 
-    console.log(`[Monthly Vivid Generate] 생성 완료: ${finalDurationSeconds.toFixed(2)}초`);
+    console.log(`[TEST] 월간 VIVID 생성 완료: ${finalDurationSeconds.toFixed(2)}초`);
 
     // 3️⃣ Supabase monthly_vivid 테이블에 저장
     const savedId = await saveMonthlyVivid(
@@ -241,7 +248,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Monthly vivid generated successfully",
+        message: "Monthly vivid generated successfully (TEST MODE)",
         data: { 
           ...cleanedFeedback, 
           id: savedId,
@@ -251,7 +258,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("API error:", error);
+    console.error("[TEST] API error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: "Internal server error", details: errorMessage },

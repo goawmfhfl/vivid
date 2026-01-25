@@ -189,7 +189,8 @@ export async function fetchMonthlyVividDetail(
 export async function saveMonthlyVivid(
   supabase: SupabaseClient,
   userId: string,
-  feedback: MonthlyVivid
+  feedback: MonthlyVivid,
+  generationDurationSeconds?: number
 ): Promise<string> {
   // 암호화 처리
   const encryptedFeedback = encryptMonthlyVivid(feedback);
@@ -208,6 +209,7 @@ export async function saveMonthlyVivid(
         report: encryptedFeedback.report,
         trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
+        generation_duration_seconds: generationDurationSeconds ?? null,
       },
       { onConflict: "user_id,month" }
     )

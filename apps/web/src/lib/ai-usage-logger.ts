@@ -3,17 +3,29 @@ import type { ExtendedUsage } from "@/app/api/types";
 
 /**
  * 모델별 토큰 가격 (USD per 1M tokens)
- * 참고: https://openai.com/api/pricing/
+ * 참고: 
+ * - Gemini: https://ai.google.dev/pricing
+ * 
+ * 참고: OpenAI 모델은 더 이상 사용하지 않지만 하위 호환성을 위해 주석 처리로 유지
  */
 const PRICING: Record<
   string,
   { input: number; inputCached: number; output: number }
 > = {
-  "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 },
-  "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
-  "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
-  "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
-  "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
+  // OpenAI 모델 (더 이상 사용하지 않음, 하위 호환성 유지)
+  // "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 },
+  // "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
+  // "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
+  // "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
+  // "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
+  
+  // Gemini 모델 가격 (현재 사용 중)
+  "gemini-2.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-2.0-flash-exp": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-3-flash-preview": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-3.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 }, // 별칭 지원
+  "gemini-1.5-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-1.5-pro": { input: 1.25, inputCached: 0.625, output: 5.0 },
 };
 
 const USD_TO_KRW = 1350; // 기본 환율
@@ -54,7 +66,11 @@ export interface LogAIRequestParams {
  * 비용 계산 함수
  */
 function calculateCost(model: string, usage: AIUsageInfo): CostCalculation {
-  const modelPricing = PRICING[model] || PRICING["gpt-5-nano"];
+  // Gemini 모델인지 확인하여 기본값 선택
+  const defaultPricing = model.startsWith("gemini")
+    ? PRICING["gemini-3-flash-preview"] || PRICING["gemini-2.0-flash"]
+    : PRICING["gemini-3-flash-preview"]; // 기본값을 Gemini로 변경
+  const modelPricing = PRICING[model] || defaultPricing;
 
   // 캐시된 토큰과 캐시되지 않은 토큰 구분
   const cachedTokens = usage.cached_tokens || 0;
@@ -76,7 +92,7 @@ function calculateCost(model: string, usage: AIUsageInfo): CostCalculation {
 }
 
 /**
- * OpenAI completion 응답에서 사용량 정보 추출
+ * AI completion 응답에서 사용량 정보 추출 (Gemini 및 OpenAI 호환)
  */
 export function extractUsageInfo(
   usage: ExtendedUsage | undefined

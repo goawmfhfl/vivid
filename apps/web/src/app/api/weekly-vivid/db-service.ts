@@ -3,6 +3,8 @@ import type { WeeklyVivid, WeeklyVividListItem } from "@/types/weekly-vivid";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
 import { encryptWeeklyVivid, decryptWeeklyVivid } from "@/lib/jsonb-encryption";
+import { decrypt } from "@/lib/encryption";
+import type { Record } from "../daily-vivid/types";
 
 /**
  * DailyVividRow에서 report만 추출
@@ -19,6 +21,7 @@ function extractReport(
 
 /**
  * 날짜 범위로 daily-vivid 조회 (report만 포함)
+ * @deprecated 기록 기반 생성으로 변경됨. fetchRecordsByDateRange 사용 권장
  */
 export async function fetchDailyVividByRange(
   supabase: SupabaseClient,
@@ -49,6 +52,41 @@ export async function fetchDailyVividByRange(
 
   // report만 추출
   return decryptedFeedbacks.map(extractReport);
+}
+
+/**
+ * 날짜 범위로 vivid-records 조회 (주간 피드백 생성용)
+ * 해당 주의 모든 VIVID 기록을 가져옴
+ */
+export async function fetchRecordsByDateRange(
+  supabase: SupabaseClient,
+  userId: string,
+  start: string,
+  end: string
+): Promise<Record[]> {
+  const { data: records, error } = await supabase
+    .from("vivid_records")
+    .select("*")
+    .eq("user_id", userId)
+    .in("type", ["vivid", "dream"]) // VIVID 타입만 조회
+    .gte("kst_date", start)
+    .lte("kst_date", end)
+    .order("kst_date", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to fetch records: ${error.message}`);
+  }
+
+  if (!records || records.length === 0) {
+    return [];
+  }
+
+  // 복호화 처리
+  return records.map((record) => ({
+    ...record,
+    content: decrypt(record.content),
+  })) as Record[];
 }
 
 /**
@@ -184,7 +222,8 @@ export async function fetchWeeklyVividDetail(
 export async function saveWeeklyVivid(
   supabase: SupabaseClient,
   userId: string,
-  feedback: WeeklyVivid
+  feedback: WeeklyVivid,
+  generationDurationSeconds?: number
 ): Promise<string> {
   // 암호화 처리
   const encryptedFeedback = encryptWeeklyVivid(
@@ -203,6 +242,7 @@ export async function saveWeeklyVivid(
         report: encryptedFeedback.report || null,
         trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
+        generation_duration_seconds: generationDurationSeconds ?? null,
       },
       { onConflict: "user_id,week_start" }
     )

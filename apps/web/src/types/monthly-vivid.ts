@@ -18,6 +18,7 @@ export type MonthlyVivid = {
   is_ai_generated?: boolean;
   created_at?: string;
   updated_at?: string;
+  generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
 };
 
 /**

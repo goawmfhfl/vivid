@@ -14,6 +14,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  RefreshCw,
 } from "lucide-react";
 import {
   LineChart,
@@ -39,6 +40,26 @@ const COLORS_CHART = [
   COLORS.section.emotion.primary,
 ];
 
+/**
+ * 생성 시간을 사용자 친화적인 형식으로 포맷팅
+ */
+function formatGenerationDuration(seconds: number | null | undefined): string {
+  if (!seconds || seconds <= 0) return "";
+  
+  if (seconds < 60) {
+    return `${seconds.toFixed(1)}초`;
+  }
+  
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  if (remainingSeconds === 0) {
+    return `${minutes}분`;
+  }
+  
+  return `${minutes}분 ${remainingSeconds.toFixed(0)}초`;
+}
+
 export function UserDetail({ userId }: UserDetailProps) {
   const router = useRouter();
   const [user, setUser] = useState<UserDetail | null>(null);
@@ -62,6 +83,7 @@ export function UserDetail({ userId }: UserDetailProps) {
       created_at: string;
       updated_at: string;
       is_ai_generated: boolean | null;
+      generation_duration_seconds?: number | null;
     }>;
     dailyPagination?: {
       page: number;
@@ -77,6 +99,7 @@ export function UserDetail({ userId }: UserDetailProps) {
       created_at: string;
       updated_at: string;
       is_ai_generated: boolean | null;
+      generation_duration_seconds?: number | null;
     }>;
     monthly: Array<{
       id: string;
@@ -87,9 +110,11 @@ export function UserDetail({ userId }: UserDetailProps) {
       created_at: string;
       updated_at: string;
       is_ai_generated: boolean | null;
+      generation_duration_seconds?: number | null;
     }>;
   } | null>(null);
   const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
+  const [isRefreshingFeedbacks, setIsRefreshingFeedbacks] = useState(false);
   const [dailyPage, setDailyPage] = useState(1);
   const [dailyLimit] = useState(10);
   const [expandedSections, setExpandedSections] = useState({
@@ -142,43 +167,65 @@ export function UserDetail({ userId }: UserDetailProps) {
     fetchData();
   }, [userId]);
 
-  useEffect(() => {
-    const fetchFeedbacks = async () => {
+  const fetchFeedbacks = async (showLoading = true) => {
+    if (showLoading) {
       setIsLoadingFeedbacks(true);
-      try {
-        const response = await adminApiFetch(
-          `/api/admin/users/${userId}/feedbacks?dailyPage=${dailyPage}&dailyLimit=${dailyLimit}`
+    } else {
+      setIsRefreshingFeedbacks(true);
+    }
+    try {
+      const response = await adminApiFetch(
+        `/api/admin/users/${userId}/feedbacks?dailyPage=${dailyPage}&dailyLimit=${dailyLimit}`
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || "피드백 목록을 불러오는데 실패했습니다."
         );
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || "피드백 목록을 불러오는데 실패했습니다."
-          );
-        }
-        const data = await response.json();
-        // weekly 피드백이 제대로 있는지 확인
-        if (data && typeof data === "object") {
-          setFeedbacks({
-            daily: data.daily || [],
-            dailyPagination: data.dailyPagination,
-            weekly: data.weekly || [],
-            monthly: data.monthly || [],
-          });
-        }
-      } catch (err) {
-        console.error("피드백 목록 조회 실패:", err);
-        setFeedbacks({
-          daily: [],
-          weekly: [],
-          monthly: [],
-        });
-      } finally {
-        setIsLoadingFeedbacks(false);
       }
-    };
+      const data = await response.json();
+      console.log("[UserDetail] 피드백 API 응답 전체:", data);
+      // weekly 피드백이 제대로 있는지 확인
+      if (data && typeof data === "object") {
+        console.log("[UserDetail] 피드백 데이터 수신:", {
+          daily: data.daily?.length || 0,
+          weekly: data.weekly?.length || 0,
+          monthly: data.monthly?.length || 0,
+          weeklyData: data.weekly,
+          weeklyIsArray: Array.isArray(data.weekly),
+          weeklyType: typeof data.weekly,
+          fullData: data,
+        });
+        
+        // weekly가 배열이 아닌 경우 처리
+        const weeklyArray = Array.isArray(data.weekly) ? data.weekly : [];
+        
+        setFeedbacks({
+          daily: data.daily || [],
+          dailyPagination: data.dailyPagination,
+          weekly: weeklyArray,
+          monthly: data.monthly || [],
+        });
+      } else {
+        console.warn("[UserDetail] 예상치 못한 데이터 형식:", data);
+      }
+    } catch (err) {
+      console.error("피드백 목록 조회 실패:", err);
+      setFeedbacks({
+        daily: [],
+        weekly: [],
+        monthly: [],
+      });
+    } finally {
+      setIsLoadingFeedbacks(false);
+      setIsRefreshingFeedbacks(false);
+    }
+  };
 
+  useEffect(() => {
     if (user) {
-      fetchFeedbacks();
+      // 초기 로딩 상태 없이 데이터만 가져오기
+      fetchFeedbacks(false);
     }
   }, [userId, user, dailyPage, dailyLimit]);
 
@@ -246,10 +293,30 @@ export function UserDetail({ userId }: UserDetailProps) {
     feedbackId: string,
     type: "daily" | "weekly" | "monthly"
   ) => {
-    if (!confirm("정말 이 피드백을 삭제하시겠습니까?")) {
-      return;
+    if (!feedbacks) return;
+
+    // Optimistic update: 즉시 UI에서 제거 (로딩창 없이)
+    const previousFeedbacks = { ...feedbacks };
+    
+    if (type === "daily") {
+      setFeedbacks({
+        ...feedbacks,
+        daily: feedbacks.daily.filter((fb) => fb.id !== feedbackId),
+      });
+    } else if (type === "weekly") {
+      setFeedbacks({
+        ...feedbacks,
+        weekly: feedbacks.weekly.filter((fb) => fb.id !== feedbackId),
+      });
+    } else if (type === "monthly") {
+      setFeedbacks({
+        ...feedbacks,
+        monthly: feedbacks.monthly.filter((fb) => fb.id !== feedbackId),
+      });
     }
 
+    // 백그라운드에서 삭제 요청 (에러 발생 시 롤백, 로딩 상태 표시 없음)
+    // setIsLoadingFeedbacks를 호출하지 않아서 로딩 상태가 표시되지 않음
     try {
       const response = await adminApiFetch(
         `/api/admin/users/${userId}/feedbacks/${feedbackId}?type=${type}`,
@@ -259,26 +326,51 @@ export function UserDetail({ userId }: UserDetailProps) {
       );
 
       if (!response.ok) {
+        // 실패 시 이전 상태로 롤백
+        setFeedbacks(previousFeedbacks);
         throw new Error("피드백 삭제에 실패했습니다.");
       }
 
-      // 피드백 목록 다시 불러오기
-      const feedbacksResponse = await adminApiFetch(
-        `/api/admin/users/${userId}/feedbacks?dailyPage=${dailyPage}&dailyLimit=${dailyLimit}`
-      );
-      if (feedbacksResponse.ok) {
-        const data = await feedbacksResponse.json();
-        setFeedbacks({
-          daily: data.daily || [],
-          dailyPagination: data.dailyPagination,
-          weekly: data.weekly || [],
-          monthly: data.monthly || [],
-        });
+      // 성공 시 사용자 통계도 업데이트 (선택적)
+      if (user?.stats) {
+        const currentStats = user.stats;
+        if (type === "daily" && currentStats.daily_vivid_count > 0) {
+          setUser({
+            ...user,
+            stats: {
+              records_count: currentStats.records_count,
+              daily_vivid_count: currentStats.daily_vivid_count - 1,
+              weekly_vivid_count: currentStats.weekly_vivid_count,
+              monthly_vivid_count: currentStats.monthly_vivid_count,
+            },
+          });
+        } else if (type === "weekly" && currentStats.weekly_vivid_count > 0) {
+          setUser({
+            ...user,
+            stats: {
+              records_count: currentStats.records_count,
+              daily_vivid_count: currentStats.daily_vivid_count,
+              weekly_vivid_count: currentStats.weekly_vivid_count - 1,
+              monthly_vivid_count: currentStats.monthly_vivid_count,
+            },
+          });
+        } else if (type === "monthly" && currentStats.monthly_vivid_count > 0) {
+          setUser({
+            ...user,
+            stats: {
+              records_count: currentStats.records_count,
+              daily_vivid_count: currentStats.daily_vivid_count,
+              weekly_vivid_count: currentStats.weekly_vivid_count,
+              monthly_vivid_count: currentStats.monthly_vivid_count - 1,
+            },
+          });
+        }
       }
-
-      alert("피드백이 성공적으로 삭제되었습니다.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "피드백 삭제 실패");
+      // 에러 발생 시 이전 상태로 롤백
+      setFeedbacks(previousFeedbacks);
+      // 조용히 실패 (사용자에게 알림 없음)
+      console.error("피드백 삭제 실패:", err);
     }
   };
 
@@ -1073,7 +1165,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   className="text-xs font-medium mb-1"
                   style={{ color: COLORS.text.secondary }}
                 >
-                  Weekly Feedback
+                  주간 Vivid
                 </p>
                 <p
                   className="text-2xl font-bold"
@@ -1116,17 +1208,27 @@ export function UserDetail({ userId }: UserDetailProps) {
             ...CARD_STYLES.default,
           }}
         >
-          <h2
-            className="text-xl font-semibold mb-4"
-            style={{ color: COLORS.text.primary }}
-          >
-            피드백 관리
-          </h2>
-          {isLoadingFeedbacks ? (
-            <div className="text-center py-8">
-              <p style={{ color: COLORS.text.secondary }}>로딩 중...</p>
-            </div>
-          ) : feedbacks ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className="text-xl font-semibold"
+              style={{ color: COLORS.text.primary }}
+            >
+              피드백 관리
+            </h2>
+            <button
+              onClick={() => fetchFeedbacks(false)}
+              disabled={isRefreshingFeedbacks}
+              className="p-2 rounded-lg hover:bg-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              style={{ backgroundColor: COLORS.background.hover }}
+              title="새로고침"
+            >
+              <RefreshCw
+                className={`w-5 h-5 ${isRefreshingFeedbacks ? "animate-spin" : ""}`}
+                style={{ color: COLORS.text.primary }}
+              />
+            </button>
+          </div>
+          {feedbacks ? (
             <div className="space-y-4">
               {/* 일간 피드백 */}
               <div>
@@ -1197,6 +1299,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                                   생성:{" "}
                                   {new Date(fb.created_at).toLocaleString(
                                     "ko-KR"
+                                  )}
+                                  {fb.generation_duration_seconds && (
+                                    <span style={{ color: COLORS.text.secondary }}>
+                                      {" "}
+                                      (소요: {formatGenerationDuration(fb.generation_duration_seconds)})
+                                    </span>
                                   )}
                                 </p>
                               </div>
@@ -1343,22 +1451,51 @@ export function UserDetail({ userId }: UserDetailProps) {
                                 style={{ color: COLORS.text.primary }}
                               >
                                 {new Date(fb.week_start).toLocaleDateString(
-                                  "ko-KR"
+                                  "ko-KR",
+                                  {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  }
                                 )}{" "}
                                 ~{" "}
                                 {new Date(fb.week_end).toLocaleDateString(
-                                  "ko-KR"
+                                  "ko-KR",
+                                  {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  }
                                 )}
                               </p>
-                              <p
-                                className="text-xs mt-1"
-                                style={{ color: COLORS.text.tertiary }}
-                              >
-                                생성:{" "}
-                                {new Date(fb.created_at).toLocaleString(
-                                  "ko-KR"
+                              <div className="flex items-center gap-3 mt-1">
+                                <p
+                                  className="text-xs"
+                                  style={{ color: COLORS.text.tertiary }}
+                                >
+                                  생성:{" "}
+                                  {new Date(fb.created_at).toLocaleString(
+                                    "ko-KR"
+                                  )}
+                                  {fb.generation_duration_seconds && (
+                                    <span style={{ color: COLORS.text.secondary }}>
+                                      {" "}
+                                      (소요: {formatGenerationDuration(fb.generation_duration_seconds)})
+                                    </span>
+                                  )}
+                                </p>
+                                {fb.is_ai_generated && (
+                                  <span
+                                    className="text-xs px-2 py-0.5 rounded"
+                                    style={{
+                                      backgroundColor: `${COLORS.brand.primary}20`,
+                                      color: COLORS.brand.primary,
+                                    }}
+                                  >
+                                    AI 생성
+                                  </span>
                                 )}
-                              </p>
+                              </div>
                             </div>
                             <button
                               onClick={() =>
@@ -1455,6 +1592,12 @@ export function UserDetail({ userId }: UserDetailProps) {
                                 생성:{" "}
                                 {new Date(fb.created_at).toLocaleString(
                                   "ko-KR"
+                                )}
+                                {fb.generation_duration_seconds && (
+                                  <span style={{ color: COLORS.text.secondary }}>
+                                    {" "}
+                                    (소요: {formatGenerationDuration(fb.generation_duration_seconds)})
+                                  </span>
                                 )}
                               </p>
                             </div>

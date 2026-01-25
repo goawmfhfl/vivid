@@ -16,11 +16,13 @@ function MonthlyCandidateItem({
   generatingMonth,
   timerProgress,
   handleCreateFeedback,
+  progress,
 }: {
   candidate: { month: string; month_label: string; daily_vivid_count: number };
   generatingMonth: string | null;
   timerProgress?: number;
   handleCreateFeedback: (month: string) => void;
+  progress?: { current: number; total: number; currentStep: string } | null;
 }) {
   const isGenerating =
     generatingMonth === candidate.month || timerProgress !== undefined;
@@ -150,10 +152,10 @@ function MonthlyCandidateItem({
                 }}
               >
                 <span className="sm:hidden">
-                  {isComplete ? "완료" : "생성 중"}
+                  {isComplete ? "완료" : progress?.currentStep || "생성 중"}
                 </span>
                 <span className="hidden sm:inline">
-                  {isComplete ? "완료" : "생성 중..."}
+                  {isComplete ? "완료" : progress?.currentStep || "생성 중..."}
                 </span>
               </p>
               <div className="flex items-center gap-1 sm:gap-2">
@@ -237,8 +239,12 @@ export function MonthlyCandidatesSection({
   const { data: candidates = [], isLoading } = useMonthlyCandidates();
   const [generatingMonth, setGeneratingMonth] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { monthlyCandidatesDropdown, toggleMonthlyCandidatesDropdown } =
-    useModalStore();
+  const { 
+    monthlyCandidatesDropdown, 
+    toggleMonthlyCandidatesDropdown,
+    monthlyVividProgress,
+    setMonthlyVividProgress,
+  } = useModalStore();
 
   const [timerProgress, setTimerProgress] = useState<Record<string, number>>(
     {}
@@ -311,7 +317,25 @@ export function MonthlyCandidatesSection({
 
       timerIntervalsRef.current[month] = interval;
 
-      // POST 요청으로 월간 비비드 생성
+      // 진행 상황 초기화 (전역 상태)
+      setMonthlyVividProgress(month, {
+        month,
+        current: 0,
+        total: 3, // report, title, trend
+        currentStep: "생성 중",
+      });
+
+      // POST 요청으로 월간 비비드 생성 (시간 측정 시작)
+      const apiStartTime = Date.now();
+      
+      // 진행 상황 업데이트: report 생성 시작
+      setMonthlyVividProgress(month, {
+        month,
+        current: 1,
+        total: 3,
+        currentStep: "리포트 생성 중...",
+      });
+
       const response = await fetch("/api/monthly-vivid/generate", {
         method: "POST",
         headers: {
@@ -323,6 +347,9 @@ export function MonthlyCandidatesSection({
         }),
       });
 
+      const apiEndTime = Date.now();
+      const durationSeconds = (apiEndTime - apiStartTime) / 1000;
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "월간 VIVID 생성에 실패했습니다.");
@@ -331,9 +358,43 @@ export function MonthlyCandidatesSection({
       const result = await response.json();
       const feedbackData = result.data as MonthlyVivid & { id: string };
 
+      // 진행 상황 업데이트: 완료
+      setMonthlyVividProgress(month, {
+        month,
+        current: 3,
+        total: 3,
+        currentStep: "완료",
+      });
+
+      // 생성 시간을 포함하여 다시 요청 (업데이트)
+      if (feedbackData?.id) {
+        try {
+          await fetch("/api/monthly-vivid/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId,
+              month,
+              generation_duration_seconds: durationSeconds,
+            }),
+          });
+        } catch (error) {
+          // 업데이트 실패해도 무시 (이미 생성은 완료됨)
+          console.warn("생성 시간 업데이트 실패:", error);
+        }
+      }
+
       // 완료 처리
       clearTimer(month);
       setTimerProgress((prev) => ({ ...prev, [month]: 100 }));
+      
+      // 진행 상황 정리
+      setTimeout(() => {
+        setMonthlyVividProgress(month, null);
+      }, 1000);
+      
       completionTimeoutsRef.current[month] = setTimeout(() => {
         clearTimer(month);
       }, 600);
@@ -366,6 +427,9 @@ export function MonthlyCandidatesSection({
       console.error("월간 vivid 생성 실패:", error);
 
       clearTimer(month);
+      
+      // 진행 상황 정리
+      setMonthlyVividProgress(month, null);
 
       alert(
         error instanceof Error
@@ -474,6 +538,7 @@ export function MonthlyCandidatesSection({
               generatingMonth={generatingMonth}
               timerProgress={timerProgress[candidate.month]}
               handleCreateFeedback={handleCreateFeedback}
+              progress={monthlyVividProgress[candidate.month] || null}
             />
           ))}
         </div>

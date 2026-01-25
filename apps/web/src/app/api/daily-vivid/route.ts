@@ -17,7 +17,7 @@ import type { DailyVividRequest, DailyReportResponse } from "./types";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, date }: DailyVividRequest = body;
+    const { userId, date, generation_duration_seconds }: DailyVividRequest = body;
 
     // 요청 검증
     if (!userId || !date) {
@@ -60,7 +60,12 @@ export async function POST(request: NextRequest) {
     };
 
     // 5️⃣ Supabase daily_vivid 테이블에 저장
-    const savedFeedback = await saveDailyReport(supabase, userId, report);
+    const savedFeedback = await saveDailyReport(
+      supabase,
+      userId,
+      report,
+      generation_duration_seconds
+    );
 
     return NextResponse.json(
       {
@@ -76,7 +81,8 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const statusCode = errorMessage.includes("No records found")
       ? 404
-      : errorMessage.includes("No content from OpenAI")
+      : errorMessage.includes("No content from Gemini") ||
+        errorMessage.includes("No content from Gemini") || errorMessage.includes("No content from OpenAI")
       ? 500
       : errorMessage.includes("Failed to")
       ? 500

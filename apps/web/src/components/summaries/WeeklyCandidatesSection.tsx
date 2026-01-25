@@ -148,7 +148,7 @@ function WeeklyCandidateItem({
               lineHeight: "1.4",
             }}
           >
-            {candidate.record_count}개의 일일 피드백
+            {candidate.record_count}개의 VIVID 기록
           </p>
         </div>
       </div>
@@ -376,6 +376,7 @@ export function WeeklyCandidatesSection() {
 
     try {
       const weekEnd = getWeekEnd(weekStart);
+      const apiStartTime = Date.now();
 
       // 일반 API 호출
       const feedbackData = await createWeeklyVivid.mutateAsync({
@@ -383,6 +384,24 @@ export function WeeklyCandidatesSection() {
         end: weekEnd,
         timezone: "Asia/Seoul",
       });
+
+      const apiEndTime = Date.now();
+      const durationSeconds = (apiEndTime - apiStartTime) / 1000;
+
+      // 생성 시간을 포함하여 다시 요청 (업데이트)
+      if (feedbackData?.id) {
+        try {
+          await createWeeklyVivid.mutateAsync({
+            start: weekStart,
+            end: weekEnd,
+            timezone: "Asia/Seoul",
+            generation_duration_seconds: durationSeconds,
+          });
+        } catch (error) {
+          // 업데이트 실패해도 무시 (이미 생성은 완료됨)
+          console.warn("생성 시간 업데이트 실패:", error);
+        }
+      }
 
       // 타이머 정리
       clearTimer(weekStart);

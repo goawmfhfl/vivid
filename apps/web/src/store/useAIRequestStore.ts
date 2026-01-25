@@ -42,16 +42,25 @@ interface AIRequestStore {
 }
 
 // 모델별 토큰 가격 (USD per 1M tokens)
-// gpt-5-mini: 캐시된 입력 $0.25, 캐시되지 않은 입력은 일반 가격, 출력 $2.0
+// 참고: OpenAI 모델은 더 이상 사용하지 않지만 하위 호환성을 위해 주석 처리로 유지
 const PRICING: Record<
   string,
   { input: number; inputCached: number; output: number }
 > = {
-  "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 }, // 캐시된 입력: $0.25
-  "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
-  "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
-  "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
-  "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
+  // OpenAI 모델 (더 이상 사용하지 않음, 하위 호환성 유지)
+  // "gpt-5-mini": { input: 0.25, inputCached: 0.25, output: 2.0 },
+  // "gpt-5-nano": { input: 0.15, inputCached: 0.15, output: 0.6 },
+  // "gpt-4-turbo": { input: 10.0, inputCached: 10.0, output: 30.0 },
+  // "gpt-4": { input: 30.0, inputCached: 30.0, output: 60.0 },
+  // "gpt-3.5-turbo": { input: 0.5, inputCached: 0.5, output: 1.5 },
+  
+  // Gemini 모델 가격 (현재 사용 중)
+  "gemini-2.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-2.0-flash-exp": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-3-flash-preview": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-3.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-1.5-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
+  "gemini-1.5-pro": { input: 1.25, inputCached: 0.625, output: 5.0 },
 };
 
 const USD_TO_KRW = 1350; // 기본 환율
@@ -66,14 +75,14 @@ function calculateCost(
 ) {
   if (!usage) return undefined;
 
-  const modelPricing = PRICING[model] || PRICING["gpt-5-nano"];
+  const modelPricing = PRICING[model] || PRICING["gemini-3-flash-preview"];
 
   // 캐시된 토큰과 캐시되지 않은 토큰 구분
   const cachedTokens = usage.cached_tokens || 0;
   const nonCachedTokens = usage.prompt_tokens - cachedTokens;
 
-  // gpt-5-mini의 경우 캐시된 입력은 $0.25, 캐시되지 않은 입력은 일반 가격
-  // 다른 모델의 경우 캐시 여부와 관계없이 동일한 가격 사용
+  // Gemini 모델은 캐시 토큰 정보를 제공하지 않으므로 항상 0으로 처리
+  // 하위 호환성을 위해 OpenAI 형식도 지원
   const cachedInputCost = cachedTokens * (modelPricing.inputCached / 1_000_000);
   const nonCachedInputCost = nonCachedTokens * (modelPricing.input / 1_000_000);
   const inputCost = cachedInputCost + nonCachedInputCost;

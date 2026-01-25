@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   DailyVividReportSchema,
   SYSTEM_PROMPT_REPORT,
@@ -12,7 +12,6 @@ import {
   generateCacheKey,
   getFromCache,
   setCache,
-  generatePromptCacheKey,
 } from "../utils/cache";
 import type {
   Schema,
@@ -23,18 +22,14 @@ import type {
 } from "../types";
 import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
-function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+function getGeminiClient(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable."
+      "Missing credentials. Please pass an `apiKey`, or set the `GEMINI_API_KEY` environment variable."
     );
   }
-  return new OpenAI({
-    apiKey,
-    timeout: 180000, // 180초(3분) 타임아웃
-    maxRetries: 0, // 재시도 최소화
-  });
+  return new GoogleGenerativeAI(apiKey);
 }
 
 /**
@@ -60,10 +55,10 @@ async function generateSection<T>(
     return cachedResult;
   }
 
-  const openai = getOpenAIClient();
-  const promptCacheKey = generatePromptCacheKey(systemPrompt);
+  const geminiClient = getGeminiClient();
 
-  const model = "gpt-5.2";
+  // Gemini 3 Flash Preview 사용 (2025년 12월 17일 출시, 2026년 1월 기준 사용 가능)
+  const modelName = "gemini-3-flash-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -77,43 +72,77 @@ async function generateSection<T>(
   // Free 유저의 경우 토큰 사용량 제한 (비용 절감)
   // Pro 유저는 제한 없음
   // JSON 스키마 응답을 완성하기 위해 최소한의 토큰은 필요하므로 2000으로 설정
-  // gpt-5.2 모델은 max_tokens 대신 max_completion_tokens를 사용해야 함
-  const maxCompletionTokens = isPro ? undefined : 2000;
+  const maxOutputTokens = isPro ? undefined : 2000;
 
   const startTime = Date.now();
   try {
-    const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming =
-      {
-        model,
-        messages: [
-          {
-            role: "system",
-            content: enhancedSystemPrompt,
-          },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: schemaObj.name,
-            schema: schemaObj.schema,
-            strict: schemaObj.strict,
-          },
-        },
-        prompt_cache_key: promptCacheKey,
-        ...(maxCompletionTokens !== undefined
-          ? { max_completion_tokens: maxCompletionTokens }
-          : {}),
-      };
+    // Gemini 모델 초기화 (systemInstruction 포함)
+    // systemInstruction은 string, Part, 또는 Content 타입을 받을 수 있음
+    // 단순 문자열로 전달하는 것이 가장 안전함
+    const model = geminiClient.getGenerativeModel({
+      model: modelName,
+      systemInstruction: enhancedSystemPrompt,
+    });
 
-    const completion = await openai.chat.completions.create(completionParams);
+    // JSON 스키마 설정
+    // Gemini API는 additionalProperties를 직접 지원하지 않으므로 제거
+    const responseSchema: {
+      type: "object";
+      properties: Record<string, unknown>;
+      required?: string[];
+    } = {
+      type: "object",
+      properties: schemaObj.schema.properties as Record<string, unknown>,
+    };
+
+    // required 필드가 있고 비어있지 않을 때만 추가
+    const requiredFields = schemaObj.schema.required;
+    if (Array.isArray(requiredFields) && requiredFields.length > 0) {
+      responseSchema.required = requiredFields as string[];
+    }
+
+    // 사용자 메시지 구성
+    // Gemini API의 Content 타입에는 role이 필요함
+    const contents = [
+      {
+        role: "user" as const,
+        parts: [{ text: userPrompt }],
+      },
+    ];
+
+    // generationConfig를 별도로 구성하여 타입 오류 방지
+    const generationConfig: {
+      responseMimeType: "application/json";
+      responseSchema: {
+        type: "object";
+        properties: Record<string, unknown>;
+        required?: string[];
+      };
+      maxOutputTokens?: number;
+    } = {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: responseSchema.properties,
+        ...(responseSchema.required && { required: responseSchema.required }),
+      },
+    };
+
+    if (maxOutputTokens !== undefined) {
+      generationConfig.maxOutputTokens = maxOutputTokens;
+    }
+
+    const geminiResult = await model.generateContent({
+      contents,
+      generationConfig: generationConfig as any, // 타입 호환성을 위해 any 사용
+    });
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;
 
-    const content = completion.choices[0]?.message?.content;
+    const content = geminiResult.response.text();
     if (!content) {
-      throw new Error(`No content from OpenAI (${schemaObj.name})`);
+      throw new Error(`No content from Gemini (${schemaObj.name})`);
     }
 
     const parsed = JSON.parse(content);
@@ -198,13 +227,19 @@ async function generateSection<T>(
 
     // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
     if (userId) {
-      const usage = extractUsageInfo(
-        completion.usage as ExtendedUsage | undefined
-      );
+      const usageMetadata = geminiResult.response.usageMetadata;
+      const usage = usageMetadata
+        ? {
+            prompt_tokens: usageMetadata.promptTokenCount || 0,
+            completion_tokens: usageMetadata.candidatesTokenCount || 0,
+            total_tokens: usageMetadata.totalTokenCount || 0,
+            cached_tokens: 0, // Gemini는 캐시 토큰 정보를 제공하지 않음
+          }
+        : null;
       if (usage) {
         logAIRequestAsync({
           userId,
-          model,
+          model: modelName,
           requestType: "daily_vivid",
           sectionName,
           usage,
@@ -223,17 +258,16 @@ async function generateSection<T>(
       typeof result === "object" &&
       !Array.isArray(result)
     ) {
-      const usage = completion.usage as ExtendedUsage | undefined;
-      const cachedTokens = usage?.prompt_tokens_details?.cached_tokens || 0;
+      const usageMetadata = geminiResult.response.usageMetadata;
       (result as WithTracking<T>).__tracking = {
         name: sectionName,
-        model,
+        model: modelName,
         duration_ms,
         usage: {
-          prompt_tokens: usage?.prompt_tokens || 0,
-          completion_tokens: usage?.completion_tokens || 0,
-          total_tokens: usage?.total_tokens || 0,
-          cached_tokens: cachedTokens,
+          prompt_tokens: usageMetadata?.promptTokenCount || 0,
+          completion_tokens: usageMetadata?.candidatesTokenCount || 0,
+          total_tokens: usageMetadata?.totalTokenCount || 0,
+          cached_tokens: 0, // Gemini는 캐시 토큰 정보를 제공하지 않음
         },
       };
     }
@@ -252,10 +286,11 @@ async function generateSection<T>(
       err?.code === "insufficient_quota" ||
       err?.type === "insufficient_quota" ||
       err?.message?.includes("쿼터") ||
-      err?.message?.includes("quota")
+      err?.message?.includes("quota") ||
+      err?.message?.includes("RESOURCE_EXHAUSTED")
     ) {
       const quotaError = new Error(
-        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schemaObj.name})`
+        `Gemini API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schemaObj.name})`
       ) as ApiError;
       quotaError.code = "INSUFFICIENT_QUOTA";
       quotaError.status = 429;
@@ -268,7 +303,7 @@ async function generateSection<T>(
       const duration_ms = endTime - startTime;
       logAIRequestAsync({
         userId,
-        model,
+        model: modelName,
         requestType: "daily_vivid",
         sectionName,
         usage: {

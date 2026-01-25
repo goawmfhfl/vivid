@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import { getFromCache, setCache, generatePromptCacheKey } from "../utils/cache";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getFromCache, setCache } from "../utils/cache";
 import type {
   ReportSchema,
   ExtendedUsage,
@@ -9,20 +9,16 @@ import type {
 import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 /**
- * OpenAI 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
+ * Gemini 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
  */
-export function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+function getGeminiClient(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable."
+      "Missing credentials. Please pass an `apiKey`, or set the `GEMINI_API_KEY` environment variable."
     );
   }
-  return new OpenAI({
-    apiKey,
-    timeout: 300000, // 300초(5분) 타임아웃 - 월간 비비드 생성은 더 많은 데이터를 처리하므로 시간이 더 필요
-    maxRetries: 0, // 재시도 최소화
-  });
+  return new GoogleGenerativeAI(apiKey);
 }
 
 /**
@@ -49,12 +45,9 @@ export async function generateSection<T>(
     return cachedResult;
   }
 
-  const openai = getOpenAIClient();
-  const promptCacheKey = generatePromptCacheKey(systemPrompt);
+  const geminiClient = getGeminiClient();
 
-  // Monthly Vivid은 gpt-5.2를 사용하여 실패 없이 안정적으로 동작
-  // Daily 점수 기반으로 정확도 향상 및 일관성 보정 역할
-  const model = "gpt-5.2";
+  const modelName = "gemini-3-pro-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -67,33 +60,182 @@ export async function generateSection<T>(
 
   const startTime = Date.now();
 
+  // 요청 정보 로깅
+  const systemPromptSize = enhancedSystemPrompt.length;
+  const userPromptSize = userPrompt.length;
+  const totalPromptSize = systemPromptSize + userPromptSize;
+
   try {
-    const completion = await openai.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: "system",
-          content: enhancedSystemPrompt,
-        },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: schema.name,
-          schema: schema.schema,
-          strict: schema.strict,
-        },
+    // Gemini 모델 초기화 (systemInstruction 포함)
+    const model = geminiClient.getGenerativeModel({
+      model: modelName,
+      systemInstruction: enhancedSystemPrompt,
+    });
+
+    // JSON 스키마를 Gemini API 형식으로 정리
+    // Gemini API는 additionalProperties, minItems, maxItems, pattern, description, maxLength 등을 지원하지 않음
+    // 재귀적으로 스키마를 정리하되, properties와 required는 반드시 보존
+    function cleanSchemaRecursive(schemaObj: unknown): unknown {
+      if (typeof schemaObj !== "object" || schemaObj === null) {
+        return schemaObj;
+      }
+
+      if (Array.isArray(schemaObj)) {
+        return schemaObj.map(cleanSchemaRecursive);
+      }
+
+      const obj = schemaObj as Record<string, unknown>;
+      const cleaned: Record<string, unknown> = {};
+
+      // Gemini API가 지원하는 필드만 유지
+      const allowedFields = new Set([
+        "type",
+        "properties",
+        "required",
+        "items",
+        "enum",
+      ]);
+
+      for (const [key, value] of Object.entries(obj)) {
+        // 지원하지 않는 필드 제거
+        if (!allowedFields.has(key)) {
+          continue;
+        }
+
+        // properties는 특별 처리: 각 속성을 재귀적으로 정리하되, properties 객체 자체는 반드시 보존
+        if (key === "properties" && value && typeof value === "object" && !Array.isArray(value)) {
+          const propertiesObj = value as Record<string, unknown>;
+          const cleanedProperties: Record<string, unknown> = {};
+          for (const [propKey, propValue] of Object.entries(propertiesObj)) {
+            const cleanedProp = cleanSchemaRecursive(propValue);
+            if (cleanedProp !== null && cleanedProp !== undefined) {
+              cleanedProperties[propKey] = cleanedProp;
+            }
+          }
+          // properties가 비어있지 않은 경우에만 추가
+          if (Object.keys(cleanedProperties).length > 0) {
+            cleaned[key] = cleanedProperties;
+          }
+        }
+        // items는 배열의 요소 스키마를 재귀적으로 정리
+        else if (key === "items" && value && typeof value === "object" && !Array.isArray(value)) {
+          cleaned[key] = cleanSchemaRecursive(value);
+        }
+        // required는 배열이므로 그대로 유지 (문자열 배열)
+        else if (key === "required" && Array.isArray(value)) {
+          cleaned[key] = value;
+        }
+        // type, enum은 그대로 유지
+        else if (key === "type" || key === "enum") {
+          cleaned[key] = value;
+        }
+        // 그 외의 객체는 재귀적으로 처리
+        else if (value && typeof value === "object") {
+          cleaned[key] = cleanSchemaRecursive(value);
+        } else {
+          cleaned[key] = value;
+        }
+      }
+
+      return cleaned;
+    }
+
+    // 스키마를 Gemini API 형식으로 정리
+    const cleanedSchema = cleanSchemaRecursive(schema.schema) as {
+      type: string;
+      properties?: Record<string, unknown>;
+      required?: string[];
+    };
+
+    // 스키마 검증: properties가 비어있으면 에러
+    if (!cleanedSchema.properties || Object.keys(cleanedSchema.properties).length === 0) {
+      console.error(`[${sectionName}] Schema properties is empty after cleaning:`, {
+        originalSchema: schema.schema,
+        cleanedSchema,
+      });
+      throw new Error(`Schema properties is empty for ${schema.name}. This may indicate that cleanSchemaRecursive removed all properties.`);
+    }
+
+    // JSON 스키마 설정
+    const responseSchema: {
+      type: "object";
+      properties: Record<string, unknown>;
+      required?: string[];
+    } = {
+      type: "object",
+      properties: cleanedSchema.properties as Record<string, unknown>,
+    };
+
+    // required 필드가 있고 비어있지 않을 때만 추가
+    // required에 있는 모든 필드가 properties에 존재하는지 확인
+    if (cleanedSchema.required && Array.isArray(cleanedSchema.required) && cleanedSchema.required.length > 0) {
+      const missingProperties = cleanedSchema.required.filter(
+        (req) => !(req in cleanedSchema.properties!)
+      );
+      if (missingProperties.length > 0) {
+        console.error(`[${sectionName}] Required properties not found in schema:`, {
+          missingProperties,
+          availableProperties: Object.keys(cleanedSchema.properties),
+          required: cleanedSchema.required,
+        });
+        throw new Error(
+          `Required properties [${missingProperties.join(", ")}] not found in schema properties for ${schema.name}`
+        );
+      }
+      responseSchema.required = cleanedSchema.required as string[];
+    }
+
+    // 사용자 메시지 구성
+    const contents = [
+      {
+        role: "user" as const,
+        parts: [{ text: userPrompt }],
       },
-      prompt_cache_key: promptCacheKey,
+    ];
+
+    // generationConfig를 별도로 구성하여 타입 오류 방지
+    const generationConfig: {
+      responseMimeType: "application/json";
+      responseSchema: {
+        type: "object";
+        properties: Record<string, unknown>;
+        required?: string[];
+      };
+      maxOutputTokens?: number;
+    } = {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: responseSchema.properties,
+        ...(responseSchema.required && { required: responseSchema.required }),
+      },
+    };
+
+    // 디버깅: 스키마 구조 로깅 (개발 환경에서만)
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[${sectionName}] Original schema:`, JSON.stringify(schema.schema, null, 2));
+      console.log(`[${sectionName}] Cleaned schema properties count:`, Object.keys(cleanedSchema.properties || {}).length);
+      console.log(`[${sectionName}] Final responseSchema:`, JSON.stringify(generationConfig.responseSchema, null, 2));
+    }
+
+    const geminiResult = await model.generateContent({
+      contents,
+      generationConfig: generationConfig as any, // 타입 호환성을 위해 any 사용
     });
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;
 
-    const content = completion.choices[0]?.message?.content;
+    console.log(`[${sectionName}] API 요청 성공:`, {
+      duration_ms,
+      duration_seconds: (duration_ms / 1000).toFixed(2),
+      usage: geminiResult.response.usageMetadata,
+      timestamp: new Date().toISOString(),
+    });
+
+    const content = geminiResult.response.text();
     if (!content) {
-      throw new Error(`No content from OpenAI (${schema.name})`);
+      throw new Error(`No content from Gemini (${schema.name})`);
     }
 
     const parsed = JSON.parse(content);
@@ -180,13 +322,19 @@ export async function generateSection<T>(
 
     // AI 사용량 로깅 (userId가 제공된 경우에만, 캐시된 응답이 아닌 경우에만)
     if (userId) {
-      const usage = extractUsageInfo(
-        completion.usage as ExtendedUsage | undefined
-      );
+      const usageMetadata = geminiResult.response.usageMetadata;
+      const usage = usageMetadata
+        ? {
+            prompt_tokens: usageMetadata.promptTokenCount || 0,
+            completion_tokens: usageMetadata.candidatesTokenCount || 0,
+            total_tokens: usageMetadata.totalTokenCount || 0,
+            cached_tokens: 0, // Gemini는 캐시 토큰 정보를 제공하지 않음
+          }
+        : null;
       if (usage) {
         logAIRequestAsync({
           userId,
-          model,
+          model: modelName,
           requestType,
           sectionName,
           usage,
@@ -204,32 +352,56 @@ export async function generateSection<T>(
       typeof result === "object" &&
       !Array.isArray(result)
     ) {
-      const usage = completion.usage as ExtendedUsage | undefined;
-      const cachedTokens = usage?.prompt_tokens_details?.cached_tokens || 0;
+      const usageMetadata = geminiResult.response.usageMetadata;
       (result as WithTracking<T>).__tracking = {
         name: schema.name,
-        model,
+        model: modelName,
         duration_ms,
         usage: {
-          prompt_tokens: usage?.prompt_tokens || 0,
-          completion_tokens: usage?.completion_tokens || 0,
-          total_tokens: usage?.total_tokens || 0,
-          cached_tokens: cachedTokens,
+          prompt_tokens: usageMetadata?.promptTokenCount || 0,
+          completion_tokens: usageMetadata?.candidatesTokenCount || 0,
+          total_tokens: usageMetadata?.totalTokenCount || 0,
+          cached_tokens: 0, // Gemini는 캐시 토큰 정보를 제공하지 않음
         },
       };
     }
 
     return result;
   } catch (error: unknown) {
-    const err = error as ApiError;
+    const err = error as {
+      message?: string;
+      code?: string;
+      status?: number;
+      type?: string;
+    };
+    const endTime = Date.now();
+    const duration_ms = endTime - startTime;
+
+    // 상세 에러 정보 로깅
+    const errorDetails: Record<string, unknown> = {
+      sectionName,
+      duration_ms,
+      duration_seconds: (duration_ms / 1000).toFixed(2),
+      errorType: err?.constructor?.name || typeof error,
+      status: err?.status,
+      code: err?.code,
+      type: err?.type,
+      message: err?.message || String(error),
+      timestamp: new Date().toISOString(),
+      model: modelName,
+      systemPromptSize,
+      userPromptSize,
+      totalPromptSize,
+      estimatedTokens: Math.ceil(totalPromptSize / 4),
+    };
+
+    console.error(`[${sectionName}] API 요청 실패:`, errorDetails);
 
     // AI 사용량 로깅 (에러 발생 시에도 로깅)
     if (userId) {
-      const endTime = Date.now();
-      const duration_ms = endTime - startTime;
       logAIRequestAsync({
         userId,
-        model,
+        model: modelName,
         requestType,
         sectionName,
         usage: {
@@ -248,11 +420,12 @@ export async function generateSection<T>(
       err?.status === 429 ||
       err?.code === "insufficient_quota" ||
       err?.type === "insufficient_quota" ||
+      err?.message?.includes("쿼터") ||
       err?.message?.includes("quota") ||
-      err?.message?.includes("429")
+      err?.message?.includes("RESOURCE_EXHAUSTED")
     ) {
       const quotaError = new Error(
-        `OpenAI API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
+        `Gemini API 쿼터가 초과되었습니다. 잠시 후 다시 시도해주세요. (${schema.name})`
       ) as ApiError;
       quotaError.code = "INSUFFICIENT_QUOTA";
       quotaError.status = 429;

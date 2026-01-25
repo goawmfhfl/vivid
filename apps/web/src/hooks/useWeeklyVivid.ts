@@ -45,9 +45,10 @@ const fetchWeeklyVividDetail = async (
  * 주간 피드백 생성
  */
 const createWeeklyVivid = async (
-  params: Omit<WeeklyVividGenerateRequest, "userId">
+  params: WeeklyVividGenerateRequest
 ): Promise<WeeklyVivid & { __tracking?: TrackingInfo[] }> => {
   const userId = await getCurrentUserId();
+  
   const res = await fetch("/api/weekly-vivid/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -114,7 +115,7 @@ export function useCreateWeeklyVivid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params: Omit<WeeklyVividGenerateRequest, "userId">) =>
+    mutationFn: (params: WeeklyVividGenerateRequest) =>
       createWeeklyVivid(params),
     onSuccess: (data) => {
       // 리스트 쿼리 캐시에 새 피드백을 리스트 앞에 추가

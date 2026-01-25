@@ -9,23 +9,26 @@ const isDevelopment =
   process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
 /**
- * OpenAI completion 응답에서 사용량 정보 추출
+ * AI completion 응답에서 사용량 정보 추출 (Gemini 및 OpenAI 호환)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractUsageInfo(completion: any) {
-  const usage = completion.usage;
+  const usage = completion.usage || completion.usageMetadata;
   if (!usage) return null;
 
-  // OpenAI API 응답에서 캐시된 토큰 정보 추출
+  // Gemini API는 usageMetadata를 사용하며, OpenAI API는 usage를 사용
+  // OpenAI API 응답에서 캐시된 토큰 정보 추출 (하위 호환성)
   // prompt_tokens_details는 선택적 필드이며, cached_tokens를 포함할 수 있음
   const cachedTokens =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (usage as any)?.prompt_tokens_details?.cached_tokens || 0;
 
+  // Gemini API의 경우 promptTokenCount, candidatesTokenCount, totalTokenCount 사용
+  // OpenAI API의 경우 prompt_tokens, completion_tokens, total_tokens 사용
   return {
-    prompt_tokens: usage.prompt_tokens || 0,
-    completion_tokens: usage.completion_tokens || 0,
-    total_tokens: usage.total_tokens || 0,
+    prompt_tokens: usage.prompt_tokens || usage.promptTokenCount || 0,
+    completion_tokens: usage.completion_tokens || usage.candidatesTokenCount || 0,
+    total_tokens: usage.total_tokens || usage.totalTokenCount || 0,
     cached_tokens: cachedTokens,
   };
 }

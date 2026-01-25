@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { formatKSTDate, formatKSTTime } from "@/lib/date-utils";
 import type { AIUsageDetail } from "@/types/admin";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import {
   XAxis,
   YAxis,
@@ -93,6 +93,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
     totalPages: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     model: "",
@@ -103,42 +104,56 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
     endDate: "",
   });
 
-  useEffect(() => {
-    const fetchDetails = async () => {
+  const fetchDetails = async (showLoading = true, refreshTableOnly = false) => {
+    if (showLoading && !refreshTableOnly) {
       setIsLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: pagination.page.toString(),
-          limit: pagination.limit.toString(),
-        });
-        if (filters.model) params.append("model", filters.model);
-        if (filters.requestType)
-          params.append("requestType", filters.requestType);
-        if (filters.sectionName)
-          params.append("sectionName", filters.sectionName);
-        if (filters.search) params.append("search", filters.search);
-        if (filters.startDate) params.append("startDate", filters.startDate);
-        if (filters.endDate) params.append("endDate", filters.endDate);
+    } else if (refreshTableOnly) {
+      setIsRefreshing(true);
+    }
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
+      if (filters.model) params.append("model", filters.model);
+      if (filters.requestType)
+        params.append("requestType", filters.requestType);
+      if (filters.sectionName)
+        params.append("sectionName", filters.sectionName);
+      if (filters.search) params.append("search", filters.search);
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
 
-        const response = await adminApiFetch(
-          `/api/admin/ai-usage/${userId}?${params.toString()}`
-        );
-        if (!response.ok) {
-          throw new Error("AI 사용량 상세를 불러오는데 실패했습니다.");
-        }
-        const data: AIUsageDetailResponse = await response.json();
+      const response = await adminApiFetch(
+        `/api/admin/ai-usage/${userId}?${params.toString()}`
+      );
+      if (!response.ok) {
+        throw new Error("AI 사용량 상세를 불러오는데 실패했습니다.");
+      }
+      const data: AIUsageDetailResponse = await response.json();
+      
+      // 테이블만 새로고침하는 경우 details와 pagination만 업데이트
+      if (refreshTableOnly) {
+        setDetails(data.details);
+        setPagination(data.pagination);
+      } else {
+        // 전체 데이터 업데이트
         setDetails(data.details);
         setPagination(data.pagination);
         setUser(data.user);
         setStats(data.stats);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "알 수 없는 오류");
-      } finally {
-        setIsLoading(false);
       }
-    };
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
-    fetchDetails();
+  useEffect(() => {
+    fetchDetails(true);
   }, [userId, pagination.page, pagination.limit, filters]);
 
   if (isLoading && details.length === 0) {
@@ -525,12 +540,26 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
               ...CARD_STYLES.default,
             }}
           >
-            <h2
-              className="text-xl font-semibold mb-4"
-              style={{ color: COLORS.text.primary }}
-            >
-              사용량 상세 내역
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-semibold"
+                style={{ color: COLORS.text.primary }}
+              >
+                사용량 상세 내역
+              </h2>
+              <button
+                onClick={() => fetchDetails(false, true)}
+                disabled={isRefreshing}
+                className="p-2 rounded-lg hover:bg-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                style={{ backgroundColor: COLORS.background.hover }}
+                title="새로고침"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+                  style={{ color: COLORS.text.primary }}
+                />
+              </button>
+            </div>
 
             {/* 필터 및 검색 영역 */}
             <div className="mb-6 space-y-4">
@@ -577,9 +606,10 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                     }}
                   >
                     <option value="">전체</option>
-                    <option value="gpt-5-nano">gpt-5-nano</option>
-                    <option value="gpt-5-mini">gpt-5-mini</option>
-                    <option value="gpt-4-turbo">gpt-4-turbo</option>
+                    <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
                   </select>
                 </div>
                 <div>
@@ -706,11 +736,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
             </div>
 
             {/* 테이블 */}
-            {isLoading ? (
-              <div className="text-center py-8">
-                <p style={{ color: COLORS.text.secondary }}>로딩 중...</p>
-              </div>
-            ) : details.length === 0 ? (
+            {details.length === 0 ? (
               <div className="text-center py-8">
                 <p style={{ color: COLORS.text.muted }}>
                   사용량 내역이 없습니다.

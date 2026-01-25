@@ -39,7 +39,8 @@ export async function fetchRecordsByDate(
 export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
-  report: DailyReportResponse
+  report: DailyReportResponse,
+  generationDurationSeconds?: number
 ): Promise<DailyVividRow> {
   // 먼저 기존 레코드가 있는지 확인
   const { data: existingData, error: checkError } = await supabase
@@ -70,6 +71,7 @@ export async function saveDailyReport(
     report: encryptedNewReports.report || null,
     trend: encryptedNewReports.trend || null, // trend 필드 추가
     is_ai_generated: true,
+    generation_duration_seconds: generationDurationSeconds ?? null,
   };
 
   let result;

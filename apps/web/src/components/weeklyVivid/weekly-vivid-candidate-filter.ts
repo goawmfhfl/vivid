@@ -110,9 +110,10 @@ export function getWeekEndISO(referenceDate: Date): string {
  * 1. 일요일이 지난 주만 포함: 해당 주의 일요일이 현재 날짜(KST)보다 작거나 같아야 함
  *    ⏰ 일요일 오전 12시(00:00:00 KST)가 되면 그때부터 생성 대상이 됨
  * 2. weekly_vivid_id가 null인 주만 포함 (아직 생성되지 않은 주)
- * 3. daily_vivid가 있는 주만 포함 (record_count > 0)
- *    - record_count는 해당 주의 daily_vivid 개수를 의미
+ * 3. vivid-records가 있는 주만 포함 (record_count > 0)
+ *    - record_count는 해당 주의 vivid-records 개수를 의미 (type="vivid" 또는 type="dream")
  *    - 하나라도 있으면 (>= 1) 주간 피드백 생성 가능
+ *    - weekly_candidates 뷰에서 vivid-records를 기반으로 record_count를 계산해야 함
  *
  * 📅 주간 범위: 월요일 ~ 일요일
  * 📌 기준 요일: 일요일
@@ -128,13 +129,13 @@ export function getWeekEndISO(referenceDate: Date): string {
  *   { week_start: "2025-11-17", weekly_vivid_id: null, record_count: 3 }
  *     → 이번주 일요일: 2025-11-23
  *     → 2025-11-23 > 2025-11-17 (아직 안 지남)
- *     → record_count: 3 (daily_vivid 3개)
+ *     → record_count: 3 (vivid-records 3개)
  *     → ❌ 제외 (일요일이 아직 안 지남)
  *
  *   { week_start: "2025-11-10", weekly_vivid_id: null, record_count: 5 }
  *     → 해당 주 일요일: 2025-11-16
  *     → 2025-11-16 <= 2025-11-17 (이미 지남)
- *     → record_count: 5 (daily_vivid 5개)
+ *     → record_count: 5 (vivid-records 5개)
  *     → ✅ 포함
  *
  *   { week_start: "2025-11-03", weekly_vivid_id: 3, record_count: 7 }
@@ -144,7 +145,7 @@ export function getWeekEndISO(referenceDate: Date): string {
  *   { week_start: "2025-10-27", weekly_vivid_id: null, record_count: 1 }
  *     → 해당 주 일요일: 2025-11-02
  *     → 2025-11-02 <= 2025-11-17 (이미 지남)
- *     → record_count: 1 (daily_vivid 1개, 하나라도 있으면 생성 가능)
+ *     → record_count: 1 (vivid-records 1개, 하나라도 있으면 생성 가능)
  *     → ✅ 포함
  * ]
  *
@@ -157,7 +158,7 @@ export function getWeekEndISO(referenceDate: Date): string {
  *
  * 🔄 생성 후 동작:
  * 1. 사용자가 "생성하기" 버튼 클릭
- * 2. 해당 주의 daily_vivid 데이터를 기반으로 주간 비비드 생성
+ * 2. 해당 주의 vivid-records 데이터를 기반으로 주간 비비드 생성 (Gemini API 사용)
  * 3. weekly_vivid 테이블에 데이터 저장됨
  * 4. weekly_candidates 뷰의 weekly_vivid_id가 자동으로 업데이트됨 (LEFT JOIN)
  * 5. 쿼리 무효화로 새로운 데이터 가져옴
@@ -181,8 +182,9 @@ export function filterWeeklyCandidatesForCreation(
 
   // Step 3: 모든 후보를 하나씩 확인
   for (const candidate of candidates) {
-    // 조건 1: weekly_vivid_id가 null이고 daily_vivid가 있는 경우만 확인
-    // record_count는 해당 주의 daily_vivid 개수 (하나라도 있으면 >= 1)
+    // 조건 1: weekly_vivid_id가 null이고 vivid-records가 있는 경우만 확인
+    // record_count는 해당 주의 vivid-records 개수 (type="vivid" 또는 type="dream", 하나라도 있으면 >= 1)
+    // 주의: weekly_candidates 뷰에서 record_count는 vivid-records를 기반으로 계산되어야 함
     if (candidate.weekly_vivid_id === null && candidate.record_count > 0) {
       // candidate.week_start는 월요일 (예: "2025-11-17")
       // KST 시간대로 파싱 (T00:00:00+09:00는 KST 오전 0시를 의미)
