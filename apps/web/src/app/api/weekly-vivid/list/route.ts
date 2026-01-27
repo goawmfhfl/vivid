@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
+    const force = searchParams.get("force") === "1";
 
     if (!userId) {
       return NextResponse.json(
@@ -26,7 +27,9 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
-          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
+          "Cache-Control": force
+            ? "no-store, max-age=0"
+            : getCacheControlHeader(FEEDBACK_REVALIDATE),
         },
       }
     );

@@ -10,9 +10,10 @@ export const fetchMonthlyTrends = async (
 ): Promise<MonthlyTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
+    const forceParam = options?.force ? "&force=1" : "";
 
     const response = await fetch(
-      `/api/monthly-vivid/recent-trends?userId=${userId}`,
+      `/api/monthly-vivid/recent-trends?userId=${userId}${forceParam}`,
       {
         cache: options?.force ? "no-store" : "default",
       }

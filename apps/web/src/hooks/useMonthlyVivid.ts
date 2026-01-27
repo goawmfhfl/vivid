@@ -10,7 +10,8 @@ export const fetchMonthlyVividList = async (
   options?: FetchOptions
 ): Promise<MonthlyVividListItem[]> => {
   const userId = await getCurrentUserId();
-  const response = await fetch(`/api/monthly-vivid/list?userId=${userId}`, {
+  const forceParam = options?.force ? "&force=1" : "";
+  const response = await fetch(`/api/monthly-vivid/list?userId=${userId}${forceParam}`, {
     cache: options?.force ? "no-store" : "default",
   });
   if (!response.ok) {

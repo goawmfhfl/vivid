@@ -16,9 +16,10 @@ export const fetchRecentTrends = async (
 ): Promise<RecentTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
+    const forceParam = options?.force ? "&force=1" : "";
 
     const response = await fetch(
-      `/api/daily-vivid/recent-trends?userId=${userId}`,
+      `/api/daily-vivid/recent-trends?userId=${userId}${forceParam}`,
       {
         cache: options?.force ? "no-store" : "default",
       }

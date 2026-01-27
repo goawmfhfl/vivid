@@ -12,8 +12,9 @@ export const fetchMonthlyCandidates = async (
   options?: FetchOptions
 ): Promise<MonthlyCandidate[]> => {
   const userId = await getCurrentUserId();
+  const forceParam = options?.force ? "&force=1" : "";
 
-  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}`, {
+  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}${forceParam}`, {
     cache: options?.force ? "no-store" : "default",
   });
   if (!res.ok) {

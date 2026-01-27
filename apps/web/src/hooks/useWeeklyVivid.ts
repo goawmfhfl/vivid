@@ -17,7 +17,8 @@ export const fetchWeeklyVividList = async (
   options?: FetchOptions
 ): Promise<WeeklyVividListItem[]> => {
   const userId = await getCurrentUserId();
-  const res = await fetch(`/api/weekly-vivid/list?userId=${userId}`, {
+  const forceParam = options?.force ? "&force=1" : "";
+  const res = await fetch(`/api/weekly-vivid/list?userId=${userId}${forceParam}`, {
     cache: options?.force ? "no-store" : "default",
   });
   if (!res.ok) {
