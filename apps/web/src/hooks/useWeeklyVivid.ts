@@ -13,7 +13,9 @@ import type { TrackingInfo } from "@/app/api/types";
  */
 const fetchWeeklyVividList = async (): Promise<WeeklyVividListItem[]> => {
   const userId = await getCurrentUserId();
-  const res = await fetch(`/api/weekly-vivid/list?userId=${userId}`);
+  const res = await fetch(`/api/weekly-vivid/list?userId=${userId}`, {
+    cache: "no-store",
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to fetch weekly vivid list");

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { fetchWeeklyVividList } from "../db-service";
-import {
-  FEEDBACK_REVALIDATE,
-  getCacheControlHeader,
-} from "@/constants/cache";
 
 /**
  * GET 핸들러: 주간 비비드 리스트 조회
@@ -29,7 +25,8 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
-          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
+          // 최신 생성 데이터를 즉시 반영하기 위해 캐시 비활성화
+          "Cache-Control": "no-store, max-age=0",
         },
       }
     );
