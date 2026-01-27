@@ -1,11 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { formatKSTDateLong } from "@/lib/date-utils";
 import type { UserDetail, AIUsageStats } from "@/types/admin";
+import { QUERY_KEYS } from "@/constants";
+import { fetchWeeklyVividList } from "@/hooks/useWeeklyVivid";
+import { fetchMonthlyVividList } from "@/hooks/useMonthlyVivid";
+import { fetchWeeklyTrends } from "@/hooks/useWeeklyTrends";
+import { fetchMonthlyTrends } from "@/hooks/useMonthlyTrends";
+import { fetchRecentTrends } from "@/hooks/useRecentTrends";
+import { fetchMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import {
   ArrowLeft,
   Edit2,
@@ -62,6 +70,7 @@ function formatGenerationDuration(seconds: number | null | undefined): string {
 
 export function UserDetail({ userId }: UserDetailProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<UserDetail | null>(null);
   const [aiStats, setAiStats] = useState<AIUsageStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -325,6 +334,67 @@ export function UserDetail({ userId }: UserDetailProps) {
         // 실패 시 이전 상태로 롤백
         setFeedbacks(previousFeedbacks);
         throw new Error("피드백 삭제에 실패했습니다.");
+      }
+
+      // 삭제 성공 시 관련 캐시 무효화 및 강제 새로고침
+      if (type === "daily") {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
+        });
+        void queryClient
+          .fetchQuery({
+            queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
+            queryFn: () => fetchRecentTrends({ force: true }),
+          })
+          .catch(() => {});
+      } else if (type === "weekly") {
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-trends"],
+        });
+        void Promise.allSettled([
+          queryClient.fetchQuery({
+            queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
+            queryFn: () => fetchWeeklyVividList({ force: true }),
+          }),
+          queryClient.fetchQuery({
+            queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-trends"],
+            queryFn: () => fetchWeeklyTrends({ force: true }),
+          }),
+          queryClient.refetchQueries({
+            queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+          }),
+        ]);
+      } else if (type === "monthly") {
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
+        });
+        void Promise.allSettled([
+          queryClient.fetchQuery({
+            queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
+            queryFn: () => fetchMonthlyVividList({ force: true }),
+          }),
+          queryClient.fetchQuery({
+            queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
+            queryFn: () => fetchMonthlyTrends({ force: true }),
+          }),
+          queryClient.fetchQuery({
+            queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
+            queryFn: () => fetchMonthlyCandidates({ force: true }),
+          }),
+        ]);
       }
 
       // 성공 시 사용자 통계도 업데이트 (선택적)
