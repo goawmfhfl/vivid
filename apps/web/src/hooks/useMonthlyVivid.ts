@@ -94,8 +94,8 @@ export function useMonthlyVividById(id: string | null) {
 export function useMonthlyVividList(enabled: boolean = true) {
   return useQuery<MonthlyVividListItem[]>({
     queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
-    queryFn: () => fetchMonthlyVividList(),
+    queryFn: () => fetchMonthlyVividList({ force: true }),
     enabled, // enabled 파라미터로 조건부 조회 제어
-    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    staleTime: 0, // 리스트는 항상 최신 데이터 조회
   });
 }

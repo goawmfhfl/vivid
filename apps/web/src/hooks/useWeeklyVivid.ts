@@ -110,8 +110,8 @@ const createWeeklyVivid = async (
 export function useWeeklyVividList() {
   return useQuery({
     queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
-    queryFn: () => fetchWeeklyVividList(),
-    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    queryFn: () => fetchWeeklyVividList({ force: true }),
+    staleTime: 0, // 리스트는 항상 최신 데이터 조회
   });
 }
 
