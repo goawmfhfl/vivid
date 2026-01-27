@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 
 export interface WeeklyTrendsResponse {
   direction: string[]; // 어떤 방향으로 가고 있는 사람인가 (최근 4주)
@@ -15,11 +15,12 @@ export const fetchWeeklyTrends = async (
   options?: FetchOptions
 ): Promise<WeeklyTrendsResponse> => {
   try {
-    const userId = await getCurrentUserId();
+    const { userId, cacheBust } = await getCurrentUserCacheContext();
     const forceParam = options?.force ? "&force=1" : "";
+    const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
 
     const response = await fetch(
-      `/api/weekly-vivid/recent-trends?userId=${userId}${forceParam}`,
+      `/api/weekly-vivid/recent-trends?userId=${userId}${forceParam}${cacheParam}`,
       {
         cache: options?.force ? "no-store" : "default",
       }

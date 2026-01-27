@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 import type { MonthlyCandidate } from "@/types/monthly-candidate";
 
 /**
@@ -11,12 +11,16 @@ type FetchOptions = { force?: boolean };
 export const fetchMonthlyCandidates = async (
   options?: FetchOptions
 ): Promise<MonthlyCandidate[]> => {
-  const userId = await getCurrentUserId();
+  const { userId, cacheBust } = await getCurrentUserCacheContext();
   const forceParam = options?.force ? "&force=1" : "";
+  const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
 
-  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}${forceParam}`, {
-    cache: options?.force ? "no-store" : "default",
-  });
+  const res = await fetch(
+    `/api/monthly-vivid/candidates?userId=${userId}${forceParam}${cacheParam}`,
+    {
+      cache: options?.force ? "no-store" : "default",
+    }
+  );
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to fetch monthly candidates");

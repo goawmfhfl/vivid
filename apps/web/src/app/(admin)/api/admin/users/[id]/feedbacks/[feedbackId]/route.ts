@@ -71,6 +71,23 @@ export async function DELETE(
       );
     }
 
+    // 캐시 무효화를 위한 버전 갱신 (user_metadata.cache_bust)
+    try {
+      const { data: { user }, error: getUserError } =
+        await supabase.auth.admin.getUserById(userId);
+      if (!getUserError && user) {
+        const currentMetadata = user.user_metadata || {};
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...currentMetadata,
+            cache_bust: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (cacheError) {
+      console.warn("cache_bust 업데이트 실패:", cacheError);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("피드백 삭제 실패:", error);

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
 import type { MonthlyVividListItem } from "@/types/monthly-vivid";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
@@ -9,11 +9,15 @@ type FetchOptions = { force?: boolean };
 export const fetchMonthlyVividList = async (
   options?: FetchOptions
 ): Promise<MonthlyVividListItem[]> => {
-  const userId = await getCurrentUserId();
+  const { userId, cacheBust } = await getCurrentUserCacheContext();
   const forceParam = options?.force ? "&force=1" : "";
-  const response = await fetch(`/api/monthly-vivid/list?userId=${userId}${forceParam}`, {
-    cache: options?.force ? "no-store" : "default",
-  });
+  const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
+  const response = await fetch(
+    `/api/monthly-vivid/list?userId=${userId}${forceParam}${cacheParam}`,
+    {
+      cache: options?.force ? "no-store" : "default",
+    }
+  );
   if (!response.ok) {
     throw new Error("Failed to fetch monthly vivid list");
   }
@@ -41,9 +45,10 @@ export function useMonthlyVivid(month: string | null) {
       }
 
       // 상세 조회
-      const userId = await getCurrentUserId();
+      const { userId, cacheBust } = await getCurrentUserCacheContext();
+      const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
       const detailResponse = await fetch(
-        `/api/monthly-vivid/${monthlyVivid.id}?userId=${userId}`
+        `/api/monthly-vivid/${monthlyVivid.id}?userId=${userId}${cacheParam}`
       );
       if (!detailResponse.ok) {
         throw new Error("Failed to fetch monthly vivid detail");
@@ -66,9 +71,10 @@ export function useMonthlyVividById(id: string | null) {
     queryFn: async () => {
       if (!id) return null;
 
-      const userId = await getCurrentUserId();
+      const { userId, cacheBust } = await getCurrentUserCacheContext();
+      const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
       const response = await fetch(
-        `/api/monthly-vivid/${id}?userId=${userId}`
+        `/api/monthly-vivid/${id}?userId=${userId}${cacheParam}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monthly vivid");

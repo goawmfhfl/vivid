@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 
 export interface RecentTrendsResponse {
   aspired_self: string[]; // 내가 지향하는 모습 (최근 5개)
@@ -15,11 +15,12 @@ export const fetchRecentTrends = async (
   options?: FetchOptions
 ): Promise<RecentTrendsResponse> => {
   try {
-    const userId = await getCurrentUserId();
+    const { userId, cacheBust } = await getCurrentUserCacheContext();
     const forceParam = options?.force ? "&force=1" : "";
+    const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
 
     const response = await fetch(
-      `/api/daily-vivid/recent-trends?userId=${userId}${forceParam}`,
+      `/api/daily-vivid/recent-trends?userId=${userId}${forceParam}${cacheParam}`,
       {
         cache: options?.force ? "no-store" : "default",
       }

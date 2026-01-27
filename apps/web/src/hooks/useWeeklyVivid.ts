@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 import type {
   WeeklyVivid,
   WeeklyVividListItem,
@@ -16,11 +16,15 @@ type FetchOptions = { force?: boolean };
 export const fetchWeeklyVividList = async (
   options?: FetchOptions
 ): Promise<WeeklyVividListItem[]> => {
-  const userId = await getCurrentUserId();
+  const { userId, cacheBust } = await getCurrentUserCacheContext();
   const forceParam = options?.force ? "&force=1" : "";
-  const res = await fetch(`/api/weekly-vivid/list?userId=${userId}${forceParam}`, {
-    cache: options?.force ? "no-store" : "default",
-  });
+  const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
+  const res = await fetch(
+    `/api/weekly-vivid/list?userId=${userId}${forceParam}${cacheParam}`,
+    {
+      cache: options?.force ? "no-store" : "default",
+    }
+  );
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to fetch weekly vivid list");
@@ -36,10 +40,15 @@ const fetchWeeklyVividDetail = async (
   id: string,
   options?: FetchOptions
 ): Promise<WeeklyVivid | null> => {
-  const userId = await getCurrentUserId();
-  const res = await fetch(`/api/weekly-vivid/${id}?userId=${userId}`, {
-    cache: options?.force ? "no-store" : "default",
-  });
+  const { userId, cacheBust } = await getCurrentUserCacheContext();
+  const forceParam = options?.force ? "&force=1" : "";
+  const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
+  const res = await fetch(
+    `/api/weekly-vivid/${id}?userId=${userId}${forceParam}${cacheParam}`,
+    {
+      cache: options?.force ? "no-store" : "default",
+    }
+  );
   if (!res.ok) {
     if (res.status === 404) {
       return null;
@@ -57,7 +66,7 @@ const fetchWeeklyVividDetail = async (
 const createWeeklyVivid = async (
   params: WeeklyVividGenerateRequest
 ): Promise<WeeklyVivid & { __tracking?: TrackingInfo[] }> => {
-  const userId = await getCurrentUserId();
+  const { userId } = await getCurrentUserCacheContext();
   
   const res = await fetch("/api/weekly-vivid/generate", {
     method: "POST",

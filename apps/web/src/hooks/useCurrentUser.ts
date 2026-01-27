@@ -39,6 +39,22 @@ const getCurrentUser = async (): Promise<CurrentUser> => {
   };
 };
 
+export const getCurrentUserCacheContext = async (): Promise<{
+  userId: string;
+  cacheBust?: string;
+}> => {
+  const user = await getCurrentUser();
+  const cacheBust =
+    typeof user.user_metadata?.cache_bust === "string"
+      ? user.user_metadata.cache_bust
+      : undefined;
+
+  return {
+    userId: user.id,
+    cacheBust,
+  };
+};
+
 // 현재 사용자 ID만 가져오기 함수
 export const getCurrentUserId = async (): Promise<string> => {
   const user = await getCurrentUser();

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
-import { getCurrentUserId } from "./useCurrentUser";
+import { getCurrentUserCacheContext } from "./useCurrentUser";
 import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 
 type FetchOptions = { force?: boolean };
@@ -9,11 +9,12 @@ export const fetchMonthlyTrends = async (
   options?: FetchOptions
 ): Promise<MonthlyTrendsResponse> => {
   try {
-    const userId = await getCurrentUserId();
+    const { userId, cacheBust } = await getCurrentUserCacheContext();
     const forceParam = options?.force ? "&force=1" : "";
+    const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
 
     const response = await fetch(
-      `/api/monthly-vivid/recent-trends?userId=${userId}${forceParam}`,
+      `/api/monthly-vivid/recent-trends?userId=${userId}${forceParam}${cacheParam}`,
       {
         cache: options?.force ? "no-store" : "default",
       }
