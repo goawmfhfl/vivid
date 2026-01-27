@@ -1,10 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
-import type {
-  MonthlyVividListItem,
-} from "@/types/monthly-vivid";
+import type { MonthlyVividListItem } from "@/types/monthly-vivid";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
+
+type FetchOptions = { force?: boolean };
+
+export const fetchMonthlyVividList = async (
+  options?: FetchOptions
+): Promise<MonthlyVividListItem[]> => {
+  const userId = await getCurrentUserId();
+  const response = await fetch(`/api/monthly-vivid/list?userId=${userId}`, {
+    cache: options?.force ? "no-store" : "default",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly vivid list");
+  }
+
+  const result = await response.json();
+  return result.data as MonthlyVividListItem[];
+};
 
 /**
  * 월간 vivid 조회 (month 기반)
@@ -15,18 +30,8 @@ export function useMonthlyVivid(month: string | null) {
     queryFn: async () => {
       if (!month) return null;
 
-      const userId = await getCurrentUserId();
-      const response = await fetch(
-        `/api/monthly-vivid/list?userId=${userId}`
-      );
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch monthly vivid list: ${response.statusText}`
-        );
-      }
-
-      const result = await response.json();
-      const monthlyVivid = result.data.find(
+      const list = await fetchMonthlyVividList();
+      const monthlyVivid = list.find(
         (item: MonthlyVividListItem) => item.month === month
       );
 
@@ -35,6 +40,7 @@ export function useMonthlyVivid(month: string | null) {
       }
 
       // 상세 조회
+      const userId = await getCurrentUserId();
       const detailResponse = await fetch(
         `/api/monthly-vivid/${monthlyVivid.id}?userId=${userId}`
       );
@@ -46,6 +52,7 @@ export function useMonthlyVivid(month: string | null) {
       return detailResult.data as MonthlyVivid;
     },
     enabled: !!month,
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
   });
 }
 
@@ -70,6 +77,7 @@ export function useMonthlyVividById(id: string | null) {
       return result.data as MonthlyVivid;
     },
     enabled: !!id,
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
   });
 }
 
@@ -79,18 +87,8 @@ export function useMonthlyVividById(id: string | null) {
 export function useMonthlyVividList(enabled: boolean = true) {
   return useQuery<MonthlyVividListItem[]>({
     queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
-    queryFn: async () => {
-      const userId = await getCurrentUserId();
-      const response = await fetch(
-        `/api/monthly-vivid/list?userId=${userId}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch monthly vivid list");
-      }
-
-      const result = await response.json();
-      return result.data as MonthlyVividListItem[];
-    },
+    queryFn: () => fetchMonthlyVividList(),
     enabled, // enabled 파라미터로 조건부 조회 제어
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
   });
 }

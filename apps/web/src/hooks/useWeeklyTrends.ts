@@ -9,12 +9,19 @@ export interface WeeklyTrendsResponse {
   current_self: string[]; // 요즘의 나라는 사람 (최근 4주)
 }
 
-const fetchWeeklyTrends = async (): Promise<WeeklyTrendsResponse> => {
+type FetchOptions = { force?: boolean };
+
+export const fetchWeeklyTrends = async (
+  options?: FetchOptions
+): Promise<WeeklyTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
 
     const response = await fetch(
-      `/api/weekly-vivid/recent-trends?userId=${userId}`
+      `/api/weekly-vivid/recent-trends?userId=${userId}`,
+      {
+        cache: options?.force ? "no-store" : "default",
+      }
     );
 
     if (!response.ok) {
@@ -33,8 +40,8 @@ const fetchWeeklyTrends = async (): Promise<WeeklyTrendsResponse> => {
 export const useWeeklyTrends = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-trends"],
-    queryFn: fetchWeeklyTrends,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
-    gcTime: 1000 * 60 * 10, // 10분간 가비지 컬렉션 방지
+    queryFn: () => fetchWeeklyTrends(),
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    gcTime: 1000 * 60 * 60 * 24, // 1일 가비지 컬렉션 방지
   });
 };

@@ -5,14 +5,17 @@
  * 각 리소스 타입별로 적절한 revalidate 시간을 정의합니다.
  */
 
-// 피드백 데이터는 한번 생성되면 오랫동안 변경되지 않으므로 30일로 설정
-export const FEEDBACK_REVALIDATE = 2592000; // 30일 (초 단위)
+// 피드백 데이터는 생성 후 무효화가 보장되므로 1일 캐시
+export const FEEDBACK_REVALIDATE = 86400; // 1일 (초 단위)
 
 // Records는 자주 업데이트되므로 1시간으로 설정
 export const RECORDS_REVALIDATE = 3600; // 1시간 (초 단위)
 
-// 최근 동향 데이터는 리포트 페이지에서 사용되며, 10분마다 갱신
-export const RECENT_TRENDS_REVALIDATE = 600; // 10분 (초 단위)
+// 최근 동향 데이터는 생성 후 무효화가 보장되므로 1일 캐시
+export const RECENT_TRENDS_REVALIDATE = 86400; // 1일 (초 단위)
+
+// 후보 데이터는 생성 후 무효화가 보장되므로 1일 캐시
+export const CANDIDATES_REVALIDATE = 86400; // 1일 (초 단위)
 
 /**
  * Cache-Control 헤더 생성 헬퍼 함수

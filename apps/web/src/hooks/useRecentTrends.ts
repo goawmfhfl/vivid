@@ -9,12 +9,19 @@ export interface RecentTrendsResponse {
   personality_traits: string[]; // 나라는 사람의 성향 (최근 5개)
 }
 
-const fetchRecentTrends = async (): Promise<RecentTrendsResponse> => {
+type FetchOptions = { force?: boolean };
+
+export const fetchRecentTrends = async (
+  options?: FetchOptions
+): Promise<RecentTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
 
     const response = await fetch(
-      `/api/daily-vivid/recent-trends?userId=${userId}`
+      `/api/daily-vivid/recent-trends?userId=${userId}`,
+      {
+        cache: options?.force ? "no-store" : "default",
+      }
     );
 
     if (!response.ok) {
@@ -33,8 +40,8 @@ const fetchRecentTrends = async (): Promise<RecentTrendsResponse> => {
 export const useRecentTrends = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-    queryFn: fetchRecentTrends,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
-    gcTime: 1000 * 60 * 10, // 10분간 가비지 컬렉션 방지 (이전 cacheTime)
+    queryFn: () => fetchRecentTrends(),
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    gcTime: 1000 * 60 * 60 * 24, // 1일 가비지 컬렉션 방지
   });
 };

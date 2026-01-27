@@ -6,10 +6,16 @@ import type { MonthlyCandidate } from "@/types/monthly-candidate";
 /**
  * Monthly Candidates 조회 함수
  */
-const fetchMonthlyCandidates = async (): Promise<MonthlyCandidate[]> => {
+type FetchOptions = { force?: boolean };
+
+export const fetchMonthlyCandidates = async (
+  options?: FetchOptions
+): Promise<MonthlyCandidate[]> => {
   const userId = await getCurrentUserId();
 
-  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}`);
+  const res = await fetch(`/api/monthly-vivid/candidates?userId=${userId}`, {
+    cache: options?.force ? "no-store" : "default",
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to fetch monthly candidates");
@@ -22,10 +28,10 @@ const fetchMonthlyCandidates = async (): Promise<MonthlyCandidate[]> => {
  * Monthly Candidates 조회 훅
  */
 export const useMonthlyCandidates = () => {
-  return useQuery({
+  return useQuery<MonthlyCandidate[]>({
     queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
-    queryFn: fetchMonthlyCandidates,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    queryFn: () => fetchMonthlyCandidates(),
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
     placeholderData: keepPreviousData, // 이전 데이터 유지
   });
 };

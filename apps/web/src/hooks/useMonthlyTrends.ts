@@ -3,12 +3,19 @@ import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 
-const fetchMonthlyTrends = async (): Promise<MonthlyTrendsResponse> => {
+type FetchOptions = { force?: boolean };
+
+export const fetchMonthlyTrends = async (
+  options?: FetchOptions
+): Promise<MonthlyTrendsResponse> => {
   try {
     const userId = await getCurrentUserId();
 
     const response = await fetch(
-      `/api/monthly-vivid/recent-trends?userId=${userId}`
+      `/api/monthly-vivid/recent-trends?userId=${userId}`,
+      {
+        cache: options?.force ? "no-store" : "default",
+      }
     );
 
     if (!response.ok) {
@@ -27,8 +34,8 @@ const fetchMonthlyTrends = async (): Promise<MonthlyTrendsResponse> => {
 export const useMonthlyTrends = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
-    queryFn: fetchMonthlyTrends,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
-    gcTime: 1000 * 60 * 10, // 10분간 가비지 컬렉션 방지
+    queryFn: () => fetchMonthlyTrends(),
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    gcTime: 1000 * 60 * 60 * 24, // 1일 가비지 컬렉션 방지
   });
 };

@@ -32,7 +32,7 @@ export const useWeeklyCandidates = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
     queryFn: fetchWeeklyCandidates,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
     placeholderData: keepPreviousData, // 이전 데이터 유지
     refetchOnWindowFocus: true, // 윈도우 포커스 시 refetch
     refetchOnMount: true, // 컴포넌트 마운트 시 refetch

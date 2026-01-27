@@ -11,10 +11,14 @@ import type { TrackingInfo } from "@/app/api/types";
 /**
  * 주간 vivid 리스트 조회
  */
-const fetchWeeklyVividList = async (): Promise<WeeklyVividListItem[]> => {
+type FetchOptions = { force?: boolean };
+
+export const fetchWeeklyVividList = async (
+  options?: FetchOptions
+): Promise<WeeklyVividListItem[]> => {
   const userId = await getCurrentUserId();
   const res = await fetch(`/api/weekly-vivid/list?userId=${userId}`, {
-    cache: "no-store",
+    cache: options?.force ? "no-store" : "default",
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -28,10 +32,13 @@ const fetchWeeklyVividList = async (): Promise<WeeklyVividListItem[]> => {
  * 주간 vivid 상세 조회 (id 기반)
  */
 const fetchWeeklyVividDetail = async (
-  id: string
+  id: string,
+  options?: FetchOptions
 ): Promise<WeeklyVivid | null> => {
   const userId = await getCurrentUserId();
-  const res = await fetch(`/api/weekly-vivid/${id}?userId=${userId}`);
+  const res = await fetch(`/api/weekly-vivid/${id}?userId=${userId}`, {
+    cache: options?.force ? "no-store" : "default",
+  });
   if (!res.ok) {
     if (res.status === 404) {
       return null;
@@ -93,8 +100,8 @@ const createWeeklyVivid = async (
 export function useWeeklyVividList() {
   return useQuery({
     queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
-    queryFn: fetchWeeklyVividList,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    queryFn: () => fetchWeeklyVividList(),
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
   });
 }
 
@@ -106,7 +113,7 @@ export function useWeeklyVividDetail(id: string | null) {
     queryKey: [QUERY_KEYS.WEEKLY_VIVID, "detail", id],
     queryFn: () => (id ? fetchWeeklyVividDetail(id) : null),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
   });
 }
 

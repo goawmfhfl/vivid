@@ -2,13 +2,15 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
-import { useMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
+import { useMonthlyCandidates, fetchMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import { QUERY_KEYS } from "@/constants";
 import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivid-candidate-filter";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
+import { fetchMonthlyVividList } from "@/hooks/useMonthlyVivid";
+import { fetchMonthlyTrends } from "@/hooks/useMonthlyTrends";
 
 // 월간 후보 아이템 컴포넌트
 function MonthlyCandidateItem({
@@ -423,6 +425,21 @@ export function MonthlyCandidatesSection({
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
       });
+
+      await Promise.allSettled([
+        queryClient.fetchQuery({
+          queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
+          queryFn: () => fetchMonthlyCandidates({ force: true }),
+        }),
+        queryClient.fetchQuery({
+          queryKey: [QUERY_KEYS.MONTHLY_VIVID, "list"],
+          queryFn: () => fetchMonthlyVividList({ force: true }),
+        }),
+        queryClient.fetchQuery({
+          queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
+          queryFn: () => fetchMonthlyTrends({ force: true }),
+        }),
+      ]);
     } catch (error) {
       console.error("월간 vivid 생성 실패:", error);
 

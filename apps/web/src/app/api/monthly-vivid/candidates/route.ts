@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { API_ENDPOINTS } from "@/constants";
 import { getKSTDateString } from "@/lib/date-utils";
+import { CANDIDATES_REVALIDATE, getCacheControlHeader } from "@/constants/cache";
 
 /**
  * GET 핸들러: 월간 비비드 후보 조회
@@ -141,7 +142,12 @@ export async function GET(request: NextRequest) {
         message: "Monthly candidates retrieved successfully",
         data: candidates,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": getCacheControlHeader(CANDIDATES_REVALIDATE),
+        },
+      }
     );
   } catch (error) {
     console.error("API error:", error);

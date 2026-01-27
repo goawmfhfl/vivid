@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
-import { useCreateWeeklyVivid } from "@/hooks/useWeeklyVivid";
+import { useCreateWeeklyVivid, fetchWeeklyVividList } from "@/hooks/useWeeklyVivid";
 import { QUERY_KEYS } from "@/constants";
 import { filterWeeklyCandidatesForCreation } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { getKSTDateString } from "@/lib/date-utils";
@@ -13,6 +13,7 @@ import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getMondayOfWeek } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
+import { fetchWeeklyTrends } from "@/hooks/useWeeklyTrends";
 
 // 주간 후보 아이템 컴포넌트
 function WeeklyCandidateItem({
@@ -454,6 +455,28 @@ export function WeeklyCandidatesSection() {
           queryClient.invalidateQueries({
             queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
           });
+
+          // 주간 후보/흐름도 무효화
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+          });
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-trends"],
+          });
+
+          await Promise.allSettled([
+            queryClient.fetchQuery({
+              queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],
+              queryFn: () => fetchWeeklyVividList({ force: true }),
+            }),
+            queryClient.fetchQuery({
+              queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-trends"],
+              queryFn: () => fetchWeeklyTrends({ force: true }),
+            }),
+            queryClient.refetchQueries({
+              queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES],
+            }),
+          ]);
 
           // 성공 시 전역 모달로 알림 및 라우팅
           const weekRange = `${feedbackData.week_range.start} ~ ${feedbackData.week_range.end}`;
