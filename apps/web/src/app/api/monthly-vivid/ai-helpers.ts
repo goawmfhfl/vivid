@@ -1,12 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generative-ai";
 import { getFromCache, setCache } from "../utils/cache";
 import type {
   ReportSchema,
-  ExtendedUsage,
   WithTracking,
   ApiError,
 } from "../types";
-import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
+import { logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 /**
  * Gemini 클라이언트를 지연 초기화 (빌드 시점 오류 방지)
@@ -218,10 +217,12 @@ export async function generateSection<T>(
       console.log(`[${sectionName}] Final responseSchema:`, JSON.stringify(generationConfig.responseSchema, null, 2));
     }
 
-    const geminiResult = await model.generateContent({
+    const request = {
       contents,
-      generationConfig: generationConfig as any, // 타입 호환성을 위해 any 사용
-    });
+      generationConfig,
+    } as unknown as GenerateContentRequest;
+
+    const geminiResult = await model.generateContent(request);
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;

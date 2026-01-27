@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf .next .next/cache node_modules/.cache && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "diagnose:decryption": "tsx scripts/diagnose-decryption-issues.ts"

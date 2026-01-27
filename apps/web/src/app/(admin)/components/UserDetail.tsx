@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
@@ -113,7 +113,6 @@ export function UserDetail({ userId }: UserDetailProps) {
       generation_duration_seconds?: number | null;
     }>;
   } | null>(null);
-  const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
   const [isRefreshingFeedbacks, setIsRefreshingFeedbacks] = useState(false);
   const [dailyPage, setDailyPage] = useState(1);
   const [dailyLimit] = useState(10);
@@ -167,10 +166,8 @@ export function UserDetail({ userId }: UserDetailProps) {
     fetchData();
   }, [userId]);
 
-  const fetchFeedbacks = async (showLoading = true) => {
-    if (showLoading) {
-      setIsLoadingFeedbacks(true);
-    } else {
+  const fetchFeedbacks = useCallback(async (showLoading = true) => {
+    if (!showLoading) {
       setIsRefreshingFeedbacks(true);
     }
     try {
@@ -217,17 +214,16 @@ export function UserDetail({ userId }: UserDetailProps) {
         monthly: [],
       });
     } finally {
-      setIsLoadingFeedbacks(false);
       setIsRefreshingFeedbacks(false);
     }
-  };
+  }, [dailyLimit, dailyPage, userId]);
 
   useEffect(() => {
     if (user) {
       // 초기 로딩 상태 없이 데이터만 가져오기
       fetchFeedbacks(false);
     }
-  }, [userId, user, dailyPage, dailyLimit]);
+  }, [fetchFeedbacks, user]);
 
   const handleSave = async () => {
     try {

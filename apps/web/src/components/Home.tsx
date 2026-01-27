@@ -153,7 +153,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const hasDateFeedback = !!dateFeedback && dateFeedback.is_ai_generated;
 
   // 전역 모달 및 피드백 생성 상태 관리
-  const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const openErrorModal = useModalStore((state) => state.openErrorModal);
   const dailyVividProgress = useModalStore(
     (state) => state.dailyVividProgress

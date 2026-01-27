@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
@@ -13,7 +13,6 @@ import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
 import { getMondayOfWeek } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
-import { useCountUp } from "@/hooks/useCountUp";
 
 // 주간 후보 아이템 컴포넌트
 function WeeklyCandidateItem({
@@ -368,15 +367,8 @@ export function WeeklyCandidatesSection() {
         console.log("Development mode: Mocking API call");
         await new Promise((resolve) => setTimeout(resolve, 15000));
         
-        // Mock 성공 데이터
+        // Mock 성공 처리 로직 재사용
         const weekEnd = getWeekEnd(weekStart);
-        const mockFeedbackData = {
-          id: "999",
-          week_range: { start: weekStart, end: weekEnd },
-          is_ai_generated: true,
-        };
-
-        // 성공 처리 로직 재사용
         setTimerStartTime(null);
         setTimerProgress(100);
         setWeeklyVividProgress(weekStart, {

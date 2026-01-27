@@ -17,7 +17,6 @@ interface EmotionReasonInputProps {
   value: string;
   onChange: (value: string) => void;
   onHelpOpen: () => void;
-  maxLengthSoft?: number;
   minEncourageLength?: number;
   accentColor?: string;
 }
@@ -27,7 +26,6 @@ export function EmotionReasonInput({
   value,
   onChange,
   onHelpOpen,
-  maxLengthSoft = 120,
   minEncourageLength = 10,
   accentColor = COLORS.brand.primary,
 }: EmotionReasonInputProps) {

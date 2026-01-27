@@ -15,14 +15,12 @@ interface EmotionSaveButtonProps {
   disabled?: boolean;
   isSaving?: boolean;
   onClick: () => void;
-  accentColor?: string;
 }
 
 export function EmotionSaveButton({
   disabled,
   isSaving,
   onClick,
-  accentColor,
 }: EmotionSaveButtonProps) {
   // 고정된 버튼 색상 (감정 컬러와 무관)
   const activeColor = COLORS.brand.primary;

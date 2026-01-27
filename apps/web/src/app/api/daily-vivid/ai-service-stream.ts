@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generative-ai";
 import {
   DailyVividReportSchema,
   SYSTEM_PROMPT_REPORT,
@@ -18,11 +18,10 @@ import {
 import type {
   Schema,
   ReportSchema,
-  ExtendedUsage,
   WithTracking,
   ApiError,
 } from "../types";
-import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
+import { logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 function getGeminiClient(): GoogleGenerativeAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -232,10 +231,12 @@ async function generateSection<T>(
       generationConfig.maxOutputTokens = maxOutputTokens;
     }
 
-    const geminiResult = await model.generateContent({
+    const request = {
       contents,
-      generationConfig: generationConfig as any, // 타입 호환성을 위해 any 사용
-    });
+      generationConfig,
+    } as unknown as GenerateContentRequest;
+
+    const geminiResult = await model.generateContent(request);
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;
@@ -333,9 +334,17 @@ async function generateSection<T>(
 
     // 결과 데이터 정리 (Trend 데이터의 경우 빈 문자열 확인 및 기본값 처리)
     if (sectionName === "integrated_report" && result && typeof result === "object") {
-       // @ts-ignore
-       let trend = result.trend;
-       if (trend) {
+      type TrendPayload = {
+        trend?: {
+          aspired_self?: string;
+          interest?: string;
+          immersion_moment?: string;
+          personality_trait?: string;
+        };
+      };
+      const resultWithTrend = result as TrendPayload;
+      let trend = resultWithTrend.trend;
+      if (trend) {
         const hasEmptyString =
           !trend.aspired_self?.trim() ||
           !trend.interest?.trim() ||
@@ -363,8 +372,7 @@ async function generateSection<T>(
           console.log(
             "[generateIntegratedReport] 빈 문자열을 기본값으로 대체했습니다."
           );
-          // @ts-ignore
-          result.trend = trend;
+          resultWithTrend.trend = trend;
         }
       }
     }

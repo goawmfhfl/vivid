@@ -1208,7 +1208,6 @@ export function RecordForm({
             }
             isSaving={createRecordMutation.isPending}
             onClick={handleEmotionSubmit}
-            accentColor={emotionIntensity ? COLORS.emotion.intensity[emotionIntensity] : COLORS.brand.primary}
           />
         </div>
       ) : (

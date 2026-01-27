@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
 import { useRouter } from "next/navigation";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
@@ -104,7 +104,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
     endDate: "",
   });
 
-  const fetchDetails = async (showLoading = true, refreshTableOnly = false) => {
+  const fetchDetails = useCallback(async (showLoading = true, refreshTableOnly = false) => {
     if (showLoading && !refreshTableOnly) {
       setIsLoading(true);
     } else if (refreshTableOnly) {
@@ -150,11 +150,11 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [filters, pagination.page, pagination.limit, userId]);
 
   useEffect(() => {
     fetchDetails(true);
-  }, [userId, pagination.page, pagination.limit, filters]);
+  }, [fetchDetails]);
 
   if (isLoading && details.length === 0) {
     return (

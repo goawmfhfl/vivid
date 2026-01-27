@@ -1,16 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generative-ai";
 import {
   getWeeklyVividSchema,
   SYSTEM_PROMPT_VIVID,
-  SYSTEM_PROMPT_WEEKLY_TREND,
-  WeeklyTrendDataSchema,
 } from "./schema";
-import type { DailyVividForWeekly, RecordsForWeekly } from "./types";
+import type { RecordsForWeekly } from "./types";
 import {
-  buildWeeklyVividPrompt,
   buildWeeklyVividPromptFromRecords,
-  buildWeeklyTitlePrompt,
-  buildWeeklyTrendPrompt,
 } from "./prompts";
 import type { WeeklyVivid, WeeklyReport, WeeklyTrendData } from "@/types/weekly-vivid";
 import {
@@ -20,11 +15,10 @@ import {
 } from "../utils/cache";
 import type {
   ReportSchema,
-  ExtendedUsage,
   WithTracking,
   ApiError,
 } from "../types";
-import { extractUsageInfo, logAIRequestAsync } from "@/lib/ai-usage-logger";
+import { logAIRequestAsync } from "@/lib/ai-usage-logger";
 
 function getGeminiClient(): GoogleGenerativeAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -229,10 +223,12 @@ async function generateSection<T>(
       },
     ];
 
-    const geminiResult = await model.generateContent({
+    const request = {
       contents,
-      generationConfig: generationConfig as any, // 타입 호환성을 위해 any 사용
-    });
+      generationConfig,
+    } as unknown as GenerateContentRequest;
+
+    const geminiResult = await model.generateContent(request);
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;
@@ -528,94 +524,6 @@ async function generateWeeklyVividDataFromRecords(
 
 
 
-/**
- * 주간 비비드 제목 생성
- */
-async function generateWeeklyTitle(
-  report: WeeklyReport,
-  range: { start: string; end: string; timezone: string },
-  isPro: boolean,
-  userId?: string,
-  userName?: string
-): Promise<string> {
-  const prompt = buildWeeklyTitlePrompt(report, range, userName);
-  const cacheKey = generateCacheKey("weekly_title", prompt);
-
-  try {
-    const response = await generateSection<{ title: string }>(
-      "당신은 주간 비비드를 분석하여 간결하고 명확한 제목을 생성하는 전문가입니다.",
-      prompt,
-      {
-        name: "WeeklyTitleResponse",
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            title: {
-              type: "string",
-              minLength: 5,
-              maxLength: 50,
-              description: '"~ 했던 주" 형식의 주간 비비드 제목',
-            },
-          },
-          required: ["title"],
-        },
-        strict: true,
-      },
-      cacheKey,
-      isPro,
-      "weekly_title",
-      userId
-    );
-
-    if (!response || !response.title) {
-      // 기본 제목 반환
-      return `${range.start} ~ ${range.end} 주간`;
-    }
-
-    return response.title;
-  } catch (error) {
-    console.error("[generateWeeklyTitle] 제목 생성 실패:", error);
-    // 기본 제목 반환
-    return `${range.start} ~ ${range.end} 주간`;
-  }
-}
-
-/**
- * 주간 흐름 데이터(trend) 생성
- */
-async function generateWeeklyTrend(
-  report: WeeklyReport,
-  range: { start: string; end: string; timezone: string },
-  isPro: boolean,
-  userId?: string,
-  userName?: string
-): Promise<WeeklyTrendData | null> {
-  const prompt = buildWeeklyTrendPrompt(report, range, userName);
-  const cacheKey = generateCacheKey("weekly_trend", prompt);
-
-  try {
-    const response = await generateSection<WeeklyTrendData>(
-      SYSTEM_PROMPT_WEEKLY_TREND,
-      prompt,
-      WeeklyTrendDataSchema,
-      cacheKey,
-      isPro,
-      "weekly_trend",
-      userId
-    );
-
-    if (!response || !response.direction || !response.core_value || !response.driving_force || !response.current_self) {
-      console.error("[generateWeeklyTrend] trend 데이터 생성 실패: 필수 필드 누락");
-      return null;
-    }
-
-    return response;
-  } catch (error) {
-    console.error("[generateWeeklyTrend] trend 생성 실패:", error);
-    return null;
-  }
-}
 
 /**
  * Records 배열을 기반으로 주간 비비드 생성 (report와 title 생성)
