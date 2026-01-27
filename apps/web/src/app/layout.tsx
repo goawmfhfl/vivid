@@ -6,12 +6,19 @@ import { GlobalModals } from "../components/ui/modals/GlobalModals";
 import { Footer } from "../components/common/Footer";
 
 export const metadata: Metadata = {
-  title: "vivid",
+  title: "VIVID",
   description: "오늘의 기록을 남기고 분석하는 일기 앱",
   icons: {
-    icon: "/vivid-logo.png",
-    shortcut: "/vivid-logo.png",
-    apple: "/vivid-logo.png",
+    icon: [
+      { url: "/favicon/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon/favicon.ico",
+    apple: "/favicon/apple-touch-icon.png",
+  },
+  manifest: "/favicon/site.webmanifest",
+  appleWebApp: {
+    title: "VIVID",
   },
 };
 
