@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
@@ -76,6 +76,9 @@ export const useGetDailyVivid = (date: string) => {
     queryFn: () => fetchDailyVividByDate(date),
     enabled: !!date,
     staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -85,5 +88,8 @@ export const useGetDailyVividById = (id: string | null) => {
     queryFn: () => (id ? fetchDailyVividById(id) : null),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };

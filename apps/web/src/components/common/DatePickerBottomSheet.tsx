@@ -23,7 +23,7 @@ export function DatePickerBottomSheet({
   onClose,
   selectedDate,
   onDateSelect,
-  recordDates = [],
+  recordDates: _recordDates = [],
   aiFeedbackDates = [],
 }: DatePickerBottomSheetProps) {
   const router = useRouter();
@@ -248,8 +248,7 @@ export function DatePickerBottomSheet({
                   const isToday = dateIso === todayIso;
                   const isCurrentMonth =
                     date.getMonth() === currentMonth.getMonth();
-                  const hasRecord = recordDates.includes(dateIso);
-                  const hasAiFeedback = aiFeedbackDates.includes(dateIso);
+                  const hasDailyVivid = aiFeedbackDates.includes(dateIso);
 
                   return (
                     <button
@@ -296,30 +295,18 @@ export function DatePickerBottomSheet({
                       }}
                     >
                       {date.getDate()}
-                      {/* 기록/AI 피드백 dot 표시 */}
-                      {(hasRecord || hasAiFeedback) && (
+                      {/* daily-vivid dot 표시 */}
+                      {hasDailyVivid && (
                         <div
                           className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5"
                           style={{ pointerEvents: "none" }}
                         >
-                          {hasRecord && (
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{
-                                backgroundColor: isActive
-                                  ? COLORS.accent[300] // 액티브 상태에서는 더 연한 파란색
-                                  : COLORS.accent[500], // 더스티 블루
-                              }}
-                            />
-                          )}
-                          {hasAiFeedback && (
-                            <div
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{
-                                backgroundColor: "#E5B96B", // 머스터드 옐로우 (active 상태에서도 잘 보임)
-                              }}
-                            />
-                          )}
+                          <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: COLORS.emotion.intensity[7],
+                            }}
+                          />
                         </div>
                       )}
                     </button>

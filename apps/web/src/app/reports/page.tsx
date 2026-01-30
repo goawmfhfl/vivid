@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RecentTrendsSection } from "@/components/reports/RecentTrendsSection";
 import { useRecentTrends } from "@/hooks/useRecentTrends";
@@ -14,9 +16,12 @@ import {
 } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Calendar, TrendingUp, Lock } from "lucide-react";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
+import { QUERY_KEYS } from "@/constants";
 
 function ReportsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isPro } = useSubscription();
 
   // 최근 동향 데이터 조회
@@ -24,16 +29,25 @@ function ReportsPage() {
     data: recentTrendsData,
     isLoading: isLoadingTrends,
     error: trendsError,
+    refetch: refetchTrends,
   } = useRecentTrends();
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      refetchTrends(),
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] }),
+    ]);
+  }, [queryClient, refetchTrends]);
+
   return (
-    <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
-    >
-      <AppHeader
-        title="리포트"
-        subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div
+        className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      >
+        <AppHeader
+          title="리포트"
+          subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
+        />
 
       <div className="grid grid-cols-2 gap-4 mt-8">
         {/* 주간 리포트 버튼 */}
@@ -241,7 +255,8 @@ function ReportsPage() {
           error={trendsError || null}
         />
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

@@ -22,7 +22,7 @@ const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 export function WeeklyDateView({
   selectedDate,
   onDateSelect,
-  recordDates = [],
+  recordDates: _recordDates = [],
   aiFeedbackDates = [],
   onMonthChange,
   isLoading = false,
@@ -269,8 +269,7 @@ export function WeeklyDateView({
             {weekDates.map((date, index) => {
               const dateIso = getKSTDateString(date);
               const isActive = dateIso === activeDate;
-              const hasRecord = recordDates.includes(dateIso);
-              const hasAiFeedback = aiFeedbackDates.includes(dateIso);
+              const hasDailyVivid = aiFeedbackDates.includes(dateIso);
               const dayOfWeek = WEEKDAYS[index];
               const dayNumber = date.getDate();
 
@@ -332,30 +331,18 @@ export function WeeklyDateView({
                     }}
                   >
                     {dayNumber}
-                    {/* 기록/AI 피드백 dot 표시 */}
-                    {(hasRecord || hasAiFeedback) && (
+                    {/* daily-vivid dot 표시 */}
+                    {hasDailyVivid && (
                       <div
                         className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
                         style={{ pointerEvents: "none" }}
                       >
-                        {hasRecord && (
-                          <div
-                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: isActive
-                                ? COLORS.accent[300] // 액티브 상태에서는 더 연한 파란색
-                                : COLORS.accent[500], // 더스티 블루
-                            }}
-                          />
-                        )}
-                        {hasAiFeedback && (
-                          <div
-                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: "#E5B96B", // 머스터드 옐로우 (active 상태에서도 잘 보임)
-                            }}
-                          />
-                        )}
+                        <div
+                          className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                          style={{
+                            backgroundColor: COLORS.emotion.intensity[7],
+                          }}
+                        />
                       </div>
                     )}
                   </button>

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
@@ -9,12 +12,13 @@ import type { NotionBlockContent, NotionRichText } from "@/lib/types/notion-api"
 
 type NotionRendererProps = {
   blocks: NotionBlock[];
+  onImageError?: (blockId: string) => void;
 };
 
 /**
  * 노션 블록을 렌더링하는 컴포넌트
  */
-export function NotionRenderer({ blocks }: NotionRendererProps) {
+export function NotionRenderer({ blocks, onImageError }: NotionRendererProps) {
   if (!blocks || blocks.length === 0) {
     return (
       <p
@@ -28,17 +32,86 @@ export function NotionRenderer({ blocks }: NotionRendererProps) {
 
   return (
     <div className="space-y-4">
-      {blocks.map((block) => (
-        <NotionBlock key={block.id} block={block} />
-      ))}
+      <NotionBlocks blocks={blocks} onImageError={onImageError} />
     </div>
   );
+}
+
+function NotionBlocks({
+  blocks,
+  onImageError,
+}: {
+  blocks: NotionBlock[];
+  onImageError?: (blockId: string) => void;
+}) {
+  if (!blocks || blocks.length === 0) return null;
+
+  const elements: React.ReactNode[] = [];
+  let index = 0;
+
+  while (index < blocks.length) {
+    const block = blocks[index];
+    const isListItem =
+      block.type === "bulleted_list_item" || block.type === "numbered_list_item";
+
+    if (isListItem) {
+      const listType = block.type;
+      const listItems: NotionBlock[] = [];
+
+      while (index < blocks.length && blocks[index].type === listType) {
+        listItems.push(blocks[index]);
+        index += 1;
+      }
+
+      const ListTag = listType === "bulleted_list_item" ? "ul" : "ol";
+      const listClassName =
+        listType === "bulleted_list_item"
+          ? "my-2 space-y-1 pl-5 list-disc list-outside"
+          : "my-2 space-y-1 pl-5 list-decimal list-outside";
+      elements.push(
+        <ListTag
+          key={`${listType}-${listItems[0]?.id}`}
+          className={listClassName}
+          style={{ listStylePosition: "outside" }}
+        >
+          {listItems.map((item) => (
+            <NotionBlock
+              key={item.id}
+              block={item}
+              onImageError={onImageError}
+              asListItem
+            />
+          ))}
+        </ListTag>
+      );
+      continue;
+    }
+
+    elements.push(
+      <NotionBlock
+        key={block.id}
+        block={block}
+        onImageError={onImageError}
+      />
+    );
+    index += 1;
+  }
+
+  return <>{elements}</>;
 }
 
 /**
  * 개별 노션 블록 렌더링
  */
-function NotionBlock({ block }: { block: NotionBlock }) {
+function NotionBlock({
+  block,
+  onImageError,
+  asListItem = false,
+}: {
+  block: NotionBlock;
+  onImageError?: (blockId: string) => void;
+  asListItem?: boolean;
+}) {
   const blockType = block.type;
   const blockContent = block[blockType] as NotionBlockContent | undefined;
 
@@ -95,6 +168,9 @@ function NotionBlock({ block }: { block: NotionBlock }) {
     
     return richText.map((text: NotionRichText, index: number) => {
       const textContent = text.plain_text || "";
+      const displayText = textContent.replace(/ {2,}/g, (match) => {
+        return ` ${"\u00A0".repeat(match.length - 1)}`;
+      });
       const annotations = text.annotations || {};
       const color = annotations.color;
       
@@ -113,8 +189,8 @@ function NotionBlock({ block }: { block: NotionBlock }) {
         : colorStyle;
       
       let element = (
-        <span key={index} style={backgroundStyle}>
-          {textContent}
+        <span key={index} style={{ ...backgroundStyle, whiteSpace: "pre-wrap" }}>
+          {displayText}
         </span>
       );
       
@@ -141,7 +217,7 @@ function NotionBlock({ block }: { block: NotionBlock }) {
               ...colorStyle,
             }}
           >
-            {textContent}
+            {displayText}
           </code>
         );
       }
@@ -162,6 +238,16 @@ function NotionBlock({ block }: { block: NotionBlock }) {
       
       return element;
     });
+  };
+
+  const getImageUrlFromBlock = (targetBlock: NotionBlock) => {
+    const imageData = (targetBlock as { image?: Record<string, unknown> }).image;
+    const imageType = imageData?.type as "external" | "file" | undefined;
+    const imageUrl =
+      imageType === "external"
+        ? (imageData?.external as { url?: string } | undefined)?.url
+        : (imageData?.file as { url?: string } | undefined)?.url;
+    return imageUrl || null;
   };
 
   switch (blockType) {
@@ -228,11 +314,26 @@ function NotionBlock({ block }: { block: NotionBlock }) {
     case "bulleted_list_item":
       const bulletText = getRichText(blockContent?.rich_text);
       if (!bulletText) return null;
+      if (asListItem) {
+        return (
+          <li
+            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+            style={{ color: COLORS.text.primary }}
+          >
+            {renderRichText(blockContent?.rich_text || [])}
+            {block.children && block.children.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <NotionBlocks blocks={block.children} onImageError={onImageError} />
+              </div>
+            )}
+          </li>
+        );
+      }
       return (
         <div className="flex items-start gap-1.5 my-1.5">
           <span
             className="flex-shrink-0 mt-0.5"
-            style={{ 
+            style={{
               color: COLORS.brand.primary,
               fontSize: "0.75rem",
               lineHeight: "1.5",
@@ -241,7 +342,11 @@ function NotionBlock({ block }: { block: NotionBlock }) {
             •
           </span>
           <div
-            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.lineHeight,
+              "flex-1"
+            )}
             style={{ color: COLORS.text.primary }}
           >
             {renderRichText(blockContent?.rich_text || [])}
@@ -259,16 +364,38 @@ function NotionBlock({ block }: { block: NotionBlock }) {
     case "numbered_list_item":
       const numberedText = getRichText(blockContent?.rich_text);
       if (!numberedText) return null;
+      if (asListItem) {
+        return (
+          <li
+            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+            style={{ color: COLORS.text.primary }}
+          >
+            {renderRichText(blockContent?.rich_text || [])}
+            {block.children && block.children.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <NotionBlocks blocks={block.children} onImageError={onImageError} />
+              </div>
+            )}
+          </li>
+        );
+      }
       return (
         <div className="flex items-start gap-1.5 my-1.5">
           <span
-            className={cn(TYPOGRAPHY.body.fontSize, "mt-0.5 flex-shrink-0 font-medium min-w-[1.5rem]")}
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              "mt-0.5 flex-shrink-0 font-medium min-w-[1.5rem]"
+            )}
             style={{ color: COLORS.brand.primary }}
           >
             {blockContent?.number || "•"}
           </span>
           <div
-            className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.lineHeight,
+              "flex-1"
+            )}
             style={{ color: COLORS.text.primary }}
           >
             {renderRichText(blockContent?.rich_text || [])}
@@ -315,8 +442,44 @@ function NotionBlock({ block }: { block: NotionBlock }) {
           block={block}
           blockContent={blockContent}
           renderRichText={renderRichText}
+          onImageError={onImageError}
         />
       );
+    case "image": {
+      const imageData = (block as { image?: Record<string, unknown> }).image;
+      const imageType = imageData?.type as "external" | "file" | undefined;
+      const imageUrl =
+        imageType === "external"
+          ? (imageData?.external as { url?: string } | undefined)?.url
+          : (imageData?.file as { url?: string } | undefined)?.url;
+      const caption = imageData?.caption as NotionRichText[] | undefined;
+
+      if (!imageUrl) return null;
+
+      return (
+        <figure className="my-4">
+          <Image
+            src={imageUrl}
+            alt={getRichText(caption)}
+            width={1080}
+            height={1080}
+            unoptimized
+            sizes="100vw"
+            className="w-full rounded-xl"
+            style={{ border: `1px solid ${COLORS.border.light}`, height: "auto" }}
+            onError={() => onImageError?.(block.id)}
+          />
+          {caption && caption.length > 0 && (
+            <figcaption
+              className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-2")}
+              style={{ color: COLORS.text.secondary }}
+            >
+              {renderRichText(caption)}
+            </figcaption>
+          )}
+        </figure>
+      );
+    }
 
     case "quote":
       const quoteText = getRichText(blockContent?.rich_text);
@@ -339,7 +502,59 @@ function NotionBlock({ block }: { block: NotionBlock }) {
 
     case "callout":
       const calloutText = getRichText(blockContent?.rich_text);
-      const calloutIcon = blockContent?.icon?.emoji || "💡";
+      const calloutIcon = blockContent?.icon?.emoji;
+      const isCarouselCallout = calloutText.includes("캐러셀");
+      const carouselImages = isCarouselCallout
+        ? (block.children || [])
+            .filter((child) => child.type === "image")
+            .map((child) => ({
+              id: child.id,
+              url: getImageUrlFromBlock(child),
+            }))
+            .filter((image): image is { id: string; url: string } => Boolean(image.url))
+        : [];
+
+      if (isCarouselCallout && carouselImages.length > 0) {
+        return (
+          <div
+            className="p-4 rounded-lg my-4"
+            style={{
+              backgroundColor: `${COLORS.brand.primary}15`,
+              border: `1px solid ${COLORS.brand.primary}30`,
+            }}
+          >
+            <Swiper
+              spaceBetween={12}
+              slidesPerView={1}
+              style={{ width: "100%", maxWidth: "360px", margin: "0 auto" }}
+            >
+              {carouselImages.map((image) => (
+                <SwiperSlide key={image.id}>
+                  <div
+                    className="w-full overflow-hidden rounded-xl"
+                    style={{
+                      border: `1px solid ${COLORS.border.light}`,
+                      aspectRatio: "1 / 1",
+                      backgroundColor: COLORS.background.card,
+                      position: "relative",
+                    }}
+                  >
+                    <Image
+                      src={image.url}
+                      alt="carousel image"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 768px) 360px, 360px"
+                      className="object-cover"
+                      onError={() => onImageError?.(image.id)}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        );
+      }
       return (
         <div
           className="p-4 rounded-lg my-4"
@@ -349,17 +564,24 @@ function NotionBlock({ block }: { block: NotionBlock }) {
           }}
         >
           <div className="flex items-start gap-3">
-            <span className="text-xl flex-shrink-0">{calloutIcon}</span>
+            {calloutIcon && (
+              <span className="text-xl flex-shrink-0">{calloutIcon}</span>
+            )}
             <div
-              className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight, "flex-1")}
+              className={cn(
+                TYPOGRAPHY.body.fontSize,
+                TYPOGRAPHY.body.lineHeight,
+                "flex-1"
+              )}
               style={{ color: COLORS.text.primary }}
             >
               {calloutText ? renderRichText(blockContent?.rich_text || []) : null}
               {block.children && block.children.length > 0 && (
                 <div className="mt-2 space-y-2">
-                  {block.children.map((child) => (
-                    <NotionBlock key={child.id} block={child} />
-                  ))}
+                  <NotionBlocks
+                    blocks={block.children}
+                    onImageError={onImageError}
+                  />
                 </div>
               )}
             </div>
@@ -483,10 +705,12 @@ function ToggleBlock({
   block,
   blockContent,
   renderRichText,
+  onImageError,
 }: {
   block: NotionBlock;
   blockContent: NotionBlockContent | undefined;
   renderRichText: (richText: NotionRichText[] | undefined) => React.ReactNode;
+  onImageError?: (blockId: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -589,9 +813,7 @@ function ToggleBlock({
             backgroundColor: "transparent",
           }}
         >
-          {block.children.map((child) => (
-            <NotionBlock key={child.id} block={child} />
-          ))}
+          <NotionBlocks blocks={block.children} onImageError={onImageError} />
         </div>
       )}
     </div>

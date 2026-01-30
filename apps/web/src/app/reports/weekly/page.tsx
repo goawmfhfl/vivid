@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";
 import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
@@ -9,26 +11,38 @@ import { SPACING, COLORS } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
+import { QUERY_KEYS } from "@/constants";
 
 function WeeklyReportsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // 주간 흐름 데이터 조회
   const {
     data: weeklyTrendsData,
     isLoading: isLoadingTrends,
     error: trendsError,
+    refetch: refetchWeeklyTrends,
   } = useWeeklyTrends();
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      refetchWeeklyTrends(),
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES] }),
+    ]);
+  }, [queryClient, refetchWeeklyTrends]);
+
   return (
-    <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
-    >
-      <AppHeader 
-        title="주간 VIVID 리포트" 
-        showBackButton={true}
-        onBack={() => router.push("/reports")}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div
+        className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      >
+        <AppHeader 
+          title="주간 VIVID 리포트" 
+          showBackButton={true}
+          onBack={() => router.push("/reports")}
+        />
 
       {/* 아직 생성되지 않은 주간 vivid 알림 */}
       <div className="mb-8">
@@ -95,7 +109,8 @@ function WeeklyReportsPage() {
           error={trendsError}
         />
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

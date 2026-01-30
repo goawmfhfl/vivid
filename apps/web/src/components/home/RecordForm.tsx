@@ -24,6 +24,7 @@ import { EmotionKeywordPicker } from "@/components/emotion/EmotionKeywordPicker"
 import { EmotionFactorPicker } from "@/components/emotion/EmotionFactorPicker";
 import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
 import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
+import { useEnvironment } from "@/hooks/useEnvironment";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -62,6 +63,7 @@ export function RecordForm({
   const isUserScrollingRef = useRef(false);
   const { data: currentUser } = useCurrentUser();
   const { subscription } = useSubscription();
+  const { isDevelopment } = useEnvironment();
   const { state: timerState } = useTimer();
   const { showToast } = useToast();
 
@@ -74,7 +76,7 @@ export function RecordForm({
   const getAllowedRecordTypes = useCallback((): RecordType[] => {
     // 프로 플랜: VIVID 기록(dream) + 감정 기록(emotion) 가능
     if (subscription?.isPro) {
-      return ["dream", "emotion"];
+      return isDevelopment ? ["dream", "emotion"] : ["dream"];
     }
     
     // 프리 플랜: VIVID 기록(dream) 사용 가능
@@ -82,15 +84,18 @@ export function RecordForm({
     if (currentUser?.user_metadata?.recordTypes) {
       const userTypes = currentUser.user_metadata.recordTypes as RecordType[];
       // dream이 포함되어 있지 않으면 dream 추가
-      if (!userTypes.includes("dream")) {
-        return ["dream", ...userTypes];
+      const filteredTypes = isDevelopment
+        ? userTypes
+        : userTypes.filter((type) => type !== "emotion");
+      if (!filteredTypes.includes("dream")) {
+        return ["dream", ...filteredTypes];
       }
-      return userTypes;
+      return filteredTypes;
     }
     
     // 기본값: VIVID 기록(dream)
     return ["dream"];
-  }, [subscription, currentUser]);
+  }, [subscription, currentUser, isDevelopment]);
 
   // 첫 번째 타입을 기본값으로 설정
   useEffect(() => {

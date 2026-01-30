@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { supabase } from "@/lib/supabase";
+import { UserError, useCurrentUser } from "@/hooks/useCurrentUser";
 
 /**
  * 인증이 필요한 페이지를 보호하는 고차 컴포넌트 (HOC)
@@ -25,7 +26,14 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
       if (!isLoading) {
         // 에러가 있거나 사용자가 없으면 로그인 페이지로 리다이렉트
         if (error || !user) {
-          router.push("/login");
+          const isInvalidRefreshToken =
+            error instanceof UserError && error.code === "INVALID_REFRESH_TOKEN";
+          if (isInvalidRefreshToken) {
+            void supabase.auth.signOut();
+            router.replace("/login");
+          } else {
+            router.push("/login");
+          }
         }
       }
     }, [isLoading, error, user, router]);

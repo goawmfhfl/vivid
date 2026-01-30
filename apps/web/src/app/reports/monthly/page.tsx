@@ -1,6 +1,8 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { MonthlyCandidatesSection } from "@/components/summaries/MonthlyCandidatesSection";
 import { MonthlyTrendsSection } from "@/components/reports/MonthlyTrendsSection";
@@ -9,26 +11,38 @@ import { COLORS, SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
+import { QUERY_KEYS } from "@/constants";
 
 function MonthlyReportsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // 월간 흐름 데이터 조회
   const {
     data: monthlyTrendsData,
     isLoading: isLoadingTrends,
     error: trendsError,
+    refetch: refetchMonthlyTrends,
   } = useMonthlyTrends();
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      refetchMonthlyTrends(),
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES] }),
+    ]);
+  }, [queryClient, refetchMonthlyTrends]);
+
   return (
-    <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
-    >
-      <AppHeader 
-        title="월간 VIVID 리포트" 
-        showBackButton={true}
-        onBack={() => router.push("/reports")}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div
+        className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      >
+        <AppHeader 
+          title="월간 VIVID 리포트" 
+          showBackButton={true}
+          onBack={() => router.push("/reports")}
+        />
 
       {/* 아직 생성되지 않은 월간 vivid 알림 */}
       <div className="mb-8">
@@ -95,7 +109,8 @@ function MonthlyReportsPage() {
           error={trendsError}
         />
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

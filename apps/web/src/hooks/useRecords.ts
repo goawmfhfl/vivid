@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
 
@@ -212,6 +212,9 @@ export const useRecords = () => {
     queryKey: [QUERY_KEYS.RECORDS],
     queryFn: fetchRecords,
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -277,6 +280,9 @@ export const useUpdateRecord = () => {
     mutationFn: ({ id, data }: { id: number; data: UpdateRecordData }) =>
       updateRecord(id, data),
     onSuccess: (updatedRecord) => {
+      const previousRecords =
+        queryClient.getQueryData<Record[]>([QUERY_KEYS.RECORDS]) || [];
+
       // RECORDS 쿼리 캐시에서 해당 id의 record를 업데이트
       queryClient.setQueryData<Record[]>(
         [QUERY_KEYS.RECORDS],
@@ -288,13 +294,11 @@ export const useUpdateRecord = () => {
       );
 
       // 날짜가 변경된 경우 useRecordsAndFeedbackDates도 업데이트
-      const oldRecords =
-        queryClient.getQueryData<Record[]>([QUERY_KEYS.RECORDS]) || [];
-      const oldRecord = oldRecords.find((r) => r.id === updatedRecord.id);
+      const oldRecord = previousRecords.find((r) => r.id === updatedRecord.id);
 
       if (oldRecord && oldRecord.kst_date !== updatedRecord.kst_date) {
         // 이전 날짜에 다른 record가 있는지 확인
-        const hasOtherRecordsOnOldDate = oldRecords.some(
+        const hasOtherRecordsOnOldDate = previousRecords.some(
           (r) => r.id !== updatedRecord.id && r.kst_date === oldRecord.kst_date
         );
 
@@ -303,10 +307,7 @@ export const useUpdateRecord = () => {
           aiFeedbackDates: string[];
         }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
-            return {
-              recordDates: [updatedRecord.kst_date],
-              aiFeedbackDates: [],
-            };
+            return oldData;
           }
 
           let { recordDates } = oldData;
@@ -377,7 +378,7 @@ export const useDeleteRecord = () => {
           aiFeedbackDates: string[];
         }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
-            return { recordDates: [], aiFeedbackDates: [] };
+            return oldData;
           }
 
           const { recordDates, aiFeedbackDates } = oldData;

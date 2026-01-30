@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Home } from "@/components/Home";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { withAuth } from "@/components/auth";
+import { QUERY_KEYS } from "@/constants";
 
 function RootPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   // 루트 URL로 리다이렉션된 OAuth 에러 처리
   useEffect(() => {
@@ -45,7 +49,21 @@ function RootPage() {
     }
   }, [router, searchParams]);
 
-  return <Home />;
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.RECORDS] }),
+      queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
+      }),
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] }),
+    ]);
+  }, [queryClient]);
+
+  return (
+    <PullToRefresh onRefresh={handleRefresh}>
+      <Home />
+    </PullToRefresh>
+  );
 }
 
 export default withAuth(RootPage);

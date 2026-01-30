@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -16,6 +16,7 @@ import {
 } from "@/components/summaries/weekly-vivid-mapper";
 import { SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
 
 /**
  * 주간 비비드 리스트 아이템을 PeriodSummary로 변환
@@ -54,19 +55,24 @@ function WeeklyListPage() {
     refetch: refetchWeekly,
   } = useWeeklyVividList();
 
+  const handleRefresh = useCallback(async () => {
+    await refetchWeekly();
+  }, [refetchWeekly]);
+
   // 주간 피드백을 PeriodSummary로 변환
   const weeklySummaries = useMemo(() => {
     return weeklyVividList.map(convertWeeklyVividToPeriodSummary);
   }, [weeklyVividList]);
 
   return (
-    <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
-    >
-      <AppHeader 
-        title="주간 VIVID 리스트" 
-        showBackButton={true}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div
+        className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      >
+        <AppHeader 
+          title="주간 VIVID 리스트" 
+          showBackButton={true}
+        />
 
       {/* 주간 리포트 리스트 */}
       {isLoadingWeekly ? (
@@ -95,7 +101,8 @@ function WeeklyListPage() {
       ) : (
         <WeeklySummariesTab summaries={weeklySummaries} />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

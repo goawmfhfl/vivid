@@ -92,9 +92,19 @@ export function Home({ selectedDate }: HomeProps = {}) {
   // 기록 및 AI 피드백 날짜 조회
   const { data: datesData, isLoading: isLoadingDates } =
     useRecordsAndFeedbackDates();
+  const [lastDatesData, setLastDatesData] = useState<{
+    recordDates: string[];
+    aiFeedbackDates: string[];
+  } | null>(null);
+  useEffect(() => {
+    if (datesData) {
+      setLastDatesData(datesData);
+    }
+  }, [datesData]);
 
-  const recordDates = datesData?.recordDates || [];
-  const aiFeedbackDates = datesData?.aiFeedbackDates || [];
+  const effectiveDatesData = datesData ?? lastDatesData;
+  const recordDates = effectiveDatesData?.recordDates || [];
+  const aiFeedbackDates = effectiveDatesData?.aiFeedbackDates || [];
 
   // 현재 표시 중인 월 상태 (WeeklyDateView와 동기화)
   const [currentMonth, setCurrentMonth] = useState<{

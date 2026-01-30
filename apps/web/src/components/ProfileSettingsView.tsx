@@ -106,8 +106,6 @@ export function ProfileSettingsView() {
         setLinkSuccess(false);
         // URL에서 파라미터 제거
         router.replace("/user", { scroll: false });
-        // 5초 후 메시지 자동 숨김
-        setTimeout(() => setLinkError(null), 5000);
       }
     }
   }, [router, showToast]);

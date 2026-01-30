@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
@@ -64,5 +64,8 @@ export function useRecordsAndFeedbackDates() {
     queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
     queryFn: fetchRecordsAndFeedbackDates,
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }

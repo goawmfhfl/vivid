@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useEnvironment } from "@/hooks/useEnvironment";
 import {
   COLORS,
   TYPOGRAPHY,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 export function MyInfoView() {
   const { data: currentUser, isLoading } = useCurrentUser();
   const { isPro } = useSubscription();
+  const { isDevelopment } = useEnvironment();
 
   if (isLoading) {
     return (
@@ -51,11 +53,15 @@ export function MyInfoView() {
   const userEmail = currentUser.email || "";
 
   const menuItems = [
-    {
-      title: "프로 멤버십",
-      href: "/membership",
-      enabled: true,
-    },
+    ...(isDevelopment
+      ? [
+          {
+            title: "프로 멤버십",
+            href: "/membership",
+            enabled: true,
+          },
+        ]
+      : []),
     {
       title: "쿠폰 등록",
       href: "/coupon/register",

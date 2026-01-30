@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/common/AppHeader";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -15,18 +15,24 @@ export default function FAQPage() {
   const [blocks, setBlocks] = useState<NotionBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastImageRefreshAtRef = useRef(0);
+  const isRefreshingImagesRef = useRef(false);
 
-  useEffect(() => {
-    const fetchFAQContent = async () => {
+  const fetchFAQContent = useCallback(
+    async (showLoading: boolean = true) => {
       try {
-        setLoading(true);
+        if (showLoading) {
+          setLoading(true);
+        }
 
-        // 페이지 블록 가져오기
-        const blocksResponse = await fetch(`/api/notion/questions/${FAQ_PAGE_ID}`);
+        const blocksResponse = await fetch(
+          `/api/notion/questions/${FAQ_PAGE_ID}`
+        );
 
         if (blocksResponse.ok) {
           const blocksResult = await blocksResponse.json();
           setBlocks(blocksResult.data?.blocks || []);
+          setError(null);
         } else {
           const errorData = await blocksResponse.json().catch(() => ({}));
           console.error("페이지 블록 가져오기 실패:", {
@@ -35,7 +41,9 @@ export default function FAQPage() {
             error: errorData,
           });
           setError(
-            `페이지 내용을 불러오는데 실패했습니다: ${errorData.error || blocksResponse.statusText}`
+            `페이지 내용을 불러오는데 실패했습니다: ${
+              errorData.error || blocksResponse.statusText
+            }`
           );
         }
       } catch (err) {
@@ -44,12 +52,34 @@ export default function FAQPage() {
           err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다."
         );
       } finally {
-        setLoading(false);
+        if (showLoading) {
+          setLoading(false);
+        }
       }
-    };
+    },
+    []
+  );
 
-    fetchFAQContent();
-  }, []);
+  useEffect(() => {
+    void fetchFAQContent();
+  }, [fetchFAQContent]);
+
+  const handleImageError = useCallback(
+    (blockId: string) => {
+      const now = Date.now();
+      if (isRefreshingImagesRef.current) return;
+      if (now - lastImageRefreshAtRef.current < 3000) return;
+
+      isRefreshingImagesRef.current = true;
+      lastImageRefreshAtRef.current = now;
+      console.warn("FAQ 이미지 로드 실패, 재요청 시도:", blockId);
+
+      void fetchFAQContent(false).finally(() => {
+        isRefreshingImagesRef.current = false;
+      });
+    },
+    [fetchFAQContent]
+  );
 
   if (loading) {
     return (
@@ -96,7 +126,7 @@ export default function FAQPage() {
           }}
         >
           {blocks.length > 0 ? (
-            <NotionRenderer blocks={blocks} />
+            <NotionRenderer blocks={blocks} onImageError={handleImageError} />
           ) : (
             <p
               className={cn(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -9,6 +9,7 @@ import { useMonthlyVividList } from "@/hooks/useMonthlyVivid";
 import { convertMonthlyVividToPeriodSummary } from "@/components/summaries/monthly-vivid-mapper";
 import { SPACING } from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
 
 function MonthlyListPage() {
   // 월간 비비드 리스트 조회
@@ -19,19 +20,24 @@ function MonthlyListPage() {
     refetch: refetchMonthly,
   } = useMonthlyVividList(true);
 
+  const handleRefresh = useCallback(async () => {
+    await refetchMonthly();
+  }, [refetchMonthly]);
+
   // 월간 비비드을 PeriodSummary로 변환
   const monthlySummaries = useMemo(() => {
     return monthlyVividList.map(convertMonthlyVividToPeriodSummary);
   }, [monthlyVividList]);
 
   return (
-    <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
-    >
-      <AppHeader 
-        title="월간 VIVID 리스트" 
-        showBackButton={true}
-      />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div
+        className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      >
+        <AppHeader 
+          title="월간 VIVID 리스트" 
+          showBackButton={true}
+        />
 
       {/* 월간 리포트 리스트 */}
       {isLoadingMonthly ? (
@@ -60,7 +66,8 @@ function MonthlyListPage() {
       ) : (
         <MonthlySummariesTab summaries={monthlySummaries} />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

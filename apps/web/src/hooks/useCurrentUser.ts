@@ -10,7 +10,7 @@ export interface CurrentUser {
 }
 
 // 커스텀 에러 클래스
-class UserError extends Error {
+export class UserError extends Error {
   constructor(message: string, public code?: string) {
     super(message);
     this.name = "UserError";
@@ -25,7 +25,11 @@ const getCurrentUser = async (): Promise<CurrentUser> => {
   } = await supabase.auth.getUser();
 
   if (error) {
-    throw new UserError(`사용자 정보 조회 실패: ${error.message}`);
+    const isInvalidRefreshToken =
+      error.message.includes("Invalid Refresh Token") ||
+      error.message.includes("Refresh Token Not Found");
+    const errorCode = isInvalidRefreshToken ? "INVALID_REFRESH_TOKEN" : undefined;
+    throw new UserError(`사용자 정보 조회 실패: ${error.message}`, errorCode);
   }
 
   if (!user) {

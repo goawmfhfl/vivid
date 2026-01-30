@@ -81,10 +81,7 @@ export const useCreateDailyVivid = () => {
           aiFeedbackDates: string[];
         }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
-            return {
-              recordDates: [],
-              aiFeedbackDates: [variables.date],
-            };
+            return oldData;
           }
 
           const { recordDates, aiFeedbackDates } = oldData;
@@ -106,6 +103,9 @@ export const useCreateDailyVivid = () => {
       // 날짜별 쿼리 무효화 (월별 dates 쿼리는 별도로 관리되므로 무효화)
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DAILY_VIVID, "dates"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
       });
 
       // 최근 흐름 데이터 무효화 및 강제 새로고침
