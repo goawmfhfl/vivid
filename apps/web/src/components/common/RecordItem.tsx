@@ -184,16 +184,16 @@ export function RecordItem({
         `,
         position: "relative",
         overflow: "hidden",
-        paddingLeft: "48px", // 왼쪽 마진 라인을 위한 패딩
+        paddingLeft: "24px", // 왼쪽 마진 라인을 위한 패딩
         // 종이 질감 배경 패턴
         backgroundImage: `
           /* 왼쪽 마진 라인 */
           linear-gradient(90deg, 
             transparent 0px,
-            transparent 36px,
-            ${COLORS.border.card} 36px,
-            ${COLORS.border.card} 38px,
-            transparent 38px
+            transparent 16px,
+            ${COLORS.border.card} 16px,
+            ${COLORS.border.card} 18px,
+            transparent 18px
           ),
           /* 가로 줄무늬 */
           repeating-linear-gradient(
@@ -240,7 +240,7 @@ export function RecordItem({
         style={{
           width: "2px",
           backgroundColor: `${COLORS.border.card}CC`, // 프로젝트 border.card 색상 사용
-          left: "36px",
+          left: "16px",
         }}
       />
 

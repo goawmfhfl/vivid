@@ -122,10 +122,19 @@ export async function applyCoupon(
 
   const coupon = verification.coupon;
 
-  // 현재 시간 기준으로 구독 기간 계산
+  // 현재 시간 기준으로 구독 기간 계산 (서버 시간)
   const now = new Date();
+  const startedAt = now.toISOString(); // 명시적으로 시작 시간 설정
   const expiresAt = new Date(now);
   expiresAt.setDate(expiresAt.getDate() + coupon.duration_days);
+
+  console.log("[CouponUtils] 쿠폰 적용 시작:", {
+    userId,
+    couponCode: code,
+    startedAt,
+    expiresAt: expiresAt.toISOString(),
+    durationDays: coupon.duration_days,
+  });
 
   // user_metadata에서 기존 정보 가져오기
   const { data: { user: currentUser }, error: getUserError } = await supabase.auth.admin.getUserById(
@@ -171,18 +180,25 @@ export async function applyCoupon(
 
   // user_metadata에 구독 정보 및 used_coupons 업데이트
   // phone_verified 등 기존 메타데이터는 보존
+  const subscriptionData = {
+    plan: "pro" as const,
+    status: "active" as const,
+    started_at: startedAt, // 명시적으로 설정된 시작 시간
+    expires_at: expiresAt.toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  console.log("[CouponUtils] 구독 정보 업데이트 시도:", {
+    userId,
+    subscription: subscriptionData,
+  });
+
   const { error: updateError } = await supabase.auth.admin.updateUserById(
     userId,
     {
       user_metadata: {
         ...currentMetadata,
-        subscription: {
-          plan: "pro",
-          status: "active",
-          started_at: now.toISOString(),
-          expires_at: expiresAt.toISOString(),
-          updated_at: new Date().toISOString(),
-        },
+        subscription: subscriptionData,
         used_coupons: updatedUsedCoupons,
         // phone_verified 정보 보존 (이미 true인 경우 유지)
         phone_verified: currentMetadata.phone_verified ?? true,
@@ -191,13 +207,19 @@ export async function applyCoupon(
   );
 
   if (updateError) {
-    console.error("구독 정보 업데이트 실패:", updateError);
+    console.error("[CouponUtils] 구독 정보 업데이트 실패:", updateError);
     return {
       success: false,
       message: "구독 정보 업데이트 중 오류가 발생했습니다.",
       expiresAt: null,
     };
   }
+
+  console.log("[CouponUtils] 쿠폰 적용 완료:", {
+    userId,
+    startedAt,
+    expiresAt: expiresAt.toISOString(),
+  });
 
   // coupons.current_uses 증가
   const { error: couponError } = await supabase

@@ -182,11 +182,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const progress = dailyVividProgress[activeDate] || null;
   const isGeneratingFeedback = createDailyVivid.isPending || progress !== null || timerProgress !== null;
   
-  // 타이머 기반 progress 계산 (0% → 99%, 15초 동안)
+  // 타이머 기반 progress 계산 (0% → 99%, 18초 동안)
   useEffect(() => {
     if (timerStartTime === null) return;
 
-    const DURATION_MS = 15000; // 15초
+    const DURATION_MS = 18000; // 18초
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 

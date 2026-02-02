@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
       plan,
       status,
       expires_at,
-      current_period_start,
-      cancel_at_period_end: _cancel_at_period_end,
+      started_at,
+      current_period_start, // 하위 호환성 유지
     } = body;
 
     if (!userId || !plan) {
@@ -144,11 +144,14 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase();
     
+    // started_at이 우선, 없으면 current_period_start 사용 (하위 호환)
+    const resolvedStartedAt = started_at || current_period_start || null;
+    
     await upsertSubscription(userId, {
       plan: plan as "free" | "pro",
       status: (status as "none" | "active" | "canceled") || "active",
       expires_at: expires_at || null,
-      started_at: current_period_start || null,
+      started_at: resolvedStartedAt,
     });
 
     // 업데이트된 구독 정보 조회

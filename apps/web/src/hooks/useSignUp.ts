@@ -74,24 +74,28 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     let session: Session | null = null;
 
     if (isSocialOnboarding) {
-      // 소셜 로그인 완료 케이스: 이미 로그인된 사용자 정보 가져오기
-      const {
-        data: { user: currentUser },
-        error: getUserError,
-      } = await supabase.auth.getUser();
+      // 소셜 로그인 완료 케이스: 이미 로그인된 사용자 정보 및 세션 가져오기
+      const [userResult, sessionResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.auth.getSession(),
+      ]);
 
-      if (getUserError || !currentUser) {
+      if (userResult.error || !userResult.data.user) {
         throw new SignUpError(
           "로그인 정보를 확인할 수 없습니다. 다시 시도해주세요.",
-          getUserError?.message
+          userResult.error?.message
         );
       }
 
-      user = currentUser;
+      user = userResult.data.user;
+      session = sessionResult.data.session; // 세션도 가져와서 쿠폰 적용 시 사용
+
+      // 현재 시간 (서버 시간 기준)
+      const now = new Date().toISOString();
 
       // 사용자 메타데이터 업데이트
       const mergedMetadata = {
-        ...(currentUser.user_metadata || {}),
+        ...(user.user_metadata || {}),
         name,
         phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호
         birthYear,
@@ -100,14 +104,14 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         agreeAI,
         agreeMarketing,
         phone_verified: true, // 핸드폰 인증 완료
-        phone_verified_at: new Date().toISOString(),
+        phone_verified_at: now,
         role: "user", // 기본 역할
         subscription: {
           plan: "free",
           status: "none",
           started_at: null,
           expires_at: null,
-          updated_at: new Date().toISOString(),
+          updated_at: now,
         },
       };
 
@@ -191,7 +195,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     // 2. 쿠폰 적용 (쿠폰 코드가 있는 경우)
     if (couponCode) {
       try {
-        // 세션이 있으면 Authorization 헤더 사용, 없으면 서버 사이드에서 처리
+        // 세션이 있으면 Authorization 헤더 사용
         const headers: HeadersInit = {
           "Content-Type": "application/json",
         };
@@ -200,22 +204,33 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
           headers.Authorization = `Bearer ${session.access_token}`;
         }
 
+        console.log("[Signup] 쿠폰 적용 시도:", {
+          couponCode,
+          hasSession: !!session,
+          hasAccessToken: !!session?.access_token,
+        });
+
         const couponResponse = await fetch("/api/coupons/apply", {
           method: "POST",
           headers,
+          credentials: "include", // 쿠키 인증을 위해 credentials 포함
           body: JSON.stringify({ code: couponCode }),
         });
 
         if (!couponResponse.ok) {
           const errorData = await couponResponse.json();
-          console.error("쿠폰 적용 실패:", errorData);
+          console.error("[Signup] 쿠폰 적용 실패:", errorData);
           // 쿠폰 적용 실패는 에러로 처리하지 않고 로그만 남김
           // (회원가입은 성공했으므로)
         } else {
-          console.log("쿠폰이 성공적으로 적용되었습니다:", couponCode);
+          const successData = await couponResponse.json();
+          console.log("[Signup] 쿠폰 적용 성공:", {
+            couponCode,
+            expiresAt: successData.expiresAt,
+          });
         }
       } catch (couponError) {
-        console.error("쿠폰 처리 중 오류:", couponError);
+        console.error("[Signup] 쿠폰 처리 중 오류:", couponError);
         // 쿠폰 처리 실패는 에러로 처리하지 않고 로그만 남김
         // (회원가입은 성공했으므로)
       }

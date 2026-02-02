@@ -108,19 +108,36 @@ export async function GET(request: NextRequest) {
       user_id: req.user_id,
     }));
 
-    // 유저 정보 추가
-    const userIds = Array.from(new Set(details.map((d) => d.user_id)));
-    const { data: userProfiles } = await supabase
-      .from("profiles")
-      .select("id, name, email")
-      .in("id", userIds);
-
-    const userMap = new Map(userProfiles?.map((p) => [p.id, p]) || []);
+    // 유저 정보 추가 (Supabase Auth admin API 사용 - user_metadata에서 name 가져오기)
+    const userIds = Array.from(new Set(details.map((d) => d.user_id).filter((id): id is string => !!id)));
+    
+    const userMap = new Map<string, { name: string; email: string }>();
+    
+    if (userIds.length > 0) {
+      const userInfoPromises = userIds.map(async (userId) => {
+        try {
+          const { data: { user }, error } = await supabase.auth.admin.getUserById(userId);
+          if (error || !user) {
+            return { id: userId, name: "알 수 없음", email: "" };
+          }
+          return {
+            id: user.id,
+            name: (user.user_metadata?.name as string) || "알 수 없음",
+            email: user.email || "",
+          };
+        } catch {
+          return { id: userId, name: "알 수 없음", email: "" };
+        }
+      });
+      
+      const userInfos = await Promise.all(userInfoPromises);
+      userInfos.forEach((info) => userMap.set(info.id, { name: info.name, email: info.email }));
+    }
 
     const detailsWithUsers = details.map((detail) => ({
       ...detail,
-      user_name: userMap.get(detail.user_id)?.name || "알 수 없음",
-      user_email: userMap.get(detail.user_id)?.email || "",
+      user_name: detail.user_id ? userMap.get(detail.user_id)?.name || "알 수 없음" : "알 수 없음",
+      user_email: detail.user_id ? userMap.get(detail.user_id)?.email || "" : "",
     }));
 
     return NextResponse.json({

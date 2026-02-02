@@ -7,6 +7,7 @@ import {
   Heart,
   Zap,
   HelpCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { Card } from "../ui/card";
 import { SectionProps } from "./types";
@@ -433,6 +434,52 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
                 오늘의 모습과 앞으로 되고 싶은 모습의 일치도를 측정한 점수입니다.
                 높을수록 현재와 목표가 일치한다는 의미입니다.
               </p>
+
+              {/* 점수 산정 근거 */}
+              {view.alignment_score_reason && view.alignment_score_reason.length > 0 && (
+                <div className="mt-6 pt-5 border-t" style={{ borderColor: `${alignmentColor}20` }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckCircle2 
+                      className="w-4 h-4" 
+                      style={{ color: alignmentColor }} 
+                    />
+                    <p
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight,
+                        TYPOGRAPHY.label.letterSpacing,
+                        "uppercase"
+                      )}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      일치도 분석 포인트
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {view.alignment_score_reason.map((reason, idx) => (
+                      <div
+                        key={idx}
+                        className="px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
+                        style={{
+                          backgroundColor: `${alignmentColor}12`,
+                          border: `1px solid ${alignmentColor}25`,
+                        }}
+                      >
+                        <div
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: alignmentColor }}
+                        />
+                        <span
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {reason}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>

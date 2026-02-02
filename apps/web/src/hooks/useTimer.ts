@@ -18,7 +18,7 @@ export interface TimerState {
 
 const DEFAULT_CONFIG: TimerConfig = {
   hours: 0,
-  minutes: 25,
+  minutes: 10,
   seconds: 0,
   isActive: false,
 };

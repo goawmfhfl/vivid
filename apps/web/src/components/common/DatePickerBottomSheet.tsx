@@ -298,11 +298,11 @@ export function DatePickerBottomSheet({
                       {/* daily-vivid dot 표시 */}
                       {hasDailyVivid && (
                         <div
-                          className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5"
+                          className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 flex items-center mt-0.5"
                           style={{ pointerEvents: "none" }}
                         >
                           <div
-                            className="w-1.5 h-1.5 rounded-full"
+                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
                             style={{
                               backgroundColor: COLORS.emotion.intensity[7],
                             }}

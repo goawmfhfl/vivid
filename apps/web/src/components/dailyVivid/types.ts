@@ -26,6 +26,8 @@ export type DailyReportData = {
   future_keywords: string[];
   /** 일치도 점수 (0-100) */
   alignment_score: number | null;
+  /** 일치도 점수 산정 근거 (3~5개) */
+  alignment_score_reason?: string[];
   /** 기록을 쓰는 사람의 특징 (최대 5가지) */
   user_characteristics: string[];
   /** 지향하는 모습 (최대 5가지) */

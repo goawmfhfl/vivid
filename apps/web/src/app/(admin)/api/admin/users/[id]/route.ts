@@ -76,6 +76,7 @@ export async function GET(
         ? {
             plan: subscription.plan,
             status: subscription.status === "none" ? "active" : subscription.status,
+            started_at: subscription.started_at || null,
             expires_at: subscription.expires_at,
           }
         : undefined,

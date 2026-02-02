@@ -213,7 +213,7 @@ export function WeeklyDateView({
   return (
     <div
       ref={containerRef}
-      className="relative mb-6 pb-3 md:pb-4 overflow-hidden"
+      className="relative mb-6 pb-3 md:pb-4 overflow-hidden -mx-4 px-4"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

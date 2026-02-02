@@ -17,30 +17,61 @@ export class UserError extends Error {
   }
 }
 
+// Invalid Refresh Token 에러 처리 함수
+const handleInvalidRefreshTokenError = async () => {
+  console.log("[useCurrentUser] Invalid Refresh Token 감지, 로그아웃 처리...");
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    console.error("[useCurrentUser] 로그아웃 처리 중 오류");
+  }
+};
+
 // 현재 사용자 정보 가져오기 함수
 const getCurrentUser = async (): Promise<CurrentUser> => {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-  if (error) {
-    const isInvalidRefreshToken =
-      error.message.includes("Invalid Refresh Token") ||
-      error.message.includes("Refresh Token Not Found");
-    const errorCode = isInvalidRefreshToken ? "INVALID_REFRESH_TOKEN" : undefined;
-    throw new UserError(`사용자 정보 조회 실패: ${error.message}`, errorCode);
+    if (error) {
+      const isInvalidRefreshToken =
+        error.message.includes("Invalid Refresh Token") ||
+        error.message.includes("Refresh Token Not Found");
+      
+      if (isInvalidRefreshToken) {
+        await handleInvalidRefreshTokenError();
+        // 로그인 필요 에러로 변환하여 UI에서 적절히 처리하도록 함
+        throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
+      }
+      
+      throw new UserError(`사용자 정보 조회 실패: ${error.message}`);
+    }
+
+    if (!user) {
+      throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED);
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      user_metadata: user.user_metadata,
+    };
+  } catch (error) {
+    // 예외 처리: 네트워크 오류 등에서도 Refresh Token 관련 에러 체크
+    if (error instanceof Error && !(error instanceof UserError)) {
+      const isInvalidRefreshToken =
+        error.message.includes("Invalid Refresh Token") ||
+        error.message.includes("Refresh Token Not Found");
+      
+      if (isInvalidRefreshToken) {
+        await handleInvalidRefreshTokenError();
+        throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
+      }
+    }
+    throw error;
   }
-
-  if (!user) {
-    throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED);
-  }
-
-  return {
-    id: user.id,
-    email: user.email,
-    user_metadata: user.user_metadata,
-  };
 };
 
 export const getCurrentUserCacheContext = async (): Promise<{

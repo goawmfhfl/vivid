@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
-import { Sparkles, Loader2, AlertCircle, ChevronDown } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, ChevronDown, CheckCircle } from "lucide-react";
 import { useMonthlyCandidates, fetchMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import { QUERY_KEYS } from "@/constants";
 import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivid-candidate-filter";
@@ -11,6 +12,15 @@ import type { MonthlyVivid } from "@/types/monthly-vivid";
 import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
 import { fetchMonthlyVividList } from "@/hooks/useMonthlyVivid";
 import { fetchMonthlyTrends } from "@/hooks/useMonthlyTrends";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 // 월간 후보 아이템 컴포넌트
 function MonthlyCandidateItem({
@@ -238,6 +248,7 @@ export function MonthlyCandidatesSection({
 }: {
   referenceDate?: Date;
 } = {}) {
+  const router = useRouter();
   const { data: candidates = [], isLoading } = useMonthlyCandidates();
   const [generatingMonth, setGeneratingMonth] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -253,6 +264,13 @@ export function MonthlyCandidatesSection({
   );
   const timerIntervalsRef = useRef<Record<string, NodeJS.Timeout>>({});
   const completionTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  
+  // 생성 완료 모달 상태
+  const [completionModal, setCompletionModal] = useState<{
+    isOpen: boolean;
+    monthLabel: string;
+    reportId: string | null;
+  }>({ isOpen: false, monthLabel: "", reportId: null });
 
   // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 월간 vivid 필터링
   const candidatesForCreation = useMemo(() => {
@@ -401,6 +419,14 @@ export function MonthlyCandidatesSection({
         clearTimer(month);
       }, 600);
 
+      // 생성 완료 모달 표시
+      const candidate = candidates.find((c) => c.month === month);
+      setCompletionModal({
+        isOpen: true,
+        monthLabel: candidate?.month_label || month,
+        reportId: feedbackData?.id || null,
+      });
+
       // MONTHLY_CANDIDATES에서 해당 월의 monthly_vivid_id 업데이트
       queryClient.setQueryData<
         import("@/types/monthly-candidate").MonthlyCandidate[]
@@ -458,8 +484,59 @@ export function MonthlyCandidatesSection({
     }
   };
 
+  // 확인 버튼 클릭 시 월간 리포트 페이지로 이동
+  const handleCompletionConfirm = () => {
+    const { reportId } = completionModal;
+    setCompletionModal({ isOpen: false, monthLabel: "", reportId: null });
+    
+    if (reportId) {
+      router.push(`/analysis/feedback/monthly/${reportId}`);
+    }
+  };
+
   if (isLoading || candidatesForCreation.length === 0) {
-    return null;
+    return (
+      <>
+        {/* 생성 완료 모달 (리스트가 비어도 모달은 표시될 수 있음) */}
+        <AlertDialog open={completionModal.isOpen} onOpenChange={(open) => {
+          if (!open) {
+            handleCompletionConfirm();
+          }
+        }}>
+          <AlertDialogContent className="max-w-md" style={{ backgroundColor: COLORS.background.card }}>
+            <AlertDialogHeader>
+              <div className="flex items-center justify-center mb-4">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${COLORS.brand.primary}15` }}
+                >
+                  <CheckCircle className="w-8 h-8" style={{ color: COLORS.brand.primary }} />
+                </div>
+              </div>
+              <AlertDialogTitle className="text-center" style={{ color: COLORS.text.primary }}>
+                생성이 완료되었습니다
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center" style={{ color: COLORS.text.secondary }}>
+                {completionModal.monthLabel} 월간 VIVID가 성공적으로 생성되었습니다.
+                <br/>
+                확인 버튼을 누르면 생성된 리포트로 이동합니다.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:justify-center">
+              <AlertDialogAction
+                onClick={handleCompletionConfirm}
+                style={{
+                  backgroundColor: COLORS.brand.primary,
+                  color: "white",
+                }}
+              >
+                확인
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
   }
 
   return (
@@ -560,6 +637,45 @@ export function MonthlyCandidatesSection({
           ))}
         </div>
       </div>
+
+      {/* 생성 완료 모달 */}
+      <AlertDialog open={completionModal.isOpen} onOpenChange={(open) => {
+        if (!open) {
+          handleCompletionConfirm();
+        }
+      }}>
+        <AlertDialogContent className="max-w-md" style={{ backgroundColor: COLORS.background.card }}>
+          <AlertDialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${COLORS.brand.primary}15` }}
+              >
+                <CheckCircle className="w-8 h-8" style={{ color: COLORS.brand.primary }} />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-center" style={{ color: COLORS.text.primary }}>
+              생성이 완료되었습니다
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center" style={{ color: COLORS.text.secondary }}>
+              {completionModal.monthLabel} 월간 VIVID가 성공적으로 생성되었습니다.
+              <br/>
+              확인 버튼을 누르면 생성된 리포트로 이동합니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction
+              onClick={handleCompletionConfirm}
+              style={{
+                backgroundColor: COLORS.brand.primary,
+                color: "white",
+              }}
+            >
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

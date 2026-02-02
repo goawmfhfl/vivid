@@ -66,6 +66,12 @@ const menuItems = [
     enabled: true,
   },
   {
+    title: "피드백 관리",
+    href: "/admin/user-feedbacks",
+    icon: MessageSquare,
+    enabled: true,
+  },
+  {
     title: "탈퇴 사유 관리",
     href: "/admin/account-deletions",
     icon: Users,

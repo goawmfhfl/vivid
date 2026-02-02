@@ -16,12 +16,8 @@ interface Subscription {
   } | null;
   plan: "free" | "pro";
   status: "active" | "canceled" | "expired" | "past_due";
-  expires_at: string | null;
   started_at: string | null;
-  canceled_at: string | null;
-  current_period_start: string | null;
-  cancel_at_period_end: boolean;
-  created_at: string;
+  expires_at: string | null;
   updated_at: string;
 }
 
@@ -50,18 +46,17 @@ export function SubscriptionList() {
   const [planFilter, setPlanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [editData, setEditData] = useState<{
     plan: "free" | "pro" | "";
     status: "active" | "canceled" | "expired" | "past_due" | "";
+    started_at: string;
     expires_at: string;
-    current_period_start: string;
-    cancel_at_period_end: boolean;
   }>({
     plan: "",
     status: "",
+    started_at: "",
     expires_at: "",
-    current_period_start: "",
-    cancel_at_period_end: false,
   });
 
   useEffect(() => {
@@ -95,6 +90,7 @@ export function SubscriptionList() {
   }, [page, planFilter, statusFilter]);
 
   const handleSave = async (userId: string) => {
+    setIsSaving(true);
     try {
       const response = await adminApiFetch("/api/admin/subscriptions", {
         method: "PATCH",
@@ -102,12 +98,11 @@ export function SubscriptionList() {
           userId,
           ...(editData.plan && { plan: editData.plan }),
           ...(editData.status && { status: editData.status }),
-          ...(editData.expires_at && { expires_at: editData.expires_at }),
-          ...(editData.current_period_start && {
-            current_period_start: editData.current_period_start,
+          ...(editData.started_at !== undefined && {
+            started_at: editData.started_at || null,
           }),
-          ...(editData.cancel_at_period_end !== undefined && {
-            cancel_at_period_end: editData.cancel_at_period_end,
+          ...(editData.expires_at !== undefined && {
+            expires_at: editData.expires_at || null,
           }),
         }),
       });
@@ -120,9 +115,8 @@ export function SubscriptionList() {
       setEditData({
         plan: "",
         status: "",
+        started_at: "",
         expires_at: "",
-        current_period_start: "",
-        cancel_at_period_end: false,
       });
       // 목록 새로고침
       const params = new URLSearchParams({
@@ -140,6 +134,8 @@ export function SubscriptionList() {
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : "수정 실패");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -460,13 +456,21 @@ export function SubscriptionList() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleSave(sub.user_id)}
-                              className="px-3 py-1 rounded text-sm"
+                              disabled={isSaving}
+                              className="px-3 py-1 rounded text-sm flex items-center gap-1 disabled:opacity-50"
                               style={{
                                 backgroundColor: COLORS.status.success,
                                 color: COLORS.text.white,
                               }}
                             >
-                              저장
+                              {isSaving ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                                  저장 중
+                                </>
+                              ) : (
+                                "저장"
+                              )}
                             </button>
                             <button
                               onClick={() => {
@@ -474,12 +478,12 @@ export function SubscriptionList() {
                                 setEditData({
                                   plan: "",
                                   status: "",
+                                  started_at: "",
                                   expires_at: "",
-                                  current_period_start: "",
-                                  cancel_at_period_end: false,
                                 });
                               }}
-                              className="px-3 py-1 rounded border text-sm"
+                              disabled={isSaving}
+                              className="px-3 py-1 rounded border text-sm disabled:opacity-50"
                               style={{
                                 borderColor: COLORS.border.input,
                                 backgroundColor: COLORS.background.card,
@@ -496,17 +500,16 @@ export function SubscriptionList() {
                               setEditData({
                                 plan: sub.plan,
                                 status: sub.status,
+                                started_at: sub.started_at
+                                  ? new Date(sub.started_at)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : "",
                                 expires_at: sub.expires_at
                                   ? new Date(sub.expires_at)
                                       .toISOString()
                                       .split("T")[0]
                                   : "",
-                                current_period_start: sub.current_period_start
-                                  ? new Date(sub.current_period_start)
-                                      .toISOString()
-                                      .split("T")[0]
-                                  : "",
-                                cancel_at_period_end: sub.cancel_at_period_end,
                               });
                             }}
                             className="p-1 rounded hover:bg-opacity-50"
@@ -707,18 +710,35 @@ export function SubscriptionList() {
                           className="block text-xs mb-1"
                           style={{ color: COLORS.text.secondary }}
                         >
+                          구독 시작일
+                        </label>
+                        <input
+                          type="date"
+                          value={editData.started_at}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              started_at: e.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded border text-sm"
+                          style={{
+                            borderColor: COLORS.border.input,
+                            backgroundColor: COLORS.background.card,
+                            color: COLORS.text.primary,
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className="block text-xs mb-1"
+                          style={{ color: COLORS.text.secondary }}
+                        >
                           만료일
                         </label>
                         <input
                           type="date"
-                          value={
-                            editData.expires_at ||
-                            (sub.expires_at
-                              ? new Date(sub.expires_at)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "")
-                          }
+                          value={editData.expires_at}
                           onChange={(e) =>
                             setEditData({
                               ...editData,
@@ -736,13 +756,21 @@ export function SubscriptionList() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSave(sub.user_id)}
-                          className="flex-1 px-3 py-2 rounded text-sm font-medium"
+                          disabled={isSaving}
+                          className="flex-1 px-3 py-2 rounded text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50"
                           style={{
                             backgroundColor: COLORS.status.success,
                             color: COLORS.text.white,
                           }}
                         >
-                          저장
+                          {isSaving ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                              저장 중
+                            </>
+                          ) : (
+                            "저장"
+                          )}
                         </button>
                         <button
                           onClick={() => {
@@ -750,12 +778,12 @@ export function SubscriptionList() {
                             setEditData({
                               plan: "",
                               status: "",
+                              started_at: "",
                               expires_at: "",
-                              current_period_start: "",
-                              cancel_at_period_end: false,
                             });
                           }}
-                          className="flex-1 px-3 py-2 rounded border text-sm font-medium"
+                          disabled={isSaving}
+                          className="flex-1 px-3 py-2 rounded border text-sm font-medium disabled:opacity-50"
                           style={{
                             borderColor: COLORS.border.input,
                             backgroundColor: COLORS.background.card,
@@ -773,17 +801,16 @@ export function SubscriptionList() {
                         setEditData({
                           plan: sub.plan,
                           status: sub.status,
+                          started_at: sub.started_at
+                            ? new Date(sub.started_at)
+                                .toISOString()
+                                .split("T")[0]
+                            : "",
                           expires_at: sub.expires_at
                             ? new Date(sub.expires_at)
                                 .toISOString()
                                 .split("T")[0]
                             : "",
-                          current_period_start: sub.current_period_start
-                            ? new Date(sub.current_period_start)
-                                .toISOString()
-                                .split("T")[0]
-                            : "",
-                          cancel_at_period_end: sub.cancel_at_period_end,
                         });
                       }}
                       className="w-full px-3 py-2 rounded border text-sm font-medium flex items-center justify-center gap-2"

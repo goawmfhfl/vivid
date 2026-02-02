@@ -33,6 +33,13 @@ export const DailyVividReportSchema = {
         minimum: 0,
         maximum: 100,
       },
+      alignment_score_reason: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 0,
+        maxItems: 5,
+        description: "점수 산정의 구체적인 근거 (겹치는 키워드/주제)",
+      },
       // 사용자 특성 분석
       user_characteristics: {
         type: "array",
@@ -55,6 +62,7 @@ export const DailyVividReportSchema = {
       "future_evaluation",
       "future_keywords",
       "alignment_score",
+      "alignment_score_reason",
       "user_characteristics",
       "aspired_traits",
     ],

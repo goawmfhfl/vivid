@@ -15,11 +15,6 @@ type InquiryRow = {
   updated_at: string;
 };
 
-type ProfileRow = {
-  id: string;
-  email: string;
-  name: string;
-};
 
 const INQUIRIES_BUCKET = "inquiries-images";
 
@@ -106,25 +101,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 유저 정보 조회 (별도 쿼리)
+    // 유저 정보 조회 (Supabase Auth admin API 사용 - user_metadata에서 name 가져오기)
     const userIds = Array.from(
       new Set((inquiries || []).map((inquiry: InquiryRow) => inquiry.user_id))
     );
 
-    let userProfiles: ProfileRow[] = [];
+    const userMap = new Map<string, { id: string; email: string; name: string | null }>();
+    
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, email, name")
-        .in("id", userIds);
+      // 각 유저의 정보를 auth.admin에서 가져오기
+      const userInfoPromises = userIds.map(async (userId) => {
+        try {
+          const { data: { user }, error } = await supabase.auth.admin.getUserById(userId);
+          if (error || !user) {
+            return { id: userId, email: "", name: null };
+          }
+          return {
+            id: user.id,
+            email: user.email || "",
+            name: (user.user_metadata?.name as string) || null,
+          };
+        } catch {
+          return { id: userId, email: "", name: null };
+        }
+      });
       
-      userProfiles = profiles || [];
+      const userInfos = await Promise.all(userInfoPromises);
+      userInfos.forEach((info) => userMap.set(info.id, info));
     }
-
-    // 유저 정보 맵 생성
-    const userMap = new Map(
-      userProfiles.map((profile) => [profile.id, profile])
-    );
 
     // 프로필 정보 포함 + 이미지 signed url 변환
     const inquiriesWithUser = await Promise.all(

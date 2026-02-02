@@ -19,6 +19,33 @@ const isProfileCompleted = (user: User) => {
   );
 };
 
+/**
+ * 카카오 로그인 시 phone_verified를 true로 설정
+ * 카카오 OAuth는 휴대폰 인증이 완료된 상태이므로 이를 반영
+ */
+const syncPhoneVerificationStatus = async (user: User) => {
+  const metadata = user.user_metadata || {};
+  
+  // 이미 phone_verified가 true인 경우 스킵
+  if (metadata.phone_verified === true) {
+    return;
+  }
+  
+  // phone_verified를 true로 업데이트
+  try {
+    await supabase.auth.updateUser({
+      data: {
+        ...metadata,
+        phone_verified: true,
+        phone_verified_at: new Date().toISOString(),
+      },
+    });
+    console.log("[OAuth Callback] phone_verified 상태가 true로 업데이트되었습니다.");
+  } catch (error) {
+    console.error("[OAuth Callback] phone_verified 업데이트 실패:", error);
+  }
+};
+
 // 환경에 따른 리다이렉션 URL 생성 헬퍼 함수
 const getRedirectUrl = (path: string): string => {
   const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV;
@@ -196,6 +223,9 @@ function AuthCallbackContent() {
               return;
             }
 
+            // 카카오 로그인 시 phone_verified 상태 동기화
+            await syncPhoneVerificationStatus(user);
+
             // 프로필의 last_login_at 업데이트
             await updateLastLoginAt(user.id);
 
@@ -274,6 +304,9 @@ function AuthCallbackContent() {
               return;
             }
           }
+
+          // 카카오 로그인 시 phone_verified 상태 동기화
+          await syncPhoneVerificationStatus(user);
 
           // 프로필의 last_login_at 업데이트
           await updateLastLoginAt(user.id);

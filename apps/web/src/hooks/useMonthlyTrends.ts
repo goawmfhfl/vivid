@@ -37,7 +37,8 @@ export const useMonthlyTrends = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.MONTHLY_VIVID, "recent-trends"],
     queryFn: () => fetchMonthlyTrends(),
-    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    staleTime: 1000 * 60 * 5, // 5분 캐시 유지 (월간 VIVID 생성 후 빠른 반영을 위해)
     gcTime: 1000 * 60 * 60 * 24, // 1일 가비지 컬렉션 방지
+    refetchOnMount: "always", // 페이지 마운트 시 항상 최신 데이터 확인
   });
 };

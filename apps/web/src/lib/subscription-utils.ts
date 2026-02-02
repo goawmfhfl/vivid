@@ -96,17 +96,32 @@ export async function updateSubscriptionMetadata(
 
   // 기존 구독이 pro이고 새로운 요청이 free면 업데이트하지 않음
   if (currentSubscription.plan === "pro" && subscriptionData.plan === "free") {
+    console.log("[SubscriptionUtils] Pro 구독 유지 - downgrade 방지");
     return; // 기존 pro 구독 유지
+  }
+
+  // started_at 처리: 명시적으로 전달된 값 > 기존 값 > null
+  // Pro 플랜으로 업그레이드 시 started_at이 없으면 현재 시간으로 설정
+  let startedAt = subscriptionData.started_at ?? currentSubscription.started_at ?? null;
+  if (subscriptionData.plan === "pro" && subscriptionData.status === "active" && !startedAt) {
+    startedAt = new Date().toISOString();
+    console.log("[SubscriptionUtils] started_at이 없어서 현재 시간으로 설정:", startedAt);
   }
 
   // 구독 정보 업데이트 (기존 값 보존)
   const subscriptionMetadata: SubscriptionMetadata = {
     plan: subscriptionData.plan,
     status: subscriptionData.status,
-    started_at: subscriptionData.started_at ?? currentSubscription.started_at ?? null,
+    started_at: startedAt,
     expires_at: subscriptionData.expires_at ?? currentSubscription.expires_at ?? null,
     updated_at: new Date().toISOString(),
   };
+
+  console.log("[SubscriptionUtils] 구독 메타데이터 업데이트:", {
+    userId,
+    before: currentSubscription,
+    after: subscriptionMetadata,
+  });
 
   // user_metadata 업데이트 (Service Role 사용)
   const { error: updateError } = await supabase.auth.admin.updateUserById(

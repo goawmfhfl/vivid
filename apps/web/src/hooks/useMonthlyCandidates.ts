@@ -36,8 +36,9 @@ export const useMonthlyCandidates = () => {
   return useQuery<MonthlyCandidate[]>({
     queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES],
     queryFn: () => fetchMonthlyCandidates(),
-    staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
+    staleTime: 1000 * 60 * 5, // 5분 캐시 유지 (월간 VIVID 생성 후 빠른 반영을 위해)
     placeholderData: keepPreviousData, // 이전 데이터 유지
+    refetchOnMount: "always", // 페이지 마운트 시 항상 최신 데이터 확인
   });
 };
 

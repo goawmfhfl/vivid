@@ -6,7 +6,6 @@ import {
   isToday,
   toISODate,
 } from "./calendar-utils";
-import { COLORS } from "@/lib/design-system";
 
 export interface CalendarProps {
   year: number;
@@ -82,25 +81,48 @@ export function Calendar({
             const isTodayDate = isToday(date);
             const isSelected = isSameDay(date, selectedDate);
 
+            // 인증 상태에 따른 스타일 결정
+            const isVerified = hasDailyVivid;
+            
+            // 배경색 결정: 선택됨 > 인증됨 > 기본
+            const getBackgroundClass = () => {
+              if (isSelected) return "bg-[#6B7A6F]";
+              if (isVerified) return "bg-indigo-600";
+              return "";
+            };
+            
+            // 텍스트색 결정
+            const getTextColorClass = () => {
+              if (isSelected || isVerified) return "text-white";
+              if (isCurrentMonth) return "text-gray-900";
+              return "text-gray-400 opacity-40";
+            };
+            
+            // 호버 스타일 결정
+            const getHoverClass = () => {
+              if (isSelected) return "hover:bg-[#5A6A5F]";
+              if (isVerified) return "hover:bg-indigo-700";
+              return "hover:bg-gray-100";
+            };
+
             return (
               <button
                 key={isoDate}
                 className={`
-                  relative flex flex-col items-center justify-center
-                  aspect-square rounded-lg text-sm font-normal
+                  flex items-center justify-center
+                  w-8 h-8 rounded-full text-sm font-normal
                   focus:outline-none focus:ring-2 focus:ring-gray-300
-                  ${
-                    isCurrentMonth
-                      ? "text-gray-900"
-                      : "text-gray-400 opacity-40"
-                  }
-                  ${isTodayDate ? "ring-2 ring-gray-300" : ""}
-                  ${
-                    isSelected
-                      ? "bg-[#6B7A6F] text-white hover:bg-[#5A6A5F]"
-                      : "hover:bg-gray-100"
-                  }
+                  transition-all duration-200
+                  ${getBackgroundClass()}
+                  ${getTextColorClass()}
+                  ${getHoverClass()}
+                  ${isTodayDate && !isSelected && !isVerified ? "ring-2 ring-gray-300" : ""}
                 `}
+                style={{
+                  boxShadow: isVerified && !isSelected 
+                    ? "0 2px 8px rgba(79, 70, 229, 0.3)" 
+                    : undefined,
+                }}
                 onClick={() => handleDateClick(date)}
                 onKeyDown={(e) => handleKeyDown(e, date)}
                 aria-label={`${isoDate}, ${hasLog ? "기록 있음" : "기록 없음"}${
@@ -109,28 +131,6 @@ export function Calendar({
                 tabIndex={0}
               >
                 <span className="text-sm">{date.getDate()}</span>
-
-                {/* 기록 표시 */}
-                <div className="absolute bottom-2 flex gap-1">
-                  {hasLog && (
-                    <div
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{
-                        backgroundColor: isSelected
-                          ? COLORS.accent[300] // 액티브 상태에서는 더 연한 파란색
-                          : COLORS.accent[500], // 더스티 블루
-                      }}
-                    />
-                  )}
-                  {hasDailyVivid && (
-                    <div
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{
-                        backgroundColor: "#E5B96B", // 머스터드 옐로우 (active 상태에서도 잘 보임)
-                      }}
-                    />
-                  )}
-                </div>
               </button>
             );
           })
