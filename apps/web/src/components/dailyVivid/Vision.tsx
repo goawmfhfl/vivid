@@ -296,7 +296,7 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
     (view.future_keywords && view.future_keywords.length > 0)
   );
   const hasRetrospectiveData = 
-    view?.retrospective_summary !== "null" && view?.retrospective_evaluation !== "null"
+    !!view?.retrospective_summary && view?.retrospective_summary !== "null" && !!view?.retrospective_evaluation && view?.retrospective_evaluation !== "null"
   
 
 
