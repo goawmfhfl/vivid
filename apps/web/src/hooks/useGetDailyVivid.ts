@@ -87,7 +87,6 @@ export const useGetDailyVividById = (id: string | null) => {
     queryFn: () => (id ? fetchDailyVividById(id) : null),
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
-    placeholderData: keepPreviousData,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
