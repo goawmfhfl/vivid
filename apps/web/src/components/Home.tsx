@@ -218,7 +218,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
   useEffect(() => {
     if (timerStartTime === null) return;
 
-    const DURATION_MS = generationMode === "reasoned" ? 35000 : 20000; // 사고: 35초, 빠른: 20초
+    const DURATION_MS = generationMode === "reasoned" ? 40000 : 20000; // 사고: 35초, 빠른: 20초
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 

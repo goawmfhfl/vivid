@@ -295,13 +295,16 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
     view.future_evaluation?.trim() ||
     (view.future_keywords && view.future_keywords.length > 0)
   );
-  const hasRetrospectiveData = !!(
-    view.retrospective_summary?.trim() || view.retrospective_evaluation?.trim()
-  );
+  const hasRetrospectiveData = 
+    view?.retrospective_summary !== "null" && view?.retrospective_evaluation !== "null"
+  
+
+
+  
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
-  const hasExecutionScore =
-    view.execution_score !== null && view.execution_score !== undefined;
+  const hasExecutionScore = !!view.execution_score
+  
   const hasUserCharacteristics =
     view.user_characteristics && view.user_characteristics.length > 0;
   const hasAspiredTraits = view.aspired_traits && view.aspired_traits.length > 0;
