@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { generateAllReportsWithProgress } from "./ai-service-stream";
 import { fetchRecordsByDate, saveDailyReport } from "./db-service";
@@ -66,6 +67,8 @@ export async function POST(request: NextRequest) {
       report,
       generation_duration_seconds
     );
+
+    revalidatePath("/");
 
     return NextResponse.json(
       {

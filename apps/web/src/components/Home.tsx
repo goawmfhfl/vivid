@@ -266,6 +266,9 @@ export function Home({ selectedDate }: HomeProps = {}) {
         // 진행 상황 초기화
         clearDailyVividProgress(activeDate);
 
+        // 서버 컴포넌트 캐시 갱신
+        router.refresh();
+
         // 성공 시 바로 라우팅 (모달 없이)
         if (feedbackData?.id) {
           // DB 동기화를 위한 짧은 딜레이 추가

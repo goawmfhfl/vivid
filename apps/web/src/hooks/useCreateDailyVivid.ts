@@ -66,6 +66,14 @@ export const useCreateDailyVivid = () => {
         data || null
       );
 
+      // 생성 직후 캐시 무효화로 최신 데이터 강제 동기화
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, variables.date],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, "today"],
+      });
+
       // 생성된 피드백의 ID로 쿼리도 업데이트 (있는 경우)
       if (data?.id) {
         queryClient.setQueryData<DailyVividRow | null>(
