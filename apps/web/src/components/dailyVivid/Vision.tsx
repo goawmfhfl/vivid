@@ -192,6 +192,98 @@ function AlignmentScoreInfoDialog() {
   );
 }
 
+function ExecutionScoreInfoDialog() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center justify-center w-5 h-5 rounded-full transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style={{
+            color: COLORS.text.tertiary,
+          }}
+          aria-label="실행력 점수 평가 기준 보기"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm mx-4">
+        <DialogHeader>
+          <DialogTitle
+            className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+            style={{ color: COLORS.text.primary }}
+          >
+            실행력 점수란?
+          </DialogTitle>
+          <DialogDescription
+            className={cn(
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.lineHeight,
+              "mt-4"
+            )}
+            style={{ color: COLORS.text.secondary }}
+          >
+            실행력 점수는 오늘의 계획(Q1)이 실제 하루(Q3)와 얼마나 잘
+            이어졌는지를 평가한 점수입니다 (0-100점).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <div>
+            <p
+              className={cn(
+                TYPOGRAPHY.bodySmall.fontSize,
+                TYPOGRAPHY.bodySmall.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
+            >
+              평가 기준
+            </p>
+            <ul className="space-y-2 ml-4 list-disc">
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                오늘의 계획이 실제 행동으로 이어졌는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                계획과 실행의 핵심 키워드가 일치하는가?
+              </li>
+              <li
+                className={cn(
+                  TYPOGRAPHY.bodySmall.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                실행의 흐름이 계획의 방향성을 잘 반영하는가?
+              </li>
+            </ul>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const hexToRgbTriplet = (hex: string) => {
+  const cleanHex = hex.replace("#", "");
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+};
+
 export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
   const hasCurrentData = !!(
     view.current_summary?.trim() ||
@@ -203,8 +295,13 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
     view.future_evaluation?.trim() ||
     (view.future_keywords && view.future_keywords.length > 0)
   );
+  const hasRetrospectiveData = !!(
+    view.retrospective_summary?.trim() || view.retrospective_evaluation?.trim()
+  );
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
+  const hasExecutionScore =
+    view.execution_score !== null && view.execution_score !== undefined;
   const hasUserCharacteristics =
     view.user_characteristics && view.user_characteristics.length > 0;
   const hasAspiredTraits = view.aspired_traits && view.aspired_traits.length > 0;
@@ -213,6 +310,7 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
   const currentColor = "#E5B96B"; // 머스터드 옐로우
   const futureColor = "#A3BFD9"; // 파스텔 블루
   const alignmentColor = COLORS.brand.primary; // 세이지 그린
+  const reviewGradientColor = hexToRgbTriplet(COLORS.brand.primary);
 
   return (
     <div className="mb-16">
@@ -329,6 +427,50 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
         </div>
       )}
 
+      {/* 🪞 오늘의 회고 (Q3) */}
+      {hasRetrospectiveData && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110"
+              style={{
+                background: `linear-gradient(135deg, ${alignmentColor} 0%, ${alignmentColor}DD 100%)`,
+                boxShadow: `0 4px 12px ${alignmentColor}40`,
+              }}
+            >
+              <CheckCircle2 className="w-5 h-5 text-white" />
+            </div>
+            <h3
+              className={cn(TYPOGRAPHY.h2.fontSize, TYPOGRAPHY.h2.fontWeight)}
+              style={{ color: COLORS.text.primary }}
+            >
+              오늘의 회고
+            </h3>
+          </div>
+
+          <div className="space-y-5">
+            {view.retrospective_summary && (
+              <ContentCard
+                icon={Sparkles}
+                iconColor={alignmentColor}
+                label="회고 요약"
+                content={view.retrospective_summary}
+                gradientColor={reviewGradientColor}
+              />
+            )}
+            {view.retrospective_evaluation && (
+              <ContentCard
+                icon={TrendingUp}
+                iconColor={alignmentColor}
+                label="회고 AI 평가"
+                content={view.retrospective_evaluation}
+                gradientColor={reviewGradientColor}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 📊 일치도 분석 */}
       {hasAlignmentScore && (
         <div className="mb-12">
@@ -436,7 +578,8 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
               </p>
 
               {/* 점수 산정 근거 */}
-              {view.alignment_score_reason && view.alignment_score_reason.length > 0 && (
+              {view.alignment_analysis_points &&
+                view.alignment_analysis_points.length > 0 && (
                 <div className="mt-6 pt-5 border-t" style={{ borderColor: `${alignmentColor}20` }}>
                   <div className="flex items-center gap-2 mb-4">
                     <CheckCircle2 
@@ -456,7 +599,7 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {view.alignment_score_reason.map((reason, idx) => (
+                    {view.alignment_analysis_points.map((reason, idx) => (
                       <div
                         key={idx}
                         className="px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
@@ -480,6 +623,177 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
                   </div>
                 </div>
               )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ⚡ 실행력 점수 */}
+      {hasExecutionScore && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110"
+              style={{
+                background: `linear-gradient(135deg, ${alignmentColor} 0%, ${alignmentColor}DD 100%)`,
+                boxShadow: `0 4px 12px ${alignmentColor}40`,
+              }}
+            >
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <h3
+              className={cn(TYPOGRAPHY.h2.fontSize, TYPOGRAPHY.h2.fontWeight)}
+              style={{ color: COLORS.text.primary }}
+            >
+              실행력 분석
+            </h3>
+          </div>
+          <Card
+            className={cn(
+              "p-6 sm:p-7 relative overflow-hidden group transition-all duration-300 hover:shadow-xl"
+            )}
+            style={{
+              background: `linear-gradient(135deg, rgba(127, 143, 122, 0.12) 0%, rgba(127, 143, 122, 0.06) 50%, rgb(255, 255, 255) 100%)`,
+              border: `1.5px solid rgba(127, 143, 122, 0.25)`,
+              borderRadius: "20px",
+              boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(127, 143, 122, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9)`,
+            }}
+          >
+            {/* 배경 장식 */}
+            <div
+              className="absolute top-0 right-0 w-64 h-64 opacity-4 group-hover:opacity-6 transition-opacity duration-300 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at 80% 20%, rgba(127, 143, 122, 0.15) 0%, transparent 60%)`,
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 w-48 h-48 opacity-3 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle at 20% 80%, rgba(127, 143, 122, 0.1) 0%, transparent 50%)`,
+              }}
+            />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{
+                    backgroundColor: `${alignmentColor}20`,
+                    border: `1.5px solid ${alignmentColor}40`,
+                  }}
+                >
+                  <Zap className="w-4 h-4" style={{ color: alignmentColor }} />
+                </div>
+                <p
+                  className={cn(
+                    TYPOGRAPHY.label.fontSize,
+                    TYPOGRAPHY.label.fontWeight,
+                    TYPOGRAPHY.label.letterSpacing,
+                    "uppercase"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  실행력 점수
+                </p>
+                <ExecutionScoreInfoDialog />
+              </div>
+              <div className="mb-4">
+                <div className="flex items-center gap-4 mb-3">
+                  <div
+                    className={cn(
+                      TYPOGRAPHY.number.large.fontSize,
+                      TYPOGRAPHY.number.large.fontWeight
+                    )}
+                    style={{
+                      color: alignmentColor,
+                      textShadow: `0 2px 8px ${alignmentColor}20`,
+                    }}
+                  >
+                    {view.execution_score}
+                  </div>
+                  <div
+                    className={cn(TYPOGRAPHY.h4.fontSize, "font-medium")}
+                    style={{ color: COLORS.text.tertiary }}
+                  >
+                    / 100
+                  </div>
+                </div>
+                <div
+                  className="h-10 rounded-full overflow-hidden relative"
+                  style={{
+                    backgroundColor: COLORS.background.hover,
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-1000 ease-out relative"
+                    style={{
+                      width: `${view.execution_score ?? 0}%`,
+                      background: `linear-gradient(90deg, ${alignmentColor} 0%, ${alignmentColor}CC 100%)`,
+                      boxShadow: `0 2px 8px ${alignmentColor}40`,
+                    }}
+                  />
+                </div>
+              </div>
+              <p
+                className={cn(
+                  TYPOGRAPHY.body.fontSize,
+                  TYPOGRAPHY.body.lineHeight,
+                  "mt-6"
+                )}
+                style={{ color: COLORS.text.muted }}
+              >
+                오늘의 계획이 실제 하루와 얼마나 잘 맞았는지를 보여주는
+                점수입니다.
+              </p>
+
+              {view.execution_analysis_points &&
+                view.execution_analysis_points.length > 0 && (
+                  <div
+                    className="mt-6 pt-5 border-t"
+                    style={{ borderColor: `${alignmentColor}20` }}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle2
+                        className="w-4 h-4"
+                        style={{ color: alignmentColor }}
+                      />
+                      <p
+                        className={cn(
+                          TYPOGRAPHY.label.fontSize,
+                          TYPOGRAPHY.label.fontWeight,
+                          TYPOGRAPHY.label.letterSpacing,
+                          "uppercase"
+                        )}
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        실행력 분석 포인트
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {view.execution_analysis_points.map((reason, idx) => (
+                        <div
+                          key={idx}
+                          className="px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
+                          style={{
+                            backgroundColor: `${alignmentColor}12`,
+                            border: `1px solid ${alignmentColor}25`,
+                          }}
+                        >
+                          <div
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: alignmentColor }}
+                          />
+                          <span
+                            className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                            style={{ color: COLORS.text.primary }}
+                          >
+                            {reason}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
             </div>
           </Card>
         </div>

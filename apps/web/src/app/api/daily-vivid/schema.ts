@@ -33,12 +33,35 @@ export const DailyVividReportSchema = {
         minimum: 0,
         maximum: 100,
       },
-      alignment_score_reason: {
+      alignment_analysis_points: {
         type: "array",
         items: { type: "string" },
+        minItems: 1,
+        maxItems: 3,
+        description: "비전 일치도 점수의 핵심 근거 3가지",
+      },
+      // 회고 인사이트 (Q3)
+      retrospective_summary: {
+        type: ["string", "null"],
+        description: "Q3가 입력된 경우에만 요약, 없으면 null",
+      },
+      retrospective_evaluation: {
+        type: ["string", "null"],
+        description: "Q3가 입력된 경우에만 평가, 없으면 null",
+      },
+      // 실행력 점수 (Q1 <-> Q3)
+      execution_score: {
+        type: ["number", "null"],
+        minimum: 0,
+        maximum: 100,
+        description: "Q3가 있을 경우: Q1과 Q3의 일치도, 없으면 null",
+      },
+      execution_analysis_points: {
+        type: ["array", "null"],
+        items: { type: "string" },
         minItems: 0,
-        maxItems: 5,
-        description: "점수 산정의 구체적인 근거 (겹치는 키워드/주제)",
+        maxItems: 3,
+        description: "Q3가 있을 경우: 실행 점수의 핵심 근거 3가지, 없으면 null",
       },
       // 사용자 특성 분석
       user_characteristics: {
@@ -62,7 +85,11 @@ export const DailyVividReportSchema = {
       "future_evaluation",
       "future_keywords",
       "alignment_score",
-      "alignment_score_reason",
+      "alignment_analysis_points",
+      "retrospective_summary",
+      "retrospective_evaluation",
+      "execution_score",
+      "execution_analysis_points",
       "user_characteristics",
       "aspired_traits",
     ],
@@ -120,12 +147,13 @@ export const IntegratedDailyVividSchema = {
 } as const;
 
 export const SYSTEM_PROMPT_REPORT = `
-당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")을 분석하여 통합 리포트를 생성합니다.
+당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")과 회고 기록(type="review")을 분석하여 통합 리포트를 생성합니다.
 
 ## 섹션별 규칙
 - vision_keywords는 6~10개 필수로 추출합니다.
 - vision_ai_feedback는 3개 요소의 배열로 반환합니다. 각 요소는 핵심 피드백 한 문장입니다.
-- VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
+- VIVID 기록(Q1, Q2)은 비전 분석에 사용합니다.
+- 회고 기록(Q3)이 없으면 retrospective/ execution 관련 필드는 반드시 null로 반환합니다.
 `;
 
 export const SYSTEM_PROMPT_TREND = `
@@ -155,11 +183,12 @@ export const SYSTEM_PROMPT_TREND = `
 `;
 
 export const SYSTEM_PROMPT_INTEGRATED = `
-당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")을 분석하여 통합 리포트와 최근 동향 데이터를 한 번에 생성합니다.
+당신은 사용자의 VIVID 기록(type="vivid" 또는 type="dream")과 회고 기록(type="review")을 분석하여 통합 리포트와 최근 동향 데이터를 한 번에 생성합니다.
 응답은 'report' 객체와 'trend' 객체를 모두 포함해야 합니다.
 
 ## 공통 규칙
-- VIVID 기록만을 기반으로 분석합니다. 다른 타입의 기록은 무시하세요.
+- VIVID 기록(Q1, Q2)은 비전 분석에 사용합니다.
+- 회고 기록(Q3)이 없으면 retrospective/ execution 관련 필드는 반드시 null로 반환합니다.
 
 ## 1. Report 섹션 규칙
 - vision_keywords는 6~10개 필수로 추출합니다.

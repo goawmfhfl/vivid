@@ -4,14 +4,19 @@ import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { fetchRecentTrends } from "@/hooks/useRecentTrends";
 
-const createDailyVivid = async (date: string): Promise<DailyVividRow> => {
+type DailyVividGenerationMode = "fast" | "reasoned";
+
+const createDailyVivid = async (
+  date: string,
+  generationMode: DailyVividGenerationMode = "fast"
+): Promise<DailyVividRow> => {
   const userId = await getCurrentUserId();
   const startTime = Date.now();
   
   const res = await fetch("/api/daily-vivid", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, date }),
+    body: JSON.stringify({ userId, date, generation_mode: generationMode }),
   });
   
   const endTime = Date.now();
@@ -35,6 +40,7 @@ const createDailyVivid = async (date: string): Promise<DailyVividRow> => {
           userId, 
           date,
           generation_duration_seconds: durationSeconds,
+          generation_mode: generationMode,
         }),
       });
     } catch (error) {
@@ -50,7 +56,13 @@ export const useCreateDailyVivid = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ date }: { date: string }) => createDailyVivid(date),
+    mutationFn: ({
+      date,
+      generationMode,
+    }: {
+      date: string;
+      generationMode?: DailyVividGenerationMode;
+    }) => createDailyVivid(date, generationMode),
     onSuccess: (data, variables) => {
       if (!variables?.date) {
         // 날짜가 없으면 전체 무효화로 폴백

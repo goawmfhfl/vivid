@@ -27,6 +27,7 @@ interface EditState {
   editContent: string;
   q1Content: string;
   q2Content: string;
+  q3Content: string;
   hasSeparated: boolean;
   selectedType: RecordType | null;
   // 감정 관련 상태
@@ -49,6 +50,7 @@ export function EditRecordDialog({
     editContent: "",
     q1Content: "",
     q2Content: "",
+    q3Content: "",
     hasSeparated: false,
     selectedType: null,
     emotionIntensity: undefined,
@@ -61,24 +63,48 @@ export function EditRecordDialog({
   const { subscription } = useSubscription();
   const isInitializedRef = useRef(false);
 
-  // vivid 타입(dream)일 때 Q1, Q2 분리 파싱
-  const parseVividContent = (content: string | null, recordType: RecordType | null) => {
-    if (!content || recordType !== "dream") {
-      return { q1: null, q2: null, hasSeparated: false };
+  // vivid/review 타입일 때 Q1/Q2 또는 Q3 분리 파싱
+  const parseVividContent = (
+    content: string | null,
+    recordType: RecordType | null
+  ) => {
+    if (!content) {
+      return { q1: null, q2: null, q3: null, hasSeparated: false };
     }
 
-    const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/);
-    const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/);
+    if (recordType === "dream") {
+      const q1Match = content.match(
+        /Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/
+      );
+      const q2Match = content.match(
+        /Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/
+      );
 
-    if (q1Match && q2Match) {
-      return {
-        q1: q1Match[1].trim(),
-        q2: q2Match[1].trim(),
-        hasSeparated: true,
-      };
+      if (q1Match && q2Match) {
+        return {
+          q1: q1Match[1].trim(),
+          q2: q2Match[1].trim(),
+          q3: null,
+          hasSeparated: true,
+        };
+      }
     }
 
-    return { q1: null, q2: null, hasSeparated: false };
+    if (recordType === "review") {
+      const q3Match = content.match(
+        /Q3\.\s*오늘의 나는 어떤 하루를 보냈을까\?[\s\n]*([\s\S]*?)$/
+      );
+      if (q3Match) {
+        return {
+          q1: null,
+          q2: null,
+          q3: q3Match[1].trim(),
+          hasSeparated: true,
+        };
+      }
+    }
+
+    return { q1: null, q2: null, q3: null, hasSeparated: false };
   };
 
   // 플랜별 사용 가능한 기록 타입 가져오기
@@ -90,7 +116,7 @@ export function EditRecordDialog({
     }
     
     if (plan === "pro") {
-      return ["dream", "emotion"];
+      return ["review", "dream", "emotion"];
     }
     
     return ["dream"];
@@ -116,6 +142,7 @@ export function EditRecordDialog({
             editContent: "",
             q1Content: parsed.q1 || "",
             q2Content: parsed.q2 || "",
+            q3Content: parsed.q3 || "",
             hasSeparated: true,
             selectedType: recordType && allowedTypes.includes(recordType)
               ? recordType
@@ -131,6 +158,7 @@ export function EditRecordDialog({
             editContent: record.content || "",
             q1Content: "",
             q2Content: "",
+            q3Content: "",
             hasSeparated: false,
             selectedType: recordType && allowedTypes.includes(recordType)
               ? recordType
@@ -157,6 +185,7 @@ export function EditRecordDialog({
         editContent: "",
         q1Content: "",
         q2Content: "",
+        q3Content: "",
         hasSeparated: false,
         selectedType: null,
         emotionIntensity: undefined,
@@ -221,9 +250,14 @@ export function EditRecordDialog({
     if (editState.hasSeparated && editState.selectedType === "dream") {
       const q1Text = editState.q1Content.trim();
       const q2Text = editState.q2Content.trim();
-      
+
       if (q1Text || q2Text) {
         contentToSave = `Q1. 오늘 하루를 어떻게 보낼까?\n\n${q1Text}\n\nQ2. 앞으로의 나는 어떤 모습일까?\n\n${q2Text}`;
+      }
+    } else if (editState.hasSeparated && editState.selectedType === "review") {
+      const q3Text = editState.q3Content.trim();
+      if (q3Text) {
+        contentToSave = `Q3. 오늘의 나는 어떤 하루를 보냈을까?\n\n${q3Text}`;
       }
     } else {
       contentToSave = editState.editContent.trim();
@@ -281,6 +315,17 @@ export function EditRecordDialog({
         : [...prev.emotionFactors, factor],
     }));
   };
+
+  const isSaveDisabled =
+    (editState.selectedType === "emotion"
+      ? !editState.emotionIntensity ||
+        editState.emotionKeywords.length === 0 ||
+        editState.emotionFactors.length === 0
+      : editState.hasSeparated && editState.selectedType === "dream"
+      ? !editState.q1Content.trim() && !editState.q2Content.trim()
+      : editState.hasSeparated && editState.selectedType === "review"
+      ? !editState.q3Content.trim()
+      : !editState.editContent.trim()) || updateRecordMutation.isPending;
 
   const handleClose = () => {
     onOpenChange(false);
@@ -514,6 +559,60 @@ export function EditRecordDialog({
                 />
               </div>
             </div>
+          ) : editState.hasSeparated && editState.selectedType === "review" ? (
+            <div className="space-y-6">
+              {/* Q3 섹션 */}
+              <div className="space-y-3">
+                <div
+                  className="flex items-baseline gap-3 pb-2 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
+                  <span
+                    className={cn(
+                      TYPOGRAPHY.h4.fontSize,
+                      "font-bold tracking-tight"
+                    )}
+                    style={{
+                      color: COLORS.text.primary,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    Q3
+                  </span>
+                  <h3
+                    className={cn(
+                      TYPOGRAPHY.body.fontSize,
+                      TYPOGRAPHY.body.fontWeight,
+                      "flex-1"
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    오늘의 나는 어떤 하루를 보냈을까?
+                  </h3>
+                </div>
+                <Textarea
+                  value={editState.q3Content}
+                  onChange={(e) => {
+                    setEditState((prev) => ({
+                      ...prev,
+                      q3Content: e.target.value,
+                    }));
+                  }}
+                  placeholder="답변을 입력하세요..."
+                  className="resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: COLORS.text.primary,
+                    fontSize: "16px",
+                    lineHeight: "28px",
+                    minHeight: "160px",
+                    padding: 0,
+                    paddingTop: "2px",
+                    boxShadow: "none",
+                  }}
+                />
+              </div>
+            </div>
           ) : (
             <Textarea
               value={editState.editContent}
@@ -572,26 +671,11 @@ export function EditRecordDialog({
           <button
             type="button"
             onClick={handleSaveEdit}
-            disabled={
-              (editState.selectedType === "emotion"
-                ? !editState.emotionIntensity ||
-                  editState.emotionKeywords.length === 0 ||
-                  editState.emotionFactors.length === 0
-                : editState.hasSeparated && editState.selectedType === "dream"
-                ? !editState.q1Content.trim() && !editState.q2Content.trim()
-                : !editState.editContent.trim()) || updateRecordMutation.isPending
-            }
+            disabled={isSaveDisabled}
             className="flex-1"
             style={{
               backgroundColor:
-                (editState.selectedType === "emotion"
-                  ? !editState.emotionIntensity ||
-                    editState.emotionKeywords.length === 0 ||
-                    editState.emotionFactors.length === 0
-                  : editState.hasSeparated && editState.selectedType === "dream"
-                  ? !editState.q1Content.trim() && !editState.q2Content.trim()
-                  : !editState.editContent.trim()) ||
-                updateRecordMutation.isPending
+                isSaveDisabled
                   ? COLORS.border.light
                   : COLORS.brand.primary,
               color: COLORS.text.white,
@@ -603,30 +687,10 @@ export function EditRecordDialog({
               alignItems: "center",
               justifyContent: "center",
               fontSize: "0.875rem",
-              cursor:
-                (editState.selectedType === "emotion"
-                  ? !editState.emotionIntensity ||
-                    editState.emotionKeywords.length === 0 ||
-                    editState.emotionFactors.length === 0
-                  : editState.hasSeparated && editState.selectedType === "dream"
-                  ? !editState.q1Content.trim() && !editState.q2Content.trim()
-                  : !editState.editContent.trim()) ||
-                updateRecordMutation.isPending
-                  ? "not-allowed"
-                  : "pointer",
+              cursor: isSaveDisabled ? "not-allowed" : "pointer",
               transition: "all 0.2s ease-in-out",
               padding: "0.625rem 1rem",
-              opacity:
-                (editState.selectedType === "emotion"
-                  ? !editState.emotionIntensity ||
-                    editState.emotionKeywords.length === 0 ||
-                    editState.emotionFactors.length === 0
-                  : editState.hasSeparated && editState.selectedType === "dream"
-                  ? !editState.q1Content.trim() && !editState.q2Content.trim()
-                  : !editState.editContent.trim()) ||
-                updateRecordMutation.isPending
-                  ? 0.5
-                  : 1,
+              opacity: isSaveDisabled ? 0.5 : 1,
             }}
           >
             {updateRecordMutation.isPending ? "저장 중..." : "저장하기"}

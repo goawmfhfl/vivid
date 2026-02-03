@@ -1,7 +1,13 @@
 import { COLORS } from "@/lib/design-system";
 import { Check } from "lucide-react";
 
-export type RecordType = "daily" | "emotion" | "dream" | "insight" | "feedback";
+export type RecordType =
+  | "daily"
+  | "emotion"
+  | "dream"
+  | "insight"
+  | "feedback"
+  | "review";
 
 interface RecordTypeInfo {
   id: RecordType;
@@ -27,7 +33,7 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
   },
   {
     id: "dream",
-    title: "VIVID",
+    title: "비비드",
     description: "살아가면서 이루고 싶은 꿈, 혹은 목표를 향한 기록",
     icon: "🎯",
   },
@@ -44,6 +50,12 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
     description:
       "어떤 경험을 통해서 깨달은 사실을 피드백하면서 스스로를 되돌아 볼 수 있는 기록",
     icon: "🔄",
+  },
+  {
+    id: "review",
+    title: "회고",
+    description: "오늘 하루를 돌아보고 정리하는 기록",
+    icon: "🪞",
   },
 ];
 
@@ -98,6 +110,13 @@ export const RECORD_TYPE_COLORS: Record<
     text: "#333333",
     lineColor: "rgba(107, 122, 111, 0.12)", // 프로젝트 브랜드 그린 줄무늬
     overlay: "rgba(124, 154, 124, 0.15)", // 미드 그린 오버레이
+  },
+  review: {
+    background: COLORS.background.card,
+    border: COLORS.border.light,
+    text: COLORS.text.primary,
+    lineColor: COLORS.border.light,
+    overlay: COLORS.brand.light,
   },
 };
 

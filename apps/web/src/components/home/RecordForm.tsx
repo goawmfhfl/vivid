@@ -5,7 +5,6 @@ import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
 import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
 import { getKSTDateString } from "@/lib/date-utils";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
   RECORD_TYPES,
@@ -36,6 +35,7 @@ interface RecordFormProps {
 const STORAGE_KEY = "record-form-draft";
 const STORAGE_KEY_Q1 = "record-form-draft-q1";
 const STORAGE_KEY_Q2 = "record-form-draft-q2";
+const STORAGE_KEY_Q3 = "record-form-draft-q3";
 
 export function RecordForm({
   onSuccess,
@@ -46,6 +46,7 @@ export function RecordForm({
   const [content, setContent] = useState("");
   const [q1Content, setQ1Content] = useState("");
   const [q2Content, setQ2Content] = useState("");
+  const [q3Content, setQ3Content] = useState("");
   const [emotionIntensity, setEmotionIntensity] =
     useState<EmotionIntensity | undefined>(4);
   const [emotionKeywords, setEmotionKeywords] = useState<string[]>([]);
@@ -56,12 +57,12 @@ export function RecordForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
   const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
+  const q3TextareaRef = useRef<HTMLTextAreaElement>(null);
   const hasAppliedInitialTypeRef = useRef(false);
   const createRecordMutation = useCreateRecord();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollPositionRef = useRef<{ x: number; y: number } | null>(null);
   const isUserScrollingRef = useRef(false);
-  const { data: currentUser } = useCurrentUser();
   const { subscription } = useSubscription();
   const { isDevelopment } = useEnvironment();
   const { state: timerState } = useTimer();
@@ -72,34 +73,23 @@ export function RecordForm({
   const targetDateIso = selectedDate || todayIso;
   const isFuture = targetDateIso > todayIso;
 
-  // 사용 가능한 기록 타입 가져오기
-  const getAllowedRecordTypes = useCallback((): RecordType[] => {
-    // 프로 플랜: VIVID 기록(dream) + 감정 기록(emotion) 가능
+  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 첫 번째 아님)
+  const getRecordTypeOptions = useCallback(() => {
+    const allowEmotion = !!subscription?.isPro && isDevelopment;
+    const allowedTypes: RecordType[] = ["dream"];
     if (subscription?.isPro) {
-      return isDevelopment ? ["dream", "emotion"] : ["dream"];
-    }
-    
-    // 프리 플랜: VIVID 기록(dream) 사용 가능
-    // 사용자의 recordTypes가 있으면 사용하되, dream이 포함되어 있지 않으면 dream 추가
-    if (currentUser?.user_metadata?.recordTypes) {
-      const userTypes = currentUser.user_metadata.recordTypes as RecordType[];
-      // dream이 포함되어 있지 않으면 dream 추가
-      const filteredTypes = isDevelopment
-        ? userTypes
-        : userTypes.filter((type) => type !== "emotion");
-      if (!filteredTypes.includes("dream")) {
-        return ["dream", ...filteredTypes];
+      allowedTypes.push("review");
+      if (allowEmotion) {
+        allowedTypes.push("emotion");
       }
-      return filteredTypes;
     }
-    
-    // 기본값: VIVID 기록(dream)
-    return ["dream"];
-  }, [subscription, currentUser, isDevelopment]);
+    const displayTypes = [...allowedTypes];
+    return { allowedTypes, displayTypes, allowEmotion };
+  }, [subscription?.isPro, isDevelopment]);
 
   // 첫 번째 타입을 기본값으로 설정
   useEffect(() => {
-    const allowedTypes = getAllowedRecordTypes();
+    const { allowedTypes } = getRecordTypeOptions();
     if (!hasAppliedInitialTypeRef.current) {
       if (initialType && allowedTypes.includes(initialType)) {
         setSelectedType(initialType);
@@ -118,7 +108,7 @@ export function RecordForm({
       // 현재 선택된 타입이 허용되지 않으면 첫 번째 타입으로 변경
       setSelectedType(allowedTypes[0] as RecordType);
     }
-  }, [getAllowedRecordTypes, selectedType, initialType]);
+  }, [getRecordTypeOptions, selectedType, initialType]);
 
   useEffect(() => {
     onTypeChange?.(selectedType);
@@ -138,6 +128,10 @@ export function RecordForm({
       const savedQ2 = localStorage.getItem(STORAGE_KEY_Q2);
       if (savedQ2) {
         setQ2Content(savedQ2);
+      }
+      const savedQ3 = localStorage.getItem(STORAGE_KEY_Q3);
+      if (savedQ3) {
+        setQ3Content(savedQ3);
       }
     }
   }, []);
@@ -169,6 +163,16 @@ export function RecordForm({
         localStorage.setItem(STORAGE_KEY_Q2, value);
       } else {
         localStorage.removeItem(STORAGE_KEY_Q2);
+      }
+    }
+  }, []);
+
+  const saveQ3ToLocalStorage = useCallback((value: string) => {
+    if (typeof window !== "undefined") {
+      if (value.trim()) {
+        localStorage.setItem(STORAGE_KEY_Q3, value);
+      } else {
+        localStorage.removeItem(STORAGE_KEY_Q3);
       }
     }
   }, []);
@@ -210,6 +214,18 @@ export function RecordForm({
     [saveQ2ToLocalStorage]
   );
 
+  const debouncedSaveQ3 = useCallback(
+    (value: string) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        saveQ3ToLocalStorage(value);
+      }, 500);
+    },
+    [saveQ3ToLocalStorage]
+  );
+
   // 페이지를 떠날 때 저장 (beforeunload)
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -222,13 +238,25 @@ export function RecordForm({
       if (q2Content.trim()) {
         saveQ2ToLocalStorage(q2Content);
       }
+      if (q3Content.trim()) {
+        saveQ3ToLocalStorage(q3Content);
+      }
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [content, q1Content, q2Content, saveToLocalStorage, saveQ1ToLocalStorage, saveQ2ToLocalStorage]);
+  }, [
+    content,
+    q1Content,
+    q2Content,
+    q3Content,
+    saveToLocalStorage,
+    saveQ1ToLocalStorage,
+    saveQ2ToLocalStorage,
+    saveQ3ToLocalStorage,
+  ]);
 
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
@@ -355,6 +383,18 @@ export function RecordForm({
     }
   }, [q2Content]);
 
+  // q3 textarea 높이 자동 조정
+  useEffect(() => {
+    const textarea = q3TextareaRef.current;
+    if (textarea && !isUserScrollingRef.current) {
+      textarea.style.height = "auto";
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.max(scrollHeight, 100);
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = "hidden";
+    }
+  }, [q3Content]);
+
   const handleToggleKeyword = (keyword: string) => {
     setEmotionKeywords((prev) =>
       prev.includes(keyword)
@@ -432,13 +472,41 @@ export function RecordForm({
 
   const handleSubmit = () => {
     if (isFuture) return;
-    const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
+    const { allowedTypes } = getRecordTypeOptions();
+    const recordType = selectedType || allowedTypes[0] || "dream";
 
     if (recordType === "emotion") {
       handleEmotionSubmit();
       return;
     }
-    
+
+    if (recordType === "review") {
+      if (q3Content.trim()) {
+        const formattedContent = `Q3. 오늘의 나는 어떤 하루를 보냈을까?\n\n${q3Content.trim()}`;
+        createRecordMutation.mutate(
+          {
+            content: formattedContent,
+            type: recordType,
+            ...(selectedDate && { kst_date: selectedDate }),
+          },
+          {
+            onSuccess: () => {
+              setQ3Content("");
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(STORAGE_KEY_Q3);
+              }
+              showToast("오늘의 회고가 저장됐어요.");
+              onSuccess?.();
+            },
+            onError: () => {
+              showToast("기록 저장에 실패했어요. 다시 시도해주세요.");
+            },
+          }
+        );
+      }
+      return;
+    }
+
     // dream 타입일 때는 2개의 질문을 포맷팅해서 합치기
     if (recordType === "dream") {
       if (q1Content.trim() || q2Content.trim()) {
@@ -551,6 +619,12 @@ export function RecordForm({
     debouncedSaveQ2(newContent);
   };
 
+  const handleQ3Change = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setQ3Content(newContent);
+    debouncedSaveQ3(newContent);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -610,8 +684,12 @@ export function RecordForm({
     }
   }, []);
 
-  const recordType = selectedType || getAllowedRecordTypes()[0] || "dream";
-  const availableTypes = getAllowedRecordTypes();
+  const { allowedTypes, displayTypes } = getRecordTypeOptions();
+  const recordType = selectedType || allowedTypes[0] || "dream";
+  const availableTypes = displayTypes;
+  const isReviewLocked = !subscription?.isPro;
+  const isTypeDisabled = (typeId: RecordType) =>
+    typeId === "review" && isReviewLocked;
 
   useEffect(() => {
     if (recordType === "emotion" && !emotionIntensity) {
@@ -858,15 +936,18 @@ export function RecordForm({
                 {availableTypes.map((typeId) => {
                   const type = RECORD_TYPES.find((t) => t.id === typeId);
                   if (!type) return null;
+                  const isDisabled = isTypeDisabled(type.id);
                   return (
                     <button
                       key={type.id}
                       type="button"
                       onClick={() => {
+                        if (isDisabled) return;
                         setSelectedType(type.id);
                         onTypeChange?.(type.id);
                         setShowTypeSelector(false);
                       }}
+                      disabled={isDisabled}
                       className="w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2"
                       style={{
                         backgroundColor:
@@ -877,15 +958,17 @@ export function RecordForm({
                           recordType === type.id
                             ? `1px solid ${COLORS.brand.primary}`
                             : "1px solid transparent",
+                        opacity: isDisabled ? 0.5 : 1,
+                        cursor: isDisabled ? "not-allowed" : "pointer",
                       }}
                       onMouseEnter={(e) => {
-                        if (recordType !== type.id) {
+                        if (recordType !== type.id && !isDisabled) {
                           e.currentTarget.style.backgroundColor =
                             COLORS.background.hover;
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (recordType !== type.id) {
+                        if (recordType !== type.id && !isDisabled) {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }
                       }}
@@ -899,9 +982,34 @@ export function RecordForm({
                       >
                         {type.title}
                       </span>
+                      {isDisabled && (
+                        <span
+                          className={TYPOGRAPHY.caption.fontSize}
+                          style={{
+                            color: COLORS.text.tertiary,
+                            marginLeft: "auto",
+                          }}
+                        >
+                          Pro 전용
+                        </span>
+                      )}
                     </button>
                   );
                 })}
+                {isReviewLocked && (
+                  <div
+                    className={cn(
+                      TYPOGRAPHY.caption.fontSize,
+                      "mt-2 rounded-lg px-3 py-2"
+                    )}
+                    style={{
+                      color: COLORS.text.secondary,
+                      backgroundColor: COLORS.background.hover,
+                    }}
+                  >
+                    Pro 업그레이드 시 회고 기록을 작성할 수 있어요.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1148,6 +1256,145 @@ export function RecordForm({
                 transition: "all 0.2s ease-in-out",
                 boxShadow:
                   (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
+                    ? "none"
+                    : "0 2px 4px rgba(0, 0, 0, 0.1)",
+              }}
+              className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
+            </Button>
+          </div>
+        </>
+      ) : recordType === "review" ? (
+        <>
+          {/* Q3 입력 필드 */}
+          <div className="mb-4">
+            <div
+              className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
+              style={{
+                backgroundColor: defaultColors.background,
+                border: `1.5px solid ${defaultColors.border}`,
+                borderRadius: "12px",
+                boxShadow: `
+                  0 2px 8px rgba(0,0,0,0.04),
+                  0 1px 3px rgba(0,0,0,0.02),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `,
+                position: "relative",
+                overflow: "hidden",
+                paddingLeft: "48px",
+                backgroundImage: `
+                  linear-gradient(90deg, 
+                    transparent 0px,
+                    transparent 36px,
+                    ${COLORS.border.card} 36px,
+                    ${COLORS.border.card} 38px,
+                    transparent 38px
+                  ),
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 27px,
+                    ${defaultColors.lineColor} 27px,
+                    ${defaultColors.lineColor} 28px
+                  ),
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(107, 122, 111, 0.01) 2px,
+                    rgba(107, 122, 111, 0.01) 4px
+                  )
+                `,
+                backgroundSize: "100% 100%, 100% 28px, 8px 8px",
+                backgroundPosition: "0 0, 0 2px, 0 0",
+                filter: "contrast(1.02) brightness(1.01)",
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 bottom-0"
+                style={{
+                  width: "2px",
+                  backgroundColor: `${COLORS.border.card}CC`,
+                  left: "36px",
+                }}
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `
+                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
+                  `,
+                  mixBlendMode: "overlay",
+                  opacity: 0.5,
+                }}
+              />
+              <div className="relative z-10">
+                <div className="mb-2">
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: "600",
+                      color: COLORS.text.primary,
+                    }}
+                  >
+                    Q3. 오늘의 나는 어떤 하루를 보냈을까?
+                  </span>
+                </div>
+                <Textarea
+                  ref={q3TextareaRef}
+                  value={q3Content}
+                  onChange={handleQ3Change}
+                  placeholder="답변을 입력하세요..."
+                  className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
+                  style={{
+                    backgroundColor: "transparent",
+                    color: COLORS.text.primary,
+                    fontSize: "16px",
+                    lineHeight: "28px",
+                    minHeight: "100px",
+                    transition: "height 0.1s ease-out",
+                    padding: 0,
+                    paddingTop: "2px",
+                    boxShadow: "none",
+                    scrollMargin: "0px",
+                  }}
+                />
+                <div className="flex items-center justify-between">
+                  <span
+                    className={TYPOGRAPHY.caption.fontSize}
+                    style={{
+                      color: COLORS.text.muted,
+                      opacity: q3Content.length > 0 ? 0.6 : 0.3,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {q3Content.length}자
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 제출 버튼 */}
+          <div className="flex justify-end mb-6">
+            <Button
+              onClick={handleSubmit}
+              disabled={!q3Content.trim() || createRecordMutation.isPending}
+              style={{
+                backgroundColor:
+                  !q3Content.trim() || createRecordMutation.isPending
+                    ? "#D1D5DB"
+                    : COLORS.brand.primary,
+                color: "#FFFFFF",
+                fontWeight: "600",
+                padding: "0.625rem 1.5rem",
+                borderRadius: "0.5rem",
+                transition: "all 0.2s ease-in-out",
+                boxShadow:
+                  !q3Content.trim() || createRecordMutation.isPending
                     ? "none"
                     : "0 2px 4px rgba(0, 0, 0, 0.1)",
               }}

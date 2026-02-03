@@ -24,5 +24,6 @@ export interface DailyReportResponse {
 export interface DailyVividRequest {
   userId: string;
   date: string;
+  generation_mode?: "fast" | "reasoned"; // 응답 생성 모드
   generation_duration_seconds?: number; // 클라이언트에서 측정한 생성 시간 (초 단위)
 }

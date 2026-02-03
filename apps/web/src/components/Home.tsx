@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, SlidersHorizontal, Check } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { type RecordType } from "./signup/RecordTypeCard";
 import { RecordForm } from "./home/RecordForm";
@@ -12,12 +12,22 @@ import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS, SPACING, SHADOWS } from "@/lib/design-system";
 import { ProfileUpdateModal } from "./ProfileUpdateModal";
 import { CircularProgress } from "./ui/CircularProgress";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "./ui/dropdown-menu";
+
+type DailyVividGenerationMode = "fast" | "reasoned";
+
+const DAILY_VIVID_MODE_STORAGE_KEY = "daily-vivid-generation-mode";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -41,11 +51,17 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [activeRecordType, setActiveRecordType] = useState<RecordType | null>(
     null
   );
+  const [generationMode, setGenerationMode] =
+    useState<DailyVividGenerationMode>("fast");
+  const [isModeHydrated, setIsModeHydrated] = useState(false);
   const searchParamsString = searchParams.toString();
   const initialRecordType = useMemo(() => {
     const typeParam = searchParams.get("type");
     if (typeParam === "emotion") {
       return "emotion";
+    }
+    if (typeParam === "review") {
+      return "review";
     }
     if (typeParam === "vivid") {
       return "dream";
@@ -58,6 +74,21 @@ export function Home({ selectedDate }: HomeProps = {}) {
       setActiveRecordType(initialRecordType);
     }
   }, [initialRecordType, activeRecordType]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedMode = localStorage.getItem(DAILY_VIVID_MODE_STORAGE_KEY);
+    if (savedMode === "fast" || savedMode === "reasoned") {
+      setGenerationMode(savedMode);
+    }
+    setIsModeHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isModeHydrated) return;
+    localStorage.setItem(DAILY_VIVID_MODE_STORAGE_KEY, generationMode);
+  }, [generationMode, isModeHydrated]);
 
   const handleTypeChange = useCallback(
     (type: RecordType | null) => {
@@ -161,6 +192,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const { data: dateFeedback } = useGetDailyVivid(activeDate);
 
   const hasDateFeedback = !!dateFeedback && dateFeedback.is_ai_generated;
+  const showGenerationModeSelector = isToday && !hasDateFeedback;
 
   // 전역 모달 및 피드백 생성 상태 관리
   const openErrorModal = useModalStore((state) => state.openErrorModal);
@@ -182,11 +214,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const progress = dailyVividProgress[activeDate] || null;
   const isGeneratingFeedback = createDailyVivid.isPending || progress !== null || timerProgress !== null;
   
-  // 타이머 기반 progress 계산 (0% → 99%, 18초 동안)
+  // 타이머 기반 progress 계산 (0% → 99%, 모드별 진행 시간)
   useEffect(() => {
     if (timerStartTime === null) return;
 
-    const DURATION_MS = 18000; // 18초
+    const DURATION_MS = generationMode === "reasoned" ? 35000 : 20000; // 사고: 35초, 빠른: 20초
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 
@@ -206,7 +238,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
     }, UPDATE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [timerStartTime]);
+  }, [timerStartTime, generationMode]);
 
   // 컴포넌트 언마운트 시에만 타이머 정리 (activeDate 변경 시에는 유지)
   useEffect(() => {
@@ -257,6 +289,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
       try {
         const feedbackData = await createDailyVivid.mutateAsync({
           date: activeDate,
+          generationMode,
         });
 
         // 타이머 정리
@@ -374,117 +407,222 @@ export function Home({ selectedDate }: HomeProps = {}) {
       />
 
       {hasDateRecords && (
-        <div 
-          className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50"
-        >
-          <div
-            className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
-            onClick={!isGeneratingFeedback ? handleOpenDailyVivid : undefined}
-            style={{
-              backgroundColor: "#FAFAF8",
-              border: `1.5px solid ${COLORS.border.light}`,
-              borderRadius: "12px",
-              boxShadow: `
-                0 2px 8px rgba(0,0,0,0.04),
-                0 1px 3px rgba(0,0,0,0.02),
-                inset 0 1px 0 rgba(255,255,255,0.6)
-              `,
-              position: "relative",
-              overflow: "hidden",
-              opacity: isGeneratingFeedback ? 0.9 : 1,
-              pointerEvents: isGeneratingFeedback ? "none" : "auto",
-              cursor: isGeneratingFeedback ? "default" : "pointer",
-              // 종이 질감 배경 패턴
-              backgroundImage: `
-                /* 가로 줄무늬 (프로젝트 그린 톤) */
-                repeating-linear-gradient(
-                  to bottom,
-                  transparent 0px,
-                  transparent 27px,
-                  rgba(107, 122, 111, 0.08) 27px,
-                  rgba(107, 122, 111, 0.08) 28px
-                ),
-                /* 종이 텍스처 노이즈 */
-                repeating-linear-gradient(
-                  45deg,
-                  transparent,
-                  transparent 2px,
-                  rgba(107, 122, 111, 0.01) 2px,
-                  rgba(107, 122, 111, 0.01) 4px
-                )
-              `,
-              backgroundSize: "100% 28px, 8px 8px",
-              backgroundPosition: "0 2px, 0 0",
-              filter: "contrast(1.02) brightness(1.01)",
-            }}
-            onMouseEnter={(e) => {
-              if (!isGeneratingFeedback) {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `
-                  0 4px 16px rgba(107, 122, 111, 0.08),
-                  0 2px 6px rgba(0,0,0,0.04),
-                  inset 0 1px 0 rgba(255,255,255,0.6)
-                `;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isGeneratingFeedback) {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = `
+        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div
+              className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
+              onClick={!isGeneratingFeedback ? handleOpenDailyVivid : undefined}
+              style={{
+                backgroundColor: "#FAFAF8",
+                border: `1.5px solid ${COLORS.border.light}`,
+                borderRadius: "12px",
+                boxShadow: `
                   0 2px 8px rgba(0,0,0,0.04),
                   0 1px 3px rgba(0,0,0,0.02),
                   inset 0 1px 0 rgba(255,255,255,0.6)
-                `;
-              }
-            }}
-          >
-            {/* 종이 질감 오버레이 */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `
-                  radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                  radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
                 `,
-                mixBlendMode: "overlay",
-                opacity: 0.5,
+                position: "relative",
+                overflow: "hidden",
+                opacity: isGeneratingFeedback ? 0.9 : 1,
+                pointerEvents: isGeneratingFeedback ? "none" : "auto",
+                cursor: isGeneratingFeedback ? "default" : "pointer",
+                // 종이 질감 배경 패턴
+                backgroundImage: `
+                  /* 가로 줄무늬 (프로젝트 그린 톤) */
+                  repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 27px,
+                    rgba(107, 122, 111, 0.08) 27px,
+                    rgba(107, 122, 111, 0.08) 28px
+                  ),
+                  /* 종이 텍스처 노이즈 */
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(107, 122, 111, 0.01) 2px,
+                    rgba(107, 122, 111, 0.01) 4px
+                  )
+                `,
+                backgroundSize: "100% 28px, 8px 8px",
+                backgroundPosition: "0 2px, 0 0",
+                filter: "contrast(1.02) brightness(1.01)",
               }}
-            />
-
-            {/* 버튼 내용 */}
-            <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
-              {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
-              {(progress || timerProgress !== null) && (
-                <CircularProgress
-                  percentage={progressPercentage}
-                  size={40}
-                  strokeWidth={4}
-                  showText={true}
-                  textSize="sm"
-                  className="flex-shrink-0"
-                  animated={false}
-                />
-              )}
-              <Sparkles
-                className={`flex-shrink-0 ${
-                  (progress || timerProgress !== null) ? "w-3 h-3 sm:w-4 sm:h-4" : "w-4 h-4"
-                }`}
-                style={{ color: COLORS.brand.primary }}
+              onMouseEnter={(e) => {
+                if (!isGeneratingFeedback) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = `
+                    0 4px 16px rgba(107, 122, 111, 0.08),
+                    0 2px 6px rgba(0,0,0,0.04),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isGeneratingFeedback) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = `
+                    0 2px 8px rgba(0,0,0,0.04),
+                    0 1px 3px rgba(0,0,0,0.02),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }
+              }}
+            >
+              {/* 종이 질감 오버레이 */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `
+                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+                  `,
+                  mixBlendMode: "overlay",
+                  opacity: 0.5,
+                }}
               />
-              <div className="flex flex-col items-start gap-0.5">
-                <span
-                  className="text-sm sm:text-base"
-                  style={{
-                    color: COLORS.brand.primary,
-                    fontSize: (progress || timerProgress !== null) ? "0.875rem" : "1rem",
-                    fontWeight: "600",
-                    lineHeight: "1.2",
-                  }}
-                >
-                  {getPrimaryButtonLabel()}
-                </span>
+
+              {/* 버튼 내용 */}
+              <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
+                {/* 원형 프로그래스 바 (생성 중일 때만 표시) */}
+                {(progress || timerProgress !== null) && (
+                  <CircularProgress
+                    percentage={progressPercentage}
+                    size={40}
+                    strokeWidth={4}
+                    showText={true}
+                    textSize="sm"
+                    className="flex-shrink-0"
+                    animated={false}
+                  />
+                )}
+                <Sparkles
+                  className={`flex-shrink-0 ${
+                    progress || timerProgress !== null
+                      ? "w-3 h-3 sm:w-4 sm:h-4"
+                      : "w-4 h-4"
+                  }`}
+                  style={{ color: COLORS.brand.primary }}
+                />
+                <div className="flex flex-col items-start gap-0.5">
+                  <span
+                    className="text-sm sm:text-base"
+                    style={{
+                      color: COLORS.brand.primary,
+                      fontSize:
+                        progress || timerProgress !== null ? "0.875rem" : "1rem",
+                      fontWeight: "600",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {getPrimaryButtonLabel()}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {showGenerationModeSelector && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200"
+                    disabled={isGeneratingFeedback}
+                    style={{
+                      backgroundColor: COLORS.background.card,
+                      border: `1px solid ${COLORS.border.light}`,
+                      color: COLORS.text.primary,
+                      boxShadow: SHADOWS.elevation1,
+                      opacity: isGeneratingFeedback ? 0.6 : 1,
+                      cursor: isGeneratingFeedback ? "default" : "pointer",
+                    }}
+                    aria-label="VIVID 생성 모드 선택"
+                  >
+                    <SlidersHorizontal
+                      className="w-3.5 h-3.5"
+                      style={{ color: COLORS.brand.primary }}
+                    />
+                    <span
+                      className="text-xs sm:text-sm"
+                      style={{ fontWeight: "600" }}
+                    >
+                      {generationMode === "fast" ? "빠른" : "사고"}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="min-w-[220px] p-2"
+                  style={{
+                    backgroundColor: COLORS.background.card,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                >
+                  <DropdownMenuItem
+                    onSelect={() => setGenerationMode("fast")}
+                    className="flex items-start gap-2"
+                  >
+                    <div className="mt-0.5 flex h-4 w-4 items-center justify-center">
+                      {generationMode === "fast" && (
+                        <Check
+                          className="h-3.5 w-3.5"
+                          style={{ color: COLORS.brand.primary }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <span
+                        className="text-sm"
+                        style={{
+                          color: COLORS.text.primary,
+                          fontWeight: "600",
+                        }}
+                      >
+                        빠른 답변 모드
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        빠르게 응답
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={() => setGenerationMode("reasoned")}
+                    className="flex items-start gap-2"
+                  >
+                    <div className="mt-0.5 flex h-4 w-4 items-center justify-center">
+                      {generationMode === "reasoned" && (
+                        <Check
+                          className="h-3.5 w-3.5"
+                          style={{ color: COLORS.brand.primary }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <span
+                        className="text-sm"
+                        style={{
+                          color: COLORS.text.primary,
+                          fontWeight: "600",
+                        }}
+                      >
+                        사고 답변 모드
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.secondary }}
+                      >
+                        분석 시간이 조금 더 소요
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       )}

@@ -54,11 +54,30 @@ export function RecordList({
   const emotionRecords = filteredRecords.filter(
     (record) => (record.type || "dream") === "emotion"
   );
+  const reviewRecords = filteredRecords.filter(
+    (record) => (record.type || "dream") === "review"
+  );
   const otherRecords = filteredRecords.filter(
-    (record) => !["dream", "emotion"].includes((record.type || "dream") as string)
+    (record) =>
+      !["dream", "emotion", "review"].includes((record.type || "dream") as string)
   );
 
   const normalizedActiveType = activeRecordType || null;
+
+  const vividAndReviewRecords = useMemo(() => {
+    const combined = [...vividRecords, ...reviewRecords];
+    return combined.sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [vividRecords, reviewRecords]);
+
+  const filteredVividAndReview =
+    normalizedActiveType === "dream"
+      ? vividAndReviewRecords.filter((r) => (r.type || "dream") === "dream")
+      : normalizedActiveType === "review"
+        ? vividAndReviewRecords.filter((r) => (r.type || "dream") === "review")
+        : vividAndReviewRecords;
 
   // 표시할 통계 계산 (모든 훅은 early return 전에 호출되어야 함)
   const displayStat = useMemo(() => {
@@ -139,7 +158,7 @@ export function RecordList({
       <div className="text-center py-12">
         <PenLine
           className="w-12 h-12 mx-auto mb-3"
-          style={{ color: "#A8BBA8", opacity: 0.5 }}
+          style={{ color: COLORS.text.muted, opacity: 0.5 }}
         />
         <p
           className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
@@ -161,6 +180,8 @@ export function RecordList({
       ? "오늘의 VIVID"
       : normalizedActiveType === "emotion"
       ? "오늘의 감정"
+      : normalizedActiveType === "review"
+      ? "오늘의 회고"
       : isToday
       ? "오늘의 타임라인"
       : "타임라인";
@@ -191,31 +212,45 @@ export function RecordList({
       </div>
 
       <div className={cn("space-y-6", SPACING.element.marginBottomLarge)}>
-        {(normalizedActiveType === "dream" || !normalizedActiveType) && (
+        {/* 비비드+회고 통합 리스트 (RecordItem으로 타입 구분) */}
+        {(normalizedActiveType === "dream" ||
+          normalizedActiveType === "review" ||
+          !normalizedActiveType) && (
           <div className="space-y-3">
-            {vividRecords.length > 0 ? (
-              vividRecords.map((record) => (
+            {filteredVividAndReview.length > 0 ? (
+              filteredVividAndReview.map((record) => (
                 <RecordItem
                   key={record.id}
                   record={record}
                   onEdit={onEdit}
                   onDelete={onDelete}
-                  showMeta={false}
+                  showMeta={normalizedActiveType === "dream" ? false : undefined}
                 />
               ))
             ) : (
-              <div className="rounded-xl border p-4">
+              <div className="text-center py-12">
+                <PenLine
+                  className="w-12 h-12 mx-auto mb-3"
+                  style={{ color: COLORS.text.muted, opacity: 0.5 }}
+                />
                 <p
-                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                  style={{ color: COLORS.text.muted }}
+                  className={cn(
+                    TYPOGRAPHY.body.fontSize,
+                    TYPOGRAPHY.body.lineHeight
+                  )}
+                  style={{
+                    color: COLORS.text.secondary,
+                    opacity: 0.6,
+                  }}
                 >
-                  오늘의 VIVID가 아직 없어요
+                  기록이 존재하지 않습니다
                 </p>
               </div>
             )}
           </div>
         )}
 
+        {/* 감정 섹션 (별도) */}
         {(normalizedActiveType === "emotion" || !normalizedActiveType) && (
           <div className="space-y-3">
             {emotionRecords.length > 0 ? (
@@ -228,12 +263,22 @@ export function RecordList({
                 />
               ))
             ) : (
-              <div className="rounded-xl border p-4">
+              <div className="text-center py-12">
+                <PenLine
+                  className="w-12 h-12 mx-auto mb-3"
+                  style={{ color: COLORS.text.muted, opacity: 0.5 }}
+                />
                 <p
-                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                  style={{ color: COLORS.text.muted }}
+                  className={cn(
+                    TYPOGRAPHY.body.fontSize,
+                    TYPOGRAPHY.body.lineHeight
+                  )}
+                  style={{
+                    color: COLORS.text.secondary,
+                    opacity: 0.6,
+                  }}
                 >
-                  아직 감정 데이터가 없어요
+                  기록이 존재하지 않습니다
                 </p>
               </div>
             )}

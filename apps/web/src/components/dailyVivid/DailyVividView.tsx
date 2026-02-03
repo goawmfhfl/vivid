@@ -123,7 +123,10 @@ export function DailyVividView({
   const hasDreamSection = !!(
     (view.current_summary && view.current_summary.trim()) ||
     (view.future_summary && view.future_summary.trim()) ||
+    (view.retrospective_summary && view.retrospective_summary.trim()) ||
+    (view.retrospective_evaluation && view.retrospective_evaluation.trim()) ||
     (view.alignment_score !== null && view.alignment_score !== undefined) ||
+    (view.execution_score !== null && view.execution_score !== undefined) ||
     (view.user_characteristics && view.user_characteristics.length > 0) ||
     (view.aspired_traits && view.aspired_traits.length > 0)
   );

@@ -45,6 +45,7 @@ export function RecordItem({
   const recordType = (record.type as RecordType) || "dream";
   const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
   const isEmotion = recordType === "emotion";
+  const isReview = recordType === "review";
   const emotionData = record.emotion;
   const intensityValue = emotionData?.intensity as EmotionIntensity | undefined;
   const intensityLabel = intensityValue
@@ -143,32 +144,54 @@ export function RecordItem({
 
   // vivid 타입(dream)일 때 Q1, Q2 분리
   const parseVividContent = (content: string | null) => {
-    if (!content || recordType !== "dream") {
-      return { q1: null, q2: null, hasSeparated: false };
+    if (!content) {
+      return { q1: null, q2: null, q3: null, hasSeparated: false };
     }
 
-    // Q1과 Q2 패턴 찾기
-    // Q1: Q1.로 시작하고 Q2.가 나오기 전까지 또는 끝까지
-    const q1Match = content.match(/Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/);
-    // Q2: Q2.로 시작하고 끝까지
-    const q2Match = content.match(/Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/);
+    if (recordType === "dream") {
+      // Q1과 Q2 패턴 찾기
+      // Q1: Q1.로 시작하고 Q2.가 나오기 전까지 또는 끝까지
+      const q1Match = content.match(
+        /Q1\.\s*오늘 하루를 어떻게 보낼까\?[\s\n]*([\s\S]*?)(?=\n\nQ2\.|$)/
+      );
+      // Q2: Q2.로 시작하고 끝까지
+      const q2Match = content.match(
+        /Q2\.\s*앞으로의 나는 어떤 모습일까\?[\s\n]*([\s\S]*?)$/
+      );
 
-    const q1 = q1Match ? q1Match[1].trim() : null;
-    const q2 = q2Match ? q2Match[1].trim() : null;
+      const q1 = q1Match ? q1Match[1].trim() : null;
+      const q2 = q2Match ? q2Match[1].trim() : null;
 
-    // Q1 또는 Q2 중 하나라도 있으면 분리된 UI로 표시
-    if (q1 || q2) {
-      return {
-        q1,
-        q2,
-        hasSeparated: true,
-      };
+      // Q1 또는 Q2 중 하나라도 있으면 분리된 UI로 표시
+      if (q1 || q2) {
+        return {
+          q1,
+          q2,
+          q3: null,
+          hasSeparated: true,
+        };
+      }
     }
 
-    return { q1: null, q2: null, hasSeparated: false };
+    if (recordType === "review") {
+      const q3Match = content.match(
+        /Q3\.\s*오늘의 나는 어떤 하루를 보냈을까\?[\s\n]*([\s\S]*?)$/
+      );
+      const q3 = q3Match ? q3Match[1].trim() : null;
+      if (q3) {
+        return {
+          q1: null,
+          q2: null,
+          q3,
+          hasSeparated: true,
+        };
+      }
+    }
+
+    return { q1: null, q2: null, q3: null, hasSeparated: false };
   };
 
-  const { q1, q2, hasSeparated } = parseVividContent(record.content);
+  const { q1, q2, q3, hasSeparated } = parseVividContent(record.content);
 
   return (
     <div
@@ -306,19 +329,68 @@ export function RecordItem({
           <div className="absolute -top-2 right-2">{actionsNode}</div>
         )}
 
-        {/* vivid 타입일 때 Q1, Q2 분리 표시 */}
-        {hasSeparated ? (
+        {/* vivid/review 타입일 때 분리 표시 */}
+        {hasSeparated && isReview ? (
           <div className="space-y-6">
-            {/* Q1 섹션 */}
-            {q1 && (
+            {q3 && (
               <div className="space-y-3">
-                <div className="flex items-baseline gap-3 pb-2 border-b" style={{ borderColor: COLORS.border.light }}>
+                <div
+                  className="flex items-baseline gap-3 pb-2 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
                   <span
                     className={cn(
                       TYPOGRAPHY.h4.fontSize,
                       "font-bold tracking-tight"
                     )}
-                    style={{ 
+                    style={{
+                      color: COLORS.text.primary,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    Q3
+                  </span>
+                  <h3
+                    className={cn(
+                      TYPOGRAPHY.body.fontSize,
+                      TYPOGRAPHY.body.fontWeight,
+                      "flex-1"
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    오늘의 나는 어떤 하루를 보냈을까?
+                  </h3>
+                </div>
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize)}
+                  style={{
+                    color: COLORS.text.primary,
+                    lineHeight: "28px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    paddingTop: "2px",
+                  }}
+                >
+                  {q3}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : hasSeparated ? (
+          <div className="space-y-6">
+            {/* Q1 섹션 */}
+            {q1 && (
+              <div className="space-y-3">
+                <div
+                  className="flex items-baseline gap-3 pb-2 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
+                  <span
+                    className={cn(
+                      TYPOGRAPHY.h4.fontSize,
+                      "font-bold tracking-tight"
+                    )}
+                    style={{
                       color: COLORS.text.primary,
                       letterSpacing: "-0.02em",
                     }}
@@ -354,13 +426,16 @@ export function RecordItem({
             {/* Q2 섹션 */}
             {q2 && (
               <div className="space-y-3">
-                <div className="flex items-baseline gap-3 pb-2 border-b" style={{ borderColor: COLORS.border.light }}>
+                <div
+                  className="flex items-baseline gap-3 pb-2 border-b"
+                  style={{ borderColor: COLORS.border.light }}
+                >
                   <span
                     className={cn(
                       TYPOGRAPHY.h4.fontSize,
                       "font-bold tracking-tight"
                     )}
-                    style={{ 
+                    style={{
                       color: COLORS.text.primary,
                       letterSpacing: "-0.02em",
                     }}

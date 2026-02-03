@@ -11,7 +11,15 @@ export interface Report {
 
   // 일치도 분석
   alignment_score: number; // 일치도 점수 - 오늘의 모습 vs 앞으로 되고 싶은 모습의 일치도 (0-100점 척도), 현재와 목표의 거리 측정
-  alignment_score_reason?: string[]; // 일치도 점수 산정 근거 - Q1과 Q2에서 겹치는 키워드/주제 (3~5개)
+  alignment_analysis_points: string[]; // 일치도 점수 산정 근거 - Q1과 Q2에서 겹치는 키워드/주제 (1~3개)
+
+  // 회고 인사이트 (Q3)
+  retrospective_summary: string | null; // Q3 요약 (없으면 null)
+  retrospective_evaluation: string | null; // Q3 평가 (없으면 null)
+
+  // 실행력 점수 (Q1 <-> Q3)
+  execution_score: number | null; // Q3가 있을 때만 점수, 없으면 null
+  execution_analysis_points: string[] | null; // 실행 점수 근거 (1~3개), 없으면 null
 
   // 사용자 특성 분석
   user_characteristics: string[]; // 기록을 쓰는 사람의 특징 (최대 5가지) - 기록 패턴과 내용을 분석해 도출한 사용자 특성 (예: "자기 성찰을 중시하는", "미래 지향적인", "감정 표현이 풍부한" 등)

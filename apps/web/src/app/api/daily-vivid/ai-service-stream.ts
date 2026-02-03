@@ -43,7 +43,8 @@ async function generateSection<T>(
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
-  userId?: string
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
 ): Promise<T> {
   const schemaObj: ReportSchema =
     typeof schema === "function" ? schema(isPro) : schema;
@@ -58,8 +59,11 @@ async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  // Gemini 3 Flash Preview 사용 (2025년 12월 17일 출시, 2026년 1월 기준 사용 가능)
-  const modelName = "gemini-3-flash-preview";
+  // generationMode에 따라 모델 선택
+  const modelName =
+    generationMode === "reasoned"
+      ? "gemini-3-pro-preview"
+      : "gemini-3-flash-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -138,8 +142,19 @@ async function generateSection<T>(
         else if (key === "required" && Array.isArray(value)) {
           cleaned[key] = value;
         }
-        // type, enum은 그대로 유지
-        else if (key === "type" || key === "enum") {
+        // type, enum은 그대로 유지하되, type이 배열인 경우 null을 제거
+        else if (key === "type") {
+          if (Array.isArray(value)) {
+            const normalizedTypes = value.filter(
+              (typeValue) => typeof typeValue === "string" && typeValue !== "null"
+            ) as string[];
+            if (normalizedTypes.length > 0) {
+              cleaned[key] = normalizedTypes[0];
+            }
+          } else {
+            cleaned[key] = value;
+          }
+        } else if (key === "enum") {
           cleaned[key] = value;
         }
         // 그 외의 객체는 재귀적으로 처리
@@ -483,7 +498,8 @@ async function generateReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  userId?: string
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
 ): Promise<Report | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -493,7 +509,10 @@ async function generateReport(
   }
 
   const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_REPORT, prompt);
+  const cacheKey = generateCacheKey(
+    SYSTEM_PROMPT_REPORT,
+    `${prompt}::${generationMode}`
+  );
 
   try {
     const result = await generateSection<Report>(
@@ -503,7 +522,8 @@ async function generateReport(
       cacheKey,
       isPro,
       "report",
-      userId
+      userId,
+      generationMode
     );
     console.log(`[generateReport] 생성 완료 (Pro: ${isPro})`);
     return result;
@@ -522,7 +542,8 @@ async function generateTrendData(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  userId?: string
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
 ): Promise<TrendData | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -532,7 +553,10 @@ async function generateTrendData(
 
   // VIVID 기록을 기반으로 trend 데이터 생성
   const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_TREND, prompt);
+  const cacheKey = generateCacheKey(
+    SYSTEM_PROMPT_TREND,
+    `${prompt}::${generationMode}`
+  );
 
   try {
     const result = await generateSection<TrendData>(
@@ -542,7 +566,8 @@ async function generateTrendData(
       cacheKey,
       isPro,
       "trend",
-      userId
+      userId,
+      generationMode
     );
 
     // 빈 문자열 검증 및 필터링
@@ -593,7 +618,8 @@ async function generateIntegratedReport(
   date: string,
   dayOfWeek: string,
   isPro: boolean,
-  userId?: string
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
 ): Promise<{ report: Report | null; trend: TrendData | null }> {
   const dreamRecords = records.filter(
     (r) => r.type === "vivid" || r.type === "dream"
@@ -604,7 +630,10 @@ async function generateIntegratedReport(
   }
 
   const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
-  const cacheKey = generateCacheKey(SYSTEM_PROMPT_INTEGRATED, prompt);
+  const cacheKey = generateCacheKey(
+    SYSTEM_PROMPT_INTEGRATED,
+    `${prompt}::${generationMode}`
+  );
 
   try {
     const result = await generateSection<{ report: Report; trend: TrendData }>(
@@ -614,7 +643,8 @@ async function generateIntegratedReport(
       cacheKey,
       isPro,
       "integrated_report",
-      userId
+      userId,
+      generationMode
     );
     
     // generateSection 내부에서 이미 처리되지만, 명시적으로 한 번 더 확인
@@ -636,7 +666,8 @@ export async function generateAllReportsWithProgress(
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  userId?: string
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
 ): Promise<{
   report: Report | null;
   trend: TrendData | null;
@@ -650,7 +681,8 @@ export async function generateAllReportsWithProgress(
       date,
       dayOfWeek,
       isPro,
-      userId
+      userId,
+      generationMode
     );
 
     return {
@@ -661,13 +693,20 @@ export async function generateAllReportsWithProgress(
 
   // Pro 유저: 통합 생성 함수 호출 (하나의 API 요청으로 Report와 Trend 동시 생성)
   if (isPro) {
-    return await generateIntegratedReport(records, date, dayOfWeek, isPro, userId);
+    return await generateIntegratedReport(
+      records,
+      date,
+      dayOfWeek,
+      isPro,
+      userId,
+      generationMode
+    );
   }
 
   // Fallback (혹시 모를 상황 대비, 기존 병렬 처리 코드 - 도달할 일 없음)
   const [report, trendData] = await Promise.all([
-    generateReport(records, date, dayOfWeek, isPro, userId),
-    generateTrendData(records, date, dayOfWeek, isPro, userId),
+    generateReport(records, date, dayOfWeek, isPro, userId, generationMode),
+    generateTrendData(records, date, dayOfWeek, isPro, userId, generationMode),
   ]);
 
   return {

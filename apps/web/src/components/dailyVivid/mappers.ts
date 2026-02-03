@@ -20,7 +20,16 @@ export function mapDailyVividRowToReport(
   const futureKeywords = report?.future_keywords ?? [];
   // 일치도 분석
   const alignmentScore = report?.alignment_score ?? null;
-  const alignmentScoreReason = report?.alignment_score_reason ?? [];
+  const alignmentAnalysisPoints =
+    report?.alignment_analysis_points ??
+    (report as { alignment_score_reason?: string[] })?.alignment_score_reason ??
+    [];
+  // 회고 인사이트
+  const retrospectiveSummary = report?.retrospective_summary ?? null;
+  const retrospectiveEvaluation = report?.retrospective_evaluation ?? null;
+  // 실행력 점수
+  const executionScore = report?.execution_score ?? null;
+  const executionAnalysisPoints = report?.execution_analysis_points ?? null;
   // 사용자 특성 분석
   const userCharacteristics = report?.user_characteristics ?? [];
   const aspiredTraits = report?.aspired_traits ?? [];
@@ -49,7 +58,11 @@ export function mapDailyVividRowToReport(
     future_evaluation: futureEvaluation,
     future_keywords: futureKeywords,
     alignment_score: alignmentScore,
-    alignment_score_reason: alignmentScoreReason,
+    alignment_analysis_points: alignmentAnalysisPoints,
+    retrospective_summary: retrospectiveSummary,
+    retrospective_evaluation: retrospectiveEvaluation,
+    execution_score: executionScore,
+    execution_analysis_points: executionAnalysisPoints,
     user_characteristics: userCharacteristics,
     aspired_traits: aspiredTraits,
     

@@ -15,10 +15,11 @@ import type { DailyVividRequest, DailyReportResponse } from "./types";
  * 3. 최종 리포트 생성
  * 4. DB 저장
  */
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, date, generation_duration_seconds }: DailyVividRequest = body;
+    const { userId, date, generation_duration_seconds, generation_mode }: DailyVividRequest = body;
 
     // 요청 검증
     if (!userId || !date) {
@@ -44,12 +45,15 @@ export async function POST(request: NextRequest) {
     const { isPro } = await verifySubscription(userId);
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
+    const generationMode = generation_mode === "reasoned" ? "reasoned" : "fast";
+
     const allReports = await generateAllReportsWithProgress(
       records,
       date,
       dayOfWeek,
       isPro,
-      userId // AI 사용량 로깅을 위한 userId 전달
+      userId, // AI 사용량 로깅을 위한 userId 전달
+      generationMode
     );
 
     // 4️⃣ DailyReportResponse 형식으로 변환

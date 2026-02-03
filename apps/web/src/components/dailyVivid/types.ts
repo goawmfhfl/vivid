@@ -26,8 +26,16 @@ export type DailyReportData = {
   future_keywords: string[];
   /** 일치도 점수 (0-100) */
   alignment_score: number | null;
-  /** 일치도 점수 산정 근거 (3~5개) */
-  alignment_score_reason?: string[];
+  /** 일치도 점수 산정 근거 (1~3개) */
+  alignment_analysis_points?: string[];
+  /** 회고 요약 (Q3) */
+  retrospective_summary?: string | null;
+  /** 회고 평가 (Q3) */
+  retrospective_evaluation?: string | null;
+  /** 실행력 점수 (Q1 <-> Q3) */
+  execution_score?: number | null;
+  /** 실행력 점수 근거 (1~3개) */
+  execution_analysis_points?: string[] | null;
   /** 기록을 쓰는 사람의 특징 (최대 5가지) */
   user_characteristics: string[];
   /** 지향하는 모습 (최대 5가지) */
