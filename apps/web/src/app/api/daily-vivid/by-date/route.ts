@@ -3,10 +3,8 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyVivid } from "@/lib/jsonb-encryption";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
-import {
-  FEEDBACK_REVALIDATE,
-  getCacheControlHeader,
-} from "@/constants/cache";
+// 날짜별 조회는 버튼 라벨(보기/생성하기)에 직결되므로 항상 최신 상태 필요 → 캐시 비활성화
+const BY_DATE_NO_CACHE = "private, max-age=0, must-revalidate";
 
 /**
  * GET 핸들러: 일일 비비드 조회 (date 기반)
@@ -46,9 +44,7 @@ export async function GET(request: NextRequest) {
         { data: null },
         {
           status: 200,
-          headers: {
-            "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
-          },
+          headers: { "Cache-Control": BY_DATE_NO_CACHE },
         }
       );
     }
@@ -62,9 +58,7 @@ export async function GET(request: NextRequest) {
       { data: decrypted },
       {
         status: 200,
-        headers: {
-          "Cache-Control": getCacheControlHeader(FEEDBACK_REVALIDATE),
-        },
+        headers: { "Cache-Control": BY_DATE_NO_CACHE },
       }
     );
   } catch (error) {

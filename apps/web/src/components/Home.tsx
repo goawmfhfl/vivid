@@ -189,9 +189,19 @@ export function Home({ selectedDate }: HomeProps = {}) {
   };
 
   // 선택한 날짜의 피드백 존재 여부 조회
-  const { data: dateFeedback } = useGetDailyVivid(activeDate);
+  const {
+    data: dateFeedback,
+    isSuccess: isDailyVividQuerySuccess,
+  } = useGetDailyVivid(activeDate);
 
-  const hasDateFeedback = !!dateFeedback && dateFeedback.is_ai_generated;
+  // 오늘의 VIVID 버튼 라벨/동작 분기: "보기"는 해당 날짜에 대한 조회가 성공했고,
+  // 그 결과가 현재 선택한 날짜(activeDate)의 AI 생성 피드백일 때만 표시.
+  // (캐시/placeholder로 다른 날짜 데이터가 잠깐 보이는 경우 "보기"가 나오지 않도록 함)
+  const hasDateFeedback =
+    isDailyVividQuerySuccess &&
+    !!dateFeedback &&
+    dateFeedback.report_date === activeDate &&
+    dateFeedback.is_ai_generated === true;
   const showGenerationModeSelector = isToday && !hasDateFeedback;
 
   // 전역 모달 및 피드백 생성 상태 관리
