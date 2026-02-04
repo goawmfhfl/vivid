@@ -13,7 +13,6 @@ function RootPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  // 루트 URL로 리다이렉션된 OAuth 에러 처리
   useEffect(() => {
     if (typeof window !== "undefined") {
       const errorParam = searchParams.get("error");
