@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEnvironment } from "@/hooks/useEnvironment";
@@ -314,11 +315,11 @@ export function MyInfoView() {
                     ? `1px solid ${COLORS.border.light}`
                     : "none",
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
                   e.currentTarget.style.backgroundColor =
                     COLORS.background.hover;
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
                   e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
