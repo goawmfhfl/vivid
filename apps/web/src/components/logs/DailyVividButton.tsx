@@ -37,7 +37,7 @@ export function DailyVividButton({
         }}
       >
         <Sparkles className="w-4 h-4" />
-        AI 리뷰 보기
+        AI 회고 보기
       </Button>
     </div>
   );

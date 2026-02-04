@@ -36,47 +36,52 @@ export async function fetchRecordsByDate(
   })) as Record[];
 }
 
+export type DailyReportGenerationType = "vivid" | "review";
+
 export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
   report: DailyReportResponse,
-  generationDurationSeconds?: number
+  generationDurationSeconds?: number,
+  generationType: DailyReportGenerationType = "vivid"
 ): Promise<DailyVividRow> {
-  // 먼저 기존 레코드가 있는지 확인
-  const { data: existingData, error: checkError } = await supabase
+  const isVivid = generationType === "vivid";
+
+  // 해당 (user_id, report_date)에서 현재 generationType에 해당하는 행 조회
+  const { data: existingRows, error: checkError } = await supabase
     .from("daily_vivid")
     .select("id")
     .eq("user_id", userId)
     .eq("report_date", report.date)
-    .maybeSingle();
+    .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
+    .limit(1);
 
   if (checkError) {
     throw new Error(`Failed to check existing feedback: ${checkError.message}`);
   }
 
-  // 새로운 타입별 리포트 데이터 준비 (암호화)
+  const existingData = existingRows?.[0] ?? null;
+
   const newReportDataToEncrypt: { [key: string]: unknown } = {
     report: report.report,
-    trend: report.trend, // trend도 함께 암호화
+    trend: report.trend,
   };
 
-  // 암호화 적용
   const encryptedNewReports = encryptDailyVivid(newReportDataToEncrypt);
 
   const reportData = {
     user_id: userId,
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
-    // 통합 리포트 필드
     report: encryptedNewReports.report || null,
-    trend: encryptedNewReports.trend || null, // trend 필드 추가
-    is_ai_generated: true,
+    trend: encryptedNewReports.trend || null,
+    is_vivid_ai_generated: isVivid,
+    is_review_ai_generated: !isVivid,
     generation_duration_seconds: generationDurationSeconds ?? null,
   };
 
   let result;
   if (existingData) {
-    // 기존 레코드가 있으면 업데이트
     const { data: updatedData, error: updateError } = await supabase
       .from("daily_vivid")
       .update(reportData)
@@ -95,7 +100,6 @@ export async function saveDailyReport(
 
     result = updatedData;
   } else {
-    // 기존 레코드가 없으면 삽입
     const { data: insertedData, error: insertError } = await supabase
       .from("daily_vivid")
       .insert(reportData)

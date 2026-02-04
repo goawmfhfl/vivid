@@ -243,15 +243,22 @@ export const useCreateRecord = () => {
       queryClient.setQueryData<{
         recordDates: string[];
         aiFeedbackDates: string[];
+        vividFeedbackDates: string[];
+        reviewFeedbackDates: string[];
       }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
         if (!oldData) {
           return {
             recordDates: [newRecord.kst_date],
             aiFeedbackDates: [],
+            vividFeedbackDates: [],
+            reviewFeedbackDates: [],
           };
         }
 
-        const { recordDates, aiFeedbackDates } = oldData;
+        const recordDates = oldData.recordDates;
+        const aiFeedbackDates = oldData.aiFeedbackDates ?? [];
+        const vividFeedbackDates = oldData.vividFeedbackDates ?? [];
+        const reviewFeedbackDates = oldData.reviewFeedbackDates ?? [];
         // 날짜가 이미 있는지 확인
         if (!recordDates.includes(newRecord.kst_date)) {
           const updatedRecordDates = [
@@ -261,9 +268,19 @@ export const useCreateRecord = () => {
           return {
             recordDates: updatedRecordDates,
             aiFeedbackDates,
+            vividFeedbackDates,
+            reviewFeedbackDates,
           };
         }
         return oldData;
+      });
+
+      // Q3 입력 직후 리뷰 탭 버튼 상태 반영: 해당 날짜 daily-vivid·기록 날짜 캐시 무효화
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, newRecord.kst_date],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
       });
     },
     onError: (error: RecordError) => {
@@ -305,6 +322,8 @@ export const useUpdateRecord = () => {
         queryClient.setQueryData<{
           recordDates: string[];
           aiFeedbackDates: string[];
+          vividFeedbackDates: string[];
+          reviewFeedbackDates: string[];
         }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
             return oldData;
@@ -329,7 +348,9 @@ export const useUpdateRecord = () => {
 
           return {
             recordDates,
-            aiFeedbackDates: oldData.aiFeedbackDates,
+            aiFeedbackDates: oldData.aiFeedbackDates ?? [],
+            vividFeedbackDates: oldData.vividFeedbackDates ?? [],
+            reviewFeedbackDates: oldData.reviewFeedbackDates ?? [],
           };
         });
       }
@@ -376,12 +397,17 @@ export const useDeleteRecord = () => {
         queryClient.setQueryData<{
           recordDates: string[];
           aiFeedbackDates: string[];
+          vividFeedbackDates: string[];
+          reviewFeedbackDates: string[];
         }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
             return oldData;
           }
 
-          const { recordDates, aiFeedbackDates } = oldData;
+          const recordDates = oldData.recordDates;
+          const aiFeedbackDates = oldData.aiFeedbackDates ?? [];
+          const vividFeedbackDates = oldData.vividFeedbackDates ?? [];
+          const reviewFeedbackDates = oldData.reviewFeedbackDates ?? [];
           const updatedRecordDates = recordDates.filter(
             (date) => date !== deletedRecord.kst_date
           );
@@ -389,6 +415,8 @@ export const useDeleteRecord = () => {
           return {
             recordDates: updatedRecordDates,
             aiFeedbackDates,
+            vividFeedbackDates,
+            reviewFeedbackDates,
           };
         });
       }

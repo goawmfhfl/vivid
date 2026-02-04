@@ -10,6 +10,8 @@ import { getKSTDateString } from "@/lib/date-utils";
 const fetchRecordsAndFeedbackDates = async (): Promise<{
   recordDates: string[];
   aiFeedbackDates: string[];
+  vividFeedbackDates: string[];
+  reviewFeedbackDates: string[];
 }> => {
   const userId = await getCurrentUserId();
 
@@ -29,12 +31,12 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
     throw new Error(`Failed to fetch records dates: ${recordsError.message}`);
   }
 
-  // AI 피드백 날짜 조회 (is_ai_generated = true만)
+  // AI 피드백 날짜 조회 (비비드 또는 리뷰 생성된 날짜)
   const { data: feedbacks, error: feedbackError } = await supabase
     .from(API_ENDPOINTS.DAILY_VIVID)
-    .select("report_date")
+    .select("report_date, is_vivid_ai_generated, is_review_ai_generated")
     .eq("user_id", userId)
-    .eq("is_ai_generated", true)
+    .or("is_vivid_ai_generated.eq.true,is_review_ai_generated.eq.true")
     .gte("report_date", startDate);
 
   if (feedbackError) {
@@ -46,13 +48,31 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
     new Set((records || []).map((r) => r.kst_date as string))
   ).sort();
 
+  const vividFeedbackDates = Array.from(
+    new Set(
+      (feedbacks || [])
+        .filter((f) => f.is_vivid_ai_generated === true)
+        .map((f) => f.report_date as string)
+    )
+  ).sort();
+
+  const reviewFeedbackDates = Array.from(
+    new Set(
+      (feedbacks || [])
+        .filter((f) => f.is_review_ai_generated === true)
+        .map((f) => f.report_date as string)
+    )
+  ).sort();
+
   const aiFeedbackDates = Array.from(
-    new Set((feedbacks || []).map((f) => f.report_date as string))
+    new Set([...vividFeedbackDates, ...reviewFeedbackDates])
   ).sort();
 
   return {
     recordDates,
     aiFeedbackDates,
+    vividFeedbackDates,
+    reviewFeedbackDates,
   };
 };
 

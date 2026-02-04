@@ -126,6 +126,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [lastDatesData, setLastDatesData] = useState<{
     recordDates: string[];
     aiFeedbackDates: string[];
+    vividFeedbackDates: string[];
+    reviewFeedbackDates: string[];
   } | null>(null);
   useEffect(() => {
     if (datesData) {
@@ -135,7 +137,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   const effectiveDatesData = datesData ?? lastDatesData;
   const recordDates = effectiveDatesData?.recordDates || [];
-  const aiFeedbackDates = effectiveDatesData?.aiFeedbackDates || [];
+  const vividFeedbackDates = effectiveDatesData?.vividFeedbackDates || [];
+  const reviewFeedbackDates = effectiveDatesData?.reviewFeedbackDates || [];
 
   // 현재 표시 중인 월 상태 (WeeklyDateView와 동기화)
   const [currentMonth, setCurrentMonth] = useState<{
@@ -188,20 +191,39 @@ export function Home({ selectedDate }: HomeProps = {}) {
     setDeletingRecordId(id);
   };
 
-  // 선택한 날짜의 피드백 존재 여부 조회
+  // 탭별 피드백 조회 (비비드 / 회고)
   const {
-    data: dateFeedback,
-    isSuccess: isDailyVividQuerySuccess,
-  } = useGetDailyVivid(activeDate);
+    data: vividFeedback,
+    isSuccess: isVividQuerySuccess,
+  } = useGetDailyVivid(activeDate, "vivid");
+  const {
+    data: reviewFeedback,
+    isSuccess: isReviewQuerySuccess,
+  } = useGetDailyVivid(activeDate, "review");
 
-  // 오늘의 VIVID 버튼 라벨/동작 분기: "보기"는 해당 날짜에 대한 조회가 성공했고,
-  // 그 결과가 현재 선택한 날짜(activeDate)의 AI 생성 피드백일 때만 표시.
-  // (캐시/placeholder로 다른 날짜 데이터가 잠깐 보이는 경우 "보기"가 나오지 않도록 함)
-  const hasDateFeedback =
-    isDailyVividQuerySuccess &&
-    !!dateFeedback &&
-    dateFeedback.report_date === activeDate &&
-    dateFeedback.is_ai_generated === true;
+  const hasVividFeedback =
+    isVividQuerySuccess &&
+    !!vividFeedback &&
+    vividFeedback.report_date === activeDate &&
+    vividFeedback.is_vivid_ai_generated === true;
+  const hasReviewFeedback =
+    isReviewQuerySuccess &&
+    !!reviewFeedback &&
+    reviewFeedback.report_date === activeDate &&
+    reviewFeedback.is_review_ai_generated === true;
+
+  const isReviewTab = activeRecordType === "review";
+  const hasDateFeedback = isReviewTab ? hasReviewFeedback : hasVividFeedback;
+  const dateFeedback = isReviewTab ? reviewFeedback : vividFeedback;
+
+  const hasVividRecord = records.some(
+    (r) => r.type === "vivid" || r.type === "dream"
+  );
+  const hasReviewRecord = records.some((r) => r.type === "review");
+  const canCreateReview = hasVividRecord && hasReviewRecord;
+  const isCreateButtonDisabled =
+    isReviewTab && !canCreateReview && !hasDateFeedback;
+
   const showGenerationModeSelector = isToday && !hasDateFeedback;
 
   // 전역 모달 및 피드백 생성 상태 관리
@@ -273,33 +295,33 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
 
   const handleOpenDailyVivid = async () => {
-    // TODO: 감정 타입 선택 시 emotion_records 기반 플로우로 분기 예정
+    if (isCreateButtonDisabled) return;
+
     try {
       if (hasDateFeedback) {
-        // 기존 피드백이 있으면 id로 라우팅
-        if (!dateFeedback.id) {
+        if (!dateFeedback?.id) {
           throw new Error("피드백 ID를 찾을 수 없습니다.");
         }
         router.push(`/analysis/feedback/daily/${dateFeedback.id}`);
         return;
       }
 
-      // 타이머 시작
       setTimerStartTime(Date.now());
       setTimerProgress(0);
 
-      // 진행 상황 초기화
+      const stepLabel = isReviewTab ? "회고 생성 중" : "비비드 생성 중";
       setDailyVividProgress(activeDate, {
         date: activeDate,
         current: 0,
         total: 1,
-        currentStep: "VIVID 생성 중",
+        currentStep: stepLabel,
       });
 
       try {
         const feedbackData = await createDailyVivid.mutateAsync({
           date: activeDate,
           generationMode,
+          generation_type: isReviewTab ? "review" : "vivid",
         });
 
         // 타이머 정리
@@ -354,7 +376,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   const getPrimaryButtonLabel = () => {
     const isEmotion = activeRecordType === "emotion";
-    const baseLabel = isEmotion ? "감정" : "VIVID";
+    const baseLabel = isEmotion
+      ? "감정"
+      : isReviewTab
+      ? "회고"
+      : "비비드";
 
     if (progress || timerProgress !== null) {
       return `${baseLabel} 생성 중...`;
@@ -388,14 +414,16 @@ export function Home({ selectedDate }: HomeProps = {}) {
         onDateSelect={(date) => router.push(buildDatePath(date))}
         currentMonth={currentMonth}
         recordDates={recordDates}
-        aiFeedbackDates={aiFeedbackDates}
+        vividFeedbackDates={vividFeedbackDates}
+        reviewFeedbackDates={reviewFeedbackDates}
       />
 
       <WeeklyDateView
         selectedDate={activeDate}
         onDateSelect={(date) => router.push(buildDatePath(date))}
         recordDates={recordDates}
-        aiFeedbackDates={aiFeedbackDates}
+        vividFeedbackDates={vividFeedbackDates}
+        reviewFeedbackDates={reviewFeedbackDates}
         onMonthChange={handleMonthChange}
         isLoading={isLoadingDates}
       />
@@ -418,10 +446,21 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
       {hasDateRecords && (
         <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 justify-center">
             <div
               className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
-              onClick={!isGeneratingFeedback ? handleOpenDailyVivid : undefined}
+              onClick={
+                !isGeneratingFeedback && !isCreateButtonDisabled
+                  ? handleOpenDailyVivid
+                  : undefined
+              }
+              role="button"
+              aria-disabled={isCreateButtonDisabled || isGeneratingFeedback}
+              title={
+                isCreateButtonDisabled
+                  ? "Q1·Q2와 Q3를 모두 입력해 주세요"
+                  : undefined
+              }
               style={{
                 backgroundColor: "#FAFAF8",
                 border: `1.5px solid ${COLORS.border.light}`,
@@ -433,9 +472,16 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 `,
                 position: "relative",
                 overflow: "hidden",
-                opacity: isGeneratingFeedback ? 0.9 : 1,
-                pointerEvents: isGeneratingFeedback ? "none" : "auto",
-                cursor: isGeneratingFeedback ? "default" : "pointer",
+                opacity:
+                  isGeneratingFeedback || isCreateButtonDisabled ? 0.6 : 1,
+                pointerEvents:
+                  isGeneratingFeedback || isCreateButtonDisabled
+                    ? "none"
+                    : "auto",
+                cursor:
+                  isGeneratingFeedback || isCreateButtonDisabled
+                    ? "not-allowed"
+                    : "pointer",
                 // 종이 질감 배경 패턴
                 backgroundImage: `
                   /* 가로 줄무늬 (프로젝트 그린 톤) */
@@ -460,7 +506,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 filter: "contrast(1.02) brightness(1.01)",
               }}
               onMouseEnter={(e) => {
-                if (!isGeneratingFeedback) {
+                if (!isGeneratingFeedback && !isCreateButtonDisabled) {
                   e.currentTarget.style.transform = "translateY(-2px)";
                   e.currentTarget.style.boxShadow = `
                     0 4px 16px rgba(107, 122, 111, 0.08),
@@ -470,7 +516,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isGeneratingFeedback) {
+                if (!isGeneratingFeedback && !isCreateButtonDisabled) {
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = `
                     0 2px 8px rgba(0,0,0,0.04),

@@ -3,14 +3,16 @@ import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
 
+export type DailyVividGenerationType = "vivid" | "review";
+
 const fetchDailyVividByDate = async (
-  date: string
+  date: string,
+  generationType: DailyVividGenerationType = "vivid"
 ): Promise<DailyVividRow | null> => {
   const userId = await getCurrentUserId();
 
-  // 서버 사이드 API를 통해 조회 (복호화는 서버에서 수행)
   const response = await fetch(
-    `/api/daily-vivid/by-date?userId=${userId}&date=${date}`
+    `/api/daily-vivid/by-date?userId=${userId}&date=${date}&generation_type=${generationType}`
   );
 
   if (!response.ok) {
@@ -70,10 +72,13 @@ const fetchDailyVividById = async (
   return result.data || null;
 };
 
-export const useGetDailyVivid = (date: string) => {
+export const useGetDailyVivid = (
+  date: string,
+  generationType: DailyVividGenerationType = "vivid"
+) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.DAILY_VIVID, date],
-    queryFn: () => fetchDailyVividByDate(date),
+    queryKey: [QUERY_KEYS.DAILY_VIVID, date, generationType],
+    queryFn: () => fetchDailyVividByDate(date, generationType),
     enabled: !!date,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,

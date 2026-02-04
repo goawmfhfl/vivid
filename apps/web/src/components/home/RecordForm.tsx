@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown, BookOpen } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
-import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES, SHADOWS } from "@/lib/design-system";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -24,6 +24,7 @@ import { EmotionFactorPicker } from "@/components/emotion/EmotionFactorPicker";
 import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
 import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
 import { useEnvironment } from "@/hooks/useEnvironment";
+import { ReviewGuidePanel } from "./ReviewGuidePanel";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -54,6 +55,7 @@ export function RecordForm({
   const [emotionReason, setEmotionReason] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
   const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -383,15 +385,34 @@ export function RecordForm({
     }
   }, [q2Content]);
 
-  // q3 textarea 높이 자동 조정
+  // q3 textarea 높이 자동 조정 (스크롤 위치 유지, 여러 타이밍에 복원)
   useEffect(() => {
     const textarea = q3TextareaRef.current;
     if (textarea && !isUserScrollingRef.current) {
+      scrollPositionRef.current = {
+        x: window.scrollX,
+        y: window.scrollY,
+      };
+
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
       const newHeight = Math.max(scrollHeight, 100);
       textarea.style.height = `${newHeight}px`;
       textarea.style.overflowY = "hidden";
+
+      const restore = () => {
+        if (scrollPositionRef.current) {
+          window.scrollTo(
+            scrollPositionRef.current.x,
+            scrollPositionRef.current.y
+          );
+        }
+      };
+      if (scrollPositionRef.current) {
+        requestAnimationFrame(restore);
+        setTimeout(restore, 0);
+        setTimeout(restore, 80);
+      }
     }
   }, [q3Content]);
 
@@ -495,7 +516,6 @@ export function RecordForm({
               if (typeof window !== "undefined") {
                 localStorage.removeItem(STORAGE_KEY_Q3);
               }
-              showToast("오늘의 회고가 저장됐어요.");
               onSuccess?.();
             },
             onError: () => {
@@ -620,9 +640,21 @@ export function RecordForm({
   };
 
   const handleQ3Change = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    scrollPositionRef.current = {
+      x: window.scrollX,
+      y: window.scrollY,
+    };
     const newContent = e.target.value;
     setQ3Content(newContent);
     debouncedSaveQ3(newContent);
+    requestAnimationFrame(() => {
+      if (scrollPositionRef.current) {
+        window.scrollTo(
+          scrollPositionRef.current.x,
+          scrollPositionRef.current.y
+        );
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -690,6 +722,49 @@ export function RecordForm({
   const isReviewLocked = !subscription?.isPro;
   const isTypeDisabled = (typeId: RecordType) =>
     typeId === "review" && isReviewLocked;
+
+  // q3 textarea의 scrollIntoView 영구 오버라이드 (스크롤 점프 방지, 회고 탭 마운트 시 적용)
+  useEffect(() => {
+    const textarea = q3TextareaRef.current;
+    if (textarea) {
+      const originalScrollIntoView = textarea.scrollIntoView.bind(textarea);
+      textarea.scrollIntoView = function (
+        _options?: boolean | ScrollIntoViewOptions
+      ) {
+        return;
+      };
+      return () => {
+        if (textarea) {
+          textarea.scrollIntoView = originalScrollIntoView;
+        }
+      };
+    }
+  }, [recordType]);
+
+  // q3 textarea style 변경 시 스크롤 복원 (높이 증가로 reflow 시 페이지 스크롤 유지)
+  useEffect(() => {
+    const textarea = q3TextareaRef.current;
+    if (!textarea) return;
+    const observer = new MutationObserver(() => {
+      if (scrollPositionRef.current && !isUserScrollingRef.current) {
+        requestAnimationFrame(() => {
+          if (scrollPositionRef.current) {
+            window.scrollTo(
+              scrollPositionRef.current.x,
+              scrollPositionRef.current.y
+            );
+          }
+        });
+      }
+    });
+    observer.observe(textarea, {
+      attributes: true,
+      attributeFilter: ["style"],
+      childList: false,
+      subtree: false,
+    });
+    return () => observer.disconnect();
+  }, [recordType]);
 
   useEffect(() => {
     if (recordType === "emotion" && !emotionIntensity) {
@@ -1347,6 +1422,7 @@ export function RecordForm({
                   ref={q3TextareaRef}
                   value={q3Content}
                   onChange={handleQ3Change}
+                  onFocus={handleFocus}
                   placeholder="답변을 입력하세요..."
                   className="mb-3 resize-none focus:outline-none focus:ring-0 border-0 bg-transparent"
                   style={{
@@ -1378,8 +1454,23 @@ export function RecordForm({
             </div>
           </div>
 
-          {/* 제출 버튼 */}
-          <div className="flex justify-end mb-6">
+          {/* 제출 버튼 + 가이드 (회고 탭: 기록 추가 왼쪽에 가이드 버튼) */}
+          <div className="flex items-center justify-between gap-2 sm:gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => setShowReviewGuidePanel(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+              style={{
+                backgroundColor: COLORS.background.card,
+                border: `1.5px solid ${COLORS.border.light}`,
+                color: COLORS.brand.primary,
+                boxShadow: SHADOWS.elevation1,
+              }}
+              aria-label="회고 가이드 보기"
+              title="가이드"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
             <Button
               onClick={handleSubmit}
               disabled={!q3Content.trim() || createRecordMutation.isPending}
@@ -1404,6 +1495,10 @@ export function RecordForm({
               {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
             </Button>
           </div>
+          <ReviewGuidePanel
+            open={showReviewGuidePanel}
+            onClose={() => setShowReviewGuidePanel(false)}
+          />
         </>
       ) : recordType === "emotion" ? (
         <div

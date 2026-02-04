@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
-      .eq("is_ai_generated", true)
+      .eq("is_vivid_ai_generated", true)
       .gte("report_date", dateRange.start_date)
       .lte("report_date", dateRange.end_date)
       .order("report_date", { ascending: true });

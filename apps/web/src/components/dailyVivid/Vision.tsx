@@ -48,7 +48,7 @@ function AlignmentScoreInfoDialog() {
           <HelpCircle className="w-4 h-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-sm mx-4">
+      <DialogContent className="w-[calc(100%-64px)] max-w-sm rounded-xl">
         <DialogHeader>
           <DialogTitle
             className={cn(
@@ -68,6 +68,13 @@ function AlignmentScoreInfoDialog() {
             style={{ color: COLORS.text.secondary }}
           >
             일치도 점수는 오늘의 계획이 미래 목표와 얼마나 잘 정렬되어 있는지를 평가한 점수입니다 (0-100점).
+            <br />
+            <span
+              className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-2 block")}
+              style={{ color: COLORS.text.tertiary }}
+            >
+              * AI 평가에 따라 5~10점 정도의 차이가 있을 수 있습니다.
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4 space-y-4">
@@ -208,7 +215,7 @@ function ExecutionScoreInfoDialog() {
           <HelpCircle className="w-4 h-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-sm mx-4">
+      <DialogContent className="w-[calc(100%-64px)] max-w-sm rounded-xl">
         <DialogHeader>
           <DialogTitle
             className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
@@ -226,6 +233,13 @@ function ExecutionScoreInfoDialog() {
           >
             실행력 점수는 오늘의 계획(Q1)이 실제 하루(Q3)와 얼마나 잘
             이어졌는지를 평가한 점수입니다 (0-100점).
+            <br />
+            <span
+              className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-2 block")}
+              style={{ color: COLORS.text.tertiary }}
+            >
+              * AI 평가에 따라 5~10점 정도의 차이가 있을 수 있습니다.
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4 space-y-4">

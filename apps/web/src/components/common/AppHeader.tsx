@@ -26,6 +26,8 @@ interface AppHeaderProps {
   currentMonth?: { year: number; month: number }; // 현재 표시 중인 월
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
+  vividFeedbackDates?: string[]; // 비비드 AI 피드백이 생성된 날짜 목록
+  reviewFeedbackDates?: string[]; // 회고 AI 피드백이 생성된 날짜 목록
   showBackButton?: boolean; // 뒤로 가기 버튼 표시 여부
   onBack?: () => void; // 뒤로 가기 버튼 클릭 핸들러
 }
@@ -39,6 +41,8 @@ export function AppHeader({
   currentMonth,
   recordDates = [],
   aiFeedbackDates = [],
+  vividFeedbackDates,
+  reviewFeedbackDates = [],
   showBackButton = false,
   onBack,
 }: AppHeaderProps) {
@@ -74,6 +78,9 @@ export function AppHeader({
       router.back();
     }
   };
+
+  const effectiveVividFeedbackDates =
+    vividFeedbackDates !== undefined ? vividFeedbackDates : aiFeedbackDates;
 
   return (
     <>
@@ -361,7 +368,8 @@ export function AppHeader({
           selectedDate={selectedDate}
           onDateSelect={onDateSelect}
           recordDates={recordDates}
-          aiFeedbackDates={aiFeedbackDates}
+          aiFeedbackDates={effectiveVividFeedbackDates}
+          reviewFeedbackDates={reviewFeedbackDates}
         />
       )}
     </>

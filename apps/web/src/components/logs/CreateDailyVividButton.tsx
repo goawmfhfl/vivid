@@ -36,10 +36,10 @@ export function CreateDailyVividButton({
       // 생성 성공 후 피드백 페이지로 이동 (id 사용)
       router.push(`/analysis/feedback/daily/${createdFeedback.id}`);
     } catch (error) {
-      console.error("AI 리뷰 생성 실패:", error);
+      console.error("AI 회고 생성 실패:", error);
       const errorMessage =
         error instanceof Error ? error.message : "알 수 없는 오류";
-      alert(`AI 리뷰 생성에 실패했습니다: ${errorMessage}`);
+      alert(`AI 회고 생성에 실패했습니다: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
@@ -61,12 +61,12 @@ export function CreateDailyVividButton({
         {isGenerating ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            AI 리뷰 생성 중...
+            AI 회고 생성 중...
           </>
         ) : (
           <>
             <Sparkles className="w-4 h-4" />
-            AI 리뷰 생성하기
+            AI 회고 생성하기
           </>
         )}
       </Button>

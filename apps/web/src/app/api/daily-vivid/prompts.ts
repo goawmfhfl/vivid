@@ -4,7 +4,8 @@ export function buildReportPrompt(
   records: Record[],
   date: string,
   dayOfWeek: string,
-  isPro: boolean = false
+  isPro: boolean = false,
+  userName?: string
 ): string {
   const targetRecords = records.filter(
     (r) =>
@@ -14,6 +15,11 @@ export function buildReportPrompt(
   if (targetRecords.length === 0) {
     return "";
   }
+
+  const honorificRule =
+    userName && userName !== "회원"
+      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${userName}님'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요.\n\n`
+      : "응답 문장에서 '당신'이라는 단어를 사용하지 마세요. 사용자를 지칭할 때는 '회원님' 등으로 호칭하세요.\n\n";
 
   const instruction = isPro
     ? [
@@ -96,6 +102,8 @@ export function buildReportPrompt(
         '- 예: "균형 잡힌 삶을 추구하는", "창의적인 문제 해결자", "타인과의 깊은 연결을 원하는" 등',
         "",
         "톤은 담백하고 과하지 않게, 사용자를 조용히 응원하는 호스트처럼 작성하세요.",
+        "",
+        honorificRule.trim(),
       ].join("\n")
     : [
         "VIVID 리포트를 간단하게 생성하세요.",
@@ -131,6 +139,8 @@ export function buildReportPrompt(
         "",
         "13) user_characteristics: 사용자 특성 (최대 3개, 간단하게)",
         "14) aspired_traits: 지향하는 모습 (최대 3개, 간단하게)",
+        "",
+        honorificRule.trim(),
       ].join("\n");
 
   let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 VIVID 기록입니다.\n${instruction}\n\n`;

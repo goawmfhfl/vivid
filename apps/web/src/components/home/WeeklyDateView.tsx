@@ -13,6 +13,8 @@ interface WeeklyDateViewProps {
   onDateSelect?: (date: string) => void;
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
+  vividFeedbackDates?: string[]; // 비비드 AI 피드백이 생성된 날짜 목록
+  reviewFeedbackDates?: string[]; // 회고 AI 피드백이 생성된 날짜 목록
   onMonthChange?: (year: number, month: number) => void; // 월 변경 콜백
   isLoading?: boolean; // 데이터 로딩 상태
 }
@@ -24,6 +26,8 @@ export function WeeklyDateView({
   onDateSelect,
   recordDates: _recordDates = [],
   aiFeedbackDates = [],
+  vividFeedbackDates,
+  reviewFeedbackDates = [],
   onMonthChange,
   isLoading = false,
 }: WeeklyDateViewProps) {
@@ -210,6 +214,9 @@ export function WeeklyDateView({
     }),
   };
 
+  const effectiveVividFeedbackDates =
+    vividFeedbackDates !== undefined ? vividFeedbackDates : aiFeedbackDates;
+
   return (
     <div
       ref={containerRef}
@@ -269,7 +276,15 @@ export function WeeklyDateView({
             {weekDates.map((date, index) => {
               const dateIso = getKSTDateString(date);
               const isActive = dateIso === activeDate;
-              const hasDailyVivid = aiFeedbackDates.includes(dateIso);
+              const hasDailyVivid =
+                effectiveVividFeedbackDates.includes(dateIso);
+              const hasReviewFeedback = reviewFeedbackDates.includes(dateIso);
+              const vividDotColor = isActive
+                ? COLORS.text.white
+                : COLORS.emotion.intensity[7];
+              const reviewDotColor = isActive
+                ? COLORS.brand.light
+                : COLORS.brand.primary;
               const dayOfWeek = WEEKDAYS[index];
               const dayNumber = date.getDate();
 
@@ -332,17 +347,27 @@ export function WeeklyDateView({
                   >
                     {dayNumber}
                     {/* daily-vivid dot 표시 */}
-                    {hasDailyVivid && (
+                    {(hasDailyVivid || hasReviewFeedback) && (
                       <div
                         className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
                         style={{ pointerEvents: "none" }}
                       >
-                        <div
-                          className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
-                          style={{
-                            backgroundColor: COLORS.emotion.intensity[7],
-                          }}
-                        />
+                        {hasDailyVivid && (
+                          <div
+                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: vividDotColor,
+                            }}
+                          />
+                        )}
+                        {hasReviewFeedback && (
+                          <div
+                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: reviewDotColor,
+                            }}
+                          />
+                        )}
                       </div>
                     )}
                   </button>

@@ -499,7 +499,8 @@ async function generateReport(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  generationMode: "fast" | "reasoned" = "fast",
+  userName?: string
 ): Promise<Report | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -508,7 +509,7 @@ async function generateReport(
     return null;
   }
 
-  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
+  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_REPORT,
     `${prompt}::${generationMode}`
@@ -543,7 +544,8 @@ async function generateTrendData(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  generationMode: "fast" | "reasoned" = "fast",
+  userName?: string
 ): Promise<TrendData | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -552,7 +554,7 @@ async function generateTrendData(
   }
 
   // VIVID 기록을 기반으로 trend 데이터 생성
-  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
+  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_TREND,
     `${prompt}::${generationMode}`
@@ -619,7 +621,8 @@ async function generateIntegratedReport(
   dayOfWeek: string,
   isPro: boolean,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  generationMode: "fast" | "reasoned" = "fast",
+  userName?: string
 ): Promise<{ report: Report | null; trend: TrendData | null }> {
   const dreamRecords = records.filter(
     (r) => r.type === "vivid" || r.type === "dream"
@@ -629,7 +632,7 @@ async function generateIntegratedReport(
     return { report: null, trend: null };
   }
 
-  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro);
+  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_INTEGRATED,
     `${prompt}::${generationMode}`
@@ -667,7 +670,8 @@ export async function generateAllReportsWithProgress(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  generationMode: "fast" | "reasoned" = "fast",
+  userName?: string
 ): Promise<{
   report: Report | null;
   trend: TrendData | null;
@@ -682,7 +686,8 @@ export async function generateAllReportsWithProgress(
       dayOfWeek,
       isPro,
       userId,
-      generationMode
+      generationMode,
+      userName
     );
 
     return {
@@ -699,14 +704,15 @@ export async function generateAllReportsWithProgress(
       dayOfWeek,
       isPro,
       userId,
-      generationMode
+      generationMode,
+      userName
     );
   }
 
   // Fallback (혹시 모를 상황 대비, 기존 병렬 처리 코드 - 도달할 일 없음)
   const [report, trendData] = await Promise.all([
-    generateReport(records, date, dayOfWeek, isPro, userId, generationMode),
-    generateTrendData(records, date, dayOfWeek, isPro, userId, generationMode),
+    generateReport(records, date, dayOfWeek, isPro, userId, generationMode, userName),
+    generateTrendData(records, date, dayOfWeek, isPro, userId, generationMode, userName),
   ]);
 
   return {

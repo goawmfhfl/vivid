@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get("userId");
     const date = searchParams.get("date");
+    const generationTypeParam = searchParams.get("generation_type");
+    const generationType =
+      generationTypeParam === "review" ? "review" : "vivid";
 
     if (!userId) {
       return NextResponse.json(
@@ -28,11 +31,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
+    const isVivid = generationType === "vivid";
     const { data, error } = await supabase
-    .from(API_ENDPOINTS.DAILY_VIVID)
+      .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
       .eq("report_date", date)
+      .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
       .maybeSingle();
 
     if (error) {

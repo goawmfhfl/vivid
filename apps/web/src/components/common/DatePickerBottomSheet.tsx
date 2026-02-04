@@ -14,6 +14,7 @@ interface DatePickerBottomSheetProps {
   onDateSelect?: (date: string) => void;
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
+  reviewFeedbackDates?: string[]; // 회고 AI 피드백이 생성된 날짜 목록
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -25,6 +26,7 @@ export function DatePickerBottomSheet({
   onDateSelect,
   recordDates: _recordDates = [],
   aiFeedbackDates = [],
+  reviewFeedbackDates = [],
 }: DatePickerBottomSheetProps) {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
@@ -249,6 +251,13 @@ export function DatePickerBottomSheet({
                   const isCurrentMonth =
                     date.getMonth() === currentMonth.getMonth();
                   const hasDailyVivid = aiFeedbackDates.includes(dateIso);
+                  const hasReviewFeedback = reviewFeedbackDates.includes(dateIso);
+                  const vividDotColor = isActive
+                    ? COLORS.text.white
+                    : COLORS.emotion.intensity[7];
+                  const reviewDotColor = isActive
+                    ? COLORS.brand.light
+                    : COLORS.brand.primary;
 
                   return (
                     <button
@@ -296,17 +305,27 @@ export function DatePickerBottomSheet({
                     >
                       {date.getDate()}
                       {/* daily-vivid dot 표시 */}
-                      {hasDailyVivid && (
+                      {(hasDailyVivid || hasReviewFeedback) && (
                         <div
-                          className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 flex items-center mt-0.5"
+                          className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-0.5 mt-0.5"
                           style={{ pointerEvents: "none" }}
                         >
-                          <div
-                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: COLORS.emotion.intensity[7],
-                            }}
-                          />
+                          {hasDailyVivid && (
+                            <div
+                              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: vividDotColor,
+                              }}
+                            />
+                          )}
+                          {hasReviewFeedback && (
+                            <div
+                              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: reviewDotColor,
+                              }}
+                            />
+                          )}
                         </div>
                       )}
                     </button>

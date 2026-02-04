@@ -5,50 +5,58 @@ import type { DailyVividRow } from "@/types/daily-vivid";
 import { fetchRecentTrends } from "@/hooks/useRecentTrends";
 
 type DailyVividGenerationMode = "fast" | "reasoned";
+type DailyVividGenerationType = "vivid" | "review";
 
 const createDailyVivid = async (
   date: string,
-  generationMode: DailyVividGenerationMode = "fast"
+  generationMode: DailyVividGenerationMode = "fast",
+  generationType: DailyVividGenerationType = "vivid"
 ): Promise<DailyVividRow> => {
   const userId = await getCurrentUserId();
   const startTime = Date.now();
-  
+
+  const body: Record<string, unknown> = {
+    userId,
+    date,
+    generation_mode: generationMode,
+    generation_type: generationType,
+  };
+
   const res = await fetch("/api/daily-vivid", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, date, generation_mode: generationMode }),
+    body: JSON.stringify(body),
   });
-  
+
   const endTime = Date.now();
   const durationSeconds = (endTime - startTime) / 1000;
-  
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(text || "Failed to create daily vivid");
   }
   const response = await res.json();
   const result = response.data as DailyVividRow;
-  
+
   // 생성 시간을 포함하여 다시 요청 (업데이트)
-  // 이미 생성된 피드백이므로 업데이트로 처리
   if (result?.id) {
     try {
       await fetch("/api/daily-vivid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          userId, 
+        body: JSON.stringify({
+          userId,
           date,
           generation_duration_seconds: durationSeconds,
           generation_mode: generationMode,
+          generation_type: generationType,
         }),
       });
     } catch (error) {
-      // 업데이트 실패해도 무시 (이미 생성은 완료됨)
       console.warn("생성 시간 업데이트 실패:", error);
     }
   }
-  
+
   return { ...result, generation_duration_seconds: durationSeconds };
 };
 
@@ -59,10 +67,12 @@ export const useCreateDailyVivid = () => {
     mutationFn: ({
       date,
       generationMode,
+      generation_type: generationType = "vivid",
     }: {
       date: string;
       generationMode?: DailyVividGenerationMode;
-    }) => createDailyVivid(date, generationMode),
+      generation_type?: DailyVividGenerationType;
+    }) => createDailyVivid(date, generationMode, generationType),
     onSuccess: (data, variables) => {
       if (!variables?.date) {
         // 날짜가 없으면 전체 무효화로 폴백
@@ -72,13 +82,14 @@ export const useCreateDailyVivid = () => {
         return;
       }
 
-      // 해당 날짜의 DAILY_VIVID 쿼리에 생성된 피드백 데이터 설정
+      const genType = variables.generation_type ?? "vivid";
+      // 해당 날짜·타입의 DAILY_VIVID 쿼리에 생성된 피드백 데이터 설정
       queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, variables.date],
+        [QUERY_KEYS.DAILY_VIVID, variables.date, genType],
         data || null
       );
 
-      // 생성 직후 캐시 무효화로 최신 데이터 강제 동기화
+      // 생성 직후 캐시 무효화로 최신 데이터 강제 동기화 (해당 날짜의 vivid/review 모두)
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DAILY_VIVID, variables.date],
       });
@@ -94,29 +105,56 @@ export const useCreateDailyVivid = () => {
         );
       }
 
-      // useRecordsAndFeedbackDates의 aiFeedbackDates 업데이트 (is_ai_generated가 true인 경우만)
-      if (data?.is_ai_generated) {
-        queryClient.setQueryData<{
-          recordDates: string[];
-          aiFeedbackDates: string[];
-        }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
+      // useRecordsAndFeedbackDates의 aiFeedbackDates 업데이트 (비비드 또는 회고 생성 시)
+      const hasAiFeedback =
+        data?.is_vivid_ai_generated === true ||
+        data?.is_review_ai_generated === true;
+      if (hasAiFeedback) {
+      queryClient.setQueryData<{
+        recordDates: string[];
+        aiFeedbackDates: string[];
+        vividFeedbackDates: string[];
+        reviewFeedbackDates: string[];
+      }>([QUERY_KEYS.RECORDS, "dates", "all"], (oldData) => {
           if (!oldData) {
             return oldData;
           }
 
-          const { recordDates, aiFeedbackDates } = oldData;
-          // 날짜가 이미 있는지 확인
-          if (!aiFeedbackDates.includes(variables.date)) {
-            const updatedAiFeedbackDates = [
-              ...aiFeedbackDates,
-              variables.date,
-            ].sort();
-            return {
-              recordDates,
-              aiFeedbackDates: updatedAiFeedbackDates,
-            };
-          }
+        const recordDates = oldData.recordDates;
+        const vividFeedbackDates = oldData.vividFeedbackDates ?? [];
+        const reviewFeedbackDates = oldData.reviewFeedbackDates ?? [];
+        let nextVividDates = vividFeedbackDates;
+        let nextReviewDates = reviewFeedbackDates;
+
+        if (
+          data?.is_vivid_ai_generated === true &&
+          !vividFeedbackDates.includes(variables.date)
+        ) {
+          nextVividDates = [...vividFeedbackDates, variables.date].sort();
+        }
+
+        if (
+          data?.is_review_ai_generated === true &&
+          !reviewFeedbackDates.includes(variables.date)
+        ) {
+          nextReviewDates = [...reviewFeedbackDates, variables.date].sort();
+        }
+
+        if (
+          nextVividDates === vividFeedbackDates &&
+          nextReviewDates === reviewFeedbackDates
+        ) {
           return oldData;
+        }
+
+        return {
+          recordDates,
+          vividFeedbackDates: nextVividDates,
+          reviewFeedbackDates: nextReviewDates,
+          aiFeedbackDates: Array.from(
+            new Set([...nextVividDates, ...nextReviewDates])
+          ).sort(),
+        };
         });
       }
 
