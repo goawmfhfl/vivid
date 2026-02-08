@@ -12,7 +12,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -542,13 +541,6 @@ export function AIUsagePage() {
                     />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: COLORS.background.card,
-                    border: `1px solid ${COLORS.border.light}`,
-                    borderRadius: "8px",
-                  }}
-                />
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 space-y-2">
@@ -630,16 +622,6 @@ export function AIUsagePage() {
                   tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
                   tickFormatter={(value) =>
                     `₩${Math.round(value).toLocaleString()}`
-                  }
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: COLORS.background.card,
-                    border: `1px solid ${COLORS.border.light}`,
-                    borderRadius: "8px",
-                  }}
-                  formatter={(value: number | undefined) =>
-                    `₩${Math.round(value ?? 0).toLocaleString()}`
                   }
                 />
                 <Bar dataKey="cost_krw" fill={COLORS.brand.primary} />
@@ -728,20 +710,6 @@ export function AIUsagePage() {
                   `₩${Math.round(value).toLocaleString()}`
                 }
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: COLORS.background.card,
-                  border: `1px solid ${COLORS.border.light}`,
-                  borderRadius: "8px",
-                }}
-                labelFormatter={(value) =>
-                  new Date(value).toLocaleDateString("ko-KR")
-                }
-                formatter={(value: number | undefined) => [
-                  `₩${Math.round(value ?? 0).toLocaleString()}`,
-                  "비용",
-                ]}
-              />
               <Line
                 type="monotone"
                 dataKey="cost_krw"
@@ -804,13 +772,6 @@ export function AIUsagePage() {
               tickFormatter={(value) =>
                 `₩${Math.round(value).toLocaleString()}`
               }
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: COLORS.background.card,
-                border: `1px solid ${COLORS.border.light}`,
-                borderRadius: "8px",
-              }}
             />
             <Bar
               yAxisId="left"
