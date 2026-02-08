@@ -12,7 +12,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
 } from "recharts";
 
@@ -236,13 +235,6 @@ export function ContentStatsPage() {
               tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
             />
             <YAxis tick={{ fill: COLORS.text.secondary, fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: COLORS.background.card,
-                border: `1px solid ${COLORS.border.light}`,
-                borderRadius: "8px",
-              }}
-            />
             <Line
               type="monotone"
               dataKey="count"
@@ -275,13 +267,6 @@ export function ContentStatsPage() {
               tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
             />
             <YAxis tick={{ fill: COLORS.text.secondary, fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: COLORS.background.card,
-                border: `1px solid ${COLORS.border.light}`,
-                borderRadius: "8px",
-              }}
-            />
             <Bar dataKey="count" fill={COLORS.brand.secondary} />
           </BarChart>
         </ResponsiveContainer>
@@ -308,13 +293,6 @@ export function ContentStatsPage() {
               tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
             />
             <YAxis tick={{ fill: COLORS.text.secondary, fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: COLORS.background.card,
-                border: `1px solid ${COLORS.border.light}`,
-                borderRadius: "8px",
-              }}
-            />
             <Bar dataKey="count" fill={COLORS.brand.light} />
           </BarChart>
         </ResponsiveContainer>

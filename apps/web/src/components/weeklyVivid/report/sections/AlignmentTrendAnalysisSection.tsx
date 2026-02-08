@@ -16,7 +16,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -282,7 +281,6 @@ export function AlignmentTrendAnalysisSection({
                     domain={[0, 100]}
                     tick={{ fontSize: 11, fill: COLORS.text.secondary }}
                   />
-                  <Tooltip />
                   <Line
                     type="monotone"
                     dataKey="score"

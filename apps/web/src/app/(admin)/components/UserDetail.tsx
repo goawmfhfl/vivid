@@ -30,7 +30,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -1828,7 +1827,6 @@ export function UserDetail({ userId }: UserDetailProps) {
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -1862,20 +1860,6 @@ export function UserDetail({ userId }: UserDetailProps) {
                       <YAxis
                         tick={{ fill: COLORS.text.secondary, fontSize: 12 }}
                         tickFormatter={(value) => `$${value.toFixed(2)}`}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: COLORS.background.card,
-                          border: `1px solid ${COLORS.border.light}`,
-                          borderRadius: "8px",
-                        }}
-                        labelFormatter={(value) =>
-                          new Date(value).toLocaleDateString("ko-KR")
-                        }
-                        formatter={(value: number | undefined) => [
-                          `$${(value ?? 0).toFixed(2)}`,
-                          "비용",
-                        ]}
                       />
                       <Line
                         type="monotone"
