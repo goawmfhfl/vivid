@@ -11,7 +11,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -330,13 +329,6 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                       `₩${Math.round(value).toLocaleString()}`
                     }
                   />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: COLORS.background.card,
-                      border: `1px solid ${COLORS.border.light}`,
-                      borderRadius: "8px",
-                    }}
-                  />
                   <Bar
                     yAxisId="left"
                     dataKey="requests"
@@ -408,23 +400,6 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: COLORS.background.card,
-                          border: `1px solid ${COLORS.border.light}`,
-                          borderRadius: "8px",
-                        }}
-                        formatter={(
-                          value: number | undefined,
-                          name: string | undefined,
-                          props?: { payload?: { requests?: number } }
-                        ) => [
-                          `₩${Math.round(value ?? 0).toLocaleString()} (${
-                            props?.payload?.requests ?? 0
-                          }회)`,
-                          name ?? "",
-                        ]}
-                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
