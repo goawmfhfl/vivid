@@ -25,8 +25,11 @@ import { COLORS } from "@/lib/design-system";
 import {
   useKakaoIdentity,
   useLinkKakao,
-  useUnlinkKakao,
 } from "@/hooks/useKakaoLinking";
+import {
+  useAppleIdentity,
+  useLinkApple,
+} from "@/hooks/useAppleLinking";
 import { useToast } from "@/hooks/useToast";
 
 type SectionCardProps = {
@@ -75,11 +78,16 @@ export function ProfileSettingsView() {
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // 카카오 연동 상태
+  // 카카오 연동 상태 (연동 해제 기능 없음)
   const { data: kakaoIdentity, isLoading: isLoadingKakao } = useKakaoIdentity();
   const linkKakaoMutation = useLinkKakao();
-  const unlinkKakaoMutation = useUnlinkKakao();
   const isKakaoLinked = Boolean(kakaoIdentity);
+
+  // 애플 연동 상태 (연동 해제 기능 없음)
+  const { data: appleIdentity, isLoading: isLoadingApple } = useAppleIdentity();
+  const linkAppleMutation = useLinkApple();
+  const isAppleLinked = Boolean(appleIdentity);
+
   const { showToast } = useToast();
 
   // URL 파라미터에서 연동 성공/에러 메시지 확인
@@ -399,93 +407,139 @@ export function ProfileSettingsView() {
 
           <SectionCard
             title="소셜 로그인 연동"
-            description="카카오 계정을 연동하면 더 편리하게 로그인할 수 있어요."
+            description="카카오·애플 계정을 연동하면 더 편리하게 로그인할 수 있어요."
           >
-            <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: "#FEE500" }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
-                      fill="#000000"
-                    />
-                  </svg>
+            <div className="space-y-3">
+              {/* 카카오 연동 */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: "#FEE500" }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
+                        fill="#000000"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#333333]">
+                      카카오 계정
+                    </p>
+                    {(!isKakaoLinked || isLoadingKakao) && (
+                      <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                        {isLoadingKakao ? "확인 중..." : "연동되지 않음"}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-[#333333]">
-                    카카오 계정
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#6B7A6F]">
-                    {isLoadingKakao
-                      ? "확인 중..."
-                      : isKakaoLinked
-                        ? "연동됨"
-                        : "연동되지 않음"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isKakaoLinked ? (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (kakaoIdentity) {
+                <div className="flex items-center gap-2">
+                  {isKakaoLinked ? (
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{
+                        color: COLORS.text.tertiary,
+                        backgroundColor: COLORS.background.hoverLight,
+                      }}
+                    >
+                      연동됨
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
                         try {
-                          await unlinkKakaoMutation.mutateAsync(kakaoIdentity);
-                          // 연동 해제 성공 시 상태 갱신
-                          setLinkSuccess(false);
-                          // Toast 팝업으로 성공 메시지 표시
-                          showToast("카카오 계정 연동이 해제되었습니다.", 4000);
+                          await linkKakaoMutation.mutateAsync();
                         } catch (error) {
                           const message =
                             error instanceof Error
                               ? error.message
-                              : "연동 해제에 실패했습니다.";
+                              : "연동에 실패했습니다.";
                           setErrors({ general: message });
                         }
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: COLORS.background.base,
-                      color: COLORS.text.secondary,
-                      border: `1px solid ${COLORS.border.light}`,
-                    }}
-                    disabled={unlinkKakaoMutation.isPending || isLoadingKakao}
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: COLORS.brand.primary,
+                        color: "white",
+                      }}
+                      disabled={linkKakaoMutation.isPending || isLoadingKakao}
+                    >
+                      {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 애플 연동 */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: COLORS.text.primary }}
                   >
-                    {unlinkKakaoMutation.isPending ? "해제 중..." : "연동 해제"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await linkKakaoMutation.mutateAsync();
-                      } catch (error) {
-                        const message =
-                          error instanceof Error
-                            ? error.message
-                            : "연동에 실패했습니다.";
-                        setErrors({ general: message });
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: COLORS.brand.primary,
-                      color: "white",
-                    }}
-                    disabled={linkKakaoMutation.isPending || isLoadingKakao}
-                  >
-                    {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
-                  </button>
-                )}
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill={COLORS.text.white}
+                    >
+                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.2 2.33-2.71 4.66-4.45 6.88zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#333333]">
+                      Apple 계정
+                    </p>
+                    {(!isAppleLinked || isLoadingApple) && (
+                      <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                        {isLoadingApple ? "확인 중..." : "연동되지 않음"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isAppleLinked ? (
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{
+                        color: COLORS.text.tertiary,
+                        backgroundColor: COLORS.background.hoverLight,
+                      }}
+                    >
+                      연동됨
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await linkAppleMutation.mutateAsync();
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "연동에 실패했습니다.";
+                          setErrors({ general: message });
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: COLORS.text.primary,
+                        color: COLORS.text.white,
+                      }}
+                      disabled={linkAppleMutation.isPending || isLoadingApple}
+                    >
+                      {linkAppleMutation.isPending ? "연동 중..." : "연동하기"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-            
-            {/* 연동 에러 메시지 (연동하기 컴포넌트 바로 아래) */}
+
+            {/* 연동 에러 메시지 */}
             {linkError && (
               <div className="mt-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-3 text-sm text-[#991B1B]">
                 <div className="flex items-center gap-2 font-medium">
