@@ -548,15 +548,6 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: unknown) => {
-                    const resolved =
-                      Array.isArray(value) ? value[0] : value;
-                    const numericValue =
-                      typeof resolved === "number"
-                        ? resolved
-                        : Number(resolved ?? 0);
-                    return `₩${Math.round(numericValue).toLocaleString()}`;
-                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
