@@ -60,6 +60,12 @@ const menuItems = [
     enabled: true,
   },
   {
+    title: "크론 테스트",
+    href: "/admin/cron/update-persona",
+    icon: FileText,
+    enabled: true,
+  },
+  {
     title: "문의사항 관리",
     href: "/admin/inquiries",
     icon: MessageSquare,

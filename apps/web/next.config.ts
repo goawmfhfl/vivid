@@ -24,9 +24,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  workerThreads: false,
-  cpus: 1,
-
   webpack: (config, { isServer, dev }) => {
     // 3. 프로덕션 빌드 시 소스맵 생성 방지
     // 소스맵은 메모리를 가장 많이 잡아먹는 주범입니다.

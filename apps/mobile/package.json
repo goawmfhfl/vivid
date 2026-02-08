@@ -8,8 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "build": "npm run build:ios && npm run build:android",
-    "build:ios": "FORCE_COLOR=0 expo export --platform ios",
-    "build:android": "FORCE_COLOR=0 expo export --platform android",
+    "build:ios": "expo export --platform ios",
+    "build:android": "expo export --platform android",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },
