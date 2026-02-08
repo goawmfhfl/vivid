@@ -37,7 +37,8 @@ export function ContentCard({
   sectionNumberColor,
   className,
 }: ContentCardProps) {
-  const numberColor = sectionNumberColor || gradientColor.split(",")[0] || "#A3BFD9";
+  const numberColor =
+    sectionNumberColor || gradientColor.split(",")[0] || COLORS.dailyVivid.future;
   
   return (
     <GradientCard gradientColor={gradientColor} className={className}>
@@ -95,7 +96,7 @@ export function ContentCard({
       </div>
       <p
         className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-        style={{ color: "#1a1a1a" }}
+        style={{ color: COLORS.text.primary }}
       >
         {content}
       </p>

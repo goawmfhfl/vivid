@@ -85,13 +85,13 @@ export async function POST(request: NextRequest) {
 
     // 1️⃣ Records 데이터 조회
     const records = await fetchRecordsByDate(supabase, userId, date);
+    const hasReview = records.some((r) => r.type === "review");
 
     // 리뷰 생성 시: 오늘 기록에 type=vivid(dream) 1개 이상 + type=review 1개 이상 필요
     if (generationType === "review") {
       const hasVivid = records.some(
         (r) => r.type === "vivid" || r.type === "dream"
       );
-      const hasReview = records.some((r) => r.type === "review");
       if (!hasVivid || !hasReview) {
         return NextResponse.json(
           {
@@ -136,6 +136,18 @@ export async function POST(request: NextRequest) {
 
     // 4.5️⃣ 응답 텍스트에서 "당신" → "userName님" 후처리
     if (allReports.report) {
+      if (!hasReview) {
+        allReports = {
+          ...allReports,
+          report: {
+            ...allReports.report,
+            retrospective_summary: null,
+            retrospective_evaluation: null,
+            execution_score: null,
+            execution_analysis_points: null,
+          },
+        };
+      }
       allReports = {
         ...allReports,
         report: replace당신InReport(allReports.report, userName),

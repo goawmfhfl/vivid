@@ -65,6 +65,29 @@ export const COLORS = {
     hover: "#e0ddd5",
     hoverLight: "#f5f3ee",
   },
+  // Glassmorphism 전용 컬러
+  glass: {
+    surface: "rgba(255, 255, 255, 0.16)",
+    surfaceStrong: "rgba(255, 255, 255, 0.22)",
+    border: "rgba(255, 255, 255, 0.4)",
+    highlight: "rgba(255, 255, 255, 0.7)",
+    shadow: "rgba(16, 24, 40, 0.18)",
+  },
+  // 차트 전용 컬러
+  chart: {
+    alignment: "#7f8f7a",
+    execution: "#5f6b3a",
+    waveLight: "rgba(127, 143, 122, 0.55)",
+    waveStrong: "rgba(127, 143, 122, 0.9)",
+    glow: "rgba(127, 143, 122, 0.45)",
+  },
+  // 데일리 비비드 전용 컬러
+  dailyVivid: {
+    current: "#E5B96B",
+    future: "#A3BFD9",
+    currentText: "#B8860B",
+    futureText: "#5A7A9A",
+  },
   // Surface Colors (카드/모달 등)
   surface: {
     default: "#f5f3ee",
@@ -282,6 +305,13 @@ export const CARD_STYLES = {
     borderRadius: "16px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
   },
+  glass: {
+    backgroundColor: COLORS.glass.surface,
+    border: `1px solid ${COLORS.glass.border}`,
+    borderRadius: "24px",
+    boxShadow: `0 16px 40px ${COLORS.glass.shadow}, inset 0 1px 0 ${COLORS.glass.highlight}`,
+    backdropFilter: "blur(32px)",
+  },
   gradient: {
     background: COLORS.background.cardGradient,
     border: `1px solid ${COLORS.border.card}`,
@@ -361,6 +391,8 @@ export const SHADOWS = {
   elevation3: "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)",
   elevation4: "0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4)",
   elevation5: "0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5)",
+  glowSoft: "0 12px 36px rgba(127, 143, 122, 0.25), 0 4px 12px rgba(127, 143, 122, 0.12)",
+  glowStrong: "0 16px 44px rgba(127, 143, 122, 0.35), 0 6px 16px rgba(127, 143, 122, 0.2)",
   // Legacy aliases for backward compatibility
   sm: "0 1px 2px 0 rgb(0 0 0 / 0.3)",
   default: "0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4)",

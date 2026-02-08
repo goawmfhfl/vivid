@@ -6,6 +6,7 @@ import {
   useGetDailyVividById,
 } from "@/hooks/useGetDailyVivid";
 import { VisionSection } from "./Vision";
+import { hasExecutionAnalysisData } from "./ExecutionAnalysisSection";
 import { EmptyState } from "./States";
 import { mapDailyVividRowToReport } from "./mappers";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
@@ -58,19 +59,21 @@ export function DailyVividView({
   const view = data ? mapDailyVividRowToReport(data) : null;
   const { isPro } = useSubscription();
 
-
   if (isLoading) {
     return (
       <div
         className="min-h-screen"
-        style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
+        style={{
+          backgroundColor: COLORS.background.card,
+          paddingBottom: "8rem",
+        }}
       >
         <div className="max-w-3xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
             onClick={onBack}
             className="mb-6 -ml-2"
-            style={{ color: "#6B7A6F" }}
+            style={{ color: COLORS.brand.primary }}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             돌아가기
@@ -91,14 +94,17 @@ export function DailyVividView({
     return (
       <div
         className="min-h-screen"
-        style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
+        style={{
+          backgroundColor: COLORS.background.card,
+          paddingBottom: "8rem",
+        }}
       >
         <div className="max-w-3xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
             onClick={onBack}
             className="mb-6 -ml-2"
-            style={{ color: "#6B7A6F" }}
+            style={{ color: COLORS.brand.primary }}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             돌아가기
@@ -126,7 +132,7 @@ export function DailyVividView({
     (view.retrospective_summary && view.retrospective_summary.trim()) ||
     (view.retrospective_evaluation && view.retrospective_evaluation.trim()) ||
     (view.alignment_score !== null && view.alignment_score !== undefined) ||
-    (view.execution_score !== null && view.execution_score !== undefined) ||
+    hasExecutionAnalysisData(view) ||
     (view.user_characteristics && view.user_characteristics.length > 0) ||
     (view.aspired_traits && view.aspired_traits.length > 0)
   );
@@ -134,7 +140,10 @@ export function DailyVividView({
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: "#f5f3ef", paddingBottom: "8rem" }}
+      style={{
+        backgroundColor: COLORS.background.card,
+        paddingBottom: "8rem",
+      }}
     >
       <div
         className={`${SPACING.page.maxWidth} mx-auto ${SPACING.page.padding}`}
@@ -184,8 +193,8 @@ export function DailyVividView({
             onClick={() => router.push("/")}
             className="rounded-full px-8 py-6"
             style={{
-              backgroundColor: "#6B7A6F",
-              color: "white",
+              backgroundColor: COLORS.brand.primary,
+              color: COLORS.text.white,
             }}
           >
             새로운 기록 시작하기
