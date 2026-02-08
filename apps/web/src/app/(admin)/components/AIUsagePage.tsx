@@ -548,9 +548,13 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number | string | undefined) => {
+                  formatter={(value: unknown) => {
+                    const resolved =
+                      Array.isArray(value) ? value[0] : value;
                     const numericValue =
-                      typeof value === "number" ? value : Number(value ?? 0);
+                      typeof resolved === "number"
+                        ? resolved
+                        : Number(resolved ?? 0);
                     return `₩${Math.round(numericValue).toLocaleString()}`;
                   }}
                 />
