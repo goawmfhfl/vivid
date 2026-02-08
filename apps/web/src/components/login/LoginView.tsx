@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
-import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { AuthHeader } from "../forms/AuthHeader";
 import { EmailField } from "../forms/EmailField";
 import { PasswordField } from "../forms/PasswordField";
 import { SubmitButton } from "../forms/SubmitButton";
 import { Checkbox } from "../ui/checkbox";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { FindEmailDialog } from "./FindEmailDialog";
 import { FindPasswordDialog } from "./FindPasswordDialog";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
@@ -36,7 +36,6 @@ export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginMutation = useLogin();
-  const kakaoLoginMutation = useKakaoLogin();
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const { showToast } = useToast();
 
@@ -58,7 +57,7 @@ export function LoginView() {
     const message = searchParams.get("message");
     if (message) {
       openSuccessModal(message);
-      router.replace("/login");
+      router.replace(getLoginPath(searchParams));
       return;
     }
 
@@ -67,7 +66,7 @@ export function LoginView() {
     if (isDeleted === "true") {
       // 토스트 팝업으로 완료 메시지 표시
       showToast("회원 탈퇴가 완료되었습니다.", 4000);
-      router.replace("/login");
+      router.replace(getLoginPath(searchParams));
     }
   }, [openSuccessModal, router, searchParams, showToast]);
 
@@ -136,7 +135,25 @@ export function LoginView() {
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div className="w-full max-w-md">
-        <AuthHeader subtitle="하루 10분 기록으로, 나를 선명하게" />
+        <AuthHeader
+          subtitle="하루 10분 기록으로, 나를 선명하게"
+          logoSrc="/logos/icon-512x512.svg"
+        />
+
+        {/* 다른 방법으로 로그인 (랜딩으로 돌아가기) */}
+        <div className="flex justify-center mb-4">
+          <button
+            type="button"
+            onClick={() => router.push(getLoginPath(searchParams))}
+            className={cn(
+              "underline hover:opacity-70 transition-opacity",
+              TYPOGRAPHY.bodySmall.fontSize
+            )}
+            style={{ color: COLORS.text.tertiary }}
+          >
+            다른 방법으로 로그인
+          </button>
+        </div>
 
         {/* Form Card */}
         <div
@@ -237,49 +254,6 @@ export function LoginView() {
               style={{ color: COLORS.brand.primary }}
             >
               계정이 없으신가요? 회원가입하기
-            </button>
-          </div>
-
-          <div className="relative py-4">
-            <div className="absolute inset-0 flex items-center">
-              <div
-                className="w-full border-t"
-                style={{ borderColor: COLORS.border.light }}
-              />
-            </div>
-            <div className="relative flex justify-center">
-              <span
-                className={cn("px-4", TYPOGRAPHY.caption.fontSize)}
-                style={{
-                  backgroundColor: COLORS.surface.elevated,
-                  color: COLORS.text.tertiary,
-                }}
-              >
-                간편 로그인
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center">
-            <button
-              type="button"
-              onClick={() => {
-                kakaoLoginMutation.mutate();
-              }}
-              className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:opacity-80 hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: "#FEE500",
-                boxShadow: `0 2px 12px rgba(254, 229, 0, 0.3)`,
-              }}
-              title="카카오 로그인"
-              disabled={kakaoLoginMutation.isPending}
-            >
-              <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
-                <path
-                  d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
-                  fill="#000000"
-                />
-              </svg>
             </button>
           </div>
 

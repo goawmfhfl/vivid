@@ -93,7 +93,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       // 현재 시간 (서버 시간 기준)
       const now = new Date().toISOString();
 
-      // 사용자 메타데이터 업데이트
+      // 사용자 메타데이터 업데이트 (애플 '이메일 숨기기' 시 회원가입에서 입력한 이메일 저장)
       const mergedMetadata = {
         ...(user.user_metadata || {}),
         name,
@@ -103,6 +103,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         agreeTerms,
         agreeAI,
         agreeMarketing,
+        ...(email?.trim() && { contact_email: email.trim() }),
         phone_verified: true, // 핸드폰 인증 완료
         phone_verified_at: now,
         role: "user", // 기본 역할
@@ -125,6 +126,11 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
           updateError.code
         );
       }
+
+      // 소셜 가입 직후 쿠폰 적용 시, 서버가 방금 반영한 user_metadata를 읽도록 세션 갱신 후 잠시 대기
+      const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+      if (refreshedSession) session = refreshedSession;
+      await new Promise((r) => setTimeout(r, 400));
     } else {
       // 일반 회원가입 케이스
       if (!email || !password) {

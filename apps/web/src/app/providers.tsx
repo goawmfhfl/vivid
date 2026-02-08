@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { supabase } from "@/lib/supabase";
 import { clearAllCache, clearUserDataCache } from "@/lib/cache-utils";
+import { isRefreshTokenError, isAuthFailureNoRetry } from "@/lib/auth-error";
+import { QUERY_KEYS } from "@/constants";
 
 // React Query 클라이언트 생성
 export const queryClient = new QueryClient({
@@ -12,15 +14,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5분
       retry: (failureCount, error) => {
-        // Invalid Refresh Token 에러는 재시도하지 않음
-        if (error instanceof Error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            return false;
-          }
-        }
+        if (isAuthFailureNoRetry(error)) return false;
         return failureCount < 1;
       },
     },
@@ -31,42 +25,28 @@ export const queryClient = new QueryClient({
 });
 
 export function JournalProvider({ children }: { children: ReactNode }) {
-  // Invalid Refresh Token 에러 발생 시 세션 정리 및 로그아웃 처리
+  // Invalid Refresh Token 에러 발생 시 세션 정리 + 현재 사용자 쿼리 제거
   const handleInvalidRefreshToken = useCallback(async () => {
-    console.log("[Auth] Invalid Refresh Token 감지, 세션 정리 중...");
     try {
-      // 모든 캐시 클리어
       clearAllCache(queryClient);
-      // 로그아웃 처리 (로컬 세션 정리)
       await supabase.auth.signOut({ scope: "local" });
-      console.log("[Auth] 세션 정리 완료");
+      queryClient.removeQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
     } catch (error) {
       console.error("[Auth] 세션 정리 중 오류:", error);
     }
   }, []);
 
-  // 초기 세션 검증 및 에러 핸들링
+  // 초기 세션 검증: 리프레시 토큰 에러만 처리 (에러 메시지 노출 없이 정리)
   useEffect(() => {
     const validateSession = async () => {
       try {
         const { error } = await supabase.auth.getSession();
-        if (error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            await handleInvalidRefreshToken();
-          }
+        if (error && isRefreshTokenError(error)) {
+          await handleInvalidRefreshToken();
         }
       } catch (error) {
-        console.error("[Auth] 세션 검증 중 오류:", error);
-        if (error instanceof Error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            await handleInvalidRefreshToken();
-          }
+        if (isRefreshTokenError(error)) {
+          await handleInvalidRefreshToken();
         }
       }
     };

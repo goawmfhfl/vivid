@@ -1872,8 +1872,8 @@ export function UserDetail({ userId }: UserDetailProps) {
                         labelFormatter={(value) =>
                           new Date(value).toLocaleDateString("ko-KR")
                         }
-                        formatter={(value: number) => [
-                          `$${value.toFixed(2)}`,
+                        formatter={(value: number | undefined) => [
+                          `$${(value ?? 0).toFixed(2)}`,
                           "비용",
                         ]}
                       />

@@ -8,15 +8,17 @@ interface AuthHeaderProps {
   title?: string;
   subtitle?: string;
   showLogo?: boolean;
+  /** 로고 이미지 경로. 미지정 시 /vivid.svg */
+  logoSrc?: string;
 }
 
-export function AuthHeader({ title, subtitle, showLogo = true }: AuthHeaderProps) {
+export function AuthHeader({ title, subtitle, showLogo = true, logoSrc = "/vivid.svg" }: AuthHeaderProps) {
   return (
     <div className="text-center mb-8">
       {showLogo && (
         <div className="flex justify-center mb-8">
           <Image
-            src="/vivid.svg"
+            src={logoSrc}
             alt="VIVID"
             width={160}
             height={160}

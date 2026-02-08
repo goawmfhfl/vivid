@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { useSignUp } from "@/hooks/useSignUp";
 import { ErrorMessage } from "../forms/ErrorMessage";
 import { SubmitButton } from "../forms/SubmitButton";
@@ -27,11 +28,12 @@ export function SignUpView({
   isSocialOnboarding?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [infoMessage] = useState<string | null>(
     initialMessage ||
       (isSocialOnboarding
-        ? "카카오 간편 로그인 정보를 확인했어요. 나머지 프로필을 입력하면 가입이 완료됩니다."
+        ? "소셜 로그인(카카오/애플) 정보를 확인했어요. 나머지 프로필을 입력하면 가입이 완료됩니다."
         : null)
   );
 
@@ -224,7 +226,7 @@ export function SignUpView({
     }
 
     signUpMutation.mutate({
-      email: isSocialOnboarding ? undefined : formData.email,
+      email: formData.email || undefined,
       password: isSocialOnboarding ? undefined : formData.password,
       name: formData.name.trim(),
       phone: formData.phone.trim(),
@@ -466,7 +468,7 @@ export function SignUpView({
                 type="button"
                 className="font-semibold underline-offset-4 hover:underline"
                 style={{ color: COLORS.brand.primary }}
-                onClick={() => router.push("/login")}
+                onClick={() => router.push(getLoginPath(searchParams))}
               >
                 로그인하기
               </button>

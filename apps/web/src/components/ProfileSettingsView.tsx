@@ -8,7 +8,8 @@ import {
   Bell,
   ChevronRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import { NameField } from "./forms/NameField";
@@ -50,6 +51,7 @@ const SectionCard = ({ title, description, children }: SectionCardProps) => (
 
 export function ProfileSettingsView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: currentUser, isLoading } = useCurrentUser();
   const updateProfileMutation = useUpdateProfile();
 
@@ -85,23 +87,27 @@ export function ProfileSettingsView() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       
-      // 연동 성공 메시지
-      if (params.get("linked") === "kakao") {
+      // 연동 성공 메시지 (카카오/애플)
+      const linkedProvider = params.get("linked");
+      if (linkedProvider === "kakao") {
         setLinkSuccess(true);
         setLinkError(null);
-        // URL에서 파라미터 제거
         router.replace("/user", { scroll: false });
-        // Toast 팝업으로 성공 메시지 표시
         showToast("카카오 계정이 성공적으로 연동되었습니다.", 4000);
-        // 3초 후 상태 초기화
+        setTimeout(() => setLinkSuccess(false), 4000);
+      } else if (linkedProvider === "apple") {
+        setLinkSuccess(true);
+        setLinkError(null);
+        router.replace("/user", { scroll: false });
+        showToast("Apple 계정이 성공적으로 연동되었습니다.", 4000);
         setTimeout(() => setLinkSuccess(false), 4000);
       }
       
-      // 연동 에러 메시지
-      if (params.get("error") === "kakao_already_linked") {
+      // 연동 에러 메시지 (카카오/애플 공통)
+      if (params.get("error") === "social_already_linked" || params.get("error") === "kakao_already_linked") {
         const errorMessage =
           params.get("message") ||
-          "이 카카오 계정은 이미 다른 사용자에게 연결되어 있습니다.";
+          "이 소셜 계정은 이미 다른 사용자에게 연결되어 있습니다.";
         setLinkError(errorMessage);
         setLinkSuccess(false);
         // URL에서 파라미터 제거
@@ -571,7 +577,7 @@ export function ProfileSettingsView() {
             // 탈퇴 성공 시 로그인 페이지로 리다이렉션 (Development/Production 모두)
             // 로딩 모달이 완료 메시지를 표시한 후 리다이렉션
             setTimeout(() => {
-              router.push("/login?deleted=true");
+              router.push(getLoginPath(searchParams, { deleted: "true" }));
             }, 500);
           }}
         />

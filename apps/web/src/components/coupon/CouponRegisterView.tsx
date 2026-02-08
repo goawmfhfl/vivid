@@ -154,7 +154,7 @@ export function CouponRegisterView() {
 
       {/* 쿠폰 코드 입력 */}
       <div
-        className="rounded-xl p-6"
+        className="rounded-xl p-4 sm:p-6"
         style={{
           ...CARD_STYLES.default,
         }}
@@ -165,7 +165,7 @@ export function CouponRegisterView() {
         >
           쿠폰 코드
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
           <input
             type="text"
             value={code}
@@ -178,7 +178,7 @@ export function CouponRegisterView() {
               }
             }}
             placeholder="쿠폰 코드를 입력하세요"
-            className="flex-1 px-4 py-3 rounded-lg border text-base transition-all outline-none"
+            className="flex-1 min-w-0 w-full px-4 py-3 rounded-lg border text-base transition-all outline-none"
             style={{
               borderColor: isCodeFocused
                 ? COLORS.brand.primary
@@ -194,14 +194,16 @@ export function CouponRegisterView() {
           <button
             onClick={handleSearch}
             disabled={!code.trim() || isSearching}
-            className="px-6 py-3 rounded-lg disabled:opacity-50 flex items-center gap-2"
+            className="w-full sm:w-auto shrink-0 px-6 py-3 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
             style={{
               backgroundColor: COLORS.brand.primary,
               color: COLORS.text.white,
             }}
           >
-            <Search className="w-5 h-5" />
-            {isSearching ? "검색 중..." : "검색"}
+            <Search className="w-5 h-5 shrink-0" />
+            <span className="whitespace-nowrap">
+              {isSearching ? "검색 중..." : "검색"}
+            </span>
           </button>
         </div>
       </div>

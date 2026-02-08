@@ -35,7 +35,9 @@ export function LoginInfoStep({
         </h2>
         <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
           {isSocialMode
-            ? "카카오에서 가져온 이메일로 계속 진행해요."
+            ? email
+              ? "소셜 로그인에서 가져온 이메일로 계속 진행해요."
+              : "연동 계정에 이메일이 없어요. 서비스 이용을 위해 이메일을 입력해주세요."
             : "서비스 이용을 위한 기본 로그인 정보를 입력해주세요."}
         </p>
       </div>
@@ -65,9 +67,9 @@ export function LoginInfoStep({
           />
         )}
 
-        {isSocialMode && (
+        {isSocialMode && email && (
           <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-            이메일은 카카오 계정과 동일하게 고정됩니다.
+            이메일은 소셜 로그인 계정과 동일하게 고정됩니다.
           </p>
         )}
       </div>
