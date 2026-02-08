@@ -548,9 +548,11 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number | undefined) =>
-                    `₩${Math.round(value ?? 0).toLocaleString()}`
-                  }
+                  formatter={(value: number | string | undefined) => {
+                    const numericValue =
+                      typeof value === "number" ? value : Number(value ?? 0);
+                    return `₩${Math.round(numericValue).toLocaleString()}`;
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
