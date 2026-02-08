@@ -65,6 +65,10 @@ export function RecordForm({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollPositionRef = useRef<{ x: number; y: number } | null>(null);
   const isUserScrollingRef = useRef(false);
+  /** Q3 텍스트 입력/높이 변경 시 스크롤 복원 중일 때, 스크롤 리스너가 scrollPositionRef를 덮어쓰지 않도록 함 */
+  const isQ3RestoringScrollRef = useRef(false);
+  /** Q3 입력 직전 스크롤 위치. effect에서는 reflow 후 잘못된 값을 캡처하므로, 복원 시 이 값만 사용 */
+  const lastQ3ScrollBeforeChangeRef = useRef<{ x: number; y: number } | null>(null);
   const { subscription } = useSubscription();
   const { isDevelopment } = useEnvironment();
   const { state: timerState } = useTimer();
@@ -273,6 +277,7 @@ export function RecordForm({
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
+      if (isQ3RestoringScrollRef.current) return;
       isUserScrollingRef.current = true;
       scrollPositionRef.current = {
         x: window.scrollX,
@@ -385,34 +390,29 @@ export function RecordForm({
     }
   }, [q2Content]);
 
-  // q3 textarea 높이 자동 조정 (스크롤 위치 유지, 여러 타이밍에 복원)
+  // q3 textarea 높이 자동 조정 (스크롤 위치 유지)
+  // effect 실행 시점에는 이미 reflow로 스크롤이 틀어져 있을 수 있으므로, 복원은 handleQ3Change에서 저장한 값만 사용
   useEffect(() => {
     const textarea = q3TextareaRef.current;
-    if (textarea && !isUserScrollingRef.current) {
-      scrollPositionRef.current = {
-        x: window.scrollX,
-        y: window.scrollY,
-      };
+    if (!textarea || isUserScrollingRef.current) return;
 
-      textarea.style.height = "auto";
-      const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.max(scrollHeight, 100);
-      textarea.style.height = `${newHeight}px`;
-      textarea.style.overflowY = "hidden";
+    const pos = lastQ3ScrollBeforeChangeRef.current;
+    isQ3RestoringScrollRef.current = true;
 
-      const restore = () => {
-        if (scrollPositionRef.current) {
-          window.scrollTo(
-            scrollPositionRef.current.x,
-            scrollPositionRef.current.y
-          );
-        }
-      };
-      if (scrollPositionRef.current) {
-        requestAnimationFrame(restore);
-        setTimeout(restore, 0);
-        setTimeout(restore, 80);
-      }
+    textarea.style.height = "auto";
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.max(scrollHeight, 100);
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY = "hidden";
+
+    if (pos) {
+      const restore = () => window.scrollTo(pos.x, pos.y);
+      requestAnimationFrame(restore);
+      restore();
+      lastQ3ScrollBeforeChangeRef.current = null;
+      isQ3RestoringScrollRef.current = false;
+    } else {
+      isQ3RestoringScrollRef.current = false;
     }
   }, [q3Content]);
 
@@ -640,20 +640,15 @@ export function RecordForm({
   };
 
   const handleQ3Change = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    scrollPositionRef.current = {
-      x: window.scrollX,
-      y: window.scrollY,
-    };
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    lastQ3ScrollBeforeChangeRef.current = { x: scrollX, y: scrollY };
+    scrollPositionRef.current = { x: scrollX, y: scrollY };
     const newContent = e.target.value;
     setQ3Content(newContent);
     debouncedSaveQ3(newContent);
     requestAnimationFrame(() => {
-      if (scrollPositionRef.current) {
-        window.scrollTo(
-          scrollPositionRef.current.x,
-          scrollPositionRef.current.y
-        );
-      }
+      window.scrollTo(scrollX, scrollY);
     });
   };
 
@@ -742,18 +737,16 @@ export function RecordForm({
   }, [recordType]);
 
   // q3 textarea style 변경 시 스크롤 복원 (높이 증가로 reflow 시 페이지 스크롤 유지)
+  // Q3 입력 직전 위치(lastQ3ScrollBeforeChangeRef) 우선 사용, 없을 때만 scrollPositionRef 사용
   useEffect(() => {
     const textarea = q3TextareaRef.current;
     if (!textarea) return;
     const observer = new MutationObserver(() => {
-      if (scrollPositionRef.current && !isUserScrollingRef.current) {
+      if (isUserScrollingRef.current) return;
+      const pos = lastQ3ScrollBeforeChangeRef.current ?? scrollPositionRef.current;
+      if (pos) {
         requestAnimationFrame(() => {
-          if (scrollPositionRef.current) {
-            window.scrollTo(
-              scrollPositionRef.current.x,
-              scrollPositionRef.current.y
-            );
-          }
+          window.scrollTo(pos.x, pos.y);
         });
       }
     });
