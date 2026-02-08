@@ -14,6 +14,12 @@ function replace당신(str: string, userName: string): string {
   return str.replace(/당신/g, `${userName}님`);
 }
 
+function normalizeUserName(value?: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return trimmed.endsWith("님") ? trimmed.slice(0, -1).trim() : trimmed;
+}
+
 function replace당신InReport(report: Report | null, userName: string): Report | null {
   if (!report) return report;
   return {
@@ -68,6 +74,7 @@ export async function POST(request: NextRequest) {
     const {
       userId,
       date,
+      userName: requestUserName,
       generation_duration_seconds,
       generation_mode,
       generation_type: requestGenerationType,
@@ -114,13 +121,30 @@ export async function POST(request: NextRequest) {
     // 3️⃣ 구독 정보 확인 (서버 사이드 검증)
     const { isPro } = await verifySubscription(userId);
 
-    // 3.5️⃣ 사용자 이름 조회 (호칭: "당신" 대신 "userName님" 사용)
-    const { data: profile } = await supabase
-      .from(API_ENDPOINTS.PROFILES)
-      .select("name")
-      .eq("id", userId)
-      .maybeSingle();
-    const userName = profile?.name?.trim() || "회원";
+    // 3.5️⃣ 사용자 이름 조회 (호칭: "당신" 대신 "사용자명/회원님" 사용)
+    let resolvedUserName = normalizeUserName(requestUserName) || null;
+
+    if (!resolvedUserName) {
+      const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+      const metadata = (user?.user_metadata || {}) as Record<string, unknown>;
+      resolvedUserName =
+        normalizeUserName(metadata.username as string) ||
+        normalizeUserName(metadata.name as string) ||
+        normalizeUserName(metadata.full_name as string) ||
+        normalizeUserName(metadata.user_name as string) ||
+        null;
+    }
+
+    if (!resolvedUserName) {
+      const { data: profile } = await supabase
+        .from(API_ENDPOINTS.PROFILES)
+        .select("name")
+        .eq("id", userId)
+        .maybeSingle();
+      resolvedUserName = normalizeUserName(profile?.name);
+    }
+
+    const userName = resolvedUserName || "회원";
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
     const generationMode = generation_mode === "reasoned" ? "reasoned" : "fast";
