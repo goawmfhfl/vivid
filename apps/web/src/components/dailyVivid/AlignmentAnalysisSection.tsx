@@ -177,19 +177,21 @@ function AlignmentScoreInfoDialog() {
 }
 
 export function AlignmentAnalysisSection({ view }: SectionProps) {
-
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
-
-  if (!hasAlignmentScore) return null;
-
+  const alignmentScore =
+    typeof view.alignment_score === "number" && Number.isFinite(view.alignment_score)
+      ? view.alignment_score
+      : 0;
   const alignmentColor = COLORS.brand.primary;
   const alignmentGradientColor = hexToRgbTriplet(alignmentColor);
   const alignmentGlow = COLORS.chart.glow;
   const { ref, isInView } = useInViewOnce<HTMLDivElement>(0.25, "0px 0px -15% 0px");
-  const target = isInView ? Math.min(view.alignment_score ?? 0, 100) : 0;
+  const target = isInView ? Math.min(alignmentScore, 100) : 0;
   const score = useCountUp(target, 1200, true);
   const progress = Math.min(score, 100);
+
+  if (!hasAlignmentScore) return null;
 
   return (
     <ScrollAnimation delay={240}>

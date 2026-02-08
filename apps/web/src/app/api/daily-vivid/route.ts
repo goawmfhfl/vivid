@@ -14,7 +14,8 @@ function replace당신(str: string, userName: string): string {
   return str.replace(/당신/g, `${userName}님`);
 }
 
-function replace당신InReport(report: Report, userName: string): Report {
+function replace당신InReport(report: Report | null, userName: string): Report | null {
+  if (!report) return report;
   return {
     ...report,
     current_summary: replace당신(report.current_summary, userName),

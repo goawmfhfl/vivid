@@ -157,17 +157,16 @@ export function ExecutionAnalysisSection({ view }: SectionProps) {
   const analysisPoints = normalizePoints(view.execution_analysis_points);
   const shouldRender =
     normalizedScore !== null && normalizedScore > 0 && analysisPoints.length > 0;
-  
-
-  if (!shouldRender) return null;
-
+  const safeScore = typeof normalizedScore === "number" ? normalizedScore : 0;
   const executionColor = COLORS.chart.execution;
   const executionGradientColor = hexToRgbTriplet(executionColor);
   const executionGlow = `rgba(${executionGradientColor}, 0.45)`;
   const { ref, isInView } = useInViewOnce<HTMLDivElement>(0.25, "0px 0px -15% 0px");
-  const target = isInView ? Math.min(normalizedScore, 100) : 0;
+  const target = isInView ? Math.min(safeScore, 100) : 0;
   const score = useCountUp(target, 1200, true);
   const progress = Math.min(score, 100);
+
+  if (!shouldRender) return null;
 
   return (
     <ScrollAnimation delay={280}>

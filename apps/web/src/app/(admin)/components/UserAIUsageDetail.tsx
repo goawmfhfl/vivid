@@ -415,14 +415,14 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           borderRadius: "8px",
                         }}
                         formatter={(
-                          value: number,
-                          name: string,
+                          value: number | undefined,
+                          name: string | undefined,
                           props?: { payload?: { requests?: number } }
                         ) => [
-                          `₩${Math.round(value).toLocaleString()} (${
+                          `₩${Math.round(value ?? 0).toLocaleString()} (${
                             props?.payload?.requests ?? 0
                           }회)`,
-                          name,
+                          name ?? "",
                         ]}
                       />
                     </PieChart>

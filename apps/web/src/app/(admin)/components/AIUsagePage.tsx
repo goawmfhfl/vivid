@@ -548,8 +548,8 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) =>
-                    `₩${Math.round(value).toLocaleString()}`
+                  formatter={(value: number | undefined) =>
+                    `₩${Math.round(value ?? 0).toLocaleString()}`
                   }
                 />
               </PieChart>
@@ -641,8 +641,8 @@ export function AIUsagePage() {
                     border: `1px solid ${COLORS.border.light}`,
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) =>
-                    `₩${Math.round(value).toLocaleString()}`
+                  formatter={(value: number | undefined) =>
+                    `₩${Math.round(value ?? 0).toLocaleString()}`
                   }
                 />
                 <Bar dataKey="cost_krw" fill={COLORS.brand.primary} />
@@ -740,8 +740,8 @@ export function AIUsagePage() {
                 labelFormatter={(value) =>
                   new Date(value).toLocaleDateString("ko-KR")
                 }
-                formatter={(value: number) => [
-                  `₩${Math.round(value).toLocaleString()}`,
+                formatter={(value: number | undefined) => [
+                  `₩${Math.round(value ?? 0).toLocaleString()}`,
                   "비용",
                 ]}
               />
