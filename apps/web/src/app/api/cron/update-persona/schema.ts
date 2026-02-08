@@ -27,7 +27,7 @@ export const UserPersonaSchema = {
           active_quests: { type: "array", items: { type: "string" } },
           weekly_summary: { type: "string" },
         },
-        required: ["active_quests", "preferred_tone", "weekly_summary"],
+        required: ["active_quests", "weekly_summary"],
       },
     },
     required: ["identity", "patterns", "context"],
@@ -46,8 +46,4 @@ export const SYSTEM_PROMPT_USER_PERSONA = `
 - 추상적인 미사여구보다 실제 기록에서 드러난 행동/감정/목표를 우선합니다.
 - 빈 문자열이나 빈 배열을 반환하지 마세요. 정보가 부족하면 합리적 추론으로 보완하세요.
 
-preferred_tone 값은 다음 중 하나로 작성하세요:
-- warm_empathy
-- calm_objective
-- gentle_motivation
 `.trim();

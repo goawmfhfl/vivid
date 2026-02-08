@@ -1,0 +1,128 @@
+import { NextRequest, NextResponse } from "next/server";
+import { Receiver } from "@upstash/qstash";
+import { getServiceSupabase } from "@/lib/supabase-service";
+import { updatePersonaForUser, type PersonaResult } from "../helpers";
+
+export const maxDuration = 180;
+
+type PersonaBatchPayload = {
+  userIds: string[];
+  startDate: string;
+  endDate: string;
+};
+
+function getQstashReceiver(): Receiver {
+  const currentSigningKey = process.env.QSTASH_CURRENT_SIGNING_KEY;
+  const nextSigningKey = process.env.QSTASH_NEXT_SIGNING_KEY;
+  if (!currentSigningKey || !nextSigningKey) {
+    throw new Error("QSTASH signing keys are required");
+  }
+  return new Receiver({
+    currentSigningKey,
+    nextSigningKey,
+  });
+}
+
+function isCronSecretAuthorized(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  return !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+}
+
+function getConcurrency(value: string | null): number {
+  const fallback = parseInt(process.env.PERSONA_BATCH_CONCURRENCY || "3", 10);
+  const parsed = parseInt(value || String(fallback), 10);
+  return Math.min(Math.max(parsed, 1), 10);
+}
+
+async function parseQstashPayload(request: NextRequest): Promise<PersonaBatchPayload> {
+  const receiver = getQstashReceiver();
+  const signature = request.headers.get("upstash-signature") || "";
+  const body = await request.text();
+
+  const isValid = await receiver.verify({
+    signature,
+    body,
+    url: request.url,
+  });
+
+  if (!isValid) {
+    throw new Error("Invalid QStash signature");
+  }
+
+  return JSON.parse(body) as PersonaBatchPayload;
+}
+
+async function processWithConcurrency(
+  userIds: string[],
+  concurrency: number,
+  handler: (userId: string) => Promise<PersonaResult>
+): Promise<PersonaResult[]> {
+  const results = new Array<PersonaResult>(userIds.length);
+  let index = 0;
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, userIds.length) },
+    async () => {
+      while (true) {
+        const current = index;
+        index += 1;
+        if (current >= userIds.length) {
+          break;
+        }
+        results[current] = await handler(userIds[current]);
+      }
+    }
+  );
+
+  await Promise.all(workers);
+  return results;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    let payload: PersonaBatchPayload;
+
+    if (isCronSecretAuthorized(request)) {
+      payload = (await request.json()) as PersonaBatchPayload;
+    } else {
+      payload = await parseQstashPayload(request);
+    }
+
+    if (!payload?.userIds?.length) {
+      return NextResponse.json({ ok: true, processed: 0, updated: 0, skipped: 0 });
+    }
+
+    const { startDate, endDate, userIds } = payload;
+    const concurrency = getConcurrency(request.nextUrl.searchParams.get("concurrency"));
+    const supabase = getServiceSupabase();
+
+    const results = await processWithConcurrency(userIds, concurrency, async (userId) => {
+      try {
+        return await updatePersonaForUser(supabase, userId, startDate, endDate);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`[update-persona] user ${userId} failed:`, message);
+        return { userId, status: "skipped", reason: message };
+      }
+    });
+
+    const updatedCount = results.filter((r) => r.status === "updated").length;
+    const skippedCount = results.length - updatedCount;
+
+    return NextResponse.json({
+      ok: true,
+      processed: results.length,
+      updated: updatedCount,
+      skipped: skippedCount,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Cron update-persona batch error:", error);
+    const status = message === "Invalid QStash signature" ? 401 : 500;
+    return NextResponse.json(
+      { error: "Internal server error", details: message },
+      { status }
+    );
+  }
+}
