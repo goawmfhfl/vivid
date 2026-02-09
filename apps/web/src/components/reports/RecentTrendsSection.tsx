@@ -150,7 +150,7 @@ export function RecentTrendsSection({
         한눈에 보기
       </h2>
       <p className="text-sm mb-6" style={{ color: COLORS.text.secondary }}>
-        최근 5일 데이터 기반 인사이트
+        최근 7일 데이터 기반 인사이트
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

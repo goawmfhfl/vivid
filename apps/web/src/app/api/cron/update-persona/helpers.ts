@@ -325,6 +325,16 @@ export async function updatePersonaForUser(
     return { userId, status: "skipped", reason: "no_records" };
   }
 
+  // 일주일 구간에서 vivid-records가 7개 미만이면 인사이트 생성하지 않음
+  const MIN_RECORDS_FOR_PERSONA = 7;
+  if (vividRecords.length < MIN_RECORDS_FOR_PERSONA) {
+    return {
+      userId,
+      status: "skipped",
+      reason: "insufficient_records",
+    };
+  }
+
   const decrypted = vividRecords.map((row) => ({
     ...row,
     content: decrypt(row.content),
