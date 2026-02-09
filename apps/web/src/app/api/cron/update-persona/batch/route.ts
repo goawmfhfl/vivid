@@ -35,15 +35,25 @@ function getConcurrency(value: string | null): number {
   return Math.min(Math.max(parsed, 1), 10);
 }
 
+function getSignatureVerificationUrl(request: NextRequest): string {
+  const baseUrl = process.env.QSTASH_CALLBACK_URL;
+  if (baseUrl) {
+    const path = request.nextUrl.pathname + request.nextUrl.search;
+    return `${baseUrl.replace(/\/$/, "")}${path}`;
+  }
+  return request.url;
+}
+
 async function parseQstashPayload(request: NextRequest): Promise<PersonaBatchPayload> {
   const receiver = getQstashReceiver();
   const signature = request.headers.get("upstash-signature") || "";
   const body = await request.text();
+  const verificationUrl = getSignatureVerificationUrl(request);
 
   const isValid = await receiver.verify({
     signature,
     body,
-    url: request.url,
+    url: verificationUrl,
   });
 
   if (!isValid) {
