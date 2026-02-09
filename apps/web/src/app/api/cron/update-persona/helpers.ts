@@ -8,7 +8,7 @@ import {
   encryptJsonbFields,
   type JsonbValue,
 } from "@/lib/jsonb-encryption";
-import { logAIRequestAsync } from "@/lib/ai-usage-logger";
+import { logAIRequest } from "@/lib/ai-usage-logger";
 import { SYSTEM_PROMPT_USER_PERSONA, UserPersonaSchema } from "./schema";
 
 type VividRecordRow = {
@@ -201,12 +201,16 @@ async function generatePersona(
     const duration_ms = Date.now() - startTime;
 
     if (userId) {
-      const usageMetadata = result.response.usageMetadata;
+      const usageMetadata = result.response?.usageMetadata as
+        | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+        | undefined;
       const usage = usageMetadata
         ? {
-            prompt_tokens: usageMetadata.promptTokenCount || 0,
-            completion_tokens: usageMetadata.candidatesTokenCount || 0,
-            total_tokens: usageMetadata.totalTokenCount || 0,
+            prompt_tokens: usageMetadata.promptTokenCount ?? 0,
+            completion_tokens: usageMetadata.candidatesTokenCount ?? 0,
+            total_tokens:
+              usageMetadata.totalTokenCount ??
+              (usageMetadata.promptTokenCount ?? 0) + (usageMetadata.candidatesTokenCount ?? 0),
             cached_tokens: 0,
           }
         : {
@@ -214,15 +218,19 @@ async function generatePersona(
             completion_tokens: 0,
             total_tokens: 0,
           };
-      logAIRequestAsync({
-        userId,
-        model: modelName,
-        requestType: "user_persona",
-        sectionName: "persona",
-        usage,
-        duration_ms,
-        success: true,
-      });
+      try {
+        await logAIRequest({
+          userId,
+          model: modelName,
+          requestType: "user_persona",
+          sectionName: "persona",
+          usage,
+          duration_ms,
+          success: true,
+        });
+      } catch (logErr) {
+        console.error("[update-persona] ai_requests 로깅 실패:", logErr);
+      }
     }
 
     if (!content) {
@@ -232,16 +240,20 @@ async function generatePersona(
     return parsePersonaResponse(content);
   } catch (error) {
     if (userId) {
-      logAIRequestAsync({
-        userId,
-        model: modelName,
-        requestType: "user_persona",
-        sectionName: "persona",
-        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-        duration_ms: Date.now() - startTime,
-        success: false,
-        errorMessage: error instanceof Error ? error.message : String(error),
-      });
+      try {
+        await logAIRequest({
+          userId,
+          model: modelName,
+          requestType: "user_persona",
+          sectionName: "persona",
+          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+          duration_ms: Date.now() - startTime,
+          success: false,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
+      } catch (logErr) {
+        console.error("[update-persona] ai_requests 로깅 실패 (실패 요청):", logErr);
+      }
     }
     throw error;
   }

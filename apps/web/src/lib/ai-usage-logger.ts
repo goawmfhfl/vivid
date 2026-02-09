@@ -52,10 +52,17 @@ interface CostCalculation {
 /**
  * AI 요청 로깅 파라미터 타입
  */
+/** request_type 값: ai_requests 테이블 및 관리자 조회에서 사용 */
+export type AIRequestType =
+  | "daily_vivid"
+  | "weekly_vivid"
+  | "monthly_vivid"
+  | "user_persona";
+
 export interface LogAIRequestParams {
   userId: string;
   model: string;
-  requestType: "daily_vivid" | "weekly_vivid" | "monthly_vivid" | "user_persona";
+  requestType: AIRequestType;
   sectionName: string | null;
   usage: AIUsageInfo;
   duration_ms: number;
