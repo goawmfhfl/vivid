@@ -102,7 +102,7 @@ export async function fetchWeeklyVividList(
       "id, week_start, week_end, title, is_ai_generated, created_at"
     )
     .eq("user_id", userId)
-    .order("week_start", { ascending: true });
+    .order("week_start", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch weekly vivid list: ${error.message}`);

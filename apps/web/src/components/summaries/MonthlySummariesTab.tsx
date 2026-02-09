@@ -20,13 +20,12 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
   const { data: candidates = [], isLoading: isLoadingCandidates } =
     useMonthlyCandidates();
 
-  // 월간 요약만 필터링 및 정렬
+  // 월간 요약만 필터링 및 정렬 (시간순: month 기준, 최신 먼저)
   const sortedSummaries = useMemo(() => {
     const monthly = summaries.filter((s) => s.type === "monthly");
-    return [...monthly].sort((a, b) => {
-      if (a.year !== b.year) return (b.year || 0) - (a.year || 0);
-      return (b.monthNumber || 0) - (a.monthNumber || 0);
-    });
+    return [...monthly].sort((a, b) =>
+      (b.month || "").localeCompare(a.month || "")
+    );
   }, [summaries]);
 
   // 페이지네이션

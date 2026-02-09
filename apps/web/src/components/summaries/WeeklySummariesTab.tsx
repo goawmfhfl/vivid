@@ -22,13 +22,12 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
   const { data: candidates = [], isLoading: isLoadingCandidates } =
     useWeeklyCandidates();
 
-  // 주간 요약만 필터링 및 정렬
+  // 주간 요약만 필터링 및 정렬 (시간순: week_start 기준, 최신 먼저)
   const sortedSummaries = useMemo(() => {
     const weekly = summaries.filter((s) => s.type === "weekly");
-    return [...weekly].sort((a, b) => {
-      if (a.year !== b.year) return (b.year || 0) - (a.year || 0);
-      return (b.weekNumber || 0) - (a.weekNumber || 0);
-    });
+    return [...weekly].sort((a, b) =>
+      (b.week_start || "").localeCompare(a.week_start || "")
+    );
   }, [summaries]);
 
   // 페이지네이션
