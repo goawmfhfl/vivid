@@ -3,11 +3,9 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Target, Sparkles, Zap, User, Lock } from "lucide-react";
-import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
-import { FeedbackCard } from "@/components/ui/FeedbackCard";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
 import { useSubscription } from "@/hooks/useSubscription";
 
@@ -17,125 +15,29 @@ interface RecentTrendsSectionProps {
   error?: Error | null;
 }
 
-interface TrendCardProps {
-  title: string;
-  icon: React.ReactNode;
-  iconColor: string;
-  items: string[];
-  emptyMessage?: string;
-  isLocked?: boolean;
-}
+const SECTION_CONFIG = [
+  {
+    key: "aspired_self",
+    title: "내가 지향하는 나의 모습",
+    Icon: Target,
+  },
+  {
+    key: "interests",
+    title: "나를 움직이는 원동력",
+    Icon: Sparkles,
+  },
+  {
+    key: "immersion_moments",
+    title: "몰입의 순간들",
+    Icon: Zap,
+  },
+  {
+    key: "personality_traits",
+    title: "나라는 사람",
+    Icon: User,
+  },
+] as const;
 
-function TrendCard({
-  title,
-  icon,
-  iconColor,
-  items,
-  emptyMessage,
-  isLocked = false,
-}: TrendCardProps) {
-  const router = useRouter();
-  if (items.length === 0) {
-    if (emptyMessage) {
-      return (
-        <div className="mb-12">
-          <FeedbackCard
-            icon={icon}
-            iconColor={iconColor}
-            title={title}
-            gradientColor={iconColor}
-            isLocked={isLocked}
-          >
-            <p
-              className={TYPOGRAPHY.body.fontSize}
-              style={{ color: COLORS.text.muted }}
-            >
-              {emptyMessage}
-            </p>
-          </FeedbackCard>
-        </div>
-      );
-    }
-    return null;
-  }
-
-  return (
-    <div className="mb-12 relative">
-      <FeedbackCard
-        icon={icon}
-        iconColor={iconColor}
-        title={title}
-        gradientColor={iconColor}
-        isLocked={isLocked}
-      >
-        <ul className="space-y-2">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <div
-                className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                style={{ backgroundColor: iconColor }}
-              />
-              <p
-                className={TYPOGRAPHY.body.fontSize}
-                style={{
-                  color: COLORS.text.primary,
-                  lineHeight: "1.6",
-                }}
-              >
-                {item}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </FeedbackCard>
-
-      {/* 카드 전체를 덮는 blur 오버레이 */}
-      {isLocked && (
-        <>
-          <div
-            className="absolute inset-0 z-20 rounded-xl pointer-events-none"
-            style={{
-              background: `linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.75) 0%, 
-                rgba(250, 252, 250, 0.85) 30%, 
-                rgba(248, 250, 248, 0.88) 60%, 
-                rgba(255, 255, 255, 0.82) 100%
-              )`,
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-            }}
-          />
-          {/* 중앙 잠금 배지 - 클릭 가능 */}
-          <div 
-            className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
-            onClick={() => router.push("/membership")}
-          >
-            <div
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
-              style={{
-                background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                boxShadow:
-                  "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <Lock className="w-4 h-4" style={{ color: COLORS.text.white }} />
-              <span
-                className="text-sm font-semibold tracking-wide"
-                style={{ color: COLORS.text.white }}
-              >
-                Pro
-              </span>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// 임시 데이터 (프로가 아닐 경우 사용)
 const mockData = {
   aspired_self: [
     "서두르지 않고 깊이 있게 사고하며, 실용적인 솔루션을 통해 사람들에게 가치를 전달하는 사람",
@@ -172,11 +74,10 @@ export function RecentTrendsSection({
   isLoading = false,
   error = null,
 }: RecentTrendsSectionProps) {
+  const router = useRouter();
   const { isPro } = useSubscription();
 
-  // 데이터 처리 로직 (useMemo로 메모이제이션)
   const processedData = useMemo(() => {
-    // 프로가 아닐 경우: 모든 데이터를 mockData로 사용
     if (!isPro) {
       return {
         aspired_self: mockData.aspired_self,
@@ -185,17 +86,14 @@ export function RecentTrendsSection({
         personality_traits: mockData.personality_traits,
       };
     }
-
-    // 프로 멤버십: 실제 데이터 사용
     if (!data) {
       return {
-        aspired_self: [],
-        interests: [],
-        immersion_moments: [],
-        personality_traits: [],
+        aspired_self: [] as string[],
+        interests: [] as string[],
+        immersion_moments: [] as string[],
+        personality_traits: [] as string[],
       };
     }
-
     return {
       aspired_self: (data.aspired_self || []).slice(0, 5),
       interests: (data.interests || []).slice(0, 5),
@@ -204,36 +102,25 @@ export function RecentTrendsSection({
     };
   }, [data, isPro]);
 
-  // 로딩 상태
   if (isLoading) {
     return (
       <div className="py-12">
-        <LoadingSpinner
-          message="최근 동향을 불러오는 중..."
-          size="md"
-          showMessage={true}
-        />
+        <LoadingSpinner message="최근 동향을 불러오는 중..." size="md" showMessage />
       </div>
     );
   }
 
-  // 에러 상태
   if (error) {
     return (
       <div className="py-12">
         <ErrorDisplay
-          message={
-            error instanceof Error
-              ? error.message
-              : "최근 동향을 불러오는 중 오류가 발생했습니다."
-          }
+          message={error instanceof Error ? error.message : "최근 동향을 불러오는 중 오류가 발생했습니다."}
           size="md"
         />
       </div>
     );
   }
 
-  // 빈 데이터 상태
   const hasAnyData =
     processedData.aspired_self.length > 0 ||
     processedData.interests.length > 0 ||
@@ -243,81 +130,118 @@ export function RecentTrendsSection({
   if (!hasAnyData) {
     return (
       <div className="py-12 text-center">
-        <p style={{ color: COLORS.text.muted }}>
-          아직 데이터가 없습니다. 일일 VIVID를 생성하면 최근 동향을 확인할 수
-          있습니다.
+        <p style={{ color: COLORS.text.muted, fontSize: "0.875rem" }}>
+          아직 데이터가 없습니다. 일일 VIVID를 생성하면 최근 동향을 확인할 수 있습니다.
         </p>
       </div>
     );
   }
 
+  const accent = COLORS.brand.primary;
+  const cardBg = COLORS.background.cardElevated;
+  const cardBorder = COLORS.border.light;
+
   return (
-    <>
-      {/* 섹션 헤더 */}
-      <ScrollAnimation>
-        <div className="mb-6">
-          <h2
-            className={TYPOGRAPHY.h2.fontSize}
-            style={{ ...TYPOGRAPHY.h2, marginBottom: "8px" }}
-          >
-            최근 7일간의 흐름
-          </h2>
-          <p
-            className={TYPOGRAPHY.body.fontSize}
-            style={{ color: COLORS.text.secondary }}
-          >
-            일주일 데이터를 기반으로 한 인사이트입니다
-          </p>
-        </div>
-      </ScrollAnimation>
+    <section className="mb-10 w-full max-w-2xl">
+      <h2
+        className="text-lg font-semibold tracking-tight mb-1"
+        style={{ color: COLORS.text.primary }}
+      >
+        한눈에 보기
+      </h2>
+      <p className="text-sm mb-6" style={{ color: COLORS.text.secondary }}>
+        최근 5일 데이터 기반 인사이트
+      </p>
 
-      {/* 1. 지향하는 나의 모습 */}
-      <ScrollAnimation delay={100}>
-        <TrendCard
-          title="내가 지향하는 나의 모습"
-          icon={<Target className="w-4 h-4 text-white" />}
-          iconColor="#E5B96B"
-          items={processedData.aspired_self}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {SECTION_CONFIG.map(({ key, title, Icon }) => {
+          const items = processedData[key];
+          const isEmpty = !items?.length;
 
-      {/* 2. 관심사 */}
-      <ScrollAnimation delay={200}>
-        <TrendCard
-          title="나를 움직이는 원동력"
-          icon={<Sparkles className="w-4 h-4 text-white" />}
-          iconColor="#A8BBA8"
-          items={processedData.interests}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
+          return (
+            <div
+              key={key}
+              className="relative rounded-xl overflow-hidden min-h-[100px] transition-all duration-200"
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${cardBorder}`,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 bottom-0 w-1"
+                style={{ backgroundColor: accent }}
+              />
+              <div className="pl-4 pr-4 pt-3.5 pb-3.5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${accent}18` }}
+                  >
+                    <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+                  </div>
+                  <span
+                    className="text-sm font-medium truncate"
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {title}
+                  </span>
+                </div>
+                {isEmpty ? (
+                  <p className="text-xs" style={{ color: COLORS.text.muted }}>
+                    아직 데이터가 없습니다
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {items.slice(0, 5).map((item, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span
+                          className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: accent }}
+                        />
+                        <span
+                          className="text-sm leading-relaxed"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-      {/* 3. 몰입 희망 순간 */}
-      <ScrollAnimation delay={300}>
-        <TrendCard
-          title="몰입의 순간들"
-          icon={<Zap className="w-4 h-4 text-white" />}
-          iconColor="#A8BBA8"
-          items={processedData.immersion_moments}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
-
-      {/* 4. 나라는 사람의 성향 */}
-      <ScrollAnimation delay={400}>
-        <TrendCard
-          title="나라는 사람"
-          icon={<User className="w-4 h-4 text-white" />}
-          iconColor="#E5B96B"
-          items={processedData.personality_traits}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
-    </>
+              {!isPro && (
+                <>
+                  <div
+                    className="absolute inset-0 z-10 rounded-xl pointer-events-none"
+                    style={{
+                      background: "rgba(255,255,255,0.82)",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => router.push("/membership")}
+                    className="absolute inset-0 z-20 flex items-center justify-center rounded-xl cursor-pointer"
+                  >
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
+                      style={{
+                        color: COLORS.text.white,
+                        backgroundColor: accent,
+                      }}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      Pro
+                    </span>
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

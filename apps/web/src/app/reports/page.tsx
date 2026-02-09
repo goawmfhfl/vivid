@@ -252,23 +252,34 @@ function ReportsPage() {
         </button>
       </div>
 
-      {/* 최근 7일간의 흐름 섹션 (일주일) */}
+      {/* 한눈에 보기 + 성장 인사이트 */}
       <div
         className="mt-12 pt-12 border-t"
         style={{ borderColor: COLORS.border.light }}
       >
-        {personaInsights?.growth_insights && (
-          <GrowthInsightsSection
-            growth_insights={personaInsights.growth_insights}
-            isLoading={isLoadingInsights}
-            isLocked={!isPro}
-          />
-        )}
         <RecentTrendsSection
           data={recentTrendsData || null}
           isLoading={isLoadingTrends}
           error={trendsError || null}
         />
+        {personaInsights?.growth_insights && (
+          <>
+            <h2
+              className="mt-12 mb-4"
+              style={TYPOGRAPHY.h2}
+            >
+              성장 인사이트
+            </h2>
+            <GrowthInsightsSection
+              growth_insights={personaInsights.growth_insights}
+              identity={personaInsights.identity ?? undefined}
+              patterns={personaInsights.patterns ?? undefined}
+              trend={personaInsights.trend ?? undefined}
+              isLoading={isLoadingInsights}
+              isLocked={!isPro}
+            />
+          </>
+        )}
       </div>
       </div>
     </PullToRefresh>

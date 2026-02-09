@@ -3,25 +3,20 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { getAuthenticatedUserIdFromRequest } from "@/app/api/utils/auth";
 import { decryptJsonbFields } from "@/lib/jsonb-encryption";
 import type { JsonbValue } from "@/lib/jsonb-encryption";
+import type {
+  UserPersonaTrend,
+  UserPersonaGrowthInsights,
+  UserPersonaIdentity,
+  UserPersonaPatterns,
+  UserPersonaContext,
+} from "@/types/user-persona";
 
 export interface UserPersonaInsightsResponse {
-  trend: {
-    aspired_self: string;
-    interest: string;
-    immersion_moment: string;
-    personality_trait: string;
-  } | null;
-  growth_insights: {
-    self_clarity_index: number;
-    pattern_balance_score: number;
-    vision_consistency_score: number;
-    self_clarity_rationale?: string;
-    pattern_balance_rationale?: string;
-    vision_consistency_rationale?: string;
-  } | null;
-  identity: Record<string, unknown> | null;
-  patterns: Record<string, unknown> | null;
-  context: Record<string, unknown> | null;
+  trend: UserPersonaTrend | null;
+  growth_insights: UserPersonaGrowthInsights | null;
+  identity: UserPersonaIdentity | null;
+  patterns: UserPersonaPatterns | null;
+  context: UserPersonaContext | null;
   source_start: string | null;
   source_end: string | null;
 }
@@ -72,12 +67,12 @@ export async function GET(request: NextRequest) {
       string,
       unknown
     >;
-    const trend = (persona.trend as UserPersonaInsightsResponse["trend"]) ?? null;
+    const trend = (persona.trend as UserPersonaTrend) ?? null;
     const growth_insights =
-      (persona.growth_insights as UserPersonaInsightsResponse["growth_insights"]) ?? null;
-    const identity = (persona.identity as Record<string, unknown>) ?? null;
-    const patterns = (persona.patterns as Record<string, unknown>) ?? null;
-    const context = (persona.context as Record<string, unknown>) ?? null;
+      (persona.growth_insights as UserPersonaGrowthInsights) ?? null;
+    const identity = (persona.identity as UserPersonaIdentity) ?? null;
+    const patterns = (persona.patterns as UserPersonaPatterns) ?? null;
+    const context = (persona.context as UserPersonaContext) ?? null;
 
     return NextResponse.json<UserPersonaInsightsResponse>({
       trend,

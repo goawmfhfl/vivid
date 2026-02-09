@@ -74,7 +74,7 @@ export default function UpdatePersonaCronTestPage() {
           크론 테스트: User Persona 업데이트
         </h1>
         <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
-          원하는 날짜/유저 기준으로 크론을 수동 실행할 수 있습니다.
+          원하는 날짜/유저 기준으로 크론을 수동 실행할 수 있습니다. 내 계정만 실행하려면 userId에 본인 계정의 userId를 입력하세요.
         </p>
       </div>
 
@@ -135,8 +135,11 @@ export default function UpdatePersonaCronTestPage() {
                 backgroundColor: COLORS.background.cardElevated,
                 color: COLORS.text.primary,
               }}
-              placeholder="특정 유저만 실행"
+              placeholder="내 계정만 테스트 시 본인 userId 입력"
             />
+            <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+              비워두면 Pro 전체 유저 대상. 특정 유저만 실행하려면 해당 유저의 userId를 입력하세요.
+            </p>
           </div>
         </div>
 

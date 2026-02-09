@@ -74,6 +74,7 @@ export const SYSTEM_PROMPT_USER_PERSONA = `
 - 기존 페르소나가 제공되면 일관성을 유지하되, 최근 7일의 변화가 있으면 반영하세요.
 - 추상적인 미사여구보다 실제 기록에서 드러난 행동/감정/목표를 우선합니다.
 - 빈 문자열이나 빈 배열을 반환하지 마세요. 정보가 부족하면 합리적 추론으로 보완하세요.
+- 배열 필드는 각각 최대 5개 항목만 출력하세요: identity.traits, identity.ideal_self, identity.driving_forces, patterns.flow_moments, patterns.stumbling_blocks, patterns.energy_sources, context.active_quests 모두 최대 5개.
 
 trend: 최근 7일 요약 기준으로 "지향하는 나의 모습(aspired_self)", "관심사(interest)", "몰입 희망 순간(immersion_moment)", "나라는 사람 성향(personality_trait)"을 각 한 문장으로 작성하세요.
 
