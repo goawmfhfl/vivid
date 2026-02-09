@@ -637,8 +637,12 @@ export function AIUsagePage() {
                     {type.request_type === "daily_vivid"
                       ? "Daily Vivid"
                       : type.request_type === "weekly_vivid"
-                      ? "Weekly Feedback"
-                      : "Monthly Vivid"}
+                        ? "Weekly Feedback"
+                        : type.request_type === "monthly_vivid"
+                          ? "Monthly Vivid"
+                          : type.request_type === "user_persona"
+                            ? "User Persona"
+                            : type.request_type}
                   </span>
                   <div className="flex flex-col items-end">
                     <span style={{ color: COLORS.text.secondary }}>
@@ -877,6 +881,7 @@ export function AIUsagePage() {
                 <option value="daily_vivid">Daily Vivid</option>
                 <option value="weekly_vivid">Weekly Vivid</option>
                 <option value="monthly_vivid">Monthly Vivid</option>
+                <option value="user_persona">User Persona</option>
               </select>
             </div>
             <div>
@@ -1080,8 +1085,12 @@ export function AIUsagePage() {
                           {detail.request_type === "daily_vivid"
                             ? "Daily"
                             : detail.request_type === "weekly_vivid"
-                            ? "Weekly"
-                            : "Monthly"}
+                              ? "Weekly"
+                              : detail.request_type === "monthly_vivid"
+                                ? "Monthly"
+                                : detail.request_type === "user_persona"
+                                  ? "Persona"
+                                  : detail.request_type}
                         </span>
                       </td>
                       <td className="px-4 py-3">

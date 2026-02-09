@@ -15,14 +15,16 @@ export async function generateVividReportFromRecords(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   userId?: string,
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<MonthlyReport> {
   const schema = getSectionSchema("report", isPro);
   const userPrompt = buildVividReportPromptFromRecords(
     records,
     month,
     dateRange,
-    userName
+    userName,
+    personaContext
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, userPrompt);
 

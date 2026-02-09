@@ -214,12 +214,18 @@ export function buildWeeklyVividPrompt(
 export function buildWeeklyVividPromptFromRecords(
   records: RecordsForWeekly,
   weekRange: { start: string; end: string; timezone: string },
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): string {
   // 기록이 없으면 빈 문자열 반환
   if (!records || records.length === 0) {
     return "";
   }
+
+  const personaBlock =
+    personaContext && personaContext.trim()
+      ? personaContext.trim() + "\n\n"
+      : "";
 
   // 날짜별로 기록 그룹화
   const recordsByDate = new Map<string, typeof records>();
@@ -235,7 +241,9 @@ export function buildWeeklyVividPromptFromRecords(
   const includedDates = Array.from(recordsByDate.keys()).sort();
   const actualDatesText = includedDates.join(", ");
 
-  let prompt = `아래는 ${userName ? `${userName}님의 ` : ""}${dateRangeText} 일주일간의 VIVID 기록입니다.
+  let prompt =
+    personaBlock +
+    `아래는 ${userName ? `${userName}님의 ` : ""}${dateRangeText} 일주일간의 VIVID 기록입니다.
 
 **중요: 분석해야 할 날짜 범위는 ${weekRange.start}부터 ${weekRange.end}까지입니다.**
 **실제로 포함된 기록 날짜: ${actualDatesText} (총 ${records.length}개 기록)**

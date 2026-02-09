@@ -15,7 +15,8 @@ export async function generateMonthlyVividFromRecordsWithProgress(
   dateRange: { start_date: string; end_date: string },
   isPro: boolean,
   userId?: string,
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<MonthlyVivid> {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
@@ -39,7 +40,8 @@ export async function generateMonthlyVividFromRecordsWithProgress(
     dateRange,
     isPro,
     userId,
-    userName
+    userName,
+    personaContext
   );
 
   // 2. Title 생성 (report 기반)

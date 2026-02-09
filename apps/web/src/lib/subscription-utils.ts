@@ -2,6 +2,29 @@ import { getServiceSupabase } from "./supabase-service";
 import type { SubscriptionVerification, SubscriptionMetadata } from "@/types/subscription";
 
 /**
+ * user_metadata만으로 Pro 여부 판단 (동기, listUsers 결과 필터용)
+ */
+export function isProFromMetadata(userMetadata: Record<string, unknown> | undefined): boolean {
+  if (!userMetadata?.subscription) return false;
+  const role = userMetadata.role as string | undefined;
+  if (role === "admin") return true;
+  const subscription = userMetadata.subscription as SubscriptionMetadata;
+  const plan = subscription.plan || "free";
+  const status = subscription.status || "none";
+  const started_at = subscription.started_at ? new Date(subscription.started_at) : null;
+  const expires_at = subscription.expires_at ? new Date(subscription.expires_at) : null;
+  const now = new Date();
+  return (
+    plan === "pro" &&
+    status === "active" &&
+    started_at !== null &&
+    started_at < now &&
+    expires_at !== null &&
+    expires_at > now
+  );
+}
+
+/**
  * 서버 사이드에서 구독 정보를 검증하는 함수
  * user_metadata에서 구독 정보를 확인
  */

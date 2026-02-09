@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/update-persona",
-      "schedule": "35 0 * * *"
-    }
-  ]
-}
+{"crons":[{"path":"/api/cron/update-persona","schedule":"0 2 */3 * *"}]}

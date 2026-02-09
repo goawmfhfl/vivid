@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import {
+  fetchUserPersonaOptional,
+  buildPersonaContextBlock,
+} from "@/lib/user-persona";
 import { fetchRecordsByDateRange, saveWeeklyVivid } from "../db-service";
 import { generateWeeklyVividFromRecordsWithProgress } from "../ai-service-stream";
 import type { WeeklyVividGenerateRequest } from "../types";
@@ -117,13 +121,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 1.5️⃣ user_persona 선택 조회 (있으면 프롬프트에 반영)
+    let personaContext = "";
+    try {
+      const persona = await fetchUserPersonaOptional(supabase, userId);
+      personaContext = buildPersonaContextBlock(persona);
+    } catch {
+      // 조회/복호화 실패 시 빈 문자열 유지
+    }
+
     // 2️⃣ AI 요청: Weekly Vivid 생성 (Gemini API 사용, 기록 기반)
     const weeklyVivid = await generateWeeklyVividFromRecordsWithProgress(
       records,
       { start, end, timezone },
       isPro,
       userId, // AI 사용량 로깅을 위한 userId 전달
-      userName // 사용자 이름 전달
+      userName, // 사용자 이름 전달
+      personaContext
     );
 
     // 추적 정보 제거 (DB 저장 전)

@@ -483,9 +483,15 @@ async function generateWeeklyVividDataFromRecords(
   range: { start: string; end: string; timezone: string },
   isPro: boolean,
   userId?: string,
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<Partial<WeeklyVivid>> {
-  const prompt = buildWeeklyVividPromptFromRecords(records, range, userName);
+  const prompt = buildWeeklyVividPromptFromRecords(
+    records,
+    range,
+    userName,
+    personaContext
+  );
   const schema = getWeeklyVividSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
 
@@ -534,7 +540,8 @@ export async function generateWeeklyVividFromRecordsWithProgress(
   range: { start: string; end: string; timezone: string },
   isPro: boolean = false,
   userId?: string,
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<WeeklyVivid> {
   // 한 번의 호출로 report, title, trend 모두 생성
   const weeklyVividData = await generateWeeklyVividDataFromRecords(
@@ -542,7 +549,8 @@ export async function generateWeeklyVividFromRecordsWithProgress(
     range,
     isPro,
     userId,
-    userName
+    userName,
+    personaContext
   );
 
   // 데이터 검증 및 기본값 처리

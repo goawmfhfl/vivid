@@ -500,7 +500,8 @@ async function generateReport(
   isPro: boolean = false,
   userId?: string,
   generationMode: "fast" | "reasoned" = "fast",
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<Report | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -509,7 +510,14 @@ async function generateReport(
     return null;
   }
 
-  const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
+  const prompt = buildReportPrompt(
+    records,
+    date,
+    dayOfWeek,
+    isPro,
+    userName,
+    personaContext
+  );
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_REPORT,
     `${prompt}::${generationMode}`
@@ -663,6 +671,7 @@ async function generateIntegratedReport(
 
 /**
  * 모든 타입별 리포트 생성
+ * trend는 user_persona cron에서 관리하므로 여기서는 생성하지 않음.
  */
 export async function generateAllReportsWithProgress(
   records: FeedbackRecord[],
@@ -671,52 +680,24 @@ export async function generateAllReportsWithProgress(
   isPro: boolean = false,
   userId?: string,
   generationMode: "fast" | "reasoned" = "fast",
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): Promise<{
   report: Report | null;
   trend: TrendData | null;
 }> {
-  // Free 유저는 trend를 생성하지 않음 (비용 절감)
-  // Pro 유저만 trend 생성
-  if (!isPro) {
-    // Free 유저: report만 생성
-    const report = await generateReport(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId,
-      generationMode,
-      userName
-    );
-
-    return {
-      report,
-      trend: null,
-    };
-  }
-
-  // Pro 유저: 통합 생성 함수 호출 (하나의 API 요청으로 Report와 Trend 동시 생성)
-  if (isPro) {
-    return await generateIntegratedReport(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId,
-      generationMode,
-      userName
-    );
-  }
-
-  // Fallback (혹시 모를 상황 대비, 기존 병렬 처리 코드 - 도달할 일 없음)
-  const [report, trendData] = await Promise.all([
-    generateReport(records, date, dayOfWeek, isPro, userId, generationMode, userName),
-    generateTrendData(records, date, dayOfWeek, isPro, userId, generationMode, userName),
-  ]);
-
+  const report = await generateReport(
+    records,
+    date,
+    dayOfWeek,
+    isPro,
+    userId,
+    generationMode,
+    userName,
+    personaContext
+  );
   return {
     report,
-    trend: trendData,
+    trend: null,
   };
 }

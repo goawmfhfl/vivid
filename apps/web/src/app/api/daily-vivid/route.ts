@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import {
+  fetchUserPersonaOptional,
+  buildPersonaContextBlock,
+} from "@/lib/user-persona";
 import { generateAllReportsWithProgress } from "./ai-service-stream";
 import { fetchRecordsByDate, saveDailyReport } from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
@@ -146,6 +150,15 @@ export async function POST(request: NextRequest) {
 
     const userName = resolvedUserName || "회원";
 
+    // 3.6️⃣ user_persona 선택 조회 (있으면 프롬프트에 반영, 없으면 무시)
+    let personaContext = "";
+    try {
+      const persona = await fetchUserPersonaOptional(supabase, userId);
+      personaContext = buildPersonaContextBlock(persona);
+    } catch {
+      // 조회/복호화 실패 시 빈 문자열 유지
+    }
+
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
     const generationMode = generation_mode === "reasoned" ? "reasoned" : "fast";
 
@@ -156,10 +169,11 @@ export async function POST(request: NextRequest) {
       isPro,
       userId, // AI 사용량 로깅을 위한 userId 전달
       generationMode,
-      userName
+      userName,
+      personaContext
     );
 
-    // 4.5️⃣ 응답 텍스트에서 "당신" → "userName님" 후처리
+    // 4.5️⃣ 응답 텍스트에서 "당신" → "재영님" 등 친근 호칭으로 후처리
     if (allReports.report) {
       if (!hasReview) {
         allReports = {
@@ -178,19 +192,12 @@ export async function POST(request: NextRequest) {
         report: replace당신InReport(allReports.report, userName),
       };
     }
-    if (allReports.trend) {
-      allReports = {
-        ...allReports,
-        trend: replace당신InTrend(allReports.trend, userName),
-      };
-    }
-
-    // 4️⃣ DailyReportResponse 형식으로 변환
+    // 4️⃣ DailyReportResponse 형식으로 변환 (trend는 user_persona에서 관리하므로 null)
     const report: DailyReportResponse = {
       date,
       day_of_week: dayOfWeek,
       report: allReports.report,
-      trend: allReports.trend,
+      trend: null,
     };
 
     // 5️⃣ Supabase daily_vivid 테이블에 저장

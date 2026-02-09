@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@upstash/qstash";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils";
 import {
   getKstDateRange,
   getKstDateRangeFromBase,
@@ -68,6 +69,19 @@ export async function GET(request: NextRequest) {
 
     let users: Array<{ id: string }> = [];
     if (targetUserId) {
+      const { isPro } = await verifySubscription(targetUserId);
+      if (!isPro) {
+        return NextResponse.json({
+          ok: true,
+          page: 1,
+          limit,
+          batchSize,
+          users: 0,
+          batches: 0,
+          nextPage: null,
+          message: "Target user is not Pro; persona cron runs for Pro only.",
+        });
+      }
       users = [{ id: targetUserId }];
     } else {
       const { data: usersData, error: usersError } =
@@ -78,7 +92,10 @@ export async function GET(request: NextRequest) {
       if (usersError) {
         throw new Error(`Failed to list users: ${usersError.message}`);
       }
-      users = usersData?.users || [];
+      const allUsers = usersData?.users || [];
+      users = allUsers.filter((u) =>
+        isProFromMetadata(u.user_metadata as Record<string, unknown> | undefined)
+      );
     }
 
     if (!users.length) {

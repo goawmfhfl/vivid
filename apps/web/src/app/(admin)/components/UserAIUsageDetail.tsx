@@ -610,6 +610,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                     <option value="daily_vivid">Daily Vivid</option>
                     <option value="weekly_vivid">Weekly Vivid</option>
                     <option value="monthly_vivid">Monthly Vivid</option>
+                    <option value="user_persona">User Persona</option>
                   </select>
                 </div>
                 <div>
@@ -818,8 +819,12 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                               {detail.request_type === "daily_vivid"
                                 ? "Daily"
                                 : detail.request_type === "weekly_vivid"
-                                ? "Weekly"
-                                : "Monthly"}
+                                  ? "Weekly"
+                                  : detail.request_type === "monthly_vivid"
+                                    ? "Monthly"
+                                    : detail.request_type === "user_persona"
+                                      ? "Persona"
+                                      : detail.request_type}
                             </span>
                           </td>
                           <td className="px-4 py-3">

@@ -1,11 +1,13 @@
 import type { Record } from "./types";
 
+
 export function buildReportPrompt(
   records: Record[],
   date: string,
   dayOfWeek: string,
   isPro: boolean = false,
-  userName?: string
+  userName?: string,
+  personaContext?: string
 ): string {
   const targetRecords = records.filter(
     (r) =>
@@ -16,9 +18,14 @@ export function buildReportPrompt(
     return "";
   }
 
+  const personaBlock =
+    personaContext && personaContext.trim()
+      ? personaContext.trim() + "\n\n"
+      : "";
+
   const honorificRule =
     userName && userName !== "회원"
-      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${userName}님'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요.\n\n`
+      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${(userName)}'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요. (예: 본명이 '최재영'이면 '재영님'으로 호칭)\n\n`
       : "응답 문장에서 '당신'이라는 단어를 사용하지 마세요. 사용자를 지칭할 때는 '회원님' 등으로 호칭하세요.\n\n";
 
   const instruction = isPro
@@ -143,7 +150,9 @@ export function buildReportPrompt(
         honorificRule.trim(),
       ].join("\n");
 
-  let prompt = `아래는 ${date} (${dayOfWeek}) 하루의 VIVID 기록입니다.\n${instruction}\n\n`;
+  let prompt =
+    personaBlock +
+    `아래는 ${date} (${dayOfWeek}) 하루의 VIVID 기록입니다.\n${instruction}\n\n`;
 
   targetRecords.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);

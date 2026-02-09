@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RecentTrendsSection } from "@/components/reports/RecentTrendsSection";
+import { GrowthInsightsSection } from "@/components/reports/GrowthInsightsSection";
 import { useRecentTrends } from "@/hooks/useRecentTrends";
+import { useUserPersonaInsights } from "@/hooks/useUserPersonaInsights";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
   COLORS,
@@ -24,7 +26,6 @@ function ReportsPage() {
   const queryClient = useQueryClient();
   const { isPro } = useSubscription();
 
-  // 최근 동향 데이터 조회
   const {
     data: recentTrendsData,
     isLoading: isLoadingTrends,
@@ -32,12 +33,19 @@ function ReportsPage() {
     refetch: refetchTrends,
   } = useRecentTrends();
 
+  const {
+    data: personaInsights,
+    isLoading: isLoadingInsights,
+    refetch: refetchInsights,
+  } = useUserPersonaInsights();
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([
       refetchTrends(),
+      refetchInsights(),
       queryClient.refetchQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] }),
     ]);
-  }, [queryClient, refetchTrends]);
+  }, [queryClient, refetchTrends, refetchInsights]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -244,11 +252,18 @@ function ReportsPage() {
         </button>
       </div>
 
-      {/* 최근 동향 섹션 */}
+      {/* 최근 7일간의 흐름 섹션 (일주일) */}
       <div
         className="mt-12 pt-12 border-t"
         style={{ borderColor: COLORS.border.light }}
       >
+        {personaInsights?.growth_insights && (
+          <GrowthInsightsSection
+            growth_insights={personaInsights.growth_insights}
+            isLoading={isLoadingInsights}
+            isLocked={!isPro}
+          />
+        )}
         <RecentTrendsSection
           data={recentTrendsData || null}
           isLoading={isLoadingTrends}

@@ -26,6 +26,7 @@ const PRICING: Record<
   "gemini-3.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 }, // 별칭 지원
   "gemini-1.5-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
   "gemini-1.5-pro": { input: 1.25, inputCached: 0.625, output: 5.0 },
+  "gemini-3-pro-preview": { input: 1.25, inputCached: 0.625, output: 5.0 },
 };
 
 const USD_TO_KRW = 1350; // 기본 환율
@@ -54,7 +55,7 @@ interface CostCalculation {
 export interface LogAIRequestParams {
   userId: string;
   model: string;
-  requestType: "daily_vivid" | "weekly_vivid" | "monthly_vivid";
+  requestType: "daily_vivid" | "weekly_vivid" | "monthly_vivid" | "user_persona";
   sectionName: string | null;
   usage: AIUsageInfo;
   duration_ms: number;
@@ -142,9 +143,13 @@ export async function logAIRequest(
         requestType === "daily_vivid"
           ? "[daily]"
           : requestType === "weekly_vivid"
-          ? "[weekly]"
-      : "[monthly]";
-      prefixedSectionName = `${prefix} ${sectionName}`;
+            ? "[weekly]"
+            : requestType === "monthly_vivid"
+              ? "[monthly]"
+              : requestType === "user_persona"
+                ? "[persona]"
+                : "";
+      prefixedSectionName = prefix ? `${prefix} ${sectionName}` : sectionName;
     }
 
     // ai_requests 테이블에 삽입

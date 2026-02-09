@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
+import {
+  fetchUserPersonaOptional,
+  buildPersonaContextBlock,
+} from "@/lib/user-persona";
 import { saveMonthlyVivid } from "../db-service";
 import { generateMonthlyVividFromRecordsWithProgress } from "../ai-service-from-records";
 import { fetchRecordsByDateRange } from "../records-db";
@@ -200,6 +204,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 1.5️⃣ user_persona 선택 조회 (있으면 프롬프트에 반영)
+    let personaContext = "";
+    try {
+      const persona = await fetchUserPersonaOptional(supabase, userId);
+      personaContext = buildPersonaContextBlock(persona);
+    } catch {
+      // 조회/복호화 실패 시 빈 문자열 유지
+    }
+
     // 2️⃣ AI 요청: Monthly Vivid 생성 (Gemini 2.0 Flash Exp Pro 모델 사용, 기록 기반)
     const monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
       records,
@@ -207,7 +220,8 @@ export async function POST(request: NextRequest) {
       dateRange,
       isPro,
       userId,
-      userName
+      userName,
+      personaContext
     );
 
     // month_label 설정 (없는 경우)

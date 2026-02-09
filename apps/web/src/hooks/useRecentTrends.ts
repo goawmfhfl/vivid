@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserCacheContext } from "./useCurrentUser";
+import { supabase } from "@/lib/supabase";
 
 export interface RecentTrendsResponse {
   aspired_self: string[]; // 내가 지향하는 모습 (최근 5개)
@@ -15,6 +16,14 @@ export const fetchRecentTrends = async (
   options?: FetchOptions
 ): Promise<RecentTrendsResponse> => {
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("인증이 필요합니다.");
+    }
+
     const { userId, cacheBust } = await getCurrentUserCacheContext();
     const forceParam = options?.force ? "&force=1" : "";
     const cacheParam = cacheBust ? `&v=${encodeURIComponent(cacheBust)}` : "";
@@ -22,7 +31,11 @@ export const fetchRecentTrends = async (
     const response = await fetch(
       `/api/daily-vivid/recent-trends?userId=${userId}${forceParam}${cacheParam}`,
       {
+        credentials: "include",
         cache: options?.force ? "no-store" : "default",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       }
     );
 

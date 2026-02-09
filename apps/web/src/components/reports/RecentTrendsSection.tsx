@@ -260,13 +260,13 @@ export function RecentTrendsSection({
             className={TYPOGRAPHY.h2.fontSize}
             style={{ ...TYPOGRAPHY.h2, marginBottom: "8px" }}
           >
-            나의 최근 흐름
+            최근 7일간의 흐름
           </h2>
           <p
             className={TYPOGRAPHY.body.fontSize}
             style={{ color: COLORS.text.secondary }}
           >
-            최근 5일간의 데이터를 기반으로 한 인사이트입니다
+            일주일 데이터를 기반으로 한 인사이트입니다
           </p>
         </div>
       </ScrollAnimation>
