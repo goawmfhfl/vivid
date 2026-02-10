@@ -56,6 +56,7 @@ export type RouteRule =
 const bottomNavHiddenRules: RouteRule[] = [
   { type: "prefix", value: "/login" }, // /login, /login/email
   { type: "exact", value: "/signup" },
+  { type: "prefix", value: "/auth" }, // OAuth 콜백/인증 처리 페이지
   { type: "exact", value: "/auth/reset-password" },
   { type: "prefix", value: "/admin" }, // 어드민 페이지에서 BottomNavigation 비활성화
   { type: "prefix", value: "/policy" }, // 정책 페이지에서 BottomNavigation 비활성화
@@ -86,6 +87,7 @@ const footerHiddenRules: RouteRule[] = [
   { type: "regex", value: /^\/(\d{4}-\d{2}-\d{2})$/ }, // 날짜별 페이지
   { type: "prefix", value: "/login" }, // 로그인 랜딩·이메일 로그인 (개인정보처리방침 미노출)
   { type: "prefix", value: "/signup" }, // 회원가입 페이지
+  { type: "prefix", value: "/auth" }, // OAuth 콜백/인증 처리 페이지
   { type: "prefix", value: "/reports" }, // 리포트 페이지
   { type: "prefix", value: "/analysis" }, // 분석 페이지
   { type: "prefix", value: "/logs" }, // 로그 페이지

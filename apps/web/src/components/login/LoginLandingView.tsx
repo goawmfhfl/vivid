@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { Loader2 } from "lucide-react";
 import { getLoginPath, getLoginEmailPath } from "@/lib/navigation";
 import {
   COLORS,
@@ -19,6 +21,8 @@ import { useIsBrowser } from "@/hooks/useIsBrowser";
 import { useIsIOS } from "@/hooks/useIsIOS";
 import { useModalStore } from "@/store/useModalStore";
 import { useToast } from "@/hooks/useToast";
+import { supabase } from "@/lib/supabase";
+import { updateLastLoginAt } from "@/lib/profile-utils";
 
 const TAGLINE = `기록을
 
@@ -42,10 +46,33 @@ const loginButtonTextureBase = {
   backgroundBlendMode: "soft-light, normal" as const,
 };
 
+const isProfileCompleted = (user: User) => {
+  const metadata = user.user_metadata || {};
+  return Boolean(metadata.name && metadata.agreeTerms && metadata.agreeAI);
+};
+
+const syncPhoneVerificationStatus = async (user: User) => {
+  const metadata = user.user_metadata || {};
+  if (metadata.phone_verified === true) return;
+
+  try {
+    await supabase.auth.updateUser({
+      data: {
+        ...metadata,
+        phone_verified: true,
+        phone_verified_at: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("[Social Login] phone_verified 동기화 실패:", error);
+  }
+};
+
 export function LoginLandingView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
+  const [isOAuthProcessing, setIsOAuthProcessing] = useState(false);
   const isBrowser = useIsBrowser();
   const isIOS = useIsIOS();
   // SSR/CSR 초기 마크업을 맞추기 위해 첫 렌더에서는 버튼을 유지하고,
@@ -53,6 +80,8 @@ export function LoginLandingView() {
   const shouldShowAppleLogin = mounted ? isBrowser || isIOS : true;
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
+  const isSocialLoading =
+    kakaoLoginMutation.isPending || appleLoginMutation.isPending || isOAuthProcessing;
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const { showToast } = useToast();
 
@@ -61,6 +90,90 @@ export function LoginLandingView() {
   }, []);
 
   useEffect(() => {
+    if (!mounted || typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash || "";
+    const hasOAuthSignal =
+      params.get("oauth") === "1" ||
+      params.has("code") ||
+      /access_token=|refresh_token=/.test(hash);
+
+    if (!hasOAuthSignal) return;
+
+    let cancelled = false;
+
+    const completeOAuthLogin = async () => {
+      setIsOAuthProcessing(true);
+      try {
+        const errorParam = params.get("error");
+        const errorDescription = params.get("error_description");
+
+        if (errorParam || errorDescription) {
+          const message = errorDescription || errorParam || "소셜 로그인에 실패했습니다.";
+          showToast(message, 5000);
+          router.replace(getLoginPath(params));
+          return;
+        }
+
+        const code = params.get("code");
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            showToast(
+              exchangeError.message || "소셜 로그인 처리 중 오류가 발생했습니다.",
+              5000
+            );
+            router.replace(getLoginPath(params));
+            return;
+          }
+        }
+
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session?.user) {
+          showToast("로그인 세션 확인에 실패했습니다. 다시 시도해주세요.", 5000);
+          router.replace(getLoginPath(params));
+          return;
+        }
+
+        const user = session.user;
+        if (!isProfileCompleted(user)) {
+          const emailQuery = user.email ? `&email=${encodeURIComponent(user.email)}` : "";
+          router.replace(`/signup?social=1${emailQuery}`);
+          return;
+        }
+
+        await syncPhoneVerificationStatus(user);
+        await updateLastLoginAt(user.id);
+        router.replace("/");
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "소셜 로그인 중 오류가 발생했습니다.";
+        showToast(message, 5000);
+        router.replace(getLoginPath(params));
+      } finally {
+        if (!cancelled) {
+          setIsOAuthProcessing(false);
+        }
+      }
+    };
+
+    completeOAuthLogin();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted, router, showToast]);
+
+  useEffect(() => {
+    if (searchParams.get("oauth") === "1") return;
+
     const message = searchParams.get("message");
     if (message) {
       openSuccessModal(message);
@@ -138,7 +251,7 @@ export function LoginLandingView() {
           <button
             type="button"
             onClick={() => kakaoLoginMutation.mutate()}
-            disabled={kakaoLoginMutation.isPending}
+            disabled={isSocialLoading}
             className={cn(
               "w-full flex items-center rounded-xl py-3.5 px-4 transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
               TYPOGRAPHY.body.fontSize,
@@ -160,7 +273,13 @@ export function LoginLandingView() {
                 />
               </svg>
             </span>
-            <span className="flex-1 flex justify-center">카카오 로그인</span>
+            <span className="flex-1 flex justify-center">
+              {isSocialLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "카카오 로그인"
+              )}
+            </span>
           </button>
 
           {/* 애플 로그인: 브라우저(PC 테스트용) + 앱(WebView) iOS에서 표시 */}
@@ -168,7 +287,7 @@ export function LoginLandingView() {
           <button
             type="button"
             onClick={() => appleLoginMutation.mutate()}
-            disabled={appleLoginMutation.isPending}
+            disabled={isSocialLoading}
             className={cn(
               "w-full flex items-center rounded-xl py-3.5 px-4 transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
               TYPOGRAPHY.body.fontSize,
@@ -191,7 +310,13 @@ export function LoginLandingView() {
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.2 2.33-2.71 4.66-4.45 6.88zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
             </span>
-            <span className="flex-1 flex justify-center">애플 로그인</span>
+            <span className="flex-1 flex justify-center">
+              {isSocialLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "애플 로그인"
+              )}
+            </span>
           </button>
           )}
 

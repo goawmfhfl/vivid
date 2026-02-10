@@ -8,14 +8,17 @@ class AppleLoginError extends Error {
   }
 }
 
-// 리디렉션 URL 계산 (브라우저/앱 WebView 모두 동일 오리진 사용)
+// 리디렉션 URL 계산: 로그인 페이지로 되돌려 페이지 전환 깜빡임 최소화
 const getRedirectUrl = (): string => {
   const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
   const isProduction = runtimeEnv === "production";
+  const isDevelopment = runtimeEnv === "development";
 
   let base: string;
   if (isProduction) {
     base = "https://vividlog.app";
+  } else if (isDevelopment) {
+    base = "http://localhost:3000";
   } else if (typeof window !== "undefined" && window.location?.origin) {
     base = window.location.origin;
   } else {
@@ -30,7 +33,14 @@ const getRedirectUrl = (): string => {
     );
   }
 
-  return `${base.replace(/\/$/, "")}/auth/callback`;
+  const currentParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  currentParams.set("oauth", "1");
+  const query = currentParams.toString();
+
+  return `${base.replace(/\/$/, "")}/login${query ? `?${query}` : ""}`;
 };
 
 const loginWithApple = async (): Promise<void> => {
