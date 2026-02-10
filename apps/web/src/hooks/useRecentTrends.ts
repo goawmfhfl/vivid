@@ -52,10 +52,14 @@ export const fetchRecentTrends = async (
   }
 };
 
-export const useRecentTrends = () => {
+export type UseRecentTrendsOptions = { enabled?: boolean };
+
+export const useRecentTrends = (options?: UseRecentTrendsOptions) => {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
     queryFn: () => fetchRecentTrends(),
+    enabled,
     staleTime: 1000 * 60 * 60 * 24, // 1일 캐시 유지
     gcTime: 1000 * 60 * 60 * 24, // 1일 가비지 컬렉션 방지
   });

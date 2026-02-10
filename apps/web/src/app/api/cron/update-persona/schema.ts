@@ -44,18 +44,14 @@ export const UserPersonaSchema = {
         properties: {
           self_clarity_index: { type: "number", minimum: 0, maximum: 100 },
           pattern_balance_score: { type: "number", minimum: 0, maximum: 100 },
-          vision_consistency_score: { type: "number", minimum: 0, maximum: 100 },
           self_clarity_rationale: { type: "string" },
           pattern_balance_rationale: { type: "string" },
-          vision_consistency_rationale: { type: "string" },
         },
         required: [
           "self_clarity_index",
           "pattern_balance_score",
-          "vision_consistency_score",
           "self_clarity_rationale",
           "pattern_balance_rationale",
-          "vision_consistency_rationale",
         ],
       },
     },
@@ -81,6 +77,5 @@ trend: 최근 7일 요약 기준으로 "지향하는 나의 모습(aspired_self)
 growth_insights: 기록과 페르소나를 바탕으로 0-100 점수와 근거를 작성하세요.
 - self_clarity_index: 정체성·지향이 얼마나 명확한지. self_clarity_rationale에 한 문장 근거.
 - pattern_balance_score: 몰입·에너지 vs 걸림돌 균형. pattern_balance_rationale에 한 문장 근거.
-- vision_consistency_score: 지향하는 모습/비전이 요즘 얼마나 일관되는지. vision_consistency_rationale에 한 문장 근거.
 
 `.trim();

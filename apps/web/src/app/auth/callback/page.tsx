@@ -362,16 +362,10 @@ function AuthCallbackContent() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8 gap-4"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
       style={{ backgroundColor: COLORS.background.base }}
     >
       <LoadingSpinner message="로그인 중..." size="md" />
-      <p
-        className="text-center text-sm max-w-md break-words"
-        style={{ color: COLORS.text.tertiary }}
-      >
-        {status}
-      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { shouldShowBottomNav } from "@/lib/navigation";
 import { useEffect, useState, useRef } from "react";
-import { COLORS } from "@/lib/design-system";
+import { COLORS, GRADIENT_UTILS, SHADOWS } from "@/lib/design-system";
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -117,39 +117,37 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#FAFAF8",
-        borderColor: COLORS.border.light,
+        backgroundColor: "rgba(250, 250, 248, 0.96)",
+        borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "35"),
         borderTopWidth: "1.5px",
-        boxShadow: `
-          0 -2px 10px rgba(0,0,0,0.05),
-          inset 0 1px 0 rgba(255,255,255,0.6)
-        `,
+        boxShadow: SHADOWS.lg,
         overflow: "hidden",
         zIndex: 100,
         transform: shouldHide ? "translateY(100%)" : "translateY(0)",
         transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        // 종이 질감 배경 패턴
+        background: GRADIENT_UTILS.cardBackground(COLORS.brand.primary, 0.14, "rgba(250, 250, 248, 0.98)"),
         backgroundImage: `
-          /* 가로 줄무늬 (프로젝트 그린 톤) */
+          linear-gradient(135deg, rgba(255,255,255,0.52) 0%, rgba(255,255,255,0.2) 100%),
           repeating-linear-gradient(
             to bottom,
             transparent 0px,
-            transparent 27px,
-            rgba(107, 122, 111, 0.08) 27px,
-            rgba(107, 122, 111, 0.08) 28px
+            transparent 25px,
+            rgba(127, 143, 122, 0.05) 25px,
+            rgba(127, 143, 122, 0.05) 26px
           ),
-          /* 종이 텍스처 노이즈 */
           repeating-linear-gradient(
             45deg,
             transparent,
             transparent 2px,
-            rgba(107, 122, 111, 0.01) 2px,
-            rgba(107, 122, 111, 0.01) 4px
+            rgba(127, 143, 122, 0.018) 2px,
+            rgba(127, 143, 122, 0.018) 4px
           )
         `,
-        backgroundSize: "100% 28px, 8px 8px",
-        backgroundPosition: "0 2px, 0 0",
-        filter: "contrast(1.02) brightness(1.01)",
+        backgroundSize: "100% 100%, 100% 26px, 8px 8px",
+        backgroundPosition: "0 0, 0 2px, 0 0",
+        filter: "contrast(1.01) brightness(1.01)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
       }}
     >
       {/* 종이 질감 오버레이 */}
@@ -157,11 +155,11 @@ export function BottomNavigation() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
+            radial-gradient(circle at 25% 20%, rgba(255,255,255,0.18) 0%, transparent 42%),
+            radial-gradient(circle at 75% 75%, rgba(127, 143, 122, 0.12) 0%, transparent 40%)
           `,
           mixBlendMode: "overlay",
-          opacity: 0.5,
+          opacity: 0.65,
         }}
       />
       <div className="max-w-2xl mx-auto px-2 relative z-10">
@@ -174,8 +172,14 @@ export function BottomNavigation() {
                 href={item.href}
                 className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-all active:scale-95"
                 style={{
-                  backgroundColor: item.isActive ? "#A8BBA8" : "transparent",
-                  color: item.isActive ? "white" : "#6B7A6F",
+                  background: item.isActive
+                    ? GRADIENT_UTILS.cardBackground(COLORS.brand.primary, 0.88, COLORS.brand.primary)
+                    : "transparent",
+                  color: item.isActive ? COLORS.text.white : COLORS.brand.secondary,
+                  border: item.isActive
+                    ? `1px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.primary, "55")}`
+                    : "1px solid transparent",
+                  boxShadow: item.isActive ? SHADOWS.default : "none",
                 }}
               >
                 <Icon className="w-5 h-5" />

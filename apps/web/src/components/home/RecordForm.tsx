@@ -3,7 +3,7 @@ import { Plus, ChevronDown, BookOpen } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
-import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES, SHADOWS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -861,68 +861,34 @@ export function RecordForm({
               className="cursor-pointer inline-flex relative overflow-hidden"
               onClick={() => setShowTypeSelector(!showTypeSelector)}
               style={{
-                backgroundColor: defaultColors.background,
+                background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
                 padding: "0.375rem 0.75rem",
                 borderRadius: "20px",
-                boxShadow: `
-                  0 1px 3px rgba(0,0,0,0.08),
-                  0 1px 2px rgba(0,0,0,0.04),
-                  inset 0 1px 0 rgba(255,255,255,0.6)
-                `,
-                border: `1px solid ${defaultColors.border}`,
+                boxShadow: SHADOWS.default,
+                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
                 transition: "all 0.2s ease",
-                // 종이 질감 배경 패턴
-                backgroundImage: `
-                  /* 가로 줄무늬 */
-                  repeating-linear-gradient(
-                    to bottom,
-                    transparent 0px,
-                    transparent 27px,
-                    ${defaultColors.lineColor} 27px,
-                    ${defaultColors.lineColor} 28px
-                  ),
-                  /* 종이 텍스처 노이즈 */
-                  repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(107, 122, 111, 0.01) 2px,
-                    rgba(107, 122, 111, 0.01) 4px
-                  )
-                `,
-                backgroundSize: "100% 28px, 8px 8px",
-                backgroundPosition: "0 2px, 0 0",
-                filter: "contrast(1.02) brightness(1.01)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = `
-                  0 2px 6px rgba(0,0,0,0.12),
-                  0 1px 3px rgba(0,0,0,0.06),
-                  inset 0 1px 0 rgba(255,255,255,0.6)
-                `;
+                e.currentTarget.style.background =
+                  GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
+                e.currentTarget.style.boxShadow = SHADOWS.elevation2;
                 e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
+                  COLORS.brand.light,
+                  "50"
+                );
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = `
-                  0 1px 3px rgba(0,0,0,0.08),
-                  0 1px 2px rgba(0,0,0,0.04),
-                  inset 0 1px 0 rgba(255,255,255,0.6)
-                `;
+                e.currentTarget.style.background =
+                  GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
+                e.currentTarget.style.boxShadow = SHADOWS.default;
                 e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
+                  COLORS.brand.light,
+                  "30"
+                );
               }}
             >
-            {/* 종이 질감 오버레이 */}
-            <div
-              className="absolute inset-0 pointer-events-none rounded-[20px]"
-              style={{
-                background: `
-                  radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                  radial-gradient(circle at 75% 75%, ${defaultColors.overlay} 0%, transparent 40%)
-                `,
-                mixBlendMode: "overlay",
-                opacity: 0.5,
-              }}
-            />
             <div className="relative z-10 flex items-center gap-1.5">
               <span
                 style={{
@@ -1316,19 +1282,26 @@ export function RecordForm({
               onClick={handleSubmit}
               disabled={(!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending}
               style={{
-                backgroundColor:
+                background:
                   (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
-                    ? "#D1D5DB"
+                    ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.08)
                     : COLORS.brand.primary,
-                color: "#FFFFFF",
+                color:
+                  (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
+                    ? COLORS.text.tertiary
+                    : COLORS.text.white,
                 fontWeight: "600",
                 padding: "0.625rem 1.5rem",
-                borderRadius: "0.5rem",
-                transition: "all 0.2s ease-in-out",
+                borderRadius: "12px",
+                border:
+                  (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
+                    ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "25")}`
+                    : `1.5px solid ${COLORS.brand.primary}`,
                 boxShadow:
                   (!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending
-                    ? "none"
-                    : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    ? SHADOWS.default
+                    : SHADOWS.elevation2,
+                transition: "all 0.2s ease-in-out",
               }}
               className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -1455,12 +1428,12 @@ export function RecordForm({
             <button
               type="button"
               onClick={() => setShowReviewGuidePanel(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+              className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
               style={{
-                backgroundColor: COLORS.background.card,
-                border: `1.5px solid ${COLORS.border.light}`,
+                background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
                 color: COLORS.brand.primary,
-                boxShadow: SHADOWS.elevation1,
+                boxShadow: SHADOWS.default,
               }}
               aria-label="회고 가이드 보기"
               title="가이드"
@@ -1471,19 +1444,26 @@ export function RecordForm({
               onClick={handleSubmit}
               disabled={!q3Content.trim() || createRecordMutation.isPending}
               style={{
-                backgroundColor:
+                background:
                   !q3Content.trim() || createRecordMutation.isPending
-                    ? "#D1D5DB"
+                    ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.08)
                     : COLORS.brand.primary,
-                color: "#FFFFFF",
+                color:
+                  !q3Content.trim() || createRecordMutation.isPending
+                    ? COLORS.text.tertiary
+                    : COLORS.text.white,
                 fontWeight: "600",
                 padding: "0.625rem 1.5rem",
-                borderRadius: "0.5rem",
-                transition: "all 0.2s ease-in-out",
+                borderRadius: "12px",
+                border:
+                  !q3Content.trim() || createRecordMutation.isPending
+                    ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "25")}`
+                    : `1.5px solid ${COLORS.brand.primary}`,
                 boxShadow:
                   !q3Content.trim() || createRecordMutation.isPending
-                    ? "none"
-                    : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    ? SHADOWS.default
+                    : SHADOWS.elevation2,
+                transition: "all 0.2s ease-in-out",
               }}
               className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -1669,19 +1649,26 @@ export function RecordForm({
                 onClick={handleSubmit}
                 disabled={!content.trim() || createRecordMutation.isPending}
                 style={{
-                  backgroundColor:
+                  background:
                     !content.trim() || createRecordMutation.isPending
-                      ? "#D1D5DB"
+                      ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.08)
                       : COLORS.brand.primary,
-                  color: "#FFFFFF",
+                  color:
+                    !content.trim() || createRecordMutation.isPending
+                      ? COLORS.text.tertiary
+                      : COLORS.text.white,
                   fontWeight: "600",
                   padding: "0.625rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  transition: "all 0.2s ease-in-out",
+                  borderRadius: "12px",
+                  border:
+                    !content.trim() || createRecordMutation.isPending
+                      ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "25")}`
+                      : `1.5px solid ${COLORS.brand.primary}`,
                   boxShadow:
                     !content.trim() || createRecordMutation.isPending
-                      ? "none"
-                      : "0 2px 4px rgba(0, 0, 0, 0.1)",
+                      ? SHADOWS.default
+                      : SHADOWS.elevation2,
+                  transition: "all 0.2s ease-in-out",
                 }}
                 className="hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >

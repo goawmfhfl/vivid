@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { useTimer } from "@/hooks/useTimer";
 import { useToast } from "@/hooks/useToast";
-import { COLORS } from "@/lib/design-system";
+import { COLORS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 
 export function Timer() {
   const { showToast } = useToast();
@@ -145,13 +145,9 @@ export function Timer() {
       <div
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
         style={{
-          backgroundColor: COLORS.background.card,
-          border: `1px solid ${COLORS.border.light}`,
-          boxShadow: `
-            0 1px 3px rgba(0,0,0,0.08),
-            0 1px 2px rgba(0,0,0,0.04),
-            inset 0 1px 0 rgba(255,255,255,0.6)
-          `,
+          background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+          border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+          boxShadow: SHADOWS.default,
         }}
       >
         {/* 시간 표시 */}

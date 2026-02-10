@@ -1,8 +1,9 @@
 "use client";
 
-import { Lightbulb, Scale, Target } from "lucide-react";
+import { Lightbulb, Scale } from "lucide-react";
 import { AnimatedScoreBlock } from "@/components/reports/AnimatedScoreBlock";
 import { ReportDropdown } from "@/components/reports/ReportDropdown";
+import { ProNoticeBox } from "@/components/reports/ProNoticeBox";
 import { COLORS } from "@/lib/design-system";
 import type { UserPersonaInsightsResponse } from "@/app/api/user-persona/insights/route";
 
@@ -35,16 +36,15 @@ export function GrowthInsightsSection({
   patterns = null,
   trend = null,
   isLoading = false,
+  isLocked = false,
 }: GrowthInsightsSectionProps) {
   if (isLoading || !growth_insights) return null;
 
   const {
     self_clarity_index,
     pattern_balance_score,
-    vision_consistency_score,
     self_clarity_rationale,
     pattern_balance_rationale,
-    vision_consistency_rationale,
   } = growth_insights;
 
   const cards = [
@@ -74,29 +74,25 @@ export function GrowthInsightsSection({
       ].filter((b) => b.items.length > 0),
       oneLine: null,
     },
-    {
-      id: "vision",
-      title: "지향하는 모습·비전 일관도",
-      Icon: Target,
-      score: vision_consistency_score,
-      rationale: vision_consistency_rationale,
-      blocks: identity?.ideal_self?.length
-        ? [{ label: "지향 포인트", items: identity.ideal_self }]
-        : [],
-      oneLine: trend?.aspired_self ? { label: "지향하는 모습", text: trend.aspired_self } : null,
-    },
   ];
 
   return (
-    <section className="space-y-6 w-full max-w-2xl">
-      {cards.map(({ id, title, Icon, score, rationale, blocks, oneLine }) => (
+    <section className="space-y-6 w-full max-w-2xl relative min-w-0">
+      {isLocked && (
+        <ProNoticeBox
+          message={`Pro 멤버십에서만 제공되는 성장 인사이트예요.구독하면 나의 정체성·지향 명확도, 몰입과 걸림돌 균형을 기록 기반으로 확인할 수 있어요.`}
+          className="mb-4"
+        />
+      )}
+      {cards.map(({ id, title, Icon, score, rationale, blocks, oneLine }, cardIdx) => (
         <div
           key={id}
-          className="relative rounded-xl overflow-hidden transition-all duration-200"
+          className="relative rounded-xl overflow-hidden transition-all duration-200 animate-fade-in"
           style={{
             backgroundColor: CARD_BG,
             border: `1px solid ${CARD_BORDER}`,
             boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            animationDelay: `${cardIdx * 100}ms`,
           }}
         >
           <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: ACCENT }} />
@@ -133,12 +129,13 @@ export function GrowthInsightsSection({
             {/* 3. 드롭다운 리스트 */}
             {blocks.length > 0 && (
               <div className="space-y-2 mt-3">
-                {blocks.map((b) => (
+                {blocks.map((b, blockIdx) => (
                   <ReportDropdown
                     key={b.label}
                     label={b.label}
                     items={b.items}
                     accentColor={ACCENT}
+                    defaultOpen={cardIdx === 0 && blockIdx === 0}
                   />
                 ))}
               </div>

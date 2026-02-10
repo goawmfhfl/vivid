@@ -31,10 +31,8 @@ export interface UserPersonaTrend {
 export interface UserPersonaGrowthInsights {
   self_clarity_index: number;
   pattern_balance_score: number;
-  vision_consistency_score: number;
   self_clarity_rationale: string;
   pattern_balance_rationale: string;
-  vision_consistency_rationale: string;
 }
 
 export interface UserPersona {

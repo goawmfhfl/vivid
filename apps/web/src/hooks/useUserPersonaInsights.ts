@@ -25,10 +25,14 @@ export async function fetchUserPersonaInsights(): Promise<UserPersonaInsightsRes
   return response.json();
 }
 
-export function useUserPersonaInsights() {
+export type UseUserPersonaInsightsOptions = { enabled?: boolean };
+
+export function useUserPersonaInsights(options?: UseUserPersonaInsightsOptions) {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: [QUERY_KEYS.USER_PERSONA_INSIGHTS],
     queryFn: fetchUserPersonaInsights,
+    enabled,
     staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24,
   });

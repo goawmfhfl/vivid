@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Target, Sparkles, Zap, User, Lock } from "lucide-react";
+import { Target, Sparkles, Zap, User } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
+import { ProNoticeBox } from "@/components/reports/ProNoticeBox";
 import { COLORS } from "@/lib/design-system";
 import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -38,34 +38,19 @@ const SECTION_CONFIG = [
   },
 ] as const;
 
+/** 비Pro 미리보기용 — 일반인 컨셉의 샘플 데이터 */
 const mockData = {
   aspired_self: [
-    "서두르지 않고 깊이 있게 사고하며, 실용적인 솔루션을 통해 사람들에게 가치를 전달하는 사람",
-    "일상의 기록과 꾸준한 반성을 통해 내면의 평화를 찾고, 이를 바탕으로 타인에게 따뜻한 인사이트를 나누는 사람",
-    "성급함을 자제하고 여유를 갖추며, 진솔한 커뮤니케이션으로 사람들에게 긍정적인 변화를 이끌어내는 사람",
-    "완벽주의를 버리고 지속 가능한 성장을 추구하며, 작은 실천으로 큰 변화를 만들어내는 사람",
-    "계획을 세우는 것에 그치지 않고, 실제로 행동으로 옮겨 사람들에게 실질적인 도움을 주는 사람",
+    "(예시) 하고 싶은 일을 꾸준히 실천하며, 몸과 마음의 균형을 챙기는 사람",
   ],
   interests: [
-    "제품 개발과 콘텐츠 기획을 통해 사용자 경험을 개선하고, 지속 가능한 성장 전략을 수립하는 일",
-    "일기와 감정 기록을 통해 내면을 탐구하고, 이를 바탕으로 정서적 안정을 찾아가는 과정",
-    "커뮤니티 운영과 온라인 강의를 통해 지식을 공유하고, 사람들과 의미 있는 연결을 만드는 일",
-    "운동과 명상을 통해 몸과 마음을 단련하며, 건강한 라이프스타일을 만들어가는 실천",
-    "독서와 학습을 통해 새로운 관점을 얻고, 이를 실제 프로젝트에 적용해 성과를 만들어내는 일",
+    "(예시) 취미나 운동으로 몸과 마음을 리프레시하는 시간",
   ],
   immersion_moments: [
-    "코드 리뷰와 디버깅을 통해 문제의 근본 원인을 찾아내고, 깔끔한 해결책을 구현해내는 순간",
-    "아침 운동과 명상 후 하루의 우선순위를 명확히 정하고, 집중력이 최고조에 달한 작업 시간",
-    "일기 작성으로 하루를 정리한 뒤, 복잡했던 문제들이 하나씩 해결되며 흐름이 생기는 순간",
-    "팀 미팅 후 피드백을 정리하고, 제품의 핵심 기능을 설계하며 전체 시스템이 연결되는 작업 시간",
-    "주간 회고와 다음 주 계획을 세우며, 장기 목표와 단기 실행 사이의 균형을 잡아가는 순간",
+    "(예시) 아침에 여유 있게 일어나 하루를 정리한 뒤 맞이한 오전",
   ],
   personality_traits: [
-    "불안과 긴장감을 인지하면서도 포기하지 않고, 체계적인 계획을 세워 꾸준히 실행해나가는 성향",
-    "결정에 대한 책임을 지고 끝까지 밀어붙이며, 서두르지 않고 단계적으로 쌓아가려는 신중한 성향",
-    "목표 의식이 뚜렷하면서도 자신의 감정 상태를 관찰하고, 더 나은 습관으로 조절하려는 자기 관리형 성향",
-    "성장 욕구가 강하고 사람들에게 진정성을 전하려 하며, 속도보다는 방향성을 중시하는 성향",
-    "자신에 대한 믿음이 높고, 반복적인 실행과 피드백을 통해 지속적으로 개선해나가는 학습형 성향",
+    "(예시) 일상의 작은 즐거움을 찾고, 기록으로 남기는 습관이 있는 사람",
   ],
 };
 
@@ -74,7 +59,6 @@ export function RecentTrendsSection({
   isLoading = false,
   error = null,
 }: RecentTrendsSectionProps) {
-  const router = useRouter();
   const { isPro } = useSubscription();
 
   const processedData = useMemo(() => {
@@ -142,30 +126,38 @@ export function RecentTrendsSection({
   const cardBorder = COLORS.border.light;
 
   return (
-    <section className="mb-10 w-full max-w-2xl">
+    <section className="mb-10 w-full max-w-2xl min-w-0">
       <h2
         className="text-lg font-semibold tracking-tight mb-1"
         style={{ color: COLORS.text.primary }}
       >
         한눈에 보기
       </h2>
-      <p className="text-sm mb-6" style={{ color: COLORS.text.secondary }}>
+      <p className="text-sm mb-4" style={{ color: COLORS.text.secondary }}>
         최근 7일 데이터 기반 인사이트
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {SECTION_CONFIG.map(({ key, title, Icon }) => {
+      {!isPro && (
+        <ProNoticeBox
+          message="Pro 멤버가 되면 최근 7일 기록을 바탕으로 한 ‘한눈에 보기’ 인사이트를 확인할 수 있어요. 지향하는 모습, 원동력, 몰입의 순간, 나에 대한 이해를 한눈에 살펴보세요."
+          className="mb-4"
+        />
+      )}
+
+      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
+        {SECTION_CONFIG.map(({ key, title, Icon }, index) => {
           const items = processedData[key];
           const isEmpty = !items?.length;
 
           return (
             <div
               key={key}
-              className="relative rounded-xl overflow-hidden min-h-[100px] transition-all duration-200"
+              className="relative rounded-xl overflow-hidden min-h-[100px] min-w-0 transition-all duration-200 animate-fade-in"
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                animationDelay: `${index * 80}ms`,
               }}
             >
               <div
@@ -210,34 +202,6 @@ export function RecentTrendsSection({
                   </ul>
                 )}
               </div>
-
-              {!isPro && (
-                <>
-                  <div
-                    className="absolute inset-0 z-10 rounded-xl pointer-events-none"
-                    style={{
-                      background: "rgba(255,255,255,0.82)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => router.push("/membership")}
-                    className="absolute inset-0 z-20 flex items-center justify-center rounded-xl cursor-pointer"
-                  >
-                    <span
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
-                      style={{
-                        color: COLORS.text.white,
-                        backgroundColor: accent,
-                      }}
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      Pro
-                    </span>
-                  </button>
-                </>
-              )}
             </div>
           );
         })}

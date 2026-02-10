@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
-import { COLORS, CARD_STYLES, TRANSITIONS } from "@/lib/design-system";
+import { COLORS, CARD_STYLES, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -154,13 +154,24 @@ export function DatePickerBottomSheet({
           style={{
             ...CARD_STYLES.default,
             maxHeight: "80vh",
-            backgroundColor: COLORS.background.base,
+            background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.8),
+            borderTop: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+            borderLeft: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+            borderRight: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+            boxShadow: SHADOWS.elevation4,
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
           }}
         >
           {/* 헤더 */}
           <div
             className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: COLORS.border.light }}
+            style={{
+              borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "30"),
+              background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.18, "rgba(250, 250, 248, 0.98)"),
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            }}
           >
             <button
               onClick={onClose}
@@ -204,14 +215,18 @@ export function DatePickerBottomSheet({
               className={`px-3 py-1.5 rounded-full text-xs font-medium ${TRANSITIONS.default}`}
               style={{
                 backgroundColor: COLORS.brand.primary,
-                color: "white",
+                color: COLORS.text.white,
+                border: `1.5px solid ${COLORS.brand.primary}`,
+                boxShadow: SHADOWS.default,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.brand.dark;
+                e.currentTarget.style.boxShadow = SHADOWS.elevation2;
                 e.currentTarget.style.transform = "scale(1.05)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.brand.primary;
+                e.currentTarget.style.boxShadow = SHADOWS.default;
                 e.currentTarget.style.transform = "scale(1)";
               }}
             >
@@ -222,7 +237,10 @@ export function DatePickerBottomSheet({
           {/* 달력 */}
           <div
             className="p-6 overflow-y-auto max-w-2xl mx-auto"
-            style={{ maxHeight: "calc(80vh - 80px)" }}
+            style={{
+              maxHeight: "calc(80vh - 80px)",
+              background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.14, "rgba(250, 250, 248, 0.96)"),
+            }}
           >
             {/* 요일 헤더 */}
             <div className="grid grid-cols-7 gap-3 mb-4">
@@ -265,41 +283,46 @@ export function DatePickerBottomSheet({
                       onClick={() => handleDateClick(date)}
                       className={`aspect-square rounded-xl flex items-center justify-center text-sm font-semibold ${TRANSITIONS.default} relative`}
                       style={{
-                        backgroundColor: isActive
+                        background: isActive
                           ? COLORS.brand.primary
-                          : isToday
-                          ? COLORS.brand.light + "15"
-                          : COLORS.background.card,
+                          : isToday && !isActive
+                          ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
+                          : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
                         color: isActive
-                          ? "white"
+                          ? COLORS.text.white
                           : isCurrentMonth
                           ? COLORS.text.primary
                           : COLORS.text.tertiary,
                         border: isActive
                           ? `1.5px solid ${COLORS.brand.primary}`
                           : isToday && !isActive
-                          ? `1px solid ${COLORS.brand.primary}40`
-                          : `1px solid ${COLORS.border.light}`,
-                        boxShadow: isActive
-                          ? "0 4px 12px rgba(107, 122, 111, 0.2)"
-                          : "0 1px 3px rgba(0, 0, 0, 0.05)",
+                          ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")}`
+                          : `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                        boxShadow: isActive ? SHADOWS.elevation3 : SHADOWS.default,
                         opacity: isCurrentMonth ? 1 : 0.4,
                       }}
                       onMouseEnter={(e) => {
                         if (!isActive) {
-                          e.currentTarget.style.backgroundColor =
-                            COLORS.background.hover;
-                          e.currentTarget.style.boxShadow =
-                            "0 2px 6px rgba(0, 0, 0, 0.1)";
+                          e.currentTarget.style.background =
+                            GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
+                          e.currentTarget.style.boxShadow = SHADOWS.elevation2;
+                          e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
+                            COLORS.brand.light,
+                            "50"
+                          );
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isActive) {
-                          e.currentTarget.style.backgroundColor = isToday
-                            ? COLORS.brand.light + "15"
-                            : COLORS.background.card;
-                          e.currentTarget.style.boxShadow =
-                            "0 1px 3px rgba(0, 0, 0, 0.05)";
+                          e.currentTarget.style.background =
+                            isToday && !isActive
+                              ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
+                              : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
+                          e.currentTarget.style.boxShadow = SHADOWS.default;
+                          e.currentTarget.style.borderColor =
+                            isToday && !isActive
+                              ? GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")
+                              : GRADIENT_UTILS.borderColor(COLORS.brand.light, "30");
                         }
                       }}
                     >

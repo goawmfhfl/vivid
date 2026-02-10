@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 import { getMondayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
-import { COLORS, TRANSITIONS, SHADOWS } from "@/lib/design-system";
+import { COLORS, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { motion, AnimatePresence } from "framer-motion";
 import { DateButtonSkeleton } from "@/components/ui/Skeleton";
 
@@ -307,41 +307,45 @@ export function WeeklyDateView({
                     {dayOfWeek}
                   </div>
 
-                  {/* 날짜 버튼 */}
+                  {/* 날짜 버튼 — 리포트 카드와 동일한 박스 스타일 */}
                   <button
                     onClick={() => handleDateClick(date)}
                     className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-sm md:text-base font-semibold ${TRANSITIONS.default} relative`}
                     style={{
-                      backgroundColor: isActive
+                      background: isActive
                         ? COLORS.brand.primary
-                        : COLORS.background.card,
+                        : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
                       color: isActive ? COLORS.text.white : COLORS.text.primary,
                       border: isActive
                         ? `1.5px solid ${COLORS.brand.primary}`
-                        : `1px solid ${COLORS.border.light}`,
-                      boxShadow: isActive
-                        ? SHADOWS.elevation3
-                        : SHADOWS.elevation1,
+                        : `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                      boxShadow: isActive ? SHADOWS.elevation3 : SHADOWS.default,
                       transform: isActive
                         ? "scale(1.05) md:scale(1.08)"
                         : "scale(1)",
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.backgroundColor =
-                          COLORS.background.hover;
+                        e.currentTarget.style.background =
+                          GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
                         e.currentTarget.style.boxShadow = SHADOWS.elevation2;
                         e.currentTarget.style.transform = "scale(1.02)";
-                        e.currentTarget.style.borderColor = COLORS.brand.primary;
+                        e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
+                          COLORS.brand.light,
+                          "50"
+                        );
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.backgroundColor =
-                          COLORS.background.card;
-                        e.currentTarget.style.boxShadow = SHADOWS.elevation1;
+                        e.currentTarget.style.background =
+                          GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
+                        e.currentTarget.style.boxShadow = SHADOWS.default;
                         e.currentTarget.style.transform = "scale(1)";
-                        e.currentTarget.style.borderColor = COLORS.border.light;
+                        e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
+                          COLORS.brand.light,
+                          "30"
+                        );
                       }
                     }}
                   >
