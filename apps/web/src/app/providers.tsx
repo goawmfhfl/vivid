@@ -1,10 +1,12 @@
 "use client";
 
 import { ReactNode, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { supabase } from "@/lib/supabase";
 import { clearAllCache, clearUserDataCache } from "@/lib/cache-utils";
+import { isInvalidRefreshTokenError } from "@/lib/auth-utils";
 
 // React Query 클라이언트 생성
 export const queryClient = new QueryClient({
@@ -12,15 +14,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5분
       retry: (failureCount, error) => {
-        // Invalid Refresh Token 에러는 재시도하지 않음
-        if (error instanceof Error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            return false;
-          }
-        }
+        if (isInvalidRefreshTokenError(error)) return false;
         return failureCount < 1;
       },
     },
@@ -31,42 +25,34 @@ export const queryClient = new QueryClient({
 });
 
 export function JournalProvider({ children }: { children: ReactNode }) {
-  // Invalid Refresh Token 에러 발생 시 세션 정리 및 로그아웃 처리
+  const router = useRouter();
+
+  // Invalid Refresh Token 에러 발생 시 세션 정리, 로그아웃, 로그인 페이지로 리다이렉트
   const handleInvalidRefreshToken = useCallback(async () => {
-    console.log("[Auth] Invalid Refresh Token 감지, 세션 정리 중...");
+    console.log("[Auth] Invalid Refresh Token 감지, 세션 정리 후 로그인으로 이동...");
     try {
-      // 모든 캐시 클리어
       clearAllCache(queryClient);
-      // 로그아웃 처리 (로컬 세션 정리)
       await supabase.auth.signOut({ scope: "local" });
-      console.log("[Auth] 세션 정리 완료");
+      router.replace("/login");
     } catch (error) {
       console.error("[Auth] 세션 정리 중 오류:", error);
+      router.replace("/login");
     }
-  }, []);
+  }, [router]);
 
-  // 초기 세션 검증 및 에러 핸들링
+  // 초기 세션 검증 및 에러 핸들링 (앱 로드 시 한 번)
   useEffect(() => {
     const validateSession = async () => {
       try {
         const { error } = await supabase.auth.getSession();
-        if (error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            await handleInvalidRefreshToken();
-          }
+        if (error && isInvalidRefreshTokenError(error)) {
+          await handleInvalidRefreshToken();
         }
       } catch (error) {
-        console.error("[Auth] 세션 검증 중 오류:", error);
-        if (error instanceof Error) {
-          const isRefreshTokenError =
-            error.message.includes("Invalid Refresh Token") ||
-            error.message.includes("Refresh Token Not Found");
-          if (isRefreshTokenError) {
-            await handleInvalidRefreshToken();
-          }
+        if (isInvalidRefreshTokenError(error)) {
+          await handleInvalidRefreshToken();
+        } else {
+          console.error("[Auth] 세션 검증 중 오류:", error);
         }
       }
     };
@@ -89,8 +75,6 @@ export function JournalProvider({ children }: { children: ReactNode }) {
           clearUserDataCache(queryClient);
         }
       } else if (event === "TOKEN_REFRESH_FAILED" as never) {
-        // 토큰 갱신 실패 시 (일부 Supabase 버전에서 지원)
-        console.log("[Auth] TOKEN_REFRESH_FAILED 이벤트 감지");
         await handleInvalidRefreshToken();
       }
     });

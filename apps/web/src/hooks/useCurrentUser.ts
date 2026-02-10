@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { isInvalidRefreshTokenError } from "@/lib/auth-utils";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
 
 // 현재 사용자 정보 타입
@@ -36,16 +37,10 @@ const getCurrentUser = async (): Promise<CurrentUser> => {
     } = await supabase.auth.getUser();
 
     if (error) {
-      const isInvalidRefreshToken =
-        error.message.includes("Invalid Refresh Token") ||
-        error.message.includes("Refresh Token Not Found");
-      
-      if (isInvalidRefreshToken) {
+      if (isInvalidRefreshTokenError(error)) {
         await handleInvalidRefreshTokenError();
-        // 로그인 필요 에러로 변환하여 UI에서 적절히 처리하도록 함
         throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
       }
-      
       throw new UserError(`사용자 정보 조회 실패: ${error.message}`);
     }
 
@@ -59,16 +54,10 @@ const getCurrentUser = async (): Promise<CurrentUser> => {
       user_metadata: user.user_metadata,
     };
   } catch (error) {
-    // 예외 처리: 네트워크 오류 등에서도 Refresh Token 관련 에러 체크
-    if (error instanceof Error && !(error instanceof UserError)) {
-      const isInvalidRefreshToken =
-        error.message.includes("Invalid Refresh Token") ||
-        error.message.includes("Refresh Token Not Found");
-      
-      if (isInvalidRefreshToken) {
-        await handleInvalidRefreshTokenError();
-        throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
-      }
+    if (error instanceof UserError) throw error;
+    if (isInvalidRefreshTokenError(error)) {
+      await handleInvalidRefreshTokenError();
+      throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
     }
     throw error;
   }
