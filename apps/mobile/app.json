@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Today Journal",
-    "slug": "today-journal-mobile",
+    "name": "Vivid",
+    "slug": "vivid-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,20 +16,20 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todayjournal.mobile"
+      "bundleIdentifier": "com.vivid.mobile"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FAFAF8"
       },
-      "package": "com.todayjournal.mobile"
+      "package": "com.vivid.mobile"
     },
     "plugins": [
       "expo-router",
       "expo-font",
       "expo-asset"
     ],
-    "scheme": "today-journal"
+    "scheme": "vivid"
   }
 }

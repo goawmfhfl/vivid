@@ -2,6 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { isInvalidRefreshTokenError } from "@/lib/auth-utils";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
+import {
+  isRefreshTokenError,
+  clearSessionOnRefreshTokenError,
+  getAuthErrorMessage,
+} from "@/lib/auth-error";
 
 // 현재 사용자 정보 타입
 export interface CurrentUser {
@@ -18,30 +23,41 @@ export class UserError extends Error {
   }
 }
 
-// Invalid Refresh Token 에러 처리 함수
-const handleInvalidRefreshTokenError = async () => {
-  console.log("[useCurrentUser] Invalid Refresh Token 감지, 로그아웃 처리...");
-  try {
-    await supabase.auth.signOut({ scope: "local" });
-  } catch {
-    console.error("[useCurrentUser] 로그아웃 처리 중 오류");
-  }
-};
-
 // 현재 사용자 정보 가져오기 함수
 const getCurrentUser = async (): Promise<CurrentUser> => {
   try {
+    // 1) 먼저 로컬 세션만 확인. 세션이 없으면 getUser() 호출 없이 로그인 필요 반환
+    //    → 리프레시 시도를 트리거하지 않아 "Refresh Token Not Found" 발생 가능성 감소
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+
+    if (sessionError && isRefreshTokenError(sessionError)) {
+      await clearSessionOnRefreshTokenError();
+      throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
+    }
+    if (sessionError) {
+      throw new UserError(
+        getAuthErrorMessage(sessionError) || ERROR_MESSAGES.LOGIN_REQUIRED
+      );
+    }
+    if (!sessionData?.session?.user) {
+      throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED);
+    }
+
+    // 2) 세션이 있으면 서버 검증 (getUser) — 이때 리프레시가 필요하면 시도됨
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
 
     if (error) {
-      if (isInvalidRefreshTokenError(error)) {
-        await handleInvalidRefreshTokenError();
+      if (isRefreshTokenError(error)) {
+        await clearSessionOnRefreshTokenError();
         throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
       }
-      throw new UserError(`사용자 정보 조회 실패: ${error.message}`);
+      throw new UserError(
+        getAuthErrorMessage(error) || "사용자 정보 조회에 실패했습니다."
+      );
     }
 
     if (!user) {
@@ -55,11 +71,14 @@ const getCurrentUser = async (): Promise<CurrentUser> => {
     };
   } catch (error) {
     if (error instanceof UserError) throw error;
-    if (isInvalidRefreshTokenError(error)) {
-      await handleInvalidRefreshTokenError();
+    // Supabase가 예외를 던진 경우(예: 네트워크/리프레시 실패)
+    if (isRefreshTokenError(error)) {
+      await clearSessionOnRefreshTokenError();
       throw new UserError(ERROR_MESSAGES.LOGIN_REQUIRED, "INVALID_REFRESH_TOKEN");
     }
-    throw error;
+    throw new UserError(
+      getAuthErrorMessage(error) || ERROR_MESSAGES.LOGIN_REQUIRED
+    );
   }
 };
 

@@ -1,6 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
+import {
+  isRefreshTokenError,
+  clearSessionOnRefreshTokenError,
+} from "@/lib/auth-error";
+import type { Session } from "@supabase/supabase-js";
 
 // Record 타입 정의
 export interface EmotionRecordPayload {
@@ -43,19 +48,21 @@ class RecordError extends Error {
   }
 }
 
-// 현재 사용자 ID 가져오기 함수는 useCurrentUser 훅에서 import
+// getSession 시 리프레시 토큰 에러면 세션 정리 후 로그인 필요 에러만 던짐
+const getSessionForRecords = async (): Promise<Session> => {
+  const { data, error } = await supabase.auth.getSession();
+  if (error && isRefreshTokenError(error)) {
+    await clearSessionOnRefreshTokenError();
+    throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
+  }
+  if (!data?.session) throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
+  return data.session;
+};
 
 // Records 조회 함수
 const fetchRecords = async (): Promise<Record[]> => {
   try {
-    // 세션 토큰 가져오기
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new RecordError("로그인이 필요합니다.");
-    }
+    const session = await getSessionForRecords();
 
     // API 라우트를 통해 조회 (서버 사이드에서 복호화)
     const response = await fetch("/api/vivid-records", {
@@ -75,8 +82,10 @@ const fetchRecords = async (): Promise<Record[]> => {
     const result = await response.json();
     return result.data || [];
   } catch (error) {
-    if (error instanceof RecordError) {
-      throw error;
+    if (error instanceof RecordError) throw error;
+    if (isRefreshTokenError(error)) {
+      await clearSessionOnRefreshTokenError();
+      throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
     }
     console.error("기록 조회 중 예상치 못한 에러:", error);
     throw new RecordError(ERROR_MESSAGES.UNEXPECTED_ERROR);
@@ -86,14 +95,7 @@ const fetchRecords = async (): Promise<Record[]> => {
 // Record 생성 함수
 const createRecord = async (data: CreateRecordData): Promise<Record> => {
   try {
-    // 세션 토큰 가져오기
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new RecordError("로그인이 필요합니다.");
-    }
+    const session = await getSessionForRecords();
 
     // API 라우트를 통해 생성 (서버 사이드에서 암호화)
     const response = await fetch("/api/vivid-records", {
@@ -120,8 +122,10 @@ const createRecord = async (data: CreateRecordData): Promise<Record> => {
     const result = await response.json();
     return result.data;
   } catch (error) {
-    if (error instanceof RecordError) {
-      throw error;
+    if (error instanceof RecordError) throw error;
+    if (isRefreshTokenError(error)) {
+      await clearSessionOnRefreshTokenError();
+      throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
     }
     console.error("기록 생성 중 예상치 못한 에러:", error);
     throw new RecordError(ERROR_MESSAGES.UNEXPECTED_ERROR);
@@ -134,14 +138,7 @@ const updateRecord = async (
   data: UpdateRecordData
 ): Promise<Record> => {
   try {
-    // 세션 토큰 가져오기
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new RecordError("로그인이 필요합니다.");
-    }
+    const session = await getSessionForRecords();
 
     // API 라우트를 통해 수정 (서버 사이드에서 암호화)
     const response = await fetch(`/api/vivid-records/${id}`, {
@@ -163,8 +160,10 @@ const updateRecord = async (
     const result = await response.json();
     return result.data;
   } catch (error) {
-    if (error instanceof RecordError) {
-      throw error;
+    if (error instanceof RecordError) throw error;
+    if (isRefreshTokenError(error)) {
+      await clearSessionOnRefreshTokenError();
+      throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
     }
     console.error("기록 수정 중 예상치 못한 에러:", error);
     throw new RecordError(ERROR_MESSAGES.UNEXPECTED_ERROR);
@@ -174,14 +173,7 @@ const updateRecord = async (
 // Record 삭제 함수
 const deleteRecord = async (id: number): Promise<void> => {
   try {
-    // 세션 토큰 가져오기
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new RecordError("로그인이 필요합니다.");
-    }
+    const session = await getSessionForRecords();
 
     // API 라우트를 통해 삭제
     const response = await fetch(`/api/vivid-records/${id}`, {
@@ -198,8 +190,10 @@ const deleteRecord = async (id: number): Promise<void> => {
       );
     }
   } catch (error) {
-    if (error instanceof RecordError) {
-      throw error;
+    if (error instanceof RecordError) throw error;
+    if (isRefreshTokenError(error)) {
+      await clearSessionOnRefreshTokenError();
+      throw new RecordError(ERROR_MESSAGES.LOGIN_REQUIRED);
     }
     console.error("기록 삭제 중 예상치 못한 에러:", error);
     throw new RecordError(ERROR_MESSAGES.UNEXPECTED_ERROR);

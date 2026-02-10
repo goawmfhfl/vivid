@@ -9,23 +9,20 @@ class KakaoLoginError extends Error {
   }
 }
 
-// 리디렉션 URL 계산
+// 리디렉션 URL 계산 (브라우저/앱 WebView 모두 동일 오리진 사용)
 const getRedirectUrl = () => {
-  // NEXT_PUBLIC_NODE_ENV에 따라 URL 설정
   const runtimeEnv = process.env.NEXT_PUBLIC_NODE_ENV ?? process.env.NODE_ENV;
   const isProduction = runtimeEnv === "production";
-  const isDevelopment = runtimeEnv === "development";
-  
+
   let base: string;
-  
   if (isProduction) {
     base = "https://vividlog.app";
-  } else if (isDevelopment) {
-    base = "http://localhost:3000";
+  } else if (typeof window !== "undefined" && window.location?.origin) {
+    // 개발/테스트: 현재 오리진 사용 → 앱 WebView(예: 172.30.1.59:3000)에서도 콜백이 같은 주소로 돌아감
+    base = window.location.origin;
   } else {
-    // test 환경 또는 기타 환경
-    base = process.env.NEXT_PUBLIC_BASE_URL ||
-      (typeof window !== "undefined" ? window.location.origin : null) ||
+    base =
+      process.env.NEXT_PUBLIC_BASE_URL ||
       "http://localhost:3000";
   }
 

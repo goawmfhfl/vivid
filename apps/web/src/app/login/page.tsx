@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense } from "react";
-import { LoginView } from "@/components/login/LoginView";
+import { LoginLandingView } from "@/components/login/LoginLandingView";
 
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
-      <LoginView />
+      <LoginLandingView />
     </Suspense>
   );
 }

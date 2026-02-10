@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
@@ -25,7 +25,7 @@ import type {
 } from "@/types/inquiry";
 import { INQUIRY_STATUS_LABELS, INQUIRY_TYPE_LABELS } from "@/types/inquiry";
 
-export default function InquiryPage() {
+function InquiryPageContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"create" | "list">("create");
@@ -1123,5 +1123,13 @@ export default function InquiryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function InquiryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen p-8">로딩 중...</div>}>
+      <InquiryPageContent />
+    </Suspense>
   );
 }

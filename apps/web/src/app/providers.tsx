@@ -6,7 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { supabase } from "@/lib/supabase";
 import { clearAllCache, clearUserDataCache } from "@/lib/cache-utils";
-import { isInvalidRefreshTokenError } from "@/lib/auth-utils";
+import { isRefreshTokenError, isAuthFailureNoRetry } from "@/lib/auth-error";
+import { QUERY_KEYS } from "@/constants";
 
 // React Query 클라이언트 생성
 export const queryClient = new QueryClient({
@@ -14,7 +15,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5분
       retry: (failureCount, error) => {
-        if (isInvalidRefreshTokenError(error)) return false;
+        if (isAuthFailureNoRetry(error)) return false;
         return failureCount < 1;
       },
     },
@@ -27,32 +28,29 @@ export const queryClient = new QueryClient({
 export function JournalProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  // Invalid Refresh Token 에러 발생 시 세션 정리, 로그아웃, 로그인 페이지로 리다이렉트
+  // Invalid Refresh Token 에러 발생 시 세션 정리 + 현재 사용자 쿼리 제거
   const handleInvalidRefreshToken = useCallback(async () => {
-    console.log("[Auth] Invalid Refresh Token 감지, 세션 정리 후 로그인으로 이동...");
     try {
       clearAllCache(queryClient);
       await supabase.auth.signOut({ scope: "local" });
-      router.replace("/login");
+      queryClient.removeQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
     } catch (error) {
       console.error("[Auth] 세션 정리 중 오류:", error);
       router.replace("/login");
     }
   }, [router]);
 
-  // 초기 세션 검증 및 에러 핸들링 (앱 로드 시 한 번)
+  // 초기 세션 검증: 리프레시 토큰 에러만 처리 (에러 메시지 노출 없이 정리)
   useEffect(() => {
     const validateSession = async () => {
       try {
         const { error } = await supabase.auth.getSession();
-        if (error && isInvalidRefreshTokenError(error)) {
+        if (error && isRefreshTokenError(error)) {
           await handleInvalidRefreshToken();
         }
       } catch (error) {
-        if (isInvalidRefreshTokenError(error)) {
+        if (isRefreshTokenError(error)) {
           await handleInvalidRefreshToken();
-        } else {
-          console.error("[Auth] 세션 검증 중 오류:", error);
         }
       }
     };

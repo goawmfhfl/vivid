@@ -1,5 +1,7 @@
+"use client";
+
 import { TermsAgreement } from "@/components/forms/TermsAgreement";
-import { PaperCard } from "../PaperCard";
+import { Checkbox } from "@/components/ui/checkbox";
 import { COLORS } from "@/lib/design-system";
 
 interface TermsStepProps {
@@ -27,32 +29,59 @@ export function TermsStep({
   onShowTerms,
   onShowAI,
 }: TermsStepProps) {
+  const allChecked = agreeTerms && agreeAI && agreeMarketing;
+
   return (
-    <PaperCard className="p-6 sm:p-8">
-      <div className="mb-6">
-        <h2
-          className="text-xl font-semibold mb-2"
+    <div className="space-y-8">
+      <header className="mt-16">
+        <h1
+          className="text-2xl font-semibold leading-tight sm:text-3xl"
           style={{ color: COLORS.text.primary }}
         >
-          이용약관
-        </h2>
-        <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
-          필수 약관을 확인하고 선택 동의 여부를 설정할 수 있어요.
-        </p>
-      </div>
+          서비스 이용 동의
+        </h1>
+      </header>
 
-      <TermsAgreement
-        agreeTerms={agreeTerms}
-        agreeAI={agreeAI}
-        agreeMarketing={agreeMarketing}
-        onTermsChange={onTermsChange}
-        onAIChange={onAIChange}
-        onMarketingChange={onMarketingChange}
-        onAgreeAll={onAgreeAll}
-        onShowTerms={onShowTerms}
-        onShowAI={onShowAI}
-        error={termsError}
-      />
-    </PaperCard>
+      <div className="space-y-0">
+        <label
+          htmlFor="terms-agree-all"
+          className="flex cursor-pointer items-center gap-3 py-4"
+        >
+          <Checkbox
+            id="terms-agree-all"
+            checked={allChecked}
+            onCheckedChange={(checked) => onAgreeAll(checked === true)}
+            className="h-5 w-5 flex-shrink-0 rounded"
+          />
+          <span
+            className="text-base font-medium"
+            style={{ color: COLORS.text.primary }}
+          >
+            약관 전체 동의
+          </span>
+        </label>
+
+        <div
+          className="h-px w-full"
+          style={{ backgroundColor: COLORS.border.light }}
+        />
+
+        <div className="pt-2">
+          <TermsAgreement
+            agreeTerms={agreeTerms}
+            agreeAI={agreeAI}
+            agreeMarketing={agreeMarketing}
+            onTermsChange={onTermsChange}
+            onAIChange={onAIChange}
+            onMarketingChange={onMarketingChange}
+            onAgreeAll={onAgreeAll}
+            onShowTerms={onShowTerms}
+            onShowAI={onShowAI}
+            error={termsError}
+            showAgreeAllButton={false}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

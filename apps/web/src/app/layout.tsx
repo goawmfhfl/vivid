@@ -10,22 +10,22 @@ export const metadata: Metadata = {
   description: "오늘의 기록을 남기고 분석하는 일기 앱",
   metadataBase: new URL("https://vividlog.app"),
   openGraph: {
-    title: "당신의 꿈을 '선명한 확신'으로",
-    description: "기록을 통해, 흐릿한 삶을 선명하게",
+    title: "흐릿한 꿈을 '선명한 확신'으로",
+    description: "기록을 통해, 나다운 삶을 선명하게",
     siteName: "VIVID",
     url: "/",
     type: "website",
     images: [
       {
-        url: "/kakao-share-image.jpg",
+        url: "/kakao-sharee.jpg",
       },
     ],
   },
   twitter: {
-    title: "당신의 꿈을 '선명한 확신'으로",
-    description: "기록을 통해, 흐릿한 삶을 선명하게.",
+    title: "흐릿한 꿈을 '선명한 확신'으로",
+    description: "기록을 통해, 나다운 삶을 선명하게.",
     card: "summary_large_image",
-    images: ["/kakao-share-image.jpg"],
+    images: ["/kakao-sharee.jpg"],
   },
   icons: {
     icon: [

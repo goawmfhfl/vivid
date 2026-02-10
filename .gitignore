@@ -38,3 +38,5 @@ yarn-error.log*
 .vscode/
 .idea/
 
+# Scripts (Apple JWT 등 로컬 전용)
+scripts/

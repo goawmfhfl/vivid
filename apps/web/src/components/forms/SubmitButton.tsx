@@ -11,6 +11,7 @@ interface SubmitButtonProps {
   defaultText: string;
   disabled?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
 export function SubmitButton({
@@ -20,6 +21,7 @@ export function SubmitButton({
   defaultText,
   disabled = false,
   onClick,
+  className,
 }: SubmitButtonProps) {
   const isDisabled = !isValid || isLoading || disabled;
 
@@ -31,7 +33,8 @@ export function SubmitButton({
       className={cn(
         "h-auto px-8 py-3 rounded-xl transition-all font-medium",
         TYPOGRAPHY.body.fontSize,
-        onClick ? "flex-shrink-0" : "w-full"
+        onClick ? "flex-shrink-0" : "w-full",
+        className
       )}
       style={{
         backgroundColor: !isDisabled ? COLORS.brand.primary : COLORS.text.tertiary,

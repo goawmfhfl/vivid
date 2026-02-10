@@ -1,24 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { useSignUp } from "@/hooks/useSignUp";
 import { ErrorMessage } from "../forms/ErrorMessage";
 import { SubmitButton } from "../forms/SubmitButton";
 import { TermsModal } from "../modals/TermsModal";
 import { AIDataModal } from "../modals/AIDataModal";
-import { StepProgress } from "./StepProgress";
 import { LoginInfoStep } from "./steps/LoginInfoStep";
-import { BasicProfileStep } from "./steps/BasicProfileStep";
-import { AdditionalInfoStep } from "./steps/AdditionalInfoStep";
+import { DisplayNameStep } from "./steps/DisplayNameStep";
 import { TermsStep } from "./steps/TermsStep";
-import { COLORS, TYPOGRAPHY, SHADOWS } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 import { ChevronLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
-const TOTAL_STEPS = 4;
+
+const TOTAL_STEPS = 2;
 
 export function SignUpView({
-  initialMessage,
+  initialMessage = null,
   initialEmail = null,
   isSocialOnboarding = false,
 }: {
@@ -27,11 +26,12 @@ export function SignUpView({
   isSocialOnboarding?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [infoMessage] = useState<string | null>(
-    initialMessage ||
+    initialMessage ??
       (isSocialOnboarding
-        ? "카카오 간편 로그인 정보를 확인했어요. 나머지 프로필을 입력하면 가입이 완료됩니다."
+        ? "소셜 로그인(카카오/애플) 정보를 확인했어요. 약관 동의 후 닉네임을 입력하면 가입이 완료됩니다."
         : null)
   );
 
@@ -48,19 +48,12 @@ export function SignUpView({
     gender: "",
   });
 
-  // 핸드폰 인증 완료 여부
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-
   // 에러 상태
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
     name?: string;
-    phone?: string;
-    birthYear?: string;
-    gender?: string;
     terms?: string;
-    code?: string;
   }>({});
 
   // 모달 상태
@@ -69,10 +62,49 @@ export function SignUpView({
     showAI: false,
   });
 
-  // 쿠폰 코드 저장
-  const [couponCode, setCouponCode] = useState<string | null>(null);
-
   const signUpMutation = useSignUp();
+
+  // 이메일 중복 확인 (이메일 가입 시에만 사용)
+  const [emailCheckStatus, setEmailCheckStatus] = useState<
+    "idle" | "checking" | "available" | "taken"
+  >("idle");
+
+  const handleCheckEmail = async () => {
+    const email = formData.email?.trim();
+    if (!email || !validateEmail(email)) {
+      setErrors((prev) => ({ ...prev, email: "이메일 형식을 확인해주세요." }));
+      return;
+    }
+    setEmailCheckStatus("checking");
+    clearFieldError("email");
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailCheckStatus("idle");
+        setErrors((prev) => ({ ...prev, email: data.error || "확인에 실패했습니다." }));
+        return;
+      }
+      setEmailCheckStatus(data.available ? "available" : "taken");
+      if (!data.available) {
+        setErrors((prev) => ({ ...prev, email: "이미 사용 중인 이메일입니다." }));
+      }
+    } catch {
+      setEmailCheckStatus("idle");
+      setErrors((prev) => ({ ...prev, email: "확인에 실패했습니다." }));
+    }
+  };
+
+  // 이메일 변경 시 중복 확인 상태 초기화
+  useEffect(() => {
+    if (emailCheckStatus !== "idle") setEmailCheckStatus("idle");
+    // formData.email만 의존: 이메일 필드 변경 시에만 리셋
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.email]);
 
   // 이메일 중복 에러 처리: 1단계로 이동하고 이메일 에러 표시
   useEffect(() => {
@@ -83,8 +115,7 @@ export function SignUpView({
         errorMessage.includes("already registered")
       ) {
         // 1단계로 이동
-        setCurrentStep(1);
-        // 이메일 에러 설정
+        setCurrentStep(2); // 이메일 입력은 2단계
         setErrors((prev) => ({
           ...prev,
           email: "이미 가입된 이메일입니다.",
@@ -118,70 +149,34 @@ export function SignUpView({
     return hasMinLength && hasLetter && hasNumber;
   };
 
-  // 각 단계별 검증
+  // 각 단계별 검증 (1=서비스 이용 동의, 2=닉네임 또는 이메일/비밀번호/닉네임)
   const validateStep = (step: number): boolean => {
     const newErrors: typeof errors = {};
 
     if (step === 1) {
-      // 로그인 정보 검증
-      if (!formData.email) {
-        newErrors.email = "이메일을 입력해주세요.";
-      } else if (!isSocialOnboarding && !validateEmail(formData.email)) {
-        newErrors.email = "이메일 형식이 올바르지 않습니다.";
+      if (!formData.agreeTerms || !formData.agreeAI) {
+        newErrors.terms = "필수 약관에 동의해주세요.";
       }
-
-      if (!isSocialOnboarding) {
+    } else if (step === 2) {
+      if (isSocialOnboarding) {
+        if (!formData.name || formData.name.trim() === "") {
+          newErrors.name = "닉네임을 입력해주세요.";
+        }
+      } else {
+        if (!formData.email) {
+          newErrors.email = "이메일을 입력해주세요.";
+        } else if (!validateEmail(formData.email)) {
+          newErrors.email = "이메일 형식이 올바르지 않습니다.";
+        }
         if (!formData.password) {
           newErrors.password = "비밀번호를 입력해주세요.";
         } else if (!validatePassword(formData.password)) {
           newErrors.password =
             "비밀번호는 영문과 숫자를 포함해 8자 이상 입력해주세요.";
         }
-      }
-    } else if (step === 2) {
-      // 기본 프로필 검증
-      if (!formData.name || formData.name.trim() === "") {
-        newErrors.name = "이름을 입력해주세요.";
-      }
-
-      if (!formData.phone || formData.phone.trim() === "") {
-        newErrors.phone = "전화번호를 입력해주세요.";
-      } else {
-        const phoneRegex = /^[0-9-]+$/;
-        const cleanedPhone = formData.phone.replace(/\s/g, "");
-        if (!phoneRegex.test(cleanedPhone) || cleanedPhone.length < 10) {
-          newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
+        if (!formData.name || formData.name.trim() === "") {
+          newErrors.name = "닉네임을 입력해주세요.";
         }
-      }
-
-      // 핸드폰 인증 검증
-      if (!isPhoneVerified) {
-        newErrors.phone = "핸드폰 인증을 완료해주세요.";
-      }
-    } else if (step === 3) {
-      // 맞춤형 피드백 정보 검증
-      if (!formData.birthYear) {
-        newErrors.birthYear = "출생년도를 입력해주세요.";
-      } else {
-        const birthYearNum = Number(formData.birthYear);
-        const currentYear = new Date().getFullYear();
-        if (
-          isNaN(birthYearNum) ||
-          formData.birthYear.length !== 4 ||
-          birthYearNum < 1900 ||
-          birthYearNum > currentYear
-        ) {
-          newErrors.birthYear = "올바른 출생년도(YYYY)를 입력해주세요.";
-        }
-      }
-
-      if (!formData.gender) {
-        newErrors.gender = "성별을 선택해주세요.";
-      }
-    } else if (step === 4) {
-      // 약관 동의 검증
-      if (!formData.agreeTerms || !formData.agreeAI) {
-        newErrors.terms = "필수 약관에 동의해주세요.";
       }
     }
 
@@ -200,20 +195,14 @@ export function SignUpView({
     }
   };
 
-  // 이전 단계로 이동
+  // 이전 단계로 이동 (2단계 → 1단계 시 약관 에러 초기화)
   const handlePrev = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      // 현재 단계의 에러 초기화
-      const stepErrors: (keyof typeof errors)[] = [];
-      if (currentStep === 2) {
-        stepErrors.push("name", "phone", "code");
-      } else if (currentStep === 3) {
-        stepErrors.push("birthYear", "gender");
-      } else if (currentStep === 4) {
-        stepErrors.push("terms");
-      }
-      stepErrors.forEach((field) => clearFieldError(field));
+      clearFieldError("terms");
+      clearFieldError("name");
+      clearFieldError("email");
+      clearFieldError("password");
     }
   };
 
@@ -224,70 +213,143 @@ export function SignUpView({
     }
 
     signUpMutation.mutate({
-      email: isSocialOnboarding ? undefined : formData.email,
+      email: formData.email || undefined,
       password: isSocialOnboarding ? undefined : formData.password,
       name: formData.name.trim(),
-      phone: formData.phone.trim(),
       agreeTerms: formData.agreeTerms,
       agreeAI: formData.agreeAI,
       agreeMarketing: formData.agreeMarketing,
-      birthYear: formData.birthYear,
-      gender: formData.gender,
       isSocialOnboarding,
-      couponCode: couponCode || undefined,
+      ...(formData.phone?.trim() && { phone: formData.phone.trim() }),
+      ...(formData.birthYear?.trim() && { birthYear: formData.birthYear }),
+      ...(formData.gender?.trim() && { gender: formData.gender }),
     });
   };
 
 
-  // 현재 단계가 유효한지 확인
+  // 현재 단계가 유효한지 확인 (1=약관, 2=닉네임 또는 이메일/비밀번호/닉네임)
   const isCurrentStepValid = () => {
     if (currentStep === 1) {
-      const emailValid = isSocialOnboarding
-        ? Boolean(formData.email)
-        : Boolean(formData.email && validateEmail(formData.email));
-      const passwordValid = isSocialOnboarding
-        ? true
-        : Boolean(formData.password && validatePassword(formData.password));
-      return emailValid && passwordValid;
-    } else if (currentStep === 2) {
-      return (
-        Boolean(formData.name?.trim()) &&
-        Boolean(formData.phone?.trim()) &&
-        formData.phone.replace(/\s/g, "").length >= 10 &&
-        isPhoneVerified
-      );
-    } else if (currentStep === 3) {
-      return Boolean(formData.birthYear && formData.gender);
-    } else if (currentStep === 4) {
       return formData.agreeTerms && formData.agreeAI;
+    }
+    if (currentStep === 2) {
+      if (isSocialOnboarding) {
+        return Boolean(formData.name?.trim());
+      }
+      return (
+        Boolean(formData.email && validateEmail(formData.email)) &&
+        Boolean(formData.password && validatePassword(formData.password)) &&
+        Boolean(formData.name?.trim())
+      );
     }
     return false;
   };
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center px-4 py-8"
+      className="flex min-h-screen flex-col px-4 pt-6 pb-8 sm:pt-8"
       style={{ backgroundColor: COLORS.background.base }}
     >
-      <div className="w-full max-w-2xl">
-        <div className="mt-8">
-          <StepProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+      <div className="mx-auto w-full max-w-lg flex-1 flex flex-col">
+        {/* 상단: 뒤로가기 (2단계일 때만) */}
+        {currentStep > 1 && (
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="mb-6 flex items-center gap-1.5 self-start rounded-lg py-2 pr-2 transition-opacity hover:opacity-70"
+            style={{ color: COLORS.text.secondary }}
+            aria-label="이전"
+          >
+            <ChevronLeft className="h-6 w-6" />
+            <span className="text-sm font-medium">이전</span>
+          </button>
+        )}
 
-          {infoMessage && currentStep === 1 && (
-            <div
-              className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm shadow-sm"
-              style={{ color: COLORS.text.secondary }}
-            >
-              {infoMessage}
-            </div>
+        {/* 본문: 제목+내용은 각 스텝 컴포넌트에서 렌더 */}
+        <div
+          className="flex-1"
+          key={currentStep}
+          style={{ animation: "fadeInSlide 0.3s ease-in-out" }}
+        >
+          {/* 1단계: 서비스 이용 동의 */}
+          {currentStep === 1 && (
+            <TermsStep
+              agreeTerms={formData.agreeTerms}
+              agreeAI={formData.agreeAI}
+              agreeMarketing={formData.agreeMarketing}
+              termsError={errors.terms}
+              onTermsChange={(checked) => {
+                updateFormData("agreeTerms", checked);
+                clearFieldError("terms");
+              }}
+              onAIChange={(checked) => {
+                updateFormData("agreeAI", checked);
+                clearFieldError("terms");
+              }}
+              onMarketingChange={(checked) => {
+                updateFormData("agreeMarketing", checked);
+              }}
+              onAgreeAll={(nextState) => {
+                updateFormData("agreeTerms", nextState);
+                updateFormData("agreeAI", nextState);
+                updateFormData("agreeMarketing", nextState);
+                if (nextState) clearFieldError("terms");
+              }}
+              onShowTerms={() =>
+                setModals((prev) => ({ ...prev, showTerms: true }))
+              }
+              onShowAI={() =>
+                setModals((prev) => ({ ...prev, showAI: true }))
+              }
+            />
           )}
+
+          {/* 2단계: 닉네임(소셜) 또는 이메일/비밀번호/닉네임(이메일 가입) */}
+          {currentStep === 2 &&
+            (isSocialOnboarding ? (
+              <DisplayNameStep
+                name={formData.name}
+                nameError={errors.name}
+                infoMessage={infoMessage}
+                onNameChange={(value) => {
+                  updateFormData("name", value);
+                  clearFieldError("name");
+                }}
+                onClearError={clearFieldError}
+              />
+            ) : (
+              <LoginInfoStep
+                email={formData.email}
+                password={formData.password}
+                name={formData.name}
+                emailError={errors.email}
+                passwordError={errors.password}
+                nameError={errors.name}
+                isSocialMode={false}
+                emailCheckStatus={emailCheckStatus}
+                onCheckEmail={handleCheckEmail}
+                onEmailChange={(value) => {
+                  updateFormData("email", value);
+                  clearFieldError("email");
+                }}
+                onPasswordChange={(value) => {
+                  updateFormData("password", value);
+                  clearFieldError("password");
+                }}
+                onNameChange={(value) => {
+                  updateFormData("name", value);
+                  clearFieldError("name");
+                }}
+                onClearError={clearFieldError}
+              />
+            ))}
 
           {signUpMutation.error &&
             !(
               signUpMutation.error.message.includes("이미 가입된 이메일") ||
               signUpMutation.error.message.includes("already registered")
             ) && (
-              <div className="mb-6">
+              <div className="mt-4">
                 <ErrorMessage
                   message={
                     signUpMutation.error?.message ||
@@ -296,182 +358,48 @@ export function SignUpView({
                 />
               </div>
             )}
+        </div>
 
-          {/* 단계별 컨텐츠 */}
-          <div className="mb-6 relative" style={{ minHeight: "300px" }}>
-            <div
-              key={currentStep}
-              style={{
-                animation: "fadeInSlide 0.3s ease-in-out",
-              }}
+        {/* 하단: 풀 너비 확인 버튼 */}
+        <div
+          className="mt-8 flex flex-col gap-4"
+          style={{ paddingBottom: 24 }}
+        >
+          <SubmitButton
+            isLoading={signUpMutation.isPending}
+            isValid={isCurrentStepValid()}
+            loadingText={
+              currentStep === TOTAL_STEPS
+                ? isSocialOnboarding
+                  ? "저장 중..."
+                  : "가입 중..."
+                : "다음"
+            }
+            defaultText={
+              currentStep === TOTAL_STEPS
+                ? isSocialOnboarding
+                  ? "확인"
+                  : "가입하고 시작하기"
+                : "확인"
+            }
+            onClick={handleNext}
+            className="w-full py-3.5 text-base"
+          />
+
+          <p
+            className="text-center text-sm"
+            style={{ color: COLORS.text.tertiary }}
+          >
+            이미 계정이 있으신가요?{" "}
+            <button
+              type="button"
+              className="font-semibold underline-offset-2 hover:underline"
+              style={{ color: COLORS.brand.primary }}
+              onClick={() => router.push(getLoginPath(searchParams))}
             >
-              {currentStep === 1 && (
-                <>
-                  <LoginInfoStep
-                    email={formData.email}
-                    password={formData.password}
-                    emailError={errors.email}
-                    passwordError={errors.password}
-                    isSocialMode={isSocialOnboarding}
-                    onEmailChange={(value) => {
-                      updateFormData("email", value);
-                      clearFieldError("email");
-                    }}
-                    onPasswordChange={(value) => {
-                      updateFormData("password", value);
-                      clearFieldError("password");
-                    }}
-                    onClearError={clearFieldError}
-                  />
-                </>
-              )}
-
-              {currentStep === 2 && (
-                <BasicProfileStep
-                  name={formData.name}
-                  phone={formData.phone}
-                  nameError={errors.name}
-                  phoneError={errors.phone}
-                  onNameChange={(value) => {
-                    updateFormData("name", value);
-                    clearFieldError("name");
-                  }}
-                  onPhoneChange={(value) => {
-                    updateFormData("phone", value);
-                    clearFieldError("phone");
-                    // 전화번호가 변경되면 인증 상태 초기화
-                    setIsPhoneVerified(false);
-                  }}
-                  onVerificationComplete={() => {
-                    setIsPhoneVerified(true);
-                    clearFieldError("phone");
-                    clearFieldError("code");
-                  }}
-                  isPhoneVerified={isPhoneVerified}
-                  onClearError={clearFieldError}
-                />
-              )}
-
-              {currentStep === 3 && (
-                <AdditionalInfoStep
-                  birthYear={formData.birthYear}
-                  gender={formData.gender}
-                  birthYearError={errors.birthYear}
-                  genderError={errors.gender}
-                  couponCode={couponCode}
-                  onCouponCodeChange={(code) => setCouponCode(code)}
-                  onBirthYearChange={(value) => {
-                    updateFormData("birthYear", value);
-                    clearFieldError("birthYear");
-                  }}
-                  onGenderChange={(value) => {
-                    updateFormData("gender", value);
-                    clearFieldError("gender");
-                  }}
-                />
-              )}
-
-              {currentStep === 4 && (
-                <TermsStep
-                  agreeTerms={formData.agreeTerms}
-                  agreeAI={formData.agreeAI}
-                  agreeMarketing={formData.agreeMarketing}
-                  termsError={errors.terms}
-                  onTermsChange={(checked) => {
-                    updateFormData("agreeTerms", checked);
-                    clearFieldError("terms");
-                  }}
-                  onAIChange={(checked) => {
-                    updateFormData("agreeAI", checked);
-                    clearFieldError("terms");
-                  }}
-                  onMarketingChange={(checked) => {
-                    updateFormData("agreeMarketing", checked);
-                  }}
-                  onAgreeAll={(nextState) => {
-                    updateFormData("agreeTerms", nextState);
-                    updateFormData("agreeAI", nextState);
-                    updateFormData("agreeMarketing", nextState);
-                    if (nextState) {
-                      clearFieldError("terms");
-                    }
-                  }}
-                  onShowTerms={() =>
-                    setModals((prev) => ({ ...prev, showTerms: true }))
-                  }
-                  onShowAI={() =>
-                    setModals((prev) => ({ ...prev, showAI: true }))
-                  }
-                />
-              )}
-            </div>
-          </div>
-
-          {/* 네비게이션 버튼 */}
-          <div className="flex items-center justify-center gap-3 mt-6">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={handlePrev}
-                className={cn(
-                  "h-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl transition-all hover:opacity-80 flex-shrink-0 font-medium",
-                  TYPOGRAPHY.body.fontSize
-                )}
-                style={{
-                  color: COLORS.text.secondary,
-                  backgroundColor: COLORS.background.card,
-                  border: `1.5px solid ${COLORS.border.light}`,
-                  boxShadow: SHADOWS.elevation2,
-                  minWidth: "140px",
-                  lineHeight: "1.5",
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>이전</span>
-              </button>
-            )}
-
-            <SubmitButton
-              isLoading={signUpMutation.isPending}
-              isValid={isCurrentStepValid()}
-              loadingText={
-                currentStep === TOTAL_STEPS
-                  ? isSocialOnboarding
-                    ? "정보 저장 중..."
-                    : "가입 중..."
-                  : "다음 단계로..."
-              }
-              defaultText={
-                currentStep === TOTAL_STEPS
-                  ? isSocialOnboarding
-                    ? "정보 제출"
-                    : "가입하고 시작하기"
-                  : "다음"
-              }
-              onClick={handleNext}
-            />
-          </div>
-
-          {currentStep === 1 && (
-            <div
-              className="mt-6 rounded-2xl border py-3 text-center text-sm"
-              style={{
-                borderColor: COLORS.border.light,
-                backgroundColor: "rgba(255,255,255,0.8)",
-                color: COLORS.text.tertiary,
-              }}
-            >
-              이미 계정이 있으신가요?{" "}
-              <button
-                type="button"
-                className="font-semibold underline-offset-4 hover:underline"
-                style={{ color: COLORS.brand.primary }}
-                onClick={() => router.push("/login")}
-              >
-                로그인하기
-              </button>
-            </div>
-          )}
+              로그인하기
+            </button>
+          </p>
         </div>
       </div>
 

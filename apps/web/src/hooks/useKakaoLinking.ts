@@ -67,8 +67,7 @@ const linkKakaoAccount = async (): Promise<void> => {
       errorMessage =
         "계정 연동 기능을 사용하려면 Supabase 설정에서 'Manual Linking' 기능을 활성화해야 합니다. 관리자에게 문의해주세요.";
     } else if (error.message?.includes("identity_already_exists") || error.code === "identity_already_exists") {
-      errorMessage =
-        "이 카카오 계정은 이미 다른 사용자에게 연결되어 있습니다. 다른 카카오 계정을 사용하거나 관리자에게 문의해주세요.";
+      errorMessage = "이미 사용 중인 계정입니다.";
     }
 
     // 에러 로깅

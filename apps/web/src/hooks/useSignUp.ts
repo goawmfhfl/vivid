@@ -8,9 +8,9 @@ export interface SignUpData {
   email?: string; // 소셜 로그인 케이스에서는 optional
   password?: string; // 소셜 로그인 케이스에서는 optional
   name: string;
-  phone: string;
-  birthYear: string;
-  gender: string;
+  phone?: string; // 선택 (간편 가입)
+  birthYear?: string;
+  gender?: string;
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
@@ -48,21 +48,9 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     couponCode,
   } = data;
 
-  // 공통 필드 검증
-  if (!name) {
+  // 공통 필드 검증: 이름 + 필수 약관만
+  if (!name || !name.trim()) {
     throw new SignUpError("이름을 입력해주세요.");
-  }
-
-  if (!phone) {
-    throw new SignUpError("전화번호를 입력해주세요.");
-  }
-
-  if (!birthYear) {
-    throw new SignUpError("출생년도를 입력해주세요.");
-  }
-
-  if (!gender) {
-    throw new SignUpError("성별을 선택해주세요.");
   }
 
   if (!agreeTerms || !agreeAI) {
@@ -93,19 +81,22 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
       // 현재 시간 (서버 시간 기준)
       const now = new Date().toISOString();
 
-      // 사용자 메타데이터 업데이트
+      // 사용자 메타데이터 업데이트 (전화/생년/성별은 선택, 있으면 저장)
       const mergedMetadata = {
         ...(user.user_metadata || {}),
-        name,
-        phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호
-        birthYear,
-        gender,
+        name: name.trim(),
+        ...(phone?.trim() && {
+          phone: phone.replace(/[\s-]/g, ""),
+          phone_verified: true,
+          phone_verified_at: now,
+        }),
+        ...(birthYear?.trim() && { birthYear }),
+        ...(gender?.trim() && { gender }),
         agreeTerms,
         agreeAI,
         agreeMarketing,
-        phone_verified: true, // 핸드폰 인증 완료
-        phone_verified_at: now,
-        role: "user", // 기본 역할
+        ...(email?.trim() && { contact_email: email.trim() }),
+        role: "user",
         subscription: {
           plan: "free",
           status: "none",
@@ -125,37 +116,44 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
           updateError.code
         );
       }
+
+      // 소셜 가입 직후 쿠폰 적용 시, 서버가 방금 반영한 user_metadata를 읽도록 세션 갱신 후 잠시 대기
+      const { data: { session: refreshedSession } } = await supabase.auth.getSession();
+      if (refreshedSession) session = refreshedSession;
+      await new Promise((r) => setTimeout(r, 400));
     } else {
       // 일반 회원가입 케이스
       if (!email || !password) {
         throw new SignUpError("이메일과 비밀번호를 입력해주세요.");
       }
 
-      // 1. Supabase Auth를 통한 회원가입
+      // 1. Supabase Auth를 통한 회원가입 (전화/생년/성별은 선택)
+      const signUpMetadata: Record<string, unknown> = {
+        agreeTerms,
+        agreeAI,
+        agreeMarketing,
+        name: name.trim(),
+        role: "user",
+        subscription: {
+          plan: "free",
+          status: "none",
+          started_at: null,
+          expires_at: null,
+          updated_at: new Date().toISOString(),
+        },
+      };
+      if (phone?.trim()) {
+        signUpMetadata.phone = phone.replace(/[\s-]/g, "");
+        signUpMetadata.phone_verified = true;
+        signUpMetadata.phone_verified_at = new Date().toISOString();
+      }
+      if (birthYear?.trim()) signUpMetadata.birthYear = birthYear;
+      if (gender?.trim()) signUpMetadata.gender = gender;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            agreeTerms,
-            agreeAI,
-            agreeMarketing,
-            name,
-            phone: phone.replace(/[\s-]/g, ""), // 정규화된 전화번호
-            birthYear,
-            gender,
-            phone_verified: true, // 핸드폰 인증 완료
-            phone_verified_at: new Date().toISOString(),
-            role: "user", // 기본 역할
-            subscription: {
-              plan: "free",
-              status: "none",
-              started_at: null,
-              expires_at: null,
-              updated_at: new Date().toISOString(),
-            },
-          },
-        },
+        options: { data: signUpMetadata },
       });
 
       if (authError) {

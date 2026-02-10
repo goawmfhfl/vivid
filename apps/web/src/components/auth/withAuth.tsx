@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { UserError, useCurrentUser } from "@/hooks/useCurrentUser";
+import { getLoginFullUrl } from "@/lib/navigation";
 
 /**
  * 인증이 필요한 페이지를 보호하는 고차 컴포넌트 (HOC)
+ * useSearchParams 사용으로 인해 Suspense 경계 내부에서 렌더링됩니다.
  *
  * 사용법:
  * ```tsx
@@ -16,34 +18,44 @@ import { UserError, useCurrentUser } from "@/hooks/useCurrentUser";
  * @param Component - 보호할 컴포넌트
  * @returns 인증 확인 후 렌더링되는 컴포넌트
  */
-export function withAuth<P extends object>(Component: React.ComponentType<P>) {
-  return function AuthenticatedComponent(props: P) {
-    const router = useRouter();
-    const { data: user, isLoading, error } = useCurrentUser();
+function AuthenticatedInner<P extends object>({
+  Component,
+  props,
+}: {
+  Component: React.ComponentType<P>;
+  props: P;
+}) {
+  const searchParams = useSearchParams();
+  const { data: user, isLoading, error } = useCurrentUser();
 
-    useEffect(() => {
-      // 로딩 중이 아닐 때만 인증 상태 확인
-      if (!isLoading) {
-        // 에러가 있거나 사용자가 없으면 로그인 페이지로 리다이렉트
-        if (error || !user) {
-          const isInvalidRefreshToken =
-            error instanceof UserError && error.code === "INVALID_REFRESH_TOKEN";
-          if (isInvalidRefreshToken) {
-            void supabase.auth.signOut();
-            router.replace("/login");
-          } else {
-            router.push("/login");
-          }
+  useEffect(() => {
+    if (!isLoading) {
+      if (error || !user) {
+        const loginUrl = getLoginFullUrl(searchParams);
+        const isInvalidRefreshToken =
+          error instanceof UserError && error.code === "INVALID_REFRESH_TOKEN";
+        if (isInvalidRefreshToken) {
+          void supabase.auth.signOut();
         }
+        window.location.href = loginUrl;
       }
-    }, [isLoading, error, user, router]);
-
-    // 로딩 중이거나 인증되지 않은 경우 아무것도 렌더링하지 않음
-    if (isLoading || error || !user) {
-      return null;
     }
+  }, [isLoading, error, user, searchParams]);
 
-    // 인증된 경우 원래 컴포넌트 렌더링
-    return <Component {...props} />;
+  if (isLoading || error || !user) {
+    return null;
+  }
+
+  // 인증된 경우 원래 컴포넌트 렌더링
+  return <Component {...props} />;
+}
+
+export function withAuth<P extends object>(Component: React.ComponentType<P>) {
+  return function WithAuthWrapper(props: P) {
+    return (
+      <Suspense fallback={null}>
+        <AuthenticatedInner Component={Component} props={props} />
+      </Suspense>
+    );
   };
 }

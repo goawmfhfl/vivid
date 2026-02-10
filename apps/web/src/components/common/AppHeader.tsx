@@ -8,7 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginFullUrl } from "@/lib/navigation";
 import { COLORS, TYPOGRAPHY, TRANSITIONS } from "@/lib/design-system";
 import { queryClient } from "@/app/providers";
 import { clearAllCache } from "@/lib/cache-utils";
@@ -47,6 +48,7 @@ export function AppHeader({
   onBack,
 }: AppHeaderProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showDatePickerSheet, setShowDatePickerSheet] = useState(false);
   const { isPro } = useSubscription();
 
@@ -65,7 +67,8 @@ export function AppHeader({
       // 로그아웃 전에 모든 캐시 클리어
       clearAllCache(queryClient);
       await supabase.auth.signOut();
-      router.push("/login");
+      // 현재 오리진으로 이동해 Expo Go에서 프로덕션으로 튕기지 않도록 함
+      window.location.href = getLoginFullUrl(searchParams);
     } catch (error) {
       console.error("로그아웃 실패:", error);
     }

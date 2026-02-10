@@ -1,76 +1,137 @@
+"use client";
+
 import { EmailField } from "@/components/forms/EmailField";
 import { PasswordField } from "@/components/forms/PasswordField";
-import { PaperCard } from "../PaperCard";
+import { NameField } from "@/components/forms/NameField";
 import { COLORS } from "@/lib/design-system";
+
+type EmailCheckStatus = "idle" | "checking" | "available" | "taken";
 
 interface LoginInfoStepProps {
   email: string;
   password: string;
+  name?: string;
   emailError?: string;
   passwordError?: string;
+  nameError?: string;
   isSocialMode?: boolean;
+  emailCheckStatus?: EmailCheckStatus;
+  onCheckEmail?: () => void;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
-  onClearError: (field: "email" | "password") => void;
+  onNameChange?: (value: string) => void;
+  onClearError: (field: "email" | "password" | "name") => void;
 }
 
 export function LoginInfoStep({
   email,
   password,
+  name = "",
   emailError,
   passwordError,
+  nameError,
   isSocialMode = false,
+  emailCheckStatus = "idle",
+  onCheckEmail,
   onEmailChange,
   onPasswordChange,
+  onNameChange,
   onClearError,
 }: LoginInfoStepProps) {
   return (
-    <PaperCard className="p-6 sm:p-8">
-      <div className="mb-6">
-        <h2
-          className="text-xl font-semibold mb-2"
+    <div className="space-y-8">
+      <header>
+        <h1
+          className="mb-2 text-2xl font-semibold leading-tight sm:text-3xl"
           style={{ color: COLORS.text.primary }}
         >
-          로그인 정보
-        </h2>
-        <p className="text-sm" style={{ color: COLORS.text.tertiary }}>
+          계정을 만들어 주세요
+        </h1>
+        <p
+          className="text-base leading-relaxed sm:text-lg"
+          style={{ color: COLORS.text.secondary }}
+        >
           {isSocialMode
-            ? "카카오에서 가져온 이메일로 계속 진행해요."
-            : "서비스 이용을 위한 기본 로그인 정보를 입력해주세요."}
+            ? email
+              ? "소셜 로그인에서 가져온 이메일로 계속 진행해요."
+              : "연동 계정에 이메일이 없어요. 서비스 이용을 위해 이메일을 입력해주세요."
+            : "이메일, 비밀번호, 닉네임을 입력해 주세요."}
         </p>
-      </div>
+      </header>
 
       <div className="space-y-5">
-        <EmailField
-          value={email}
-          onChange={(value) => {
-            onEmailChange(value);
-            onClearError("email");
-          }}
-          placeholder="example@gmail.com"
-          error={emailError}
-          disabled={isSocialMode && Boolean(email)}
-        />
+        <div>
+          <EmailField
+            value={email}
+            onChange={(value) => {
+              onEmailChange(value);
+              onClearError("email");
+            }}
+            placeholder="example@gmail.com"
+            error={emailError}
+            disabled={isSocialMode && Boolean(email)}
+          />
+          {!isSocialMode && onCheckEmail && (
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onCheckEmail}
+                disabled={emailCheckStatus === "checking" || !email.trim()}
+                className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                style={{
+                  borderColor: COLORS.border.light,
+                  color: COLORS.text.secondary,
+                  backgroundColor: COLORS.background.base,
+                }}
+              >
+                {emailCheckStatus === "checking" ? "확인 중..." : "중복 확인"}
+              </button>
+              {emailCheckStatus === "available" && (
+                <span className="text-sm" style={{ color: COLORS.brand.primary }}>
+                  사용 가능한 이메일이에요.
+                </span>
+              )}
+              {emailCheckStatus === "taken" && (
+                <span className="text-sm" style={{ color: COLORS.status.error }}>
+                  이미 사용 중인 이메일입니다.
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         {!isSocialMode && (
-          <PasswordField
-            value={password}
-            onChange={(value) => {
-              onPasswordChange(value);
-              onClearError("password");
-            }}
-            placeholder="영문+숫자 8자 이상 입력"
-            error={passwordError}
-            autocomplete="new-password"
-          />
+          <>
+            <PasswordField
+              value={password}
+              onChange={(value) => {
+                onPasswordChange(value);
+                onClearError("password");
+              }}
+              placeholder="영문+숫자 8자 이상 입력"
+              error={passwordError}
+              autocomplete="new-password"
+            />
+            {onNameChange && (
+              <NameField
+                value={name}
+                onChange={(value) => {
+                  onNameChange(value);
+                  onClearError("name");
+                }}
+                placeholder="닉네임을 입력해 주세요."
+                error={nameError}
+              />
+            )}
+          </>
         )}
 
-        {isSocialMode && (
+        {isSocialMode && email && (
           <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
-            이메일은 카카오 계정과 동일하게 고정됩니다.
+            이메일은 소셜 로그인 계정과 동일하게 고정됩니다.
           </p>
         )}
       </div>
-    </PaperCard>
+    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Home } from "@/components/Home";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
@@ -34,14 +35,14 @@ function RootPage() {
           return;
         }
 
-        // 기타 OAuth 에러는 로그인 페이지로 리다이렉션
+        // 기타 OAuth 에러는 로그인 페이지로 리다이렉션 (embed 유지)
         const errorDescription = searchParams.get("error_description");
         const errorMessage =
           errorDescription ||
           (errorCode === "server_error"
             ? "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             : "인증 중 오류가 발생했습니다.");
-        router.replace(`/login?error=${encodeURIComponent(errorMessage)}`, {
+        router.replace(getLoginPath(searchParams, { error: errorMessage }), {
           scroll: false,
         });
       }

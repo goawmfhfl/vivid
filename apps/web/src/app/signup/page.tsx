@@ -1,7 +1,8 @@
+import { Suspense } from "react";
 import { SignUpView } from "@/components/signup/SignUpView";
 
 // Next.js 15: searchParams는 Promise입니다
-export default async function SignUpPage({
+async function SignUpContent({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -17,5 +18,17 @@ export default async function SignUpPage({
       initialEmail={initialEmail || null}
       isSocialOnboarding={isSocialOnboarding}
     />
+  );
+}
+
+export default function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  return (
+    <Suspense fallback={<div className="min-h-screen p-8">로딩 중...</div>}>
+      <SignUpContent searchParams={searchParams} />
+    </Suspense>
   );
 }

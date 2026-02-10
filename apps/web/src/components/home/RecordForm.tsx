@@ -804,13 +804,16 @@ export function RecordForm({
             border: `1.5px solid ${COLORS.border.card}`,
             backgroundColor: COLORS.background.card,
             borderRadius: "12px",
+            textAlign: "center",
           }}
         >
           <p
             className={TYPOGRAPHY.body.fontSize}
             style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}
           >
-            미래 날짜에는 기록을 작성할 수 없습니다. 오늘 또는 지난 날짜를
+            미래 날짜에는 기록을 작성할 수 없습니다.
+            <br/>
+            오늘 또는 지난 날짜를
             선택해 주세요.
           </p>
         </div>

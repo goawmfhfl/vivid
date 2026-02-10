@@ -5,6 +5,7 @@ import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { COLORS, TYPOGRAPHY, SHADOWS } from "@/lib/design-system";
+import { getAuthErrorMessage } from "@/lib/auth-error";
 
 export default function Error({
   error,
@@ -101,12 +102,12 @@ export default function Error({
           오류가 발생했습니다
         </h2>
 
-        {/* 에러 메시지 */}
+        {/* 에러 메시지 (리프레시 토큰 등 인증 에러는 사용자 친화 메시지로 통일) */}
         <p
           className={`${TYPOGRAPHY.body.fontSize} mb-10 text-center leading-relaxed max-w-md`}
           style={{ color: COLORS.text.secondary }}
         >
-          {error.message ||
+          {getAuthErrorMessage(error) ||
             "예상치 못한 오류가 발생했습니다. 다시 시도해주세요."}
         </p>
 

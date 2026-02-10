@@ -8,7 +8,8 @@ import {
   Bell,
   ChevronRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getLoginPath } from "@/lib/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import { NameField } from "./forms/NameField";
@@ -24,9 +25,13 @@ import { COLORS } from "@/lib/design-system";
 import {
   useKakaoIdentity,
   useLinkKakao,
-  useUnlinkKakao,
 } from "@/hooks/useKakaoLinking";
+import {
+  useAppleIdentity,
+  useLinkApple,
+} from "@/hooks/useAppleLinking";
 import { useToast } from "@/hooks/useToast";
+import { supabase } from "@/lib/supabase";
 
 type SectionCardProps = {
   title: string;
@@ -50,6 +55,7 @@ const SectionCard = ({ title, description, children }: SectionCardProps) => (
 
 export function ProfileSettingsView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: currentUser, isLoading } = useCurrentUser();
   const updateProfileMutation = useUpdateProfile();
 
@@ -72,12 +78,29 @@ export function ProfileSettingsView() {
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hasEmailProvider, setHasEmailProvider] = useState<boolean>(true);
 
-  // 카카오 연동 상태
+  // 이메일 로그인 유저 여부 (identities에 email provider 있으면 true)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase.auth.getSession().then(({ data }) => {
+      const identities = data.session?.user?.identities ?? [];
+      setHasEmailProvider(
+        identities.some((i) => i.provider === "email")
+      );
+    });
+  }, [currentUser?.id]);
+
+  // 카카오 연동 상태 (연동 해제 기능 없음)
   const { data: kakaoIdentity, isLoading: isLoadingKakao } = useKakaoIdentity();
   const linkKakaoMutation = useLinkKakao();
-  const unlinkKakaoMutation = useUnlinkKakao();
   const isKakaoLinked = Boolean(kakaoIdentity);
+
+  // 애플 연동 상태 (연동 해제 기능 없음)
+  const { data: appleIdentity, isLoading: isLoadingApple } = useAppleIdentity();
+  const linkAppleMutation = useLinkApple();
+  const isAppleLinked = Boolean(appleIdentity);
+
   const { showToast } = useToast();
 
   // URL 파라미터에서 연동 성공/에러 메시지 확인
@@ -85,23 +108,26 @@ export function ProfileSettingsView() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       
-      // 연동 성공 메시지
-      if (params.get("linked") === "kakao") {
+      // 연동 성공 메시지 (카카오/애플)
+      const linkedProvider = params.get("linked");
+      if (linkedProvider === "kakao") {
         setLinkSuccess(true);
         setLinkError(null);
-        // URL에서 파라미터 제거
         router.replace("/user", { scroll: false });
-        // Toast 팝업으로 성공 메시지 표시
         showToast("카카오 계정이 성공적으로 연동되었습니다.", 4000);
-        // 3초 후 상태 초기화
+        setTimeout(() => setLinkSuccess(false), 4000);
+      } else if (linkedProvider === "apple") {
+        setLinkSuccess(true);
+        setLinkError(null);
+        router.replace("/user", { scroll: false });
+        showToast("Apple 계정이 성공적으로 연동되었습니다.", 4000);
         setTimeout(() => setLinkSuccess(false), 4000);
       }
       
-      // 연동 에러 메시지
-      if (params.get("error") === "kakao_already_linked") {
+      // 연동 에러 메시지 (카카오/애플 공통)
+      if (params.get("error") === "social_already_linked" || params.get("error") === "kakao_already_linked") {
         const errorMessage =
-          params.get("message") ||
-          "이 카카오 계정은 이미 다른 사용자에게 연결되어 있습니다.";
+          params.get("message") || "이미 사용 중인 계정입니다.";
         setLinkError(errorMessage);
         setLinkSuccess(false);
         // URL에서 파라미터 제거
@@ -138,19 +164,14 @@ export function ProfileSettingsView() {
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!formData.name.trim()) newErrors.name = "이름을 입력해주세요.";
-    if (!formData.phone.trim()) {
-      newErrors.phone = "전화번호를 입력해주세요.";
-    } else {
+    if (formData.phone.trim()) {
       const phoneRegex = /^[0-9-]+$/;
       const cleaned = formData.phone.replace(/\s/g, "");
       if (!phoneRegex.test(cleaned) || cleaned.length < 10) {
         newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
       }
     }
-
-    if (!formData.birthYear) {
-      newErrors.birthYear = "출생년도를 입력해주세요.";
-    } else {
+    if (formData.birthYear) {
       const year = Number(formData.birthYear);
       const currentYear = new Date().getFullYear();
       if (
@@ -162,11 +183,6 @@ export function ProfileSettingsView() {
         newErrors.birthYear = "올바른 출생년도(YYYY)를 입력해주세요.";
       }
     }
-
-    if (!formData.gender) {
-      newErrors.gender = "성별을 선택해주세요.";
-    }
-
     setErrors(newErrors);
     return newErrors;
   };
@@ -183,9 +199,11 @@ export function ProfileSettingsView() {
     try {
       await updateProfileMutation.mutateAsync({
         name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        birthYear: formData.birthYear,
-        gender: formData.gender,
+        ...(hasEmailProvider && formData.phone.trim() && {
+          phone: formData.phone.trim(),
+        }),
+        birthYear: formData.birthYear || "",
+        gender: formData.gender || "",
         agreeMarketing: formData.agreeMarketing,
       });
       setSuccess(true);
@@ -262,18 +280,22 @@ export function ProfileSettingsView() {
 
           <SectionCard
             title="기본 프로필"
-            description="이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+            description={
+              hasEmailProvider
+                ? "이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+                : "VIVID에서 사용할 이름을 설정해주세요."
+            }
           >
-            <div>
-              <EmailField
-                value={currentUser?.email || ""}
-                onChange={() => {
-                  // 이메일은 수정 불가
-                }}
-                placeholder="이메일"
-                disabled={true}
-              />
-            </div>
+            {hasEmailProvider && (
+              <div>
+                <EmailField
+                  value={currentUser?.email || ""}
+                  onChange={() => {}}
+                  placeholder="이메일"
+                  disabled={true}
+                />
+              </div>
+            )}
 
             <div>
               <NameField
@@ -288,34 +310,38 @@ export function ProfileSettingsView() {
               />
             </div>
 
-            <div>
-              <PhoneField
-                value={formData.phone}
-                onChange={(value) => {
-                  updateField("phone", value);
-                  setErrors((prev) => ({ ...prev, phone: undefined }));
-                }}
-                error={errors.phone}
-                disabled={Boolean(formData.phone) || updateProfileMutation.isPending}
-                actionSlot={
-                  formData.phone ? (
-                    <button
-                      type="button"
-                      onClick={openPhoneEditModal}
-                      className="px-3 py-2 rounded-lg text-sm font-medium"
-                      style={{
-                        backgroundColor: COLORS.background.base,
-                        color: COLORS.text.secondary,
-                        border: `1px solid ${COLORS.border.light}`,
-                      }}
-                      disabled={updateProfileMutation.isPending}
-                    >
-                      수정
-                    </button>
-                  ) : null
-                }
-              />
-            </div>
+            {hasEmailProvider && (
+              <div>
+                <PhoneField
+                  value={formData.phone}
+                  onChange={(value) => {
+                    updateField("phone", value);
+                    setErrors((prev) => ({ ...prev, phone: undefined }));
+                  }}
+                  error={errors.phone}
+                  disabled={
+                    Boolean(formData.phone) || updateProfileMutation.isPending
+                  }
+                  actionSlot={
+                    formData.phone ? (
+                      <button
+                        type="button"
+                        onClick={openPhoneEditModal}
+                        className="px-3 py-2 rounded-lg text-sm font-medium"
+                        style={{
+                          backgroundColor: COLORS.background.base,
+                          color: COLORS.text.secondary,
+                          border: `1px solid ${COLORS.border.light}`,
+                        }}
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        수정
+                      </button>
+                    ) : null
+                  }
+                />
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard
@@ -389,97 +415,177 @@ export function ProfileSettingsView() {
                 )}
               </div>
             </div>
+            {(formData.birthYear || formData.gender) && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await updateProfileMutation.mutateAsync({
+                        birthYear: "",
+                        gender: "",
+                      });
+                      setFormData((prev) => ({
+                        ...prev,
+                        birthYear: "",
+                        gender: "",
+                      }));
+                      setSuccess(true);
+                      showToast("맞춤 정보가 삭제되었습니다.", 3000);
+                    } catch (err) {
+                      const msg =
+                        err instanceof Error ? err.message : "삭제에 실패했습니다.";
+                      setErrors({ general: msg });
+                    }
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  className="text-sm font-medium"
+                  style={{
+                    color: COLORS.text.muted,
+                    textDecoration: "underline",
+                  }}
+                >
+                  맞춤 정보 삭제
+                </button>
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard
             title="소셜 로그인 연동"
-            description="카카오 계정을 연동하면 더 편리하게 로그인할 수 있어요."
+            description="카카오·애플 계정을 연동하면 더 편리하게 로그인할 수 있어요."
           >
-            <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: "#FEE500" }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
-                      fill="#000000"
-                    />
-                  </svg>
+            <div className="space-y-3">
+              {/* 카카오 연동 */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: "#FEE500" }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.17188 14.6953L4.30469 17.8359C4.25781 18.0078 4.42969 18.1641 4.59375 18.0781L8.35938 15.8203C8.89844 15.9141 9.44531 15.9766 10 15.9766C14.4183 15.9766 18 13.0811 18 9.47656C18 5.87201 14.4183 3 10 3Z"
+                        fill="#000000"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#333333]">
+                      카카오 계정
+                    </p>
+                    {(!isKakaoLinked || isLoadingKakao) && (
+                      <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                        {isLoadingKakao ? "확인 중..." : "연동되지 않음"}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-[#333333]">
-                    카카오 계정
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#6B7A6F]">
-                    {isLoadingKakao
-                      ? "확인 중..."
-                      : isKakaoLinked
-                        ? "연동됨"
-                        : "연동되지 않음"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isKakaoLinked ? (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (kakaoIdentity) {
+                <div className="flex items-center gap-2">
+                  {isKakaoLinked ? (
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{
+                        color: COLORS.text.tertiary,
+                        backgroundColor: COLORS.background.hoverLight,
+                      }}
+                    >
+                      연동됨
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
                         try {
-                          await unlinkKakaoMutation.mutateAsync(kakaoIdentity);
-                          // 연동 해제 성공 시 상태 갱신
-                          setLinkSuccess(false);
-                          // Toast 팝업으로 성공 메시지 표시
-                          showToast("카카오 계정 연동이 해제되었습니다.", 4000);
+                          await linkKakaoMutation.mutateAsync();
                         } catch (error) {
                           const message =
                             error instanceof Error
                               ? error.message
-                              : "연동 해제에 실패했습니다.";
+                              : "연동에 실패했습니다.";
                           setErrors({ general: message });
                         }
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: COLORS.background.base,
-                      color: COLORS.text.secondary,
-                      border: `1px solid ${COLORS.border.light}`,
-                    }}
-                    disabled={unlinkKakaoMutation.isPending || isLoadingKakao}
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: COLORS.brand.primary,
+                        color: "white",
+                      }}
+                      disabled={linkKakaoMutation.isPending || isLoadingKakao}
+                    >
+                      {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 애플 연동 */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: COLORS.text.primary }}
                   >
-                    {unlinkKakaoMutation.isPending ? "해제 중..." : "연동 해제"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await linkKakaoMutation.mutateAsync();
-                      } catch (error) {
-                        const message =
-                          error instanceof Error
-                            ? error.message
-                            : "연동에 실패했습니다.";
-                        setErrors({ general: message });
-                      }
-                    }}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    style={{
-                      backgroundColor: COLORS.brand.primary,
-                      color: "white",
-                    }}
-                    disabled={linkKakaoMutation.isPending || isLoadingKakao}
-                  >
-                    {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
-                  </button>
-                )}
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill={COLORS.text.white}
+                    >
+                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.2 2.33-2.71 4.66-4.45 6.88zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#333333]">
+                      Apple 계정
+                    </p>
+                    {(!isAppleLinked || isLoadingApple) && (
+                      <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                        {isLoadingApple ? "확인 중..." : "연동되지 않음"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isAppleLinked ? (
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{
+                        color: COLORS.text.tertiary,
+                        backgroundColor: COLORS.background.hoverLight,
+                      }}
+                    >
+                      연동됨
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await linkAppleMutation.mutateAsync();
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "연동에 실패했습니다.";
+                          setErrors({ general: message });
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: COLORS.text.primary,
+                        color: COLORS.text.white,
+                      }}
+                      disabled={linkAppleMutation.isPending || isLoadingApple}
+                    >
+                      {linkAppleMutation.isPending ? "연동 중..." : "연동하기"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-            
-            {/* 연동 에러 메시지 (연동하기 컴포넌트 바로 아래) */}
+
+            {/* 연동 에러 메시지 */}
             {linkError && (
               <div className="mt-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-3 text-sm text-[#991B1B]">
                 <div className="flex items-center gap-2 font-medium">
@@ -537,12 +643,7 @@ export function ProfileSettingsView() {
           <SubmitButton
             isLoading={updateProfileMutation.isPending}
             isValid={
-              Boolean(
-                formData.name &&
-                  formData.phone &&
-                  formData.birthYear &&
-                  formData.gender
-              ) && !updateProfileMutation.isPending
+              Boolean(formData.name?.trim()) && !updateProfileMutation.isPending
             }
             loadingText="저장 중..."
             defaultText="변경 사항 저장하기"
@@ -571,7 +672,7 @@ export function ProfileSettingsView() {
             // 탈퇴 성공 시 로그인 페이지로 리다이렉션 (Development/Production 모두)
             // 로딩 모달이 완료 메시지를 표시한 후 리다이렉션
             setTimeout(() => {
-              router.push("/login?deleted=true");
+              router.push(getLoginPath(searchParams, { deleted: "true" }));
             }, 500);
           }}
         />

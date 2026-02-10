@@ -24,13 +24,13 @@ class UpdateProfileError extends Error {
 const updateProfile = async (data: UpdateProfileData): Promise<void> => {
   const { name, phone, birthYear, gender, agreeMarketing } = data;
 
-  if (
-    !name &&
-    !phone &&
-    !birthYear &&
-    !gender &&
-    agreeMarketing === undefined
-  ) {
+  const hasAny =
+    name !== undefined ||
+    phone !== undefined ||
+    birthYear !== undefined ||
+    gender !== undefined ||
+    agreeMarketing !== undefined;
+  if (!hasAny) {
     throw new UpdateProfileError("변경할 정보를 입력해주세요.");
   }
 
@@ -48,13 +48,15 @@ const updateProfile = async (data: UpdateProfileData): Promise<void> => {
     // 기존 메타데이터 가져오기
     const currentMetadata = user.user_metadata || {};
 
-    // 새로운 메타데이터 생성
+    // 새로운 메타데이터 생성 (빈 문자열은 null로 저장해 맞춤 정보 삭제 가능)
     const newMetadata = {
       ...currentMetadata,
-      ...(name && { name }),
-      ...(phone && { phone }),
-      ...(birthYear && { birthYear }),
-      ...(gender && { gender }),
+      ...(name !== undefined && {
+      name: typeof name === "string" ? name.trim() : name,
+    }),
+      ...(phone !== undefined && { phone: phone || null }),
+      ...(birthYear !== undefined && { birthYear: birthYear || null }),
+      ...(gender !== undefined && { gender: gender || null }),
       ...(agreeMarketing !== undefined && { agreeMarketing }),
     };
 

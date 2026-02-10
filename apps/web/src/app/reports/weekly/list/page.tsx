@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo } from "react";
 import { AppHeader } from "@/components/common/AppHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
@@ -106,4 +106,22 @@ function WeeklyListPage() {
   );
 }
 
-export default withAuth(WeeklyListPage);
+const WeeklyListPageWithAuth = withAuth(WeeklyListPage);
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center py-12">
+          <LoadingSpinner
+            message="로딩 중..."
+            size="md"
+            showMessage={true}
+          />
+        </div>
+      }
+    >
+      <WeeklyListPageWithAuth />
+    </Suspense>
+  );
+}
