@@ -40,6 +40,7 @@ const getRedirectUrl = () => {
       ? new URLSearchParams(window.location.search)
       : new URLSearchParams();
   currentParams.set("oauth", "1");
+  currentParams.set("oauth_provider", "kakao");
   const query = currentParams.toString();
 
   return `${base.replace(/\/$/, "")}/login${query ? `?${query}` : ""}`;

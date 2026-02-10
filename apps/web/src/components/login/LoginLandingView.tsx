@@ -73,6 +73,9 @@ export function LoginLandingView() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false);
+  const [activeSocialProvider, setActiveSocialProvider] = useState<
+    "kakao" | "apple" | null
+  >(null);
   const isBrowser = useIsBrowser();
   const isIOS = useIsIOS();
   // SSR/CSR 초기 마크업을 맞추기 위해 첫 렌더에서는 버튼을 유지하고,
@@ -80,8 +83,16 @@ export function LoginLandingView() {
   const shouldShowAppleLogin = mounted ? isBrowser || isIOS : true;
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
-  const isSocialLoading =
-    kakaoLoginMutation.isPending || appleLoginMutation.isPending || isOAuthProcessing;
+  const processingProvider = searchParams.get("oauth_provider");
+  const kakaoLoading =
+    kakaoLoginMutation.isPending ||
+    activeSocialProvider === "kakao" ||
+    (isOAuthProcessing && processingProvider === "kakao");
+  const appleLoading =
+    appleLoginMutation.isPending ||
+    activeSocialProvider === "apple" ||
+    (isOAuthProcessing && processingProvider === "apple");
+  const disableSocialButtons = kakaoLoading || appleLoading || isOAuthProcessing;
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const { showToast } = useToast();
 
@@ -160,6 +171,7 @@ export function LoginLandingView() {
       } finally {
         if (!cancelled) {
           setIsOAuthProcessing(false);
+          setActiveSocialProvider(null);
         }
       }
     };
@@ -250,8 +262,11 @@ export function LoginLandingView() {
           {/* 카카오 로그인 */}
           <button
             type="button"
-            onClick={() => kakaoLoginMutation.mutate()}
-            disabled={isSocialLoading}
+            onClick={() => {
+              setActiveSocialProvider("kakao");
+              kakaoLoginMutation.mutate();
+            }}
+            disabled={disableSocialButtons}
             className={cn(
               "w-full flex items-center rounded-xl py-3.5 px-4 transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
               TYPOGRAPHY.body.fontSize,
@@ -274,7 +289,7 @@ export function LoginLandingView() {
               </svg>
             </span>
             <span className="flex-1 flex justify-center">
-              {isSocialLoading ? (
+              {kakaoLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "카카오 로그인"
@@ -286,8 +301,11 @@ export function LoginLandingView() {
           {shouldShowAppleLogin && (
           <button
             type="button"
-            onClick={() => appleLoginMutation.mutate()}
-            disabled={isSocialLoading}
+            onClick={() => {
+              setActiveSocialProvider("apple");
+              appleLoginMutation.mutate();
+            }}
+            disabled={disableSocialButtons}
             className={cn(
               "w-full flex items-center rounded-xl py-3.5 px-4 transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
               TYPOGRAPHY.body.fontSize,
@@ -311,7 +329,7 @@ export function LoginLandingView() {
               </svg>
             </span>
             <span className="flex-1 flex justify-center">
-              {isSocialLoading ? (
+              {appleLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "애플 로그인"
