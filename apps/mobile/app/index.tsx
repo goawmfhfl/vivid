@@ -8,6 +8,7 @@ import {
   Text,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import * as SplashScreen from "expo-splash-screen";
 import { supabase } from "../lib/supabase";
 
 const WEB_APP_URL_BASE =
@@ -24,6 +25,13 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const webViewRef = useRef<WebView>(null);
+  const hideNativeSplash = React.useCallback(async () => {
+    try {
+      await SplashScreen.hideAsync();
+    } catch {
+      // Ignore if splash is already hidden.
+    }
+  }, []);
 
   // URL이 없으면 바로 에러 표시 (하얀 화면 방지)
   React.useEffect(() => {
@@ -36,12 +44,14 @@ export default function Page() {
           "웹 서버를 먼저 실행한 뒤 앱을 실행하세요."
       );
       setLoading(false);
+      void hideNativeSplash();
     }
-  }, []);
+  }, [hideNativeSplash]);
 
   // WebView가 로드 완료되면 호출
   const handleLoadEnd = () => {
     setLoading(false);
+    void hideNativeSplash();
   };
 
   // WebView에서 에러 발생 시 호출
@@ -74,6 +84,7 @@ export default function Page() {
 
     setError(errorMessage);
     setLoading(false);
+    void hideNativeSplash();
   };
 
   // WebView에서 메시지 수신 (웹 앱과 통신)

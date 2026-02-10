@@ -48,16 +48,17 @@ export function LoginLandingView() {
   const [mounted, setMounted] = useState(false);
   const isBrowser = useIsBrowser();
   const isIOS = useIsIOS();
-
-  // useIsBrowser/useIsIOS는 서버와 클라이언트에서 다르게 나와 하이드레이션 오류가 나므로,
-  // 마운트된 뒤에만 해당 값으로 조건부 렌더링함.
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // SSR/CSR 초기 마크업을 맞추기 위해 첫 렌더에서는 버튼을 유지하고,
+  // 마운트 후 실제 환경(isBrowser/isIOS)에 맞게 최종 노출 여부를 결정한다.
+  const shouldShowAppleLogin = mounted ? isBrowser || isIOS : true;
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const message = searchParams.get("message");
@@ -162,8 +163,8 @@ export function LoginLandingView() {
             <span className="flex-1 flex justify-center">카카오 로그인</span>
           </button>
 
-          {/* 애플 로그인: 브라우저(PC 테스트용) + 앱(WebView) iOS에서 표시. mounted 후에만 렌더해 하이드레이션 오류 방지 */}
-          {mounted && (isBrowser || isIOS) && (
+          {/* 애플 로그인: 브라우저(PC 테스트용) + 앱(WebView) iOS에서 표시 */}
+          {shouldShowAppleLogin && (
           <button
             type="button"
             onClick={() => appleLoginMutation.mutate()}
@@ -194,7 +195,7 @@ export function LoginLandingView() {
           </button>
           )}
 
-          {mounted && !isBrowser && !isIOS && (
+          {!shouldShowAppleLogin && (
             <p
               className={cn("text-center py-4", TYPOGRAPHY.bodySmall.fontSize)}
               style={{ color: COLORS.text.tertiary }}

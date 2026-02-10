@@ -12,9 +12,6 @@ import { LoginInfoStep } from "./steps/LoginInfoStep";
 import { DisplayNameStep } from "./steps/DisplayNameStep";
 import { TermsStep } from "./steps/TermsStep";
 import { COLORS } from "@/lib/design-system";
-import { ChevronLeft } from "lucide-react";
-
-const TOTAL_STEPS = 2;
 
 export function SignUpView({
   initialMessage = null,
@@ -28,6 +25,7 @@ export function SignUpView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = isSocialOnboarding ? 2 : 3;
   const [infoMessage] = useState<string | null>(
     initialMessage ??
       (isSocialOnboarding
@@ -41,6 +39,7 @@ export function SignUpView({
     password: "",
     name: "",
     phone: "",
+    agreeAge14: false,
     agreeTerms: false,
     agreeAI: false,
     agreeMarketing: false,
@@ -149,12 +148,12 @@ export function SignUpView({
     return hasMinLength && hasLetter && hasNumber;
   };
 
-  // 각 단계별 검증 (1=서비스 이용 동의, 2=닉네임 또는 이메일/비밀번호/닉네임)
+  // 각 단계별 검증
   const validateStep = (step: number): boolean => {
     const newErrors: typeof errors = {};
 
     if (step === 1) {
-      if (!formData.agreeTerms || !formData.agreeAI) {
+      if (!formData.agreeAge14 || !formData.agreeTerms || !formData.agreeAI) {
         newErrors.terms = "필수 약관에 동의해주세요.";
       }
     } else if (step === 2) {
@@ -174,9 +173,16 @@ export function SignUpView({
           newErrors.password =
             "비밀번호는 영문과 숫자를 포함해 8자 이상 입력해주세요.";
         }
-        if (!formData.name || formData.name.trim() === "") {
-          newErrors.name = "닉네임을 입력해주세요.";
+        if (emailCheckStatus !== "available") {
+          newErrors.email =
+            emailCheckStatus === "taken"
+              ? "이미 사용 중인 이메일입니다."
+              : "이메일 중복 확인을 완료해주세요.";
         }
+      }
+    } else if (step === 3) {
+      if (!formData.name || formData.name.trim() === "") {
+        newErrors.name = "닉네임을 입력해주세요.";
       }
     }
 
@@ -187,7 +193,7 @@ export function SignUpView({
   // 다음 단계로 이동
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep < TOTAL_STEPS) {
+      if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       } else {
         handleSubmit();
@@ -195,20 +201,9 @@ export function SignUpView({
     }
   };
 
-  // 이전 단계로 이동 (2단계 → 1단계 시 약관 에러 초기화)
-  const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      clearFieldError("terms");
-      clearFieldError("name");
-      clearFieldError("email");
-      clearFieldError("password");
-    }
-  };
-
   // 최종 제출
   const handleSubmit = () => {
-    if (!validateStep(TOTAL_STEPS)) {
+    if (!validateStep(totalSteps)) {
       return;
     }
 
@@ -216,6 +211,7 @@ export function SignUpView({
       email: formData.email || undefined,
       password: isSocialOnboarding ? undefined : formData.password,
       name: formData.name.trim(),
+      agreeAge14: formData.agreeAge14,
       agreeTerms: formData.agreeTerms,
       agreeAI: formData.agreeAI,
       agreeMarketing: formData.agreeMarketing,
@@ -226,11 +222,10 @@ export function SignUpView({
     });
   };
 
-
-  // 현재 단계가 유효한지 확인 (1=약관, 2=닉네임 또는 이메일/비밀번호/닉네임)
+  // 현재 단계가 유효한지 확인
   const isCurrentStepValid = () => {
     if (currentStep === 1) {
-      return formData.agreeTerms && formData.agreeAI;
+      return formData.agreeAge14 && formData.agreeTerms && formData.agreeAI;
     }
     if (currentStep === 2) {
       if (isSocialOnboarding) {
@@ -239,8 +234,11 @@ export function SignUpView({
       return (
         Boolean(formData.email && validateEmail(formData.email)) &&
         Boolean(formData.password && validatePassword(formData.password)) &&
-        Boolean(formData.name?.trim())
+        emailCheckStatus === "available"
       );
+    }
+    if (currentStep === 3) {
+      return Boolean(formData.name?.trim());
     }
     return false;
   };
@@ -251,20 +249,6 @@ export function SignUpView({
       style={{ backgroundColor: COLORS.background.base }}
     >
       <div className="mx-auto w-full max-w-lg flex-1 flex flex-col">
-        {/* 상단: 뒤로가기 (2단계일 때만) */}
-        {currentStep > 1 && (
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="mb-6 flex items-center gap-1.5 self-start rounded-lg py-2 pr-2 transition-opacity hover:opacity-70"
-            style={{ color: COLORS.text.secondary }}
-            aria-label="이전"
-          >
-            <ChevronLeft className="h-6 w-6" />
-            <span className="text-sm font-medium">이전</span>
-          </button>
-        )}
-
         {/* 본문: 제목+내용은 각 스텝 컴포넌트에서 렌더 */}
         <div
           className="flex-1"
@@ -274,10 +258,15 @@ export function SignUpView({
           {/* 1단계: 서비스 이용 동의 */}
           {currentStep === 1 && (
             <TermsStep
+              agreeAge14={formData.agreeAge14}
               agreeTerms={formData.agreeTerms}
               agreeAI={formData.agreeAI}
               agreeMarketing={formData.agreeMarketing}
               termsError={errors.terms}
+              onAge14Change={(checked) => {
+                updateFormData("agreeAge14", checked);
+                clearFieldError("terms");
+              }}
               onTermsChange={(checked) => {
                 updateFormData("agreeTerms", checked);
                 clearFieldError("terms");
@@ -290,6 +279,7 @@ export function SignUpView({
                 updateFormData("agreeMarketing", checked);
               }}
               onAgreeAll={(nextState) => {
+                updateFormData("agreeAge14", nextState);
                 updateFormData("agreeTerms", nextState);
                 updateFormData("agreeAI", nextState);
                 updateFormData("agreeMarketing", nextState);
@@ -304,7 +294,7 @@ export function SignUpView({
             />
           )}
 
-          {/* 2단계: 닉네임(소셜) 또는 이메일/비밀번호/닉네임(이메일 가입) */}
+          {/* 2단계: 닉네임(소셜) 또는 이메일/비밀번호(이메일 가입) */}
           {currentStep === 2 &&
             (isSocialOnboarding ? (
               <DisplayNameStep
@@ -341,8 +331,22 @@ export function SignUpView({
                   clearFieldError("name");
                 }}
                 onClearError={clearFieldError}
+                showNameField={false}
               />
             ))}
+
+          {/* 3단계: 이름 입력 (이메일 가입만) */}
+          {currentStep === 3 && !isSocialOnboarding && (
+            <DisplayNameStep
+              name={formData.name}
+              nameError={errors.name}
+              onNameChange={(value) => {
+                updateFormData("name", value);
+                clearFieldError("name");
+              }}
+              onClearError={clearFieldError}
+            />
+          )}
 
           {signUpMutation.error &&
             !(
@@ -369,18 +373,18 @@ export function SignUpView({
             isLoading={signUpMutation.isPending}
             isValid={isCurrentStepValid()}
             loadingText={
-              currentStep === TOTAL_STEPS
+              currentStep === totalSteps
                 ? isSocialOnboarding
                   ? "저장 중..."
                   : "가입 중..."
-                : "다음"
+                : "다음으로"
             }
             defaultText={
-              currentStep === TOTAL_STEPS
+              currentStep === totalSteps
                 ? isSocialOnboarding
                   ? "확인"
                   : "가입하고 시작하기"
-                : "확인"
+                : "다음"
             }
             onClick={handleNext}
             className="w-full py-3.5 text-base"

@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "../../packages/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#FAFAF8"
     },
@@ -26,6 +26,14 @@
       "package": "com.vivid.mobile"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "../../packages/assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FAFAF8"
+        }
+      ],
       "expo-router",
       "expo-font",
       "expo-asset"

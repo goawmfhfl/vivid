@@ -13,6 +13,7 @@ interface PasswordFieldProps {
   error?: string;
   disabled?: boolean;
   autocomplete?: "current-password" | "new-password" | "off";
+  disableActiveStyle?: boolean;
 }
 
 export function PasswordField({
@@ -22,13 +23,14 @@ export function PasswordField({
   error,
   disabled = false,
   autocomplete = "current-password",
+  disableActiveStyle = false,
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
   const borderColor = error 
     ? COLORS.status.error 
-    : isFocused || value
+    : !disableActiveStyle && (isFocused || value)
       ? COLORS.brand.primary 
       : COLORS.border.light;
 
@@ -44,8 +46,12 @@ export function PasswordField({
         <Lock
           className="absolute left-0 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors"
           style={{ 
-            color: error ? COLORS.status.error : (value || isFocused ? COLORS.brand.primary : COLORS.text.tertiary),
-            opacity: value || isFocused ? 1 : 0.4,
+            color: error
+              ? COLORS.status.error
+              : !disableActiveStyle && (value || isFocused)
+              ? COLORS.brand.primary
+              : COLORS.text.tertiary,
+            opacity: !disableActiveStyle && (value || isFocused) ? 1 : 0.4,
           }}
         />
         <Input
@@ -69,10 +75,10 @@ export function PasswordField({
         <div 
           className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
           style={{
-            width: error || value || isFocused ? "100%" : "0%",
+            width: error || (!disableActiveStyle && (value || isFocused)) ? "100%" : "0%",
             backgroundColor: error 
               ? COLORS.status.error 
-              : value || isFocused
+              : !disableActiveStyle && (value || isFocused)
                 ? COLORS.brand.primary 
                 : "transparent",
           }}
@@ -86,12 +92,24 @@ export function PasswordField({
           {showPassword ? (
             <EyeOff
               className="w-5 h-5"
-              style={{ color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary) }}
+              style={{
+                color: error
+                  ? COLORS.status.error
+                  : !disableActiveStyle && value
+                  ? COLORS.brand.primary
+                  : COLORS.text.tertiary,
+              }}
             />
           ) : (
             <Eye
               className="w-5 h-5"
-              style={{ color: error ? COLORS.status.error : (value ? COLORS.brand.primary : COLORS.text.tertiary) }}
+              style={{
+                color: error
+                  ? COLORS.status.error
+                  : !disableActiveStyle && value
+                  ? COLORS.brand.primary
+                  : COLORS.text.tertiary,
+              }}
             />
           )}
         </button>

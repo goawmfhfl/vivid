@@ -4,6 +4,7 @@ import { EmailField } from "@/components/forms/EmailField";
 import { PasswordField } from "@/components/forms/PasswordField";
 import { NameField } from "@/components/forms/NameField";
 import { COLORS } from "@/lib/design-system";
+import { CheckCircle2 } from "lucide-react";
 
 type EmailCheckStatus = "idle" | "checking" | "available" | "taken";
 
@@ -21,6 +22,7 @@ interface LoginInfoStepProps {
   onPasswordChange: (value: string) => void;
   onNameChange?: (value: string) => void;
   onClearError: (field: "email" | "password" | "name") => void;
+  showNameField?: boolean;
 }
 
 export function LoginInfoStep({
@@ -37,9 +39,12 @@ export function LoginInfoStep({
   onPasswordChange,
   onNameChange,
   onClearError,
+  showNameField = true,
 }: LoginInfoStepProps) {
+  const isEmailCheckPassed = emailCheckStatus === "available";
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mt-16">
       <header>
         <h1
           className="mb-2 text-2xl font-semibold leading-tight sm:text-3xl"
@@ -55,7 +60,7 @@ export function LoginInfoStep({
             ? email
               ? "소셜 로그인에서 가져온 이메일로 계속 진행해요."
               : "연동 계정에 이메일이 없어요. 서비스 이용을 위해 이메일을 입력해주세요."
-            : "이메일, 비밀번호, 닉네임을 입력해 주세요."}
+            : "이메일과 비밀번호를 입력해 주세요."}
         </p>
       </header>
 
@@ -70,33 +75,40 @@ export function LoginInfoStep({
             placeholder="example@gmail.com"
             error={emailError}
             disabled={isSocialMode && Boolean(email)}
+            disableActiveStyle
+            rightAction={
+              !isSocialMode && onCheckEmail ? (
+                <button
+                  type="button"
+                  onClick={onCheckEmail}
+                  disabled={emailCheckStatus === "checking" || !email.trim()}
+                  className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                  style={{
+                    borderColor: isEmailCheckPassed
+                      ? COLORS.brand.primary
+                      : COLORS.border.light,
+                    color: isEmailCheckPassed
+                      ? COLORS.brand.primary
+                      : COLORS.text.secondary,
+                    backgroundColor: isEmailCheckPassed
+                      ? `${COLORS.brand.light}20`
+                      : COLORS.background.base,
+                  }}
+                >
+                  {isEmailCheckPassed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {emailCheckStatus === "checking"
+                    ? "확인 중..."
+                    : isEmailCheckPassed
+                    ? "확인 완료"
+                    : "중복 확인"}
+                </button>
+              ) : undefined
+            }
           />
-          {!isSocialMode && onCheckEmail && (
-            <div className="mt-2 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onCheckEmail}
-                disabled={emailCheckStatus === "checking" || !email.trim()}
-                className="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
-                style={{
-                  borderColor: COLORS.border.light,
-                  color: COLORS.text.secondary,
-                  backgroundColor: COLORS.background.base,
-                }}
-              >
-                {emailCheckStatus === "checking" ? "확인 중..." : "중복 확인"}
-              </button>
-              {emailCheckStatus === "available" && (
-                <span className="text-sm" style={{ color: COLORS.brand.primary }}>
-                  사용 가능한 이메일이에요.
-                </span>
-              )}
-              {emailCheckStatus === "taken" && (
-                <span className="text-sm" style={{ color: COLORS.status.error }}>
-                  이미 사용 중인 이메일입니다.
-                </span>
-              )}
-            </div>
+          {isEmailCheckPassed && (
+            <p className="mt-2 text-xs" style={{ color: COLORS.brand.primary }}>
+              사용 가능한 이메일입니다.
+            </p>
           )}
         </div>
 
@@ -111,8 +123,9 @@ export function LoginInfoStep({
               placeholder="영문+숫자 8자 이상 입력"
               error={passwordError}
               autocomplete="new-password"
+              disableActiveStyle
             />
-            {onNameChange && (
+            {showNameField && onNameChange && (
               <NameField
                 value={name}
                 onChange={(value) => {

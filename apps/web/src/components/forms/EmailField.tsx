@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { AlertCircle, Mail } from "lucide-react";
 import { Input } from "../ui/Input";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
@@ -12,6 +13,8 @@ interface EmailFieldProps {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  rightAction?: ReactNode;
+  disableActiveStyle?: boolean;
 }
 
 export function EmailField({
@@ -20,12 +23,19 @@ export function EmailField({
   placeholder = "example@gmail.com",
   error,
   disabled = false,
+  rightAction,
+  disableActiveStyle = false,
 }: EmailFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const hasRightAction = Boolean(rightAction);
+  const lineInsetRight = hasRightAction ? "7.25rem" : "0";
+  const isActiveLine = disableActiveStyle
+    ? Boolean(error)
+    : Boolean(error || value || isFocused);
 
   const borderColor = error 
     ? COLORS.status.error 
-    : isFocused || value
+    : !disableActiveStyle && (isFocused || value)
       ? COLORS.brand.primary 
       : COLORS.border.light;
 
@@ -41,8 +51,12 @@ export function EmailField({
         <Mail
           className="absolute left-0 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors"
           style={{ 
-            color: error ? COLORS.status.error : (value || isFocused ? COLORS.brand.primary : COLORS.text.tertiary),
-            opacity: value || isFocused ? 1 : 0.4,
+            color: error
+              ? COLORS.status.error
+              : !disableActiveStyle && (value || isFocused)
+              ? COLORS.brand.primary
+              : COLORS.text.tertiary,
+            opacity: !disableActiveStyle && (value || isFocused) ? 1 : 0.4,
           }}
         />
         <Input
@@ -52,25 +66,34 @@ export function EmailField({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder={placeholder}
-          className="pl-8 pr-4 py-3.5 border-0 border-b-2 rounded-none transition-all focus:ring-0 focus:outline-none"
+          className="pl-8 pr-4 py-3.5 border-0 rounded-none transition-all focus:ring-0 focus:outline-none"
           disabled={disabled}
           style={{
             backgroundColor: "transparent",
             fontSize: "16px",
             paddingLeft: "2rem",
-            borderBottomColor: borderColor,
-            borderBottomWidth: "2px",
+            paddingRight: rightAction ? "7.25rem" : "1rem",
           }}
         />
-        <div 
-          className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
+        {rightAction && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            {rightAction}
+          </div>
+        )}
+        <div
+          className="absolute bottom-0 left-0 h-0.5"
           style={{
-            width: error || value || isFocused ? "100%" : "0%",
-            backgroundColor: error 
-              ? COLORS.status.error 
-              : value || isFocused
-                ? COLORS.brand.primary 
-                : "transparent",
+            right: lineInsetRight,
+            backgroundColor: COLORS.border.light,
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 h-0.5 transition-transform duration-300"
+          style={{
+            right: lineInsetRight,
+            transform: isActiveLine ? "scaleX(1)" : "scaleX(0)",
+            transformOrigin: "left",
+            backgroundColor: borderColor,
           }}
         />
       </div>

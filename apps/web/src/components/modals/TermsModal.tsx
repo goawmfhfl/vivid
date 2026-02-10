@@ -277,7 +277,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             </h3>
             <div style={{ fontSize: "0.8rem", color: "#4E4B46" }}>
               <p>
-                이용자는 문자·이메일 등으로 제공되는 서비스 소식, 이용 팁,
+                이용자는 이메일 등으로 제공되는 서비스 소식, 이용 팁,
                 이벤트 안내 등을 위한 마케팅 정보 수신에 선택적으로 동의할 수
                 있습니다.
               </p>

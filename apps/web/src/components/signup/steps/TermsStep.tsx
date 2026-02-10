@@ -5,10 +5,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { COLORS } from "@/lib/design-system";
 
 interface TermsStepProps {
+  agreeAge14: boolean;
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
   termsError?: string;
+  onAge14Change: (checked: boolean) => void;
   onTermsChange: (checked: boolean) => void;
   onAIChange: (checked: boolean) => void;
   onMarketingChange: (checked: boolean) => void;
@@ -18,10 +20,12 @@ interface TermsStepProps {
 }
 
 export function TermsStep({
+  agreeAge14,
   agreeTerms,
   agreeAI,
   agreeMarketing,
   termsError,
+  onAge14Change,
   onTermsChange,
   onAIChange,
   onMarketingChange,
@@ -29,7 +33,7 @@ export function TermsStep({
   onShowTerms,
   onShowAI,
 }: TermsStepProps) {
-  const allChecked = agreeTerms && agreeAI && agreeMarketing;
+  const allChecked = agreeAge14 && agreeTerms && agreeAI && agreeMarketing;
 
   return (
     <div className="space-y-8">
@@ -68,9 +72,11 @@ export function TermsStep({
 
         <div className="pt-2">
           <TermsAgreement
+            agreeAge14={agreeAge14}
             agreeTerms={agreeTerms}
             agreeAI={agreeAI}
             agreeMarketing={agreeMarketing}
+            onAge14Change={onAge14Change}
             onTermsChange={onTermsChange}
             onAIChange={onAIChange}
             onMarketingChange={onMarketingChange}

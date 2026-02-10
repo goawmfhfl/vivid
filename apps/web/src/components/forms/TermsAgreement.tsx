@@ -4,9 +4,11 @@ import { AlertCircle } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 
 interface TermsAgreementProps {
+  agreeAge14: boolean;
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
+  onAge14Change: (checked: boolean) => void;
   onTermsChange: (checked: boolean) => void;
   onAIChange: (checked: boolean) => void;
   onMarketingChange: (checked: boolean) => void;
@@ -19,9 +21,11 @@ interface TermsAgreementProps {
 }
 
 export function TermsAgreement({
+  agreeAge14,
   agreeTerms,
   agreeAI,
   agreeMarketing,
+  onAge14Change,
   onTermsChange,
   onAIChange,
   onMarketingChange,
@@ -31,10 +35,27 @@ export function TermsAgreement({
   error,
   showAgreeAllButton = true,
 }: TermsAgreementProps) {
-  const allChecked = agreeTerms && agreeAI && agreeMarketing;
+  const allChecked = agreeAge14 && agreeTerms && agreeAI && agreeMarketing;
 
   return (
     <div className="space-y-4 pt-2 px-0">
+      <div className="flex items-start gap-2">
+        <Checkbox
+          id="age14"
+          checked={agreeAge14}
+          onCheckedChange={(checked) => onAge14Change(checked === true)}
+          className="mt-0.5 flex-shrink-0"
+        />
+        <label
+          htmlFor="age14"
+          className="flex-1 cursor-pointer"
+          style={{ color: "#333333", fontSize: "0.75rem", lineHeight: "1.4" }}
+        >
+          <span style={{ color: "#EF4444" }}>[필수]</span>{" "}
+          <span>만 14세 이상입니다.</span>
+        </label>
+      </div>
+
       <div className="flex items-start gap-2">
         <Checkbox
           id="terms"
@@ -104,7 +125,7 @@ export function TermsAgreement({
           style={{ color: "#333333", fontSize: "0.75rem", lineHeight: "1.4" }}
         >
           <span style={{ color: "#6B7A6F" }}>[선택]</span>{" "}
-          <span>마케팅 정보 (문자·이메일) 수신 동의</span>
+          <span>마케팅 정보 (이메일) 수신 동의</span>
         </label>
       </div>
 

@@ -14,12 +14,9 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import { NameField } from "./forms/NameField";
 import { EmailField } from "./forms/EmailField";
-import { PhoneField } from "./forms/PhoneField";
 import { SubmitButton } from "./forms/SubmitButton";
 import { AuthHeader } from "./forms/AuthHeader";
-import { Input } from "./ui/Input";
 import { Checkbox } from "./ui/checkbox";
-import { PhoneVerificationModal } from "./profile/PhoneVerificationModal";
 import { DeleteAccountDialog } from "./profile/DeleteAccountDialog";
 import { COLORS } from "@/lib/design-system";
 import {
@@ -56,25 +53,18 @@ const SectionCard = ({ title, description, children }: SectionCardProps) => (
 export function ProfileSettingsView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: currentUser, isLoading } = useCurrentUser();
+  const { data: currentUser } = useCurrentUser();
   const updateProfileMutation = useUpdateProfile();
 
   const [formData, setFormData] = useState({
     name: "",
-    phone: "",
-    birthYear: "",
-    gender: "",
     agreeMarketing: false,
   });
   const [errors, setErrors] = useState<{
     name?: string;
-    phone?: string;
-    birthYear?: string;
-    gender?: string;
     general?: string;
   }>({});
   const [success, setSuccess] = useState(false);
-  const [isPhoneEditOpen, setIsPhoneEditOpen] = useState(false);
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -100,6 +90,12 @@ export function ProfileSettingsView() {
   const { data: appleIdentity, isLoading: isLoadingApple } = useAppleIdentity();
   const linkAppleMutation = useLinkApple();
   const isAppleLinked = Boolean(appleIdentity);
+  const socialLinkButtonStyle = {
+    backgroundColor: COLORS.brand.primary,
+    color: COLORS.text.white,
+    border: `1px solid ${COLORS.brand.primary}`,
+    boxShadow: `0 2px 8px ${COLORS.brand.primary}30`,
+  };
 
   const { showToast } = useToast();
 
@@ -141,9 +137,6 @@ export function ProfileSettingsView() {
       const metadata = currentUser.user_metadata;
       setFormData({
         name: (metadata.name as string) || "",
-        phone: (metadata.phone as string) || "",
-        birthYear: (metadata.birthYear as string) || "",
-        gender: (metadata.gender as string) || "",
         agreeMarketing: Boolean(metadata.agreeMarketing),
       });
     }
@@ -152,37 +145,9 @@ export function ProfileSettingsView() {
   const updateField = (field: keyof typeof formData, value: string | boolean) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-  const openPhoneEditModal = () => {
-    setIsPhoneEditOpen(true);
-  };
-
-  const closePhoneEditModal = () => {
-    setIsPhoneEditOpen(false);
-  };
-
-
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!formData.name.trim()) newErrors.name = "이름을 입력해주세요.";
-    if (formData.phone.trim()) {
-      const phoneRegex = /^[0-9-]+$/;
-      const cleaned = formData.phone.replace(/\s/g, "");
-      if (!phoneRegex.test(cleaned) || cleaned.length < 10) {
-        newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
-      }
-    }
-    if (formData.birthYear) {
-      const year = Number(formData.birthYear);
-      const currentYear = new Date().getFullYear();
-      if (
-        isNaN(year) ||
-        formData.birthYear.length !== 4 ||
-        year < 1900 ||
-        year > currentYear
-      ) {
-        newErrors.birthYear = "올바른 출생년도(YYYY)를 입력해주세요.";
-      }
-    }
     setErrors(newErrors);
     return newErrors;
   };
@@ -199,11 +164,6 @@ export function ProfileSettingsView() {
     try {
       await updateProfileMutation.mutateAsync({
         name: formData.name.trim(),
-        ...(hasEmailProvider && formData.phone.trim() && {
-          phone: formData.phone.trim(),
-        }),
-        birthYear: formData.birthYear || "",
-        gender: formData.gender || "",
         agreeMarketing: formData.agreeMarketing,
       });
       setSuccess(true);
@@ -213,45 +173,11 @@ export function ProfileSettingsView() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div
-        className="flex min-h-screen items-center justify-center px-4 py-8"
-        style={{ backgroundColor: "#FAFAF8" }}
-      >
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900" />
-          <p className="text-sm text-[#6B7A6F]">로딩 중...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className="min-h-screen px-4 py-8"
       style={{ backgroundColor: "#FAFAF8" }}
     >
-      <PhoneVerificationModal
-        open={isPhoneEditOpen}
-        onClose={closePhoneEditModal}
-        onApply={async (phone) => {
-          try {
-            await updateProfileMutation.mutateAsync({
-              phone: phone.trim(),
-            });
-            updateField("phone", phone);
-            setIsPhoneEditOpen(false);
-            setSuccess(true);
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "전화번호 업데이트에 실패했습니다.";
-            setErrors({ general: message });
-          }
-        }}
-      />
       <div className="mx-auto w-full max-w-2xl">
         <button
           onClick={() => router.back()}
@@ -282,7 +208,7 @@ export function ProfileSettingsView() {
             title="기본 프로필"
             description={
               hasEmailProvider
-                ? "이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+                ? "이름, 이메일은 계정 보호와 이메일 찾기에 활용돼요."
                 : "VIVID에서 사용할 이름을 설정해주세요."
             }
           >
@@ -309,146 +235,6 @@ export function ProfileSettingsView() {
                 disabled={updateProfileMutation.isPending}
               />
             </div>
-
-            {hasEmailProvider && (
-              <div>
-                <PhoneField
-                  value={formData.phone}
-                  onChange={(value) => {
-                    updateField("phone", value);
-                    setErrors((prev) => ({ ...prev, phone: undefined }));
-                  }}
-                  error={errors.phone}
-                  disabled={
-                    Boolean(formData.phone) || updateProfileMutation.isPending
-                  }
-                  actionSlot={
-                    formData.phone ? (
-                      <button
-                        type="button"
-                        onClick={openPhoneEditModal}
-                        className="px-3 py-2 rounded-lg text-sm font-medium"
-                        style={{
-                          backgroundColor: COLORS.background.base,
-                          color: COLORS.text.secondary,
-                          border: `1px solid ${COLORS.border.light}`,
-                        }}
-                        disabled={updateProfileMutation.isPending}
-                      >
-                        수정
-                      </button>
-                    ) : null
-                  }
-                />
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="맞춤 VIVID 정보"
-            description="정확한 AI VIVID를 위해 선택 정보를 입력해주세요."
-          >
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  className="mb-2 block text-sm font-medium text-[#333333]"
-                  htmlFor="profile-birth"
-                >
-                  출생년도
-                </label>
-                <Input
-                  id="profile-birth"
-                  type="text"
-                  inputMode="numeric"
-                  value={formData.birthYear}
-                  onChange={(e) => {
-                    const cleaned = e.target.value
-                      .replace(/[^0-9]/g, "")
-                      .slice(0, 4);
-                    updateField("birthYear", cleaned);
-                    setErrors((prev) => ({ ...prev, birthYear: undefined }));
-                  }}
-                  placeholder="예) 1994"
-                  className="w-full"
-                  style={{
-                    borderColor: errors.birthYear ? "#EF4444" : "#EFE9E3",
-                    backgroundColor: "white",
-                  }}
-                  disabled={updateProfileMutation.isPending}
-                />
-                {errors.birthYear && (
-                  <p className="mt-1 text-xs text-[#EF4444]">
-                    {errors.birthYear}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  className="mb-2 block text-sm font-medium text-[#333333]"
-                  htmlFor="profile-gender"
-                >
-                  성별
-                </label>
-                <select
-                  id="profile-gender"
-                  value={formData.gender}
-                  onChange={(e) => {
-                    updateField("gender", e.target.value);
-                    setErrors((prev) => ({ ...prev, gender: undefined }));
-                  }}
-                  className="w-full rounded-md border px-3 py-2 text-sm transition-colors"
-                  style={{
-                    borderColor: errors.gender ? "#EF4444" : "#EFE9E3",
-                    backgroundColor: "white",
-                    color: formData.gender ? "#333333" : "#9CA3AF",
-                  }}
-                  disabled={updateProfileMutation.isPending}
-                >
-                  <option value="">선택해주세요</option>
-                  <option value="female">여성</option>
-                  <option value="male">남성</option>
-                  <option value="other">기타/선택 안함</option>
-                </select>
-                {errors.gender && (
-                  <p className="mt-1 text-xs text-[#EF4444]">{errors.gender}</p>
-                )}
-              </div>
-            </div>
-            {(formData.birthYear || formData.gender) && (
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await updateProfileMutation.mutateAsync({
-                        birthYear: "",
-                        gender: "",
-                      });
-                      setFormData((prev) => ({
-                        ...prev,
-                        birthYear: "",
-                        gender: "",
-                      }));
-                      setSuccess(true);
-                      showToast("맞춤 정보가 삭제되었습니다.", 3000);
-                    } catch (err) {
-                      const msg =
-                        err instanceof Error ? err.message : "삭제에 실패했습니다.";
-                      setErrors({ general: msg });
-                    }
-                  }}
-                  disabled={updateProfileMutation.isPending}
-                  className="text-sm font-medium"
-                  style={{
-                    color: COLORS.text.muted,
-                    textDecoration: "underline",
-                  }}
-                >
-                  맞춤 정보 삭제
-                </button>
-              </div>
-            )}
           </SectionCard>
 
           <SectionCard
@@ -506,11 +292,8 @@ export function ProfileSettingsView() {
                           setErrors({ general: message });
                         }
                       }}
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                      style={{
-                        backgroundColor: COLORS.brand.primary,
-                        color: "white",
-                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={socialLinkButtonStyle}
                       disabled={linkKakaoMutation.isPending || isLoadingKakao}
                     >
                       {linkKakaoMutation.isPending ? "연동 중..." : "연동하기"}
@@ -571,11 +354,8 @@ export function ProfileSettingsView() {
                           setErrors({ general: message });
                         }
                       }}
-                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                      style={{
-                        backgroundColor: COLORS.text.primary,
-                        color: COLORS.text.white,
-                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={socialLinkButtonStyle}
                       disabled={linkAppleMutation.isPending || isLoadingApple}
                     >
                       {linkAppleMutation.isPending ? "연동 중..." : "연동하기"}
@@ -609,7 +389,7 @@ export function ProfileSettingsView() {
                   마케팅 정보 수신 동의
                 </p>
                 <p className="mt-1 text-xs text-[#6B7A6F]">
-                  문자/이메일로 서비스 꿀팁, 업데이트, 이벤트 소식을 보내드려요.
+                  이메일로 서비스 꿀팁, 업데이트, 이벤트 소식을 보내드려요.
                   언제든지 철회할 수 있습니다.
                 </p>
               </div>

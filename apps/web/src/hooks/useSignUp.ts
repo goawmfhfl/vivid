@@ -11,6 +11,7 @@ export interface SignUpData {
   phone?: string; // 선택 (간편 가입)
   birthYear?: string;
   gender?: string;
+  agreeAge14: boolean;
   agreeTerms: boolean;
   agreeAI: boolean;
   agreeMarketing: boolean;
@@ -41,6 +42,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     phone,
     birthYear,
     gender,
+    agreeAge14,
     agreeTerms,
     agreeAI,
     agreeMarketing,
@@ -53,7 +55,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
     throw new SignUpError("이름을 입력해주세요.");
   }
 
-  if (!agreeTerms || !agreeAI) {
+  if (!agreeAge14 || !agreeTerms || !agreeAI) {
     throw new SignUpError("필수 약관에 동의해주세요.");
   }
 
@@ -92,6 +94,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
         }),
         ...(birthYear?.trim() && { birthYear }),
         ...(gender?.trim() && { gender }),
+        agreeAge14,
         agreeTerms,
         agreeAI,
         agreeMarketing,
@@ -129,6 +132,7 @@ const signUpUser = async (data: SignUpData): Promise<SignUpResponse> => {
 
       // 1. Supabase Auth를 통한 회원가입 (전화/생년/성별은 선택)
       const signUpMetadata: Record<string, unknown> = {
+        agreeAge14,
         agreeTerms,
         agreeAI,
         agreeMarketing,
