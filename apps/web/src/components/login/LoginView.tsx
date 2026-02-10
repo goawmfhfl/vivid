@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath } from "@/lib/navigation";
 import { FindEmailDialog } from "./FindEmailDialog";
 import { FindPasswordDialog } from "./FindPasswordDialog";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, GRADIENT_UTILS, SHADOWS } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { useModalStore } from "@/store/useModalStore";
 import { useToast } from "@/hooks/useToast";
@@ -172,19 +172,40 @@ export function LoginView() {
           {/* General Error */}
           {errors.general && (
             <div
-              className="p-4 rounded-lg flex items-center gap-2"
+              className="relative overflow-hidden p-4 rounded-xl flex items-start gap-3"
               style={{
-                backgroundColor: COLORS.status.errorLight,
-                border: `1px solid ${COLORS.status.error}`,
+                background: GRADIENT_UTILS.cardBackground(COLORS.status.error, 0.18, "rgba(255, 255, 255, 0.98)"),
+                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.status.error, "55")}`,
+                boxShadow: SHADOWS.default,
               }}
             >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 100%)",
+                }}
+              />
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 relative z-10"
+                style={{ backgroundColor: GRADIENT_UTILS.borderColor(COLORS.status.error, "22") }}
+              >
               <AlertCircle
-                className="w-5 h-5 flex-shrink-0"
+                className="w-4 h-4"
                 style={{ color: COLORS.status.error }}
               />
-              <p style={{ color: COLORS.status.errorDark, fontSize: "0.9rem" }}>
-                {errors.general}
-              </p>
+              </div>
+              <div className="relative z-10 min-w-0">
+                <p
+                  className="text-xs font-semibold mb-0.5"
+                  style={{ color: COLORS.status.errorDark, letterSpacing: "0.01em" }}
+                >
+                  로그인 오류
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: COLORS.status.errorDark }}>
+                  {errors.general}
+                </p>
+              </div>
             </div>
           )}
 

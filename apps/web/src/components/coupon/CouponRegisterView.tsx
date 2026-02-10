@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import { Search } from "lucide-react";
 import type { CouponVerification } from "@/types/coupon";
 import { supabase } from "@/lib/supabase";
 import { SystemModal } from "@/components/ui/modals/SystemModal";
 import { CouponTicket } from "@/components/coupon/CouponTicket";
+import { QUERY_KEYS } from "@/constants";
 
 interface SystemModalState {
   open: boolean;
@@ -15,6 +17,7 @@ interface SystemModalState {
 }
 
 export function CouponRegisterView() {
+  const queryClient = useQueryClient();
   const [code, setCode] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [verification, setVerification] =
@@ -104,6 +107,11 @@ export function CouponRegisterView() {
       setVerification((prev) =>
         prev && prev.coupon ? { ...prev, isUsed: true, isValid: true } : prev
       );
+      await supabase.auth.refreshSession();
+      // 쿠폰 적용 직후 사용자 메타데이터(구독 상태)를 즉시 동기화
+      await queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.CURRENT_USER],
+      });
       openSystemModal("쿠폰 적용 완료", "쿠폰이 성공적으로 적용되었습니다.");
     } catch (error) {
       console.error("쿠폰 적용 실패:", error);
