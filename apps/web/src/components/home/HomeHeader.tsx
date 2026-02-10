@@ -9,7 +9,7 @@ import {
 } from "../ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getLoginPath, getLoginFullUrl } from "@/lib/navigation";
+import { getLoginFullUrl } from "@/lib/navigation";
 import { COLORS, TYPOGRAPHY, SHADOWS, TRANSITIONS } from "@/lib/design-system";
 import { queryClient } from "@/app/providers";
 import { clearAllCache } from "@/lib/cache-utils";

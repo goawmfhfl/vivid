@@ -79,12 +79,13 @@ export function shouldShowBottomNav(pathname: string): boolean {
 /**
  * Footer를 표시할지 여부를 결정
  * 서비스 이용 페이지(데일리/주간/월간 입력/조회, 리포트)에서는 숨기고,
- * 프로필, 설정, 로그인/회원가입 페이지에서는 보여줌
+ * 프로필, 설정 페이지에서는 보여줌 (로그인·회원가입은 숨김)
  */
 const footerHiddenRules: RouteRule[] = [
   { type: "exact", value: "/" }, // 홈 (데일리 입력)
   { type: "regex", value: /^\/(\d{4}-\d{2}-\d{2})$/ }, // 날짜별 페이지
   { type: "prefix", value: "/login" }, // 로그인 랜딩·이메일 로그인 (개인정보처리방침 미노출)
+  { type: "prefix", value: "/signup" }, // 회원가입 페이지
   { type: "prefix", value: "/reports" }, // 리포트 페이지
   { type: "prefix", value: "/analysis" }, // 분석 페이지
   { type: "prefix", value: "/logs" }, // 로그 페이지

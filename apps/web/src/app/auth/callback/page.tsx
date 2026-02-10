@@ -12,12 +12,7 @@ import { COLORS } from "@/lib/design-system";
 const isProfileCompleted = (user: User) => {
   const metadata = user.user_metadata || {};
   return Boolean(
-    metadata.name &&
-      metadata.phone &&
-      metadata.birthYear &&
-      metadata.gender &&
-      metadata.agreeTerms &&
-      metadata.agreeAI
+    metadata.name && metadata.agreeTerms && metadata.agreeAI
   );
 };
 

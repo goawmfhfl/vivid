@@ -14,6 +14,8 @@ interface TermsAgreementProps {
   onShowTerms: () => void;
   onShowAI: () => void;
   error?: string;
+  /** false면 하단 '전체 동의하기' 버튼 숨김 (상단에 전체 동의 체크박스 사용 시) */
+  showAgreeAllButton?: boolean;
 }
 
 export function TermsAgreement({
@@ -27,11 +29,12 @@ export function TermsAgreement({
   onShowTerms,
   onShowAI,
   error,
+  showAgreeAllButton = true,
 }: TermsAgreementProps) {
   const allChecked = agreeTerms && agreeAI && agreeMarketing;
 
   return (
-    <div className="space-y-4 pt-2 px-2 sm:px-0">
+    <div className="space-y-4 pt-2 px-0">
       <div className="flex items-start gap-2">
         <Checkbox
           id="terms"
@@ -105,27 +108,29 @@ export function TermsAgreement({
         </label>
       </div>
 
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={() => onAgreeAll(!allChecked)}
-          className="w-full rounded-lg py-2 text-sm font-medium transition-colors"
-          style={{
-            backgroundColor: allChecked ? "#6B7A6F" : "#D1D5DB",
-            color: allChecked ? "white" : "white",
-            opacity: allChecked ? 1 : 0.6,
-          }}
-        >
-          전체 동의하기
-        </button>
-        <p
-          className="mt-1 text-center"
-          style={{ fontSize: "0.75rem", color: "#6B7A6F" }}
-        >
-          버튼을 누르면 필수·선택 항목이 모두 {allChecked ? "해제" : "동의"}
-          됩니다.
-        </p>
-      </div>
+      {showAgreeAllButton && (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => onAgreeAll(!allChecked)}
+            className="w-full rounded-lg py-2 text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: allChecked ? "#6B7A6F" : "#D1D5DB",
+              color: "white",
+              opacity: allChecked ? 1 : 0.6,
+            }}
+          >
+            전체 동의하기
+          </button>
+          <p
+            className="mt-1 text-center"
+            style={{ fontSize: "0.75rem", color: "#6B7A6F" }}
+          >
+            버튼을 누르면 필수·선택 항목이 모두 {allChecked ? "해제" : "동의"}
+            됩니다.
+          </p>
+        </div>
+      )}
 
       {error && (
         <p

@@ -13,7 +13,6 @@ import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, SPACING, SHADOWS } from "@/lib/design-system";
-import { ProfileUpdateModal } from "./ProfileUpdateModal";
 import { CircularProgress } from "./ui/CircularProgress";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
@@ -694,9 +693,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
         open={!!deletingRecordId}
         onOpenChange={(open) => !open && setDeletingRecordId(null)}
       />
-
-      {/* 프로필 업데이트 모달 */}
-      <ProfileUpdateModal />
     </div>
   );
 }

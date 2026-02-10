@@ -65,8 +65,7 @@ const linkAppleAccount = async (): Promise<void> => {
       error.message?.includes("identity_already_exists") ||
       error.code === "identity_already_exists"
     ) {
-      errorMessage =
-        "이 Apple 계정은 이미 다른 사용자에게 연결되어 있습니다. 다른 Apple 계정을 사용하거나 관리자에게 문의해주세요.";
+      errorMessage = "이미 사용 중인 계정입니다.";
     }
 
     console.error("[Apple Linking Error]", {

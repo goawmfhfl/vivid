@@ -31,6 +31,7 @@ import {
   useLinkApple,
 } from "@/hooks/useAppleLinking";
 import { useToast } from "@/hooks/useToast";
+import { supabase } from "@/lib/supabase";
 
 type SectionCardProps = {
   title: string;
@@ -77,6 +78,18 @@ export function ProfileSettingsView() {
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hasEmailProvider, setHasEmailProvider] = useState<boolean>(true);
+
+  // 이메일 로그인 유저 여부 (identities에 email provider 있으면 true)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    supabase.auth.getSession().then(({ data }) => {
+      const identities = data.session?.user?.identities ?? [];
+      setHasEmailProvider(
+        identities.some((i) => i.provider === "email")
+      );
+    });
+  }, [currentUser?.id]);
 
   // 카카오 연동 상태 (연동 해제 기능 없음)
   const { data: kakaoIdentity, isLoading: isLoadingKakao } = useKakaoIdentity();
@@ -114,8 +127,7 @@ export function ProfileSettingsView() {
       // 연동 에러 메시지 (카카오/애플 공통)
       if (params.get("error") === "social_already_linked" || params.get("error") === "kakao_already_linked") {
         const errorMessage =
-          params.get("message") ||
-          "이 소셜 계정은 이미 다른 사용자에게 연결되어 있습니다.";
+          params.get("message") || "이미 사용 중인 계정입니다.";
         setLinkError(errorMessage);
         setLinkSuccess(false);
         // URL에서 파라미터 제거
@@ -152,19 +164,14 @@ export function ProfileSettingsView() {
   const validate = () => {
     const newErrors: typeof errors = {};
     if (!formData.name.trim()) newErrors.name = "이름을 입력해주세요.";
-    if (!formData.phone.trim()) {
-      newErrors.phone = "전화번호를 입력해주세요.";
-    } else {
+    if (formData.phone.trim()) {
       const phoneRegex = /^[0-9-]+$/;
       const cleaned = formData.phone.replace(/\s/g, "");
       if (!phoneRegex.test(cleaned) || cleaned.length < 10) {
         newErrors.phone = "올바른 전화번호 형식을 입력해주세요.";
       }
     }
-
-    if (!formData.birthYear) {
-      newErrors.birthYear = "출생년도를 입력해주세요.";
-    } else {
+    if (formData.birthYear) {
       const year = Number(formData.birthYear);
       const currentYear = new Date().getFullYear();
       if (
@@ -176,11 +183,6 @@ export function ProfileSettingsView() {
         newErrors.birthYear = "올바른 출생년도(YYYY)를 입력해주세요.";
       }
     }
-
-    if (!formData.gender) {
-      newErrors.gender = "성별을 선택해주세요.";
-    }
-
     setErrors(newErrors);
     return newErrors;
   };
@@ -197,9 +199,11 @@ export function ProfileSettingsView() {
     try {
       await updateProfileMutation.mutateAsync({
         name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        birthYear: formData.birthYear,
-        gender: formData.gender,
+        ...(hasEmailProvider && formData.phone.trim() && {
+          phone: formData.phone.trim(),
+        }),
+        birthYear: formData.birthYear || "",
+        gender: formData.gender || "",
         agreeMarketing: formData.agreeMarketing,
       });
       setSuccess(true);
@@ -276,18 +280,22 @@ export function ProfileSettingsView() {
 
           <SectionCard
             title="기본 프로필"
-            description="이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+            description={
+              hasEmailProvider
+                ? "이름, 이메일, 연락처는 계정 보호와 이메일 찾기에 활용돼요."
+                : "VIVID에서 사용할 이름을 설정해주세요."
+            }
           >
-            <div>
-              <EmailField
-                value={currentUser?.email || ""}
-                onChange={() => {
-                  // 이메일은 수정 불가
-                }}
-                placeholder="이메일"
-                disabled={true}
-              />
-            </div>
+            {hasEmailProvider && (
+              <div>
+                <EmailField
+                  value={currentUser?.email || ""}
+                  onChange={() => {}}
+                  placeholder="이메일"
+                  disabled={true}
+                />
+              </div>
+            )}
 
             <div>
               <NameField
@@ -302,34 +310,38 @@ export function ProfileSettingsView() {
               />
             </div>
 
-            <div>
-              <PhoneField
-                value={formData.phone}
-                onChange={(value) => {
-                  updateField("phone", value);
-                  setErrors((prev) => ({ ...prev, phone: undefined }));
-                }}
-                error={errors.phone}
-                disabled={Boolean(formData.phone) || updateProfileMutation.isPending}
-                actionSlot={
-                  formData.phone ? (
-                    <button
-                      type="button"
-                      onClick={openPhoneEditModal}
-                      className="px-3 py-2 rounded-lg text-sm font-medium"
-                      style={{
-                        backgroundColor: COLORS.background.base,
-                        color: COLORS.text.secondary,
-                        border: `1px solid ${COLORS.border.light}`,
-                      }}
-                      disabled={updateProfileMutation.isPending}
-                    >
-                      수정
-                    </button>
-                  ) : null
-                }
-              />
-            </div>
+            {hasEmailProvider && (
+              <div>
+                <PhoneField
+                  value={formData.phone}
+                  onChange={(value) => {
+                    updateField("phone", value);
+                    setErrors((prev) => ({ ...prev, phone: undefined }));
+                  }}
+                  error={errors.phone}
+                  disabled={
+                    Boolean(formData.phone) || updateProfileMutation.isPending
+                  }
+                  actionSlot={
+                    formData.phone ? (
+                      <button
+                        type="button"
+                        onClick={openPhoneEditModal}
+                        className="px-3 py-2 rounded-lg text-sm font-medium"
+                        style={{
+                          backgroundColor: COLORS.background.base,
+                          color: COLORS.text.secondary,
+                          border: `1px solid ${COLORS.border.light}`,
+                        }}
+                        disabled={updateProfileMutation.isPending}
+                      >
+                        수정
+                      </button>
+                    ) : null
+                  }
+                />
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard
@@ -403,6 +415,40 @@ export function ProfileSettingsView() {
                 )}
               </div>
             </div>
+            {(formData.birthYear || formData.gender) && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await updateProfileMutation.mutateAsync({
+                        birthYear: "",
+                        gender: "",
+                      });
+                      setFormData((prev) => ({
+                        ...prev,
+                        birthYear: "",
+                        gender: "",
+                      }));
+                      setSuccess(true);
+                      showToast("맞춤 정보가 삭제되었습니다.", 3000);
+                    } catch (err) {
+                      const msg =
+                        err instanceof Error ? err.message : "삭제에 실패했습니다.";
+                      setErrors({ general: msg });
+                    }
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  className="text-sm font-medium"
+                  style={{
+                    color: COLORS.text.muted,
+                    textDecoration: "underline",
+                  }}
+                >
+                  맞춤 정보 삭제
+                </button>
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard
@@ -597,12 +643,7 @@ export function ProfileSettingsView() {
           <SubmitButton
             isLoading={updateProfileMutation.isPending}
             isValid={
-              Boolean(
-                formData.name &&
-                  formData.phone &&
-                  formData.birthYear &&
-                  formData.gender
-              ) && !updateProfileMutation.isPending
+              Boolean(formData.name?.trim()) && !updateProfileMutation.isPending
             }
             loadingText="저장 중..."
             defaultText="변경 사항 저장하기"

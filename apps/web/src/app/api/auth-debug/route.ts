@@ -11,11 +11,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const ts = new Date().toISOString();
     const line = `[auth-debug ${ts}] ${JSON.stringify(body)}`;
-    // eslint-disable-next-line no-console
     console.log("\n" + "─".repeat(60));
-    // eslint-disable-next-line no-console
     console.log(line);
-    // eslint-disable-next-line no-console
     console.log("─".repeat(60) + "\n");
     return NextResponse.json({ ok: true });
   } catch {
