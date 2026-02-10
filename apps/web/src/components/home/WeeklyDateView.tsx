@@ -216,11 +216,15 @@ export function WeeklyDateView({
 
   const effectiveVividFeedbackDates =
     vividFeedbackDates !== undefined ? vividFeedbackDates : aiFeedbackDates;
+  const dragOffset =
+    isDragging && mouseStart !== null && mouseEnd !== null
+      ? Math.round(mouseEnd - mouseStart)
+      : null;
 
   return (
     <div
       ref={containerRef}
-      className="relative mb-6 pb-3 md:pb-4 overflow-hidden -mx-4 px-4"
+      className="relative mb-6 pb-3 md:pb-4 overflow-hidden -mx-4 px-4 max-[411px]:px-2"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -243,7 +247,7 @@ export function WeeklyDateView({
           // 스켈레톤 UI 표시
           <motion.div
             key="skeleton"
-            className="grid grid-cols-7 gap-2 md:gap-4"
+            className="grid grid-cols-7 gap-2 max-[411px]:gap-1.5 md:gap-4"
           >
             {Array.from({ length: 7 }).map((_, index) => (
               <DateButtonSkeleton key={`skeleton-${index}`} />
@@ -265,12 +269,13 @@ export function WeeklyDateView({
                 duration: 0.1,
               },
             }}
-            className="grid grid-cols-7 gap-2 md:gap-4"
+            className="grid grid-cols-7 gap-2 max-[411px]:gap-1.5 md:gap-4"
             style={{
-              transform:
-                isDragging && mouseStart && mouseEnd
-                  ? `translateX(${mouseEnd - mouseStart}px)`
-                  : undefined,
+              transform: dragOffset !== null ? `translateX(${dragOffset}px)` : undefined,
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              WebkitFontSmoothing: "antialiased",
+              textRendering: "optimizeLegibility",
             }}
           >
             {weekDates.map((date, index) => {
@@ -291,11 +296,11 @@ export function WeeklyDateView({
               return (
                 <div
                   key={dateIso}
-                  className="flex flex-col items-center gap-1 md:gap-2"
+                  className="flex flex-col items-center gap-1 max-[411px]:gap-0.5 md:gap-2"
                 >
                   {/* 요일 */}
                   <div
-                    className={`text-xs md:text-sm font-semibold ${TRANSITIONS.colors}`}
+                    className={`text-xs max-[411px]:text-[11px] md:text-sm font-semibold ${TRANSITIONS.colors}`}
                     style={{
                       color: isActive
                         ? COLORS.text.primary
@@ -310,7 +315,7 @@ export function WeeklyDateView({
                   {/* 날짜 버튼 — 리포트 카드와 동일한 박스 스타일 */}
                   <button
                     onClick={() => handleDateClick(date)}
-                    className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center text-sm md:text-base font-semibold ${TRANSITIONS.default} relative`}
+                    className={`w-12 h-12 max-[411px]:w-10 max-[411px]:h-10 md:w-16 md:h-16 rounded-xl max-[411px]:rounded-lg md:rounded-2xl flex items-center justify-center text-sm max-[411px]:text-[13px] md:text-base font-semibold ${TRANSITIONS.default} relative`}
                     style={{
                       background: isActive
                         ? COLORS.brand.primary
@@ -320,16 +325,16 @@ export function WeeklyDateView({
                         ? `1.5px solid ${COLORS.brand.primary}`
                         : `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
                       boxShadow: isActive ? SHADOWS.elevation3 : SHADOWS.default,
-                      transform: isActive
-                        ? "scale(1.05) md:scale(1.08)"
-                        : "scale(1)",
+                      transform: "none",
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
                         e.currentTarget.style.background =
                           GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
                         e.currentTarget.style.boxShadow = SHADOWS.elevation2;
-                        e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.transform = "none";
                         e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
                           COLORS.brand.light,
                           "50"
@@ -353,12 +358,12 @@ export function WeeklyDateView({
                     {/* daily-vivid dot 표시 */}
                     {(hasDailyVivid || hasReviewFeedback) && (
                       <div
-                        className="absolute bottom-1 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
+                        className="absolute bottom-1 max-[411px]:bottom-0.5 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
                         style={{ pointerEvents: "none" }}
                       >
                         {hasDailyVivid && (
                           <div
-                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                            className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
                             style={{
                               backgroundColor: vividDotColor,
                             }}
@@ -366,7 +371,7 @@ export function WeeklyDateView({
                         )}
                         {hasReviewFeedback && (
                           <div
-                            className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full"
+                            className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
                             style={{
                               backgroundColor: reviewDotColor,
                             }}
