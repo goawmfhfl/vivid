@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -8,7 +9,7 @@ import { COLORS, SPACING, GRADIENT_UTILS, hexToRgba } from "@/lib/design-system"
 import { Crown, Calendar, Sparkles, Zap, TrendingUp, Users } from "lucide-react";
 import { formatKSTDate } from "@/lib/date-utils";
 
-export default function MembershipPage() {
+function MembershipPageContent() {
   const router = useRouter();
   const { subscription, isPro } = useSubscription();
   const { data: currentUser } = useCurrentUser();
@@ -455,5 +456,13 @@ export default function MembershipPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MembershipPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen p-8">로딩 중...</div>}>
+      <MembershipPageContent />
+    </Suspense>
   );
 }

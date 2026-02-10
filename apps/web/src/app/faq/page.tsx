@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/common/AppHeader";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import type { NotionBlock } from "@/lib/types/notion";
 // 특정 Notion 페이지 ID
 const FAQ_PAGE_ID = "2e8834013f7080f58d62d7158a810b5c";
 
-export default function FAQPage() {
+function FAQPageContent() {
   const [blocks, setBlocks] = useState<NotionBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,5 +141,13 @@ export default function FAQPage() {
         </div>
       </article>
     </div>
+  );
+}
+
+export default function FAQPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen p-8">로딩 중...</div>}>
+      <FAQPageContent />
+    </Suspense>
   );
 }

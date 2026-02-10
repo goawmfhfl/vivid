@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath } from "@/lib/navigation";
 import { supabase } from "@/lib/supabase";
@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
@@ -322,5 +322,25 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center px-4 py-8"
+          style={{ backgroundColor: "#FAFAF8" }}
+        >
+          <LoadingSpinner
+            message="비밀번호 재설정 페이지를 불러오는 중..."
+            size="md"
+          />
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
