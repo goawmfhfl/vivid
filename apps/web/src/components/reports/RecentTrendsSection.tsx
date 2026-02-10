@@ -144,15 +144,15 @@ export function RecentTrendsSection({
         />
       )}
 
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
+      <ul className="space-y-3">
         {SECTION_CONFIG.map(({ key, title, Icon }, index) => {
           const items = processedData[key];
           const isEmpty = !items?.length;
 
           return (
-            <div
+            <li
               key={key}
-              className="relative rounded-xl overflow-hidden min-h-[100px] min-w-0 transition-all duration-200 animate-fade-in"
+              className="relative rounded-xl overflow-hidden min-w-0 transition-all duration-200 animate-fade-in"
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
@@ -165,7 +165,7 @@ export function RecentTrendsSection({
                 style={{ backgroundColor: accent }}
               />
               <div className="pl-4 pr-4 pt-3.5 pb-3.5">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2.5">
                   <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: `${accent}18` }}
@@ -184,7 +184,7 @@ export function RecentTrendsSection({
                     아직 데이터가 없습니다
                   </p>
                 ) : (
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5">
                     {items.slice(0, 5).map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span
@@ -202,10 +202,10 @@ export function RecentTrendsSection({
                   </ul>
                 )}
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }
