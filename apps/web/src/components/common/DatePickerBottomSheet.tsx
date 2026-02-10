@@ -154,7 +154,7 @@ export function DatePickerBottomSheet({
           style={{
             ...CARD_STYLES.default,
             maxHeight: "80vh",
-            background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.8),
+            background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.1),
             borderTop: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
             borderLeft: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
             borderRight: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,

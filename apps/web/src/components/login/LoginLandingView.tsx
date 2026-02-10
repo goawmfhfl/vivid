@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath, getLoginEmailPath } from "@/lib/navigation";
-import { COLORS, TYPOGRAPHY, SPACING, BUTTON_STYLES } from "@/lib/design-system";
+import {
+  COLORS,
+  TYPOGRAPHY,
+  SPACING,
+  BUTTON_STYLES,
+  GRADIENT_UTILS,
+  SHADOWS,
+} from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { useAppleLogin } from "@/hooks/useAppleLogin";
@@ -16,6 +23,24 @@ import { useToast } from "@/hooks/useToast";
 const TAGLINE = `기록을
 
 통해 나다운 삶을 선명하게`
+
+const loginButtonTextureBase = {
+  borderRadius: "12px",
+  border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+  boxShadow: SHADOWS.default,
+  backgroundImage: `
+    linear-gradient(135deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.08) 100%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(127, 143, 122, 0.012) 2px,
+      rgba(127, 143, 122, 0.012) 4px
+    )
+  `,
+  backgroundSize: "100% 100%, 8px 8px",
+  backgroundBlendMode: "soft-light, normal" as const,
+};
 
 export function LoginLandingView() {
   const router = useRouter();
@@ -119,9 +144,11 @@ export function LoginLandingView() {
               TYPOGRAPHY.body.fontWeight
             )}
             style={{
-              backgroundColor: "#FEE500",
+              ...loginButtonTextureBase,
+              background: GRADIENT_UTILS.cardBackground("#FEE500", 0.86, "#FEE500"),
               color: "#191919",
-              boxShadow: "0 2px 12px rgba(254, 229, 0, 0.3)",
+              border: "1.5px solid rgba(254, 229, 0, 0.55)",
+              boxShadow: "0 2px 12px rgba(254, 229, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.12)",
             }}
           >
             <span className="flex-shrink-0 w-6 flex items-center justify-center" aria-hidden>
@@ -147,8 +174,10 @@ export function LoginLandingView() {
               TYPOGRAPHY.body.fontWeight
             )}
             style={{
-              backgroundColor: COLORS.text.primary,
+              ...loginButtonTextureBase,
+              background: GRADIENT_UTILS.cardBackground(COLORS.text.primary, 0.92, "#353535"),
               color: COLORS.text.white,
+              border: "1.5px solid rgba(255, 255, 255, 0.2)",
             }}
           >
             <span className="flex-shrink-0 w-6 flex items-center justify-center" aria-hidden>
@@ -185,8 +214,14 @@ export function LoginLandingView() {
               TYPOGRAPHY.body.fontWeight
             )}
             style={{
-              backgroundColor: COLORS.brand.primary,
+              ...loginButtonTextureBase,
+              background: GRADIENT_UTILS.cardBackground(
+                COLORS.brand.primary,
+                0.88,
+                COLORS.brand.primary
+              ),
               color: BUTTON_STYLES.primary.color,
+              border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.primary, "55")}`,
             }}
           >
             <span className="flex-shrink-0 w-6 flex items-center justify-center" aria-hidden>
