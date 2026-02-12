@@ -188,21 +188,22 @@ export type MonthlyReport = {
 };
 
 // ============================================
-// Monthly Trend Data (월간 흐름 - weekly와 동일 구조)
+// Monthly Trend Data (월간 흐름 - 4가지 인사이트)
 // ============================================
 export type MonthlyTrendData = {
-  direction: string; // 어떤 방향으로 가고 있는 사람인가
-  core_value: string; // 내가 진짜 중요하게 여기는 가치
-  driving_force: string; // 나를 움직이는 실제 원동력
-  current_self: string; // 요즘의 나라는 사람
+  recurring_self: string; // 가장 자주 드러나는 나의 모습
+  effort_to_keep: string; // 지키기 위해서 노력했던 것
+  most_meaningful: string; // 내게 가장 의미가 있었던 것
+  biggest_change: string; // 발생한 가장 큰 변화
 };
 
 // ============================================
 // Monthly Trends Response (최근 4달 데이터 - user_trends 기반)
+// 각 항목은 [26년1월]: 텍스트 형식
 // ============================================
 export type MonthlyTrendsResponse = {
-  direction: string[];
-  core_value: string[];
-  driving_force: string[];
-  current_self: string[];
+  recurring_self: string[];
+  effort_to_keep: string[];
+  most_meaningful: string[];
+  biggest_change: string[];
 };

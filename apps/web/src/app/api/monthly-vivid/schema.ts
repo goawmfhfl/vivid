@@ -376,19 +376,19 @@ export const MonthlyReportSchema = {
 } as const;
 
 /**
- * Monthly Trend Data 스키마 (weekly와 동일 - 나를 설명하는 4가지 흐름)
+ * Monthly Trend Data 스키마 (월간 4가지 흐름)
  */
 export const MonthlyTrendDataSchema = {
   name: "MonthlyTrendData",
   schema: {
     type: "object",
     properties: {
-      direction: { type: "string" }, // 어떤 방향으로 가고 있는 사람인가
-      core_value: { type: "string" }, // 내가 진짜 중요하게 여기는 가치
-      driving_force: { type: "string" }, // 나를 움직이는 실제 원동력
-      current_self: { type: "string" }, // 요즘의 나라는 사람
+      recurring_self: { type: "string" }, // 가장 자주 드러나는 나의 모습
+      effort_to_keep: { type: "string" }, // 지키기 위해서 노력했던 것
+      most_meaningful: { type: "string" }, // 내게 가장 의미가 있었던 것
+      biggest_change: { type: "string" }, // 발생한 가장 큰 변화
     },
-    required: ["direction", "core_value", "driving_force", "current_self"],
+    required: ["recurring_self", "effort_to_keep", "most_meaningful", "biggest_change"],
     additionalProperties: false,
   },
   strict: true,
@@ -398,14 +398,14 @@ export const SYSTEM_PROMPT_MONTHLY_TREND = `
 당신은 사용자의 월간 비비드 리포트를 분석하여 월간 흐름 데이터를 생성합니다.
 
 ## 필드별 요구사항
-- direction: 이번 달의 기록을 통해 드러난 사용자가 가고 있는 방향을 한 문장으로 작성합니다.
-  예: "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람"
-- core_value: 이번 달의 기록에서 가장 중요하게 여기는 가치를 한 문장으로 작성합니다.
-  예: "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치"
-- driving_force: 이번 달을 움직인 실제 원동력을 한 문장으로 작성합니다.
-  예: "새로운 목표를 향한 호기심과 실행력"
-- current_self: 요즘의 사용자를 한 문장으로 표현합니다.
-  예: "변화를 두려워하지 않고 꾸준히 나아가는 사람"
+- recurring_self: 이번 달의 기록에서 가장 자주 드러나는 사용자의 모습을 한 문장으로 작성합니다.
+  예: "기술적 성취와 가정의 행복을 함께 키우며, 진정성 있는 1인 사업가로 나아가고 있어요"
+- effort_to_keep: 이번 달에 지키기 위해 노력했던 것을 한 문장으로 작성합니다.
+  예: "완벽함보다 진심을 담는 것, 그리고 사랑하는 가족과 함께하는 따뜻한 균형을 지키려 했어요"
+- most_meaningful: 이번 달에 사용자에게 가장 의미가 있었던 것을 한 문장으로 작성합니다.
+  예: "꾸준히 지켜나가는 건강한 습관과 아내와 함께하는 저녁 시간의 편안함이 가장 의미 있었어요"
+- biggest_change: 이번 달에 발생한 가장 큰 변화를 한 문장으로 작성합니다.
+  예: "개발자로서의 자신감이 쑥쑥 자라고, 완벽하고 싶은 마음과 싸우며 꾸준히 노력하는 사람으로 변했어요"
 
 각 필드는 간결하고 명확하게 작성하세요.
 `;

@@ -9,6 +9,8 @@ interface ReportDropdownProps {
   items: string[];
   accentColor: string;
   defaultOpen?: boolean;
+  /** monthly: bullet 제거, [26년1월]: 구간 accent 강조 */
+  variant?: "default" | "monthly";
 }
 
 const MAX_ITEMS = 5;
@@ -22,10 +24,13 @@ export function ReportDropdown({
   items,
   accentColor,
   defaultOpen = false,
+  variant = "default",
 }: ReportDropdownProps) {
   const [open, setOpen] = useState(defaultOpen);
   const list = (items || []).slice(0, MAX_ITEMS);
   if (!list.length) return null;
+
+  const isMonthly = variant === "monthly";
 
   return (
     <div
@@ -63,17 +68,37 @@ export function ReportDropdown({
           className="px-3 pb-3 pt-0 space-y-2 border-t"
           style={{ borderColor: COLORS.border.light }}
         >
-          {list.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 pt-2 first:pt-3">
-              <span
-                className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: accentColor }}
-              />
-              <span className="text-xs sm:text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
-                {item}
-              </span>
-            </li>
-          ))}
+          {list.map((item, i) => {
+            if (isMonthly && item.includes("]: ")) {
+              const idx = item.indexOf("]: ");
+              const monthPart = item.slice(0, idx + 1); // "[26년1월]"
+              const textPart = item.slice(idx + 3).trim(); // "]: " 이후 텍스트
+              return (
+                <li key={i} className="flex items-start gap-2 pt-2 first:pt-3">
+                  <span
+                    className="text-xs font-medium flex-shrink-0 px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: `${accentColor}20`, color: accentColor }}
+                  >
+                    {monthPart}
+                  </span>
+                  <span className="text-xs sm:text-sm leading-relaxed flex-1" style={{ color: COLORS.text.primary }}>
+                    {textPart}
+                  </span>
+                </li>
+              );
+            }
+            return (
+              <li key={i} className="flex items-start gap-2 pt-2 first:pt-3">
+                <span
+                  className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: accentColor }}
+                />
+                <span className="text-xs sm:text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+                  {item}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

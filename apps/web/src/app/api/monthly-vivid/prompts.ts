@@ -150,7 +150,7 @@ export function buildMonthlyTrendPrompt(
   monthLabel: string,
   userName?: string
 ): string {
-  const prompt = `${userName ? `${userName}님의 ` : ""}${monthLabel} 월간 비비드 리포트를 분석하여, 나를 설명하는 4가지 흐름을 생성해주세요.
+  const prompt = `${userName ? `${userName}님의 ` : ""}${monthLabel} 월간 비비드 리포트를 분석하여, 아래 4가지 흐름을 생성해주세요.
 
 **분석 결과 요약:**
 
@@ -167,13 +167,13 @@ ${report.daily_life_patterns?.recurring_patterns?.slice(0, 3).map((p: { pattern:
 ${report.identity_alignment?.trait_evolution?.strengthened?.slice(0, 2).map((t: { trait: string }) => `- ${t.trait}`).join("\n") || ""}
 
 위 분석 결과를 바탕으로, 아래 4가지 필드를 한 문장씩 생성해주세요:
-- direction: 어떤 방향으로 가고 있는 사람인가
-- core_value: 내가 진짜 중요하게 여기는 가치
-- driving_force: 나를 움직이는 실제 원동력
-- current_self: 요즘의 나라는 사람
+- recurring_self: 가장 자주 드러나는 나의 모습
+- effort_to_keep: 지키기 위해서 노력했던 것
+- most_meaningful: 내게 가장 의미가 있었던 것
+- biggest_change: 발생한 가장 큰 변화
 
 각 필드는 1줄의 자연스러운 인사이트로 작성하세요.
-JSON 형식으로 {"direction": "...", "core_value": "...", "driving_force": "...", "current_self": "..."}만 출력해주세요.`;
+JSON 형식으로 {"recurring_self": "...", "effort_to_keep": "...", "most_meaningful": "...", "biggest_change": "..."}만 출력해주세요.`;
   
   return prompt;
 }

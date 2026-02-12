@@ -16,21 +16,21 @@ import { PreviewDataNotice } from "./PreviewDataNotice";
 
 /** 데이터 없을 때 미리보기용 플레이스홀더 */
 const MONTHLY_PREVIEW_DATA = {
-  direction: [
-    "한 달간의 기록을 돌아보며 성장 방향을 찾아가는 사람",
-    "균형과 조화를 유지하려 노력하는 방향",
+  recurring_self: [
+    "[26년1월]: 기술적 성취와 가정의 행복을 함께 키우며, 진정성 있는 1인 사업가로 나아가고 있어요",
+    "[25년12월]: 꾸준히 실천하려 하고, 한 번 정한 일은 끝까지 해내는 편이에요",
   ],
-  core_value: [
-    "꾸준함과 끈기를 중요하게 여기는 사람",
-    "반성과 다듬어 나가는 과정을 소중히 여기는 스타일",
+  effort_to_keep: [
+    "[26년1월]: 완벽함보다 진심을 담는 것, 그리고 사랑하는 가족과 함께하는 따뜻한 균형을 지키려 했어요",
+    "[25년12월]: 꾸준함과 끈기를 지키기 위해 작은 것부터 시작하는 습관을 유지했어요",
   ],
-  driving_force: [
-    "도움이 되는 일을 하고 싶은 마음",
-    "내면의 평화를 유지하려는 노력",
+  most_meaningful: [
+    "[26년1월]: 건강한 습관들과 아내와 함께 나누는 저녁 시간의 편안함이 가장 의미 있었어요",
+    "[25년12월]: 매일 아침 스스로를 다잡는 긍정의 힘이 원동력이 되어주었어요",
   ],
-  current_self: [
-    "생각한 뒤 말하고 행동하는 사람",
-    "꾸준히 실천하는 사람",
+  biggest_change: [
+    "[26년1월]: 개발자로서의 자신감이 쑥쑥 자라고, 완벽하고 싶은 마음과 싸우며 꾸준히 노력하는 사람으로 변했어요",
+    "[25년12월]: 시작의 떨림과 걱정을 느끼면서도 묵묵히 첫 발을 떼기 시작했어요",
   ],
 };
 
@@ -52,35 +52,35 @@ export function MonthlyTrendsSection({
   const processedData = useMemo(() => {
     if (!isPro) {
       return {
-        direction: [] as string[],
-        core_value: [] as string[],
-        driving_force: [] as string[],
-        current_self: [] as string[],
+        recurring_self: [] as string[],
+        effort_to_keep: [] as string[],
+        most_meaningful: [] as string[],
+        biggest_change: [] as string[],
       };
     }
     const real = data
       ? {
-          direction: (data.direction || []).slice(0, 4),
-          core_value: (data.core_value || []).slice(0, 4),
-          driving_force: (data.driving_force || []).slice(0, 4),
-          current_self: (data.current_self || []).slice(0, 4),
+          recurring_self: (data.recurring_self || []).slice(0, 4),
+          effort_to_keep: (data.effort_to_keep || []).slice(0, 4),
+          most_meaningful: (data.most_meaningful || []).slice(0, 4),
+          biggest_change: (data.biggest_change || []).slice(0, 4),
         }
       : null;
     const hasReal =
       real &&
-      (real.direction.length > 0 ||
-        real.core_value.length > 0 ||
-        real.driving_force.length > 0 ||
-        real.current_self.length > 0);
+      (real.recurring_self.length > 0 ||
+        real.effort_to_keep.length > 0 ||
+        real.most_meaningful.length > 0 ||
+        real.biggest_change.length > 0);
     return hasReal ? real : MONTHLY_PREVIEW_DATA;
   }, [data, isPro]);
 
   const hasRealData =
     !!data &&
-    ((data.direction?.length ?? 0) > 0 ||
-      (data.core_value?.length ?? 0) > 0 ||
-      (data.driving_force?.length ?? 0) > 0 ||
-      (data.current_self?.length ?? 0) > 0);
+    ((data.recurring_self?.length ?? 0) > 0 ||
+      (data.effort_to_keep?.length ?? 0) > 0 ||
+      (data.most_meaningful?.length ?? 0) > 0 ||
+      (data.biggest_change?.length ?? 0) > 0);
 
   if (isLoading) {
     return (
@@ -167,24 +167,28 @@ export function MonthlyTrendsSection({
             </p>
             <div className="space-y-2">
               <ReportDropdown
-                label="어떤 방향으로 가고 있는 사람인가"
-                items={processedData.direction}
+                label="가장 자주 드러나는 나의 모습"
+                items={processedData.recurring_self}
                 accentColor={MONTHLY_ACCENT}
+                variant="monthly"
               />
               <ReportDropdown
-                label="내가 진짜 중요하게 여기는 가치"
-                items={processedData.core_value}
+                label="지키기 위해서 노력했던 것"
+                items={processedData.effort_to_keep}
                 accentColor={MONTHLY_ACCENT}
+                variant="monthly"
               />
               <ReportDropdown
-                label="나를 움직이는 실제 원동력"
-                items={processedData.driving_force}
+                label="내게 가장 의미가 있었던 것"
+                items={processedData.most_meaningful}
                 accentColor={MONTHLY_ACCENT}
+                variant="monthly"
               />
               <ReportDropdown
-                label="요즘의 나라는 사람"
-                items={processedData.current_self}
+                label="발생한 가장 큰 변화"
+                items={processedData.biggest_change}
                 accentColor={MONTHLY_ACCENT}
+                variant="monthly"
               />
             </div>
           </div>
