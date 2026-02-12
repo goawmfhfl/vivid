@@ -17,20 +17,20 @@ import { PreviewDataNotice } from "./PreviewDataNotice";
 /** 데이터 없을 때 미리보기용 플레이스홀더 */
 const WEEKLY_PREVIEW_DATA = {
   direction: [
-    "조금씩이라도 나아지려는 성장 방향으로 가고 있는 사람",
-    "일상의 균형과 몸·마음 조화를 꾸준히 챙기려는 방향",
+    "[04월1주차]: 조금씩이라도 나아지려는 성장 방향으로 가고 있는 사람",
+    "[03월4주차]: 일상의 균형과 몸·마음 조화를 꾸준히 챙기려는 방향",
   ],
   core_value: [
-    "꾸준히 실천하려 하고, 한 번 정한 일은 끝까지 해내는 편",
-    "하루를 돌아보고 반성하며 다음에 살짝 다듬어 나가는 스타일",
+    "[04월1주차]: 꾸준히 실천하려 하고, 한 번 정한 일은 끝까지 해내는 편",
+    "[03월4주차]: 하루를 돌아보고 반성하며 다음에 살짝 다듬어 나가는 스타일",
   ],
   driving_force: [
-    "내가 하는 일이 누군가에게 조금이라도 도움이 되길 바라는 마음",
-    "나와 주변을 조금씩 더 나은 방향으로 바꿔나가고 싶은 욕구",
+    "[04월1주차]: 내가 하는 일이 누군가에게 조금이라도 도움이 되길 바라는 마음",
+    "[03월4주차]: 나와 주변을 조금씩 더 나은 방향으로 바꿔나가고 싶은 욕구",
   ],
   current_self: [
-    "깊이 있게 생각한 뒤 말하고 행동하는 사람",
-    "현실에 맞게 움직이되, 꾸준히 실천하는 사람",
+    "[04월1주차]: 깊이 있게 생각한 뒤 말하고 행동하는 사람",
+    "[03월4주차]: 현실에 맞게 움직이되, 꾸준히 실천하는 사람",
   ],
 };
 
@@ -174,21 +174,25 @@ export function WeeklyTrendsSection({
                 label="어떤 방향으로 가고 있는 사람인가"
                 items={processedData.direction}
                 accentColor={WEEKLY_ACCENT}
+                variant="weekly"
               />
               <ReportDropdown
                 label="내가 진짜 중요하게 여기는 가치"
                 items={processedData.core_value}
                 accentColor={WEEKLY_ACCENT}
+                variant="weekly"
               />
               <ReportDropdown
                 label="나를 움직이는 실제 원동력"
                 items={processedData.driving_force}
                 accentColor={WEEKLY_ACCENT}
+                variant="weekly"
               />
               <ReportDropdown
                 label="요즘의 나라는 사람"
                 items={processedData.current_self}
                 accentColor={WEEKLY_ACCENT}
+                variant="weekly"
               />
             </div>
           </div>

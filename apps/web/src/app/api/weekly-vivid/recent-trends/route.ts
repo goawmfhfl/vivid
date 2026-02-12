@@ -14,9 +14,19 @@ interface WeeklyTrendsResponse {
   current_self: string[];
 }
 
+/** period_start (YYYY-MM-DD) → "[04월1주차]" 형식 */
+function formatWeekLabel(periodStart: string): string {
+  const match = String(periodStart).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "";
+  const month = match[2]; // "01", "02", ... "12"
+  const day = parseInt(match[3], 10);
+  const weekNum = Math.ceil(day / 7);
+  return `[${month}월${weekNum}주차]`;
+}
+
 /**
  * GET 핸들러: user_trends에서 최근 4주 trend 조회
- * weekly_vivid trend가 user_trends로 마이그레이션됨
+ * 각 항목은 [04월1주차]: 텍스트 형식으로 반환
  */
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from(API_ENDPOINTS.USER_TRENDS)
-      .select("trend")
+      .select("trend, period_start, period_end")
       .eq("user_id", userId)
       .eq("type", "weekly")
       .order("period_end", { ascending: false })
@@ -45,7 +55,11 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch user_trends: ${error.message}`);
     }
 
-    const rows = (data || []) as Array<{ trend: JsonbValue }>;
+    const rows = (data || []) as Array<{
+      trend: JsonbValue;
+      period_start: string;
+      period_end: string;
+    }>;
     const direction: string[] = [];
     const core_value: string[] = [];
     const driving_force: string[] = [];
@@ -56,14 +70,19 @@ export async function GET(request: NextRequest) {
         string,
         unknown
       >;
+      const weekLabel = formatWeekLabel(row.period_start || "");
+      if (!weekLabel) continue;
+
+      const prefix = `${weekLabel}: `;
+
       const d = decoded.direction;
       const c = decoded.core_value;
       const df = decoded.driving_force;
       const cs = decoded.current_self;
-      if (typeof d === "string" && d.trim()) direction.push(d);
-      if (typeof c === "string" && c.trim()) core_value.push(c);
-      if (typeof df === "string" && df.trim()) driving_force.push(df);
-      if (typeof cs === "string" && cs.trim()) current_self.push(cs);
+      if (typeof d === "string" && d.trim()) direction.push(`${prefix}${d.trim()}`);
+      if (typeof c === "string" && c.trim()) core_value.push(`${prefix}${c.trim()}`);
+      if (typeof df === "string" && df.trim()) driving_force.push(`${prefix}${df.trim()}`);
+      if (typeof cs === "string" && cs.trim()) current_self.push(`${prefix}${cs.trim()}`);
     }
 
     const response: WeeklyTrendsResponse = {

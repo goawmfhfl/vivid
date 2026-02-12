@@ -8,12 +8,12 @@ import {
 } from "@/constants/cache";
 import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 
-/** period_end (YYYY-MM-DD) → "26년1월" 형식 */
+/** period_end (YYYY-MM-DD) → "26년01월" 형식 (월 2자리 유지) */
 function formatMonthLabel(periodEnd: string): string {
   const match = String(periodEnd).match(/^(\d{4})-(\d{2})/);
   if (!match) return "";
   const year = match[1].slice(2); // "2026" → "26"
-  const month = parseInt(match[2], 10); // "01" → 1
+  const month = match[2]; // "01", "02", ... "12" (0 패딩 유지)
   return `${year}년${month}월`;
 }
 

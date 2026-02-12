@@ -9,8 +9,8 @@ interface ReportDropdownProps {
   items: string[];
   accentColor: string;
   defaultOpen?: boolean;
-  /** monthly: bullet 제거, [26년1월]: 구간 accent 강조 */
-  variant?: "default" | "monthly";
+  /** monthly: bullet 제거, [26년01월]: 구간 accent 강조. weekly: [04월1주차]: 구간 accent 강조 */
+  variant?: "default" | "monthly" | "weekly";
 }
 
 const MAX_ITEMS = 5;
@@ -30,7 +30,7 @@ export function ReportDropdown({
   const list = (items || []).slice(0, MAX_ITEMS);
   if (!list.length) return null;
 
-  const isMonthly = variant === "monthly";
+  const useLabeledVariant = variant === "monthly" || variant === "weekly";
 
   return (
     <div
@@ -69,7 +69,7 @@ export function ReportDropdown({
           style={{ borderColor: COLORS.border.light }}
         >
           {list.map((item, i) => {
-            if (isMonthly && item.includes("]: ")) {
+            if (useLabeledVariant && item.includes("]: ")) {
               const idx = item.indexOf("]: ");
               const monthPart = item.slice(0, idx + 1); // "[26년1월]"
               const textPart = item.slice(idx + 3).trim(); // "]: " 이후 텍스트
