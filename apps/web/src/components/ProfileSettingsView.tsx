@@ -208,7 +208,7 @@ export function ProfileSettingsView() {
             title="기본 프로필"
             description={
               hasEmailProvider
-                ? "이름, 이메일은 계정 보호와 이메일 찾기에 활용돼요."
+                ? ""
                 : "VIVID에서 사용할 이름을 설정해주세요."
             }
           >

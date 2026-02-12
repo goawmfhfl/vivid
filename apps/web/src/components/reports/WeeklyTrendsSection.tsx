@@ -2,14 +2,37 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Compass, Heart, Zap, User, Lock } from "lucide-react";
+import { BarChart3, Lock } from "lucide-react";
 import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ReportDropdown } from "@/components/reports/ReportDropdown";
+import { TrendsCardSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
-import { FeedbackCard } from "@/components/ui/FeedbackCard";
-import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
+
+const WEEKLY_ACCENT = COLORS.weekly.primary;
 import type { WeeklyTrendsResponse } from "@/hooks/useWeeklyTrends";
 import { useSubscription } from "@/hooks/useSubscription";
+import { PreviewDataNotice } from "./PreviewDataNotice";
+
+/** 데이터 없을 때 미리보기용 플레이스홀더 */
+const WEEKLY_PREVIEW_DATA = {
+  direction: [
+    "조금씩이라도 나아지려는 성장 방향으로 가고 있는 사람",
+    "일상의 균형과 몸·마음 조화를 꾸준히 챙기려는 방향",
+  ],
+  core_value: [
+    "꾸준히 실천하려 하고, 한 번 정한 일은 끝까지 해내는 편",
+    "하루를 돌아보고 반성하며 다음에 살짝 다듬어 나가는 스타일",
+  ],
+  driving_force: [
+    "내가 하는 일이 누군가에게 조금이라도 도움이 되길 바라는 마음",
+    "나와 주변을 조금씩 더 나은 방향으로 바꿔나가고 싶은 욕구",
+  ],
+  current_self: [
+    "깊이 있게 생각한 뒤 말하고 행동하는 사람",
+    "현실에 맞게 움직이되, 꾸준히 실천하는 사람",
+  ],
+};
 
 interface WeeklyTrendsSectionProps {
   data: WeeklyTrendsResponse | null;
@@ -17,191 +40,66 @@ interface WeeklyTrendsSectionProps {
   error?: Error | null;
 }
 
-interface TrendCardProps {
-  title: string;
-  icon: React.ReactNode;
-  iconColor: string;
-  items: string[];
-  emptyMessage?: string;
-  isLocked?: boolean;
-}
-
-function TrendCard({
-  title,
-  icon,
-  iconColor,
-  items,
-  emptyMessage,
-  isLocked = false,
-}: TrendCardProps) {
-  const router = useRouter();
-  if (items.length === 0) {
-    if (emptyMessage) {
-      return (
-        <div className="mb-12">
-          <FeedbackCard
-            icon={icon}
-            iconColor={iconColor}
-            title={title}
-            gradientColor={iconColor}
-            isLocked={isLocked}
-          >
-            <p
-              className={TYPOGRAPHY.body.fontSize}
-              style={{ color: COLORS.text.muted }}
-            >
-              {emptyMessage}
-            </p>
-          </FeedbackCard>
-        </div>
-      );
-    }
-    return null;
-  }
-
-  return (
-    <div className="mb-12 relative">
-      <FeedbackCard
-        icon={icon}
-        iconColor={iconColor}
-        title={title}
-        gradientColor={iconColor}
-        isLocked={isLocked}
-      >
-        <ul className="space-y-2">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <div
-                className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                style={{ backgroundColor: iconColor }}
-              />
-              <p
-                className={TYPOGRAPHY.body.fontSize}
-                style={{
-                  color: COLORS.text.primary,
-                  lineHeight: "1.6",
-                }}
-              >
-                {item}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </FeedbackCard>
-
-      {/* 카드 전체를 덮는 blur 오버레이 */}
-      {isLocked && (
-        <>
-          <div
-            className="absolute inset-0 z-20 rounded-xl pointer-events-none"
-            style={{
-              background: `linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.75) 0%, 
-                rgba(250, 252, 250, 0.85) 30%, 
-                rgba(248, 250, 248, 0.88) 60%, 
-                rgba(255, 255, 255, 0.82) 100%
-              )`,
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-            }}
-          />
-          {/* 중앙 잠금 배지 - 클릭 가능 */}
-          <div 
-            className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
-            onClick={() => router.push("/membership")}
-          >
-            <div
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
-              style={{
-                background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary} 100%)`,
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-                boxShadow:
-                  "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <Lock className="w-4 h-4" style={{ color: COLORS.text.white }} />
-              <span
-                className="text-sm font-semibold tracking-wide"
-                style={{ color: COLORS.text.white }}
-              >
-                Pro
-              </span>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// 임시 데이터 (프로가 아닐 경우 사용)
-const mockData = {
-  direction: [
-    "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람",
-    "균형 잡힌 삶을 추구하는 방향으로 변화하고 있는 사람",
-  ],
-  core_value: [
-    "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치",
-    "자기 이해와 타인과의 깊은 연결을 중시하는 가치",
-  ],
-  driving_force: [
-    "새로운 목표를 향한 호기심과 실행력",
-    "내면의 성장에 대한 열망과 일관성",
-  ],
-  current_self: [
-    "변화를 두려워하지 않고 꾸준히 나아가는 사람",
-    "자기 성찰을 통해 지속적으로 성장하는 사람",
-  ],
-};
-
 export function WeeklyTrendsSection({
   data,
   isLoading = false,
   error = null,
 }: WeeklyTrendsSectionProps) {
+  const router = useRouter();
   const { isPro } = useSubscription();
 
-  // 데이터 처리 로직 (useMemo로 메모이제이션)
+  // 실제 데이터 있으면 사용, 없으면 미리보기 데이터
   const processedData = useMemo(() => {
-    // 프로가 아닐 경우: 모든 데이터를 mockData로 사용
     if (!isPro) {
       return {
-        direction: mockData.direction,
-        core_value: mockData.core_value,
-        driving_force: mockData.driving_force,
-        current_self: mockData.current_self,
+        direction: [] as string[],
+        core_value: [] as string[],
+        driving_force: [] as string[],
+        current_self: [] as string[],
       };
     }
-
-    // 프로 멤버십: 실제 데이터 사용
-    if (!data) {
-      return {
-        direction: [],
-        core_value: [],
-        driving_force: [],
-        current_self: [],
-      };
-    }
-
-    return {
-      direction: (data.direction || []).slice(0, 4),
-      core_value: (data.core_value || []).slice(0, 4),
-      driving_force: (data.driving_force || []).slice(0, 4),
-      current_self: (data.current_self || []).slice(0, 4),
-    };
+    const real = data
+      ? {
+          direction: (data.direction || []).slice(0, 4),
+          core_value: (data.core_value || []).slice(0, 4),
+          driving_force: (data.driving_force || []).slice(0, 4),
+          current_self: (data.current_self || []).slice(0, 4),
+        }
+      : null;
+    const hasReal =
+      real &&
+      (real.direction.length > 0 ||
+        real.core_value.length > 0 ||
+        real.driving_force.length > 0 ||
+        real.current_self.length > 0);
+    return hasReal ? real : WEEKLY_PREVIEW_DATA;
   }, [data, isPro]);
 
-  // 로딩 상태
+  const hasRealData =
+    !!data &&
+    ((data.direction?.length ?? 0) > 0 ||
+      (data.core_value?.length ?? 0) > 0 ||
+      (data.driving_force?.length ?? 0) > 0 ||
+      (data.current_self?.length ?? 0) > 0);
+
+  // 로딩 상태 - 스켈레톤 UI
   if (isLoading) {
     return (
-      <div className="py-12">
-        <LoadingSpinner
-          message="주간 흐름을 불러오는 중..."
-          size="md"
-          showMessage={true}
-        />
-      </div>
+      <>
+        <ScrollAnimation>
+          <div className="mb-4">
+            <h2 className="text-[13px] sm:text-sm font-semibold mb-1" style={{ color: COLORS.text.primary }}>
+              성장 인사이트
+            </h2>
+            <p className="text-[12px] sm:text-sm" style={{ color: COLORS.text.primary, lineHeight: "1.6" }}>
+              주간 VIVID 기록을 바탕으로 한 내용이에요
+            </p>
+          </div>
+        </ScrollAnimation>
+        <ScrollAnimation delay={90}>
+          <TrendsCardSkeleton />
+        </ScrollAnimation>
+      </>
     );
   }
 
@@ -221,91 +119,118 @@ export function WeeklyTrendsSection({
     );
   }
 
-  // 빈 데이터 상태
-  const hasAnyData =
-    processedData.direction.length > 0 ||
-    processedData.core_value.length > 0 ||
-    processedData.driving_force.length > 0 ||
-    processedData.current_self.length > 0;
-
-  if (!hasAnyData) {
-    return (
-      <div className="py-12 text-center">
-        <p style={{ color: COLORS.text.muted }}>
-          아직 데이터가 없습니다. 주간 VIVID를 생성하면 주간 흐름을 확인할 수
-          있습니다.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* 섹션 헤더 */}
       <ScrollAnimation>
-        <div className="mb-6">
-          <h2
-            className={TYPOGRAPHY.h2.fontSize}
-            style={{ ...TYPOGRAPHY.h2, marginBottom: "8px" }}
-          >
-            나의 주간 흐름
+        <div className="mb-4">
+          <h2 className="text-[13px] sm:text-sm font-semibold mb-1" style={{ color: COLORS.text.primary }}>
+            성장 인사이트
           </h2>
-          <p
-            className={TYPOGRAPHY.body.fontSize}
-            style={{ color: COLORS.text.secondary }}
-          >
-            최근 4주간의 데이터를 기반으로 한 인사이트입니다
+          <p className="text-[12px] sm:text-sm" style={{ color: COLORS.text.primary, lineHeight: "1.6" }}>
+            주간 VIVID 기록을 바탕으로 한 내용이에요
           </p>
         </div>
       </ScrollAnimation>
 
-      {/* 1. 어떤 방향으로 가고 있는 사람인가 */}
-      <ScrollAnimation delay={100}>
-        <TrendCard
-          title="어떤 방향으로 가고 있는 사람인가"
-          icon={<Compass className="w-4 h-4 text-white" />}
-          iconColor="#E5B96B"
-          items={processedData.direction}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
-
-      {/* 2. 내가 진짜 중요하게 여기는 가치 */}
-      <ScrollAnimation delay={200}>
-        <TrendCard
-          title="내가 진짜 중요하게 여기는 가치"
-          icon={<Heart className="w-4 h-4 text-white" />}
-          iconColor="#A8BBA8"
-          items={processedData.core_value}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
-
-      {/* 3. 나를 움직이는 실제 원동력 */}
-      <ScrollAnimation delay={300}>
-        <TrendCard
-          title="나를 움직이는 실제 원동력"
-          icon={<Zap className="w-4 h-4 text-white" />}
-          iconColor="#A8BBA8"
-          items={processedData.driving_force}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
-      </ScrollAnimation>
-
-      {/* 4. 요즘의 나라는 사람 */}
-      <ScrollAnimation delay={400}>
-        <TrendCard
-          title="요즘의 나라는 사람"
-          icon={<User className="w-4 h-4 text-white" />}
-          iconColor="#E5B96B"
-          items={processedData.current_self}
-          emptyMessage="아직 데이터가 없습니다"
-          isLocked={!isPro}
-        />
+      {/* 나를 설명하는 4가지 흐름 - GrowthInsightsSection 디자인 적용 */}
+      <ScrollAnimation delay={90}>
+        <>
+          {!hasRealData && (
+            <PreviewDataNotice
+              subtitle="주간 VIVID가 쌓이면 나의 기록이 표시됩니다"
+              accentColor={WEEKLY_ACCENT}
+            />
+          )}
+          <div
+            className="relative rounded-xl overflow-hidden min-w-0 transition-all duration-200 animate-fade-in"
+            style={{
+              backgroundColor: COLORS.background.cardElevated,
+              border: `1px solid ${COLORS.border.light}`,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+          <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: WEEKLY_ACCENT }} />
+          <div className="pl-4 pr-4 pt-4 pb-4 relative">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 mb-4">
+              <div
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: `${WEEKLY_ACCENT}18` }}
+              >
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: WEEKLY_ACCENT }} />
+              </div>
+              <h3
+                className="text-xs sm:text-sm font-semibold truncate"
+                style={{ color: COLORS.text.primary }}
+              >
+                나를 설명하는 4가지 흐름
+              </h3>
+            </div>
+            <p className="text-xs mb-3" style={{ color: COLORS.text.secondary }}>
+              필요한 항목만 펼쳐서 확인할 수 있도록 한 곳에 모아두었습니다.
+            </p>
+            <div className="space-y-2">
+              <ReportDropdown
+                label="어떤 방향으로 가고 있는 사람인가"
+                items={processedData.direction}
+                accentColor={WEEKLY_ACCENT}
+              />
+              <ReportDropdown
+                label="내가 진짜 중요하게 여기는 가치"
+                items={processedData.core_value}
+                accentColor={WEEKLY_ACCENT}
+              />
+              <ReportDropdown
+                label="나를 움직이는 실제 원동력"
+                items={processedData.driving_force}
+                accentColor={WEEKLY_ACCENT}
+              />
+              <ReportDropdown
+                label="요즘의 나라는 사람"
+                items={processedData.current_self}
+                accentColor={WEEKLY_ACCENT}
+              />
+            </div>
+          </div>
+          {!isPro && (
+            <>
+              <div
+                className="absolute inset-0 z-20 rounded-xl pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.75) 0%,
+                    rgba(250, 252, 250, 0.85) 30%,
+                    rgba(248, 250, 248, 0.88) 60%,
+                    rgba(255, 255, 255, 0.82) 100%
+                  )`,
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                }}
+              />
+                <div
+                  className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
+                  onClick={() => router.push("/membership")}
+                >
+                  <div
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+                    style={{
+                      background: `linear-gradient(135deg, ${COLORS.weekly.primary} 0%, ${COLORS.weekly.dark} 100%)`,
+                    boxShadow:
+                      "0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  <Lock className="w-4 h-4" style={{ color: COLORS.text.white }} />
+                  <span className="text-sm font-semibold tracking-wide" style={{ color: COLORS.text.white }}>
+                    Pro
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        </>
       </ScrollAnimation>
     </>
   );
 }
+

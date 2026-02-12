@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LogOut, Settings, Crown, ChevronDown, ArrowLeft } from "lucide-react";
+import { User, LogOut, Settings, Crown, ChevronDown, ArrowLeft, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,7 @@ import { queryClient } from "@/app/providers";
 import { clearAllCache } from "@/lib/cache-utils";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DatePickerBottomSheet } from "./DatePickerBottomSheet";
 import { getKSTDate } from "@/lib/date-utils";
 
@@ -51,6 +52,8 @@ export function AppHeader({
   const searchParams = useSearchParams();
   const [showDatePickerSheet, setShowDatePickerSheet] = useState(false);
   const { isPro } = useSubscription();
+  const { data: user } = useCurrentUser();
+  const isAdmin = user?.user_metadata?.role === "admin";
 
   // currentMonth가 제공되면 사용, 없으면 selectedDate 또는 오늘 날짜 사용
   const displayDate = currentMonth
@@ -89,8 +92,46 @@ export function AppHeader({
     <>
       <header className="mb-6">
         <div className="flex items-center justify-between mb-2 relative">
-          {/* 왼쪽: 뒤로 가기 버튼 */}
-          <div className="flex-shrink-0" style={{ width: showBackButton ? "44px" : "0px" }}>
+          {/* 왼쪽: 어드민 버튼(관리자만) / 뒤로 가기 버튼 */}
+          <div className="flex-shrink-0 flex items-center gap-1.5" style={{ width: isAdmin || showBackButton ? "auto" : "0px" }}>
+            {isAdmin && (
+              <button
+                onClick={() => router.push("/admin")}
+                className="flex items-center justify-center w-10 h-10 rounded-xl transition-all relative overflow-hidden group"
+                style={{
+                  backgroundColor: COLORS.background.base,
+                  border: `1.5px solid ${COLORS.border.light}`,
+                  color: COLORS.text.primary,
+                  boxShadow: `
+                    0 1px 3px rgba(0,0,0,0.08),
+                    0 1px 2px rgba(0,0,0,0.04),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.background.hover;
+                  e.currentTarget.style.transform = "translateX(-2px)";
+                  e.currentTarget.style.boxShadow = `
+                    0 2px 6px rgba(0,0,0,0.12),
+                    0 1px 3px rgba(0,0,0,0.06),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.background.base;
+                  e.currentTarget.style.transform = "translateX(0)";
+                  e.currentTarget.style.boxShadow = `
+                    0 1px 3px rgba(0,0,0,0.08),
+                    0 1px 2px rgba(0,0,0,0.04),
+                    inset 0 1px 0 rgba(255,255,255,0.6)
+                  `;
+                }}
+                title="어드민 페이지로 이동"
+              >
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${COLORS.brand.light}15 0%, ${COLORS.brand.primary}15 100%)` }} />
+                <Shield className="w-5 h-5 relative z-10 transition-transform group-hover:-translate-x-0.5" />
+              </button>
+            )}
             {showBackButton && (
               <button
                 onClick={handleBack}

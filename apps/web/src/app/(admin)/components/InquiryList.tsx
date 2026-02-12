@@ -560,6 +560,7 @@ export function InquiryList() {
                                   fill
                                   sizes="(max-width: 768px) 33vw, 120px"
                                   className="object-cover"
+                                  unoptimized
                                 />
                               </div>
                             </button>
@@ -683,6 +684,7 @@ export function InquiryList() {
                                     fill
                                     sizes="(max-width: 768px) 33vw, 120px"
                                     className="object-cover"
+                                    unoptimized
                                   />
                                 </div>
                                 </button>
@@ -855,6 +857,7 @@ export function InquiryList() {
                   fill
                   sizes="80vw"
                   className="object-contain"
+                  unoptimized
                   style={{ borderRadius: "8px" }}
                 />
               </div>

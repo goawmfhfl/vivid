@@ -31,11 +31,10 @@ export async function generateMonthlyTrend(
     );
 
     if (!response || 
-        !response.breakdown_moments || 
-        !response.recovery_moments || 
-        !response.energy_sources || 
-        !response.missing_future_elements || 
-        !response.top_keywords) {
+        !response.direction || 
+        !response.core_value || 
+        !response.driving_force || 
+        !response.current_self) {
       console.error("[generateMonthlyTrend] trend 데이터 생성 실패: 필수 필드 누락");
       return null;
     }

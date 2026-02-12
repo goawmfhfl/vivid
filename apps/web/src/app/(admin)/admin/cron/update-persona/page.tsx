@@ -13,35 +13,45 @@ import { cn } from "@/lib/utils";
 type CronResult = Record<string, unknown>;
 
 export default function UpdatePersonaCronTestPage() {
-  const [cronSecret, setCronSecret] = useState("");
+  const [cronSecret, setCronSecret] = useState(
+    () => process.env.NEXT_PUBLIC_CRON_SECRET ?? ""
+  );
   const [baseDate, setBaseDate] = useState("");
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState("1bebb0d4-9908-4e98-817b-06e19331cd0f");
   const [page, setPage] = useState("1");
   const [limit, setLimit] = useState("25");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CronResult | null>(null);
+  const [trendsResult, setTrendsResult] = useState<CronResult | null>(null);
+  const [trendsMonthlyResult, setTrendsMonthlyResult] = useState<CronResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [trendsError, setTrendsError] = useState<string | null>(null);
+  const [trendsMonthlyError, setTrendsMonthlyError] = useState<string | null>(null);
+  const [isTrendsLoading, setIsTrendsLoading] = useState(false);
+  const [isTrendsMonthlyLoading, setIsTrendsMonthlyLoading] = useState(false);
+  const [runSync, setRunSync] = useState(true);
 
-  const handleRun = async () => {
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
+  const executeCron = async (
+    path: string,
+    options?: { sync?: boolean; type?: "weekly" | "monthly" }
+  ) => {
     try {
       const params = new URLSearchParams();
       if (baseDate.trim()) params.set("baseDate", baseDate.trim());
       if (userId.trim()) params.set("userId", userId.trim());
       if (page.trim()) params.set("page", page.trim());
       if (limit.trim()) params.set("limit", limit.trim());
+      if (options?.sync) params.set("sync", "1");
+      if (options?.type) params.set("type", options.type);
 
-      const response = await fetch(
-        `/api/cron/update-persona?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${cronSecret}`,
-          },
+      const query = params.toString();
+      const fullUrl = query ? `${path}?${query}` : path;
+
+      const response = await fetch(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${cronSecret}`,
         }
-      );
+      });
 
       const data = await response.json();
       if (!response.ok) {
@@ -52,11 +62,60 @@ export default function UpdatePersonaCronTestPage() {
         throw new Error(message);
       }
 
+      return data as CronResult;
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const handleRun = async () => {
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const data = await executeCron("/api/cron/update-persona");
       setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "알 수 없는 오류");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRunUserTrendsWeekly = async () => {
+    setIsTrendsLoading(true);
+    setTrendsError(null);
+    setTrendsResult(null);
+
+    try {
+      const data = await executeCron("/api/cron/update-user-trends", {
+        sync: runSync && userId.trim().length > 0,
+        type: "weekly",
+      });
+      setTrendsResult(data);
+    } catch (err) {
+      setTrendsError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsTrendsLoading(false);
+    }
+  };
+
+  const handleRunUserTrendsMonthly = async () => {
+    setIsTrendsMonthlyLoading(true);
+    setTrendsMonthlyError(null);
+    setTrendsMonthlyResult(null);
+
+    try {
+      const data = await executeCron("/api/cron/update-user-trends", {
+        sync: runSync && userId.trim().length > 0,
+        type: "monthly",
+      });
+      setTrendsMonthlyResult(data);
+    } catch (err) {
+      setTrendsMonthlyError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsTrendsMonthlyLoading(false);
     }
   };
 
@@ -108,7 +167,7 @@ export default function UpdatePersonaCronTestPage() {
               baseDate (YYYY-MM-DD)
             </label>
             <input
-              type="text"
+              type="date"
               value={baseDate}
               onChange={(event) => setBaseDate(event.target.value)}
               className="w-full rounded-lg px-3 py-2 text-sm"
@@ -117,7 +176,6 @@ export default function UpdatePersonaCronTestPage() {
                 backgroundColor: COLORS.background.cardElevated,
                 color: COLORS.text.primary,
               }}
-              placeholder="예: 2026-02-08"
             />
           </div>
 
@@ -202,6 +260,19 @@ export default function UpdatePersonaCronTestPage() {
             baseDate 미입력 시 오늘(KST)을 기준으로 7일 계산합니다.
           </p>
         </div>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={runSync}
+            onChange={(event) => setRunSync(event.target.checked)}
+          />
+          <span
+            className={cn(TYPOGRAPHY.caption.fontSize)}
+            style={{ color: COLORS.text.secondary }}
+          >
+            특정 userId 입력 시 동기 실행(sync=1)으로 즉시 breakdown 생성 여부 확인
+          </span>
+        </label>
       </div>
 
       {error && (
@@ -234,6 +305,150 @@ export default function UpdatePersonaCronTestPage() {
           >
             {JSON.stringify(result, null, 2)}
           </pre>
+        </div>
+      )}
+
+      <div className="space-y-2 pt-6 border-t" style={{ borderColor: COLORS.border.light }}>
+        <h2
+          className={cn(
+            TYPOGRAPHY.h3.fontSize,
+            TYPOGRAPHY.h3.fontWeight,
+            TYPOGRAPHY.h3.lineHeight
+          )}
+          style={{ color: TYPOGRAPHY.h3.color }}
+        >
+          크론 테스트: User Trends (주간 / 월간)
+        </h2>
+        <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+          baseDate/userId/page/limit로 user_trends 크론을 실행합니다.
+          주간: 이전 주(월~일) 성장 인사이트. 월간: 이전 달 성장 인사이트. 특정 유저만 테스트하려면 userId를 입력하세요.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRunUserTrendsWeekly}
+            disabled={isTrendsLoading || !cronSecret.trim()}
+            className={cn(
+              "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+              BUTTON_STYLES.primary.borderRadius,
+              BUTTON_STYLES.primary.padding
+            )}
+            style={{
+              backgroundColor: BUTTON_STYLES.primary.background,
+              color: BUTTON_STYLES.primary.color,
+            }}
+          >
+            {isTrendsLoading ? "실행 중..." : "Weekly user_trends 실행"}
+          </button>
+          <button
+            type="button"
+            onClick={handleRunUserTrendsMonthly}
+            disabled={isTrendsMonthlyLoading || !cronSecret.trim()}
+            className={cn(
+              "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+              BUTTON_STYLES.primary.borderRadius,
+              BUTTON_STYLES.primary.padding
+            )}
+            style={{
+              backgroundColor: BUTTON_STYLES.primary.background,
+              color: BUTTON_STYLES.primary.color,
+            }}
+          >
+            {isTrendsMonthlyLoading ? "실행 중..." : "Monthly user_trends 실행"}
+          </button>
+        </div>
+      </div>
+
+      {(trendsError || trendsMonthlyError) && (
+        <div
+          className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)}
+          style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}
+        >
+          {trendsError || trendsMonthlyError}
+        </div>
+      )}
+
+      {trendsResult && (
+        <div
+          className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
+          style={{ ...CARD_STYLES.default }}
+        >
+          <h2
+            className={cn(
+              TYPOGRAPHY.h3.fontSize,
+              TYPOGRAPHY.h3.fontWeight,
+              TYPOGRAPHY.h3.lineHeight
+            )}
+            style={{ color: TYPOGRAPHY.h3.color }}
+          >
+            Weekly user_trends 실행 결과
+          </h2>
+          <pre
+            className="text-xs whitespace-pre-wrap"
+            style={{ color: COLORS.text.secondary }}
+          >
+            {JSON.stringify(trendsResult, null, 2)}
+          </pre>
+          {"latest" in trendsResult && trendsResult.latest ? (
+            <div
+              className={cn("rounded-lg px-3 py-2")}
+              style={{
+                backgroundColor: COLORS.background.base,
+                border: `1px solid ${COLORS.border.light}`,
+              }}
+            >
+              <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+                breakdown 생성 체크
+              </p>
+              <p className={cn(TYPOGRAPHY.body.fontSize)} style={{ color: COLORS.text.primary }}>
+                {(trendsResult.latest as Record<string, unknown>).has_metrics_breakdown
+                  ? "metrics_breakdown 생성됨"
+                  : "metrics_breakdown 미생성"}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {trendsMonthlyResult && (
+        <div
+          className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
+          style={{ ...CARD_STYLES.default }}
+        >
+          <h2
+            className={cn(
+              TYPOGRAPHY.h3.fontSize,
+              TYPOGRAPHY.h3.fontWeight,
+              TYPOGRAPHY.h3.lineHeight
+            )}
+            style={{ color: TYPOGRAPHY.h3.color }}
+          >
+            Monthly user_trends 실행 결과
+          </h2>
+          <pre
+            className="text-xs whitespace-pre-wrap"
+            style={{ color: COLORS.text.secondary }}
+          >
+            {JSON.stringify(trendsMonthlyResult, null, 2)}
+          </pre>
+          {"latest" in trendsMonthlyResult && trendsMonthlyResult.latest ? (
+            <div
+              className={cn("rounded-lg px-3 py-2")}
+              style={{
+                backgroundColor: COLORS.background.base,
+                border: `1px solid ${COLORS.border.light}`,
+              }}
+            >
+              <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+                trend 생성 체크
+              </p>
+              <p className={cn(TYPOGRAPHY.body.fontSize)} style={{ color: COLORS.text.primary }}>
+                {(trendsMonthlyResult.latest as Record<string, unknown>).has_trend
+                  ? "trend 생성됨"
+                  : "trend 미생성"}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

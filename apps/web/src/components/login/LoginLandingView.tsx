@@ -83,7 +83,7 @@ export function LoginLandingView() {
   const shouldShowAppleLogin = mounted ? isBrowser || isIOS : true;
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
-  const processingProvider = searchParams.get("oauth_provider");
+  const processingProvider = searchParams?.get("oauth_provider");
   const kakaoLoading =
     kakaoLoginMutation.isPending ||
     activeSocialProvider === "kakao" ||
@@ -184,21 +184,21 @@ export function LoginLandingView() {
   }, [mounted, router, showToast]);
 
   useEffect(() => {
-    if (searchParams.get("oauth") === "1") return;
+    if (searchParams?.get("oauth") === "1") return;
 
-    const message = searchParams.get("message");
+    const message = searchParams?.get("message");
     if (message) {
       openSuccessModal(message);
       router.replace(getLoginPath(searchParams));
       return;
     }
-    const errorMessage = searchParams.get("error");
+    const errorMessage = searchParams?.get("error");
     if (errorMessage) {
       showToast(errorMessage, 6000);
       router.replace(getLoginPath(searchParams));
       return;
     }
-    const isDeleted = searchParams.get("deleted");
+    const isDeleted = searchParams?.get("deleted");
     if (isDeleted === "true") {
       showToast("회원 탈퇴가 완료되었습니다.", 4000);
       router.replace(getLoginPath(searchParams));

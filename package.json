@@ -2,23 +2,28 @@
   "name": "today-journal-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:mobile": "npm run dev --workspace=apps/mobile",
     "build:web": "npm run build --workspace=apps/web",
     "build:mobile": "npm run build --workspace=apps/mobile",
-    "build": "npm run build:web && npm run build:mobile"
+    "build": "npm run build:web && npm run build:mobile",
+    "postinstall": "patch-package"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
-  },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1"
+    "@google/generative-ai": "^0.24.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.0"
   }
 }

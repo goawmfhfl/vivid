@@ -129,7 +129,8 @@ export function decryptJsonbFields(obj: JsonbValue): JsonbValue {
 }
 
 /**
- * WeeklyVivid 객체의 모든 JSONB 필드를 암호화
+ * WeeklyVivid 객체의 report JSONB 필드 암호화
+ * trend는 user_trends로 마이그레이션됨 - weekly_vivid에는 저장하지 않음
  */
 export function encryptWeeklyVivid(
   feedback: Record<string, unknown>
@@ -139,14 +140,12 @@ export function encryptWeeklyVivid(
     report: feedback.report
       ? encryptJsonbFields(feedback.report as JsonbValue)
       : null,
-    trend: feedback.trend
-      ? encryptJsonbFields(feedback.trend as JsonbValue)
-      : null,
   };
 }
 
 /**
- * WeeklyVivid 객체의 모든 JSONB 필드를 복호화
+ * WeeklyVivid 객체의 report JSONB 필드 복호화
+ * trend는 user_trends에서 조회
  */
 export function decryptWeeklyVivid(
   feedback: Record<string, unknown>
@@ -156,14 +155,15 @@ export function decryptWeeklyVivid(
     report: feedback.report
       ? decryptJsonbFields(feedback.report as JsonbValue)
       : null,
-    trend: feedback.trend
-      ? decryptJsonbFields(feedback.trend as JsonbValue)
-      : null,
   };
 }
 
 /**
  * MonthlyVivid 객체의 모든 JSONB 필드를 암호화
+ */
+/**
+ * MonthlyVivid 객체의 title, report 암호화
+ * trend는 user_trends로 마이그레이션됨 - monthly_vivid에는 저장하지 않음
  */
 export function encryptMonthlyVivid(
   feedback: Record<string, unknown>
@@ -176,14 +176,11 @@ export function encryptMonthlyVivid(
     report: feedback.report
       ? encryptJsonbFields(feedback.report as JsonbValue)
       : null,
-    trend: feedback.trend
-      ? encryptJsonbFields(feedback.trend as JsonbValue)
-      : null,
   };
 }
 
 /**
- * MonthlyVivid 객체의 모든 JSONB 필드를 복호화
+ * MonthlyVivid 객체의 title, report 복호화
  */
 export function decryptMonthlyVivid(
   feedback: Record<string, unknown>
@@ -195,9 +192,6 @@ export function decryptMonthlyVivid(
       : null,
     report: feedback.report
       ? decryptJsonbFields(feedback.report as JsonbValue)
-      : null,
-    trend: feedback.trend
-      ? decryptJsonbFields(feedback.trend as JsonbValue)
       : null,
   };
 }

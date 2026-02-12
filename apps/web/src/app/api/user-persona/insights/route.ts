@@ -4,7 +4,6 @@ import { getAuthenticatedUserIdFromRequest } from "@/app/api/utils/auth";
 import { decryptJsonbFields } from "@/lib/jsonb-encryption";
 import type { JsonbValue } from "@/lib/jsonb-encryption";
 import type {
-  UserPersonaTrend,
   UserPersonaGrowthInsights,
   UserPersonaIdentity,
   UserPersonaPatterns,
@@ -12,7 +11,6 @@ import type {
 } from "@/types/user-persona";
 
 export interface UserPersonaInsightsResponse {
-  trend: UserPersonaTrend | null;
   growth_insights: UserPersonaGrowthInsights | null;
   identity: UserPersonaIdentity | null;
   patterns: UserPersonaPatterns | null;
@@ -23,7 +21,7 @@ export interface UserPersonaInsightsResponse {
 
 /**
  * GET /api/user-persona/insights
- * 현재 유저의 user_persona 조회 (trend, growth_insights, identity, patterns, context)
+ * 현재 유저의 user_persona 조회 (growth_insights, identity, patterns, context)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +37,6 @@ export async function GET(request: NextRequest) {
     if (error) {
       if (error.code === "PGRST116") {
         return NextResponse.json<UserPersonaInsightsResponse>({
-          trend: null,
           growth_insights: null,
           identity: null,
           patterns: null,
@@ -53,7 +50,6 @@ export async function GET(request: NextRequest) {
 
     if (!data?.persona) {
       return NextResponse.json<UserPersonaInsightsResponse>({
-        trend: null,
         growth_insights: null,
         identity: null,
         patterns: null,
@@ -67,7 +63,6 @@ export async function GET(request: NextRequest) {
       string,
       unknown
     >;
-    const trend = (persona.trend as UserPersonaTrend) ?? null;
     const growth_insights =
       (persona.growth_insights as UserPersonaGrowthInsights) ?? null;
     const identity = (persona.identity as UserPersonaIdentity) ?? null;
@@ -75,7 +70,6 @@ export async function GET(request: NextRequest) {
     const context = (persona.context as UserPersonaContext) ?? null;
 
     return NextResponse.json<UserPersonaInsightsResponse>({
-      trend,
       growth_insights,
       identity,
       patterns,

@@ -52,7 +52,7 @@ export function SummariesView() {
   const searchParams = useSearchParams();
 
   // URL 쿼리 파라미터에서 탭 정보 가져오기 (기본값: weekly)
-  const activeTab = (searchParams.get("tab") || "weekly") as
+  const activeTab = (searchParams?.get("tab") || "weekly") as
     | "weekly"
     | "monthly";
 

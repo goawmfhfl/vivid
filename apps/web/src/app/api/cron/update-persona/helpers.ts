@@ -8,7 +8,6 @@ import {
   encryptJsonbFields,
   type JsonbValue,
 } from "@/lib/jsonb-encryption";
-import { logAIRequest } from "@/lib/ai-usage-logger";
 import { SYSTEM_PROMPT_USER_PERSONA, UserPersonaSchema } from "./schema";
 
 type VividRecordRow = {
@@ -129,6 +128,46 @@ export function isValidDateString(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
+/** 이전 주(월~일)의 KST 날짜 범위 반환. baseDate가 비어있으면 오늘(KST) 기준 */
+export function getPreviousWeekKstRange(baseDate?: string): {
+  startDate: string;
+  endDate: string;
+} {
+  const refDateStr = baseDate || getKSTDateString();
+  const ref = new Date(`${refDateStr}T00:00:00+09:00`);
+  const dayOfWeek = ref.getUTCDay(); // 0=Sun, 1=Mon, ...
+  const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
+  const lastSunday = new Date(ref);
+  lastSunday.setUTCDate(ref.getUTCDate() - daysToLastSunday);
+  const lastMonday = new Date(lastSunday);
+  lastMonday.setUTCDate(lastSunday.getUTCDate() - 6);
+
+  return {
+    startDate: getKSTDateString(lastMonday),
+    endDate: getKSTDateString(lastSunday),
+  };
+}
+
+/** 이전 월의 KST 날짜 범위 반환. baseDate가 비어있으면 오늘(KST) 기준 */
+export function getPreviousMonthKstRange(baseDate?: string): {
+  startDate: string;
+  endDate: string;
+  month: string; // "YYYY-MM"
+} {
+  const refDateStr = baseDate || getKSTDateString();
+  const [y, m] = refDateStr.split("-").map(Number);
+  const prevMonth = m === 1 ? 12 : m - 1;
+  const prevYear = m === 1 ? y - 1 : y;
+  const firstDay = new Date(prevYear, prevMonth - 1, 1);
+  const lastDay = new Date(prevYear, prevMonth, 0);
+
+  return {
+    startDate: getKSTDateString(firstDay),
+    endDate: getKSTDateString(lastDay),
+    month: `${prevYear}-${String(prevMonth).padStart(2, "0")}`,
+  };
+}
+
 function parsePersonaResponse(raw: string): Record<string, unknown> {
   const parsed = JSON.parse(raw);
 
@@ -144,13 +183,9 @@ function parsePersonaResponse(raw: string): Record<string, unknown> {
   throw new Error("Invalid persona response format");
 }
 
-async function generatePersona(
-  prompt: string,
-  userId?: string
-): Promise<Record<string, unknown>> {
+async function generatePersona(prompt: string): Promise<Record<string, unknown>> {
   const geminiClient = getGeminiClient();
   const modelName = "gemini-3-pro-preview";
-  const startTime = Date.now();
 
   const model = geminiClient.getGenerativeModel({
     model: modelName,
@@ -198,40 +233,6 @@ async function generatePersona(
   try {
     const result = await model.generateContent(request);
     const content = result.response.text();
-    const duration_ms = Date.now() - startTime;
-
-    if (userId) {
-      const usageMetadata = result.response?.usageMetadata as
-        | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
-        | undefined;
-      const usage = usageMetadata
-        ? {
-            prompt_tokens: usageMetadata.promptTokenCount ?? 0,
-            completion_tokens: usageMetadata.candidatesTokenCount ?? 0,
-            total_tokens:
-              usageMetadata.totalTokenCount ??
-              (usageMetadata.promptTokenCount ?? 0) + (usageMetadata.candidatesTokenCount ?? 0),
-            cached_tokens: 0,
-          }
-        : {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0,
-          };
-      try {
-        await logAIRequest({
-          userId,
-          model: modelName,
-          requestType: "user_persona",
-          sectionName: "persona",
-          usage,
-          duration_ms,
-          success: true,
-        });
-      } catch (logErr) {
-        console.error("[update-persona] ai_requests 로깅 실패:", logErr);
-      }
-    }
 
     if (!content) {
       throw new Error("No content from Gemini");
@@ -239,22 +240,6 @@ async function generatePersona(
 
     return parsePersonaResponse(content);
   } catch (error) {
-    if (userId) {
-      try {
-        await logAIRequest({
-          userId,
-          model: modelName,
-          requestType: "user_persona",
-          sectionName: "persona",
-          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-          duration_ms: Date.now() - startTime,
-          success: false,
-          errorMessage: error instanceof Error ? error.message : String(error),
-        });
-      } catch (logErr) {
-        console.error("[update-persona] ai_requests 로깅 실패 (실패 요청):", logErr);
-      }
-    }
     throw error;
   }
 }
@@ -354,7 +339,7 @@ export async function updatePersonaForUser(
     existingPersona: existingPersonaRow?.persona || null,
   });
 
-  const persona = await generatePersona(prompt, userId);
+  const persona = await generatePersona(prompt);
   const encryptedPersona = encryptJsonbFields(persona as JsonbValue) as Record<
     string,
     unknown

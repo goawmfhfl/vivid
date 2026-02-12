@@ -376,20 +376,19 @@ export const MonthlyReportSchema = {
 } as const;
 
 /**
- * Monthly Trend Data 스키마 (별도 컬럼)
+ * Monthly Trend Data 스키마 (weekly와 동일 - 나를 설명하는 4가지 흐름)
  */
 export const MonthlyTrendDataSchema = {
   name: "MonthlyTrendData",
   schema: {
     type: "object",
     properties: {
-      breakdown_moments: { type: "string" }, // 나는 어떤 순간에서 가장 무너지는가
-      recovery_moments: { type: "string" }, // 나는 어떤 순간에서 가장 회복되는가
-      energy_sources: { type: "string" }, // 내가 실제로 에너지를 얻는 방향
-      missing_future_elements: { type: "string" }, // 내가 미래를 그릴 때 빠뜨리는 요소
-      top_keywords: { type: "string" }, // 이 달에서 가장 자주 등장하는 키워드 5가지
+      direction: { type: "string" }, // 어떤 방향으로 가고 있는 사람인가
+      core_value: { type: "string" }, // 내가 진짜 중요하게 여기는 가치
+      driving_force: { type: "string" }, // 나를 움직이는 실제 원동력
+      current_self: { type: "string" }, // 요즘의 나라는 사람
     },
-    required: ["breakdown_moments", "recovery_moments", "energy_sources", "missing_future_elements", "top_keywords"],
+    required: ["direction", "core_value", "driving_force", "current_self"],
     additionalProperties: false,
   },
   strict: true,
@@ -398,34 +397,17 @@ export const MonthlyTrendDataSchema = {
 export const SYSTEM_PROMPT_MONTHLY_TREND = `
 당신은 사용자의 월간 비비드 리포트를 분석하여 월간 흐름 데이터를 생성합니다.
 
-📝 출력 형식 규칙:
-- 반드시 JSON 형식 하나만 출력해주세요.
-- 아래 스키마의 모든 키와 타입을 정확하게 지켜주세요.
-- 모든 필드를 반드시 포함해주세요.
-
 ## 필드별 요구사항
-각 필드는 이번 달의 데이터를 분석하여 1줄의 자연스러운 인사이트로 작성합니다.
+- direction: 이번 달의 기록을 통해 드러난 사용자가 가고 있는 방향을 한 문장으로 작성합니다.
+  예: "자기계발과 성장에 집중하는 방향으로 나아가고 있는 사람"
+- core_value: 이번 달의 기록에서 가장 중요하게 여기는 가치를 한 문장으로 작성합니다.
+  예: "균형 잡힌 삶과 지속 가능한 성장을 추구하는 가치"
+- driving_force: 이번 달을 움직인 실제 원동력을 한 문장으로 작성합니다.
+  예: "새로운 목표를 향한 호기심과 실행력"
+- current_self: 요즘의 사용자를 한 문장으로 표현합니다.
+  예: "변화를 두려워하지 않고 꾸준히 나아가는 사람"
 
-- breakdown_moments: 나는 어떤 순간에서 가장 무너지는가
-  예: "유튜브 업로드·결제 시스템·사람 모으기 때문에 조급함과 부담을 느끼기도 하면서 인간관계 기대/열등감/인정 욕구가 무너지는 요인이에요"
-
-- recovery_moments: 나는 어떤 순간에서 가장 회복되는가
-  예: "컨디션을 지키면서도 꾸준히 지속 가능한 실행과 삶-일 균형을 추구하는 가치가 있음"
-
-- energy_sources: 내가 실제로 에너지를 얻는 방향
-  예: "새로운 기술을 학습하거나 프로젝트에 몰입할 때 에너지가 상승하고 성취감을 느낌"
-
-- missing_future_elements: 내가 미래를 그릴 때 빠뜨리는 요소
-  예: "완벽보다 시작을 택하되 진정성·정직한 메시지와 관계·휴식의 균형으로 꾸준함을 지키는 가치를 가장 중요하게 여깁니다"
-
-- top_keywords: 이 달에서 가장 자주 등장하는 키워드 5가지
-  예: "기록, 성장, 루틴, 운동, 독서가 이번 달에 가장 자주 등장한 키워드였어요"
-
-## 작성 스타일
-- "~패턴이 반복됨", "~데이터가 확인됨" 같은 기계적인 표현을 사용하지 마세요.
-- 실제 데이터를 바탕으로 자연스럽고 인간적인 말투로 작성하세요.
-- 구체적인 상황, 감정, 가치, 행동을 자연스럽게 연결하여 작성하세요.
-- 각 필드는 1줄로 간결하게 작성하세요.
+각 필드는 간결하고 명확하게 작성하세요.
 `;
 
 export const SYSTEM_PROMPT_MONTHLY = `

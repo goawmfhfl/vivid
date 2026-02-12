@@ -1,6 +1,6 @@
 "use client";
 
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
 
 interface ScoreGaugeProps {
   score: number;

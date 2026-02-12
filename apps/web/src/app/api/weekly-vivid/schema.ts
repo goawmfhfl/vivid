@@ -33,19 +33,8 @@ export function getWeeklyVividSchema(isPro: boolean) {
               type: "string",
               description: "\"~ 했던 주\" 형식의 주간 비비드 제목",
             },
-            trend: {
-              type: "object",
-              properties: {
-                direction: { type: "string" }, // 어떤 방향으로 가고 있는 사람인가
-                core_value: { type: "string" }, // 내가 진짜 중요하게 여기는 가치 (한 문장)
-                driving_force: { type: "string" }, // 나를 움직이는 실제 원동력
-                current_self: { type: "string" }, // 요즘의 나라는 사람 (한 문장)
-              },
-              required: ["direction", "core_value", "driving_force", "current_self"],
-              additionalProperties: false,
-            },
           },
-          required: ["week_range", "report", "title", "trend"],
+          required: ["week_range", "report", "title"],
         },
       },
       required: ["weekly_vivid"],

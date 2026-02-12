@@ -2,7 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WeeklyVivid, WeeklyVividListItem } from "@/types/weekly-vivid";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
-import { encryptWeeklyVivid, decryptWeeklyVivid } from "@/lib/jsonb-encryption";
+import {
+  encryptWeeklyVivid,
+  decryptWeeklyVivid,
+} from "@/lib/jsonb-encryption";
 import { decrypt } from "@/lib/encryption";
 import type { Record } from "../daily-vivid/types";
 
@@ -152,6 +155,7 @@ export async function fetchWeeklyVividByDate(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyVivid 타입으로 변환
+  // trend는 user_trends로 마이그레이션됨 - weekly_vivid에는 없음
   const rawFeedback = {
     id: String(data.id),
     week_range: {
@@ -161,7 +165,6 @@ export async function fetchWeeklyVividByDate(
     },
     report: data.report as WeeklyVivid["report"],
     title: data.title || undefined,
-    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -199,6 +202,7 @@ export async function fetchWeeklyVividDetail(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 WeeklyVivid 타입으로 변환
+  // trend는 user_trends로 마이그레이션됨 - weekly_vivid에는 없음
   const rawFeedback = {
     id: String(data.id),
     week_range: {
@@ -208,7 +212,6 @@ export async function fetchWeeklyVividDetail(
     },
     report: data.report as WeeklyVivid["report"],
     title: data.title || undefined,
-    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -225,7 +228,7 @@ export async function saveWeeklyVivid(
   feedback: WeeklyVivid,
   generationDurationSeconds?: number
 ): Promise<string> {
-  // 암호화 처리
+  // 암호화 처리 (trend는 weekly_vivid에 저장하지 않음 - user_trends로 마이그레이션됨)
   const encryptedFeedback = encryptWeeklyVivid(
     feedback
   ) as unknown as WeeklyVivid;
@@ -240,7 +243,6 @@ export async function saveWeeklyVivid(
         timezone: encryptedFeedback.week_range.timezone || "Asia/Seoul",
         title: encryptedFeedback.title || null,
         report: encryptedFeedback.report || null,
-        trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
         generation_duration_seconds: generationDurationSeconds ?? null,
       },
@@ -256,6 +258,8 @@ export async function saveWeeklyVivid(
   if (!data || !data.id) {
     throw new Error("Failed to save weekly vivid: no ID returned");
   }
+
+  // trend는 user-trends cron에서만 생성/저장됨
 
   return String(data.id);
 }

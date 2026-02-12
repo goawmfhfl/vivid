@@ -9,10 +9,8 @@ import { AlignmentAnalysisSection } from "./AlignmentAnalysisSection";
 import { ExecutionAnalysisSection } from "./ExecutionAnalysisSection";
 import { UserCharacteristicsSection } from "./UserCharacteristicsSection";
 
-export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
+export function VisionSection({ view, isPro = false }: SectionProps) {
   const currentColor = COLORS.dailyVivid.current;
-
-  
 
   return (
     <div className="mb-16">
@@ -25,9 +23,9 @@ export function VisionSection({ view, isPro: _isPro = false }: SectionProps) {
       <CurrentVividSection view={view} />
       <FutureVisionSection view={view} />
       <RetrospectiveSection view={view} />
-      <AlignmentAnalysisSection view={view} />
+      <AlignmentAnalysisSection view={view} isPro={isPro} />
       <ExecutionAnalysisSection view={view} />
-      <UserCharacteristicsSection view={view} />
+      <UserCharacteristicsSection view={view} isPro={isPro} />
     </div>
   );
 }

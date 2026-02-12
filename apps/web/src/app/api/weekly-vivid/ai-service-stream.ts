@@ -7,7 +7,7 @@ import type { RecordsForWeekly } from "./types";
 import {
   buildWeeklyVividPromptFromRecords,
 } from "./prompts";
-import type { WeeklyVivid, WeeklyReport, WeeklyTrendData } from "@/types/weekly-vivid";
+import type { WeeklyVivid, WeeklyReport } from "@/types/weekly-vivid";
 import {
   generateCacheKey,
   getFromCache,
@@ -532,7 +532,7 @@ async function generateWeeklyVividDataFromRecords(
 
 
 /**
- * Records 배열을 기반으로 주간 비비드 생성 (report와 title 생성)
+ * Records 배열을 기반으로 주간 비비드 생성 (report와 title만, trend는 user-trends cron에서 생성)
  * vivid-records의 실제 기록을 기반으로 주간 피드백 생성
  */
 export async function generateWeeklyVividFromRecordsWithProgress(
@@ -543,7 +543,7 @@ export async function generateWeeklyVividFromRecordsWithProgress(
   userName?: string,
   personaContext?: string
 ): Promise<WeeklyVivid> {
-  // 한 번의 호출로 report, title, trend 모두 생성
+  // report, title만 생성 (trend는 user-trends cron에서 별도 생성)
   const weeklyVividData = await generateWeeklyVividDataFromRecords(
     records,
     range,
@@ -558,12 +558,12 @@ export async function generateWeeklyVividFromRecordsWithProgress(
     throw new Error("Failed to generate weekly report");
   }
 
-  // 최종 Weekly Vivid 조합
+  // 최종 Weekly Vivid 조합 (trend는 user-trends cron에서만 생성)
   const weeklyVivid: WeeklyVivid = {
     week_range: range,
     report: weeklyVividData.report as WeeklyReport,
     title: weeklyVividData.title || `${range.start} ~ ${range.end} 주간`,
-    trend: weeklyVividData.trend as WeeklyTrendData | null,
+    trend: null, // user-trends cron에서만 생성
     is_ai_generated: true,
   };
 

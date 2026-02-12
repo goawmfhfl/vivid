@@ -12,7 +12,6 @@ import { fetchWeeklyVividList } from "@/hooks/useWeeklyVivid";
 import { fetchMonthlyVividList } from "@/hooks/useMonthlyVivid";
 import { fetchWeeklyTrends } from "@/hooks/useWeeklyTrends";
 import { fetchMonthlyTrends } from "@/hooks/useMonthlyTrends";
-import { fetchRecentTrends } from "@/hooks/useRecentTrends";
 import { fetchMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import {
   ArrowLeft,
@@ -338,15 +337,6 @@ export function UserDetail({ userId }: UserDetailProps) {
       // 삭제 성공 시 관련 캐시 무효화 및 강제 새로고침
       if (type === "daily") {
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-        });
-        void queryClient
-          .fetchQuery({
-            queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-            queryFn: () => fetchRecentTrends({ force: true }),
-          })
-          .catch(() => {});
       } else if (type === "weekly") {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.WEEKLY_VIVID, "list"],

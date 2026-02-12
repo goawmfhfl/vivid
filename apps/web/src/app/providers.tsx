@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { supabase } from "@/lib/supabase";
 import { clearAllCache, clearUserDataCache } from "@/lib/cache-utils";
-import { isRefreshTokenError, isAuthFailureNoRetry } from "@/lib/auth-error";
+import { isAuthFailureNoRetry } from "@/lib/auth-error";
 import { QUERY_KEYS } from "@/constants";
 
 // React Query 클라이언트 생성
@@ -34,29 +34,15 @@ export function JournalProvider({ children }: { children: ReactNode }) {
       clearAllCache(queryClient);
       await supabase.auth.signOut({ scope: "local" });
       queryClient.removeQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
-    } catch (error) {
-      console.error("[Auth] 세션 정리 중 오류:", error);
-      router.replace("/login");
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        router.replace("/login");
+      }
+    } catch (_error) {
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        router.replace("/login");
+      }
     }
   }, [router]);
-
-  // 초기 세션 검증: 리프레시 토큰 에러만 처리 (에러 메시지 노출 없이 정리)
-  useEffect(() => {
-    const validateSession = async () => {
-      try {
-        const { error } = await supabase.auth.getSession();
-        if (error && isRefreshTokenError(error)) {
-          await handleInvalidRefreshToken();
-        }
-      } catch (error) {
-        if (isRefreshTokenError(error)) {
-          await handleInvalidRefreshToken();
-        }
-      }
-    };
-
-    validateSession();
-  }, [handleInvalidRefreshToken]);
 
   // Supabase 인증 상태 변경 감지 및 캐시 관리
   useEffect(() => {

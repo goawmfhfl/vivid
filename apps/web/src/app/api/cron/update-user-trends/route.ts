@@ -1,0 +1,250 @@
+import { NextRequest, NextResponse } from "next/server";
+import { Client } from "@upstash/qstash";
+import { getServiceSupabase } from "@/lib/supabase-service";
+import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils";
+import { API_ENDPOINTS } from "@/constants";
+import { decryptJsonbFields, type JsonbValue } from "@/lib/jsonb-encryption";
+import {
+  updateUserTrendsForUser,
+  updateUserTrendsMonthlyForUser,
+} from "./helpers";
+import {
+  getKstDateRangeFromBase,
+  getPreviousWeekKstRange,
+  getPreviousMonthKstRange,
+  isValidDateString,
+} from "../update-persona/helpers";
+
+export const maxDuration = 180;
+
+type UserTrendsBatchPayload = {
+  userIds: string[];
+  startDate: string;
+  endDate: string;
+  type?: "weekly" | "monthly";
+  month?: string; // "YYYY-MM", required when type=monthly
+};
+
+function getQstashClient(): Client {
+  const token = process.env.QSTASH_TOKEN;
+  if (!token) {
+    throw new Error("QSTASH_TOKEN is required");
+  }
+  return new Client({ token });
+}
+
+function getBatchSize(value: string | null): number {
+  const fallback = parseInt(process.env.USER_TRENDS_BATCH_SIZE || "25", 10);
+  const parsed = parseInt(value || String(fallback), 10);
+  return Math.min(Math.max(parsed, 1), 100);
+}
+
+function isAuthorizedCron(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  const isSecretValid = !!cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
+
+  // 로컬 개발: query param secret 허용 (NODE_ENV=development만)
+  const isDevSecret =
+    process.env.NODE_ENV === "development" &&
+    !!cronSecret &&
+    new URL(request.url).searchParams.get("secret") === cronSecret;
+
+  return isSecretValid || isVercelCron || isDevSecret;
+}
+
+export async function GET(request: NextRequest) {
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || "25", 10), 1),
+      100
+    );
+    const batchSize = getBatchSize(searchParams.get("batchSize"));
+    const baseDate = searchParams.get("baseDate");
+    const targetUserId = searchParams.get("userId");
+    const sync = searchParams.get("sync") === "1";
+    const type = (searchParams.get("type") || "weekly") as "weekly" | "monthly";
+
+    if (baseDate && !isValidDateString(baseDate)) {
+      return NextResponse.json(
+        { error: "Invalid baseDate format (YYYY-MM-DD required)" },
+        { status: 400 }
+      );
+    }
+
+    const { startDate, endDate } =
+      type === "monthly"
+        ? (() => {
+            const r = getPreviousMonthKstRange(baseDate || undefined);
+            return { startDate: r.startDate, endDate: r.endDate };
+          })()
+        : baseDate
+          ? getKstDateRangeFromBase(baseDate, 7)
+          : getPreviousWeekKstRange(baseDate || undefined);
+
+    const supabase = getServiceSupabase();
+
+    let users: Array<{ id: string }> = [];
+    if (targetUserId) {
+      const { isPro } = await verifySubscription(targetUserId);
+      if (!isPro) {
+        return NextResponse.json({
+          ok: true,
+          page: 1,
+          limit,
+          batchSize,
+          users: 0,
+          batches: 0,
+          nextPage: null,
+          message: "Target user is not Pro; user_trends cron runs for Pro only.",
+        });
+      }
+      users = [{ id: targetUserId }];
+
+      if (sync) {
+        const month =
+          type === "monthly"
+            ? getPreviousMonthKstRange(baseDate || undefined).month
+            : undefined;
+
+        const result =
+          type === "monthly"
+            ? await updateUserTrendsMonthlyForUser(
+                supabase,
+                targetUserId,
+                month!,
+                startDate,
+                endDate
+              )
+            : await updateUserTrendsForUser(
+                supabase,
+                targetUserId,
+                startDate,
+                endDate
+              );
+
+        const { data: latestRow } = await supabase
+          .from(API_ENDPOINTS.USER_TRENDS)
+          .select("id, period_start, period_end, metrics_breakdown, trend, generated_at")
+          .eq("user_id", targetUserId)
+          .eq("type", type)
+          .order("period_end", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const breakdownDecrypted =
+          latestRow?.metrics_breakdown && type === "weekly"
+            ? decryptJsonbFields(latestRow.metrics_breakdown as JsonbValue)
+            : null;
+        const breakdownKeys =
+          breakdownDecrypted && typeof breakdownDecrypted === "object"
+            ? Object.keys(breakdownDecrypted as Record<string, unknown>)
+            : [];
+
+        return NextResponse.json({
+          ok: true,
+          mode: "sync",
+          type,
+          userId: targetUserId,
+          startDate,
+          endDate,
+          ...(type === "monthly" && { month }),
+          result,
+          latest: latestRow
+            ? {
+                id: latestRow.id,
+                period_start: latestRow.period_start,
+                period_end: latestRow.period_end,
+                generated_at: latestRow.generated_at,
+                ...(type === "weekly" && {
+                  has_metrics_breakdown: breakdownKeys.length > 0,
+                  metrics_breakdown_keys: breakdownKeys,
+                }),
+                ...(type === "monthly" && {
+                  has_trend: !!latestRow.trend,
+                }),
+              }
+            : null,
+        });
+      }
+    } else {
+      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers({
+        page,
+        perPage: limit,
+      });
+      if (usersError) {
+        throw new Error(`Failed to list users: ${usersError.message}`);
+      }
+      const allUsers = usersData?.users || [];
+      users = allUsers.filter((user) =>
+        isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)
+      );
+    }
+
+    if (!users.length) {
+      return NextResponse.json({
+        ok: true,
+        page,
+        limit,
+        batchSize,
+        users: 0,
+        batches: 0,
+        nextPage: null,
+      });
+    }
+
+    const month = type === "monthly" ? getPreviousMonthKstRange(baseDate || undefined).month : undefined;
+
+    const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
+    const batchUrl = `${baseUrl}/api/cron/update-user-trends/batch`;
+    const qstash = getQstashClient();
+    const userIds = users.map((user) => user.id);
+    const batches: UserTrendsBatchPayload[] = [];
+    for (let idx = 0; idx < userIds.length; idx += batchSize) {
+      batches.push({
+        userIds: userIds.slice(idx, idx + batchSize),
+        startDate,
+        endDate,
+        type,
+        ...(type === "monthly" && month && { month }),
+      });
+    }
+
+    await Promise.all(
+      batches.map((payload) =>
+        qstash.publishJSON({
+          url: batchUrl,
+          body: payload,
+        })
+      )
+    );
+
+    return NextResponse.json({
+      ok: true,
+      page,
+      limit,
+      batchSize,
+      type,
+      users: users.length,
+      batches: batches.length,
+      nextPage: users.length === limit ? page + 1 : null,
+      startDate,
+      endDate,
+      ...(type === "monthly" && month && { month }),
+    });
+  } catch (error) {
+    console.error("Cron update-user-trends error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: "Internal server error", details: message },
+      { status: 500 }
+    );
+  }
+}

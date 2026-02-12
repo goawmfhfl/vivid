@@ -84,11 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[TEST] Trend generated successfully:`, {
-      breakdown_moments: trend.breakdown_moments?.substring(0, 50) + "...",
-      recovery_moments: trend.recovery_moments?.substring(0, 50) + "...",
-      energy_sources: trend.energy_sources?.substring(0, 50) + "...",
-      missing_future_elements: trend.missing_future_elements?.substring(0, 50) + "...",
-      top_keywords: trend.top_keywords?.substring(0, 50) + "...",
+      direction: trend.direction?.substring(0, 50) + "...",
+      core_value: trend.core_value?.substring(0, 50) + "...",
+      driving_force: trend.driving_force?.substring(0, 50) + "...",
+      current_self: trend.current_self?.substring(0, 50) + "...",
     });
 
     return NextResponse.json({

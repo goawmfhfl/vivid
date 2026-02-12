@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { MonthlyListSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { MonthlySummariesTab } from "@/components/summaries/MonthlySummariesTab";
 import { useMonthlyVividList } from "@/hooks/useMonthlyVivid";
@@ -12,6 +14,17 @@ import { withAuth } from "@/components/auth";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 
 function MonthlyListPage() {
+  const router = useRouter();
+  const { isPro, isLoading: isLoadingSubscription } = useSubscription();
+
+  // 비Pro 사용자는 리포트 메인으로 리다이렉트
+  useEffect(() => {
+    if (isLoadingSubscription) return;
+    if (!isPro) {
+      router.replace("/reports");
+    }
+  }, [isPro, isLoadingSubscription, router]);
+
   // 월간 비비드 리스트 조회
   const {
     data: monthlyVividList = [],
@@ -24,30 +37,30 @@ function MonthlyListPage() {
     await refetchMonthly();
   }, [refetchMonthly]);
 
-  // 월간 비비드을 PeriodSummary로 변환
+  // 월간 비비드을 PeriodSummary로 변환 (Hooks는 early return 전에 호출)
   const monthlySummaries = useMemo(() => {
     return monthlyVividList.map(convertMonthlyVividToPeriodSummary);
   }, [monthlyVividList]);
+
+  // 비Pro 또는 로딩 중에는 리다이렉트 처리
+  if (isLoadingSubscription || !isPro) {
+    return null;
+  }
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div
         className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
       >
-        <AppHeader 
-          title="월간 VIVID 리스트" 
+        <AppHeader
+          title="월간 VIVID 리스트"
           showBackButton={true}
+          onBack={() => router.push("/reports/monthly")}
         />
 
       {/* 월간 리포트 리스트 */}
       {isLoadingMonthly ? (
-        <div className="flex justify-center items-center py-12">
-          <LoadingSpinner
-            message="월간 vivid를 불러오는 중..."
-            size="md"
-            showMessage={true}
-          />
-        </div>
+        <MonthlyListSkeleton />
       ) : monthlyError ? (
         <div className="py-12">
           <ErrorDisplay
@@ -71,4 +84,12 @@ function MonthlyListPage() {
   );
 }
 
-export default withAuth(MonthlyListPage);
+const MonthlyListPageWithAuth = withAuth(MonthlyListPage);
+
+export default function Page() {
+  return (
+    <Suspense fallback={<MonthlyListSkeleton />}>
+      <MonthlyListPageWithAuth />
+    </Suspense>
+  );
+}

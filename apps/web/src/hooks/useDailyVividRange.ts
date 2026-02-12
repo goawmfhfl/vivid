@@ -10,6 +10,10 @@ type UseDailyVividRangeParams = {
   end: string; // "YYYY-MM-DD"
 };
 
+type UseDailyVividRangeOptions = {
+  enabled?: boolean;
+};
+
 /**
  * 날짜 범위로 daily-vivid 조회
  */
@@ -42,11 +46,15 @@ const fetchDailyVividRange = async (
 /**
  * 날짜 범위로 daily-vivid 조회 훅
  */
-export function useDailyVividRange(params: UseDailyVividRangeParams) {
+export function useDailyVividRange(
+  params: UseDailyVividRangeParams,
+  options?: UseDailyVividRangeOptions
+) {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: [QUERY_KEYS.DAILY_VIVID, "range", params.start, params.end],
     queryFn: () => fetchDailyVividRange(params),
-    enabled: !!params.start && !!params.end,
+    enabled: enabled && !!params.start && !!params.end,
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
   });
 }

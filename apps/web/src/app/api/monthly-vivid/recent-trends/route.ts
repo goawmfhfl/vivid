@@ -9,7 +9,8 @@ import {
 import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 
 /**
- * GET 핸들러: 최근 4달간의 monthly-vivid trend 데이터 조회
+ * GET 핸들러: user_trends에서 최근 4달 monthly trend 조회
+ * monthly_vivid trend가 user_trends로 마이그레이션됨
  */
 export async function GET(request: NextRequest) {
   try {
@@ -26,99 +27,44 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    // 최근 4달간의 monthly-vivid 데이터 조회 (trend 컬럼만 선택)
     const { data, error } = await supabase
-      .from(API_ENDPOINTS.MONTHLY_VIVID)
-      .select("month, trend")
+      .from(API_ENDPOINTS.USER_TRENDS)
+      .select("trend")
       .eq("user_id", userId)
-      .not("trend", "is", null)
-      .order("month", { ascending: false })
+      .eq("type", "monthly")
+      .order("period_end", { ascending: false })
       .limit(4);
 
     if (error) {
-      throw new Error(`Failed to fetch monthly vivid trends: ${error.message}`);
+      throw new Error(`Failed to fetch user_trends: ${error.message}`);
     }
 
-    if (!data || data.length === 0) {
-      return NextResponse.json<MonthlyTrendsResponse>(
-        {
-          breakdown_moments: [],
-          recovery_moments: [],
-          energy_sources: [],
-          missing_future_elements: [],
-          top_keywords: [],
-        },
-        { status: 200 }
-      );
-    }
+    const rows = (data || []) as Array<{ trend: JsonbValue }>;
+    const direction: string[] = [];
+    const core_value: string[] = [];
+    const driving_force: string[] = [];
+    const current_self: string[] = [];
 
-    // trend 데이터 추출 및 복호화
-    const breakdownMomentsList: MonthlyTrendsResponse["breakdown_moments"] = [];
-    const recoveryMomentsList: MonthlyTrendsResponse["recovery_moments"] = [];
-    const energySourcesList: MonthlyTrendsResponse["energy_sources"] = [];
-    const missingFutureElementsList: MonthlyTrendsResponse["missing_future_elements"] = [];
-    const topKeywordsList: MonthlyTrendsResponse["top_keywords"] = [];
-
-    for (const item of data) {
-      if (item.trend) {
-        // trend 복호화
-        const decryptedTrend = decryptJsonbFields(
-          item.trend as JsonbValue
-        ) as {
-          breakdown_moments?: string;
-          recovery_moments?: string;
-          energy_sources?: string;
-          missing_future_elements?: string;
-          top_keywords?: string;
-        } | null;
-
-        if (decryptedTrend && typeof decryptedTrend === "object") {
-          const month = item.month;
-
-          if (decryptedTrend.breakdown_moments) {
-            breakdownMomentsList.push({
-              month,
-              answer: decryptedTrend.breakdown_moments,
-            });
-          }
-
-          if (decryptedTrend.recovery_moments) {
-            recoveryMomentsList.push({
-              month,
-              answer: decryptedTrend.recovery_moments,
-            });
-          }
-
-          if (decryptedTrend.energy_sources) {
-            energySourcesList.push({
-              month,
-              answer: decryptedTrend.energy_sources,
-            });
-          }
-
-          if (decryptedTrend.missing_future_elements) {
-            missingFutureElementsList.push({
-              month,
-              answer: decryptedTrend.missing_future_elements,
-            });
-          }
-
-          if (decryptedTrend.top_keywords) {
-            topKeywordsList.push({
-              month,
-              answer: decryptedTrend.top_keywords,
-            });
-          }
-        }
-      }
+    for (const row of rows) {
+      const decoded = decryptJsonbFields(row.trend || {}) as Record<
+        string,
+        unknown
+      >;
+      const d = decoded.direction;
+      const c = decoded.core_value;
+      const df = decoded.driving_force;
+      const cs = decoded.current_self;
+      if (typeof d === "string" && d.trim()) direction.push(d);
+      if (typeof c === "string" && c.trim()) core_value.push(c);
+      if (typeof df === "string" && df.trim()) driving_force.push(df);
+      if (typeof cs === "string" && cs.trim()) current_self.push(cs);
     }
 
     const response: MonthlyTrendsResponse = {
-      breakdown_moments: breakdownMomentsList,
-      recovery_moments: recoveryMomentsList,
-      energy_sources: energySourcesList,
-      missing_future_elements: missingFutureElementsList,
-      top_keywords: topKeywordsList,
+      direction: direction.slice(0, 4),
+      core_value: core_value.slice(0, 4),
+      driving_force: driving_force.slice(0, 4),
+      current_self: current_self.slice(0, 4),
     };
 
     return NextResponse.json<MonthlyTrendsResponse>(

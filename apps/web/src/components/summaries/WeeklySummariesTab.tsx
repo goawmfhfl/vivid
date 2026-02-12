@@ -13,7 +13,7 @@ interface WeeklySummariesTabProps {
   summaries: PeriodSummary[];
 }
 
-const WEEKLY_COLOR = COLORS.brand.primary;
+const WEEKLY_COLOR = COLORS.weekly.primary;
 const ITEMS_PER_PAGE = 10;
 
 export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {

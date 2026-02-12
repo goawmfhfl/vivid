@@ -1,15 +1,22 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { MonthlyCandidatesSection } from "@/components/summaries/MonthlyCandidatesSection";
+import { FourMonthTrendsSection } from "@/components/reports/FourMonthTrendsSection";
 import { MonthlyTrendsSection } from "@/components/reports/MonthlyTrendsSection";
 import { useMonthlyTrends } from "@/hooks/useMonthlyTrends";
-import { COLORS, SPACING } from "@/lib/design-system";
+import { useSubscription } from "@/hooks/useSubscription";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  GRADIENT_UTILS,
+  SHADOWS,
+} from "@/lib/design-system";
 import { withAuth } from "@/components/auth";
-import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { QUERY_KEYS } from "@/constants";
@@ -17,6 +24,15 @@ import { QUERY_KEYS } from "@/constants";
 function MonthlyReportsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { isPro, isLoading: isLoadingSubscription } = useSubscription();
+
+  // 비Pro 사용자는 리포트 메인으로 리다이렉트
+  useEffect(() => {
+    if (isLoadingSubscription) return;
+    if (!isPro) {
+      router.replace("/reports");
+    }
+  }, [isPro, isLoadingSubscription, router]);
 
   // 월간 흐름 데이터 조회
   const {
@@ -32,6 +48,11 @@ function MonthlyReportsPage() {
       queryClient.refetchQueries({ queryKey: [QUERY_KEYS.MONTHLY_CANDIDATES] }),
     ]);
   }, [queryClient, refetchMonthlyTrends]);
+
+  // 비Pro 또는 로딩 중에는 리다이렉트/스켈레톤 처리
+  if (isLoadingSubscription || !isPro) {
+    return null;
+  }
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -49,59 +70,77 @@ function MonthlyReportsPage() {
         <MonthlyCandidatesSection />
       </div>
 
-      {/* 월간 리스트 보러가기 버튼 */}
+      {/* 월간 리스트 보러가기 버튼 - 부드러운 옐로우 */}
       <div className="mb-12">
-        <Button
+        <button
+          type="button"
           onClick={() => router.push("/reports/monthly/list")}
-          className="w-full relative overflow-hidden group"
+          className="w-full relative overflow-hidden transition-all duration-300 active:scale-[0.98] cursor-pointer min-w-0 p-3 sm:p-5 text-left"
           style={{
-            backgroundColor: COLORS.brand.primary,
-            color: "white",
-            padding: "1.5rem 2rem",
-            borderRadius: "16px",
-            border: "none",
-            fontSize: "1.125rem",
-            boxShadow: `
-              0 4px 16px rgba(107, 122, 111, 0.25),
-              0 2px 8px rgba(107, 122, 111, 0.15),
-              inset 0 1px 0 rgba(255,255,255,0.2)
-            `,
-            transition: "all 0.3s ease",
-            fontWeight: "700",
-            letterSpacing: "0.01em",
+            background: GRADIENT_UTILS.cardBackground(COLORS.monthly.light, 0.2),
+            border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.monthly.primary, "35")}`,
+            borderRadius: "20px",
+            boxShadow: SHADOWS.default,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
-            e.currentTarget.style.boxShadow = `
-              0 8px 24px rgba(107, 122, 111, 0.35),
-              0 4px 12px rgba(107, 122, 111, 0.2),
-              inset 0 1px 0 rgba(255,255,255,0.3)
-            `;
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = SHADOWS.lg;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = `
-              0 4px 16px rgba(107, 122, 111, 0.25),
-              0 2px 8px rgba(107, 122, 111, 0.15),
-              inset 0 1px 0 rgba(255,255,255,0.2)
-            `;
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = SHADOWS.default;
           }}
         >
-          {/* 배경 그라데이션 오버레이 */}
           <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            className="absolute top-0 right-0 w-32 h-32 opacity-10 pointer-events-none"
             style={{
-              background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.light} 100%)`,
+              background: GRADIENT_UTILS.decoration(COLORS.monthly.primary, 0.5),
             }}
           />
-          <div className="relative z-10 flex items-center justify-center gap-3">
-            <List className="w-6 h-6" />
-            <span className="text-lg font-bold">월간 VIVID 리스트 보러가기</span>
+          <div className="relative z-0 flex flex-col gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center"
+                style={{
+                  background: GRADIENT_UTILS.iconBadge(COLORS.monthly.primary, 0.08),
+                  boxShadow: `0 2px 8px ${COLORS.monthly.primary}35`,
+                }}
+              >
+                <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: COLORS.text.white }} />
+              </div>
+              <h3
+                className={TYPOGRAPHY.h3.fontSize}
+                style={{
+                  ...TYPOGRAPHY.h3,
+                  fontSize: "clamp(0.8rem, 2.5vw, 0.9rem)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                월간 VIVID 리스트 보러가기
+              </h3>
+            </div>
+            <p
+              className="text-[0.7rem] sm:text-xs leading-relaxed line-clamp-2"
+              style={{
+                color: COLORS.text.secondary,
+                opacity: 0.85,
+                lineHeight: "1.4",
+              }}
+            >
+              작성한 월간 VIVID 목록 확인
+            </p>
           </div>
-        </Button>
+        </button>
       </div>
 
-      {/* 나의 월간 흐름 */}
+      {/* 한눈에 보기 - 최근 4달 인사이트 */}
+      <div className="mb-12">
+        <FourMonthTrendsSection />
+      </div>
+
+      {/* 성장인사이트 - 나를 설명하는 4가지 흐름 */}
       <div className="mb-12">
         <MonthlyTrendsSection
           data={monthlyTrendsData ?? null}

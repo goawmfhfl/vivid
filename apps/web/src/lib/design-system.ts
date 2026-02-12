@@ -108,6 +108,18 @@ export const COLORS = {
     light: "#b9c0a3",
     dark: "#4b5530",
   },
+  // 주간 VIVID 전용 - 부드러운 하늘빛 (소프트 스카이 블루)
+  weekly: {
+    primary: "#7ab8ce", // 소프트 스카이 블루
+    light: "#c8dde8", // 프로스티드 글라스 느낌 연한 블루
+    dark: "#5a8e9e", // 뮤트 딥 스카이
+  },
+  // 월간 VIVID 전용 - 모던한 투명감 있는 보랏빛
+  monthly: {
+    primary: "#a89bc4", // 소프트 라벤더 (모던/투명감)
+    light: "#e2deec", // 프로스티드 글라스 느낌 연한 퍼플
+    dark: "#8b7a9e", // 리파인드 딥 라벤더
+  },
   // 상태 색상
   status: {
     success: "#7f8f7a",
@@ -170,6 +182,12 @@ export const COLORS = {
       gradient: "linear-gradient(135deg, #7f8f7a 0%, #5f6b3a 100%)",
       light: "#7f8f7a20",
       border: "#7f8f7a40",
+    },
+    recovery: {
+      primary: "#5d9aae", // 푸른 에메랄드 - 회복·힐링 톤
+      gradient: "linear-gradient(135deg, #5d9aae 0%, #4a8799 100%)",
+      light: "#5d9aae20",
+      border: "#5d9aae40",
     },
   },
 } as const;

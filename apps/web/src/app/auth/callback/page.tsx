@@ -76,7 +76,7 @@ function sendAuthDebug(payload: Record<string, unknown>) {
 function AuthCallbackContent() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [status, setStatus] = useState<string>("콜백 확인 중...");
+  const [_status, setStatus] = useState<string>("콜백 확인 중...");
   const authExecutedRef = useRef(false);
 
   // 1. Hydration 방지: 브라우저 마운트 이후에만 콘텐츠 렌더

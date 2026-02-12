@@ -1,3 +1,4 @@
+import { jsonrepair } from "jsonrepair";
 import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generative-ai";
 import {
   DailyVividReportSchema,
@@ -22,6 +23,30 @@ import type {
   ApiError,
 } from "../types";
 import { logAIRequestAsync } from "@/lib/ai-usage-logger";
+
+/**
+ * AI 응답 JSON 파싱 (truncated/unterminated string 등 복구)
+ */
+function parseJsonRobust(content: string, schemaName: string): unknown {
+  const trimmed = content.trim();
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // jsonrepair로 truncated/unterminated string 등 복구 후 재시도
+    try {
+      const repaired = jsonrepair(trimmed);
+      return JSON.parse(repaired);
+    } catch (repairErr) {
+      console.error(`[${schemaName}] JSON 파싱 실패 (복구 시도 후):`, {
+        contentLength: trimmed.length,
+        contentPreview: trimmed.slice(0, 200) + (trimmed.length > 200 ? "..." : ""),
+        repairErr,
+      });
+      throw repairErr;
+    }
+  }
+}
 
 function getGeminiClient(): GoogleGenerativeAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -59,9 +84,9 @@ async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  // generationMode에 따라 모델 선택
+  // 모델 선택: Free는 항상 Flash(비용 절감), Pro는 사고모드일 때 Pro 모델
   const modelName =
-    generationMode === "reasoned"
+    isPro && generationMode === "reasoned"
       ? "gemini-3-pro-preview"
       : "gemini-3-flash-preview";
 
@@ -74,10 +99,9 @@ async function generateSection<T>(
     isPro
   );
 
-  // Free 유저의 경우 토큰 사용량 제한 (비용 절감)
-  // Pro 유저는 제한 없음
-  // JSON 스키마 응답을 완성하기 위해 최소한의 토큰은 필요하므로 2000으로 설정
-  const maxOutputTokens = isPro ? undefined : 2000;
+  // Free 유저: Flash 사용으로 비용 절감하되, 풀 리포트를 위해 4096 토큰 허용
+  // Pro 유저: 제한 없음
+  const maxOutputTokens = isPro ? undefined : 4096;
 
   const startTime = Date.now();
   try {
@@ -261,7 +285,7 @@ async function generateSection<T>(
       throw new Error(`No content from Gemini (${schemaObj.name})`);
     }
 
-    const parsed = JSON.parse(content);
+    const parsed = parseJsonRobust(content, schemaObj.name);
     let result: T;
 
     // parsed가 이미 직접 객체인 경우 (래퍼 없이)
@@ -301,17 +325,18 @@ async function generateSection<T>(
 
           // parsed가 직접 원하는 구조인지 확인 (예: { report: {...} })
           // 또는 다른 키를 확인
-          const keys = Object.keys(parsed);
+          const parsedRecord = parsed as Record<string, unknown>;
+          const keys = Object.keys(parsedRecord);
           const objectValue = keys.find(
             (key) =>
-              parsed[key] !== null &&
-              parsed[key] !== undefined &&
-              typeof parsed[key] === "object" &&
-              !Array.isArray(parsed[key])
+              parsedRecord[key] !== null &&
+              parsedRecord[key] !== undefined &&
+              typeof parsedRecord[key] === "object" &&
+              !Array.isArray(parsedRecord[key])
           );
 
           if (objectValue) {
-            result = parsed[objectValue] as T;
+            result = parsedRecord[objectValue] as T;
           } else {
             // parsed 자체가 원하는 객체인 경우
             result = parsed as T;
@@ -546,7 +571,7 @@ async function generateReport(
 /**
  * Trend 데이터 생성 (최근 동향 섹션용)
  */
-async function generateTrendData(
+async function _generateTrendData(
   records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,
@@ -623,7 +648,7 @@ async function generateTrendData(
 /**
  * 통합 리포트 생성 (Report + Trend) - Pro 유저용
  */
-async function generateIntegratedReport(
+async function _generateIntegratedReport(
   records: FeedbackRecord[],
   date: string,
   dayOfWeek: string,

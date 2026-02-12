@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
-import { fetchRecentTrends } from "@/hooks/useRecentTrends";
 
 type DailyVividGenerationMode = "fast" | "reasoned";
 type DailyVividGenerationType = "vivid" | "review";
@@ -166,16 +165,6 @@ export const useCreateDailyVivid = () => {
         queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
       });
 
-      // 최근 흐름 데이터 무효화 및 강제 새로고침
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-      });
-      void queryClient
-        .fetchQuery({
-          queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-          queryFn: () => fetchRecentTrends({ force: true }),
-        })
-        .catch(() => {});
     },
     onError: (error) => {
       console.error("일일 비비드 생성 실패:", error);

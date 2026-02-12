@@ -1,4 +1,5 @@
-import { BarChart3, CheckCircle2, HelpCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BarChart3, CheckCircle2, HelpCircle, Lock } from "lucide-react";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { COLORS, TYPOGRAPHY, hexToRgba } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -176,7 +177,8 @@ function AlignmentScoreInfoDialog() {
   );
 }
 
-export function AlignmentAnalysisSection({ view }: SectionProps) {
+export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) {
+  const router = useRouter();
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
   const alignmentScore =
@@ -299,7 +301,7 @@ export function AlignmentAnalysisSection({ view }: SectionProps) {
           {view.alignment_analysis_points &&
             view.alignment_analysis_points.length > 0 && (
               <div
-                className="mt-6 pt-5 border-t"
+                className="mt-6 pt-5 border-t relative"
                 style={{ borderColor: `${alignmentColor}20` }}
               >
                 <div className="flex items-center gap-2 mb-4">
@@ -319,29 +321,60 @@ export function AlignmentAnalysisSection({ view }: SectionProps) {
                     일치도 분석 포인트
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {view.alignment_analysis_points.map((reason, idx) => (
+                {isPro ? (
+                  <div className="flex flex-wrap gap-2">
+                    {view.alignment_analysis_points.map((reason, idx) => (
+                      <div
+                        key={idx}
+                        className="px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
+                        style={{
+                          backgroundColor: `${alignmentColor}12`,
+                          border: `1px solid ${alignmentColor}25`,
+                        }}
+                      >
+                        <div
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: alignmentColor }}
+                        />
+                        <span
+                          className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {reason}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/membership")}
+                    className="w-full py-4 rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:opacity-90"
+                    style={{
+                      backgroundColor: `${alignmentColor}10`,
+                      border: `1px dashed ${alignmentColor}40`,
+                    }}
+                  >
                     <div
-                      key={idx}
-                      className="px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 hover:scale-[1.02]"
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
                       style={{
-                        backgroundColor: `${alignmentColor}12`,
-                        border: `1px solid ${alignmentColor}25`,
+                        background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.dark} 100%)`,
+                        boxShadow: `0 2px 8px ${COLORS.brand.primary}40`,
                       }}
                     >
-                      <div
-                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: alignmentColor }}
+                      <Lock
+                        className="w-5 h-5"
+                        style={{ color: COLORS.text.white }}
                       />
-                      <span
-                        className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {reason}
-                      </span>
                     </div>
-                  ))}
-                </div>
+                    <span
+                      className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      Pro 업그레이드 시 상세 분석 포인트 확인
+                    </span>
+                  </button>
+                )}
               </div>
             )}
         </ChartGlassCard>

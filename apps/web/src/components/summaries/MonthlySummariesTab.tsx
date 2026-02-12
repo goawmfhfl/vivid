@@ -7,11 +7,13 @@ import { SummaryList } from "./SummaryList";
 import { MonthlyCandidatesSection } from "./MonthlyCandidatesSection";
 import { EmptyState } from "./EmptyState";
 import { Pagination } from "./Pagination";
+import { COLORS } from "@/lib/design-system";
+
 interface MonthlySummariesTabProps {
   summaries: PeriodSummary[];
 }
 
-const MONTHLY_COLOR = "#6B7A6F";
+const MONTHLY_COLOR = COLORS.monthly.primary;
 const ITEMS_PER_PAGE = 10;
 
 export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
@@ -56,25 +58,18 @@ export function MonthlySummariesTab({ summaries }: MonthlySummariesTabProps) {
       {currentSummaries.length > 0 && (
         <div
           className={hasCandidatesSection ? "pt-6 border-t" : "pt-0"}
-          style={{ borderColor: "#EFE9E3" }}
+          style={{ borderColor: COLORS.border.light }}
         >
           <div className="mb-4">
             <h2
-              style={{
-                color: "#333333",
-                fontSize: "1.1rem",
-                fontWeight: "600",
-                marginBottom: "4px",
-              }}
+              className="text-lg font-semibold mb-1"
+              style={{ color: COLORS.text.primary }}
             >
               월간 vivid 리스트
             </h2>
             <p
-              style={{
-                color: "#4E4B46",
-                opacity: 0.7,
-                fontSize: "0.85rem",
-              }}
+              className="text-sm"
+              style={{ color: COLORS.text.secondary }}
             >
               AI가 분석한 월간 인사이트와 VIVID를 확인하세요
             </p>

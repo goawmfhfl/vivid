@@ -1,4 +1,5 @@
-import { Heart, Target, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, Lock, Target, User } from "lucide-react";
 import { Card } from "../ui/card";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { COLORS, TYPOGRAPHY, SHADOWS, hexToRgba } from "@/lib/design-system";
@@ -6,7 +7,11 @@ import { cn } from "@/lib/utils";
 import { SectionProps } from "./types";
 import { hexToRgbTriplet } from "./colorUtils";
 
-export function UserCharacteristicsSection({ view }: SectionProps) {
+const FREE_VISIBLE_COUNT = 2;
+const PRO_TOTAL_COUNT = 5;
+
+export function UserCharacteristicsSection({ view, isPro = false }: SectionProps) {
+  const router = useRouter();
   const hasUserCharacteristics =
     view.user_characteristics && view.user_characteristics.length > 0;
   const hasAspiredTraits = view.aspired_traits && view.aspired_traits.length > 0;
@@ -90,7 +95,10 @@ export function UserCharacteristicsSection({ view }: SectionProps) {
                   </p>
                 </div>
                 <ul className="space-y-3">
-                  {view.user_characteristics.map((trait, idx) => (
+                  {(isPro
+                    ? view.user_characteristics
+                    : view.user_characteristics.slice(0, FREE_VISIBLE_COUNT)
+                  ).map((trait, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <div
                         className="w-2 h-2 rounded-full mt-2.5 flex-shrink-0 transition-transform duration-300 group-hover:scale-125"
@@ -109,6 +117,33 @@ export function UserCharacteristicsSection({ view }: SectionProps) {
                     </li>
                   ))}
                 </ul>
+                {!isPro && view.user_characteristics.length > FREE_VISIBLE_COUNT && (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/membership")}
+                    className="mt-4 w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{
+                      backgroundColor: `${alignmentColor}10`,
+                      border: `1px dashed ${alignmentColor}40`,
+                    }}
+                  >
+                    <Lock
+                      className="w-4 h-4"
+                      style={{ color: COLORS.brand.primary }}
+                    />
+                    <span
+                      className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      Pro 업그레이드 시 나머지{" "}
+                      {Math.min(
+                        view.user_characteristics.length - FREE_VISIBLE_COUNT,
+                        PRO_TOTAL_COUNT - FREE_VISIBLE_COUNT
+                      )}
+                      개 확인
+                    </span>
+                  </button>
+                )}
               </div>
             </Card>
           )}
@@ -163,7 +198,10 @@ export function UserCharacteristicsSection({ view }: SectionProps) {
                   </p>
                 </div>
                 <ul className="space-y-3">
-                  {view.aspired_traits.map((trait, idx) => (
+                  {(isPro
+                    ? view.aspired_traits
+                    : view.aspired_traits.slice(0, FREE_VISIBLE_COUNT)
+                  ).map((trait, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <div
                         className="w-2 h-2 rounded-full mt-2.5 flex-shrink-0 transition-transform duration-300 group-hover:scale-125"
@@ -182,6 +220,33 @@ export function UserCharacteristicsSection({ view }: SectionProps) {
                     </li>
                   ))}
                 </ul>
+                {!isPro && view.aspired_traits.length > FREE_VISIBLE_COUNT && (
+                  <button
+                    type="button"
+                    onClick={() => router.push("/membership")}
+                    className="mt-4 w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{
+                      backgroundColor: `${futureColor}10`,
+                      border: `1px dashed ${futureColor}40`,
+                    }}
+                  >
+                    <Lock
+                      className="w-4 h-4"
+                      style={{ color: futureColor }}
+                    />
+                    <span
+                      className={cn(TYPOGRAPHY.bodySmall.fontSize)}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      Pro 업그레이드 시 나머지{" "}
+                      {Math.min(
+                        view.aspired_traits.length - FREE_VISIBLE_COUNT,
+                        PRO_TOTAL_COUNT - FREE_VISIBLE_COUNT
+                      )}
+                      개 확인
+                    </span>
+                  </button>
+                )}
               </div>
             </Card>
           )}

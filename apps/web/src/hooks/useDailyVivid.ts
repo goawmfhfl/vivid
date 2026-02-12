@@ -4,7 +4,6 @@ import { QUERY_KEYS, API_ENDPOINTS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { decryptDailyVivid } from "@/lib/jsonb-encryption";
-import { fetchRecentTrends } from "@/hooks/useRecentTrends";
 
 // Daily Vivid 조회 함수
 const fetchDailyVivid = async (
@@ -85,16 +84,6 @@ export const useCreateDailyVivid = () => {
       // 기록 변화가 반영되도록 records도 새로고침(선택)
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.RECORDS] });
 
-      // 최근 흐름 데이터 무효화 및 강제 새로고침
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-      });
-      void queryClient
-        .fetchQuery({
-          queryKey: [QUERY_KEYS.DAILY_VIVID, "recent-trends"],
-          queryFn: () => fetchRecentTrends({ force: true }),
-        })
-        .catch(() => {});
     },
     onError: (error) => {
       console.error("일일 비비드 생성 실패:", error);

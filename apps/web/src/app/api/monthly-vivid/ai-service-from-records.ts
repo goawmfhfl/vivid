@@ -2,7 +2,6 @@ import type { MonthlyVivid } from "@/types/monthly-vivid";
 import type { Record } from "../daily-vivid/types";
 import { generateVividReportFromRecords } from "./sections/vivid-from-records";
 import { generateTitle } from "./sections/title";
-import { generateMonthlyTrend } from "./sections/trend";
 
 /**
  * Vivid Records 배열을 기반으로 월간 비비드 생성
@@ -55,15 +54,7 @@ export async function generateMonthlyVividFromRecordsWithProgress(
     userId
   );
 
-  // 3. Trend 생성 (report 기반)
-  const trend = await generateMonthlyTrend(
-    report,
-    month,
-    monthLabel,
-    isPro,
-    userId,
-    userName
-  );
+  // trend는 user-trends cron에서만 생성됨
 
   const monthlyVivid: MonthlyVivid = {
     month,
@@ -73,7 +64,7 @@ export async function generateMonthlyVividFromRecordsWithProgress(
     recorded_days: recordedDays,
     title,
     report,
-    trend: trend || null,
+    trend: null, // user-trends cron에서만 생성
     is_ai_generated: true,
   };
 

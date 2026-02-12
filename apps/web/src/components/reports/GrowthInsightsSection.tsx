@@ -1,9 +1,11 @@
 "use client";
 
-import { Lightbulb, Scale } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Lightbulb, Scale, Lock } from "lucide-react";
 import { AnimatedScoreBlock } from "@/components/reports/AnimatedScoreBlock";
 import { ReportDropdown } from "@/components/reports/ReportDropdown";
-import { ProNoticeBox } from "@/components/reports/ProNoticeBox";
+import { GrowthInsightsSectionSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
+import { PreviewDataNotice } from "@/components/reports/PreviewDataNotice";
 import { COLORS } from "@/lib/design-system";
 import type { UserPersonaInsightsResponse } from "@/app/api/user-persona/insights/route";
 
@@ -11,34 +13,26 @@ interface GrowthInsightsSectionProps {
   growth_insights: UserPersonaInsightsResponse["growth_insights"] | null;
   identity?: UserPersonaInsightsResponse["identity"];
   patterns?: UserPersonaInsightsResponse["patterns"];
-  trend?: UserPersonaInsightsResponse["trend"];
   isLoading?: boolean;
   isLocked?: boolean;
+  hasRealData?: boolean;
 }
 
 const ACCENT = COLORS.brand.primary;
 const CARD_BG = COLORS.background.cardElevated;
 const CARD_BORDER = COLORS.border.light;
 
-function OneLine({ label, text }: { label: string; text: string }) {
-  if (!text?.trim()) return null;
-  return (
-    <p className="text-xs mt-1" style={{ color: COLORS.text.secondary }}>
-      <span className="font-medium" style={{ color: COLORS.text.primary }}>{label}</span>
-      {` · ${text}`}
-    </p>
-  );
-}
-
 export function GrowthInsightsSection({
   growth_insights,
   identity = null,
   patterns = null,
-  trend = null,
   isLoading = false,
   isLocked = false,
+  hasRealData = true,
 }: GrowthInsightsSectionProps) {
-  if (isLoading || !growth_insights) return null;
+  const router = useRouter();
+  if (isLoading) return <GrowthInsightsSectionSkeleton />;
+  if (!growth_insights) return null;
 
   const {
     self_clarity_index,
@@ -59,7 +53,6 @@ export function GrowthInsightsSection({
         { label: "지향하는 자아", items: identity?.ideal_self ?? [] },
         { label: "나를 움직이는 원동력", items: identity?.driving_forces ?? [] },
       ].filter((b) => b.items.length > 0),
-      oneLine: trend?.aspired_self ? { label: "지향", text: trend.aspired_self } : null,
     },
     {
       id: "balance",
@@ -72,19 +65,18 @@ export function GrowthInsightsSection({
         { label: "에너지원", items: patterns?.energy_sources ?? [] },
         { label: "걸림돌", items: patterns?.stumbling_blocks ?? [] },
       ].filter((b) => b.items.length > 0),
-      oneLine: null,
     },
   ];
 
   return (
     <section className="space-y-6 w-full max-w-2xl relative min-w-0">
-      {isLocked && (
-        <ProNoticeBox
-          message={`Pro 멤버십에서만 제공되는 성장 인사이트예요.구독하면 나의 정체성·지향 명확도, 몰입과 걸림돌 균형을 기록 기반으로 확인할 수 있어요.`}
-          className="mb-4"
+      {!hasRealData && (
+        <PreviewDataNotice
+          subtitle="나의 기록이 쌓이면 성장 인사이트가 표시됩니다"
+          accentColor={ACCENT}
         />
       )}
-      {cards.map(({ id, title, Icon, score, rationale, blocks, oneLine }, cardIdx) => (
+      {cards.map(({ id, title, Icon, score, rationale, blocks }, cardIdx) => (
         <div
           key={id}
           className="relative rounded-xl overflow-hidden transition-all duration-200 animate-fade-in"
@@ -95,6 +87,36 @@ export function GrowthInsightsSection({
             animationDelay: `${cardIdx * 100}ms`,
           }}
         >
+          {/* 비Pro: Pro 전용 데이터 오버레이 */}
+          {isLocked && (
+            <button
+              type="button"
+              onClick={() => router.push("/membership")}
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-opacity hover:opacity-100"
+              style={{
+                backgroundColor: "rgba(250, 250, 248, 0.85)",
+                backdropFilter: "blur(4px)",
+                WebkitBackdropFilter: "blur(4px)",
+                opacity: 0.95,
+              }}
+            >
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-full"
+                style={{
+                  background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.dark} 100%)`,
+                  boxShadow: `0 2px 12px ${COLORS.brand.primary}50`,
+                }}
+              >
+                <Lock className="w-6 h-6" style={{ color: COLORS.text.white }} />
+              </div>
+              <span
+                className="text-sm font-medium"
+                style={{ color: COLORS.text.primary }}
+              >
+                Pro 멤버 전용
+              </span>
+            </button>
+          )}
           <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: ACCENT }} />
           <div className="pl-4 pr-4 pt-4 pb-4 relative">
             {/* 1. 제목(왼쪽) + 점수·그래프(오른쪽) 한 줄 (줄바꿈 없음, 좁을 땐 크기 축소) */}
@@ -123,25 +145,21 @@ export function GrowthInsightsSection({
               </div>
             </div>
 
-            {/* 2. 한 줄 요약 */}
-            {oneLine && <OneLine label={oneLine.label} text={oneLine.text} />}
-
-            {/* 3. 드롭다운 리스트 */}
+            {/* 2. 드롭다운 리스트 */}
             {blocks.length > 0 && (
               <div className="space-y-2 mt-3">
-                {blocks.map((b, blockIdx) => (
+                {blocks.map((b) => (
                   <ReportDropdown
                     key={b.label}
                     label={b.label}
                     items={b.items}
                     accentColor={ACCENT}
-                    defaultOpen={cardIdx === 0 && blockIdx === 0}
                   />
                 ))}
               </div>
             )}
 
-            {/* 4. 인사이트 */}
+            {/* 3. 인사이트 */}
             {rationale && (
               <p
                 className="text-xs mt-4 leading-relaxed"

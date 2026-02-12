@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Plus, ChevronDown, BookOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, ChevronDown, BookOpen, Lock } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
@@ -69,6 +70,7 @@ export function RecordForm({
   const isQ3RestoringScrollRef = useRef(false);
   /** Q3 입력 직전 스크롤 위치. effect에서는 reflow 후 잘못된 값을 캡처하므로, 복원 시 이 값만 사용 */
   const lastQ3ScrollBeforeChangeRef = useRef<{ x: number; y: number } | null>(null);
+  const router = useRouter();
   const { subscription } = useSubscription();
   const { isDevelopment } = useEnvironment();
   const { state: timerState } = useTimer();
@@ -79,7 +81,7 @@ export function RecordForm({
   const targetDateIso = selectedDate || todayIso;
   const isFuture = targetDateIso > todayIso;
 
-  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 첫 번째 아님)
+  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 Pro 아니어도 드롭다운에 표시)
   const getRecordTypeOptions = useCallback(() => {
     const allowEmotion = !!subscription?.isPro && isDevelopment;
     const allowedTypes: RecordType[] = ["dream"];
@@ -89,7 +91,9 @@ export function RecordForm({
         allowedTypes.push("emotion");
       }
     }
-    const displayTypes = [...allowedTypes];
+    // 회고는 Pro 아니어도 드롭다운에 표시 (자물쇠와 함께, 클릭 시 결제 유도)
+    const displayTypes: RecordType[] =
+      allowedTypes.includes("review") ? [...allowedTypes] : ["dream", "review"];
     return { allowedTypes, displayTypes, allowEmotion };
   }, [subscription?.isPro, isDevelopment]);
 
@@ -973,18 +977,24 @@ export function RecordForm({
                 {availableTypes.map((typeId) => {
                   const type = RECORD_TYPES.find((t) => t.id === typeId);
                   if (!type) return null;
+                  const isLocked = type.id === "review" && isReviewLocked;
                   const isDisabled = isTypeDisabled(type.id);
                   return (
                     <button
                       key={type.id}
                       type="button"
                       onClick={() => {
+                        if (isLocked) {
+                          setShowTypeSelector(false);
+                          router.push("/membership");
+                          return;
+                        }
                         if (isDisabled) return;
                         setSelectedType(type.id);
                         onTypeChange?.(type.id);
                         setShowTypeSelector(false);
                       }}
-                      disabled={isDisabled}
+                      disabled={isDisabled && !isLocked}
                       className="w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2"
                       style={{
                         backgroundColor:
@@ -995,17 +1005,17 @@ export function RecordForm({
                           recordType === type.id
                             ? `1px solid ${COLORS.brand.primary}`
                             : "1px solid transparent",
-                        opacity: isDisabled ? 0.5 : 1,
-                        cursor: isDisabled ? "not-allowed" : "pointer",
+                        opacity: isDisabled && !isLocked ? 0.5 : 1,
+                        cursor: isLocked ? "pointer" : isDisabled ? "not-allowed" : "pointer",
                       }}
                       onMouseEnter={(e) => {
-                        if (recordType !== type.id && !isDisabled) {
+                        if (recordType !== type.id && (isLocked || !isDisabled)) {
                           e.currentTarget.style.backgroundColor =
                             COLORS.background.hover;
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (recordType !== type.id && !isDisabled) {
+                        if (recordType !== type.id && (isLocked || !isDisabled)) {
                           e.currentTarget.style.backgroundColor = "transparent";
                         }
                       }}
@@ -1019,7 +1029,13 @@ export function RecordForm({
                       >
                         {type.title}
                       </span>
-                      {isDisabled && (
+                      {isLocked && (
+                        <Lock
+                          className="w-3.5 h-3.5 ml-auto flex-shrink-0"
+                          style={{ color: COLORS.text.tertiary }}
+                        />
+                      )}
+                      {isDisabled && !isLocked && (
                         <span
                           className={TYPOGRAPHY.caption.fontSize}
                           style={{
@@ -1033,20 +1049,6 @@ export function RecordForm({
                     </button>
                   );
                 })}
-                {isReviewLocked && (
-                  <div
-                    className={cn(
-                      TYPOGRAPHY.caption.fontSize,
-                      "mt-2 rounded-lg px-3 py-2"
-                    )}
-                    style={{
-                      color: COLORS.text.secondary,
-                      backgroundColor: COLORS.background.hover,
-                    }}
-                  >
-                    Pro 업그레이드 시 회고 기록을 작성할 수 있어요.
-                  </div>
-                )}
               </div>
             </div>
           )}

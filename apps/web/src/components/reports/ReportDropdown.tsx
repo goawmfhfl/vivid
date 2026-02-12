@@ -43,9 +43,6 @@ export function ReportDropdown({
       >
         <span className="text-sm font-medium">
           {label}
-          <span className="ml-1.5 text-xs font-normal" style={{ color: COLORS.text.muted }}>
-            ({list.length}개)
-          </span>
         </span>
         <ChevronDown
           className="w-4 h-4 flex-shrink-0 transition-transform duration-300 ease-out"
@@ -72,7 +69,7 @@ export function ReportDropdown({
                 className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: accentColor }}
               />
-              <span className="text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+              <span className="text-xs sm:text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
                 {item}
               </span>
             </li>

@@ -1,96 +1,144 @@
 "use client";
 
-import { useMemo } from "react";
-import { Target, Sparkles, Zap, User } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useEffect, useMemo, useState } from "react";
+import { BarChart3 } from "lucide-react";
+import { OneViewCardSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
-import { ProNoticeBox } from "@/components/reports/ProNoticeBox";
 import { COLORS } from "@/lib/design-system";
-import type { RecentTrendsResponse } from "@/hooks/useRecentTrends";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useDailyVividInsights } from "@/hooks/useDailyVividInsights";
+import { useCountUp } from "@/hooks/useCountUp";
+import { getKSTDateString } from "@/lib/date-utils";
+import { PreviewDataNotice } from "./PreviewDataNotice";
+
+/** 데이터 부족 시 그래프 미리보기용 플레이스홀더 */
+function getPlaceholderMetrics(): {
+  totalAverage: number;
+  alignmentAverage: number;
+  executionAverage: number;
+  rows: Array<{ reportDate: string; alignmentScore: number; executionScore: number }>;
+} {
+  const today = new Date();
+  const rows = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    return {
+      reportDate: getKSTDateString(d),
+      alignmentScore: 70 + (i % 3) * 5,
+      executionScore: 68 + (i % 4) * 4,
+    };
+  });
+  return {
+    totalAverage: 72,
+    alignmentAverage: 75,
+    executionAverage: 68,
+    rows,
+  };
+}
 
 interface RecentTrendsSectionProps {
-  data: RecentTrendsResponse | null;
   isLoading?: boolean;
   error?: Error | null;
 }
 
-const SECTION_CONFIG = [
-  {
-    key: "aspired_self",
-    title: "내가 지향하는 나의 모습",
-    Icon: Target,
-  },
-  {
-    key: "interests",
-    title: "나를 움직이는 원동력",
-    Icon: Sparkles,
-  },
-  {
-    key: "immersion_moments",
-    title: "몰입의 순간들",
-    Icon: Zap,
-  },
-  {
-    key: "personality_traits",
-    title: "나라는 사람",
-    Icon: User,
-  },
-] as const;
-
-/** 비Pro 미리보기용 — 일반인 컨셉의 샘플 데이터 */
-const mockData = {
-  aspired_self: [
-    "(예시) 하고 싶은 일을 꾸준히 실천하며, 몸과 마음의 균형을 챙기는 사람",
-  ],
-  interests: [
-    "(예시) 취미나 운동으로 몸과 마음을 리프레시하는 시간",
-  ],
-  immersion_moments: [
-    "(예시) 아침에 여유 있게 일어나 하루를 정리한 뒤 맞이한 오전",
-  ],
-  personality_traits: [
-    "(예시) 일상의 작은 즐거움을 찾고, 기록으로 남기는 습관이 있는 사람",
-  ],
-};
-
 export function RecentTrendsSection({
-  data,
   isLoading = false,
   error = null,
 }: RecentTrendsSectionProps) {
-  const { isPro } = useSubscription();
+  const [isAnimated, setIsAnimated] = useState(false);
+  const {
+    data: scoreEntries,
+    isLoading: isLoadingScores,
+    error: scoreError,
+  } = useDailyVividInsights({ enabled: true, count: 7 });
 
-  const processedData = useMemo(() => {
-    if (!isPro) {
-      return {
-        aspired_self: mockData.aspired_self,
-        interests: mockData.interests,
-        immersion_moments: mockData.immersion_moments,
-        personality_traits: mockData.personality_traits,
-      };
-    }
-    if (!data) {
-      return {
-        aspired_self: [] as string[],
-        interests: [] as string[],
-        immersion_moments: [] as string[],
-        personality_traits: [] as string[],
-      };
-    }
+  const placeholderMetrics = useMemo(() => getPlaceholderMetrics(), []);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setIsAnimated(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // 꿈 일치도(alignment_score)가 1일 이상 있으면 실제 데이터 사용. execution_score는 회고 있을 때만 있음
+  const scoreMetrics = useMemo(() => {
+    if (!scoreEntries || scoreEntries.length === 0) return null;
+
+    const rows = scoreEntries
+      .map((entry) => ({
+        reportDate: entry.report_date,
+        alignmentScore: entry.report?.alignment_score,
+        executionScore: entry.report?.execution_score ?? null,
+      }))
+      .filter(
+        (row): row is {
+          reportDate: string;
+          alignmentScore: number;
+          executionScore: number | null;
+        } =>
+          typeof row.alignmentScore === "number" &&
+          Number.isFinite(row.alignmentScore)
+      );
+
+    if (rows.length === 0) return null;
+
+    const n = rows.length;
+    const alignmentAverage = Math.round(
+      rows.reduce((sum, row) => sum + row.alignmentScore, 0) / n
+    );
+    const withExecution = rows.filter((r) => r.executionScore != null && Number.isFinite(r.executionScore));
+    const hasExecutionData = withExecution.length > 0;
+    const executionAverage = hasExecutionData
+      ? Math.round(
+          withExecution.reduce((sum, r) => sum + (r.executionScore ?? 0), 0) / withExecution.length
+        )
+      : 0; // 표시 안 함
+    const totalAverage = hasExecutionData
+      ? Math.round((alignmentAverage + executionAverage) / 2)
+      : alignmentAverage;
+
     return {
-      aspired_self: (data.aspired_self || []).slice(0, 5),
-      interests: (data.interests || []).slice(0, 5),
-      immersion_moments: (data.immersion_moments || []).slice(0, 5),
-      personality_traits: (data.personality_traits || []).slice(0, 5),
+      rows: rows.map((r) => ({
+        reportDate: r.reportDate,
+        alignmentScore: r.alignmentScore,
+        executionScore: r.executionScore,
+      })),
+      alignmentAverage,
+      executionAverage,
+      totalAverage,
+      hasExecutionData,
     };
-  }, [data, isPro]);
+  }, [scoreEntries]);
+
+  // 실제 데이터 있으면 사용, 없으면 플레이스홀더로 UI 미리보기
+  const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
+  const hasRealData = !!scoreMetrics;
+  const hasExecutionData = scoreMetrics?.hasExecutionData ?? true; // placeholder는 둘 다 있음
+
+  const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
+  const displayAlignment = useCountUp(
+    effectiveMetrics.alignmentAverage,
+    900,
+    isAnimated
+  );
+  const displayExecution = useCountUp(
+    effectiveMetrics.executionAverage,
+    900,
+    isAnimated
+  );
 
   if (isLoading) {
     return (
-      <div className="py-12">
-        <LoadingSpinner message="최근 동향을 불러오는 중..." size="md" showMessage />
-      </div>
+      <section className="mb-10 w-full max-w-2xl min-w-0">
+        <h2
+          className="text-[13px] sm:text-sm font-semibold mb-1"
+          style={{ color: COLORS.text.primary }}
+        >
+          한눈에 보기
+        </h2>
+        <p className="text-[12px] sm:text-sm mb-4" style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}>
+          최근 7일 데이터 기반 인사이트
+        </p>
+        <OneViewCardSkeleton />
+      </section>
     );
   }
 
@@ -105,107 +153,259 @@ export function RecentTrendsSection({
     );
   }
 
-  const hasAnyData =
-    processedData.aspired_self.length > 0 ||
-    processedData.interests.length > 0 ||
-    processedData.immersion_moments.length > 0 ||
-    processedData.personality_traits.length > 0;
-
-  if (!hasAnyData) {
-    return (
-      <div className="py-12 text-center">
-        <p style={{ color: COLORS.text.muted, fontSize: "0.875rem" }}>
-          아직 데이터가 없습니다. 일일 VIVID를 생성하면 최근 동향을 확인할 수 있습니다.
-        </p>
-      </div>
-    );
-  }
-
-  const accent = COLORS.brand.primary;
   const cardBg = COLORS.background.cardElevated;
   const cardBorder = COLORS.border.light;
+  const showScoreSkeleton = isLoadingScores;
+  const showGraphCard = !scoreError; // 데이터 부족해도 그래프 UI 미리보기
 
   return (
     <section className="mb-10 w-full max-w-2xl min-w-0">
       <h2
-        className="text-lg font-semibold tracking-tight mb-1"
+        className="text-[13px] sm:text-sm font-semibold mb-1"
         style={{ color: COLORS.text.primary }}
       >
         한눈에 보기
       </h2>
-      <p className="text-sm mb-4" style={{ color: COLORS.text.secondary }}>
+      <p className="text-[12px] sm:text-sm mb-4" style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}>
         최근 7일 데이터 기반 인사이트
       </p>
 
-      {!isPro && (
-        <ProNoticeBox
-          message="Pro 멤버가 되면 최근 7일 기록을 바탕으로 한 ‘한눈에 보기’ 인사이트를 확인할 수 있어요. 지향하는 모습, 원동력, 몰입의 순간, 나에 대한 이해를 한눈에 살펴보세요."
-          className="mb-4"
-        />
-      )}
-
-      <ul className="space-y-3">
-        {SECTION_CONFIG.map(({ key, title, Icon }, index) => {
-          const items = processedData[key];
-          const isEmpty = !items?.length;
-
-          return (
-            <li
-              key={key}
-              className="relative rounded-xl overflow-hidden min-w-0 transition-all duration-200 animate-fade-in"
-              style={{
-                backgroundColor: cardBg,
-                border: `1px solid ${cardBorder}`,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                animationDelay: `${index * 80}ms`,
-              }}
-            >
-              <div
-                className="absolute left-0 top-0 bottom-0 w-1"
-                style={{ backgroundColor: accent }}
-              />
-              <div className="pl-4 pr-4 pt-3.5 pb-3.5">
-                <div className="flex items-center gap-2 mb-2.5">
+      {showScoreSkeleton ? (
+        <div
+          className="rounded-xl overflow-hidden min-w-0 transition-all duration-300 mb-4 animate-pulse"
+          style={{
+            backgroundColor: cardBg,
+            border: `1px solid ${cardBorder}`,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="pl-4 pr-4 pt-4 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-4 items-center">
+              <div className="flex justify-center">
+                <div
+                  className="w-[132px] h-[132px] rounded-full"
+                  style={{
+                    backgroundColor: COLORS.background.base,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {[0, 1].map((idx) => (
                   <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${accent}18` }}
+                    key={`skeleton-metric-${idx}`}
+                    className="rounded-lg p-3"
+                    style={{
+                      backgroundColor: COLORS.background.base,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
                   >
-                    <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+                    <div
+                      className="h-3 w-20 rounded mb-2"
+                      style={{ backgroundColor: COLORS.border.light }}
+                    />
+                    <div
+                      className="h-6 w-12 rounded"
+                      style={{ backgroundColor: COLORS.border.default }}
+                    />
                   </div>
-                  <span
-                    className="text-sm font-medium truncate"
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {title}
-                  </span>
-                </div>
-                {isEmpty ? (
-                  <p className="text-xs" style={{ color: COLORS.text.muted }}>
-                    아직 데이터가 없습니다
-                  </p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {items.slice(0, 5).map((item, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span
-                          className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: accent }}
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: COLORS.border.light }}>
+              <div
+                className="h-3 w-36 rounded mb-2.5"
+                style={{ backgroundColor: COLORS.border.light }}
+              />
+              <div className="grid grid-cols-7 gap-2">
+                {Array.from({ length: 7 }).map((_, idx) => (
+                  <div key={`skeleton-day-${idx}`} className="flex flex-col items-center gap-1">
+                    <div className="w-full h-16 flex items-end justify-center gap-1">
+                      <div
+                        className="w-2 rounded-t"
+                        style={{
+                          height: `${18 + ((idx % 3) + 1) * 8}px`,
+                          backgroundColor: COLORS.border.default,
+                        }}
+                      />
+                      <div
+                        className="w-2 rounded-t"
+                        style={{
+                          height: `${14 + ((idx % 4) + 1) * 7}px`,
+                          backgroundColor: COLORS.border.light,
+                        }}
+                      />
+                    </div>
+                    <div
+                      className="h-2 w-8 rounded"
+                      style={{ backgroundColor: COLORS.border.light }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : showGraphCard ? (
+        <>
+          {!hasRealData && (
+            <PreviewDataNotice
+              subtitle="꿈 일치도 데이터가 쌓이면 나의 기록이 표시됩니다"
+              accentColor={COLORS.brand.primary}
+            />
+          )}
+          <div
+            className="rounded-xl overflow-hidden min-w-0 transition-all duration-300 mb-4"
+            style={{
+              backgroundColor: cardBg,
+              border: `1px solid ${cardBorder}`,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+          <div className="pl-4 pr-4 pt-4 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-4 items-center">
+              <div className="flex justify-center">
+                <div className="relative w-[132px] h-[132px]">
+                  {(() => {
+                    const donutSize = 132;
+                    const strokeWidth = 12;
+                    const radius = (donutSize - strokeWidth) / 2;
+                    const circumference = 2 * Math.PI * radius;
+                    const progress = isAnimated
+                      ? Math.max(0, Math.min(100, effectiveMetrics.totalAverage))
+                      : 0;
+                    const dashOffset = circumference - (progress / 100) * circumference;
+
+                    return (
+                      <svg width={donutSize} height={donutSize} className="-rotate-90">
+                        <circle
+                          cx={donutSize / 2}
+                          cy={donutSize / 2}
+                          r={radius}
+                          fill="none"
+                          stroke={COLORS.border.light}
+                          strokeWidth={strokeWidth}
                         />
-                        <span
-                          className="text-sm leading-relaxed"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          {item}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                        <circle
+                          cx={donutSize / 2}
+                          cy={donutSize / 2}
+                          r={radius}
+                          fill="none"
+                          stroke={COLORS.brand.primary}
+                          strokeWidth={strokeWidth}
+                          strokeDasharray={circumference}
+                          strokeDashoffset={dashOffset}
+                          strokeLinecap="round"
+                          style={{ transition: "stroke-dashoffset 1s ease-out" }}
+                        />
+                      </svg>
+                    );
+                  })()}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span
+                      className="text-2xl font-semibold tabular-nums"
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      {displayTotal}
+                    </span>
+                    <span className="text-xs" style={{ color: COLORS.text.muted }}>
+                      {hasExecutionData ? "통합 평균" : "꿈 일치도 평균"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="grid gap-2.5"
+                style={{
+                  gridTemplateColumns: hasExecutionData ? "1fr 1fr" : "1fr",
+                }}
+              >
+                <div
+                  className="rounded-lg p-3"
+                  style={{
+                    backgroundColor: COLORS.background.base,
+                    border: `1px solid ${COLORS.border.light}`,
+                  }}
+                >
+                  <p className="text-xs mb-1" style={{ color: COLORS.text.secondary }}>
+                    꿈 일치도 평균
+                  </p>
+                  <p
+                    className="text-xl font-semibold tabular-nums"
+                    style={{ color: COLORS.chart.alignment }}
+                  >
+                    {displayAlignment}
+                  </p>
+                </div>
+                {hasExecutionData && (
+                  <div
+                    className="rounded-lg p-3"
+                    style={{
+                      backgroundColor: COLORS.background.base,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    <p className="text-xs mb-1" style={{ color: COLORS.text.secondary }}>
+                      실행력 평균
+                    </p>
+                    <p
+                      className="text-xl font-semibold tabular-nums"
+                      style={{ color: COLORS.chart.execution }}
+                    >
+                      {displayExecution}
+                    </p>
+                  </div>
                 )}
               </div>
-            </li>
-          );
-        })}
-      </ul>
+            </div>
+
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: COLORS.border.light }}>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <BarChart3 className="w-3.5 h-3.5" style={{ color: COLORS.brand.primary }} />
+                <span className="text-xs font-medium" style={{ color: COLORS.text.primary }}>
+                  {effectiveMetrics.rows.length}일 데이터 점수 추이
+                </span>
+              </div>
+              <div
+                className="grid gap-2"
+                style={{ gridTemplateColumns: `repeat(${effectiveMetrics.rows.length}, minmax(0, 1fr))` }}
+              >
+                {effectiveMetrics.rows.map((item) => (
+                  <div key={item.reportDate} className="flex flex-col items-center gap-1">
+                    <div
+                      className="w-full h-16 flex items-end justify-center"
+                      style={{ gap: hasExecutionData && item.executionScore != null ? 4 : 0 }}
+                    >
+                      <div
+                        className="rounded-t transition-all duration-1000 ease-out"
+                        style={{
+                          width: hasExecutionData && item.executionScore != null ? 8 : 16,
+                          height: `${isAnimated ? Math.max(4, item.alignmentScore * 0.64) : 0}px`,
+                          backgroundColor: COLORS.chart.alignment,
+                        }}
+                      />
+                      {hasExecutionData && item.executionScore != null && (
+                        <div
+                          className="w-2 rounded-t transition-all duration-1000 ease-out"
+                          style={{
+                            height: `${isAnimated ? Math.max(4, item.executionScore * 0.64) : 0}px`,
+                            backgroundColor: COLORS.chart.execution,
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span className="text-[11px]" style={{ color: COLORS.text.muted }}>
+                      {item.reportDate.slice(5).replace("-", ".")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        </>
+      ) : null}
     </section>
   );
 }

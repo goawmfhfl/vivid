@@ -35,23 +35,21 @@ export function SummaryList({
             `,
             position: "relative",
             overflow: "hidden",
-            // 종이 질감 배경 패턴 (프로젝트 브랜드 색상 사용)
+            // 종이 질감 배경 패턴 (color prop 기반 - 주간=블루, 월간=그린)
             backgroundImage: `
-              /* 가로 줄무늬 (프로젝트 그린 톤) */
               repeating-linear-gradient(
                 to bottom,
                 transparent 0px,
                 transparent 27px,
-                ${COLORS.brand.primary}14 27px,
-                ${COLORS.brand.primary}14 28px
+                ${color}14 27px,
+                ${color}14 28px
               ),
-              /* 종이 텍스처 노이즈 */
               repeating-linear-gradient(
                 45deg,
                 transparent,
                 transparent 2px,
-                ${COLORS.brand.primary}08 2px,
-                ${COLORS.brand.primary}08 4px
+                ${color}08 2px,
+                ${color}08 4px
               )
             `,
             backgroundSize: "100% 28px, 8px 8px",
@@ -60,10 +58,10 @@ export function SummaryList({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.borderColor = COLORS.brand.primary;
+            e.currentTarget.style.borderColor = color;
             e.currentTarget.style.backgroundColor = COLORS.background.hoverLight;
             e.currentTarget.style.boxShadow = `
-              0 4px 16px ${COLORS.brand.primary}20,
+              0 4px 16px ${color}20,
               0 2px 6px rgba(0,0,0,0.04),
               inset 0 1px 0 rgba(255,255,255,0.6)
             `;
@@ -85,7 +83,7 @@ export function SummaryList({
             style={{
               background: `
                 radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, ${COLORS.brand.light}20 0%, transparent 40%)
+                radial-gradient(circle at 75% 75%, ${color}20 0%, transparent 40%)
               `,
               mixBlendMode: "overlay",
               opacity: 0.5,

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath } from "@/lib/navigation";
@@ -9,13 +10,13 @@ import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { withAuth } from "@/components/auth";
 import { QUERY_KEYS } from "@/constants";
 
-function RootPage() {
+function RootPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && searchParams) {
       const errorParam = searchParams.get("error");
       const errorCode = searchParams.get("error_code");
       const typeParam = searchParams.get("type");
@@ -66,4 +67,8 @@ function RootPage() {
   );
 }
 
-export default withAuth(RootPage);
+const RootPageWithAuth = withAuth(RootPageInner);
+export default dynamic(() => Promise.resolve(RootPageWithAuth), {
+  ssr: false,
+  loading: () => <div className="min-h-screen" style={{ backgroundColor: "#e4e2dd" }} />,
+});

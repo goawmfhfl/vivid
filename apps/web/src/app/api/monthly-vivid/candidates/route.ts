@@ -44,12 +44,13 @@ export async function GET(request: NextRequest) {
     const sixMonthsAgo = new Date(currentYear, currentMonthNum - 6, 1);
     const sixMonthsAgoString = getKSTDateString(sixMonthsAgo);
 
+    // daily_vivid 테이블에는 is_ai_generated가 없고 is_vivid_ai_generated, is_review_ai_generated만 있음.
+    // 모든 daily_vivid는 AI 생성(vivid 또는 review)이므로 필터 없이 조회
     const { data: dailyVividRows, error: dailyError } = await supabase
       .from(API_ENDPOINTS.DAILY_VIVID)
       .select("id, report_date, user_id")
       .eq("user_id", userId)
       .gte("report_date", sixMonthsAgoString)
-      .eq("is_ai_generated", true)
       .order("report_date", { ascending: false });
 
     if (dailyError) {

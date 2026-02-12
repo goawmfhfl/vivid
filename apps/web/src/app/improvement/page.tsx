@@ -9,7 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
+  ImagePlus,
   Send,
+  Trash2,
   Upload,
   X,
   XCircle,
@@ -28,6 +30,8 @@ import { INQUIRY_STATUS_LABELS, INQUIRY_TYPE_LABELS } from "@/types/inquiry";
 function InquiryPageContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceAtIndexRef = useRef<number | null>(null);
+  const replacePreviewIdRef = useRef<string | null>(null);
   const [activeTab, setActiveTab] = useState<"create" | "list">("create");
 
   // 내가 남긴 문의 조회 관련 상태
@@ -52,6 +56,7 @@ function InquiryPageContent() {
   const [images, setImages] = useState<string[]>([]); // 서버에 업로드된 이미지 URL
   const [previewImages, setPreviewImages] = useState<Array<{ id: string; url: string; file: File; error?: string }>>([]); // 로컬 미리보기 (에러 상태 포함)
   const [uploadingImages, setUploadingImages] = useState<string[]>([]); // 업로드 중인 이미지 ID
+  const [replaceUploadingIndex, setReplaceUploadingIndex] = useState<number | null>(null); // 교체 업로드 중인 이미지 인덱스
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTitleFocused, setIsTitleFocused] = useState(false);
@@ -148,11 +153,14 @@ function InquiryPageContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [imageModal.isOpen, imageModal.currentIndex, imageModal.images.length]);
 
-  const handleImageUpload = async (previewId: string, file: File) => {
+  const handleImageUpload = async (
+    previewId: string,
+    file: File,
+    options?: { insertAt?: number }
+  ) => {
     setUploadingImages((prev) => [...prev, previewId]);
 
     try {
-      // Supabase 세션 가져오기
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -179,47 +187,92 @@ function InquiryPageContent() {
       }
 
       const result = await response.json();
-      
+
       if (!result || !result.url) {
         throw new Error("이미지 URL을 받아오지 못했습니다.");
       }
 
-      // URL 유효성 검사
       if (typeof result.url !== "string" || result.url.trim() === "") {
         throw new Error("유효하지 않은 이미지 URL입니다.");
       }
 
-      // 미리보기에서 제거하고 서버 URL 추가 (순서 중요: 먼저 미리보기 제거 후 이미지 추가)
       setPreviewImages((prev) => {
         const preview = prev.find((img) => img.id === previewId);
         if (preview) {
-          URL.revokeObjectURL(preview.url); // 메모리 해제
+          URL.revokeObjectURL(preview.url);
         }
         return prev.filter((img) => img.id !== previewId);
       });
-      
-      // 서버 URL 추가
-      setImages((prev) => [...prev, result.url]);
-      
-      // 에러 상태 초기화 (성공 시)
+      const insertAt = options?.insertAt;
+      if (insertAt !== undefined) {
+        setImages((prev) => [
+          ...prev.slice(0, insertAt),
+          result.url,
+          ...prev.slice(insertAt),
+        ]);
+      } else {
+        setImages((prev) => [...prev, result.url]);
+      }
       setError(null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "이미지 업로드 중 오류가 발생했습니다.";
+      const errorMessage =
+        err instanceof Error ? err.message : "이미지 업로드 중 오류가 발생했습니다.";
       console.error("이미지 업로드 실패:", err);
-      
-      // 에러 발생 시 미리보기에 에러 상태 표시 (제거하지 않음)
       setPreviewImages((prev) =>
         prev.map((img) =>
-          img.id === previewId
-            ? { ...img, error: errorMessage }
-            : img
+          img.id === previewId ? { ...img, error: errorMessage } : img
         )
       );
-      
-      // 전체 에러 메시지도 표시
       setError(`이미지 업로드 실패: ${errorMessage}`);
     } finally {
       setUploadingImages((prev) => prev.filter((id) => id !== previewId));
+    }
+  };
+
+  const handleUploadForReplace = async (index: number, file: File) => {
+    setReplaceUploadingIndex(index);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/inquiries/upload-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "이미지 업로드에 실패했습니다.");
+      }
+
+      const result = await response.json();
+      if (!result?.url) {
+        throw new Error("이미지 URL을 받아오지 못했습니다.");
+      }
+
+      setImages((prev) =>
+        prev.map((url, i) => (i === index ? result.url : url))
+      );
+      setError(null);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "이미지 변경 중 오류가 발생했습니다.";
+      setError(`이미지 변경 실패: ${errorMessage}`);
+      console.error("이미지 교체 실패:", err);
+    } finally {
+      setReplaceUploadingIndex(null);
     }
   };
 
@@ -227,37 +280,80 @@ function InquiryPageContent() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const currentCount = images.length + previewImages.length + uploadingImages.length;
+    const replaceAtIndex = replaceAtIndexRef.current;
+    const replacePreviewId = replacePreviewIdRef.current;
+    replaceAtIndexRef.current = null;
+    replacePreviewIdRef.current = null;
+
+    const file = files[0];
+
+    // 파일 유효성 검사
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert("파일 크기는 5MB 이하여야 합니다.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("지원하지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 가능)");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // 교체 모드: 서버 이미지
+    if (replaceAtIndex !== null) {
+      handleUploadForReplace(replaceAtIndex, file);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // 교체 모드: 미리보기 (원래 그리드 위치 유지)
+    if (replacePreviewId !== null) {
+      const previewIndex = previewImages.findIndex(
+        (p) => p.id === replacePreviewId
+      );
+      const insertAt =
+        previewIndex >= 0 ? images.length + previewIndex : undefined;
+
+      const newPreviewUrl = URL.createObjectURL(file);
+      setPreviewImages((prev) => {
+        const preview = prev.find((img) => img.id === replacePreviewId);
+        if (preview) {
+          URL.revokeObjectURL(preview.url);
+        }
+        return prev.map((p) =>
+          p.id === replacePreviewId
+            ? { ...p, url: newPreviewUrl, file, error: undefined }
+            : p
+        );
+      });
+      handleImageUpload(replacePreviewId, file, { insertAt });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // 추가 모드
+    Array.from(files).forEach((f) => {
+      const currentCount =
+        images.length + previewImages.length + uploadingImages.length;
       if (currentCount >= 5) {
         alert("이미지는 최대 5개까지 업로드할 수 있습니다.");
         return;
       }
 
-      // 파일 유효성 검사
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        alert("파일 크기는 5MB 이하여야 합니다.");
-        return;
-      }
-
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
-        alert("지원하지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 가능)");
-        return;
-      }
-
-      // 로컬 미리보기 생성
       const previewId = `preview-${Date.now()}-${Math.random()}`;
-      const previewUrl = URL.createObjectURL(file);
-      
-      setPreviewImages((prev) => [...prev, { id: previewId, url: previewUrl, file }]);
-      
-      // 업로드 시작
-      handleImageUpload(previewId, file);
+      const previewUrl = URL.createObjectURL(f);
+
+      setPreviewImages((prev) => [
+        ...prev,
+        { id: previewId, url: previewUrl, file: f },
+      ]);
+
+      handleImageUpload(previewId, f);
     });
 
-    // 같은 파일을 다시 선택할 수 있도록 리셋
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -314,7 +410,7 @@ function InquiryPageContent() {
       return;
     }
 
-    if (uploadingImages.length > 0 || previewImages.length > 0) {
+    if (uploadingImages.length > 0 || previewImages.length > 0 || replaceUploadingIndex !== null) {
       setError("이미지 업로드가 완료될 때까지 기다려주세요.");
       return;
     }
@@ -576,6 +672,9 @@ function InquiryPageContent() {
               onChange={handleFileChange}
               className="hidden"
             />
+            <p className="text-xs mb-2" style={{ color: COLORS.text.muted }}>
+              JPEG, PNG, GIF, WebP · 파일당 5MB 이하
+            </p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -610,10 +709,11 @@ function InquiryPageContent() {
                 {/* 서버에 업로드된 이미지 */}
                 {images.map((url, index) => (
                   <div
-                    key={`uploaded-${index}`}
-                    className="relative group aspect-square overflow-hidden rounded-lg border"
+                    key={`uploaded-${index}-${url}`}
+                    className="relative aspect-square overflow-hidden rounded-lg border"
                     style={{
                       borderColor: COLORS.border.light,
+                      backgroundColor: COLORS.background.hover,
                     }}
                   >
                     <Image
@@ -621,97 +721,159 @@ function InquiryPageContent() {
                       alt={`첨부 이미지 ${index + 1}`}
                       fill
                       sizes="(max-width: 768px) 33vw, 120px"
-                      className="object-cover"
+                      className="object-contain"
+                      unoptimized
+                      style={{ objectPosition: "center" }}
                     />
+                    {replaceUploadingIndex === index && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 z-[5]"
+                        style={{ backdropFilter: "blur(2px)" }}
+                      >
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto mb-1" />
+                          <p className="text-xs text-white">변경 중...</p>
+                        </div>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 p-1.5 rounded-full bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute left-1.5 top-1.5 z-10 p-2 rounded-full transition-opacity hover:opacity-90 shadow-lg"
                       style={{
+                        color: COLORS.text.white,
+                        backgroundColor: "rgba(0,0,0,0.75)",
                         backdropFilter: "blur(4px)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
                       }}
+                      title="삭제"
                     >
-                      <X className="w-4 h-4 text-white" />
+                      <Trash2 className="w-5 h-5" strokeWidth={2} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        replaceAtIndexRef.current = index;
+                        fileInputRef.current?.click();
+                      }}
+                      className="absolute right-1.5 bottom-1.5 z-10 p-2 rounded-full transition-opacity hover:opacity-90 shadow-lg"
+                      style={{
+                        color: COLORS.text.white,
+                        backgroundColor: "rgba(0,0,0,0.75)",
+                        backdropFilter: "blur(4px)",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                      }}
+                      title="새로 업로드"
+                    >
+                      <ImagePlus className="w-5 h-5" strokeWidth={2} />
                     </button>
                   </div>
                 ))}
 
                 {/* 로컬 미리보기 (업로드 전) */}
                 {previewImages.map((preview) => (
-                  <div key={preview.id} className="relative group aspect-square">
-                    <div
-                      className="relative w-full h-full rounded-lg border overflow-hidden"
-                      style={{
-                        borderColor: preview.error
-                          ? COLORS.status.error
-                          : COLORS.border.input,
-                      }}
-                    >
-                      <Image
-                        src={preview.url}
-                        alt="미리보기"
-                        fill
-                        sizes="(max-width: 768px) 33vw, 120px"
-                        className="object-cover"
-                      />
-                      {/* 업로드 중 오버레이 */}
-                      {uploadingImages.includes(preview.id) && !preview.error && (
-                        <div
-                          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40"
-                          style={{
-                            backdropFilter: "blur(2px)",
-                          }}
-                        >
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto mb-1" />
-                            <p className="text-xs text-white">업로드 중...</p>
-                          </div>
+                  <div
+                    key={preview.id}
+                    className="relative aspect-square rounded-lg border overflow-hidden"
+                    style={{
+                      borderColor: preview.error
+                        ? COLORS.status.error
+                        : COLORS.border.input,
+                      backgroundColor: COLORS.background.hover,
+                    }}
+                  >
+                    <Image
+                      src={preview.url}
+                      alt="미리보기"
+                      fill
+                      sizes="(max-width: 768px) 33vw, 120px"
+                      className="object-contain"
+                      unoptimized
+                      style={{ objectPosition: "center" }}
+                    />
+                    {/* 업로드 중 오버레이 */}
+                    {uploadingImages.includes(preview.id) && !preview.error && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40"
+                        style={{ backdropFilter: "blur(2px)" }}
+                      >
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto mb-1" />
+                          <p className="text-xs text-white">업로드 중...</p>
                         </div>
-                      )}
-                      {/* 에러 상태 오버레이 */}
-                      {preview.error && (
-                        <div
-                          className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 p-2"
-                          style={{
-                            backdropFilter: "blur(2px)",
-                          }}
+                      </div>
+                    )}
+                    {/* 에러 상태 오버레이 */}
+                    {preview.error && (
+                      <div
+                        className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 p-2"
+                        style={{ backdropFilter: "blur(2px)" }}
+                      >
+                        <XCircle
+                          className="w-5 h-5 mb-1"
+                          style={{ color: COLORS.status.error }}
+                        />
+                        <p
+                          className="text-xs text-white text-center mb-1"
+                          style={{ lineHeight: "1.2" }}
                         >
-                          <XCircle
-                            className="w-5 h-5 mb-1"
-                            style={{ color: COLORS.status.error }}
-                          />
-                          <p
-                            className="text-xs text-white text-center mb-1"
-                            style={{ lineHeight: "1.2" }}
-                          >
-                            {preview.error.length > 20
-                              ? preview.error.substring(0, 20) + "..."
-                              : preview.error}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRetryUpload(preview.id);
-                            }}
-                            className="text-xs px-2 py-0.5 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
-                            style={{ color: "white" }}
-                          >
-                            재시도
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePreview(preview.id)}
-                      className="absolute top-1 right-1 p-1.5 rounded-full bg-black bg-opacity-70 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                      style={{
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
+                          {preview.error.length > 20
+                            ? preview.error.substring(0, 20) + "..."
+                            : preview.error}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRetryUpload(preview.id);
+                          }}
+                          className="text-xs px-2 py-0.5 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all"
+                          style={{ color: "white" }}
+                        >
+                          재시도
+                        </button>
+                      </div>
+                    )}
+                    {/* 삭제/새로 업로드 버튼 (업로드 완료 또는 에러 시) */}
+                    {!uploadingImages.includes(preview.id) && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePreview(preview.id)}
+                          className="absolute left-1.5 top-1.5 z-10 p-2 rounded-full transition-opacity hover:opacity-90"
+                          style={{
+                            color: COLORS.text.white,
+                            backgroundColor: "rgba(0,0,0,0.75)",
+                            backdropFilter: "blur(4px)",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                          }}
+                          title="삭제"
+                        >
+                          <Trash2 className="w-5 h-5" strokeWidth={2} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            replacePreviewIdRef.current = preview.id;
+                            fileInputRef.current?.click();
+                          }}
+                          className="absolute right-1.5 bottom-1.5 z-10 p-2 rounded-full transition-opacity hover:opacity-90"
+                          style={{
+                            color: COLORS.text.white,
+                            backgroundColor: "rgba(0,0,0,0.75)",
+                            backdropFilter: "blur(4px)",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                          }}
+                          title="새로 업로드"
+                        >
+                          <ImagePlus className="w-5 h-5" strokeWidth={2} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -746,7 +908,8 @@ function InquiryPageContent() {
                 !title.trim() ||
                 !content.trim() ||
                 uploadingImages.length > 0 ||
-                previewImages.length > 0
+                previewImages.length > 0 ||
+                replaceUploadingIndex !== null
               }
               className="flex-1 flex items-center justify-center gap-2"
               style={{
@@ -919,6 +1082,7 @@ function InquiryPageContent() {
                                       fill
                                       sizes="(max-width: 768px) 33vw, 120px"
                                       className="object-cover"
+                                      unoptimized
                                     />
                                   </div>
                                 </button>
@@ -979,6 +1143,7 @@ function InquiryPageContent() {
                                           fill
                                           sizes="(max-width: 768px) 33vw, 120px"
                                           className="object-cover"
+                                          unoptimized
                                         />
                                       </div>
                                     </button>
@@ -1081,6 +1246,7 @@ function InquiryPageContent() {
                       fill
                       sizes="80vw"
                       className="object-contain"
+                      unoptimized
                       style={{
                         borderRadius: "8px",
                       }}

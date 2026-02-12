@@ -58,6 +58,7 @@ export function WeeklyDateView({
 
   // 이전 주로 이동
   const goToPreviousWeek = () => {
+    if (isTransitioning) return;
     setDirection("right");
     setIsTransitioning(true);
     setCurrentWeekStart((prev) => {
@@ -70,6 +71,7 @@ export function WeeklyDateView({
 
   // 다음 주로 이동
   const goToNextWeek = () => {
+    if (isTransitioning) return;
     setDirection("left");
     setIsTransitioning(true);
     setCurrentWeekStart((prev) => {
@@ -90,12 +92,16 @@ export function WeeklyDateView({
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart) return;
+    if (touchStart === null) return;
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (touchStart === null || touchEnd === null) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      return;
+    }
 
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
@@ -121,12 +127,14 @@ export function WeeklyDateView({
   };
 
   const onMouseMove = (e: React.MouseEvent) => {
-    if (!mouseStart || !isDragging) return;
+    if (mouseStart === null || !isDragging) return;
     setMouseEnd(e.clientX);
   };
 
   const onMouseUp = () => {
-    if (!mouseStart || !mouseEnd) {
+    if (mouseStart === null || mouseEnd === null) {
+      setMouseStart(null);
+      setMouseEnd(null);
       setIsDragging(false);
       return;
     }
@@ -216,10 +224,6 @@ export function WeeklyDateView({
 
   const effectiveVividFeedbackDates =
     vividFeedbackDates !== undefined ? vividFeedbackDates : aiFeedbackDates;
-  const dragOffset =
-    isDragging && mouseStart !== null && mouseEnd !== null
-      ? Math.round(mouseEnd - mouseStart)
-      : null;
 
   return (
     <div
@@ -271,7 +275,6 @@ export function WeeklyDateView({
             }}
             className="grid grid-cols-7 gap-2 max-[411px]:gap-1.5 md:gap-4"
             style={{
-              transform: dragOffset !== null ? `translateX(${dragOffset}px)` : undefined,
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
               WebkitFontSmoothing: "antialiased",
@@ -346,7 +349,7 @@ export function WeeklyDateView({
                         e.currentTarget.style.background =
                           GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
                         e.currentTarget.style.boxShadow = SHADOWS.default;
-                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.transform = "none";
                         e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
                           COLORS.brand.light,
                           "30"

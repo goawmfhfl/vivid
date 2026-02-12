@@ -116,6 +116,7 @@ export async function fetchMonthlyVividByMonth(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyVivid 타입으로 변환
+  // trend는 user_trends로 마이그레이션됨 - monthly_vivid에는 없음
   const rawFeedback = {
     id: String(data.id),
     month: data.month,
@@ -125,7 +126,6 @@ export async function fetchMonthlyVividByMonth(
     recorded_days: data.recorded_days,
     title: (data.title as string | undefined) || data.month_label || "",
     report: data.report as MonthlyVivid["report"],
-    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -163,6 +163,7 @@ export async function fetchMonthlyVividDetail(
   }
 
   // 각 JSONB 컬럼에서 데이터를 읽어서 MonthlyVivid 타입으로 변환
+  // trend는 user_trends로 마이그레이션됨 - monthly_vivid에는 없음
   const rawFeedback = {
     id: String(data.id),
     month: data.month,
@@ -172,7 +173,6 @@ export async function fetchMonthlyVividDetail(
     recorded_days: data.recorded_days,
     title: (data.title as string | undefined) || data.month_label || "",
     report: data.report as MonthlyVivid["report"],
-    trend: data.trend || undefined,
     is_ai_generated: data.is_ai_generated ?? undefined,
     created_at: data.created_at ?? undefined,
   };
@@ -185,6 +185,7 @@ export async function fetchMonthlyVividDetail(
 
 /**
  * Monthly Vivid 저장
+ * trend는 user_trends에 저장 (monthly_vivid에는 trend 컬럼 없음)
  */
 export async function saveMonthlyVivid(
   supabase: SupabaseClient,
@@ -192,7 +193,6 @@ export async function saveMonthlyVivid(
   feedback: MonthlyVivid,
   generationDurationSeconds?: number
 ): Promise<string> {
-  // 암호화 처리
   const encryptedFeedback = encryptMonthlyVivid(feedback);
 
   const { data, error } = await supabase
@@ -207,7 +207,6 @@ export async function saveMonthlyVivid(
         recorded_days: encryptedFeedback.recorded_days,
         title: encryptedFeedback.title,
         report: encryptedFeedback.report,
-        trend: encryptedFeedback.trend || null, // trend 필드 추가
         is_ai_generated: encryptedFeedback.is_ai_generated ?? true,
         generation_duration_seconds: generationDurationSeconds ?? null,
       },
@@ -223,6 +222,8 @@ export async function saveMonthlyVivid(
   if (!data || !data.id) {
     throw new Error("Failed to save monthly vivid: no ID returned");
   }
+
+  // trend는 user-trends cron에서만 생성/저장됨
 
   return String(data.id);
 }

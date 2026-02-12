@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { isInvalidRefreshTokenError } from "@/lib/auth-utils";
 import { QUERY_KEYS, ERROR_MESSAGES } from "@/constants";
 import {
   isRefreshTokenError,

@@ -14,6 +14,7 @@ export const QUERY_KEYS = {
   NOTION_POLICIES: "notionPolicies",
   NOTION_QUESTIONS: "notionQuestions",
   USER_PERSONA_INSIGHTS: "userPersonaInsights",
+  USER_TRENDS: "userTrends",
 } as const;
 
 // API Endpoints
@@ -28,6 +29,7 @@ export const API_ENDPOINTS = {
   WEEKLY_VIVID: "weekly_vivid",
   MONTHLY_VIVID: "monthly_vivid",
   MONTHLY_CANDIDATES: "monthly_candidates",
+  USER_TRENDS: "user_trends",
 } as const;
 
 // Record Types

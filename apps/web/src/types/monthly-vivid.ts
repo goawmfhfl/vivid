@@ -188,28 +188,21 @@ export type MonthlyReport = {
 };
 
 // ============================================
-// Monthly Trend Data (월간 흐름 - 별도 컬럼)
+// Monthly Trend Data (월간 흐름 - weekly와 동일 구조)
 // ============================================
 export type MonthlyTrendData = {
-  breakdown_moments: string; // 나는 어떤 순간에서 가장 무너지는가
-  recovery_moments: string; // 나는 어떤 순간에서 가장 회복되는가
-  energy_sources: string; // 내가 실제로 에너지를 얻는 방향
-  missing_future_elements: string; // 내가 미래를 그릴 때 빠뜨리는 요소
-  top_keywords: string; // 이 달에서 가장 자주 등장하는 키워드 5가지
+  direction: string; // 어떤 방향으로 가고 있는 사람인가
+  core_value: string; // 내가 진짜 중요하게 여기는 가치
+  driving_force: string; // 나를 움직이는 실제 원동력
+  current_self: string; // 요즘의 나라는 사람
 };
 
 // ============================================
-// Monthly Trends Response (최근 4달 데이터)
+// Monthly Trends Response (최근 4달 데이터 - user_trends 기반)
 // ============================================
-export type MonthlyTrendItem = {
-  month: string; // "YYYY-MM" 형식
-  answer: string; // 해당 월의 인사이트
-};
-
 export type MonthlyTrendsResponse = {
-  breakdown_moments: MonthlyTrendItem[];
-  recovery_moments: MonthlyTrendItem[];
-  energy_sources: MonthlyTrendItem[];
-  missing_future_elements: MonthlyTrendItem[];
-  top_keywords: MonthlyTrendItem[];
+  direction: string[];
+  core_value: string[];
+  driving_force: string[];
+  current_self: string[];
 };

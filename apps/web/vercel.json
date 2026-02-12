@@ -1,1 +1,7 @@
-{"crons":[{"path":"/api/cron/update-persona","schedule":"0 18 * * 0"}]}
+{
+  "crons": [
+    {"path": "/api/cron/update-persona", "schedule": "0 18 * * 0"},
+    {"path": "/api/cron/update-user-trends?type=weekly", "schedule": "0 19 * * 0"},
+    {"path": "/api/cron/update-user-trends?type=monthly", "schedule": "0 19 1 * *"}
+  ]
+}

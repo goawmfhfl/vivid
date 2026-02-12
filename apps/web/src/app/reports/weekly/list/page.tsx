@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { WeeklyListSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { WeeklySummariesTab } from "@/components/summaries/WeeklySummariesTab";
 import { useWeeklyVividList } from "@/hooks/useWeeklyVivid";
@@ -47,6 +49,17 @@ function convertWeeklyVividToPeriodSummary(
 }
 
 function WeeklyListPage() {
+  const router = useRouter();
+  const { isPro, isLoading: isLoadingSubscription } = useSubscription();
+
+  // 비Pro 사용자는 리포트 메인으로 리다이렉트
+  useEffect(() => {
+    if (isLoadingSubscription) return;
+    if (!isPro) {
+      router.replace("/reports");
+    }
+  }, [isPro, isLoadingSubscription, router]);
+
   // 주간 피드백 리스트 조회
   const {
     data: weeklyVividList = [],
@@ -59,30 +72,30 @@ function WeeklyListPage() {
     await refetchWeekly();
   }, [refetchWeekly]);
 
-  // 주간 피드백을 PeriodSummary로 변환
+  // 주간 피드백을 PeriodSummary로 변환 (Hooks는 early return 전에 호출)
   const weeklySummaries = useMemo(() => {
     return weeklyVividList.map(convertWeeklyVividToPeriodSummary);
   }, [weeklyVividList]);
+
+  // 비Pro 또는 로딩 중에는 리다이렉트 처리
+  if (isLoadingSubscription || !isPro) {
+    return null;
+  }
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div
         className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
       >
-        <AppHeader 
-          title="주간 VIVID 리스트" 
+        <AppHeader
+          title="주간 VIVID 리스트"
           showBackButton={true}
+          onBack={() => router.push("/reports/weekly")}
         />
 
       {/* 주간 리포트 리스트 */}
       {isLoadingWeekly ? (
-        <div className="flex justify-center items-center py-12">
-          <LoadingSpinner
-            message="주간 vivid를 불러오는 중..."
-            size="md"
-            showMessage={true}
-          />
-        </div>
+        <WeeklyListSkeleton />
       ) : weeklyError ? (
         <div className="py-12">
           <ErrorDisplay
@@ -110,17 +123,7 @@ const WeeklyListPageWithAuth = withAuth(WeeklyListPage);
 
 export default function Page() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center items-center py-12">
-          <LoadingSpinner
-            message="로딩 중..."
-            size="md"
-            showMessage={true}
-          />
-        </div>
-      }
-    >
+    <Suspense fallback={<WeeklyListSkeleton />}>
       <WeeklyListPageWithAuth />
     </Suspense>
   );

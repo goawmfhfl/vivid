@@ -57,7 +57,8 @@ export type AIRequestType =
   | "daily_vivid"
   | "weekly_vivid"
   | "monthly_vivid"
-  | "user_persona";
+  | "user_persona"
+  | "user_trends";
 
 export interface LogAIRequestParams {
   userId: string;
@@ -155,6 +156,8 @@ export async function logAIRequest(
               ? "[monthly]"
               : requestType === "user_persona"
                 ? "[persona]"
+                : requestType === "user_trends"
+                  ? "[trends]"
                 : "";
       prefixedSectionName = prefix ? `${prefix} ${sectionName}` : sectionName;
     }

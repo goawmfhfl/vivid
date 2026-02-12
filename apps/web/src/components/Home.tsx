@@ -17,6 +17,7 @@ import { CircularProgress } from "./ui/CircularProgress";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -53,9 +54,9 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [generationMode, setGenerationMode] =
     useState<DailyVividGenerationMode>("fast");
   const [isModeHydrated, setIsModeHydrated] = useState(false);
-  const searchParamsString = searchParams.toString();
+  const searchParamsString = searchParams?.toString() ?? "";
   const initialRecordType = useMemo(() => {
-    const typeParam = searchParams.get("type");
+    const typeParam = searchParams?.get("type");
     if (typeParam === "emotion") {
       return "emotion";
     }
@@ -99,7 +100,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         params.delete("type");
       }
       const nextQuery = params.toString();
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+      router.replace(nextQuery ? `${pathname ?? "/"}?${nextQuery}` : pathname ?? "/");
     },
     [router, pathname, searchParamsString]
   );
@@ -223,7 +224,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const isCreateButtonDisabled =
     isReviewTab && !canCreateReview && !hasDateFeedback;
 
-  const showGenerationModeSelector = isToday && !hasDateFeedback;
+  const { isPro } = useSubscription();
+  const showGenerationModeSelector = isPro; // Pro일 때만 사고/빠른 모드 선택 표시
 
   // 전역 모달 및 피드백 생성 상태 관리
   const openErrorModal = useModalStore((state) => state.openErrorModal);

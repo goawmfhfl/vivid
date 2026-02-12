@@ -54,7 +54,7 @@ export function LoginView() {
   }, []);
 
   useEffect(() => {
-    const message = searchParams.get("message");
+    const message = searchParams?.get("message");
     if (message) {
       openSuccessModal(message);
       router.replace(getLoginPath(searchParams));
@@ -62,7 +62,7 @@ export function LoginView() {
     }
 
     // 회원 탈퇴 완료 확인
-    const isDeleted = searchParams.get("deleted");
+    const isDeleted = searchParams?.get("deleted");
     if (isDeleted === "true") {
       // 토스트 팝업으로 완료 메시지 표시
       showToast("회원 탈퇴가 완료되었습니다.", 4000);

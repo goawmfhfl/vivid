@@ -4,6 +4,7 @@ import {
   getAuthenticatedUserIdFromCookie,
 } from "../../utils/auth";
 import { createClient } from "@supabase/supabase-js";
+import { getServiceSupabase } from "@/lib/supabase-service";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -97,18 +98,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 공개 URL 생성 (버킷이 private이므로 signed URL 사용)
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from("inquiries-images")
-      .createSignedUrl(fileName, 3600); // 1시간 유효
+    // 서비스 역할로 signed URL 생성 (private 버킷에서 anon 키로는 실패할 수 있음)
+    const supabaseService = getServiceSupabase();
+    const objectPath = data.path ?? fileName;
+    const { data: signedUrlData, error: signedUrlError } =
+      await supabaseService.storage
+        .from("inquiries-images")
+        .createSignedUrl(objectPath, 3600); // 1시간 유효
 
     if (signedUrlError || !signedUrlData?.signedUrl) {
       console.error("Signed URL 생성 실패:", signedUrlError);
       // signed URL 실패 시 public URL 시도
       const {
         data: { publicUrl },
-      } = supabase.storage.from("inquiries-images").getPublicUrl(fileName);
-      
+      } = supabase.storage.from("inquiries-images").getPublicUrl(objectPath);
+
       return NextResponse.json({
         url: publicUrl,
         path: data.path,

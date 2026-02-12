@@ -110,30 +110,6 @@ export function formatPersonaForPrompt(
     }
   }
 
-  const trend = persona.trend as Record<string, unknown> | undefined;
-  if (trend && typeof trend === "object") {
-    const aspired =
-      typeof trend.aspired_self === "string" ? trend.aspired_self : "";
-    const interest = typeof trend.interest === "string" ? trend.interest : "";
-    const immersion =
-      typeof trend.immersion_moment === "string"
-        ? trend.immersion_moment
-        : "";
-    const trait =
-      typeof trend.personality_trait === "string"
-        ? trend.personality_trait
-        : "";
-    const parts = [
-      aspired && `지향하는 모습: ${aspired}`,
-      interest && `관심사: ${interest}`,
-      immersion && `몰입 희망: ${immersion}`,
-      trait && `성향: ${trait}`,
-    ].filter(Boolean);
-    if (parts.length) {
-      lines.push(`- 최근 흐름: ${parts.join(" / ")}`);
-    }
-  }
-
   if (lines.length === 0) return "";
   return lines.join("\n");
 }

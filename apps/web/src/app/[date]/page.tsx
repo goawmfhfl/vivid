@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 
 function DatePage() {
   const params = useParams();
-  const date = params.date as string;
+  const date = (params?.date ?? "") as string;
 
   // 날짜 형식 검증 (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;

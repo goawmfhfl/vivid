@@ -25,7 +25,7 @@ interface DecryptionDiagnosis {
   }>;
 }
 
-function isJsonbEncrypted(obj: any): boolean {
+function isJsonbEncrypted(obj: unknown): boolean {
   if (obj === null || obj === undefined) {
     return false;
   }
@@ -103,7 +103,7 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
         { name: "trend", value: feedback.trend },
       ];
 
-      let hasEncryptedField = false;
+      let _hasEncryptedField = false;
       let hasDecryptionFailure = false;
 
       for (const field of fields) {
@@ -112,7 +112,7 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
         const isFieldEncrypted = isJsonbEncrypted(field.value);
 
         if (isFieldEncrypted) {
-          hasEncryptedField = true;
+          _hasEncryptedField = true;
           diagnosis.encrypted++;
 
           try {
@@ -151,7 +151,7 @@ async function diagnoseDecryption(): Promise<DecryptionDiagnosis> {
 
       // 전체 복호화 시도
       try {
-        const decryptedFeedback = decryptDailyVivid(feedback);
+        const _decryptedFeedback = decryptDailyVivid(feedback);
         if (!hasDecryptionFailure) {
           // 복호화 성공
         }

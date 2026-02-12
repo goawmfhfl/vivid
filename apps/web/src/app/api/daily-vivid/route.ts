@@ -38,22 +38,22 @@ function replace당신InReport(report: Report | null, userName: string): Report 
     retrospective_evaluation: report.retrospective_evaluation
       ? replace당신(report.retrospective_evaluation, userName)
       : null,
-    alignment_analysis_points: report.alignment_analysis_points.map((s) =>
-      replace당신(s, userName)
+    alignment_analysis_points: (report.alignment_analysis_points ?? []).map(
+      (s) => replace당신(s, userName)
     ),
     execution_analysis_points: report.execution_analysis_points
       ? report.execution_analysis_points.map((s) => replace당신(s, userName))
       : null,
-    user_characteristics: report.user_characteristics.map((s) =>
+    user_characteristics: (report.user_characteristics ?? []).map((s) =>
       replace당신(s, userName)
     ),
-    aspired_traits: report.aspired_traits.map((s) =>
+    aspired_traits: (report.aspired_traits ?? []).map((s) =>
       replace당신(s, userName)
     ),
   };
 }
 
-function replace당신InTrend(trend: TrendData, userName: string): TrendData {
+function _replace당신InTrend(trend: TrendData, userName: string): TrendData {
   return {
     aspired_self: replace당신(trend.aspired_self, userName),
     interest: replace당신(trend.interest, userName),
@@ -160,7 +160,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
-    const generationMode = generation_mode === "reasoned" ? "reasoned" : "fast";
+    // Free: 항상 Flash 모델 사용 (비용 절감), Pro: 요청 모드 사용
+    const generationMode =
+      isPro && generation_mode === "reasoned" ? "reasoned" : "fast";
 
     let allReports = await generateAllReportsWithProgress(
       records,

@@ -2,14 +2,15 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
-import { Sparkles, Loader2, AlertCircle, ChevronDown, CheckCircle } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle } from "lucide-react";
 import { useMonthlyCandidates, fetchMonthlyCandidates } from "@/hooks/useMonthlyCandidates";
 import { QUERY_KEYS } from "@/constants";
 import { filterMonthlyCandidatesForCreation } from "../monthlyVivid/monthly-vivid-candidate-filter";
 import { getCurrentUserId } from "@/hooks/useCurrentUser";
 import { useModalStore } from "@/store/useModalStore";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
-import { COLORS, GRADIENT_UTILS } from "@/lib/design-system";
+import { COLORS } from "@/lib/design-system";
+import { CandidatesNoticeBox } from "./CandidatesNoticeBox";
 import { fetchMonthlyVividList } from "@/hooks/useMonthlyVivid";
 import { fetchMonthlyTrends } from "@/hooks/useMonthlyTrends";
 import {
@@ -45,84 +46,35 @@ function MonthlyCandidateItem({
 
   return (
     <div
-      className="flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 relative overflow-hidden group"
+      className="relative flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-200"
       style={{
-        backgroundColor: COLORS.background.base,
-        border: `1.5px solid ${COLORS.border.light}`,
-        borderRadius: "12px",
-        boxShadow: `
-          0 2px 8px rgba(0,0,0,0.04),
-          0 1px 3px rgba(0,0,0,0.02),
-          inset 0 1px 0 rgba(255,255,255,0.6)
-        `,
-        backgroundImage: `
-          repeating-linear-gradient(
-            to bottom,
-            transparent 0px,
-            transparent 27px,
-            rgba(127, 143, 122, 0.06) 27px,
-            rgba(127, 143, 122, 0.06) 28px
-          ),
-          repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 2px,
-            rgba(127, 143, 122, 0.01) 2px,
-            rgba(127, 143, 122, 0.01) 4px
-          )
-        `,
-        backgroundSize: "100% 28px, 8px 8px",
-        backgroundPosition: "0 2px, 0 0",
-        filter: "contrast(1.02) brightness(1.01)",
+        backgroundColor: COLORS.background.card,
+        border: `1px solid ${COLORS.border.light}`,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
       onClick={(e) => e.stopPropagation()}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
-        e.currentTarget.style.boxShadow = `
-          0 4px 16px rgba(127, 143, 122, 0.12),
-          0 2px 6px rgba(0,0,0,0.04),
-          inset 0 1px 0 rgba(255,255,255,0.6)
+        e.currentTarget.style.borderColor = `${COLORS.monthly.primary}50`;
+          e.currentTarget.style.boxShadow = `
+          0 2px 8px rgba(168, 155, 196, 0.15),
+          0 1px 3px rgba(0,0,0,0.04)
         `;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.borderColor = COLORS.border.light;
-        e.currentTarget.style.boxShadow = `
-          0 2px 8px rgba(0,0,0,0.04),
-          0 1px 3px rgba(0,0,0,0.02),
-          inset 0 1px 0 rgba(255,255,255,0.6)
-        `;
+        e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
       }}
     >
-      {/* 종이 질감 오버레이 */}
       <div
-        className="absolute inset-0 pointer-events-none rounded-xl"
-        style={{
-          background: `
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-            radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
-          `,
-          mixBlendMode: "overlay",
-          opacity: 0.5,
-        }}
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+        style={{ backgroundColor: COLORS.monthly.primary }}
       />
-
-      {/* 왼쪽 브랜드 컬러 액센트 라인 */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300"
-        style={{
-          backgroundColor: COLORS.brand.primary,
-          opacity: 0.6,
-        }}
-      />
-
-      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 relative z-10 pl-4">
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 pl-4">
         <div
           className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 transition-all duration-300"
           style={{
-            backgroundColor: COLORS.brand.primary,
-            boxShadow: `0 0 8px ${COLORS.brand.primary}40`,
+            backgroundColor: COLORS.monthly.primary,
+            boxShadow: `0 0 8px ${COLORS.monthly.primary}40`,
           }}
         />
         <div className="flex-1 min-w-0">
@@ -182,7 +134,7 @@ function MonthlyCandidateItem({
                     className="h-full transition-all duration-1000 ease-out"
                     style={{
                       width: `${progressPercentage}%`,
-                      backgroundColor: COLORS.brand.primary,
+                      backgroundColor: COLORS.monthly.primary,
                     }}
                   />
                 </div>
@@ -207,7 +159,7 @@ function MonthlyCandidateItem({
           disabled={isGenerating}
           className="rounded-full px-3 py-1.5 sm:px-4 sm:py-2 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 text-xs sm:text-sm relative"
           style={{
-            backgroundColor: isGenerating ? "#9CA89C" : COLORS.brand.primary,
+            backgroundColor: isGenerating ? "#b5a9c6" : COLORS.monthly.primary,
             color: "white",
             fontSize: "0.7rem",
             fontWeight: "500",
@@ -216,12 +168,12 @@ function MonthlyCandidateItem({
           }}
           onMouseEnter={(e) => {
             if (!isGenerating) {
-              e.currentTarget.style.backgroundColor = "#5A675A";
+              e.currentTarget.style.backgroundColor = COLORS.monthly.dark;
             }
           }}
           onMouseLeave={(e) => {
             if (!isGenerating) {
-              e.currentTarget.style.backgroundColor = COLORS.brand.primary;
+              e.currentTarget.style.backgroundColor = COLORS.monthly.primary;
             }
           }}
         >
@@ -494,121 +446,56 @@ export function MonthlyCandidatesSection({
     }
   };
 
-  if (isLoading || candidatesForCreation.length === 0) {
-    return (
-      <>
-        {/* 생성 완료 모달 (리스트가 비어도 모달은 표시될 수 있음) */}
-        <AlertDialog open={completionModal.isOpen} onOpenChange={(open) => {
-          if (!open) {
-            handleCompletionConfirm();
-          }
-        }}>
-          <AlertDialogContent className="max-w-md" style={{ backgroundColor: COLORS.background.card }}>
-            <AlertDialogHeader>
-              <div className="flex items-center justify-center mb-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${COLORS.brand.primary}15` }}
-                >
-                  <CheckCircle className="w-8 h-8" style={{ color: COLORS.brand.primary }} />
-                </div>
-              </div>
-              <AlertDialogTitle className="text-center" style={{ color: COLORS.text.primary }}>
-                생성이 완료되었습니다
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-center" style={{ color: COLORS.text.secondary }}>
-                {completionModal.monthLabel} 월간 VIVID가 성공적으로 생성되었습니다.
-                <br/>
-                확인 버튼을 누르면 생성된 리포트로 이동합니다.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:justify-center">
-              <AlertDialogAction
-                onClick={handleCompletionConfirm}
-                style={{
-                  backgroundColor: COLORS.brand.primary,
-                  color: "white",
-                }}
-              >
-                확인
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </>
-    );
+  const renderCompletionModal = () => (
+    <AlertDialog open={completionModal.isOpen} onOpenChange={(open) => !open && handleCompletionConfirm()}>
+      <AlertDialogContent className="max-w-md" style={{ backgroundColor: COLORS.background.card }}>
+        <AlertDialogHeader>
+          <div className="flex items-center justify-center mb-4">
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${COLORS.monthly.primary}18` }}
+            >
+              <CheckCircle className="w-8 h-8" style={{ color: COLORS.monthly.primary }} />
+            </div>
+          </div>
+          <AlertDialogTitle className="text-center" style={{ color: COLORS.text.primary }}>
+            생성이 완료되었습니다
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-center" style={{ color: COLORS.text.secondary }}>
+            {completionModal.monthLabel} 월간 VIVID가 성공적으로 생성되었습니다.
+            <br />
+            확인 버튼을 누르면 생성된 리포트로 이동합니다.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center">
+          <AlertDialogAction
+            onClick={handleCompletionConfirm}
+            style={{ backgroundColor: COLORS.monthly.primary, color: "white" }}
+          >
+            확인
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  if (isLoading) {
+    return <>{renderCompletionModal()}</>;
+  }
+
+  if (candidatesForCreation.length === 0) {
+    return <>{renderCompletionModal()}</>;
   }
 
   return (
     <div className="mb-8">
-      {/* Notice 형태의 알림 박스 (클릭 가능) */}
-      <div
-        className="rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg"
-        style={{
-          backgroundColor: COLORS.background.card,
-          border: `1.5px solid ${COLORS.brand.primary}40`,
-          boxShadow: `0 2px 8px ${COLORS.brand.primary}15`,
-        }}
+      <CandidatesNoticeBox
+        title="아직 생성되지 않은 월간 vivid가 있어요"
+        description={`${candidatesForCreation.length}개의 월간 vivid를 생성할 수 있어요.`}
+        isExpanded={monthlyCandidatesDropdown.isExpanded}
         onClick={toggleMonthlyCandidatesDropdown}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = `${COLORS.brand.primary}60`;
-          e.currentTarget.style.boxShadow = `0 4px 12px ${COLORS.brand.primary}20`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = `${COLORS.brand.primary}40`;
-          e.currentTarget.style.boxShadow = `0 2px 8px ${COLORS.brand.primary}15`;
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <div
-            className="p-2 rounded-lg flex-shrink-0 mt-0.5 transition-all duration-300"
-            style={{
-              background: GRADIENT_UTILS.iconBadge(COLORS.brand.primary),
-              boxShadow: `0 2px 8px ${COLORS.brand.primary}30`,
-            }}
-          >
-            <AlertCircle className="w-4 h-4" style={{ color: "white" }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <h3
-                  className="mb-1"
-                  style={{
-                    color: COLORS.text.primary,
-                    fontSize: "0.95rem",
-                    fontWeight: "600",
-                  }}
-                >
-                  아직 생성되지 않은 월간 vivid가 있어요
-                </h3>
-                <p
-                  style={{
-                    color: COLORS.text.secondary,
-                    fontSize: "0.85rem",
-                    lineHeight: "1.5",
-                  }}
-                >
-                  {candidatesForCreation.length}개의 월간 vivid를 생성할 수
-                  있어요. 기록을 통해 나를 이해하고, 나답게 성장하는 시간을
-                  가져보세요.
-                </p>
-              </div>
-              <div
-                className="flex-shrink-0 transition-transform duration-300"
-                style={{
-                  transform: monthlyCandidatesDropdown.isExpanded
-                    ? "rotate(180deg)"
-                    : "rotate(0deg)",
-                  color: COLORS.brand.primary,
-                }}
-              >
-                <ChevronDown className="w-5 h-5" style={{ color: COLORS.brand.primary }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        accentColor={COLORS.monthly.primary}
+      />
 
       {/* 생성 가능한 월간 vivid 리스트 (드롭다운 애니메이션) */}
       <div
@@ -638,44 +525,7 @@ export function MonthlyCandidatesSection({
         </div>
       </div>
 
-      {/* 생성 완료 모달 */}
-      <AlertDialog open={completionModal.isOpen} onOpenChange={(open) => {
-        if (!open) {
-          handleCompletionConfirm();
-        }
-      }}>
-        <AlertDialogContent className="max-w-md" style={{ backgroundColor: COLORS.background.card }}>
-          <AlertDialogHeader>
-            <div className="flex items-center justify-center mb-4">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${COLORS.brand.primary}15` }}
-              >
-                <CheckCircle className="w-8 h-8" style={{ color: COLORS.brand.primary }} />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-center" style={{ color: COLORS.text.primary }}>
-              생성이 완료되었습니다
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center" style={{ color: COLORS.text.secondary }}>
-              {completionModal.monthLabel} 월간 VIVID가 성공적으로 생성되었습니다.
-              <br/>
-              확인 버튼을 누르면 생성된 리포트로 이동합니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction
-              onClick={handleCompletionConfirm}
-              style={{
-                backgroundColor: COLORS.brand.primary,
-                color: "white",
-              }}
-            >
-              확인
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {renderCompletionModal()}
     </div>
   );
 }

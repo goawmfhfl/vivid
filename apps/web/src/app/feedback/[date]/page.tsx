@@ -8,7 +8,7 @@ function DateFeedbackPage() {
   const params = useParams();
   const router = useRouter();
 
-  const dateStr = params.date as string;
+  const dateStr = (params?.date ?? "") as string;
 
   const handleBack = () => {
     router.push("/logs");

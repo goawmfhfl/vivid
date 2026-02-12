@@ -14,8 +14,8 @@ export function useIsBrowser(): boolean {
   return useMemo(() => {
     if (typeof window === "undefined") return true;
 
-    const embed = searchParams.get("embed");
-    const source = searchParams.get("source");
+    const embed = searchParams?.get("embed");
+    const source = searchParams?.get("source");
     if (embed === "1" || source === "app") return false;
 
     const ua = navigator.userAgent;
