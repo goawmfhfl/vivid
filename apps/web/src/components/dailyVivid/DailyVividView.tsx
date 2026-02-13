@@ -350,7 +350,7 @@ export function DailyVividView({
                     className="text-xs"
                     style={{ color: COLORS.text.secondary, opacity: 0.9 }}
                   >
-                    1번만 재생성 가능합니다
+                    1번 재생성 가능합니다
                   </span>
                 </div>
               )}
