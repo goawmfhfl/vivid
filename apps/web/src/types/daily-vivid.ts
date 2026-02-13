@@ -54,4 +54,5 @@ export interface DailyVividRow {
   is_vivid_ai_generated: boolean | null;
   is_review_ai_generated: boolean | null;
   generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
+  is_regenerated?: boolean | null; // 재생성 여부. true이면 1회 재생성 완료
 }

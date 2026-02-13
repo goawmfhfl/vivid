@@ -38,19 +38,51 @@ export async function fetchRecordsByDate(
 
 export type DailyReportGenerationType = "vivid" | "review";
 
+/**
+ * 재생성 가능 여부 확인 (기존 레코드 존재 + is_regenerated false)
+ */
+export async function checkRegenerationEligibility(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+  generationType: DailyReportGenerationType
+): Promise<{ eligible: boolean; error?: string }> {
+  const isVivid = generationType === "vivid";
+  const { data: rows, error } = await supabase
+    .from("daily_vivid")
+    .select("id, is_regenerated")
+    .eq("user_id", userId)
+    .eq("report_date", date)
+    .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
+    .limit(1);
+
+  if (error) {
+    return { eligible: false, error: "기존 피드백 조회 실패" };
+  }
+  const existing = rows?.[0] ?? null;
+  if (!existing) {
+    return { eligible: false, error: "재생성할 피드백이 없습니다." };
+  }
+  if (existing.is_regenerated === true) {
+    return { eligible: false, error: "이미 재생성이 완료되었습니다. 1번만 재생성 가능합니다." };
+  }
+  return { eligible: true };
+}
+
 export async function saveDailyReport(
   supabase: SupabaseClient,
   userId: string,
   report: DailyReportResponse,
   generationDurationSeconds?: number,
-  generationType: DailyReportGenerationType = "vivid"
+  generationType: DailyReportGenerationType = "vivid",
+  isRegeneration = false
 ): Promise<DailyVividRow> {
   const isVivid = generationType === "vivid";
 
   // 해당 (user_id, report_date)에서 현재 generationType에 해당하는 행 조회
   const { data: existingRows, error: checkError } = await supabase
     .from("daily_vivid")
-    .select("id")
+    .select("id, is_regenerated")
     .eq("user_id", userId)
     .eq("report_date", report.date)
     .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
@@ -62,6 +94,11 @@ export async function saveDailyReport(
 
   const existingData = existingRows?.[0] ?? null;
 
+  // 재생성 요청 시: 기존 레코드 없으면 에러, 이미 재생성됐으면 API에서 검증 (여기선 저장만)
+  if (isRegeneration && !existingData) {
+    throw new Error("재생성할 피드백이 없습니다.");
+  }
+
   const newReportDataToEncrypt: { [key: string]: unknown } = {
     report: report.report,
     trend: null,
@@ -69,7 +106,7 @@ export async function saveDailyReport(
 
   const encryptedNewReports = encryptDailyVivid(newReportDataToEncrypt);
 
-  const reportData = {
+  const reportData: Record<string, unknown> = {
     user_id: userId,
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
@@ -79,6 +116,11 @@ export async function saveDailyReport(
     is_review_ai_generated: !isVivid,
     generation_duration_seconds: generationDurationSeconds ?? null,
   };
+
+  // 재생성 시 is_regenerated 마크
+  if (isRegeneration && existingData) {
+    reportData.is_regenerated = true;
+  }
 
   let result;
   if (existingData) {

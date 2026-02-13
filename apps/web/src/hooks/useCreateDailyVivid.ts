@@ -9,7 +9,8 @@ type DailyVividGenerationType = "vivid" | "review";
 const createDailyVivid = async (
   date: string,
   generationMode: DailyVividGenerationMode = "fast",
-  generationType: DailyVividGenerationType = "vivid"
+  generationType: DailyVividGenerationType = "vivid",
+  isRegeneration = false
 ): Promise<DailyVividRow> => {
   const userId = await getCurrentUserId();
   const startTime = Date.now();
@@ -20,6 +21,9 @@ const createDailyVivid = async (
     generation_mode: generationMode,
     generation_type: generationType,
   };
+  if (isRegeneration) {
+    body.is_regeneration = true;
+  }
 
   const res = await fetch("/api/daily-vivid", {
     method: "POST",
@@ -40,16 +44,18 @@ const createDailyVivid = async (
   // 생성 시간을 포함하여 다시 요청 (업데이트)
   if (result?.id) {
     try {
+      const durationBody: Record<string, unknown> = {
+        userId,
+        date,
+        generation_duration_seconds: durationSeconds,
+        generation_mode: generationMode,
+        generation_type: generationType,
+      };
+      if (isRegeneration) durationBody.is_regeneration = true;
       await fetch("/api/daily-vivid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          date,
-          generation_duration_seconds: durationSeconds,
-          generation_mode: generationMode,
-          generation_type: generationType,
-        }),
+        body: JSON.stringify(durationBody),
       });
     } catch (error) {
       console.warn("생성 시간 업데이트 실패:", error);
@@ -57,6 +63,13 @@ const createDailyVivid = async (
   }
 
   return { ...result, generation_duration_seconds: durationSeconds };
+};
+
+export type CreateDailyVividVariables = {
+  date: string;
+  generationMode?: DailyVividGenerationMode;
+  generation_type?: DailyVividGenerationType;
+  is_regeneration?: boolean;
 };
 
 export const useCreateDailyVivid = () => {
@@ -67,11 +80,9 @@ export const useCreateDailyVivid = () => {
       date,
       generationMode,
       generation_type: generationType = "vivid",
-    }: {
-      date: string;
-      generationMode?: DailyVividGenerationMode;
-      generation_type?: DailyVividGenerationType;
-    }) => createDailyVivid(date, generationMode, generationType),
+      is_regeneration: isRegeneration = false,
+    }: CreateDailyVividVariables) =>
+      createDailyVivid(date, generationMode, generationType, isRegeneration),
     onSuccess: (data, variables) => {
       if (!variables?.date) {
         // 날짜가 없으면 전체 무효화로 폴백

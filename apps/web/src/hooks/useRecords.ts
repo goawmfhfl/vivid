@@ -70,6 +70,7 @@ const fetchRecords = async (): Promise<Record[]> => {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -269,12 +270,15 @@ export const useCreateRecord = () => {
         return oldData;
       });
 
-      // Q3 입력 직후 리뷰 탭 버튼 상태 반영: 해당 날짜 daily-vivid·기록 날짜 캐시 무효화
-      queryClient.invalidateQueries({
+      // Q3 입력 직후 리뷰 탭 버튼 상태 반영: 즉시 refetch로 UI 동기화
+      void queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
+      });
+      void queryClient.refetchQueries({
         queryKey: [QUERY_KEYS.DAILY_VIVID, newRecord.kst_date],
       });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
+      void queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.RECORDS],
       });
     },
     onError: (error: RecordError) => {

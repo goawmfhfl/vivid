@@ -42,9 +42,9 @@ export async function fetchUserPersonaOptional(
 }
 
 const PERSONA_INTRO =
-  "아래는 해당 사용자의 페르소나입니다. 이 내용을 기억하고, 리포트·피드백 작성 시 이 사용자의 성향과 최근 맥락에 맞게 반영하세요.";
+  "아래는 해당 사용자의 페르소나입니다. 이 사용자의 성향, 지향, 패턴을 기억하고 있다는 느낌이 자연스럽게 드러나도록 평가·인사이트에 가미하세요. 과하지 않게, 1~2문장 정도로 '이전에 알게 된 너의 모습과 연결된다'는 인상을 주세요.";
 const PERSONA_OUTRO =
-  "위 페르소나를 참고해 이 사용자에 맞는 톤과 인사이트로 작성하세요.";
+  "위 페르소나를 참고해, 이 사용자에 맞는 톤과 인사이트로 작성하세요. 평가 문장 중 적절한 곳에 '너의 성향을 기억하고 있다'는 느낌이 자연스럽게 스며들도록 하세요.";
 
 function joinList(arr: unknown[] | undefined): string {
   if (!Array.isArray(arr) || arr.length === 0) return "";

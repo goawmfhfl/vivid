@@ -12,7 +12,8 @@ const fetchDailyVividByDate = async (
   const userId = await getCurrentUserId();
 
   const response = await fetch(
-    `/api/daily-vivid/by-date?userId=${userId}&date=${date}&generation_type=${generationType}`
+    `/api/daily-vivid/by-date?userId=${userId}&date=${date}&generation_type=${generationType}`,
+    { cache: "no-store" }
   );
 
   if (!response.ok) {
@@ -80,9 +81,10 @@ export const useGetDailyVivid = (
     queryKey: [QUERY_KEYS.DAILY_VIVID, date, generationType],
     queryFn: () => fetchDailyVividByDate(date, generationType),
     enabled: !!date,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0, // 보기/생성하기 버튼 상태 정확도를 위해 항상 최신 데이터
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    refetchOnMount: "always",
   });
 };
 

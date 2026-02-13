@@ -83,9 +83,10 @@ export function useRecordsAndFeedbackDates() {
   return useQuery({
     queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
     queryFn: fetchRecordsAndFeedbackDates,
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    staleTime: 0, // 회고 탭 버튼 상태 정확도를 위해 항상 최신 데이터
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    refetchOnMount: "always",
   });
 }

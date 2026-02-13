@@ -225,7 +225,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
     isReviewTab && !canCreateReview && !hasDateFeedback;
 
   const { isPro } = useSubscription();
-  const showGenerationModeSelector = isPro; // Pro일 때만 사고/빠른 모드 선택 표시
+  const showGenerationModeSelector =
+    isPro && !hasDateFeedback && !isCreateButtonDisabled; // 생성 가능할 때만 사고/빠른 모드 표시
 
   // 전역 모달 및 피드백 생성 상태 관리
   const openErrorModal = useModalStore((state) => state.openErrorModal);

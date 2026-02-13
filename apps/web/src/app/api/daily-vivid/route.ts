@@ -6,7 +6,11 @@ import {
   buildPersonaContextBlock,
 } from "@/lib/user-persona";
 import { generateAllReportsWithProgress } from "./ai-service-stream";
-import { fetchRecordsByDate, saveDailyReport } from "./db-service";
+import {
+  fetchRecordsByDate,
+  saveDailyReport,
+  checkRegenerationEligibility,
+} from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
 import type { DailyVividRequest, DailyReportResponse } from "./types";
@@ -82,6 +86,7 @@ export async function POST(request: NextRequest) {
       generation_duration_seconds,
       generation_mode,
       generation_type: requestGenerationType,
+      is_regeneration: isRegeneration,
     }: DailyVividRequest = body;
 
     const generationType = requestGenerationType === "review" ? "review" : "vivid";
@@ -94,6 +99,19 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceSupabase();
+
+    // 0️⃣ 재생성 요청 시: 기존 레코드 확인 및 is_regenerated 검증
+    if (isRegeneration) {
+      const { eligible, error: regenError } = await checkRegenerationEligibility(
+        supabase,
+        userId,
+        date,
+        generationType
+      );
+      if (!eligible && regenError) {
+        return NextResponse.json({ error: regenError }, { status: 400 });
+      }
+    }
 
     // 1️⃣ Records 데이터 조회
     const records = await fetchRecordsByDate(supabase, userId, date);
@@ -150,13 +168,15 @@ export async function POST(request: NextRequest) {
 
     const userName = resolvedUserName || "회원";
 
-    // 3.6️⃣ user_persona 선택 조회 (있으면 프롬프트에 반영, 없으면 무시)
+    // 3.6️⃣ user_persona 선택 조회 (Pro 유저일 때만 프롬프트에 반영)
     let personaContext = "";
-    try {
-      const persona = await fetchUserPersonaOptional(supabase, userId);
-      personaContext = buildPersonaContextBlock(persona);
-    } catch {
-      // 조회/복호화 실패 시 빈 문자열 유지
+    if (isPro) {
+      try {
+        const persona = await fetchUserPersonaOptional(supabase, userId);
+        personaContext = buildPersonaContextBlock(persona);
+      } catch {
+        // 조회/복호화 실패 시 빈 문자열 유지
+      }
     }
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
@@ -208,7 +228,8 @@ export async function POST(request: NextRequest) {
       userId,
       report,
       generation_duration_seconds,
-      generationType
+      generationType,
+      isRegeneration ?? false
     );
 
     revalidatePath("/");

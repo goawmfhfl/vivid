@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 import { getMondayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
@@ -20,6 +20,9 @@ interface WeeklyDateViewProps {
 }
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+
+/** 애니메이션 완료 대기 최대 시간 (ms) - onExitComplete 미호출 시 복구 */
+const TRANSITION_TIMEOUT_MS = 600;
 
 export function WeeklyDateView({
   selectedDate,
@@ -56,6 +59,11 @@ export function WeeklyDateView({
     return date;
   });
 
+  // 전환 완료 핸들러 (onExitComplete 미호출 시 타임아웃으로 복구)
+  const clearTransitioning = useCallback(() => {
+    setIsTransitioning(false);
+  }, []);
+
   // 이전 주로 이동
   const goToPreviousWeek = () => {
     if (isTransitioning) return;
@@ -64,7 +72,6 @@ export function WeeklyDateView({
     setCurrentWeekStart((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(prev.getDate() - 7);
-      // 월 변경 콜백은 useEffect에서 처리됨
       return newDate;
     });
   };
@@ -77,7 +84,6 @@ export function WeeklyDateView({
     setCurrentWeekStart((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(prev.getDate() + 7);
-      // 월 변경 콜백은 useEffect에서 처리됨
       return newDate;
     });
   };
@@ -195,16 +201,23 @@ export function WeeklyDateView({
     }
   };
 
-  // selectedDate가 변경되면 해당 주로 이동
+  // selectedDate가 변경되면 해당 주로 이동 (날짜 클릭/URL 변경 시)
   useEffect(() => {
     if (selectedDate) {
       const selected = getKSTDate(new Date(selectedDate));
       const weekStart = getMondayOfWeek(selected);
       setCurrentWeekStart(weekStart);
-      setDirection(null); // 직접 선택 시 애니메이션 방지
-      // 월 변경 콜백은 currentWeekStart 변경 시 자동으로 호출됨
+      setDirection(null);
+      setIsTransitioning(false); // 전환 상태 초기화
     }
   }, [selectedDate]);
+
+  // isTransitioning 시 안전 타임아웃 - onExitComplete 미호출 시 복구
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const timeoutId = setTimeout(clearTransitioning, TRANSITION_TIMEOUT_MS);
+    return () => clearTimeout(timeoutId);
+  }, [isTransitioning, clearTransitioning]);
 
   // 애니메이션 variants
   const slideVariants = {
@@ -240,14 +253,14 @@ export function WeeklyDateView({
         userSelect: "none",
       }}
     >
-      {/* 주간 날짜 그리드 */}
+      {/* 주간 날짜 그리드 - isLoading 시에만 스켈레톤, 슬라이드 전환은 애니메이션만 사용 */}
       <AnimatePresence
         mode="wait"
         custom={direction}
         initial={false}
-        onExitComplete={() => setIsTransitioning(false)}
+        onExitComplete={clearTransitioning}
       >
-        {(isLoading || isTransitioning) && !isDragging ? (
+        {isLoading && !isDragging ? (
           // 스켈레톤 UI 표시
           <motion.div
             key="skeleton"
