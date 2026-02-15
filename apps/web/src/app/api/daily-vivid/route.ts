@@ -9,12 +9,13 @@ import { generateAllReportsWithProgress } from "./ai-service-stream";
 import {
   fetchRecordsByDate,
   saveDailyReport,
+  fetchTodoCheckSummary,
   checkRegenerationEligibility,
 } from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
+import type { Report } from "@/types/daily-vivid";
 import type { DailyVividRequest, DailyReportResponse } from "./types";
-import type { Report, TrendData } from "@/types/daily-vivid";
 
 /** 응답 텍스트에서 "당신"을 호칭으로 치환 (userName님) */
 function replace당신(str: string, userName: string): string {
@@ -54,15 +55,6 @@ function replace당신InReport(report: Report | null, userName: string): Report 
     aspired_traits: (report.aspired_traits ?? []).map((s) =>
       replace당신(s, userName)
     ),
-  };
-}
-
-function _replace당신InTrend(trend: TrendData, userName: string): TrendData {
-  return {
-    aspired_self: replace당신(trend.aspired_self, userName),
-    interest: replace당신(trend.interest, userName),
-    immersion_moment: replace당신(trend.immersion_moment, userName),
-    personality_trait: replace당신(trend.personality_trait, userName),
   };
 }
 
@@ -184,6 +176,13 @@ export async function POST(request: NextRequest) {
     const generationMode =
       isPro && generation_mode === "reasoned" ? "reasoned" : "fast";
 
+    // 회고 생성 시: 투두 체크 완료율 조회 (execution_score 반영용)
+    let todoCheckInfo: { checked: number; total: number } | undefined;
+    if (generationType === "review" && isPro) {
+      const summary = await fetchTodoCheckSummary(supabase, userId, date);
+      if (summary) todoCheckInfo = summary;
+    }
+
     let allReports = await generateAllReportsWithProgress(
       records,
       date,
@@ -192,26 +191,28 @@ export async function POST(request: NextRequest) {
       userId, // AI 사용량 로깅을 위한 userId 전달
       generationMode,
       userName,
-      personaContext
+      personaContext,
+      todoCheckInfo
     );
 
     // 4.5️⃣ 응답 텍스트에서 "당신" → "재영님" 등 친근 호칭으로 후처리
     if (allReports.report) {
-      if (!hasReview) {
-        allReports = {
-          ...allReports,
-          report: {
-            ...allReports.report,
-            retrospective_summary: null,
-            retrospective_evaluation: null,
-            execution_score: null,
-            execution_analysis_points: null,
-          },
-        };
-      }
       allReports = {
         ...allReports,
         report: replace당신InReport(allReports.report, userName),
+      };
+    }
+
+    if (allReports.report && !hasReview) {
+      allReports = {
+        ...allReports,
+        report: {
+          ...allReports.report,
+          retrospective_summary: null,
+          retrospective_evaluation: null,
+          execution_score: null,
+          execution_analysis_points: null,
+        },
       };
     }
     // 4️⃣ DailyReportResponse 형식으로 변환 (trend는 user_persona에서 관리하므로 null)

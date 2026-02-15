@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ChevronDown, BookOpen, Lock } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, BookOpen, Lock, Check, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
@@ -26,6 +26,9 @@ import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
 import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
+import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
+import { useUpdateTodoCheck, useCreateTodoList } from "@/hooks/useTodoList";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -57,6 +60,7 @@ export function RecordForm({
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
+  const [todoSectionExpanded, setTodoSectionExpanded] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
   const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -80,6 +84,13 @@ export function RecordForm({
   const todayIso = getKSTDateString();
   const targetDateIso = selectedDate || todayIso;
   const isFuture = targetDateIso > todayIso;
+
+  // 회고 탭에서만 오늘의 비비드 조회
+  const vividDate =
+    selectedType === "review" && targetDateIso ? targetDateIso : "";
+  const { data: vividFeedback } = useGetDailyVivid(vividDate, "vivid");
+  const updateTodoCheck = useUpdateTodoCheck(targetDateIso || "");
+  const createTodoList = useCreateTodoList(targetDateIso || "");
 
   // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 Pro 아니어도 드롭다운에 표시)
   const getRecordTypeOptions = useCallback(() => {
@@ -1314,6 +1325,176 @@ export function RecordForm({
         </>
       ) : recordType === "review" ? (
         <>
+          {/* 오늘의 할 일 (Pro + 오늘 비비드가 있을 때만) */}
+          {subscription?.isPro && vividFeedback?.is_vivid_ai_generated && (
+            <div className="mb-4">
+              {!vividFeedback.todoLists || vividFeedback.todoLists.length === 0 ? (
+                <Button
+                  type="button"
+                  onClick={() =>
+                    createTodoList.mutate(undefined, {
+                      onError: (err) =>
+                        showToast(
+                          err instanceof Error ? err.message : "생성에 실패했어요."
+                        ),
+                    })
+                  }
+                  disabled={createTodoList.isPending}
+                  className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                  style={{
+                    backgroundColor: COLORS.primary[600],
+                    border: `2px solid ${COLORS.primary[600]}`,
+                    color: COLORS.text.white,
+                    fontWeight: "700",
+                    fontSize: "0.9375rem",
+                    boxShadow: SHADOWS.elevation2,
+                  }}
+                >
+                  {createTodoList.isPending ? (
+                    <>
+                      <Loader2
+                        className="w-4 h-4 mr-2 animate-spin"
+                        style={{ color: COLORS.text.white }}
+                      />
+                      생성 중...
+                    </>
+                  ) : (
+                    "오늘의 할 일 생성하기"
+                  )}
+                </Button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setTodoSectionExpanded((p) => !p)}
+                    className="w-full text-left flex items-center justify-between gap-2 py-3 px-4 rounded-xl transition-all"
+                    style={{
+                      backgroundColor: GRADIENT_UTILS.cardBackground(
+                        COLORS.brand.light,
+                        0.12
+                      ),
+                      border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                      borderRadius: "12px",
+                      boxShadow: SHADOWS.default,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: "600",
+                        color: COLORS.text.primary,
+                      }}
+                    >
+                      오늘의 할 일
+                    </span>
+                    {todoSectionExpanded ? (
+                      <ChevronUp
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: COLORS.text.tertiary }}
+                      />
+                    ) : (
+                      <ChevronDown
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: COLORS.text.tertiary }}
+                      />
+                    )}
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {todoSectionExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{
+                          duration: 0.25,
+                          ease: [0.4, 0, 0.2, 1],
+                        }}
+                        className="overflow-hidden"
+                      >
+                        <div
+                          className="mt-2 px-4 py-3 rounded-xl space-y-2"
+                          style={{
+                            backgroundColor: defaultColors.background,
+                            border: `1.5px solid ${defaultColors.border}`,
+                            boxShadow: `
+                              0 2px 8px rgba(0,0,0,0.04),
+                              0 1px 3px rgba(0,0,0,0.02)
+                            `,
+                          }}
+                        >
+                          {vividFeedback.todoLists.map((item) => (
+                            <label
+                              key={item.id}
+                              className="flex items-center gap-3 cursor-pointer group"
+                            >
+                              <button
+                                type="button"
+                                role="checkbox"
+                                aria-checked={item.is_checked}
+                                onClick={() =>
+                                  updateTodoCheck.mutate({
+                                    id: item.id,
+                                    is_checked: !item.is_checked,
+                                  })
+                                }
+                                disabled={updateTodoCheck.isPending}
+                                className="flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
+                                style={{
+                                  borderColor: item.is_checked
+                                    ? COLORS.brand.primary
+                                    : COLORS.border.light,
+                                  backgroundColor: item.is_checked
+                                    ? COLORS.brand.primary
+                                    : "transparent",
+                                }}
+                              >
+                                {item.is_checked && (
+                                  <Check
+                                    className="w-3 h-3"
+                                    style={{ color: COLORS.text.white }}
+                                  />
+                                )}
+                              </button>
+                              <span
+                                className={cn(
+                                  TYPOGRAPHY.bodySmall.fontSize,
+                                  "flex-1"
+                                )}
+                                style={{
+                                  color: COLORS.text.primary,
+                                  textDecoration: item.is_checked
+                                    ? "line-through"
+                                    : "none",
+                                  opacity: item.is_checked ? 0.7 : 1,
+                                }}
+                              >
+                                {item.contents}
+                              </span>
+                              {item.category && (
+                                <span
+                                  className={cn(
+                                    TYPOGRAPHY.caption.fontSize,
+                                    "flex-shrink-0 px-2 py-0.5 rounded"
+                                  )}
+                                  style={{
+                                    color: COLORS.text.muted,
+                                    backgroundColor: COLORS.background.hover,
+                                  }}
+                                >
+                                  {item.category}
+                                </span>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Q3 입력 필드 */}
           <div className="mb-4">
             <div

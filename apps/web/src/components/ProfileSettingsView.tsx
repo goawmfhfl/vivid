@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   AlertCircle,
-  CheckCircle2,
   ArrowLeft,
   Bell,
   ChevronRight,
@@ -64,7 +63,6 @@ export function ProfileSettingsView() {
     name?: string;
     general?: string;
   }>({});
-  const [success, setSuccess] = useState(false);
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -154,7 +152,6 @@ export function ProfileSettingsView() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(false);
     const validationErrors = validate();
 
     if (Object.keys(validationErrors).length > 0) {
@@ -166,7 +163,7 @@ export function ProfileSettingsView() {
         name: formData.name.trim(),
         agreeMarketing: formData.agreeMarketing,
       });
-      setSuccess(true);
+      showToast("프로필이 업데이트되었습니다.");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setErrors({ general: message });
@@ -407,18 +404,6 @@ export function ProfileSettingsView() {
               </div>
             </div>
           </SectionCard>
-
-          {success && (
-            <div className="rounded-2xl border border-[#A8BBA8] bg-[#F2F7F2] p-4 text-sm text-[#3F553F]">
-              <div className="flex items-center gap-2 font-medium">
-                <CheckCircle2 className="h-4 w-4 text-[#4C7660]" />
-                프로필이 업데이트되었습니다.
-              </div>
-              <p className="mt-1 text-xs">
-                저장된 내용은 다음 로그인부터 반영됩니다.
-              </p>
-            </div>
-          )}
 
           <SubmitButton
             isLoading={updateProfileMutation.isPending}

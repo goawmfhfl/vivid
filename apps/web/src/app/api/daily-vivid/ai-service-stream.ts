@@ -8,6 +8,7 @@ import {
   IntegratedDailyVividSchema,
   SYSTEM_PROMPT_INTEGRATED,
 } from "./schema";
+import { TodoListSchema, SYSTEM_PROMPT_TODO } from "./todo-schema";
 import type { Record as FeedbackRecord } from "./types";
 import { buildReportPrompt } from "./prompts";
 import type { Report, TrendData } from "@/types/daily-vivid";
@@ -526,7 +527,8 @@ async function generateReport(
   userId?: string,
   generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoCheckInfo?: { checked: number; total: number }
 ): Promise<Report | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -541,7 +543,8 @@ async function generateReport(
     dayOfWeek,
     isPro,
     userName,
-    personaContext
+    personaContext,
+    todoCheckInfo
   );
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_REPORT,
@@ -695,6 +698,78 @@ async function _generateIntegratedReport(
 }
 
 /**
+ * Q1("오늘 하루를 어떻게 보낼까?") 내용 추출
+ */
+function extractQ1ContentFromRecords(records: FeedbackRecord[]): string {
+  const dreamRecords = records.filter(
+    (r) => r.type === "vivid" || r.type === "dream"
+  );
+  const parts: string[] = [];
+  for (const record of dreamRecords) {
+    const content = record.content || "";
+    const q1Match = content.match(
+      /Q1\.\s*오늘 하루를 어떻게 보낼까\?\s*\n+([\s\S]*?)(?=Q2\.|$)/
+    );
+    if (q1Match) {
+      const text = q1Match[1].trim();
+      if (text) parts.push(text);
+    }
+  }
+  return parts.join("\n\n");
+}
+
+export interface TodoListItemGenerated {
+  contents: string;
+  category: string;
+}
+
+/**
+ * Q1 내용을 분석하여 투두 리스트 생성 (Pro 전용)
+ */
+export async function generateTodoListFromQ1(
+  records: FeedbackRecord[],
+  date: string,
+  dayOfWeek: string,
+  isPro: boolean,
+  userId?: string,
+  generationMode: "fast" | "reasoned" = "fast"
+): Promise<TodoListItemGenerated[] | null> {
+  const q1Content = extractQ1ContentFromRecords(records);
+  if (!q1Content || q1Content.length < 10) {
+    console.log("[generateTodoListFromQ1] Q1 내용이 부족하여 스킵");
+    return null;
+  }
+
+  const prompt = `아래는 ${date} (${dayOfWeek}) 사용자의 "오늘 하루를 어떻게 보낼까?" 답변입니다.\n\n${q1Content}\n\n위 내용을 바탕으로 오늘의 할 일 목록을 생성해주세요.`;
+
+  const cacheKey = generateCacheKey(
+    SYSTEM_PROMPT_TODO,
+    `${prompt}::${generationMode}`
+  );
+
+  try {
+    const result = await generateSection<{ items: TodoListItemGenerated[] }>(
+      SYSTEM_PROMPT_TODO,
+      prompt,
+      TodoListSchema,
+      cacheKey,
+      isPro,
+      "todo_list",
+      userId,
+      generationMode
+    );
+    if (!result?.items?.length) {
+      console.log("[generateTodoListFromQ1] 생성된 항목 없음");
+      return null;
+    }
+    return result.items;
+  } catch (error) {
+    console.error("[generateTodoListFromQ1] 생성 실패:", error);
+    return null;
+  }
+}
+
+/**
  * 모든 타입별 리포트 생성
  * trend는 user_persona cron에서 관리하므로 여기서는 생성하지 않음.
  */
@@ -706,7 +781,8 @@ export async function generateAllReportsWithProgress(
   userId?: string,
   generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoCheckInfo?: { checked: number; total: number }
 ): Promise<{
   report: Report | null;
   trend: TrendData | null;
@@ -719,7 +795,8 @@ export async function generateAllReportsWithProgress(
     userId,
     generationMode,
     userName,
-    personaContext
+    personaContext,
+    todoCheckInfo
   );
   return {
     report,

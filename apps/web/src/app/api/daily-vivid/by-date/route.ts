@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyVivid } from "@/lib/jsonb-encryption";
+import { decryptTodoListItems } from "../db-service";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
 // 날짜별 조회는 버튼 라벨(보기/생성하기)에 직결되므로 항상 최신 상태 필요 → 캐시 비활성화
@@ -59,8 +60,26 @@ export async function GET(request: NextRequest) {
       data as unknown as { [key: string]: unknown }
     ) as unknown as DailyVividRow;
 
+    // vivid 조회 시 todo_list_items 포함
+    let todoLists: DailyVividRow["todoLists"] = undefined;
+    if (isVivid && data.id) {
+      const { data: todoRows } = await supabase
+        .from("todo_list_items")
+        .select("id, contents, is_checked, category")
+        .eq("daily_vivid_id", data.id)
+        .order("sort_order", { ascending: true });
+      if (todoRows?.length) {
+        todoLists = decryptTodoListItems(todoRows) as DailyVividRow["todoLists"];
+      }
+    }
+
+    const result: DailyVividRow = {
+      ...decrypted,
+      ...(todoLists && { todoLists }),
+    };
+
     return NextResponse.json(
-      { data: decrypted },
+      { data: result },
       {
         status: 200,
         headers: { "Cache-Control": BY_DATE_NO_CACHE },

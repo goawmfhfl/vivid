@@ -7,7 +7,8 @@ export function buildReportPrompt(
   dayOfWeek: string,
   _isPro: boolean = false,
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoCheckInfo?: { checked: number; total: number }
 ): string {
   const targetRecords = records.filter(
     (r) =>
@@ -29,7 +30,7 @@ export function buildReportPrompt(
 
   const honorificRule =
     userName && userName !== "회원"
-      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${(userName)}'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요. (예: 본명이 '최재영'이면 '재영님'으로 호칭)\n\n`
+      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${userName}님'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요. (예: 본명이 '최재영'이면 '재영님'으로 호칭)\n\n`
       : "응답 문장에서 '당신'이라는 단어를 사용하지 마세요. 사용자를 지칭할 때는 '회원님' 등으로 호칭하세요.\n\n";
 
   // Pro/Free 동일한 상세 프롬프트 사용 (Free는 Flash 모델로 비용 절감)
@@ -100,9 +101,15 @@ export function buildReportPrompt(
     "11) execution_score:",
     "- Q3가 있을 경우: Q1(계획)과 Q3(실행)의 일치도를 0-100점으로 산정합니다.",
     "- Q3가 없으면 반드시 null로 반환합니다.",
+    todoCheckInfo
+      ? `- [투두 체크리스트] 오늘의 할 일 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료. 이 비율을 execution_score 산정에 반드시 반영하세요. 체크 완료율이 높을수록 실행력 점수를 높게 산정합니다.`
+      : "",
     "",
     "12) execution_analysis_points:",
     "- Q3가 있을 경우에만 핵심 근거 1~3개를 작성합니다. 없으면 null.",
+    todoCheckInfo
+      ? `- [투두 체크리스트가 있는 경우] execution_analysis_points에 '체크리스트 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료'를 근거 중 하나로 포함하세요.`
+      : "",
     "",
     "### 🔍 사용자 특성 분석",
     "13) user_characteristics:",

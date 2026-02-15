@@ -917,3 +917,8 @@ textarea::-webkit-scrollbar {
 .edit-record-dialog > button[data-slot="dialog-close"] {
   display: none !important;
 }
+
+/* 오늘의 비비드 요약 다이얼로그 - 기본 X 버튼 숨기기 (카드 내부에 별도 X 사용) */
+.vivid-summary-dialog > button {
+  display: none !important;
+}

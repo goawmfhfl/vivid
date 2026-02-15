@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DailyReportResponse, Record } from "./types";
 import type { DailyVividRow } from "@/types/daily-vivid";
-import { decrypt } from "@/lib/encryption";
+import { decrypt, encrypt } from "@/lib/encryption";
 import {
   encryptDailyVivid,
   decryptDailyVivid,
@@ -30,6 +30,34 @@ export async function fetchRecordsByDate(
   }
 
   // 복호화 처리
+  return records.map((record) => ({
+    ...record,
+    content: decrypt(record.content),
+  })) as Record[];
+}
+
+/**
+ * 특정 날짜의 기록 조회 (없으면 빈 배열 반환, 에러 없음)
+ */
+export async function fetchRecordsByDateOptional(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string
+): Promise<Record[]> {
+  const { data: records, error } = await supabase
+    .from("vivid_records")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("kst_date", date);
+
+  if (error) {
+    throw new Error(`Failed to fetch records: ${error.message}`);
+  }
+
+  if (!records || records.length === 0) {
+    return [];
+  }
+
   return records.map((record) => ({
     ...record,
     content: decrypt(record.content),
@@ -106,7 +134,7 @@ export async function saveDailyReport(
 
   const encryptedNewReports = encryptDailyVivid(newReportDataToEncrypt);
 
-  const reportData: Record<string, unknown> = {
+  const reportData: { [key: string]: unknown } = {
     user_id: userId,
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
@@ -171,4 +199,92 @@ export async function saveDailyReport(
     savedRow as unknown as { [key: string]: unknown }
   );
   return decrypted as unknown as DailyVividRow;
+}
+
+export interface TodoItemToSave {
+  contents: string;
+  category: string;
+}
+
+/**
+ * 투두 리스트 항목 저장 (Pro 전용, vivid 생성 시 호출)
+ * 기존 항목이 있으면 삭제 후 새로 삽입
+ */
+export async function saveTodoListItems(
+  supabase: SupabaseClient,
+  dailyVividId: string,
+  userId: string,
+  items: TodoItemToSave[]
+): Promise<void> {
+  if (items.length === 0) return;
+
+  // 기존 todo 항목 삭제
+  await supabase
+    .from("todo_list_items")
+    .delete()
+    .eq("daily_vivid_id", dailyVividId);
+
+  const rows = items.map((item, idx) => ({
+    daily_vivid_id: dailyVividId,
+    user_id: userId,
+    contents: encrypt(item.contents),
+    is_checked: false,
+    category: encrypt(item.category),
+    sort_order: idx,
+  }));
+
+  const { error } = await supabase.from("todo_list_items").insert(rows);
+
+  if (error) {
+    throw new Error(`Failed to save todo list items: ${error.message}`);
+  }
+}
+
+/**
+ * 해당 날짜 vivid의 투두 체크 완료 정보 조회 (회고 생성 시 execution_score 반영용)
+ */
+export async function fetchTodoCheckSummary(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string
+): Promise<{ checked: number; total: number } | null> {
+  const { data: dv } = await supabase
+    .from("daily_vivid")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("report_date", date)
+    .eq("is_vivid_ai_generated", true)
+    .maybeSingle();
+
+  if (!dv?.id) return null;
+
+  const { data: items } = await supabase
+    .from("todo_list_items")
+    .select("is_checked")
+    .eq("daily_vivid_id", dv.id);
+
+  if (!items?.length) return null;
+
+  const checked = items.filter((i) => i.is_checked === true).length;
+  return { checked, total: items.length };
+}
+
+export interface TodoListItemRow {
+  id: string;
+  contents: string;
+  is_checked: boolean;
+  category: string;
+}
+
+/**
+ * todo_list_items의 contents, category 복호화
+ */
+export function decryptTodoListItems(
+  rows: TodoListItemRow[]
+): TodoListItemRow[] {
+  return rows.map((row) => ({
+    ...row,
+    contents: decrypt(row.contents),
+    category: decrypt(row.category),
+  }));
 }

@@ -26,6 +26,14 @@ export interface Report {
   aspired_traits: string[]; // 지향하는 모습 (최대 5가지) - 오늘의 VIVID 기록에서 드러난 지향 모습 (예: "균형 잡힌 삶을 추구하는", "창의적인 문제 해결자", "타인과의 깊은 연결을 원하는" 등)
 }
 
+// Todo 리스트 항목 (Pro 전용)
+export interface TodoListItem {
+  id: string;
+  contents: string;
+  is_checked: boolean;
+  category: string;
+}
+
 // Trend 데이터 타입 (최근 동향 섹션용)
 export interface TrendData {
   aspired_self: string; // 내가 지향하는 모습 1개
@@ -55,4 +63,5 @@ export interface DailyVividRow {
   is_review_ai_generated: boolean | null;
   generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
   is_regenerated?: boolean | null; // 재생성 여부. true이면 1회 재생성 완료
+  todoLists?: TodoListItem[]; // Pro 전용: Q1 기반 AI 투두 리스트
 }
