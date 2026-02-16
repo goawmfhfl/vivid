@@ -19,7 +19,12 @@ import type {
 } from "@/types/user-trends";
 import { API_ENDPOINTS } from "@/constants";
 import { buildWeeklyUserTrendsPrompt } from "./prompts";
-import { SYSTEM_PROMPT_WEEKLY_USER_TRENDS, WeeklyUserTrendsInsightSchema } from "./schema";
+import {
+  SYSTEM_PROMPT_WEEKLY_USER_TRENDS,
+  SYSTEM_PROMPT_WEEKLY_TREND,
+  WeeklyUserTrendsInsightSchema,
+  WeeklyTrendDataSchema,
+} from "./schema";
 
 type MetricKey =
   | "reflection_continuity"
@@ -47,19 +52,11 @@ type WeeklyTrendRow = {
   metrics: WeeklyUserTrendMetrics;
 };
 
-type UserTrendDbRow = {
-  user_id: string;
-  type: "weekly";
-  period_start: string;
-  period_end: string;
-  source_count: number;
-  metrics: Record<string, unknown>;
-  metrics_breakdown: Record<string, unknown>;
-  insights: Record<string, unknown>;
-  debug: Record<string, unknown>;
-  data_quality: Record<string, unknown>;
-  generated_at: string;
-  updated_at: string;
+type WeeklyTrendData = {
+  direction: string;
+  core_value: string;
+  driving_force: string;
+  current_self: string;
 };
 
 type MetricAIResponse = {
@@ -287,6 +284,130 @@ function buildRecordEvidenceContext({
   ].join("\n");
 }
 
+function buildWeeklyTrendContext({
+  records,
+  dailyRows,
+  startDate,
+  endDate,
+}: RecordEvidenceContextParams): string {
+  const summaries = dailyRows
+    .filter((r) => r.report?.current_summary)
+    .map((r) => `- ${r.report_date}: ${(r.report!.current_summary || "").slice(0, 120)}...`)
+    .join("\n");
+  const futureSummaries = dailyRows
+    .filter((r) => r.report?.future_summary)
+    .map((r) => `- ${r.report_date}: ${(r.report!.future_summary || "").slice(0, 100)}...`)
+    .join("\n");
+  const allKeywords = dailyRows.flatMap((r) => r.report?.current_keywords || []);
+  const allFutureKeywords = dailyRows.flatMap((r) => r.report?.future_keywords || []);
+  const allTraits = dailyRows.flatMap((r) => r.report?.aspired_traits || []);
+  const allChars = dailyRows.flatMap((r) => r.report?.user_characteristics || []);
+  const sampleRecords = records
+    .slice(0, 5)
+    .map((r) => `- ${r.kst_date} [${r.type}]: ${r.content.replace(/\s+/g, " ").trim().slice(0, 80)}...`)
+    .join("\n");
+
+  return [
+    `기간: ${startDate} ~ ${endDate}`,
+    `[일별 오늘의 비비드 요약]\n${summaries || "없음"}`,
+    `[일별 앞으로의 모습 요약]\n${futureSummaries || "없음"}`,
+    `[자주 등장한 키워드] ${[...new Set(allKeywords)].slice(0, 10).join(", ") || "없음"}`,
+    `[지향하는 모습 키워드] ${[...new Set(allFutureKeywords)].slice(0, 8).join(", ") || "없음"}`,
+    `[사용자 특성] ${[...new Set(allChars)].slice(0, 5).join(", ") || "없음"}`,
+    `[지향하는 모습] ${[...new Set(allTraits)].slice(0, 5).join(", ") || "없음"}`,
+    `[기록 샘플]\n${sampleRecords || "없음"}`,
+  ].join("\n\n");
+}
+
+async function generateWeeklyTrendFromDailyData(
+  records: VividRecordRow[],
+  dailyRows: DailyScoreRow[],
+  startDate: string,
+  endDate: string,
+  userId: string
+): Promise<WeeklyTrendData | null> {
+  const context = buildWeeklyTrendContext({ records, dailyRows, startDate, endDate });
+  const prompt = `다음은 사용자의 ${startDate} ~ ${endDate} 주간 기록 분석입니다.\n\n${context}\n\n위 내용을 바탕으로 direction, core_value, driving_force, current_self 4가지 필드를 생성해주세요. JSON 형식으로 {"direction": "...", "core_value": "...", "driving_force": "...", "current_self": "..."}만 출력해주세요.`;
+
+  const geminiClient = getGeminiClient();
+  const modelName = "gemini-3-pro-preview";
+  const startTime = Date.now();
+  const model = geminiClient.getGenerativeModel({
+    model: modelName,
+    systemInstruction: SYSTEM_PROMPT_WEEKLY_TREND,
+  });
+
+  const cleanedSchema = cleanSchemaRecursive(WeeklyTrendDataSchema.schema) as {
+    type: "object";
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+
+  const request = {
+    contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: cleanedSchema.properties,
+        ...(cleanedSchema.required && { required: cleanedSchema.required }),
+      },
+    },
+  } as unknown as GenerateContentRequest;
+
+  try {
+    const result = await model.generateContent(request);
+    const content = result.response.text();
+    const duration_ms = Date.now() - startTime;
+    const usageMetadata = result.response?.usageMetadata as
+      | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+      | undefined;
+    const usage = usageMetadata
+      ? {
+          prompt_tokens: usageMetadata.promptTokenCount ?? 0,
+          completion_tokens: usageMetadata.candidatesTokenCount ?? 0,
+          total_tokens:
+            usageMetadata.totalTokenCount ??
+            (usageMetadata.promptTokenCount ?? 0) + (usageMetadata.candidatesTokenCount ?? 0),
+          cached_tokens: 0,
+        }
+      : { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+    await logAIRequest({
+      userId,
+      model: modelName,
+      requestType: "user_trends",
+      sectionName: "weekly_trend",
+      usage,
+      duration_ms,
+      success: true,
+    });
+
+    const parsed = JSON.parse(content || "{}") as Partial<WeeklyTrendData>;
+    if (
+      typeof parsed.direction !== "string" ||
+      typeof parsed.core_value !== "string" ||
+      typeof parsed.driving_force !== "string" ||
+      typeof parsed.current_self !== "string"
+    ) {
+      throw new Error("Invalid weekly trend response");
+    }
+    return parsed as WeeklyTrendData;
+  } catch (error) {
+    await logAIRequest({
+      userId,
+      model: modelName,
+      requestType: "user_trends",
+      sectionName: "weekly_trend",
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      duration_ms: Date.now() - startTime,
+      success: false,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 async function generateMetricwiseInsights(
   currentWeek: WeeklyTrendRow,
   previousWeeks: WeeklyTrendRow[],
@@ -503,9 +624,28 @@ async function fetchDailyScores(
 type RawHistoryRow = {
   period_start: string;
   period_end: string;
-  source_count: number;
-  metrics: JsonbValue | null;
+  trend: JsonbValue | null;
 };
+
+/** trend JSONB에서 metrics, source_count 추출 (기존 스키마 호환) */
+function parseTrendForHistory(trend: JsonbValue | null): {
+  metrics: WeeklyUserTrendMetrics;
+  source_count: number;
+} {
+  const decoded = trend ? decryptJsonbFields(trend) : {};
+  const obj = (typeof decoded === "object" && decoded !== null ? decoded : {}) as Record<
+    string,
+    unknown
+  >;
+  const m = (obj.metrics as Record<string, unknown>) || {};
+  return {
+    metrics: {
+      reflection_continuity: clampToPercent(Number(m.reflection_continuity) || 0),
+      identity_coherence: clampToPercent(Number(m.identity_coherence) || 0),
+    },
+    source_count: Number(obj.source_count) || 0,
+  };
+}
 
 async function fetchRecentHistory(
   supabase: SupabaseClient,
@@ -514,29 +654,25 @@ async function fetchRecentHistory(
 ): Promise<WeeklyTrendRow[]> {
   const { data, error } = await supabase
     .from(API_ENDPOINTS.USER_TRENDS)
-    .select("period_start, period_end, source_count, metrics")
+    .select("period_start, period_end, trend")
     .eq("user_id", userId)
     .eq("type", "weekly")
     .order("period_end", { ascending: false })
     .limit(limit);
 
   if (error) {
-    throw new Error(`Failed to fetch user_trends history: ${error.message}`);
+    // 스키마 불일치 시(예: trend만 있는 테이블) 빈 배열 반환하여 1주차로 처리
+    console.warn(`[fetchRecentHistory] ${userId} skip: ${error.message}`);
+    return [];
   }
 
   return ((data || []) as RawHistoryRow[])
     .map((row) => {
-      const decryptedMetrics = (row.metrics
-        ? decryptJsonbFields(row.metrics)
-        : {}) as Record<string, unknown>;
-      const metrics: WeeklyUserTrendMetrics = {
-        reflection_continuity: clampToPercent(Number(decryptedMetrics.reflection_continuity) || 0),
-        identity_coherence: clampToPercent(Number(decryptedMetrics.identity_coherence) || 0),
-      };
+      const { metrics, source_count } = parseTrendForHistory(row.trend);
       return {
         period_start: row.period_start,
         period_end: row.period_end,
-        source_count: row.source_count,
+        source_count,
         metrics,
       };
     })
@@ -545,7 +681,15 @@ async function fetchRecentHistory(
 
 async function upsertWeeklyTrend(
   supabase: SupabaseClient,
-  payload: UserTrendDbRow
+  payload: {
+    user_id: string;
+    type: "weekly";
+    period_start: string;
+    period_end: string;
+    trend: Record<string, unknown>;
+    generated_at: string;
+    updated_at: string;
+  }
 ): Promise<void> {
   const { error } = await supabase.from(API_ENDPOINTS.USER_TRENDS).upsert(payload, {
     onConflict: "user_id,type,period_start,period_end",
@@ -581,18 +725,21 @@ export async function updateUserTrendsForUser(
   }];
   const validWeeks = allWeeks.length;
 
-  const aiInsights = await generateMetricwiseInsights(
-    allWeeks[allWeeks.length - 1],
-    previousWeeks,
-    userId,
-    validWeeks,
-    buildRecordEvidenceContext({
-      records,
-      dailyRows,
-      startDate,
-      endDate,
-    })
-  );
+  const [aiInsights, weeklyTrend] = await Promise.all([
+    generateMetricwiseInsights(
+      allWeeks[allWeeks.length - 1],
+      previousWeeks,
+      userId,
+      validWeeks,
+      buildRecordEvidenceContext({
+        records,
+        dailyRows,
+        startDate,
+        endDate,
+      })
+    ),
+    generateWeeklyTrendFromDailyData(records, dailyRows, startDate, endDate, userId),
+  ]);
   const metricsBreakdown = buildMetricsBreakdown(allWeeks, aiInsights);
 
   const insights: WeeklyUserTrendInsights = {
@@ -608,32 +755,32 @@ export async function updateUserTrendsForUser(
   };
 
   const now = new Date().toISOString();
+  // 기존 user_trends 스키마에 맞춤: 모든 주간 데이터를 trend JSONB에 통합 저장
+  const trendPayload: Record<string, unknown> = {
+    ...(weeklyTrend || {}),
+    metrics: currentMetrics,
+    metrics_breakdown: metricsBreakdown,
+    insights,
+    debug: {
+      previous_periods: previousWeeks.map((week) => ({
+        period_start: week.period_start,
+        period_end: week.period_end,
+      })),
+    },
+    data_quality: dataQuality,
+    source_count: records.length,
+  };
+  const trendEncrypted = encryptJsonbFields(trendPayload as unknown as JsonbValue) as Record<
+    string,
+    unknown
+  >;
+
   await upsertWeeklyTrend(supabase, {
     user_id: userId,
     type: "weekly",
     period_start: startDate,
     period_end: endDate,
-    source_count: records.length,
-    metrics: encryptJsonbFields(currentMetrics as unknown as JsonbValue) as Record<
-      string,
-      unknown
-    >,
-    metrics_breakdown: encryptJsonbFields(
-      metricsBreakdown as unknown as JsonbValue
-    ) as Record<string, unknown>,
-    insights: encryptJsonbFields(insights as unknown as JsonbValue) as Record<string, unknown>,
-    debug: encryptJsonbFields(
-      {
-        previous_periods: previousWeeks.map((week) => ({
-          period_start: week.period_start,
-          period_end: week.period_end,
-        })),
-      } as JsonbValue
-    ) as Record<string, unknown>,
-    data_quality: encryptJsonbFields(dataQuality as unknown as JsonbValue) as Record<
-      string,
-      unknown
-    >,
+    trend: trendEncrypted,
     generated_at: now,
     updated_at: now,
   });

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const limit = Math.min(
-      Math.max(parseInt(searchParams.get("limit") || "25", 10), 1),
+      Math.max(parseInt(searchParams.get("limit") || "100", 10), 1),
       100
     );
     const batchSize = getBatchSize(searchParams.get("batchSize"));
@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       : getKstDateRange(7);
 
     let users: Array<{ id: string }> = [];
+    let authPageFull = false;
     if (targetUserId) {
       const { isPro } = await verifySubscription(targetUserId);
       if (!isPro) {
@@ -93,12 +94,38 @@ export async function GET(request: NextRequest) {
         throw new Error(`Failed to list users: ${usersError.message}`);
       }
       const allUsers = usersData?.users || [];
+      authPageFull = allUsers.length === limit;
       users = allUsers.filter((u) =>
         isProFromMetadata(u.user_metadata as Record<string, unknown> | undefined)
       );
     }
 
+    const hasMoreAuthPages = !targetUserId && authPageFull;
+    const nextPage = hasMoreAuthPages ? page + 1 : null;
+
     if (!users.length) {
+      let nextPageScheduled = false;
+      if (nextPage) {
+        const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
+        const cronSecret = process.env.CRON_SECRET;
+        const qstash = getQstashClient();
+        const nextUrl = new URL(`${baseUrl}/api/cron/update-persona`);
+        nextUrl.searchParams.set("page", String(nextPage));
+        nextUrl.searchParams.set("limit", String(limit));
+        nextUrl.searchParams.set("batchSize", String(batchSize));
+        if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
+
+        if (cronSecret) {
+          await qstash.publishJSON({
+            url: nextUrl.toString(),
+            body: {},
+            method: "GET",
+            headers: { Authorization: `Bearer ${cronSecret}` },
+            delay: "10s",
+          });
+          nextPageScheduled = true;
+        }
+      }
       return NextResponse.json({
         ok: true,
         page,
@@ -106,7 +133,8 @@ export async function GET(request: NextRequest) {
         batchSize,
         users: 0,
         batches: 0,
-        nextPage: null,
+        nextPage,
+        ...(nextPageScheduled && { nextPageScheduled: true }),
       });
     }
 
@@ -133,6 +161,27 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    let nextPageScheduled = false;
+    if (nextPage) {
+      const cronSecret = process.env.CRON_SECRET;
+      const nextUrl = new URL(`${baseUrl}/api/cron/update-persona`);
+      nextUrl.searchParams.set("page", String(nextPage));
+      nextUrl.searchParams.set("limit", String(limit));
+      nextUrl.searchParams.set("batchSize", String(batchSize));
+      if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
+
+      if (cronSecret) {
+        await qstash.publishJSON({
+          url: nextUrl.toString(),
+          body: {},
+          method: "GET",
+          headers: { Authorization: `Bearer ${cronSecret}` },
+          delay: "10s",
+        });
+        nextPageScheduled = true;
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       page,
@@ -140,7 +189,8 @@ export async function GET(request: NextRequest) {
       batchSize,
       users: users.length,
       batches: batches.length,
-      nextPage: users.length === limit ? page + 1 : null,
+      nextPage,
+      ...(nextPageScheduled && { nextPageScheduled: true }),
     });
   } catch (error) {
     console.error("Cron update-persona error:", error);

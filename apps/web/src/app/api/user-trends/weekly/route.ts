@@ -182,14 +182,19 @@ export async function GET(request: NextRequest) {
       mode === "history" && rawRows.length < 2 ? [] : rawRows;
 
     const result = rows.map((row) => {
-      const metrics = decryptJsonbFields((row.metrics as JsonbValue) || {});
-      const insights = decryptJsonbFields((row.insights as JsonbValue) || {});
-      const metricsBreakdown = decryptJsonbFields(
-        (row.metrics_breakdown as JsonbValue) || {}
+      // 기존 스키마: 모든 주간 데이터가 trend JSONB에 통합 저장됨
+      const trendDecrypted = decryptJsonbFields((row.trend as JsonbValue) || {}) as Record<
+        string,
+        unknown
+      >;
+      const metrics = asMetrics(trendDecrypted.metrics);
+      const insights = asInsights(trendDecrypted.insights);
+      const metricsBreakdown = asMetricsBreakdown(
+        trendDecrypted.metrics_breakdown,
+        metrics
       );
-      const debug = decryptJsonbFields((row.debug as JsonbValue) || {});
-      const dataQuality = decryptJsonbFields((row.data_quality as JsonbValue) || {});
-      const parsedMetrics = asMetrics(metrics);
+      const debug = (trendDecrypted.debug as Record<string, unknown>) || null;
+      const dataQuality = asDataQuality(trendDecrypted.data_quality);
 
       return {
         id: String(row.id),
@@ -197,16 +202,16 @@ export async function GET(request: NextRequest) {
         type: "weekly",
         period_start: String(row.period_start),
         period_end: String(row.period_end),
-        metrics: parsedMetrics,
-        metrics_breakdown: asMetricsBreakdown(metricsBreakdown, parsedMetrics),
-        insights: asInsights(insights),
-        debug: (debug as Record<string, unknown>) || null,
-        data_quality: asDataQuality(dataQuality),
-        source_count: Number(row.source_count) || 0,
+        metrics,
+        metrics_breakdown: metricsBreakdown,
+        insights,
+        debug,
+        data_quality: dataQuality,
+        source_count: Number(trendDecrypted.source_count) || 0,
         generated_at: String(row.generated_at),
         created_at: String(row.created_at),
         updated_at: String(row.updated_at),
-      }       satisfies UserTrendsRow;
+      } satisfies UserTrendsRow;
     });
 
     return NextResponse.json({ data: result }, { status: 200 });

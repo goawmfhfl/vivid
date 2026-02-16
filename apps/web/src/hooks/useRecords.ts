@@ -270,15 +270,14 @@ export const useCreateRecord = () => {
         return oldData;
       });
 
-      // Q3 입력 직후 리뷰 탭 버튼 상태 반영: 즉시 refetch로 UI 동기화
-      void queryClient.refetchQueries({
-        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
-      });
-      void queryClient.refetchQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, newRecord.kst_date],
-      });
-      void queryClient.refetchQueries({
+      // 비비드/회고 작성 직후 오늘의 VIVID 리스트 즉시 갱신 (캐시 무효화 + refetch)
+      void queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RECORDS],
+        refetchType: "active",
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID],
+        refetchType: "active",
       });
     },
     onError: (error: RecordError) => {

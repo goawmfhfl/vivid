@@ -208,7 +208,7 @@ export interface TodoItemToSave {
 
 /**
  * 투두 리스트 항목 저장 (Pro 전용, vivid 생성 시 호출)
- * 기존 항목이 있으면 삭제 후 새로 삽입
+ * 기존 항목 중 scheduled_at이 null인 것만 삭제 후 새로 삽입 (미룬 항목은 보존)
  */
 export async function saveTodoListItems(
   supabase: SupabaseClient,
@@ -218,11 +218,12 @@ export async function saveTodoListItems(
 ): Promise<void> {
   if (items.length === 0) return;
 
-  // 기존 todo 항목 삭제
+  // scheduled_at이 null인 항목만 삭제 (다른 날짜로 미룬 항목은 유지)
   await supabase
     .from("todo_list_items")
     .delete()
-    .eq("daily_vivid_id", dailyVividId);
+    .eq("daily_vivid_id", dailyVividId)
+    .is("scheduled_at", null);
 
   const rows = items.map((item, idx) => ({
     daily_vivid_id: dailyVividId,
@@ -274,6 +275,8 @@ export interface TodoListItemRow {
   contents: string;
   is_checked: boolean;
   category: string;
+  sort_order?: number;
+  scheduled_at?: string | null;
 }
 
 /**

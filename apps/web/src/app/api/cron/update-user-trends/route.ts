@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const limit = Math.min(
-      Math.max(parseInt(searchParams.get("limit") || "25", 10), 1),
+      Math.max(parseInt(searchParams.get("limit") || "100", 10), 1),
       100
     );
     const batchSize = getBatchSize(searchParams.get("batchSize"));
@@ -92,6 +92,7 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     let users: Array<{ id: string }> = [];
+    let authPageFull = false; // auth에서 full page 수신 여부 (다음 페이지 체이닝용)
     if (targetUserId) {
       const { isPro } = await verifySubscription(targetUserId);
       if (!isPro) {
@@ -132,16 +133,21 @@ export async function GET(request: NextRequest) {
 
         const { data: latestRow } = await supabase
           .from(API_ENDPOINTS.USER_TRENDS)
-          .select("id, period_start, period_end, metrics_breakdown, trend, generated_at")
+          .select("id, period_start, period_end, trend, generated_at")
           .eq("user_id", targetUserId)
           .eq("type", type)
           .order("period_end", { ascending: false })
           .limit(1)
           .maybeSingle();
 
+        const trendDecrypted =
+          latestRow?.trend && type === "weekly"
+            ? (decryptJsonbFields(latestRow.trend as JsonbValue) as Record<string, unknown>)
+            : null;
         const breakdownDecrypted =
-          latestRow?.metrics_breakdown && type === "weekly"
-            ? decryptJsonbFields(latestRow.metrics_breakdown as JsonbValue)
+          trendDecrypted?.metrics_breakdown &&
+          typeof trendDecrypted.metrics_breakdown === "object"
+            ? trendDecrypted.metrics_breakdown
             : null;
         const breakdownKeys =
           breakdownDecrypted && typeof breakdownDecrypted === "object"
@@ -183,12 +189,40 @@ export async function GET(request: NextRequest) {
         throw new Error(`Failed to list users: ${usersError.message}`);
       }
       const allUsers = usersData?.users || [];
+      authPageFull = allUsers.length === limit;
       users = allUsers.filter((user) =>
         isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)
       );
     }
 
+    // 다음 페이지 존재 여부: auth에서 full page를 받았으면 더 있을 수 있음
+    const hasMoreAuthPages = !targetUserId && authPageFull;
+    const nextPage = hasMoreAuthPages ? page + 1 : null;
+
     if (!users.length) {
+      let nextPageScheduled = false;
+      if (nextPage) {
+        const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
+        const cronSecret = process.env.CRON_SECRET;
+        const qstash = getQstashClient();
+        const nextUrl = new URL(`${baseUrl}/api/cron/update-user-trends`);
+        nextUrl.searchParams.set("type", type);
+        nextUrl.searchParams.set("page", String(nextPage));
+        nextUrl.searchParams.set("limit", String(limit));
+        nextUrl.searchParams.set("batchSize", String(batchSize));
+        if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
+
+        if (cronSecret) {
+          await qstash.publishJSON({
+            url: nextUrl.toString(),
+            body: {},
+            method: "GET",
+            headers: { Authorization: `Bearer ${cronSecret}` },
+            delay: "10s",
+          });
+          nextPageScheduled = true;
+        }
+      }
       return NextResponse.json({
         ok: true,
         page,
@@ -196,7 +230,8 @@ export async function GET(request: NextRequest) {
         batchSize,
         users: 0,
         batches: 0,
-        nextPage: null,
+        nextPage,
+        ...(nextPageScheduled && { nextPageScheduled: true }),
       });
     }
 
@@ -226,6 +261,29 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    // 다음 페이지가 있으면 QStash로 체이닝 (모든 Pro 유저 처리)
+    let nextPageScheduled = false;
+    if (nextPage) {
+      const cronSecret = process.env.CRON_SECRET;
+      const nextUrl = new URL(`${baseUrl}/api/cron/update-user-trends`);
+      nextUrl.searchParams.set("type", type);
+      nextUrl.searchParams.set("page", String(nextPage));
+      nextUrl.searchParams.set("limit", String(limit));
+      nextUrl.searchParams.set("batchSize", String(batchSize));
+      if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
+
+      if (cronSecret) {
+        await qstash.publishJSON({
+          url: nextUrl.toString(),
+          body: {},
+          method: "GET",
+          headers: { Authorization: `Bearer ${cronSecret}` },
+          delay: "10s",
+        });
+        nextPageScheduled = true;
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       page,
@@ -234,7 +292,8 @@ export async function GET(request: NextRequest) {
       type,
       users: users.length,
       batches: batches.length,
-      nextPage: users.length === limit ? page + 1 : null,
+      nextPage,
+      ...(nextPageScheduled && { nextPageScheduled: true }),
       startDate,
       endDate,
       ...(type === "monthly" && month && { month }),

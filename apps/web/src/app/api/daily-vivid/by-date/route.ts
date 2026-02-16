@@ -3,12 +3,77 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyVivid } from "@/lib/jsonb-encryption";
 import { decryptTodoListItems } from "../db-service";
 import type { DailyVividRow } from "@/types/daily-vivid";
+import type { TodoListItem } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
 // 날짜별 조회는 버튼 라벨(보기/생성하기)에 직결되므로 항상 최신 상태 필요 → 캐시 비활성화
 const BY_DATE_NO_CACHE = "private, max-age=0, must-revalidate";
 
 /**
+ * 날짜 X의 "오늘의 할 일" 조회
+ * (A) 해당 날짜 vivid에 연결된 todo (scheduled_at null) - 네이티브
+ * (B) scheduled_at = X 인 todo (다른 날짜에서 미룬 것) - 스케줄된 항목
+ * (C) 해당 날짜 vivid에서 미룬 항목 (scheduled_at 있음) - 오늘 목록에 유지, "N일 후 진행 예정" 표시
+ * @returns { todoLists, hasNativeTodoList } - hasNativeTodoList: 네이티브 항목 존재 여부 (생성 버튼 분기용)
+ */
+async function fetchTodoListsForDate(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  userId: string,
+  date: string,
+  dailyVividId: string | null
+): Promise<{ todoLists: TodoListItem[]; hasNativeTodoList: boolean }> {
+  const nativeItems: TodoListItem[] = [];
+  const scheduledItems: TodoListItem[] = [];
+  const postponedItems: TodoListItem[] = [];
+
+  // (A) 해당 날짜 vivid의 원래 할 일 (scheduled_at null)
+  if (dailyVividId) {
+    const { data: nativeRows } = await supabase
+      .from("todo_list_items")
+      .select("id, contents, is_checked, category, sort_order, scheduled_at")
+      .eq("daily_vivid_id", dailyVividId)
+      .is("scheduled_at", null)
+      .order("sort_order", { ascending: true });
+    if (nativeRows?.length) {
+      nativeItems.push(
+        ...(decryptTodoListItems(nativeRows) as TodoListItem[])
+      );
+    }
+
+    // (C) 해당 날짜 vivid에서 미룬 항목 (오늘 목록에 유지, "N일 후 진행 예정" 표시)
+    const { data: postponedRows } = await supabase
+      .from("todo_list_items")
+      .select("id, contents, is_checked, category, sort_order, scheduled_at")
+      .eq("daily_vivid_id", dailyVividId)
+      .not("scheduled_at", "is", null)
+      .order("sort_order", { ascending: true });
+    if (postponedRows?.length) {
+      postponedItems.push(
+        ...(decryptTodoListItems(postponedRows) as TodoListItem[])
+      );
+    }
+  }
+
+  // (B) 이 날짜로 미룬 할 일 (다른 날짜 vivid에서 온 것)
+  const { data: scheduledRows } = await supabase
+    .from("todo_list_items")
+    .select("id, contents, is_checked, category, sort_order, scheduled_at")
+    .eq("user_id", userId)
+    .eq("scheduled_at", date)
+    .order("sort_order", { ascending: true });
+  if (scheduledRows?.length) {
+    scheduledItems.push(
+      ...(decryptTodoListItems(scheduledRows) as TodoListItem[])
+    );
+  }
+
+  const todoLists = [...nativeItems, ...postponedItems, ...scheduledItems];
+  const hasNativeTodoList = nativeItems.length > 0;
+  return { todoLists, hasNativeTodoList };
+}
+
+/**
  * GET 핸들러: 일일 비비드 조회 (date 기반)
+ * vivid가 없어도 scheduled_at = date 인 todo가 있으면 todoLists 반환
  */
 export async function GET(request: NextRequest) {
   try {
@@ -45,9 +110,21 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch daily vivid: ${error.message}`);
     }
 
+    // vivid가 없어도 todoLists(스케줄된 항목) 조회
+    const { todoLists, hasNativeTodoList } = await fetchTodoListsForDate(
+      supabase,
+      userId,
+      date,
+      data?.id ?? null
+    );
+
     if (!data) {
       return NextResponse.json(
-        { data: null },
+        {
+          data: null,
+          todoLists: todoLists,
+          hasNativeTodoList: false, // vivid 없으면 네이티브 항목 없음
+        },
         {
           status: 200,
           headers: { "Cache-Control": BY_DATE_NO_CACHE },
@@ -60,22 +137,10 @@ export async function GET(request: NextRequest) {
       data as unknown as { [key: string]: unknown }
     ) as unknown as DailyVividRow;
 
-    // vivid 조회 시 todo_list_items 포함
-    let todoLists: DailyVividRow["todoLists"] = undefined;
-    if (isVivid && data.id) {
-      const { data: todoRows } = await supabase
-        .from("todo_list_items")
-        .select("id, contents, is_checked, category")
-        .eq("daily_vivid_id", data.id)
-        .order("sort_order", { ascending: true });
-      if (todoRows?.length) {
-        todoLists = decryptTodoListItems(todoRows) as DailyVividRow["todoLists"];
-      }
-    }
-
     const result: DailyVividRow = {
       ...decrypted,
-      ...(todoLists && { todoLists }),
+      todoLists: todoLists.length > 0 ? todoLists : (decrypted.todoLists ?? []),
+      hasNativeTodoList,
     };
 
     return NextResponse.json(

@@ -172,26 +172,21 @@ export async function POST(request: NextRequest) {
     const targetKstDate = kst_date || getKSTDateString();
     const todayKstDate = getKSTDateString();
 
-    // targetKstDate가 미래인 경우 생성 차단
-    if (targetKstDate > todayKstDate) {
-      return NextResponse.json(
-        { error: "미래 날짜에는 기록을 생성할 수 없습니다." },
-        { status: 400 }
-      );
-    }
-
     const [year, month, day] = targetKstDate.split("-").map(Number);
 
     // created_at 계산: UTC로 저장해야 함
-    // 오늘: 현재 UTC 시간 그대로 사용
-    // 과거: 해당 날짜 23:59:59 KST를 UTC로 변환 (KST 23:59:59 = UTC 14:59:59)
+    // 오늘: 현재 UTC 시간 (작성 시점 기록)
+    // 미래: 해당 날짜 KST 00:00:00을 UTC로 변환 (KST 00:00 = UTC 전날 15:00)
+    // 과거: 해당 날짜 KST 23:59:59를 UTC로 변환 (KST 23:59:59 = UTC 14:59:59)
     let createdAtUtc: Date;
-    if (targetKstDate === todayKstDate) {
-      // 오늘인 경우: 현재 UTC 시간 사용
+    if (targetKstDate > todayKstDate) {
+      // 미래 날짜: KST 해당 날짜 00:00:00을 UTC로 변환
+      createdAtUtc = new Date(Date.UTC(year, month - 1, day - 1, 15, 0, 0));
+    } else if (targetKstDate === todayKstDate) {
+      // 오늘: 현재 UTC 시간 사용
       createdAtUtc = new Date();
     } else {
-      // 과거 날짜인 경우: KST 23:59:59를 UTC로 변환
-      // KST 23:59:59 = UTC 14:59:59 (9시간 차이)
+      // 과거 날짜: KST 23:59:59를 UTC로 변환
       createdAtUtc = new Date(Date.UTC(year, month - 1, day, 14, 59, 59));
     }
 

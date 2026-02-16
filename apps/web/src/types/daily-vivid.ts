@@ -32,6 +32,8 @@ export interface TodoListItem {
   contents: string;
   is_checked: boolean;
   category: string;
+  sort_order?: number;
+  scheduled_at?: string | null;
 }
 
 // Trend 데이터 타입 (최근 동향 섹션용)
@@ -64,4 +66,6 @@ export interface DailyVividRow {
   generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
   is_regenerated?: boolean | null; // 재생성 여부. true이면 1회 재생성 완료
   todoLists?: TodoListItem[]; // Pro 전용: Q1 기반 AI 투두 리스트
+  /** 해당 날짜 vivid에서 생성된 네이티브 할 일 존재 여부 (스케줄된 항목 제외). 생성 버튼 분기용 */
+  hasNativeTodoList?: boolean;
 }

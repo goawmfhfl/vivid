@@ -25,7 +25,26 @@ const fetchDailyVividByDate = async (
   }
 
   const result = await response.json();
-  return result.data || null;
+  // vivid가 없어도 스케줄된 todo가 있으면 todoLists만 있는 객체 반환
+  if (result.data) {
+    return {
+      ...result.data,
+      hasNativeTodoList: result.data.hasNativeTodoList ?? false,
+    };
+  }
+  if (result.todoLists?.length) {
+    return {
+      todoLists: result.todoLists,
+      hasNativeTodoList: result.hasNativeTodoList ?? false,
+    } as DailyVividRow;
+  }
+  if (Array.isArray(result.todoLists)) {
+    return {
+      todoLists: result.todoLists,
+      hasNativeTodoList: result.hasNativeTodoList ?? false,
+    } as DailyVividRow;
+  }
+  return null;
 };
 
 const fetchDailyVividById = async (

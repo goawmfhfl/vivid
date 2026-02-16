@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ChevronDown, ChevronUp, BookOpen, Lock, Check, Loader2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, BookOpen, Lock, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
-import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
+import { COLORS, TYPOGRAPHY, SPACING, CARD_STYLES, SHADOWS, GRADIENT_UTILS, FONTS } from "@/lib/design-system";
 import { getKSTDateString } from "@/lib/date-utils";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -27,8 +27,28 @@ import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
-import { useUpdateTodoCheck, useCreateTodoList } from "@/hooks/useTodoList";
+import {
+  useCreateTodoList,
+  useAddTodoItem,
+  useReorderTodoItems,
+} from "@/hooks/useTodoList";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { TodoItemRow } from "./TodoItemRow";
 
 interface RecordFormProps {
   onSuccess?: () => void;
@@ -61,6 +81,7 @@ export function RecordForm({
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
   const [todoSectionExpanded, setTodoSectionExpanded] = useState(true);
+  const [newTodoContents, setNewTodoContents] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
   const q2TextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -83,14 +104,28 @@ export function RecordForm({
   // 날짜 상태 계산
   const todayIso = getKSTDateString();
   const targetDateIso = selectedDate || todayIso;
-  const isFuture = targetDateIso > todayIso;
+
+  // 예정된 할 일(미래 날짜)일 때 드롭다운 닫힌 상태로 시작
+  useEffect(() => {
+    if (targetDateIso && targetDateIso > todayIso) {
+      setTodoSectionExpanded(false);
+    } else {
+      setTodoSectionExpanded(true);
+    }
+  }, [targetDateIso, todayIso]);
 
   // 회고 탭에서만 오늘의 비비드 조회
   const vividDate =
     selectedType === "review" && targetDateIso ? targetDateIso : "";
   const { data: vividFeedback } = useGetDailyVivid(vividDate, "vivid");
-  const updateTodoCheck = useUpdateTodoCheck(targetDateIso || "");
   const createTodoList = useCreateTodoList(targetDateIso || "");
+  const addTodoItem = useAddTodoItem(targetDateIso || "");
+  const reorderTodoItems = useReorderTodoItems(targetDateIso || "");
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 Pro 아니어도 드롭다운에 표시)
   const getRecordTypeOptions = useCallback(() => {
@@ -466,7 +501,6 @@ export function RecordForm({
       !emotionIntensity ||
       emotionKeywords.length === 0 ||
       emotionFactors.length === 0 ||
-      isFuture ||
       createRecordMutation.isPending
     )
       return;
@@ -507,7 +541,6 @@ export function RecordForm({
   };
 
   const handleSubmit = () => {
-    if (isFuture) return;
     const { allowedTypes } = getRecordTypeOptions();
     const recordType = selectedType || allowedTypes[0] || "dream";
 
@@ -808,33 +841,6 @@ export function RecordForm({
       };
     }
   }, [showTypeSelector]);
-
-  if (isFuture) {
-    return (
-      <div className="mb-6">
-        <div
-          className={`${SPACING.card.padding}`}
-          style={{
-            ...CARD_STYLES.default,
-            border: `1.5px solid ${COLORS.border.card}`,
-            backgroundColor: COLORS.background.card,
-            borderRadius: "12px",
-            textAlign: "center",
-          }}
-        >
-          <p
-            className={TYPOGRAPHY.body.fontSize}
-            style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}
-          >
-            미래 날짜에는 기록을 작성할 수 없습니다.
-            <br/>
-            오늘 또는 지난 날짜를
-            선택해 주세요.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -1325,57 +1331,59 @@ export function RecordForm({
         </>
       ) : recordType === "review" ? (
         <>
-          {/* 오늘의 할 일 (Pro + 오늘 비비드가 있을 때만) */}
-          {subscription?.isPro && vividFeedback?.is_vivid_ai_generated && (
-            <div className="mb-4">
-              {!vividFeedback.todoLists || vividFeedback.todoLists.length === 0 ? (
-                <Button
-                  type="button"
-                  onClick={() =>
-                    createTodoList.mutate(undefined, {
-                      onError: (err) =>
-                        showToast(
-                          err instanceof Error ? err.message : "생성에 실패했어요."
-                        ),
-                    })
-                  }
-                  disabled={createTodoList.isPending}
-                  className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
-                  style={{
-                    backgroundColor: COLORS.primary[600],
-                    border: `2px solid ${COLORS.primary[600]}`,
-                    color: COLORS.text.white,
-                    fontWeight: "700",
-                    fontSize: "0.9375rem",
-                    boxShadow: SHADOWS.elevation2,
-                  }}
-                >
-                  {createTodoList.isPending ? (
-                    <>
-                      <Loader2
-                        className="w-4 h-4 mr-2 animate-spin"
-                        style={{ color: COLORS.text.white }}
-                      />
-                      생성 중...
-                    </>
-                  ) : (
-                    "오늘의 할 일 생성하기"
-                  )}
-                </Button>
-              ) : (
+          {/* 오늘의 할 일 / 예정된 할 일 (Pro + (비비드 있음 또는 스케줄된 todo 있음 또는 미래 날짜)) */}
+          {subscription?.isPro &&
+            (vividFeedback?.is_vivid_ai_generated ||
+              (vividFeedback?.todoLists?.length ?? 0) > 0 ||
+              (targetDateIso && targetDateIso > todayIso)) && (
+            <div className="mb-4 space-y-2">
+              {/* 할 일이 없을 때: vivid+네이티브 없음 → 생성 버튼만 (직접 추가는 생성 후 컴포넌트 내부에서) */}
+              {vividFeedback?.is_vivid_ai_generated &&
+                !vividFeedback?.hasNativeTodoList && (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      createTodoList.mutate(undefined, {
+                        onError: (err) =>
+                          showToast(
+                            err instanceof Error
+                              ? err.message
+                              : "생성에 실패했어요."
+                          ),
+                      })
+                    }
+                    disabled={createTodoList.isPending}
+                    className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    style={{
+                      backgroundColor: COLORS.primary[600],
+                      border: `2px solid ${COLORS.primary[600]}`,
+                      color: COLORS.text.white,
+                      fontWeight: "700",
+                      fontSize: "0.9375rem",
+                      boxShadow: SHADOWS.elevation2,
+                    }}
+                  >
+                    {createTodoList.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        생성 중...
+                      </>
+                    ) : (
+                      "오늘의 할 일 생성하기"
+                    )}
+                  </Button>
+                )}
+              {/* 할 일 목록 또는 예정된 할 일 드롭다운 (오늘+항목있음, 또는 미래날짜) */}
+              {((vividFeedback?.todoLists?.length ?? 0) > 0 ||
+                (targetDateIso && targetDateIso > todayIso)) && (
                 <>
                   <button
                     type="button"
                     onClick={() => setTodoSectionExpanded((p) => !p)}
-                    className="w-full text-left flex items-center justify-between gap-2 py-3 px-4 rounded-xl transition-all"
+                    className="w-full text-left flex items-center justify-between gap-2 py-3 px-4 rounded-xl transition-colors hover:bg-black/[0.02]"
                     style={{
-                      backgroundColor: GRADIENT_UTILS.cardBackground(
-                        COLORS.brand.light,
-                        0.12
-                      ),
-                      border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                      ...CARD_STYLES.default,
                       borderRadius: "12px",
-                      boxShadow: SHADOWS.default,
                     }}
                   >
                     <span
@@ -1385,7 +1393,9 @@ export function RecordForm({
                         color: COLORS.text.primary,
                       }}
                     >
-                      오늘의 할 일
+                      {targetDateIso && targetDateIso > todayIso
+                        ? "예정된 할 일"
+                        : "오늘의 할 일"}
                     </span>
                     {todoSectionExpanded ? (
                       <ChevronUp
@@ -1411,82 +1421,156 @@ export function RecordForm({
                         }}
                         className="overflow-hidden"
                       >
+                        {(vividFeedback?.todoLists?.length ?? 0) > 0 && (
                         <div
-                          className="mt-2 px-4 py-3 rounded-xl space-y-2"
+                          className="mt-2 px-3 py-2 rounded-xl space-y-0"
                           style={{
-                            backgroundColor: defaultColors.background,
-                            border: `1.5px solid ${defaultColors.border}`,
-                            boxShadow: `
-                              0 2px 8px rgba(0,0,0,0.04),
-                              0 1px 3px rgba(0,0,0,0.02)
-                            `,
+                            ...CARD_STYLES.default,
+                            borderRadius: "12px",
                           }}
                         >
-                          {vividFeedback.todoLists.map((item) => (
-                            <label
-                              key={item.id}
-                              className="flex items-center gap-3 cursor-pointer group"
+                          <DndContext
+                            sensors={dndSensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={(event: DragEndEvent) => {
+                              const { active, over } = event;
+                              if (!over || active.id === over.id) return;
+                              const items = vividFeedback?.todoLists ?? [];
+                              const oldIndex = items.findIndex(
+                                (i) => i.id === active.id
+                              );
+                              const newIndex = items.findIndex(
+                                (i) => i.id === over.id
+                              );
+                              if (oldIndex === -1 || newIndex === -1) return;
+                              const reordered = arrayMove(
+                                items,
+                                oldIndex,
+                                newIndex
+                              );
+                              reorderTodoItems.mutate(
+                                reordered.map((i) => i.id)
+                              );
+                            }}
+                          >
+                            <SortableContext
+                              items={
+                                vividFeedback?.todoLists?.map((i) => i.id) ?? []
+                              }
+                              strategy={verticalListSortingStrategy}
                             >
-                              <button
-                                type="button"
-                                role="checkbox"
-                                aria-checked={item.is_checked}
-                                onClick={() =>
-                                  updateTodoCheck.mutate({
-                                    id: item.id,
-                                    is_checked: !item.is_checked,
-                                  })
-                                }
-                                disabled={updateTodoCheck.isPending}
-                                className="flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
-                                style={{
-                                  borderColor: item.is_checked
-                                    ? COLORS.brand.primary
-                                    : COLORS.border.light,
-                                  backgroundColor: item.is_checked
-                                    ? COLORS.brand.primary
-                                    : "transparent",
-                                }}
-                              >
-                                {item.is_checked && (
-                                  <Check
-                                    className="w-3 h-3"
-                                    style={{ color: COLORS.text.white }}
-                                  />
-                                )}
-                              </button>
-                              <span
-                                className={cn(
-                                  TYPOGRAPHY.bodySmall.fontSize,
-                                  "flex-1"
-                                )}
-                                style={{
-                                  color: COLORS.text.primary,
-                                  textDecoration: item.is_checked
-                                    ? "line-through"
-                                    : "none",
-                                  opacity: item.is_checked ? 0.7 : 1,
-                                }}
-                              >
-                                {item.contents}
-                              </span>
-                              {item.category && (
-                                <span
-                                  className={cn(
-                                    TYPOGRAPHY.caption.fontSize,
-                                    "flex-shrink-0 px-2 py-0.5 rounded"
-                                  )}
-                                  style={{
-                                    color: COLORS.text.muted,
-                                    backgroundColor: COLORS.background.hover,
-                                  }}
-                                >
-                                  {item.category}
-                                </span>
-                              )}
-                            </label>
-                          ))}
+                              {vividFeedback?.todoLists?.map((item) => (
+                                <TodoItemRow
+                                  key={item.id}
+                                  item={item}
+                                  date={targetDateIso || ""}
+                                />
+                              ))}
+                            </SortableContext>
+                          </DndContext>
                         </div>
+                        )}
+                        {targetDateIso &&
+                          targetDateIso > todayIso &&
+                          (vividFeedback?.todoLists?.length ?? 0) === 0 && (
+                            <div
+                              className="mt-2 px-3 py-6 rounded-xl text-center"
+                              style={{
+                                ...CARD_STYLES.default,
+                                borderRadius: "12px",
+                                color: COLORS.text.tertiary,
+                                fontSize: "0.8125rem",
+                              }}
+                            >
+                              예정된 할 일이 없습니다.
+                            </div>
+                          )}
+                        {/* 새 할 일 입력 (생성 후에만 오늘의 할 일 컴포넌트 안에서 표시) */}
+                        {vividFeedback?.hasNativeTodoList && (
+                        <div className="mt-2 flex gap-2 items-stretch">
+                              <input
+                                type="text"
+                                value={newTodoContents}
+                                onChange={(e) =>
+                                  setNewTodoContents(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    const trimmed = newTodoContents.trim();
+                                    if (trimmed) {
+                                      addTodoItem.mutate(trimmed, {
+                                        onSuccess: () =>
+                                          setNewTodoContents(""),
+                                        onError: (err) => {
+                                          showToast(
+                                            err instanceof Error
+                                              ? err.message
+                                              : "추가에 실패했어요."
+                                          );
+                                          setNewTodoContents(trimmed);
+                                        },
+                                      });
+                                      setNewTodoContents("");
+                                    }
+                                  }
+                                }}
+                                placeholder="새 할 일 입력..."
+                                className="flex-1 h-10 px-3 rounded-lg text-sm outline-none transition-colors placeholder:text-muted-foreground"
+                                style={{
+                                  fontFamily: FONTS.sans,
+                                  border: `1.5px solid ${COLORS.border.light}`,
+                                  backgroundColor: COLORS.background.base,
+                                  color: COLORS.text.primary,
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor =
+                                    COLORS.brand.primary;
+                                  e.target.style.boxShadow = `0 0 0 2px ${COLORS.brand.primary}30`;
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor =
+                                    COLORS.border.light;
+                                  e.target.style.boxShadow = "none";
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  const trimmed = newTodoContents.trim();
+                                  if (trimmed) {
+                                    addTodoItem.mutate(trimmed, {
+                                      onSuccess: () =>
+                                        setNewTodoContents(""),
+                                      onError: (err) => {
+                                        showToast(
+                                          err instanceof Error
+                                            ? err.message
+                                            : "추가에 실패했어요."
+                                        );
+                                        setNewTodoContents(trimmed);
+                                      },
+                                    });
+                                    setNewTodoContents("");
+                                  }
+                                }}
+                                disabled={
+                                  addTodoItem.isPending ||
+                                  !newTodoContents.trim()
+                                }
+                                className="h-10 rounded-lg text-sm font-semibold min-w-[72px] transition-all hover:opacity-90 active:scale-[0.98]"
+                                style={{
+                                  backgroundColor: COLORS.brand.primary,
+                                  color: COLORS.text.white,
+                                  border: `1.5px solid ${COLORS.brand.primary}`,
+                                  boxShadow: SHADOWS.elevation2,
+                                }}
+                              >
+                                추가
+                              </Button>
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
