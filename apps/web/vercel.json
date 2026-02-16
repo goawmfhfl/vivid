@@ -1,4 +1,6 @@
 {
+  "buildCommand": "rm -rf .next && npx next build",
+  "installCommand": "pnpm install",
   "crons": [
     {"path": "/api/cron/update-persona", "schedule": "0 18 * * 0"},
     {"path": "/api/cron/update-user-trends?type=weekly", "schedule": "0 19 * * 0"},
