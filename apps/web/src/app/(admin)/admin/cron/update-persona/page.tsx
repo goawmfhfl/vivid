@@ -389,24 +389,6 @@ export default function UpdatePersonaCronTestPage() {
           >
             {JSON.stringify(trendsResult, null, 2)}
           </pre>
-          {"latest" in trendsResult && trendsResult.latest ? (
-            <div
-              className={cn("rounded-lg px-3 py-2")}
-              style={{
-                backgroundColor: COLORS.background.base,
-                border: `1px solid ${COLORS.border.light}`,
-              }}
-            >
-              <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
-                breakdown 생성 체크
-              </p>
-              <p className={cn(TYPOGRAPHY.body.fontSize)} style={{ color: COLORS.text.primary }}>
-                {(trendsResult.latest as Record<string, unknown>).has_metrics_breakdown
-                  ? "metrics_breakdown 생성됨"
-                  : "metrics_breakdown 미생성"}
-              </p>
-            </div>
-          ) : null}
         </div>
       )}
 

@@ -17,6 +17,7 @@ import {
   getFromCache,
   setCache,
 } from "../utils/cache";
+import { withGeminiRetry } from "../utils/gemini-retry";
 import type {
   Schema,
   ReportSchema,
@@ -276,7 +277,9 @@ async function generateSection<T>(
       generationConfig,
     } as unknown as GenerateContentRequest;
 
-    const geminiResult = await model.generateContent(request);
+    const geminiResult = await withGeminiRetry(() =>
+      model.generateContent(request)
+    );
 
     const endTime = Date.now();
     const duration_ms = endTime - startTime;

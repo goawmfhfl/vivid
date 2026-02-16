@@ -9,6 +9,7 @@ import {
   type JsonbValue,
 } from "@/lib/jsonb-encryption";
 import { SYSTEM_PROMPT_USER_PERSONA, UserPersonaSchema } from "./schema";
+import { withGeminiRetry } from "../../utils/gemini-retry";
 
 type VividRecordRow = {
   user_id: string;
@@ -185,7 +186,8 @@ function parsePersonaResponse(raw: string): Record<string, unknown> {
 
 async function generatePersona(prompt: string): Promise<Record<string, unknown>> {
   const geminiClient = getGeminiClient();
-  const modelName = "gemini-3-pro-preview";
+  // cron 인사이트: 항상 Flash (rate limit·비용 고려)
+  const modelName = "gemini-3-flash-preview";
 
   const model = geminiClient.getGenerativeModel({
     model: modelName,
@@ -231,7 +233,7 @@ async function generatePersona(prompt: string): Promise<Record<string, unknown>>
   } as unknown as GenerateContentRequest;
 
   try {
-    const result = await model.generateContent(request);
+    const result = await withGeminiRetry(() => model.generateContent(request));
     const content = result.response.text();
 
     if (!content) {

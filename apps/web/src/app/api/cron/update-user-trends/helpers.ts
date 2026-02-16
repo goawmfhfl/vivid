@@ -10,29 +10,16 @@ import {
 import { logAIRequest } from "@/lib/ai-usage-logger";
 import type { Report } from "@/types/daily-vivid";
 import type {
-  WeeklyMetricBreakdownItem,
-  WeeklyMetricsBreakdown,
-  WeeklyPoint,
   WeeklyUserTrendDataQuality,
   WeeklyUserTrendInsights,
   WeeklyUserTrendMetrics,
 } from "@/types/user-trends";
 import { API_ENDPOINTS } from "@/constants";
-import { buildWeeklyUserTrendsPrompt } from "./prompts";
 import {
-  SYSTEM_PROMPT_WEEKLY_USER_TRENDS,
   SYSTEM_PROMPT_WEEKLY_TREND,
-  WeeklyUserTrendsInsightSchema,
   WeeklyTrendDataSchema,
 } from "./schema";
-
-type MetricKey =
-  | "reflection_continuity"
-  | "identity_coherence";
-
-type BreakdownKey =
-  | "reflection_continuity"
-  | "identity_coherence";
+import { withGeminiRetry } from "../../utils/gemini-retry";
 
 type VividRecordRow = {
   kst_date: string;
@@ -59,36 +46,11 @@ type WeeklyTrendData = {
   current_self: string;
 };
 
-type MetricAIResponse = {
-  score_reason_summary: string;
-  score_reason_items: string[];
-  score_evidence_items: string[];
-  flow_insight: string;
-  confidence: "low" | "medium" | "high";
-};
-
-type WeeklyMetricwiseInsights = {
-  reflection_continuity: MetricAIResponse;
-  identity_coherence: MetricAIResponse;
-  overall_summary: string;
-  insufficient_data_note: string;
-};
-
 type RecordEvidenceContextParams = {
   records: VividRecordRow[];
   dailyRows: DailyScoreRow[];
   startDate: string;
   endDate: string;
-};
-
-const METRIC_LABELS: Record<BreakdownKey, string> = {
-  reflection_continuity: "꾸준히 기록하기",
-  identity_coherence: "나에 대한 이야기",
-};
-
-const METRIC_TO_BREAKDOWN: Record<MetricKey, BreakdownKey> = {
-  reflection_continuity: "reflection_continuity",
-  identity_coherence: "identity_coherence",
 };
 
 export type UserTrendResult = {
@@ -227,63 +189,6 @@ function getGeminiClient(): GoogleGenerativeAI {
   return new GoogleGenerativeAI(apiKey);
 }
 
-function fallbackMetricReason(
-  validWeeks: number
-): MetricAIResponse {
-  return {
-    score_reason_summary: "",
-    score_reason_items: [],
-    score_evidence_items: [],
-    flow_insight: validWeeks >= 2 ? "" : "데이터가 조금 더 모이면 알려드릴게요.",
-    confidence: "low",
-  };
-}
-
-function buildWeeklyPoints(rows: WeeklyTrendRow[], metric: MetricKey): WeeklyPoint[] {
-  const lastFour = rows.slice(-4);
-  return lastFour.map((row) => ({
-    week_label: `${row.period_start.slice(5).replace("-", "/")}~${row.period_end.slice(5).replace("-", "/")}`,
-    value: clampToPercent(row.metrics[metric]),
-  }));
-}
-
-function buildRecordEvidenceContext({
-  records,
-  dailyRows,
-  startDate,
-  endDate,
-}: RecordEvidenceContextParams): string {
-  const typeCounts = records.reduce<Record<string, number>>((acc, item) => {
-    acc[item.type] = (acc[item.type] || 0) + 1;
-    return acc;
-  }, {});
-  const activeDays = Array.from(new Set(records.map((item) => item.kst_date))).sort();
-  const sampleRecords = records
-    .slice(0, 8)
-    .map((item) => {
-      const short = item.content.replace(/\s+/g, " ").trim().slice(0, 55);
-      return `- ${item.kst_date} [${item.type}] ${short}${item.content.length > 55 ? "..." : ""}`;
-    })
-    .join("\n");
-  const scoreSnapshots = dailyRows
-    .slice(-7)
-    .map((row) => {
-      const alignment = row.report?.alignment_score;
-      const execution = row.report?.execution_score;
-      return `- ${row.report_date}: alignment=${alignment ?? "NA"}, execution=${execution ?? "NA"}`;
-    })
-    .join("\n");
-
-  return [
-    `기간: ${startDate} ~ ${endDate}`,
-    `기록 타입 카운트: vivid=${typeCounts.vivid || 0}, dream=${typeCounts.dream || 0}, review=${typeCounts.review || 0}`,
-    `활동 일수: ${activeDays.length}일`,
-    activeDays.length > 0 ? `활동 날짜: ${activeDays.join(", ")}` : "활동 날짜: 없음",
-    sampleRecords ? `[기록 샘플]\n${sampleRecords}` : "[기록 샘플]\n없음",
-    scoreSnapshots ? `[최근 점수 스냅샷]\n${scoreSnapshots}` : "[최근 점수 스냅샷]\n없음",
-  ].join("\n");
-}
-
 function buildWeeklyTrendContext({
   records,
   dailyRows,
@@ -330,7 +235,8 @@ async function generateWeeklyTrendFromDailyData(
   const prompt = `다음은 사용자의 ${startDate} ~ ${endDate} 주간 기록 분석입니다.\n\n${context}\n\n위 내용을 바탕으로 direction, core_value, driving_force, current_self 4가지 필드를 생성해주세요. JSON 형식으로 {"direction": "...", "core_value": "...", "driving_force": "...", "current_self": "..."}만 출력해주세요.`;
 
   const geminiClient = getGeminiClient();
-  const modelName = "gemini-3-pro-preview";
+  // cron 인사이트: 항상 Flash (rate limit·비용 고려)
+  const modelName = "gemini-3-flash-preview";
   const startTime = Date.now();
   const model = geminiClient.getGenerativeModel({
     model: modelName,
@@ -356,7 +262,7 @@ async function generateWeeklyTrendFromDailyData(
   } as unknown as GenerateContentRequest;
 
   try {
-    const result = await model.generateContent(request);
+    const result = await withGeminiRetry(() => model.generateContent(request));
     const content = result.response.text();
     const duration_ms = Date.now() - startTime;
     const usageMetadata = result.response?.usageMetadata as
@@ -406,164 +312,6 @@ async function generateWeeklyTrendFromDailyData(
     });
     return null;
   }
-}
-
-async function generateMetricwiseInsights(
-  currentWeek: WeeklyTrendRow,
-  previousWeeks: WeeklyTrendRow[],
-  userId: string,
-  validWeeks: number,
-  recordEvidenceContext: string
-): Promise<WeeklyMetricwiseInsights> {
-  const geminiClient = getGeminiClient();
-  const modelName = "gemini-3-pro-preview";
-  const startTime = Date.now();
-  const model = geminiClient.getGenerativeModel({
-    model: modelName,
-    systemInstruction: SYSTEM_PROMPT_WEEKLY_USER_TRENDS,
-  });
-
-  const cleanedSchema = cleanSchemaRecursive(WeeklyUserTrendsInsightSchema.schema) as {
-    type: "object";
-    properties: Record<string, unknown>;
-    required?: string[];
-  };
-
-  const prompt = buildWeeklyUserTrendsPrompt({
-    currentWeek: {
-      period_start: currentWeek.period_start,
-      period_end: currentWeek.period_end,
-      ...currentWeek.metrics,
-      source_count: currentWeek.source_count,
-    },
-    previousWeeks: previousWeeks.map((week) => ({
-      period_start: week.period_start,
-      period_end: week.period_end,
-      ...week.metrics,
-      source_count: week.source_count,
-    })),
-    validWeeks,
-    recordEvidenceContext,
-  });
-
-  const request = {
-    contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "object",
-        properties: cleanedSchema.properties,
-        ...(cleanedSchema.required && { required: cleanedSchema.required }),
-      },
-    },
-  } as unknown as GenerateContentRequest;
-
-  try {
-    const result = await model.generateContent(request);
-    const content = result.response.text();
-    const duration_ms = Date.now() - startTime;
-    const usageMetadata = result.response?.usageMetadata as
-      | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
-      | undefined;
-    const usage = usageMetadata
-      ? {
-          prompt_tokens: usageMetadata.promptTokenCount ?? 0,
-          completion_tokens: usageMetadata.candidatesTokenCount ?? 0,
-          total_tokens:
-            usageMetadata.totalTokenCount ??
-            (usageMetadata.promptTokenCount ?? 0) + (usageMetadata.candidatesTokenCount ?? 0),
-          cached_tokens: 0,
-        }
-      : { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
-
-    await logAIRequest({
-      userId,
-      model: modelName,
-      requestType: "user_trends",
-      sectionName: "weekly_metric_breakdown",
-      usage,
-      duration_ms,
-      success: true,
-    });
-
-    const parsed = JSON.parse(content || "{}") as Partial<WeeklyMetricwiseInsights>;
-    if (
-      !parsed.reflection_continuity ||
-      !parsed.identity_coherence ||
-      typeof parsed.overall_summary !== "string"
-    ) {
-      throw new Error("Invalid metricwise insights response");
-    }
-
-    return {
-      reflection_continuity: parsed.reflection_continuity,
-      identity_coherence: parsed.identity_coherence,
-      overall_summary: parsed.overall_summary,
-      insufficient_data_note: typeof parsed.insufficient_data_note === "string"
-        ? parsed.insufficient_data_note
-        : "",
-    };
-  } catch (error) {
-    await logAIRequest({
-      userId,
-      model: modelName,
-      requestType: "user_trends",
-      sectionName: "weekly_metric_breakdown",
-      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
-      duration_ms: Date.now() - startTime,
-      success: false,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    });
-
-    return {
-      reflection_continuity: fallbackMetricReason(validWeeks),
-      identity_coherence: fallbackMetricReason(validWeeks),
-      overall_summary: validWeeks >= 2 ? "AI 해석이 일시적으로 지연되어 지표 수치만 우선 표시합니다." : "",
-      insufficient_data_note:
-        validWeeks < 2
-          ? `최근 ${validWeeks}주 데이터로는 산정 이유를 제공하기 어렵습니다.`
-          : "AI 해석 생성이 지연되어 산정 이유를 표시하지 못했습니다.",
-    };
-  }
-}
-
-function buildMetricsBreakdown(
-  rows: WeeklyTrendRow[],
-  ai: WeeklyMetricwiseInsights
-): WeeklyMetricsBreakdown {
-  const latest = rows[rows.length - 1];
-  const previous = rows.length > 1 ? rows[rows.length - 2] : null;
-
-  const trimReasonList = (value: string[] | undefined): string[] =>
-    (value || [])
-      .filter((item) => typeof item === "string" && item.trim().length > 0)
-      .slice(0, 5);
-
-  const baseItem = (key: MetricKey): WeeklyMetricBreakdownItem => {
-    const breakdownKey = METRIC_TO_BREAKDOWN[key];
-    const aiItem = ai[breakdownKey];
-    const currentScore = latest?.metrics[key] ?? 0;
-    const delta =
-      previous == null
-        ? null
-        : Math.round(currentScore - previous.metrics[key]);
-    return {
-      label: METRIC_LABELS[breakdownKey],
-      current_score: clampToPercent(currentScore),
-      delta_from_previous: delta,
-      weekly_points: buildWeeklyPoints(rows, key),
-      score_reason_summary: aiItem.score_reason_summary || "",
-      score_reason_items: trimReasonList(aiItem.score_reason_items),
-      score_evidence_items: trimReasonList(aiItem.score_evidence_items),
-      flow_insight: aiItem.flow_insight,
-      confidence: aiItem.confidence,
-    };
-  };
-
-  return {
-    reflection_continuity: baseItem("reflection_continuity"),
-    identity_coherence: baseItem("identity_coherence"),
-  };
 }
 
 async function fetchVividRecords(
@@ -725,28 +473,18 @@ export async function updateUserTrendsForUser(
   }];
   const validWeeks = allWeeks.length;
 
-  const [aiInsights, weeklyTrend] = await Promise.all([
-    generateMetricwiseInsights(
-      allWeeks[allWeeks.length - 1],
-      previousWeeks,
-      userId,
-      validWeeks,
-      buildRecordEvidenceContext({
-        records,
-        dailyRows,
-        startDate,
-        endDate,
-      })
-    ),
-    generateWeeklyTrendFromDailyData(records, dailyRows, startDate, endDate, userId),
-  ]);
-  const metricsBreakdown = buildMetricsBreakdown(allWeeks, aiInsights);
+  const weeklyTrend = await generateWeeklyTrendFromDailyData(
+    records,
+    dailyRows,
+    startDate,
+    endDate,
+    userId
+  );
 
   const insights: WeeklyUserTrendInsights = {
-    overall_summary: aiInsights.overall_summary,
-    insufficient_data_note: aiInsights.insufficient_data_note.trim()
-      ? aiInsights.insufficient_data_note
-      : null,
+    overall_summary: "",
+    insufficient_data_note:
+      validWeeks < 2 ? `최근 ${validWeeks}주 데이터로는 산정이 어렵습니다.` : null,
   };
   const dataQuality: WeeklyUserTrendDataQuality = {
     valid_weeks: validWeeks,
@@ -759,7 +497,6 @@ export async function updateUserTrendsForUser(
   const trendPayload: Record<string, unknown> = {
     ...(weeklyTrend || {}),
     metrics: currentMetrics,
-    metrics_breakdown: metricsBreakdown,
     insights,
     debug: {
       previous_periods: previousWeeks.map((week) => ({

@@ -3,7 +3,6 @@ import { Client } from "@upstash/qstash";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
-import { decryptJsonbFields, type JsonbValue } from "@/lib/jsonb-encryption";
 import {
   updateUserTrendsForUser,
   updateUserTrendsMonthlyForUser,
@@ -140,20 +139,6 @@ export async function GET(request: NextRequest) {
           .limit(1)
           .maybeSingle();
 
-        const trendDecrypted =
-          latestRow?.trend && type === "weekly"
-            ? (decryptJsonbFields(latestRow.trend as JsonbValue) as Record<string, unknown>)
-            : null;
-        const breakdownDecrypted =
-          trendDecrypted?.metrics_breakdown &&
-          typeof trendDecrypted.metrics_breakdown === "object"
-            ? trendDecrypted.metrics_breakdown
-            : null;
-        const breakdownKeys =
-          breakdownDecrypted && typeof breakdownDecrypted === "object"
-            ? Object.keys(breakdownDecrypted as Record<string, unknown>)
-            : [];
-
         return NextResponse.json({
           ok: true,
           mode: "sync",
@@ -169,10 +154,6 @@ export async function GET(request: NextRequest) {
                 period_start: latestRow.period_start,
                 period_end: latestRow.period_end,
                 generated_at: latestRow.generated_at,
-                ...(type === "weekly" && {
-                  has_metrics_breakdown: breakdownKeys.length > 0,
-                  metrics_breakdown_keys: breakdownKeys,
-                }),
                 ...(type === "monthly" && {
                   has_trend: !!latestRow.trend,
                 }),
