@@ -211,12 +211,12 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
           )}
         </div>
 
-        {/* 내용 - 수정 시 기존 UI 그대로 인라인 편집, 포커스 아웃/엔터 시 자동 저장 */}
+        {/* 내용 - 수정 시 기존 UI 그대로 인라인 편집, 길게 누르면 순서 변경 가능 */}
         <div
           {...(!isEditing ? { ...attributes, ...listeners } : {})}
           className={cn(
             "flex-1 min-w-0",
-            !isEditing && "cursor-grab active:cursor-grabbing touch-none"
+            !isEditing && "cursor-grab active:cursor-grabbing"
           )}
         >
           <div className="space-y-0.5">

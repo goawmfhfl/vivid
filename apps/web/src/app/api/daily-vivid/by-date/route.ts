@@ -66,7 +66,11 @@ async function fetchTodoListsForDate(
     );
   }
 
-  const todoLists = [...nativeItems, ...postponedItems, ...scheduledItems];
+  // 순서 변경 시 sort_order로 전체 정렬 (예정된 스케줄 포함 그룹 간 순서 변경 지원)
+  const merged = [...nativeItems, ...postponedItems, ...scheduledItems];
+  const todoLists = merged.sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+  );
   const hasNativeTodoList = nativeItems.length > 0;
   return { todoLists, hasNativeTodoList };
 }
@@ -98,17 +102,20 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     const isVivid = generationType === "vivid";
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
       .eq("report_date", date)
       .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
     if (error) {
       throw new Error(`Failed to fetch daily vivid: ${error.message}`);
     }
+
+    const data = rows?.[0] ?? null;
 
     // vivid가 없어도 todoLists(스케줄된 항목) 조회
     const { todoLists, hasNativeTodoList } = await fetchTodoListsForDate(

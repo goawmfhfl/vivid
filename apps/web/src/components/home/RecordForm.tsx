@@ -122,8 +122,11 @@ export function RecordForm({
   const addTodoItem = useAddTodoItem(targetDateIso || "");
   const reorderTodoItems = useReorderTodoItems(targetDateIso || "");
 
+  // 롱프레스(250ms) 후에만 드래그 시작 - 모바일 스크롤 시 오동작 방지
   const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -1485,8 +1488,9 @@ export function RecordForm({
                               예정된 할 일이 없습니다.
                             </div>
                           )}
-                        {/* 새 할 일 입력 (생성 후에만 오늘의 할 일 컴포넌트 안에서 표시) */}
-                        {vividFeedback?.hasNativeTodoList && (
+                        {/* 새 할 일 입력: 생성 후 오늘의 할 일, 또는 예정된 할 일(미래 날짜) 드롭다운 안에서 표시 */}
+                        {(vividFeedback?.hasNativeTodoList ||
+                          (targetDateIso && targetDateIso > todayIso)) && (
                         <div className="mt-2 flex gap-2 items-stretch">
                               <input
                                 type="text"
