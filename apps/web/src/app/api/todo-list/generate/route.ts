@@ -74,8 +74,7 @@ export async function POST(request: NextRequest) {
       date,
       dayOfWeek,
       isPro,
-      userId,
-      "fast"
+      userId
     );
 
     if (!todoItems?.length) {

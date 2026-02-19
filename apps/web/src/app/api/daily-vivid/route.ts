@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
       date,
       userName: requestUserName,
       generation_duration_seconds,
-      generation_mode,
       generation_type: requestGenerationType,
       is_regeneration: isRegeneration,
     }: DailyVividRequest = body;
@@ -161,9 +160,7 @@ export async function POST(request: NextRequest) {
     const hasIdealSelfInPersonaFlag = false;
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
-    // Free: 항상 Flash 모델 사용 (비용 절감), Pro: 요청 모드 사용
-    const generationMode =
-      isPro && generation_mode === "reasoned" ? "reasoned" : "fast";
+    // 항상 Flash 모델 사용 (사고모드 제거)
 
     // 회고 생성 시: 투두 체크 완료율 조회 (execution_score 반영용)
     let todoCheckInfo: { checked: number; total: number } | undefined;
@@ -178,7 +175,6 @@ export async function POST(request: NextRequest) {
       dayOfWeek,
       isPro,
       userId, // AI 사용량 로깅을 위한 userId 전달
-      generationMode,
       userName,
       personaContext,
       todoCheckInfo,

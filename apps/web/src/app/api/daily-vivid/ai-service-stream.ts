@@ -75,8 +75,7 @@ async function generateSection<T>(
   cacheKey: string,
   isPro: boolean,
   sectionName: string,
-  userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  userId?: string
 ): Promise<T> {
   const schemaObj: ReportSchema =
     typeof schema === "function" ? schema(isPro) : schema;
@@ -91,11 +90,8 @@ async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  // 모델 선택: Free는 항상 Flash(비용 절감), Pro는 사고모드일 때 Pro 모델
-  const modelName =
-    isPro && generationMode === "reasoned"
-      ? "gemini-3-pro-preview"
-      : "gemini-3-flash-preview";
+  // 모델 선택: 항상 Flash 사용 (사고모드 제거)
+  const modelName = "gemini-3-flash-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -533,7 +529,6 @@ async function generateReport(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
   personaContext?: string,
   todoCheckInfo?: { checked: number; total: number },
@@ -556,10 +551,7 @@ async function generateReport(
     todoCheckInfo,
     hasIdealSelfInPersona
   );
-  const cacheKey = generateCacheKey(
-    SYSTEM_PROMPT_REPORT,
-    `${prompt}::${generationMode}`
-  );
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_REPORT, prompt);
 
   try {
     const result = await generateSection<Report>(
@@ -569,8 +561,7 @@ async function generateReport(
       cacheKey,
       isPro,
       "report",
-      userId,
-      generationMode
+      userId
     );
     // alignment_based_on_persona 누락 시 기본값 적용 (스키마 불안정 대비)
     if (result && typeof result.alignment_based_on_persona !== "boolean") {
@@ -594,7 +585,6 @@ async function _generateTrendData(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast",
   userName?: string
 ): Promise<TrendData | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
@@ -605,10 +595,7 @@ async function _generateTrendData(
 
   // VIVID 기록을 기반으로 trend 데이터 생성
   const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
-  const cacheKey = generateCacheKey(
-    SYSTEM_PROMPT_TREND,
-    `${prompt}::${generationMode}`
-  );
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_TREND, prompt);
 
   try {
     const result = await generateSection<TrendData>(
@@ -618,8 +605,7 @@ async function _generateTrendData(
       cacheKey,
       isPro,
       "trend",
-      userId,
-      generationMode
+      userId
     );
 
     // 빈 문자열 검증 및 필터링
@@ -671,7 +657,6 @@ async function _generateIntegratedReport(
   dayOfWeek: string,
   isPro: boolean,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast",
   userName?: string
 ): Promise<{ report: Report | null; trend: TrendData | null }> {
   const dreamRecords = records.filter(
@@ -683,10 +668,7 @@ async function _generateIntegratedReport(
   }
 
   const prompt = buildReportPrompt(records, date, dayOfWeek, isPro, userName);
-  const cacheKey = generateCacheKey(
-    SYSTEM_PROMPT_INTEGRATED,
-    `${prompt}::${generationMode}`
-  );
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_INTEGRATED, prompt);
 
   try {
     const result = await generateSection<{ report: Report; trend: TrendData }>(
@@ -696,8 +678,7 @@ async function _generateIntegratedReport(
       cacheKey,
       isPro,
       "integrated_report",
-      userId,
-      generationMode
+      userId
     );
     
     // generateSection 내부에서 이미 처리되지만, 명시적으로 한 번 더 확인
@@ -745,8 +726,7 @@ export async function generateTodoListFromQ1(
   date: string,
   dayOfWeek: string,
   isPro: boolean,
-  userId?: string,
-  generationMode: "fast" | "reasoned" = "fast"
+  userId?: string
 ): Promise<TodoListItemGenerated[] | null> {
   const q1Content = extractQ1ContentFromRecords(records);
   if (!q1Content || q1Content.length < 10) {
@@ -756,10 +736,7 @@ export async function generateTodoListFromQ1(
 
   const prompt = `아래는 ${date} (${dayOfWeek}) 사용자의 "오늘 하루를 어떻게 보낼까?" 답변입니다.\n\n${q1Content}\n\n위 내용을 바탕으로 오늘의 할 일 목록을 생성해주세요.`;
 
-  const cacheKey = generateCacheKey(
-    SYSTEM_PROMPT_TODO,
-    `${prompt}::${generationMode}`
-  );
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_TODO, prompt);
 
   try {
     const result = await generateSection<{ items: TodoListItemGenerated[] }>(
@@ -769,8 +746,7 @@ export async function generateTodoListFromQ1(
       cacheKey,
       isPro,
       "todo_list",
-      userId,
-      generationMode
+      userId
     );
     if (!result?.items?.length) {
       console.log("[generateTodoListFromQ1] 생성된 항목 없음");
@@ -793,7 +769,6 @@ export async function generateAllReportsWithProgress(
   dayOfWeek: string,
   isPro: boolean = false,
   userId?: string,
-  generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
   personaContext?: string,
   todoCheckInfo?: { checked: number; total: number },
@@ -808,7 +783,6 @@ export async function generateAllReportsWithProgress(
     dayOfWeek,
     isPro,
     userId,
-    generationMode,
     userName,
     personaContext,
     todoCheckInfo,

@@ -3,12 +3,10 @@ import { QUERY_KEYS } from "@/constants";
 import { getCurrentUserId } from "./useCurrentUser";
 import type { DailyVividRow } from "@/types/daily-vivid";
 
-type DailyVividGenerationMode = "fast" | "reasoned";
 type DailyVividGenerationType = "vivid" | "review";
 
 const createDailyVivid = async (
   date: string,
-  generationMode: DailyVividGenerationMode = "fast",
   generationType: DailyVividGenerationType = "vivid",
   isRegeneration = false
 ): Promise<DailyVividRow> => {
@@ -18,7 +16,6 @@ const createDailyVivid = async (
   const body: Record<string, unknown> = {
     userId,
     date,
-    generation_mode: generationMode,
     generation_type: generationType,
   };
   if (isRegeneration) {
@@ -48,7 +45,6 @@ const createDailyVivid = async (
         userId,
         date,
         generation_duration_seconds: durationSeconds,
-        generation_mode: generationMode,
         generation_type: generationType,
       };
       if (isRegeneration) durationBody.is_regeneration = true;
@@ -67,7 +63,6 @@ const createDailyVivid = async (
 
 export type CreateDailyVividVariables = {
   date: string;
-  generationMode?: DailyVividGenerationMode;
   generation_type?: DailyVividGenerationType;
   is_regeneration?: boolean;
 };
@@ -78,11 +73,10 @@ export const useCreateDailyVivid = () => {
   return useMutation({
     mutationFn: ({
       date,
-      generationMode,
       generation_type: generationType = "vivid",
       is_regeneration: isRegeneration = false,
     }: CreateDailyVividVariables) =>
-      createDailyVivid(date, generationMode, generationType, isRegeneration),
+      createDailyVivid(date, generationType, isRegeneration),
     onSuccess: (data, variables) => {
       if (!variables?.date) {
         // 날짜가 없으면 전체 무효화로 폴백

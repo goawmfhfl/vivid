@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, SlidersHorizontal, Check, MessageCircle } from "lucide-react";
+import { Sparkles, MessageCircle } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { type RecordType } from "./signup/RecordTypeCard";
 import { RecordForm } from "./home/RecordForm";
@@ -20,12 +20,6 @@ import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "./ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,10 +27,6 @@ import {
   DialogFooter,
 } from "./ui/dialog";
 import { motion } from "framer-motion";
-
-type DailyVividGenerationMode = "fast" | "reasoned";
-
-const DAILY_VIVID_MODE_STORAGE_KEY = "daily-vivid-generation-mode";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -60,9 +50,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [activeRecordType, setActiveRecordType] = useState<RecordType | null>(
     null
   );
-  const [generationMode, setGenerationMode] =
-    useState<DailyVividGenerationMode>("fast");
-  const [isModeHydrated, setIsModeHydrated] = useState(false);
   const searchParamsString = searchParams?.toString() ?? "";
   const initialRecordType = useMemo(() => {
     const typeParam = searchParams?.get("type");
@@ -83,21 +70,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
       setActiveRecordType(initialRecordType);
     }
   }, [initialRecordType, activeRecordType]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedMode = localStorage.getItem(DAILY_VIVID_MODE_STORAGE_KEY);
-    if (savedMode === "fast" || savedMode === "reasoned") {
-      setGenerationMode(savedMode);
-    }
-    setIsModeHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!isModeHydrated) return;
-    localStorage.setItem(DAILY_VIVID_MODE_STORAGE_KEY, generationMode);
-  }, [generationMode, isModeHydrated]);
 
   const handleTypeChange = useCallback(
     (type: RecordType | null) => {
@@ -259,9 +231,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
     showInsightButton &&
     typeof window !== "undefined" &&
     !localStorage.getItem(`vivid_insight_read_${vividFeedback?.id}`);
-  const showGenerationModeSelector =
-    isPro && !hasDateFeedback && !isCreateButtonDisabled; // 생성 가능할 때만 사고/빠른 모드 표시
-
   // 전역 모달 및 피드백 생성 상태 관리
   const openErrorModal = useModalStore((state) => state.openErrorModal);
   const dailyVividProgress = useModalStore(
@@ -282,11 +251,11 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const progress = dailyVividProgress[activeDate] || null;
   const isGeneratingFeedback = createDailyVivid.isPending || progress !== null || timerProgress !== null;
   
-  // 타이머 기반 progress 계산 (0% → 99%, 모드별 진행 시간)
+  // 타이머 기반 progress 계산 (0% → 99%)
   useEffect(() => {
     if (timerStartTime === null) return;
 
-    const DURATION_MS = generationMode === "reasoned" ? 40000 : 20000; // 사고: 35초, 빠른: 20초
+    const DURATION_MS = 20000;
     const TARGET_PERCENTAGE = 99; // 최대 99%
     const UPDATE_INTERVAL = 100; // 100ms마다 업데이트
 
@@ -306,7 +275,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
     }, UPDATE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [timerStartTime, generationMode]);
+  }, [timerStartTime]);
 
   // 컴포넌트 언마운트 시에만 타이머 정리 (activeDate 변경 시에는 유지)
   useEffect(() => {
@@ -356,7 +325,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
       try {
         const feedbackData = await createDailyVivid.mutateAsync({
           date: activeDate,
-          generationMode,
           generation_type: isReviewTab ? "review" : "vivid",
         });
 
@@ -657,108 +625,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   <MessageCircle className="w-4 h-4 relative z-10" />
                 </button>
               </motion.div>
-            )}
-
-            {showGenerationModeSelector && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200"
-                    disabled={isGeneratingFeedback}
-                    style={{
-                      backgroundColor: COLORS.background.card,
-                      border: `1px solid ${COLORS.border.light}`,
-                      color: COLORS.text.primary,
-                      boxShadow: SHADOWS.elevation1,
-                      opacity: isGeneratingFeedback ? 0.6 : 1,
-                      cursor: isGeneratingFeedback ? "default" : "pointer",
-                    }}
-                    aria-label="VIVID 생성 모드 선택"
-                  >
-                    <SlidersHorizontal
-                      className="w-3.5 h-3.5"
-                      style={{ color: COLORS.brand.primary }}
-                    />
-                    <span
-                      className="text-xs sm:text-sm"
-                      style={{ fontWeight: "600" }}
-                    >
-                      {generationMode === "fast" ? "빠른" : "사고"}
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  sideOffset={8}
-                  className="min-w-[220px] p-2"
-                  style={{
-                    backgroundColor: COLORS.background.card,
-                    border: `1px solid ${COLORS.border.light}`,
-                  }}
-                >
-                  <DropdownMenuItem
-                    onSelect={() => setGenerationMode("fast")}
-                    className="flex items-start gap-2"
-                  >
-                    <div className="mt-0.5 flex h-4 w-4 items-center justify-center">
-                      {generationMode === "fast" && (
-                        <Check
-                          className="h-3.5 w-3.5"
-                          style={{ color: COLORS.brand.primary }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex flex-col">
-                      <span
-                        className="text-sm"
-                        style={{
-                          color: COLORS.text.primary,
-                          fontWeight: "600",
-                        }}
-                      >
-                        빠른 답변 모드
-                      </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        빠르게 응답
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => setGenerationMode("reasoned")}
-                    className="flex items-start gap-2"
-                  >
-                    <div className="mt-0.5 flex h-4 w-4 items-center justify-center">
-                      {generationMode === "reasoned" && (
-                        <Check
-                          className="h-3.5 w-3.5"
-                          style={{ color: COLORS.brand.primary }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex flex-col">
-                      <span
-                        className="text-sm"
-                        style={{
-                          color: COLORS.text.primary,
-                          fontWeight: "600",
-                        }}
-                      >
-                        사고 답변 모드
-                      </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        분석 시간이 조금 더 소요
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             )}
           </div>
         </div>

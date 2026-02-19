@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, RotateCcw } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import {
@@ -30,10 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-
-type DailyVividGenerationMode = "fast" | "reasoned";
-
-const DAILY_VIVID_MODE_STORAGE_KEY = "daily-vivid-generation-mode";
 
 type DailyVividViewProps = {
   date?: string;
@@ -88,26 +84,6 @@ export function DailyVividView({
   const [timerProgress, setTimerProgress] = useState<number | null>(null);
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = useState(false);
-  const [regenerationMode, setRegenerationMode] =
-    useState<DailyVividGenerationMode>("fast");
-
-  // 다이얼로그 열릴 때 localStorage에서 마지막 선택 모드 불러오기 (Home과 동일)
-  // Free 유저는 사고 모드 사용 불가이므로 "fast"로 고정
-  useEffect(() => {
-    if (!isRegenerateDialogOpen || typeof window === "undefined") return;
-    const savedMode = localStorage.getItem(DAILY_VIVID_MODE_STORAGE_KEY);
-    if (savedMode === "fast" || savedMode === "reasoned") {
-      setRegenerationMode(
-        isPro && savedMode === "reasoned" ? "reasoned" : "fast"
-      );
-    }
-  }, [isRegenerateDialogOpen, isPro]);
-
-  // 모드 선택 시 localStorage에 저장 (Home과 동일)
-  useEffect(() => {
-    if (typeof window === "undefined" || !isRegenerateDialogOpen) return;
-    localStorage.setItem(DAILY_VIVID_MODE_STORAGE_KEY, regenerationMode);
-  }, [regenerationMode, isRegenerateDialogOpen]);
 
   // Pro 전용: 상세 페이지 마운트 시 인사이트 생성 요청 (type=vivid일 때만)
   useEffect(() => {
@@ -162,7 +138,7 @@ export function DailyVividView({
 
   const progressPercentage = Math.min(timerProgress ?? 0, 99);
 
-  const handleRegenerate = async (generationMode: DailyVividGenerationMode) => {
+  const handleRegenerate = async () => {
     if (!canRegenerate || !data?.report_date || isRegenerating) return;
     try {
       setTimerStartTime(Date.now());
@@ -176,7 +152,6 @@ export function DailyVividView({
 
       const feedbackData = await createDailyVivid.mutateAsync({
         date: data.report_date,
-        generationMode,
         generation_type: generationType,
         is_regeneration: true,
       });
@@ -419,99 +394,9 @@ export function DailyVividView({
               <DialogDescription
                 style={{ color: COLORS.text.secondary }}
               >
-                어떤 모드로 재생성할까요?
+                이 비비드를 다시 생성할까요?
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-2 py-2">
-              <button
-                type="button"
-                onClick={() => !isRegenerating && setRegenerationMode("fast")}
-                disabled={isRegenerating}
-                className="flex items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-opacity-80"
-                style={{
-                  backgroundColor:
-                    regenerationMode === "fast"
-                      ? `${COLORS.brand.primary}15`
-                      : COLORS.background.hoverLight,
-                  border: `1px solid ${
-                    regenerationMode === "fast"
-                      ? COLORS.brand.primary
-                      : "transparent"
-                  }`,
-                  opacity: isRegenerating ? 0.6 : 1,
-                  cursor: isRegenerating ? "not-allowed" : "pointer",
-                }}
-              >
-                <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center">
-                  {regenerationMode === "fast" && (
-                    <Check
-                      className="h-3.5 w-3.5"
-                      style={{ color: COLORS.brand.primary }}
-                    />
-                  )}
-                </div>
-                <div className="flex flex-col gap-0.5 ">
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    빠른 모드
-                  </span>
-                  <span
-                    className="text-xs"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    빠르게 응답
-                  </span>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  !isRegenerating && isPro && setRegenerationMode("reasoned")
-                }
-                disabled={isRegenerating}
-                className="flex items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-opacity-80"
-                style={{
-                  backgroundColor:
-                    regenerationMode === "reasoned"
-                      ? `${COLORS.brand.primary}15`
-                      : COLORS.background.hoverLight,
-                  border: `1px solid ${
-                    regenerationMode === "reasoned"
-                      ? COLORS.brand.primary
-                      : "transparent"
-                  }`,
-                  opacity: isRegenerating ? 0.6 : isPro ? 1 : 0.6,
-                  cursor: isRegenerating ? "not-allowed" : isPro ? "pointer" : "not-allowed",
-                }}
-              >
-                <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center">
-                  {regenerationMode === "reasoned" && (
-                    <Check
-                      className="h-3.5 w-3.5"
-                      style={{ color: COLORS.brand.primary }}
-                    />
-                  )}
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    사고 모드
-                  </span>
-                  <span
-                    className="text-xs"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    {isPro
-                      ? "분석 시간이 조금 더 소요"
-                      : "Pro 전용"}
-                  </span>
-                </div>
-              </button>
-            </div>
             <DialogFooter className="gap-2 sm:gap-2">
               <Button
                 variant="outline"
@@ -526,16 +411,8 @@ export function DailyVividView({
                 취소
               </Button>
               <Button
-                onClick={() =>
-                  handleRegenerate(
-                    isPro && regenerationMode === "reasoned"
-                      ? "reasoned"
-                      : "fast"
-                  )
-                }
-                disabled={
-                  isRegenerating || (!isPro && regenerationMode === "reasoned")
-                }
+                onClick={() => handleRegenerate()}
+                disabled={isRegenerating}
                 style={{
                   backgroundColor: COLORS.brand.primary,
                   color: COLORS.text.white,
