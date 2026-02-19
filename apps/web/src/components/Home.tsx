@@ -205,12 +205,14 @@ export function Home({ selectedDate }: HomeProps = {}) {
     isVividQuerySuccess &&
     !!vividFeedback &&
     vividFeedback.report_date === activeDate &&
-    vividFeedback.is_vivid_ai_generated === true;
+    vividFeedback.is_vivid_ai_generated === true &&
+    vividFeedback.report != null;
   const hasReviewFeedback =
     isReviewQuerySuccess &&
     !!reviewFeedback &&
     reviewFeedback.report_date === activeDate &&
-    reviewFeedback.is_review_ai_generated === true;
+    reviewFeedback.is_review_ai_generated === true &&
+    reviewFeedback.report != null;
 
   const isReviewTab = activeRecordType === "review";
   const hasDateFeedback = isReviewTab ? hasReviewFeedback : hasVividFeedback;

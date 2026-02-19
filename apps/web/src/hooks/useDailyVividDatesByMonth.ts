@@ -5,6 +5,7 @@ import { getCurrentUserId } from "./useCurrentUser";
 
 /**
  * 특정 월의 daily-vivid가 있는 날짜 목록 조회
+ * (report가 존재하는 실제 비비드만 포함, 투두 전용 minimal row 제외)
  */
 const fetchDailyVividDatesByMonth = async (
   year: number,
@@ -26,6 +27,7 @@ const fetchDailyVividDatesByMonth = async (
     .eq("user_id", userId)
     .gte("report_date", startDate)
     .lte("report_date", endDate)
+    .not("report", "is", null)
     .order("report_date", { ascending: true });
 
   if (error) {

@@ -1340,9 +1340,11 @@ export function RecordForm({
               (vividFeedback?.todoLists?.length ?? 0) > 0 ||
               (targetDateIso && targetDateIso > todayIso)) && (
             <div className="mb-4 space-y-2">
-              {/* 할 일이 없을 때: vivid+네이티브 없음 → 생성 버튼만 (직접 추가는 생성 후 컴포넌트 내부에서) */}
-              {vividFeedback?.is_vivid_ai_generated &&
-                !vividFeedback?.hasNativeTodoList && (
+              {/* 할 일이 없을 때: 실제 비비드+네이티브 없음+오늘/과거 → 생성 버튼만 */}
+              {vividFeedback?.report != null &&
+                vividFeedback?.is_vivid_ai_generated &&
+                !vividFeedback?.hasNativeTodoList &&
+                (!targetDateIso || targetDateIso <= todayIso) && (
                   <Button
                     type="button"
                     onClick={() =>
@@ -1500,8 +1502,9 @@ export function RecordForm({
                                 }
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter") {
+                                    if (e.nativeEvent.isComposing || addTodoItem.isPending) return;
                                     e.preventDefault();
-                                    const trimmed = newTodoContents.trim();
+                                    const trimmed = (e.target as HTMLInputElement).value.trim();
                                     if (trimmed) {
                                       addTodoItem.mutate(trimmed, {
                                         onSuccess: () =>

@@ -8,12 +8,14 @@ import { API_ENDPOINTS } from "@/constants";
 // 날짜별 조회는 버튼 라벨(보기/생성하기)에 직결되므로 항상 최신 상태 필요 → 캐시 비활성화
 const BY_DATE_NO_CACHE = "private, max-age=0, must-revalidate";
 
+const MANUAL_ADD_CATEGORY = "직접 추가";
+
 /**
  * 날짜 X의 "오늘의 할 일" 조회
  * (A) 해당 날짜 vivid에 연결된 todo (scheduled_at null) - 네이티브
  * (B) scheduled_at = X 인 todo (다른 날짜에서 미룬 것) - 스케줄된 항목
  * (C) 해당 날짜 vivid에서 미룬 항목 (scheduled_at 있음) - 오늘 목록에 유지, "N일 후 진행 예정" 표시
- * @returns { todoLists, hasNativeTodoList } - hasNativeTodoList: 네이티브 항목 존재 여부 (생성 버튼 분기용)
+ * @returns { todoLists, hasNativeTodoList } - hasNativeTodoList: "오늘의 할 일 생성하기"로 AI 생성된 항목 존재 여부 (직접 추가 제외)
  */
 async function fetchTodoListsForDate(
   supabase: ReturnType<typeof getServiceSupabase>,
@@ -71,7 +73,10 @@ async function fetchTodoListsForDate(
   const todoLists = merged.sort(
     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
   );
-  const hasNativeTodoList = nativeItems.length > 0;
+  // "오늘의 할 일 생성하기"로 AI 생성된 항목만 카운트 (직접 추가/예정된 할 일은 제외)
+  const hasNativeTodoList = nativeItems.some(
+    (item) => (item.category ?? "").trim() !== MANUAL_ADD_CATEGORY
+  );
   return { todoLists, hasNativeTodoList };
 }
 
@@ -143,6 +148,21 @@ export async function GET(request: NextRequest) {
     const decrypted = decryptDailyVivid(
       data as unknown as { [key: string]: unknown }
     ) as unknown as DailyVividRow;
+
+    // report가 null이면 minimal vivid(투두 전용) → 실제 비비드 없음으로 처리
+    if (decrypted.report == null) {
+      return NextResponse.json(
+        {
+          data: null,
+          todoLists: todoLists,
+          hasNativeTodoList,
+        },
+        {
+          status: 200,
+          headers: { "Cache-Control": BY_DATE_NO_CACHE },
+        }
+      );
+    }
 
     const result: DailyVividRow = {
       ...decrypted,

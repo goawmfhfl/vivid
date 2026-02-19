@@ -31,12 +31,13 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
     throw new Error(`Failed to fetch records dates: ${recordsError.message}`);
   }
 
-  // AI 피드백 날짜 조회 (비비드 또는 리뷰 생성된 날짜)
+  // AI 피드백 날짜 조회 (비비드 또는 리뷰 생성된 날짜, report 존재하는 실제 비비드만)
   const { data: feedbacks, error: feedbackError } = await supabase
     .from(API_ENDPOINTS.DAILY_VIVID)
     .select("report_date, is_vivid_ai_generated, is_review_ai_generated")
     .eq("user_id", userId)
     .or("is_vivid_ai_generated.eq.true,is_review_ai_generated.eq.true")
+    .not("report", "is", null)
     .gte("report_date", startDate);
 
   if (feedbackError) {
