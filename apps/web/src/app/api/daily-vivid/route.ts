@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import {
-  fetchUserPersonaOptional,
-  buildPersonaContextBlock,
-} from "@/lib/user-persona";
 import { generateAllReportsWithProgress } from "./ai-service-stream";
 import {
   fetchRecordsByDate,
@@ -160,16 +156,9 @@ export async function POST(request: NextRequest) {
 
     const userName = resolvedUserName || "회원";
 
-    // 3.6️⃣ user_persona 선택 조회 (Pro 유저일 때만 프롬프트에 반영)
-    let personaContext = "";
-    if (isPro) {
-      try {
-        const persona = await fetchUserPersonaOptional(supabase, userId);
-        personaContext = buildPersonaContextBlock(persona);
-      } catch {
-        // 조회/복호화 실패 시 빈 문자열 유지
-      }
-    }
+    // 3.6️⃣ 일치도 분석: 기존 Q1 vs Q2 방식 사용 (persona 기반은 응답 지연 이슈로 비활성화)
+    const personaContext = "";
+    const hasIdealSelfInPersonaFlag = false;
 
     // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
     // Free: 항상 Flash 모델 사용 (비용 절감), Pro: 요청 모드 사용
@@ -192,7 +181,8 @@ export async function POST(request: NextRequest) {
       generationMode,
       userName,
       personaContext,
-      todoCheckInfo
+      todoCheckInfo,
+      hasIdealSelfInPersonaFlag
     );
 
     // 4.5️⃣ 응답 텍스트에서 "당신" → "재영님" 등 친근 호칭으로 후처리

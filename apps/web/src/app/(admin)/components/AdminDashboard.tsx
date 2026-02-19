@@ -74,7 +74,7 @@ export function AdminDashboard() {
       </div>
 
       {/* 통계 카드 그리드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
         <StatsCard
           title="총 유저 수"
           value={stats.totalUsers.toLocaleString()}
@@ -92,13 +92,25 @@ export function AdminDashboard() {
         />
         <StatsCard
           title="오늘 AI 요청"
-          value={stats.todayAIRequests.toLocaleString()}
-          description="오늘 처리된 AI 요청 수"
+          value={(stats.todayAIRequests ?? 0).toLocaleString()}
+          description={
+            stats.todayAICostKrw != null
+              ? `₩${Math.round(stats.todayAICostKrw).toLocaleString()}`
+              : "오늘 처리된 AI 요청"
+          }
         />
         <StatsCard
-          title="오늘 AI 비용"
-          value={`$${stats.todayAICost.usd.toFixed(2)}`}
-          description={`₩${Math.round(stats.todayAICost.krw).toLocaleString()}`}
+          title="유저당 평균 월 API 비용"
+          value={
+            stats.avgCostPerUserPerMonth != null
+              ? `₩${stats.avgCostPerUserPerMonth.toLocaleString()}`
+              : "₩0"
+          }
+          description={
+            stats.thisMonthAIUsers != null
+              ? `이번 달 ${stats.thisMonthAIUsers}명 사용 · 총 ₩${Math.round(stats.thisMonthAICostKrw ?? 0).toLocaleString()}`
+              : "이번 달 AI 사용 유저 기준"
+          }
         />
       </div>
     </div>

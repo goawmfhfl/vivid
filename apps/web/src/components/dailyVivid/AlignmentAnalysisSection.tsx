@@ -18,7 +18,11 @@ import {
 import { ChartGlassCard, useInViewOnce } from "./analysisShared";
 import { hexToRgbTriplet } from "./colorUtils";
 
-function AlignmentScoreInfoDialog() {
+function AlignmentScoreInfoDialog({
+  alignmentBasedOnPersona,
+}: {
+  alignmentBasedOnPersona?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const buttonStyle = {
     color: COLORS.text.tertiary,
@@ -55,7 +59,6 @@ function AlignmentScoreInfoDialog() {
           >
             일치도 점수는 오늘의 계획이 미래 목표와 얼마나 잘 정렬되어 있는지를
             평가한 점수입니다 (0-100점).
-            <br />
             <span
               className={cn(TYPOGRAPHY.bodySmall.fontSize, "mt-2 block")}
               style={{ color: COLORS.text.tertiary }}
@@ -181,6 +184,7 @@ export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) 
   const router = useRouter();
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
+  const alignmentBasedOnPersona = view.alignment_based_on_persona === true;
   const alignmentScore =
     typeof view.alignment_score === "number" && Number.isFinite(view.alignment_score)
       ? view.alignment_score
@@ -226,18 +230,26 @@ export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) 
             >
               <BarChart3 className="w-4 h-4" style={{ color: alignmentColor }} />
             </div>
-            <p
-              className={cn(
-                TYPOGRAPHY.label.fontSize,
-                TYPOGRAPHY.label.fontWeight,
-                TYPOGRAPHY.label.letterSpacing,
-                "uppercase"
-              )}
-              style={{ color: COLORS.text.secondary }}
-            >
-              일치도 점수
-            </p>
-            <AlignmentScoreInfoDialog />
+            <div className="flex items-center gap-2 flex-wrap">
+              <p
+                className={cn(
+                  TYPOGRAPHY.label.fontSize,
+                  TYPOGRAPHY.label.fontWeight,
+                  TYPOGRAPHY.label.letterSpacing,
+                  "uppercase"
+                )}
+                style={{ color: COLORS.text.secondary }}
+              >
+                일치도 점수
+              </p>
+              <span
+                className={cn(TYPOGRAPHY.bodySmall.fontSize, "normal-case")}
+                style={{ color: COLORS.text.tertiary }}
+              >
+                {alignmentBasedOnPersona ? "(지향하는 모습 기반)" : "(오늘의 꿈 기반)"}
+              </span>
+              <AlignmentScoreInfoDialog alignmentBasedOnPersona={alignmentBasedOnPersona} />
+            </div>
           </div>
           <div className="mb-4">
             <div className="flex items-center gap-4 mb-3">
@@ -295,8 +307,9 @@ export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) 
             )}
             style={{ color: COLORS.text.muted }}
           >
-            오늘의 모습과 앞으로 되고 싶은 모습의 일치도를 측정한 점수입니다.
-            높을수록 현재와 목표가 일치한다는 의미입니다.
+            {alignmentBasedOnPersona
+              ? "오늘의 계획이 내가 지향하는 모습과 얼마나 잘 정렬되어 있는지 측정한 점수입니다. 높을수록 현재와 목표가 일치한다는 의미입니다."
+              : "오늘의 모습과 앞으로 되고 싶은 모습의 일치도를 측정한 점수입니다. 높을수록 현재와 목표가 일치한다는 의미입니다."}
           </p>
           {view.alignment_analysis_points &&
             view.alignment_analysis_points.length > 0 && (

@@ -6,6 +6,8 @@ import type { AdminStats } from "@/types/admin";
 /**
  * GET /api/admin/stats
  * 관리자 대시보드 통계 조회
+ * - profiles 테이블 또는 auth.users 기반
+ * - Pro 멤버십: user_metadata.subscription 기반
  */
 export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(request);
@@ -13,64 +15,97 @@ export async function GET(request: NextRequest) {
     return authResult;
   }
 
-  const { userId: _adminId } = authResult;
-
   try {
     const supabase = getServiceSupabase();
 
-    // 오늘 날짜 (KST 기준)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayISO = today.toISOString();
+    let totalUsers = 0;
+    let activeUsers = 0;
+    let proUsers = 0;
 
-    // 1. 총 유저 수
-    const { count: totalUsers } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
+    // 1. 총 유저 수 & Pro 멤버십: auth.admin.listUsers로 조회
+    let page = 1;
+    const perPage = 500;
+    let hasMore = true;
 
-    // 2. 활성 유저 수
-    const { count: activeUsers } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true);
+    while (hasMore) {
+      const { data, error } = await supabase.auth.admin.listUsers({
+        page,
+        perPage,
+      });
 
-    // 3. Pro 멤버십 수
-    const { count: proUsers } = await supabase
-      .from("subscriptions")
-      .select("*", { count: "exact", head: true })
-      .eq("plan", "pro")
-      .eq("status", "active");
+      if (error) {
+        console.error("유저 목록 조회 실패:", error);
+        break;
+      }
 
-    // 4. 오늘 AI 요청 수 및 비용
-    const { data: todayAIRequests, error: aiError } = await supabase
-      .from("ai_requests")
-      .select("cost_usd, cost_krw")
-      .gte("created_at", todayISO);
+      const users = data.users || [];
+      totalUsers += users.length;
 
-    if (aiError) {
-      console.error("AI 요청 통계 조회 실패:", aiError);
+      for (const user of users) {
+        const sub = user.user_metadata?.subscription;
+        if (sub?.plan === "pro" && (sub?.status === "active" || sub?.status === "none")) {
+          proUsers += 1;
+        }
+        const isActive = user.user_metadata?.is_active;
+        if (isActive !== false) activeUsers += 1;
+      }
+
+      hasMore = users.length === perPage;
+      page += 1;
+      if (page > 20) break; // 최대 10,000명
     }
 
-    const todayAIRequestsCount = todayAIRequests?.length || 0;
-    const todayAICost = {
-      usd:
-        todayAIRequests?.reduce(
-          (sum, req) => sum + Number(req.cost_usd || 0),
-          0
-        ) || 0,
-      krw:
-        todayAIRequests?.reduce(
-          (sum, req) => sum + Number(req.cost_krw || 0),
-          0
-        ) || 0,
-    };
+    // 오늘 AI 요청 수 (ai_requests 테이블)
+    let todayAIRequests = 0;
+    let todayAICostKrw = 0;
+    let thisMonthAIUsers = 0;
+    let thisMonthAICostKrw = 0;
+    let avgCostPerUserPerMonth = 0;
+
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      monthStart.setHours(0, 0, 0, 0);
+      const monthStartISO = monthStart.toISOString();
+
+      const { data: todayReqs } = await supabase
+        .from("ai_requests")
+        .select("cost_krw")
+        .gte("created_at", todayISO);
+      todayAIRequests = todayReqs?.length || 0;
+      todayAICostKrw =
+        todayReqs?.reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
+
+      const { data: monthReqs } = await supabase
+        .from("ai_requests")
+        .select("user_id, cost_krw")
+        .gte("created_at", monthStartISO);
+
+      const uniqueUsers = new Set<string>();
+      monthReqs?.forEach((r) => {
+        if (r.user_id) uniqueUsers.add(r.user_id);
+        thisMonthAICostKrw += Number(r.cost_krw || 0);
+      });
+      thisMonthAIUsers = uniqueUsers.size;
+      avgCostPerUserPerMonth =
+        thisMonthAIUsers > 0
+          ? Math.round(thisMonthAICostKrw / thisMonthAIUsers)
+          : 0;
+    } catch {
+      // ai_requests 없으면 무시
+    }
 
     const stats: AdminStats = {
-      totalUsers: totalUsers || 0,
-      activeUsers: activeUsers || 0,
-      proUsers: proUsers || 0,
-      todayAIRequests: todayAIRequestsCount,
-      todayAICost,
+      totalUsers,
+      activeUsers: activeUsers || totalUsers,
+      proUsers,
+      todayAIRequests,
+      todayAICostKrw,
+      thisMonthAIUsers,
+      thisMonthAICostKrw,
+      avgCostPerUserPerMonth,
     };
 
     return NextResponse.json(stats);

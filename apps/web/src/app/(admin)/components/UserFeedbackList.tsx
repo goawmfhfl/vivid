@@ -2,9 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
-import { Trash2, Star, TrendingUp, MessageSquare } from "lucide-react";
+import {
+  Trash2,
+  Star,
+  TrendingUp,
+  MessageSquare,
+  Sparkles,
+  Target,
+  Lightbulb,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminApiFetch } from "@/lib/admin-api-client";
+import { AdminSelect } from "./AdminSelect";
 
 interface UserFeedback {
   id: string;
@@ -60,6 +70,18 @@ export function UserFeedbackList() {
   const [sortBy, setSortBy] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<string>("desc");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // AI 피드백 분석
+  const [insightStartDate, setInsightStartDate] = useState("");
+  const [insightEndDate, setInsightEndDate] = useState("");
+  const [insightPageType, setInsightPageType] = useState("all");
+  const [insights, setInsights] = useState<{
+    improvements: string[];
+    developmentPriorities: string[];
+    keyRecommendations: string[];
+  } | null>(null);
+  const [insightsRawText, setInsightsRawText] = useState<string | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const fetchFeedbacks = useCallback(async () => {
     setLoading(true);
@@ -122,6 +144,33 @@ export function UserFeedbackList() {
       alert(err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const fetchInsights = async () => {
+    setInsightsLoading(true);
+    setInsights(null);
+    setInsightsRawText(null);
+    try {
+      const res = await adminApiFetch("/api/admin/user-feedbacks/insights", {
+        method: "POST",
+        body: JSON.stringify({
+          startDate: insightStartDate || undefined,
+          endDate: insightEndDate || undefined,
+          pageType: insightPageType !== "all" ? insightPageType : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "분석에 실패했습니다.");
+      }
+      const data = await res.json();
+      setInsights(data.insights ?? null);
+      setInsightsRawText(data.rawText ?? null);
+    } catch (err) {
+      setInsightsRawText(err instanceof Error ? err.message : "분석 중 오류 발생");
+    } finally {
+      setInsightsLoading(false);
     }
   };
 
@@ -283,107 +332,237 @@ export function UserFeedbackList() {
         style={CARD_STYLES.default}
       >
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              페이지 타입
-            </label>
-            <select
-              value={selectedPageType}
-              onChange={(e) => {
-                setSelectedPageType(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="all">전체</option>
-              <option value="daily">Daily Vivid</option>
-              <option value="weekly">Weekly Vivid</option>
-              <option value="monthly">Monthly Vivid</option>
-            </select>
+          <AdminSelect
+            label="페이지 타입"
+            value={selectedPageType}
+            onChange={(e) => {
+              setSelectedPageType(e.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "all", label: "전체" },
+              { value: "daily", label: "Daily Vivid" },
+              { value: "weekly", label: "Weekly Vivid" },
+              { value: "monthly", label: "Monthly Vivid" },
+            ]}
+          />
+          <AdminSelect
+            label="평점"
+            value={selectedRating}
+            onChange={(e) => {
+              setSelectedRating(e.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "all", label: "전체" },
+              ...([5, 4, 3, 2, 1] as const).map((r) => ({ value: r.toString(), label: `${r}점` })),
+            ]}
+          />
+          <AdminSelect
+            label="정렬 기준"
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "created_at", label: "작성일" },
+              { value: "rating", label: "평점" },
+            ]}
+          />
+          <AdminSelect
+            label="정렬 순서"
+            value={sortOrder}
+            onChange={(e) => {
+              setSortOrder(e.target.value);
+              setPage(1);
+            }}
+            options={[
+              { value: "desc", label: "최신순" },
+              { value: "asc", label: "오래된순" },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* AI 피드백 분석 */}
+      <div
+        className="rounded-xl p-6"
+        style={{
+          ...CARD_STYLES.default,
+          background: `linear-gradient(135deg, ${COLORS.brand.light}15 0%, ${COLORS.brand.primary}08 100%)`,
+          border: `1px solid ${COLORS.border.light}`,
+        }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: `${COLORS.brand.primary}20` }}
+          >
+            <Sparkles className="w-5 h-5" style={{ color: COLORS.brand.primary }} />
           </div>
           <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              평점
-            </label>
-            <select
-              value={selectedRating}
-              onChange={(e) => {
-                setSelectedRating(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="all">전체</option>
-              {[5, 4, 3, 2, 1].map((r) => (
-                <option key={r} value={r.toString()}>{r}점</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              정렬 기준
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="created_at">작성일</option>
-              <option value="rating">평점</option>
-            </select>
-          </div>
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              정렬 순서
-            </label>
-            <select
-              value={sortOrder}
-              onChange={(e) => {
-                setSortOrder(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="desc">최신순</option>
-              <option value="asc">오래된순</option>
-            </select>
+            <h3 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
+              AI 피드백 분석
+            </h3>
+            <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+              기간을 선택하고 분석 버튼을 누르면 개선·개발 방향을 제안받을 수 있습니다. (비워두면 전체)
+            </p>
           </div>
         </div>
+
+        <div className="flex flex-wrap items-end gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: COLORS.text.secondary }}>
+              시작일
+            </label>
+            <input
+              type="date"
+              value={insightStartDate}
+              onChange={(e) => setInsightStartDate(e.target.value)}
+              className="px-4 py-2.5 rounded-xl border text-sm"
+              style={{
+                borderColor: COLORS.border.input,
+                backgroundColor: COLORS.background.cardElevated,
+                color: COLORS.text.primary,
+              }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: COLORS.text.secondary }}>
+              종료일
+            </label>
+            <input
+              type="date"
+              value={insightEndDate}
+              onChange={(e) => setInsightEndDate(e.target.value)}
+              className="px-4 py-2.5 rounded-xl border text-sm"
+              style={{
+                borderColor: COLORS.border.input,
+                backgroundColor: COLORS.background.cardElevated,
+                color: COLORS.text.primary,
+              }}
+            />
+          </div>
+          <AdminSelect
+            label="분석 대상"
+            value={insightPageType}
+            onChange={(e) => setInsightPageType(e.target.value)}
+            options={[
+              { value: "all", label: "전체" },
+              { value: "daily", label: "Daily Vivid" },
+              { value: "weekly", label: "Weekly Vivid" },
+              { value: "monthly", label: "Monthly Vivid" },
+            ]}
+            containerClassName="w-40"
+          />
+          <button
+            type="button"
+            onClick={fetchInsights}
+            disabled={insightsLoading}
+            className="px-5 py-2.5 rounded-xl font-semibold text-sm disabled:opacity-50 transition-all"
+            style={{
+              backgroundColor: COLORS.brand.primary,
+              color: COLORS.text.white,
+              boxShadow: "0 2px 8px rgba(127, 143, 122, 0.3)",
+            }}
+          >
+            {insightsLoading ? "분석 중..." : "AI 분석 실행"}
+          </button>
+        </div>
+
+        {insights ? (
+          <div className="space-y-5 mt-6 pt-5 border-t" style={{ borderColor: COLORS.border.light }}>
+            <div
+              className="rounded-xl p-5"
+              style={{
+                background: `linear-gradient(135deg, ${COLORS.brand.primary}12 0%, ${COLORS.brand.secondary}08 100%)`,
+                border: `1px solid ${COLORS.brand.primary}40`,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-5 h-5" style={{ color: COLORS.brand.secondary }} />
+                <h4 className="text-sm font-bold" style={{ color: COLORS.brand.secondary }}>
+                  핵심 권장사항
+                </h4>
+              </div>
+              <ul className="space-y-2.5">
+                {insights.keyRecommendations.map((item, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span
+                      className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{
+                        backgroundColor: COLORS.brand.primary,
+                        color: COLORS.text.white,
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                    <p className="text-sm leading-relaxed" style={{ color: COLORS.text.primary }}>
+                      {item}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: COLORS.background.cardElevated,
+                  border: `1px solid ${COLORS.status.warning}40`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <ChevronRight className="w-4 h-4" style={{ color: COLORS.status.warning }} />
+                  <h4 className="text-sm font-bold" style={{ color: COLORS.status.warning }}>
+                    개선이 필요한 영역
+                  </h4>
+                </div>
+                <ul className="space-y-2">
+                  {insights.improvements.map((item, i) => (
+                    <li key={i} className="flex gap-2 text-sm" style={{ color: COLORS.text.primary }}>
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: COLORS.background.cardElevated,
+                  border: `1px solid ${COLORS.status.success}40`,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="w-4 h-4" style={{ color: COLORS.status.success }} />
+                  <h4 className="text-sm font-bold" style={{ color: COLORS.status.success }}>
+                    개발 우선순위
+                  </h4>
+                </div>
+                <ul className="space-y-2">
+                  {insights.developmentPriorities.map((item, i) => (
+                    <li key={i} className="flex gap-2 text-sm" style={{ color: COLORS.text.primary }}>
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ) : insightsRawText ? (
+          <div
+            className="mt-6 pt-5 border-t rounded-xl p-5 whitespace-pre-wrap text-sm"
+            style={{
+              borderColor: COLORS.border.light,
+              backgroundColor: COLORS.background.hover,
+              color: COLORS.text.primary,
+            }}
+          >
+            {insightsRawText}
+          </div>
+        ) : null}
       </div>
 
       {/* 피드백 목록 */}

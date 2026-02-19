@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, SlidersHorizontal, Check } from "lucide-react";
+import { Sparkles, SlidersHorizontal, Check, MessageCircle } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { type RecordType } from "./signup/RecordTypeCard";
 import { RecordForm } from "./home/RecordForm";
@@ -12,7 +12,8 @@ import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
 import { getKSTDateString } from "@/lib/date-utils";
-import { COLORS, SPACING, SHADOWS } from "@/lib/design-system";
+import { COLORS, SPACING, SHADOWS, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 import { CircularProgress } from "./ui/CircularProgress";
 import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
@@ -24,6 +25,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "./ui/dialog";
+import { motion } from "framer-motion";
 
 type DailyVividGenerationMode = "fast" | "reasoned";
 
@@ -227,6 +236,29 @@ export function Home({ selectedDate }: HomeProps = {}) {
     isReviewTab && !canCreateReview && !hasDateFeedback;
 
   const { isPro } = useSubscription();
+  const [isInsightDialogOpen, setIsInsightDialogOpen] = useState(false);
+  const insight = vividFeedback?.insight as
+    | { praise?: string[]; feedback?: string[]; improvements?: string[]; summary?: string }
+    | null
+    | undefined;
+  const hasStructuredInsight =
+    insight &&
+    ((insight.praise?.length ?? 0) > 0 ||
+      (insight.feedback?.length ?? 0) > 0 ||
+      (insight.improvements?.length ?? 0) > 0 ||
+      !!(insight.summary?.trim()));
+  const hasLegacyInsight = !!vividFeedback?.insight_message?.trim();
+  const hasInsightData = hasStructuredInsight || hasLegacyInsight;
+  // 인사이트는 type=vivid(비비드)일 때만 표시
+  const showInsightButton =
+    isPro &&
+    hasVividFeedback &&
+    hasInsightData &&
+    !!vividFeedback?.id;
+  const shouldShowInsightPulse =
+    showInsightButton &&
+    typeof window !== "undefined" &&
+    !localStorage.getItem(`vivid_insight_read_${vividFeedback?.id}`);
   const showGenerationModeSelector =
     isPro && !hasDateFeedback && !isCreateButtonDisabled; // 생성 가능할 때만 사고/빠른 모드 표시
 
@@ -582,6 +614,51 @@ export function Home({ selectedDate }: HomeProps = {}) {
               </div>
             </div>
 
+            {showInsightButton && (
+              <motion.div className="relative flex items-center justify-center w-9 h-9 overflow-visible">
+                {/* 피드백 생성 시 버튼 주변 pulse 애니메이션 (Framer Motion) */}
+                {shouldShowInsightPulse && (
+                  <motion.span
+                    className="absolute -inset-1 rounded-xl pointer-events-none"
+                    style={{
+                      border: `2px solid ${COLORS.brand.primary}`,
+                    }}
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 0, 0.5],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsInsightDialogOpen(true);
+                    if (vividFeedback?.id && typeof window !== "undefined") {
+                      localStorage.setItem(
+                        `vivid_insight_read_${vividFeedback.id}`,
+                        "1"
+                      );
+                    }
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-200"
+                  style={{
+                    backgroundColor: COLORS.background.card,
+                    border: `1px solid ${COLORS.border.light}`,
+                    color: COLORS.brand.primary,
+                    boxShadow: SHADOWS.elevation1,
+                  }}
+                  aria-label="오늘의 인사이트 보기"
+                >
+                  <MessageCircle className="w-4 h-4 relative z-10" />
+                </button>
+              </motion.div>
+            )}
+
             {showGenerationModeSelector && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -698,6 +775,159 @@ export function Home({ selectedDate }: HomeProps = {}) {
         open={!!deletingRecordId}
         onOpenChange={(open) => !open && setDeletingRecordId(null)}
       />
+
+      <Dialog
+        open={isInsightDialogOpen}
+        onOpenChange={setIsInsightDialogOpen}
+      >
+        <DialogContent
+          className={cn(
+            "w-[min(calc(100vw-24px),400px)] max-h-[85vh] p-4 sm:p-6",
+            "flex flex-col gap-4"
+          )}
+          style={{
+            backgroundColor: COLORS.background.card,
+            border: `1px solid ${COLORS.border.light}`,
+          }}
+        >
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle
+              className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
+              style={{ color: COLORS.text.primary }}
+            >
+              오늘의 인사이트
+            </DialogTitle>
+          </DialogHeader>
+          <div
+            className={cn(
+              "flex flex-col gap-4 overflow-y-auto max-h-[70vh]",
+              "text-sm leading-relaxed"
+            )}
+            style={{ color: COLORS.text.secondary }}
+          >
+            {hasStructuredInsight && insight ? (
+              <>
+                {insight.praise?.length ? (
+                  <div className="space-y-2">
+                    <h4
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight
+                      )}
+                      style={{ color: COLORS.section.summary.primary }}
+                    >
+                      잘 맞는 점
+                    </h4>
+                    <ul className="space-y-1.5 ml-0 list-none">
+                      {insight.praise.map((item, i) => (
+                        <li
+                          key={i}
+                          className="flex gap-2"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          <span
+                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: COLORS.section.summary.primary,
+                            }}
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {insight.feedback?.length ? (
+                  <div className="space-y-2">
+                    <h4
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight
+                      )}
+                      style={{ color: COLORS.section.insight.primary }}
+                    >
+                      피드백
+                    </h4>
+                    <ul className="space-y-1.5 ml-0 list-none">
+                      {insight.feedback.map((item, i) => (
+                        <li
+                          key={i}
+                          className="flex gap-2"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          <span
+                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: COLORS.section.insight.primary,
+                            }}
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {insight.improvements?.length ? (
+                  <div className="space-y-2">
+                    <h4
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight
+                      )}
+                      style={{ color: COLORS.section.feedback.primary }}
+                    >
+                      개선할 점
+                    </h4>
+                    <ul className="space-y-1.5 ml-0 list-none">
+                      {insight.improvements.map((item, i) => (
+                        <li
+                          key={i}
+                          className="flex gap-2"
+                          style={{ color: COLORS.text.secondary }}
+                        >
+                          <span
+                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                            style={{
+                              backgroundColor: COLORS.section.feedback.primary,
+                            }}
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {insight.summary?.trim() ? (
+                  <p
+                    className={cn(TYPOGRAPHY.bodySmall.fontSize, "pt-2")}
+                    style={{
+                      color: COLORS.text.tertiary,
+                      borderTop: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    {insight.summary}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <div className="whitespace-pre-wrap">
+                {vividFeedback?.insight_message}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="flex-shrink-0 flex flex-col gap-2 sm:flex-col">
+            <p
+              className={cn(TYPOGRAPHY.caption.fontSize)}
+              style={{
+                color: COLORS.text.muted,
+                lineHeight: 1.4,
+              }}
+            >
+              이 피드백은 AI가 생성한 것으로, 최종 선택은 사용자의 몫입니다.
+            </p>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

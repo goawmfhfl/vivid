@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminApiFetch } from "@/lib/admin-api-client";
+import { AdminSelect } from "./AdminSelect";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import type { Inquiry, InquiryStatus, InquiryType } from "@/types/inquiry";
@@ -357,66 +358,40 @@ export function InquiryList() {
         }}
       >
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              상태
-            </label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => {
-                setSelectedStatus(e.target.value as InquiryStatus | "all");
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="all">전체</option>
-              {statusOptions
+          <AdminSelect
+            label="상태"
+            value={selectedStatus}
+            onChange={(e) => {
+              setSelectedStatus(e.target.value as InquiryStatus | "all");
+              setPage(1);
+            }}
+            options={[
+              { value: "all", label: "전체" },
+              ...statusOptions
                 .filter((s) => s !== "all")
-                .map((status) => (
-                  <option key={status} value={status}>
-                    {INQUIRY_STATUS_LABELS[status]}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <div>
-            <label
-              className="block text-sm font-medium mb-2"
-              style={{ color: COLORS.text.secondary }}
-            >
-              타입
-            </label>
-            <select
-              value={selectedType}
-              onChange={(e) => {
-                setSelectedType(e.target.value as InquiryType | "all");
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.base,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="all">전체</option>
-              {typeOptions
+                .map((status) => ({
+                  value: status,
+                  label: INQUIRY_STATUS_LABELS[status],
+                })),
+            ]}
+          />
+          <AdminSelect
+            label="타입"
+            value={selectedType}
+            onChange={(e) => {
+              setSelectedType(e.target.value as InquiryType | "all");
+              setPage(1);
+            }}
+            options={[
+              { value: "all", label: "전체" },
+              ...typeOptions
                 .filter((t) => t !== "all")
-                .map((type) => (
-                  <option key={type} value={type}>
-                    {INQUIRY_TYPE_LABELS[type]}
-                  </option>
-                ))}
-            </select>
-          </div>
+                .map((type) => ({
+                  value: type,
+                  label: INQUIRY_TYPE_LABELS[type],
+                })),
+            ]}
+          />
         </div>
       </div>
 

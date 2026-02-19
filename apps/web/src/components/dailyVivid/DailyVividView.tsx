@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import {
   useGetDailyVividById,
 } from "@/hooks/useGetDailyVivid";
 import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
+import { useEnhanceDailyVivid } from "@/hooks/useEnhanceDailyVivid";
 import { VisionSection } from "./Vision";
 import { hasExecutionAnalysisData } from "./ExecutionAnalysisSection";
 import { EmptyState } from "./States";
@@ -78,6 +79,8 @@ export function DailyVividView({
   const view = data ? mapDailyVividRowToReport(data) : null;
   const { isPro } = useSubscription();
   const createDailyVivid = useCreateDailyVivid();
+  const enhanceMutation = useEnhanceDailyVivid();
+  const insightTriggeredRef = useRef(false);
   const openErrorModal = useModalStore((s) => s.openErrorModal);
   const setDailyVividProgress = useModalStore((s) => s.setDailyVividProgress);
   const clearDailyVividProgress = useModalStore((s) => s.clearDailyVividProgress);
@@ -105,6 +108,30 @@ export function DailyVividView({
     if (typeof window === "undefined" || !isRegenerateDialogOpen) return;
     localStorage.setItem(DAILY_VIVID_MODE_STORAGE_KEY, regenerationMode);
   }, [regenerationMode, isRegenerateDialogOpen]);
+
+  // Pro 전용: 상세 페이지 마운트 시 인사이트 생성 요청 (type=vivid일 때만)
+  useEffect(() => {
+    if (
+      !isPro ||
+      !data?.id ||
+      data?.is_vivid_ai_generated !== true ||
+      data.insight ||
+      data.insight_message ||
+      insightTriggeredRef.current ||
+      enhanceMutation.isPending
+    ) {
+      return;
+    }
+    insightTriggeredRef.current = true;
+    enhanceMutation.mutate({ id: data.id });
+  }, [
+    isPro,
+    data?.id,
+    data?.is_vivid_ai_generated,
+    data?.insight,
+    data?.insight_message,
+    enhanceMutation,
+  ]);
 
   const isRegenerating =
     createDailyVivid.isPending || timerProgress !== null;

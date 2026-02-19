@@ -12,12 +12,12 @@ export default function AdminLayout({
   return (
     <AdminAuthProvider>
       <div
-        className="flex min-h-screen"
+        className="flex h-screen overflow-hidden"
         style={{ backgroundColor: COLORS.background.base }}
       >
         <AdminSidebar />
-        <main className="flex-1 min-h-screen w-full lg:w-auto">
-          <div className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 max-w-full overflow-x-hidden">
+        <main className="flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 max-w-full">
             {children}
           </div>
         </main>

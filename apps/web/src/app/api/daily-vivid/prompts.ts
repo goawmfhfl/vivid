@@ -8,7 +8,8 @@ export function buildReportPrompt(
   _isPro: boolean = false,
   userName?: string,
   personaContext?: string,
-  todoCheckInfo?: { checked: number; total: number }
+  todoCheckInfo?: { checked: number; total: number },
+  hasIdealSelfInPersona?: boolean
 ): string {
   const targetRecords = records.filter(
     (r) =>
@@ -82,43 +83,56 @@ export function buildReportPrompt(
     "- [페르소나가 제공된 경우] 사용자의 걸림돌·에너지원 등 패턴과 오늘 실행을 연결하는 문장을 1개 정도 자연스럽게 넣을 수 있습니다.",
     "",
     "### 📊 일치도 분석",
+    hasIdealSelfInPersona
+      ? "- [페르소나의 지향하는 자아(ideal_self) 기반] Q1(오늘의 계획)과 페르소나에 기록된 '지향하는 자아'를 비교하여 일치도를 산정합니다. Q2는 보조 참고만 하세요."
+      : "- [Q2 기반] Q1(오늘의 계획)과 Q2(미래 비전)의 내용을 비교하여 일치도를 산정합니다.",
+    "",
     "9) alignment_score:",
-    "- Q1과 Q2의 내용이 얼마나 유사한지 단순 비교해 0-100점으로 산정합니다",
+    hasIdealSelfInPersona
+      ? "- Q1과 페르소나의 '지향하는 자아'가 얼마나 정렬되어 있는지 0-100점으로 산정합니다."
+      : "- Q1과 Q2의 내용이 얼마나 유사한지 단순 비교해 0-100점으로 산정합니다.",
     "- 기준: 핵심 키워드/주제의 겹침 정도만 반영하세요",
-    "- 높은 점수(80점 이상): 유사한 키워드·주제가 많이 겹침",
-    "- 중간 점수(50-79점): 일부만 겹침",
-    "- 낮은 점수(50점 미만): 거의 겹치지 않음",
+    "- 높은 점수(80점 이상): 오늘의 계획이 지향하는 모습과 잘 정렬됨",
+    "- 중간 점수(50-79점): 일부만 정렬됨",
+    "- 낮은 점수(50점 미만): 거의 정렬되지 않음",
     "- 과도한 해석 없이 유사성만 판단하세요",
     "- 결과는 가능한 한 빠르게 산출하세요",
     "",
     "10) alignment_analysis_points:",
-    "- Q1과 Q2 사이에서 핵심적으로 겹치는 키워드나 주제를 분석합니다.",
+    hasIdealSelfInPersona
+      ? "- Q1과 페르소나의 지향하는 자아 사이에서 핵심적으로 겹치는 키워드나 주제를 분석합니다."
+      : "- Q1과 Q2 사이에서 핵심적으로 겹치는 키워드나 주제를 분석합니다.",
     "- 점수 산정의 핵심 근거를 1~3개의 짧은 문장이나 키워드로 리스트업합니다.",
     '- 예시: ["\'성장\'이라는 공통 키워드", "아침 운동에 대한 의지가 일치함", "새로운 도전에 대한 긍정적 태도"]',
     "- 겹치는 주제가 적으면 \"공통 주제가 거의 없음\"과 같이 명시하세요.",
     "",
+    "11) alignment_based_on_persona:",
+    hasIdealSelfInPersona
+      ? "- 반드시 true를 반환합니다. (페르소나의 지향하는 자아를 기준으로 산정했으므로)"
+      : "- 반드시 false를 반환합니다. (Q2만 기준으로 산정했으므로)",
+    "",
     "### ⚡ 실행력 점수 (Q1 <-> Q3)",
-    "11) execution_score:",
+    "12) execution_score:",
     "- Q3가 있을 경우: Q1(계획)과 Q3(실행)의 일치도를 0-100점으로 산정합니다.",
     "- Q3가 없으면 반드시 null로 반환합니다.",
     todoCheckInfo
       ? `- [투두 체크리스트] 오늘의 할 일 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료. 이 비율을 execution_score 산정에 반드시 반영하세요. 체크 완료율이 높을수록 실행력 점수를 높게 산정합니다.`
       : "",
     "",
-    "12) execution_analysis_points:",
+    "13) execution_analysis_points:",
     "- Q3가 있을 경우에만 핵심 근거 1~3개를 작성합니다. 없으면 null.",
     todoCheckInfo
       ? `- [투두 체크리스트가 있는 경우] execution_analysis_points에 '체크리스트 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료'를 근거 중 하나로 포함하세요.`
       : "",
     "",
     "### 🔍 사용자 특성 분석",
-    "13) user_characteristics:",
+    "14) user_characteristics:",
     "- 기록 패턴과 내용을 분석해 도출한 사용자 특성을 최대 5가지 작성합니다.",
     "- [페르소나가 제공된 경우] 페르소나의 특성·지향과 오늘 기록이 맞는 부분을 우선 반영하세요. '이전에 파악한 너의 모습'과 일관되게.",
     "- '너는 이런 사람이다'라고 낙인찍지 말고, 가능성과 방향성을 보여주는 문장으로 작성하세요.",
     '- 예: "자기 성찰을 중시하는", "미래 지향적인", "감정 표현이 풍부한" 등',
     "",
-    "14) aspired_traits:",
+    "15) aspired_traits:",
     "- 오늘의 VIVID 기록(Q1, Q2 모두)에서 드러난 지향 모습을 최대 5가지 작성합니다.",
     "- [페르소나가 제공된 경우] 페르소나의 지향하는 자아·원동력과 오늘 기록에서 드러난 지향이 겹치는 부분을 반영하세요.",
     "- 사용자가 추구하는 가치와 방향성을 나타내는 특성으로 작성하세요.",

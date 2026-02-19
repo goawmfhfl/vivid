@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult;
   }
+  const currentAdminId = authResult.userId;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -56,6 +57,21 @@ export async function GET(request: NextRequest) {
       filteredUsers = filteredUsers.filter(
         (user) => (user.user_metadata?.role as string) === role
       );
+    }
+
+    // 현재 로그인한 관리자가 목록에 없으면 항상 포함 (본인 데이터 접근 가능)
+    const adminInList = filteredUsers.some((u) => u.id === currentAdminId);
+    if (!adminInList) {
+      const { data: { user: adminUser } } = await supabase.auth.admin.getUserById(currentAdminId);
+      if (adminUser) {
+        const matchesSearch = !search ||
+          adminUser.email?.toLowerCase().includes(search.toLowerCase()) ||
+          (adminUser.user_metadata?.name as string)?.toLowerCase().includes(search.toLowerCase());
+        const matchesRole = !role || (adminUser.user_metadata?.role as string) === role;
+        if (matchesSearch && matchesRole) {
+          filteredUsers = [adminUser, ...filteredUsers];
+        }
+      }
     }
 
     // 총 개수 계산 (필터링 후)

@@ -126,3 +126,17 @@ export function buildPersonaContextBlock(
   if (!body) return "";
   return `${PERSONA_INTRO}\n\n[사용자 페르소나 참고]\n${body}\n\n${PERSONA_OUTRO}`;
 }
+
+/**
+ * 페르소나에 '지향하는 자아'(ideal_self)가 있는지 확인.
+ * 일치도 분석 시 user_persona 기반으로 산정할 수 있는지 판단용.
+ */
+export function hasIdealSelfInPersona(
+  persona: Record<string, unknown> | null
+): boolean {
+  if (!persona || typeof persona !== "object") return false;
+  const identity = persona.identity as Record<string, unknown> | undefined;
+  if (!identity || typeof identity !== "object") return false;
+  const ideal = identity.ideal_self as unknown[] | undefined;
+  return Array.isArray(ideal) && ideal.some((x) => typeof x === "string" && x.trim().length > 0);
+}

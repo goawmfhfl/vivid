@@ -129,7 +129,6 @@ export async function saveDailyReport(
 
   const newReportDataToEncrypt: { [key: string]: unknown } = {
     report: report.report,
-    trend: null,
   };
 
   const encryptedNewReports = encryptDailyVivid(newReportDataToEncrypt);
@@ -139,7 +138,6 @@ export async function saveDailyReport(
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
     report: encryptedNewReports.report || null,
-    trend: null,
     is_vivid_ai_generated: isVivid,
     is_review_ai_generated: !isVivid,
     generation_duration_seconds: generationDurationSeconds ?? null,

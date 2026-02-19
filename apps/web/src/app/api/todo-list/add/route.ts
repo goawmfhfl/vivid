@@ -34,7 +34,7 @@ async function getOrCreateDailyVividForDate(
     timeZone: "Asia/Seoul",
   });
 
-  const encrypted = encryptDailyVivid({ report: null, trend: null });
+  const encrypted = encryptDailyVivid({ report: null });
   const { data: inserted, error: insertError } = await supabase
     .from(API_ENDPOINTS.DAILY_VIVID)
     .insert({
@@ -42,7 +42,6 @@ async function getOrCreateDailyVividForDate(
       report_date: date,
       day_of_week: dayOfWeek,
       report: encrypted.report ?? null,
-      trend: encrypted.trend ?? null,
       is_vivid_ai_generated: true,
       is_review_ai_generated: false,
     })

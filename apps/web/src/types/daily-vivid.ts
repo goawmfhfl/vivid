@@ -12,6 +12,7 @@ export interface Report {
   // 일치도 분석
   alignment_score: number; // 일치도 점수 - 오늘의 모습 vs 앞으로 되고 싶은 모습의 일치도 (0-100점 척도), 현재와 목표의 거리 측정
   alignment_analysis_points: string[]; // 일치도 점수 산정 근거 - Q1과 Q2에서 겹치는 키워드/주제 (1~3개)
+  alignment_based_on_persona?: boolean; // user_persona의 지향하는 자아 기반이면 true, Q2만 기준이면 false
 
   // 회고 인사이트 (Q3)
   retrospective_summary: string | null; // Q3 요약 (없으면 null)
@@ -44,6 +45,14 @@ export interface TrendData {
   personality_trait: string; // 나라는 사람의 성향 1개
 }
 
+/** Pro 전용: 구조화된 인사이트 (칭찬, 피드백, 개선할 점) */
+export interface DailyVividInsight {
+  praise: string[]; // 칭찬 - 잘한 점, 지향과 일치하는 점
+  feedback: string[]; // 피드백 - 관찰/분석
+  improvements: string[]; // 개선할 점 - 실행 가능한 제안
+  summary?: string; // (선택) 한 줄 요약
+}
+
 
 
 
@@ -68,4 +77,8 @@ export interface DailyVividRow {
   todoLists?: TodoListItem[]; // Pro 전용: Q1 기반 AI 투두 리스트
   /** 해당 날짜 vivid에서 생성된 네이티브 할 일 존재 여부 (스케줄된 항목 제외). 생성 버튼 분기용 */
   hasNativeTodoList?: boolean;
+  /** Pro 전용: 구조화된 인사이트 (칭찬, 피드백, 개선할 점) - JSONB 암호화 */
+  insight?: DailyVividInsight | null;
+  /** @deprecated insight로 마이그레이션됨. 하위 호환용 */
+  insight_message?: string | null;
 }

@@ -40,6 +40,10 @@ export const DailyVividReportSchema = {
         maxItems: 3,
         description: "비전 일치도 점수의 핵심 근거 3가지",
       },
+      alignment_based_on_persona: {
+        type: "boolean",
+        description: "일치도가 user_persona의 지향하는 자아(ideal_self)를 기준으로 산정되었으면 true, Q2만 기준이면 false",
+      },
       // 회고 인사이트 (Q3)
       retrospective_summary: {
         type: ["string", "null"],

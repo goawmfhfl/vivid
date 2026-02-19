@@ -34,6 +34,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { AdminSelect } from "./AdminSelect";
 
 interface UserDetailProps {
   userId: string;
@@ -254,13 +255,7 @@ export function UserDetail({ userId }: UserDetailProps) {
   const handleCreateSubscription = async () => {
     if (!user) return;
 
-    // 구독 정보가 이미 있으면 구독 관리 페이지로 이동
-    if (user.subscription) {
-      router.push(`/admin/subscriptions?userId=${user.id}`);
-      return;
-    }
-
-    // 구독 정보가 없으면 바로 생성
+    // 구독 정보가 없으면 생성
     setIsCreatingSubscription(true);
     try {
       const response = await adminApiFetch("/api/admin/subscriptions", {
@@ -893,64 +888,40 @@ export function UserDetail({ userId }: UserDetailProps) {
             <div className="space-y-4">
               {isEditingSubscription ? (
                 <>
-                  <div>
-                    <label
-                      className="text-xs font-medium block mb-2"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      플랜
-                    </label>
-                    <select
-                      value={subscriptionEditData.plan}
-                      onChange={(e) =>
-                        setSubscriptionEditData({
-                          ...subscriptionEditData,
-                          plan: e.target.value as "free" | "pro",
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-lg border text-base"
-                      style={{
-                        borderColor: COLORS.border.input,
-                        backgroundColor: COLORS.background.card,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      <option value="free">Free</option>
-                      <option value="pro">Pro</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      className="text-xs font-medium block mb-2"
-                      style={{ color: COLORS.text.secondary }}
-                    >
-                      상태
-                    </label>
-                    <select
-                      value={subscriptionEditData.status}
-                      onChange={(e) =>
-                        setSubscriptionEditData({
-                          ...subscriptionEditData,
-                          status: e.target.value as
-                            | "active"
-                            | "canceled"
-                            | "expired"
-                            | "past_due",
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-lg border text-base"
-                      style={{
-                        borderColor: COLORS.border.input,
-                        backgroundColor: COLORS.background.card,
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      <option value="active">활성</option>
-                      <option value="canceled">취소됨</option>
-                      <option value="expired">만료됨</option>
-                      <option value="past_due">연체</option>
-                    </select>
-                  </div>
+                  <AdminSelect
+                    label="플랜"
+                    value={subscriptionEditData.plan}
+                    onChange={(e) =>
+                      setSubscriptionEditData({
+                        ...subscriptionEditData,
+                        plan: e.target.value as "free" | "pro",
+                      })
+                    }
+                    options={[
+                      { value: "free", label: "Free" },
+                      { value: "pro", label: "Pro" },
+                    ]}
+                  />
+                  <AdminSelect
+                    label="상태"
+                    value={subscriptionEditData.status}
+                    onChange={(e) =>
+                      setSubscriptionEditData({
+                        ...subscriptionEditData,
+                        status: e.target.value as
+                          | "active"
+                          | "canceled"
+                          | "expired"
+                          | "past_due",
+                      })
+                    }
+                    options={[
+                      { value: "active", label: "활성" },
+                      { value: "canceled", label: "취소됨" },
+                      { value: "expired", label: "만료됨" },
+                      { value: "past_due", label: "연체" },
+                    ]}
+                  />
                   <div>
                     <label
                       className="text-xs font-medium block mb-2"
@@ -1047,25 +1018,26 @@ export function UserDetail({ userId }: UserDetailProps) {
                   </div>
                 </>
               ) : (
-                <>
+                <div className="space-y-4">
+                  {/* 구독 요약 카드 */}
                   <div
-                    className="flex items-center justify-between p-3 rounded-lg"
-                    style={{ backgroundColor: COLORS.background.hover }}
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl"
+                    style={{
+                      backgroundColor: COLORS.background.hover,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
                   >
                     <div>
-                      <label
-                        className="text-xs font-medium block mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
                         플랜
-                      </label>
+                      </p>
                       <span
-                        className="px-3 py-1 rounded-lg text-sm font-semibold"
+                        className="inline-block px-3 py-1.5 rounded-lg text-sm font-semibold"
                         style={{
                           backgroundColor:
                             user.subscription.plan === "pro"
                               ? COLORS.brand.light
-                              : COLORS.background.card,
+                              : COLORS.background.cardElevated,
                           color:
                             user.subscription.plan === "pro"
                               ? COLORS.brand.primary
@@ -1075,26 +1047,25 @@ export function UserDetail({ userId }: UserDetailProps) {
                         {user.subscription.plan === "pro" ? "Pro" : "Free"}
                       </span>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label
-                        className="text-xs font-medium block mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
                         상태
-                      </label>
+                      </p>
                       <span
-                        className="px-2 py-1 rounded text-xs font-medium"
+                        className="inline-block px-3 py-1.5 rounded-lg text-sm font-medium"
                         style={{
                           backgroundColor:
                             user.subscription.status === "active"
-                              ? COLORS.status.success + "20"
-                              : COLORS.status.error + "20",
+                              ? COLORS.status.success + "25"
+                              : user.subscription.status === "expired"
+                              ? COLORS.status.error + "25"
+                              : COLORS.background.cardElevated,
                           color:
                             user.subscription.status === "active"
                               ? COLORS.status.success
-                              : COLORS.status.error,
+                              : user.subscription.status === "expired"
+                              ? COLORS.status.error
+                              : COLORS.text.secondary,
                         }}
                       >
                         {user.subscription.status === "active"
@@ -1107,45 +1078,41 @@ export function UserDetail({ userId }: UserDetailProps) {
                       </span>
                     </div>
                     <div>
-                      <label
-                        className="text-xs font-medium block mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
                         구독 시작일
-                      </label>
-                      <p
-                        className="text-sm"
-                        style={{ color: COLORS.text.primary }}
-                      >
+                      </p>
+                      <p className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
                         {user.subscription.started_at
-                          ? new Date(
-                              user.subscription.started_at
-                            ).toLocaleDateString("ko-KR")
+                          ? new Date(user.subscription.started_at).toLocaleDateString("ko-KR")
                           : "-"}
                       </p>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 mt-2">
                     <div>
-                      <label
-                        className="text-xs font-medium block mb-1"
-                        style={{ color: COLORS.text.secondary }}
-                      >
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
                         만료일
-                      </label>
-                      <p
-                        className="text-sm"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {user.subscription.expires_at
-                          ? new Date(
-                              user.subscription.expires_at
-                            ).toLocaleDateString("ko-KR")
-                          : "-"}
                       </p>
+                      <p className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+                        {user.subscription.expires_at
+                          ? new Date(user.subscription.expires_at).toLocaleDateString("ko-KR")
+                          : "무기한"}
+                      </p>
+                      {user.subscription.expires_at &&
+                        user.subscription.status === "active" &&
+                        (() => {
+                          const exp = new Date(user.subscription!.expires_at!);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          exp.setHours(0, 0, 0, 0);
+                          const daysLeft = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                          return daysLeft >= 0 ? (
+                            <span className="text-xs block mt-0.5" style={{ color: COLORS.text.tertiary }}>
+                              D-{daysLeft} 남음
+                            </span>
+                          ) : null;
+                        })()}
                     </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           ) : (

@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       let hasMore = true;
       let query = supabase
         .from(API_ENDPOINTS.DAILY_VIVID)
-        .select("id, report, trend, user_id");
+        .select("id, report, user_id");
 
       if (userId) {
         query = query.eq("user_id", userId);
@@ -141,9 +141,7 @@ export async function POST(request: NextRequest) {
 
           try {
             // 이미 암호화된 데이터인지 확인
-            const isAlreadyEncrypted =
-              isJsonbEncrypted(feedback.report) ||
-              isJsonbEncrypted(feedback.trend);
+            const isAlreadyEncrypted = isJsonbEncrypted(feedback.report);
 
             if (isAlreadyEncrypted) {
               stats.daily.totalSkipped++;
@@ -156,16 +154,15 @@ export async function POST(request: NextRequest) {
               continue;
             }
 
-            // 암호화
-            const encryptedData = encryptDailyVivid({
+            // 암호화 (trend 컬럼 제거됨 - report만 업데이트)
+            const encrypted = encryptDailyVivid({
               report: feedback.report,
-              trend: feedback.trend,
             });
 
             // 업데이트
             const { error: updateError } = await supabase
               .from(API_ENDPOINTS.DAILY_VIVID)
-              .update(encryptedData)
+              .update({ report: encrypted.report })
               .eq("id", feedback.id);
 
             if (updateError) {

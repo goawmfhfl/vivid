@@ -10,6 +10,7 @@ import type {
 } from "@/types/vivid-feedback";
 import { Search, Star, Calendar, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminSelect } from "./AdminSelect";
 
 export function FeedbackManagementPage() {
   const [feedbacks, setFeedbacks] = useState<VividFeedback[]>([]);
@@ -272,63 +273,36 @@ export function FeedbackManagementPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 페이지 타입 필터 */}
-            <div>
-              <label
-                className={cn(TYPOGRAPHY.caption.fontSize, "block mb-2")}
-                style={{ color: COLORS.text.secondary }}
-              >
-                페이지 타입
-              </label>
-              <select
-                value={pageTypeFilter}
-                onChange={(e) => {
-                  setPageTypeFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full px-3 py-2 rounded-lg border"
-                style={{
-                  backgroundColor: COLORS.background.cardElevated,
-                  borderColor: COLORS.border.light,
-                  color: COLORS.text.primary,
-                }}
-              >
-                <option value="">전체</option>
-                <option value="daily">데일리</option>
-                <option value="weekly">주간</option>
-                <option value="monthly">월간</option>
-              </select>
-            </div>
-
-            {/* 별점 필터 */}
-            <div>
-              <label
-                className={cn(TYPOGRAPHY.caption.fontSize, "block mb-2")}
-                style={{ color: COLORS.text.secondary }}
-              >
-                별점
-              </label>
-              <select
-                value={ratingFilter}
-                onChange={(e) => {
-                  setRatingFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full px-3 py-2 rounded-lg border"
-                style={{
-                  backgroundColor: COLORS.background.cardElevated,
-                  borderColor: COLORS.border.light,
-                  color: COLORS.text.primary,
-                }}
-              >
-                <option value="">전체</option>
-                <option value="5">5점</option>
-                <option value="4">4점</option>
-                <option value="3">3점</option>
-                <option value="2">2점</option>
-                <option value="1">1점</option>
-              </select>
-            </div>
+            <AdminSelect
+              label="페이지 타입"
+              value={pageTypeFilter}
+              onChange={(e) => {
+                setPageTypeFilter(e.target.value);
+                setPage(1);
+              }}
+              options={[
+                { value: "", label: "전체" },
+                { value: "daily", label: "데일리" },
+                { value: "weekly", label: "주간" },
+                { value: "monthly", label: "월간" },
+              ]}
+            />
+            <AdminSelect
+              label="별점"
+              value={ratingFilter}
+              onChange={(e) => {
+                setRatingFilter(e.target.value);
+                setPage(1);
+              }}
+              options={[
+                { value: "", label: "전체" },
+                { value: "5", label: "5점" },
+                { value: "4", label: "4점" },
+                { value: "3", label: "3점" },
+                { value: "2", label: "2점" },
+                { value: "1", label: "1점" },
+              ]}
+            />
 
             {/* 시작 날짜 */}
             <div>

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { adminApiFetch } from "@/lib/admin-api-client";
+import { AdminSelect } from "./AdminSelect";
 import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { COLORS, CARD_STYLES } from "@/lib/design-system";
 import type { UserListItem } from "@/types/admin";
 import { Search, ChevronRight } from "lucide-react";
@@ -19,6 +21,7 @@ interface UserListResponse {
 
 export function UserList() {
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,40 +128,32 @@ export function UserList() {
                 }}
               />
             </div>
-            <select
+            <AdminSelect
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.card,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="">모든 역할</option>
-              <option value="user">유저</option>
-              <option value="admin">관리자</option>
-            </select>
-            <select
+              options={[
+                { value: "", label: "모든 역할" },
+                { value: "user", label: "유저" },
+                { value: "admin", label: "관리자" },
+              ]}
+              containerClassName="w-36"
+            />
+            <AdminSelect
               value={activeFilter}
               onChange={(e) => {
                 setActiveFilter(e.target.value);
                 setPage(1);
               }}
-              className="px-4 py-2 rounded-lg border"
-              style={{
-                borderColor: COLORS.border.input,
-                backgroundColor: COLORS.background.card,
-                color: COLORS.text.primary,
-              }}
-            >
-              <option value="">모든 상태</option>
-              <option value="true">활성</option>
-              <option value="false">비활성</option>
-            </select>
+              options={[
+                { value: "", label: "모든 상태" },
+                { value: "true", label: "활성" },
+                { value: "false", label: "비활성" },
+              ]}
+              containerClassName="w-36"
+            />
           </div>
         </form>
       </div>
@@ -252,9 +247,22 @@ export function UserList() {
                       onClick={() => router.push(`/admin/users/${user.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <span style={{ color: COLORS.text.primary }}>
-                          {user.name}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: COLORS.text.primary }}>
+                            {user.name || user.email || "-"}
+                          </span>
+                          {currentUser?.id === user.id && (
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-medium"
+                              style={{
+                                backgroundColor: COLORS.status.info + "25",
+                                color: COLORS.status.info,
+                              }}
+                            >
+                              본인
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span style={{ color: COLORS.text.secondary }}>
@@ -365,12 +373,25 @@ export function UserList() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3
-                        className="font-semibold text-base mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {user.name}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3
+                          className="font-semibold text-base"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          {user.name || user.email || "-"}
+                        </h3>
+                        {currentUser?.id === user.id && (
+                          <span
+                            className="px-2 py-0.5 rounded text-xs font-medium"
+                            style={{
+                              backgroundColor: COLORS.status.info + "25",
+                              color: COLORS.status.info,
+                            }}
+                          >
+                            본인
+                          </span>
+                        )}
+                      </div>
                       <p
                         className="text-sm"
                         style={{ color: COLORS.text.secondary }}

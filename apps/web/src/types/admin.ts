@@ -6,11 +6,14 @@ export interface AdminStats {
   totalUsers: number;
   activeUsers: number;
   proUsers: number;
-  todayAIRequests: number;
-  todayAICost: {
-    usd: number;
-    krw: number;
-  };
+  todayAIRequests?: number;
+  todayAICostKrw?: number;
+  /** 이번 달 AI 사용 유저 수 */
+  thisMonthAIUsers?: number;
+  /** 이번 달 총 AI 비용 (원) */
+  thisMonthAICostKrw?: number;
+  /** 유저당 평균 한달 API 사용 비용 (원) */
+  avgCostPerUserPerMonth?: number;
 }
 
 export interface UserListItem {

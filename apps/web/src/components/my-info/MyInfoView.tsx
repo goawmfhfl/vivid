@@ -20,6 +20,13 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+type MenuItem = {
+  title: string;
+  href: string;
+  enabled: boolean;
+  subtitle?: string;
+};
+
 export function MyInfoView() {
   const { data: currentUser, isLoading } = useCurrentUser();
   const { isPro } = useSubscription();
@@ -53,7 +60,7 @@ export function MyInfoView() {
   const userName = (metadata.name as string) || "사용자";
   const userEmail = currentUser.email || "";
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     ...(isDevelopment
       ? [
           {
@@ -66,6 +73,11 @@ export function MyInfoView() {
     {
       title: "쿠폰 등록",
       href: "/coupon/register",
+      enabled: true,
+    },
+    {
+      title: "설문 참여",
+      href: "/survey",
       enabled: true,
     },
     {
@@ -304,6 +316,7 @@ export function MyInfoView() {
             }
 
             // 일반 메뉴 아이템
+            const hasSubtitle = "subtitle" in item && item.subtitle;
             return (
               <Link
                 key={item.href}
@@ -323,12 +336,22 @@ export function MyInfoView() {
                   e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
-                <span
-                  className="text-base font-medium"
-                  style={{ color: COLORS.text.primary }}
-                >
-                  {item.title}
-                </span>
+                <div className="flex flex-col">
+                  <span
+                    className="text-base font-medium"
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {item.title}
+                  </span>
+                  {hasSubtitle && (
+                    <span
+                      className="text-xs mt-0.5"
+                      style={{ color: COLORS.text.tertiary }}
+                    >
+                      {item.subtitle}
+                    </span>
+                  )}
+                </div>
                 <ChevronRight
                   className="w-5 h-5 flex-shrink-0"
                   style={{ color: COLORS.text.tertiary }}

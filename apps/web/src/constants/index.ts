@@ -19,6 +19,7 @@ export const QUERY_KEYS = {
 
 // API Endpoints
 export const API_ENDPOINTS = {
+  SURVEY_SUBMISSIONS: "survey_submissions",
   RECORDS: "vivid_records",
   PROFILES: "profiles",
   DAILY_VIVID: "daily_vivid",

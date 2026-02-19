@@ -11,13 +11,18 @@ import {
 import { TodoListSchema, SYSTEM_PROMPT_TODO } from "./todo-schema";
 import type { Record as FeedbackRecord } from "./types";
 import { buildReportPrompt } from "./prompts";
-import type { Report, TrendData } from "@/types/daily-vivid";
+import type {
+  Report,
+  TrendData,
+  DailyVividInsight,
+} from "@/types/daily-vivid";
 import {
   generateCacheKey,
   getFromCache,
   setCache,
 } from "../utils/cache";
 import { withGeminiRetry } from "../utils/gemini-retry";
+import { enhanceSystemPromptWithGlobal } from "../shared/global-prompt";
 import type {
   Schema,
   ReportSchema,
@@ -531,7 +536,8 @@ async function generateReport(
   generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
   personaContext?: string,
-  todoCheckInfo?: { checked: number; total: number }
+  todoCheckInfo?: { checked: number; total: number },
+  hasIdealSelfInPersona?: boolean
 ): Promise<Report | null> {
   const dreamRecords = records.filter((r) => r.type === "vivid" || r.type === "dream");
 
@@ -547,7 +553,8 @@ async function generateReport(
     isPro,
     userName,
     personaContext,
-    todoCheckInfo
+    todoCheckInfo,
+    hasIdealSelfInPersona
   );
   const cacheKey = generateCacheKey(
     SYSTEM_PROMPT_REPORT,
@@ -565,6 +572,10 @@ async function generateReport(
       userId,
       generationMode
     );
+    // alignment_based_on_persona 누락 시 기본값 적용 (스키마 불안정 대비)
+    if (result && typeof result.alignment_based_on_persona !== "boolean") {
+      result.alignment_based_on_persona = hasIdealSelfInPersona ?? false;
+    }
     console.log(`[generateReport] 생성 완료 (Pro: ${isPro})`);
     return result;
   } catch (error) {
@@ -785,7 +796,8 @@ export async function generateAllReportsWithProgress(
   generationMode: "fast" | "reasoned" = "fast",
   userName?: string,
   personaContext?: string,
-  todoCheckInfo?: { checked: number; total: number }
+  todoCheckInfo?: { checked: number; total: number },
+  hasIdealSelfInPersona?: boolean
 ): Promise<{
   report: Report | null;
   trend: TrendData | null;
@@ -799,10 +811,234 @@ export async function generateAllReportsWithProgress(
     generationMode,
     userName,
     personaContext,
-    todoCheckInfo
+    todoCheckInfo,
+    hasIdealSelfInPersona
   );
   return {
     report,
     trend: null,
   };
+}
+
+const INSIGHT_SYSTEM_PROMPT = `
+당신은 사용자의 일상 계획과 지향하는 자아(persona)를 비교 분석하는 코치입니다.
+
+## 인사이트 작성 원칙
+1. **완전한 문장**: 모든 문장을 끝까지 완성합니다. "~적"처럼 형용사만으로 끝내지 않습니다.
+2. **구체적 연결**: 오늘의 계획과 페르소나(지향하는 자아, 관심사, 패턴)를 구체적으로 연결해 설명합니다.
+3. **실행 가능한 제안**: 막연한 조언이 아니라 "구체적으로 무엇을 할 수 있는지" 제시합니다.
+4. **친근하고 따뜻한 톤**: 비난보다 이해와 응원을 담아 작성합니다.
+
+## 출력 형식 (JSON)
+반드시 다음 형식으로만 응답:
+{
+  "praise": ["잘 맞는 점 문장1", "문장2"],
+  "feedback": ["피드백/관찰 문장1"],
+  "improvements": ["개선 제안 문장1"],
+  "summary": "한 줄 요약 (선택)"
+}
+
+- praise: 오늘 계획이 지향과 잘 맞는 점, 인정받을 만한 부분. 1~3개. 완전한 문장. "칭찬"이라는 단어는 사용하지 말고 관찰·인정 톤으로.
+- feedback: 관찰/분석. 1~2개. 완전한 문장.
+- improvements: 실행 가능한 구체적 제안. 1~2개. 완전한 문장.
+- summary: (선택) 한 줄 요약. 없으면 빈 문자열 또는 생략 가능.
+- 최소 1개 섹션은 비어있지 않아야 함.
+- 각 배열의 모든 문장을 끝까지 완성하세요. 중간에 끊기지 않도록 주의.
+`;
+
+/** 인사이트 생성 시도 (모델 지정) */
+async function tryGenerateInsightWithModel(
+  geminiClient: ReturnType<typeof getGeminiClient>,
+  modelName: string,
+  systemPrompt: string,
+  _prompt: string,
+  request: GenerateContentRequest,
+  report: Report
+): Promise<DailyVividInsight> {
+  const model = geminiClient.getGenerativeModel({
+    model: modelName,
+    systemInstruction: systemPrompt,
+  });
+
+  const result = await withGeminiRetry(() => model.generateContent(request));
+
+  let content: string;
+  try {
+    content = result.response.text();
+  } catch (e) {
+    throw new Error(`Gemini response.text() failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!content?.trim()) {
+    throw new Error("No content from Gemini (daily_vivid_insight)");
+  }
+
+  const parsed = parseJsonRobust(content, "daily_vivid_insight") as {
+    praise?: string[];
+    feedback?: string[];
+    improvements?: string[];
+    summary?: string;
+  };
+
+  const praise = Array.isArray(parsed?.praise)
+    ? parsed.praise.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    : [];
+  const feedback = Array.isArray(parsed?.feedback)
+    ? parsed.feedback.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    : [];
+  const improvements = Array.isArray(parsed?.improvements)
+    ? parsed.improvements.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    : [];
+
+  const resultInsight: DailyVividInsight = {
+    praise,
+    feedback,
+    improvements,
+  };
+  if (typeof parsed?.summary === "string" && parsed.summary.trim()) {
+    resultInsight.summary = parsed.summary.trim();
+  }
+
+  // 모든 섹션이 비어있으면 리포트 기반 폴백 summary 생성
+  if (praise.length === 0 && feedback.length === 0 && improvements.length === 0) {
+    const fallbackSummary =
+      report.current_summary?.slice(0, 80) ||
+      report.future_summary?.slice(0, 80) ||
+      "오늘의 기록을 바탕으로 한 인사이트입니다.";
+    resultInsight.summary = fallbackSummary + (fallbackSummary.length >= 80 ? "…" : "");
+  }
+
+  return resultInsight;
+}
+
+/** 리포트에서 폴백 인사이트 생성 (AI 실패 시) */
+function buildFallbackInsight(report: Report): DailyVividInsight {
+  const parts: string[] = [];
+  if (report.current_summary?.trim()) {
+    parts.push(report.current_summary.slice(0, 150));
+  }
+  if (report.future_summary?.trim()) {
+    parts.push(report.future_summary.slice(0, 150));
+  }
+  const summary =
+    parts.length > 0
+      ? parts.join(" ").slice(0, 120) + (parts.join(" ").length > 120 ? "…" : "")
+      : "오늘의 비비드 기록을 확인해 보세요.";
+  return {
+    praise: [],
+    feedback: [],
+    improvements: [],
+    summary,
+  };
+}
+
+/**
+ * Daily Vivid 인사이트 생성 (Pro 전용)
+ * Pro 실패 시 Flash fallback, 최종 실패 시 리포트 기반 폴백 반환
+ */
+export async function generateDailyVividInsight(
+  report: Report,
+  persona: Record<string, unknown>,
+  userName?: string
+): Promise<DailyVividInsight> {
+  const { formatPersonaForPrompt } = await import("@/lib/user-persona");
+  const personaBlock = formatPersonaForPrompt(persona);
+  if (!personaBlock?.trim()) {
+    throw new Error("Persona content is required for insight generation");
+  }
+
+  const geminiClient = getGeminiClient();
+  const enhancedSystemPrompt = enhanceSystemPromptWithGlobal(INSIGHT_SYSTEM_PROMPT, true);
+
+  const reportParts: string[] = [];
+  if (report.current_summary) {
+    reportParts.push(`[오늘의 요약]\n${report.current_summary}`);
+  }
+  if (report.current_evaluation) {
+    reportParts.push(`[오늘의 평가]\n${report.current_evaluation}`);
+  }
+  if (report.future_summary) {
+    reportParts.push(`[기대하는 모습]\n${report.future_summary}`);
+  }
+  if (report.future_evaluation) {
+    reportParts.push(`[기대 모습 평가]\n${report.future_evaluation}`);
+  }
+  if (
+    typeof report.alignment_score === "number" &&
+    Number.isFinite(report.alignment_score)
+  ) {
+    reportParts.push(`[일치도 점수] ${report.alignment_score}점`);
+  }
+  if (report.alignment_analysis_points?.length) {
+    reportParts.push(
+      `[일치도 근거] ${report.alignment_analysis_points.join(", ")}`
+    );
+  }
+  if (report.user_characteristics?.length) {
+    reportParts.push(
+      `[사용자 특성] ${report.user_characteristics.join(", ")}`
+    );
+  }
+  if (report.aspired_traits?.length) {
+    reportParts.push(`[지향하는 특성] ${report.aspired_traits.join(", ")}`);
+  }
+  const reportSummary = reportParts.join("\n\n");
+
+  const userLabel = userName ? `${userName}님` : "사용자";
+  const prompt = `[사용자 페르소나]
+${personaBlock}
+
+[오늘의 비비드 리포트]
+${reportSummary}
+
+---
+위 ${userLabel}의 오늘 계획과 페르소나를 비교 분석하여, praise/feedback/improvements 각각 1~3개씩 완전한 문장으로 JSON에 작성하세요.`;
+
+  const request = {
+    contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          praise: { type: "array", items: { type: "string" } },
+          feedback: { type: "array", items: { type: "string" } },
+          improvements: { type: "array", items: { type: "string" } },
+          summary: { type: "string" },
+        },
+        required: ["praise", "feedback", "improvements"],
+      },
+      maxOutputTokens: 2048,
+    },
+  } as unknown as GenerateContentRequest;
+
+  const maxAttempts = 3;
+  const models: [string] = ["gemini-3-flash-preview"];
+
+  for (const modelName of models) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await tryGenerateInsightWithModel(
+          geminiClient,
+          modelName,
+          enhancedSystemPrompt,
+          prompt,
+          request,
+          report
+        );
+      } catch (err) {
+        console.warn(
+          `[insight] ${modelName} attempt ${attempt}/${maxAttempts} failed:`,
+          err instanceof Error ? err.message : String(err)
+        );
+        if (attempt < maxAttempts) {
+          const delayMs = Math.min(2000 * Math.pow(2, attempt - 1), 8000);
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
+      }
+    }
+  }
+
+  // 모든 시도 실패 시 리포트 기반 폴백 반환 (요청 자체는 성공 처리)
+  console.warn("[insight] All model attempts failed, returning fallback insight");
+  return buildFallbackInsight(report);
 }

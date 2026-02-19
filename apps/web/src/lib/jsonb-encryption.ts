@@ -210,6 +210,9 @@ export function encryptDailyVivid(
     trend: feedback.trend
       ? encryptJsonbFields(feedback.trend as JsonbValue)
       : null,
+    insight: feedback.insight
+      ? encryptJsonbFields(feedback.insight as JsonbValue)
+      : null,
   };
 }
 
@@ -226,6 +229,9 @@ export function decryptDailyVivid(
       : null,
     trend: feedback.trend
       ? decryptJsonbFields(feedback.trend as JsonbValue)
+      : null,
+    insight: feedback.insight
+      ? decryptJsonbFields(feedback.insight as JsonbValue)
       : null,
   };
 }

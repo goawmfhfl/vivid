@@ -80,6 +80,7 @@ export function BottomNavigation() {
   // 내정보 관련 페이지 경로 목록
   const myInfoRelatedPaths = [
     "/my-info",
+    "/survey",
     "/coupon/register",
     "/faq",
     "/membership",

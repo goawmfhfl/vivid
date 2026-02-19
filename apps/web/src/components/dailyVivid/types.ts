@@ -28,6 +28,8 @@ export type DailyReportData = {
   alignment_score: number | null;
   /** 일치도 점수 산정 근거 (1~3개) */
   alignment_analysis_points?: string[];
+  /** user_persona의 지향하는 자아 기반 일치도 여부 (현재는 Q2 기반만 사용) */
+  alignment_based_on_persona?: boolean;
   /** 회고 요약 (Q3) */
   retrospective_summary?: string | null;
   /** 회고 평가 (Q3) */

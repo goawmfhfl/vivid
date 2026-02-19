@@ -9,13 +9,13 @@ import {
   LayoutDashboard,
   Users,
   BarChart3,
-  CreditCard,
   FileText,
   Settings,
   Menu,
   X,
   MessageSquare,
   Ticket,
+  ClipboardList,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -42,21 +42,9 @@ const menuItems = [
     enabled: true,
   },
   {
-    title: "구독 관리",
-    href: "/admin/subscriptions",
-    icon: CreditCard,
-    enabled: true,
-  },
-  {
     title: "쿠폰 관리",
     href: "/admin/coupons",
     icon: Ticket,
-    enabled: true,
-  },
-  {
-    title: "콘텐츠 통계",
-    href: "/admin/content",
-    icon: FileText,
     enabled: true,
   },
   {
@@ -75,6 +63,12 @@ const menuItems = [
     title: "피드백 관리",
     href: "/admin/user-feedbacks",
     icon: MessageSquare,
+    enabled: true,
+  },
+  {
+    title: "설문 결과",
+    href: "/admin/survey-results",
+    icon: ClipboardList,
     enabled: true,
   },
   {

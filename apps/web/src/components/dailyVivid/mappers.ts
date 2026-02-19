@@ -59,6 +59,7 @@ export function mapDailyVividRowToReport(
     future_keywords: futureKeywords,
     alignment_score: alignmentScore,
     alignment_analysis_points: alignmentAnalysisPoints,
+    alignment_based_on_persona: report?.alignment_based_on_persona,
     retrospective_summary: retrospectiveSummary,
     retrospective_evaluation: retrospectiveEvaluation,
     execution_score: executionScore,

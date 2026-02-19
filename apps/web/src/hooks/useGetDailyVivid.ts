@@ -30,7 +30,7 @@ const fetchDailyVividByDate = async (
     return {
       ...result.data,
       hasNativeTodoList: result.data.hasNativeTodoList ?? false,
-    };
+    } as DailyVividRow;
   }
   if (result.todoLists?.length) {
     return {
