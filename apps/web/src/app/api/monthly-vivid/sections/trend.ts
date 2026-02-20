@@ -6,6 +6,7 @@ import { generateCacheKey } from "../../utils/cache";
 
 /**
  * Monthly Trend 생성
+ * @param requestType - cron에서 호출 시 "user_trends_monthly", 그 외 "monthly_vivid"
  */
 export async function generateMonthlyTrend(
   report: MonthlyReport,
@@ -13,7 +14,8 @@ export async function generateMonthlyTrend(
   monthLabel: string,
   isPro: boolean,
   userId?: string,
-  userName?: string
+  userName?: string,
+  requestType: "monthly_vivid" | "user_trends_monthly" = "monthly_vivid"
 ): Promise<MonthlyTrendData | null> {
   const prompt = buildMonthlyTrendPrompt(report, month, monthLabel, userName);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_MONTHLY_TREND, prompt);
@@ -27,7 +29,7 @@ export async function generateMonthlyTrend(
       isPro,
       "monthly_trend",
       userId,
-      "monthly_vivid"
+      requestType
     );
 
     if (!response ||

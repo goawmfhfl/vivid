@@ -211,7 +211,7 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
           )}
         </div>
 
-        {/* 내용 - 수정 시 기존 UI 그대로 인라인 편집, 길게 누르면 순서 변경 가능 */}
+        {/* 내용 - 수정 시 표시 UI와 동일한 인라인 편집 (수정하기 메뉴로 진입) */}
         <div
           {...(!isEditing ? { ...attributes, ...listeners } : {})}
           className={cn(
@@ -245,7 +245,12 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
                 className={cn(
                   TYPOGRAPHY.bodySmall.fontSize,
                   TYPOGRAPHY.bodySmall.fontWeight,
-                  "w-full block break-words leading-relaxed bg-transparent outline-none border-none focus:ring-0 focus:outline-none p-0 m-0 appearance-none"
+                  "w-full block break-words whitespace-pre-wrap leading-relaxed",
+                  "outline-none border-0 focus:ring-0 focus:outline-none",
+                  "p-0 m-0 appearance-none min-w-0",
+                  "[&::-webkit-input-placeholder]:opacity-0",
+                  "[&::-moz-placeholder]:opacity-0",
+                  "[&::placeholder]:opacity-0"
                 )}
                 style={{
                   fontFamily: FONTS.sans,
@@ -255,6 +260,7 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
                   color: COLORS.text.primary,
                   textDecoration: item.is_checked ? "line-through" : "none",
                   opacity: item.is_checked ? 0.7 : 1,
+                  backgroundColor: "transparent",
                   caretColor: COLORS.text.primary,
                   boxShadow: "none",
                   WebkitAppearance: "none",
@@ -329,7 +335,7 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
                 className="flex items-center gap-2"
               >
                 <Calendar className="w-3.5 h-3.5" />
-                일정 바꾸기
+                일정 변경
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setShowDeleteDialog(true)}

@@ -5,9 +5,34 @@ import { getAuthenticatedUserIdFromRequest } from "@/app/api/utils/auth";
 import { API_ENDPOINTS } from "@/constants";
 import { FEEDBACK_REVALIDATE, getCacheControlHeader } from "@/constants/cache";
 import type { DailyVividRow } from "@/types/daily-vivid";
+import { getDailyVividType, isVividReport, isReviewReport } from "@/types/daily-vivid";
 
 function isValidScore(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+/** 꿈 일치도: vivid만. 실행력: review만. 날짜별로 병합 */
+function mergeByDate(entries: DailyVividRow[]): Array<{ report_date: string; alignment_score?: number; execution_score?: number }> {
+  const byDate = new Map<string, { alignment_score?: number; execution_score?: number }>();
+  for (const entry of entries) {
+    const report = entry.report;
+    if (!report) continue;
+    const rowType = getDailyVividType(entry);
+    const date = entry.report_date;
+    const existing = byDate.get(date) ?? {};
+
+    if (rowType === "vivid" && isVividReport(report) && isValidScore(report.alignment_score)) {
+      existing.alignment_score = report.alignment_score;
+    }
+    if (rowType === "review" && isReviewReport(report) && isValidScore(report.execution_score)) {
+      existing.execution_score = report.execution_score;
+    }
+    byDate.set(date, existing);
+  }
+  return Array.from(byDate.entries())
+    .filter(([, v]) => v.alignment_score != null || v.execution_score != null)
+    .map(([report_date, v]) => ({ report_date, ...v }))
+    .sort((a, b) => b.report_date.localeCompare(a.report_date));
 }
 
 export async function GET(request: NextRequest) {
@@ -47,24 +72,18 @@ export async function GET(request: NextRequest) {
         ) as unknown as DailyVividRow
     );
 
-    // 꿈 일치도(alignment_score)만 있으면 포함. execution_score는 회고(Q3) 있을 때만 있음
-    const filtered = decrypted.filter((entry) => {
-      const report = entry.report;
-      return report != null && isValidScore(report.alignment_score);
-    });
+    // type별 필터: 꿈 일치도=vivid만, 실행력=review만. 날짜별 병합
+    const merged = mergeByDate(decrypted);
+    const mergedAsRows = merged.map((m) => ({
+      report_date: m.report_date,
+      report: {
+        alignment_score: m.alignment_score,
+        execution_score: m.execution_score ?? null,
+      },
+    })) as DailyVividRow[];
 
     if (mode === "latest") {
-      // 최근 생성 데이터 기준으로 날짜별 1개만 선택
-      const perDateMap = new Map<string, DailyVividRow>();
-      for (const entry of filtered) {
-        if (!perDateMap.has(entry.report_date)) {
-          perDateMap.set(entry.report_date, entry);
-        }
-      }
-
-      // UI 그래프는 오래된 날짜 -> 최신 날짜 순서가 자연스러움
-      const latestCount = Array.from(perDateMap.values())
-        .slice(0, count)
+      const latestCount = mergedAsRows.slice(0, count)
         .sort((a, b) => a.report_date.localeCompare(b.report_date));
 
       return NextResponse.json(
@@ -81,7 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { data: filtered },
+      { data: mergedAsRows },
       {
         status: 200,
         headers: {

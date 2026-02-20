@@ -270,11 +270,8 @@ export const useCreateRecord = () => {
         return oldData;
       });
 
-      // 비비드/회고 작성 직후 오늘의 VIVID 리스트 즉시 갱신 (캐시 무효화 + refetch)
-      void queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RECORDS],
-        refetchType: "active",
-      });
+      // RECORDS는 setQueryData로 이미 즉시 반영됨. invalidate 시 refetch가 캐시를 덮어쓰며
+      // 지연을 유발할 수 있으므로 제외. DAILY_VIVID만 무효화 (피드백 생성 버튼 등 갱신용)
       void queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DAILY_VIVID],
         refetchType: "active",

@@ -22,7 +22,7 @@ async function getOrCreateDailyVividForDate(
     .select("id")
     .eq("user_id", userId)
     .eq("report_date", date)
-    .eq("is_vivid_ai_generated", true)
+    .eq("type", "vivid")
     .maybeSingle();
 
   if (fetchError) throw new Error(`Failed to fetch daily vivid: ${fetchError.message}`);
@@ -42,8 +42,7 @@ async function getOrCreateDailyVividForDate(
       report_date: date,
       day_of_week: dayOfWeek,
       report: encrypted.report ?? null,
-      is_vivid_ai_generated: true,
-      is_review_ai_generated: false,
+      type: "vivid",
     })
     .select("id")
     .single();

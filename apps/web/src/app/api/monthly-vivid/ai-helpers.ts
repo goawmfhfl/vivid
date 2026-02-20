@@ -35,7 +35,8 @@ export async function generateSection<T>(
   requestType:
     | "daily_vivid"
     | "weekly_vivid"
-    | "monthly_vivid" = "monthly_vivid"
+    | "monthly_vivid"
+    | "user_trends_monthly" = "monthly_vivid"
 ): Promise<T> {
   // 캐시에서 조회 (멤버십별로 캐시 키 구분)
   const proCacheKey = isPro ? `${cacheKey}_pro` : cacheKey;

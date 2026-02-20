@@ -1,5 +1,8 @@
 export type PageType = 'daily' | 'weekly' | 'monthly' | 'improvement';
 
+/** 데일리 페이지에서 vivid(비전) vs review(회고) 구분 */
+export type VividType = 'vivid' | 'review';
+
 /**
  * 유저 피드백 인터페이스
  * 사용자가 VIVID 페이지에 남긴 피드백 정보
@@ -7,6 +10,8 @@ export type PageType = 'daily' | 'weekly' | 'monthly' | 'improvement';
 export interface VividFeedback {
   id: string;
   page_type: PageType;
+  /** 데일리 페이지일 때만: vivid(비전) | review(회고) */
+  vivid_type?: VividType | null;
   rating: number | null; // 1-5 (개선점 피드백은 null)
   comment: string | null;
   content?: string | null; // 개선점 피드백용
@@ -17,6 +22,8 @@ export interface VividFeedback {
 
 export interface SubmitFeedbackRequest {
   pageType: PageType;
+  /** 데일리 페이지일 때만: vivid | review */
+  vividType?: VividType;
   rating: number; // 1-5
   comment?: string;
 }

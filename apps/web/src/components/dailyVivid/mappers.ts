@@ -1,38 +1,52 @@
 import type { DailyReportData } from "./types";
-import type { DailyVividRow, Report } from "@/types/daily-vivid";
+import type { DailyVividRow, Report, ReviewReport } from "@/types/daily-vivid";
+import { getDailyVividType, isReviewReport } from "@/types/daily-vivid";
 
 /**
  * jsonb 구조의 DailyVividRow를 평면 구조의 DailyReportData로 변환
- * 통합 report 구조를 사용
+ * Report(vivid) 또는 ReviewReport(review) 지원
  */
 export function mapDailyVividRowToReport(
   row: DailyVividRow
 ): DailyReportData {
-  // Report에서 데이터 추출
-  const report: Report | null = row.report;
-  // 오늘의 VIVID (현재 모습)
-  const currentSummary = report?.current_summary ?? "";
-  const currentEvaluation = report?.current_evaluation ?? "";
-  const currentKeywords = report?.current_keywords ?? [];
-  // 앞으로의 나의 모습 (미래 비전)
-  const futureSummary = report?.future_summary ?? "";
-  const futureEvaluation = report?.future_evaluation ?? "";
-  const futureKeywords = report?.future_keywords ?? [];
-  // 일치도 분석
-  const alignmentScore = report?.alignment_score ?? null;
+  const report = row.report;
+  const rowType = getDailyVividType(row);
+  const isReview = rowType === "review" || isReviewReport(report);
+  const r = report as Report | ReviewReport | null;
+
+  const currentSummary = !isReview && r && "current_summary" in r ? r.current_summary : "";
+  const currentEvaluation = !isReview && r && "current_evaluation" in r ? r.current_evaluation : "";
+  const currentKeywords = !isReview && r && "current_keywords" in r ? (r.current_keywords ?? []) : [];
+  const futureSummary = !isReview && r && "future_summary" in r ? r.future_summary : "";
+  const futureEvaluation = !isReview && r && "future_evaluation" in r ? r.future_evaluation : "";
+  const futureKeywords = !isReview && r && "future_keywords" in r ? (r.future_keywords ?? []) : [];
+  const alignmentScore = !isReview && r && "alignment_score" in r ? r.alignment_score : null;
   const alignmentAnalysisPoints =
-    report?.alignment_analysis_points ??
-    (report as { alignment_score_reason?: string[] })?.alignment_score_reason ??
-    [];
-  // 회고 인사이트
-  const retrospectiveSummary = report?.retrospective_summary ?? null;
-  const retrospectiveEvaluation = report?.retrospective_evaluation ?? null;
-  // 실행력 점수
-  const executionScore = report?.execution_score ?? null;
-  const executionAnalysisPoints = report?.execution_analysis_points ?? null;
-  // 사용자 특성 분석
-  const userCharacteristics = report?.user_characteristics ?? [];
-  const aspiredTraits = report?.aspired_traits ?? [];
+    !isReview && r && "alignment_analysis_points" in r
+      ? (r.alignment_analysis_points ?? [])
+      : (r as { alignment_score_reason?: string[] })?.alignment_score_reason ?? [];
+  const retrospectiveSummary = r && "retrospective_summary" in r ? (r.retrospective_summary ?? null) : null;
+  const retrospectiveEvaluation = r && "retrospective_evaluation" in r ? (r.retrospective_evaluation ?? null) : null;
+  const executionScore = r && "execution_score" in r ? r.execution_score : null;
+  const executionAnalysisPoints = r && "execution_analysis_points" in r ? (r.execution_analysis_points ?? []) : null;
+  const userCharacteristics = !isReview && r && "user_characteristics" in r ? (r.user_characteristics ?? []) : [];
+  const aspiredTraits = !isReview && r && "aspired_traits" in r ? (r.aspired_traits ?? []) : [];
+  const completedTodos = isReview && r ? (Array.isArray((r as ReviewReport).completed_todos) ? (r as ReviewReport).completed_todos : []) : undefined;
+  const uncompletedTodos = isReview && r ? (Array.isArray((r as ReviewReport).uncompleted_todos) ? (r as ReviewReport).uncompleted_todos : []) : undefined;
+  const todoFeedback = isReview && r ? (Array.isArray((r as ReviewReport).todo_feedback) ? (r as ReviewReport).todo_feedback : []) : undefined;
+  const dailySummary = isReview && r && "daily_summary" in r ? ((r as ReviewReport).daily_summary ?? "") : undefined;
+  const rawSuggested = isReview && r && "suggested_todos_for_tomorrow" in r
+    ? (r as ReviewReport).suggested_todos_for_tomorrow
+    : undefined;
+  const suggestedTodosForTomorrow =
+    rawSuggested &&
+    typeof rawSuggested === "object" &&
+    Array.isArray(rawSuggested.items)
+      ? {
+          reason: String(rawSuggested.reason ?? ""),
+          items: rawSuggested.items.filter((s): s is string => typeof s === "string"),
+        }
+      : undefined;
   
   // 하위 호환성을 위한 레거시 필드 매핑
   const visionSummary = currentSummary || futureSummary || "";
@@ -42,8 +56,7 @@ export function mapDailyVividRowToReport(
   const dreamGoals = null;
   const dreamerTraits = null;
 
-  // narrative_summary는 report의 current_summary를 사용
-  const narrativeSummary = currentSummary || futureSummary;
+  const narrativeSummary = isReview && dailySummary ? dailySummary : currentSummary || futureSummary;
 
   return {
     date: row.report_date,
@@ -59,14 +72,19 @@ export function mapDailyVividRowToReport(
     future_keywords: futureKeywords,
     alignment_score: alignmentScore,
     alignment_analysis_points: alignmentAnalysisPoints,
-    alignment_based_on_persona: report?.alignment_based_on_persona,
+    alignment_based_on_persona: !isReview && r && "alignment_based_on_persona" in r ? r.alignment_based_on_persona : undefined,
     retrospective_summary: retrospectiveSummary,
     retrospective_evaluation: retrospectiveEvaluation,
     execution_score: executionScore,
     execution_analysis_points: executionAnalysisPoints,
     user_characteristics: userCharacteristics,
     aspired_traits: aspiredTraits,
-    
+    completed_todos: completedTodos,
+    uncompleted_todos: uncompletedTodos,
+    todo_feedback: todoFeedback,
+    daily_summary: dailySummary,
+    suggested_todos_for_tomorrow: suggestedTodosForTomorrow,
+
     // 하위 호환성을 위한 레거시 필드
     vision_summary: visionSummary,
     vision_self: visionSelf,

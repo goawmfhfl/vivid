@@ -86,6 +86,7 @@ export function UserDetail({ userId }: UserDetailProps) {
     daily: Array<{
       id: string;
       type: "daily";
+      feedbackType?: "vivid" | "review";
       date: string;
       day_of_week: string | null;
       created_at: string;
@@ -1311,13 +1312,28 @@ export function UserDetail({ userId }: UserDetailProps) {
                             >
                               <div className="flex-1">
                                 <p
-                                  className="font-medium"
+                                  className="font-medium flex items-center gap-2"
                                   style={{ color: COLORS.text.primary }}
                                 >
                                   {new Date(fb.date).toLocaleDateString(
                                     "ko-KR"
                                   )}
                                   {fb.day_of_week && ` (${fb.day_of_week})`}
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                                    style={{
+                                      backgroundColor:
+                                        fb.feedbackType === "review"
+                                          ? COLORS.chart.execution + "30"
+                                          : COLORS.chart.alignment + "30",
+                                      color:
+                                        fb.feedbackType === "review"
+                                          ? COLORS.chart.execution
+                                          : COLORS.chart.alignment,
+                                    }}
+                                  >
+                                    {fb.feedbackType === "review" ? "회고" : "비비드"}
+                                  </span>
                                 </p>
                                 <p
                                   className="text-xs mt-1"

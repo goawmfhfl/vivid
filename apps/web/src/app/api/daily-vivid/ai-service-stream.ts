@@ -2,7 +2,9 @@ import { jsonrepair } from "jsonrepair";
 import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generative-ai";
 import {
   DailyVividReportSchema,
+  ReviewReportSchema,
   SYSTEM_PROMPT_REPORT,
+  SYSTEM_PROMPT_REVIEW,
   SYSTEM_PROMPT_TREND,
   TrendDataSchema,
   IntegratedDailyVividSchema,
@@ -10,9 +12,10 @@ import {
 } from "./schema";
 import { TodoListSchema, SYSTEM_PROMPT_TODO } from "./todo-schema";
 import type { Record as FeedbackRecord } from "./types";
-import { buildReportPrompt } from "./prompts";
+import { buildReportPrompt, buildReviewReportPrompt } from "./prompts";
 import type {
   Report,
+  ReviewReport,
   TrendData,
   DailyVividInsight,
 } from "@/types/daily-vivid";
@@ -30,6 +33,19 @@ import type {
   ApiError,
 } from "../types";
 import { logAIRequestAsync } from "@/lib/ai-usage-logger";
+import type { AIRequestType } from "@/lib/ai-usage-logger";
+
+/** sectionName → ai_requests request_type 매핑 */
+function mapSectionToRequestType(sectionName: string): AIRequestType {
+  const map: Record<string, AIRequestType> = {
+    report: "daily_vivid_report",
+    trend: "daily_vivid_trend",
+    integrated_report: "daily_vivid_integrated",
+    todo_list: "daily_vivid_todo_list",
+    review_report: "daily_vivid_review",
+  };
+  return map[sectionName] ?? "daily_vivid";
+}
 
 /**
  * AI 응답 JSON 파싱 (truncated/unterminated string 등 복구)
@@ -318,33 +334,28 @@ async function generateSection<T>(
         ) {
           result = firstValue as T;
         } else if (typeof firstValue === "string") {
-          // 첫 번째 값이 문자열인 경우 - parsed 자체를 확인하거나 다른 키 확인
-          console.warn(
-            `[${schemaObj.name}] First value is string, checking parsed structure:`,
-            {
-              parsed,
-              parsedKeys: Object.keys(parsed),
-              firstValue,
-            }
-          );
-
-          // parsed가 직접 원하는 구조인지 확인 (예: { report: {...} })
-          // 또는 다른 키를 확인
+          // 첫 번째 값이 문자열인 경우 - ReviewReport 등 평면 스키마는 parsed 자체가 결과
           const parsedRecord = parsed as Record<string, unknown>;
           const keys = Object.keys(parsedRecord);
-          const objectValue = keys.find(
-            (key) =>
-              parsedRecord[key] !== null &&
-              parsedRecord[key] !== undefined &&
-              typeof parsedRecord[key] === "object" &&
-              !Array.isArray(parsedRecord[key])
-          );
+          const keyCount = keys.length;
 
-          if (objectValue) {
-            result = parsedRecord[objectValue] as T;
-          } else {
-            // parsed 자체가 원하는 객체인 경우
+          // 평면 스키마(키 5개 이상): parsed가 전체 결과 (예: ReviewReport)
+          // 래퍼 스키마(키 1~2개): { report: {... } } 형태면 내부 객체 추출
+          if (keyCount >= 5) {
             result = parsed as T;
+          } else {
+            const objectValue = keys.find(
+              (key) =>
+                parsedRecord[key] !== null &&
+                parsedRecord[key] !== undefined &&
+                typeof parsedRecord[key] === "object" &&
+                !Array.isArray(parsedRecord[key])
+            );
+            if (objectValue) {
+              result = parsedRecord[objectValue] as T;
+            } else {
+              result = parsed as T;
+            }
           }
         } else {
           // 그 외의 경우 parsed 자체를 사용
@@ -435,11 +446,12 @@ async function generateSection<T>(
             cached_tokens: 0, // Gemini는 캐시 토큰 정보를 제공하지 않음
           }
         : null;
+      const requestType = mapSectionToRequestType(sectionName);
       if (usage) {
         logAIRequestAsync({
           userId,
           model: modelName,
-          requestType: "daily_vivid",
+          requestType,
           sectionName,
           usage,
           duration_ms,
@@ -500,10 +512,11 @@ async function generateSection<T>(
     if (userId) {
       const endTime = Date.now();
       const duration_ms = endTime - startTime;
+      const requestType = mapSectionToRequestType(sectionName);
       logAIRequestAsync({
         userId,
         model: modelName,
-        requestType: "daily_vivid",
+        requestType,
         sectionName,
         usage: {
           prompt_tokens: 0,
@@ -566,6 +579,13 @@ async function generateReport(
     // alignment_based_on_persona 누락 시 기본값 적용 (스키마 불안정 대비)
     if (result && typeof result.alignment_based_on_persona !== "boolean") {
       result.alignment_based_on_persona = hasIdealSelfInPersona ?? false;
+    }
+    // vivid 타입은 실행력 분석·회고를 생성하지 않음 (review 전용)
+    if (result) {
+      result.execution_score = null;
+      result.execution_analysis_points = null;
+      result.retrospective_summary = null;
+      result.retrospective_evaluation = null;
     }
     console.log(`[generateReport] 생성 완료 (Pro: ${isPro})`);
     return result;
@@ -760,6 +780,52 @@ export async function generateTodoListFromQ1(
 }
 
 /**
+ * 회고 전용 리포트 생성 (Q3 + 투두 + user_persona 기반)
+ */
+export async function generateReviewReport(
+  records: FeedbackRecord[],
+  date: string,
+  dayOfWeek: string,
+  todoItems: { contents: string; is_checked: boolean }[],
+  personaTraitsBlock: string,
+  isPro: boolean,
+  userId?: string,
+  userName?: string
+): Promise<ReviewReport | null> {
+  const prompt = buildReviewReportPrompt(
+    records,
+    date,
+    dayOfWeek,
+    todoItems,
+    personaTraitsBlock,
+    userName
+  );
+  if (!prompt.trim()) {
+    console.log("[generateReviewReport] Q3 기록 없어서 null 반환");
+    return null;
+  }
+
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_REVIEW, prompt);
+
+  try {
+    const result = await generateSection<ReviewReport>(
+      SYSTEM_PROMPT_REVIEW,
+      prompt,
+      ReviewReportSchema,
+      cacheKey,
+      isPro,
+      "review_report",
+      userId
+    );
+    console.log(`[generateReviewReport] 생성 완료 (Pro: ${isPro})`);
+    return result;
+  } catch (error) {
+    console.error("[generateReviewReport] 생성 실패:", error);
+    return null;
+  }
+}
+
+/**
  * 모든 타입별 리포트 생성
  * trend는 user_persona cron에서 관리하므로 여기서는 생성하지 않음.
  */
@@ -806,16 +872,16 @@ const INSIGHT_SYSTEM_PROMPT = `
 ## 출력 형식 (JSON)
 반드시 다음 형식으로만 응답:
 {
-  "praise": ["잘 맞는 점 문장1", "문장2"],
   "feedback": ["피드백/관찰 문장1"],
   "improvements": ["개선 제안 문장1"],
-  "summary": "한 줄 요약 (선택)"
+  "summary": "한 줄 요약 (선택)",
+  "suggested_today": ["오늘 할 일 제안1", "제안2"]
 }
 
-- praise: 오늘 계획이 지향과 잘 맞는 점, 인정받을 만한 부분. 1~3개. 완전한 문장. "칭찬"이라는 단어는 사용하지 말고 관찰·인정 톤으로.
 - feedback: 관찰/분석. 1~2개. 완전한 문장.
 - improvements: 실행 가능한 구체적 제안. 1~2개. 완전한 문장.
 - summary: (선택) 한 줄 요약. 없으면 빈 문자열 또는 생략 가능.
+- suggested_today: **필수. 절대 비우지 마세요.** 오늘 바로 실행할 수 있는 구체적인 할 일 2~5개. improvements가 있으면 각 항목을 "~하기", "~해보기" 형태로 변환하여 포함. improvements가 없어도 리포트/계획에서 오늘 하면 좋을 일을 도출. 각 항목은 15자 이내 짧은 문장. 예: "딱 5분만 해보기", "30분 산책하기", "중요한 일 1개 먼저 하기"
 - 최소 1개 섹션은 비어있지 않아야 함.
 - 각 배열의 모든 문장을 끝까지 완성하세요. 중간에 끊기지 않도록 주의.
 `;
@@ -827,14 +893,40 @@ async function tryGenerateInsightWithModel(
   systemPrompt: string,
   _prompt: string,
   request: GenerateContentRequest,
-  report: Report
+  report: Report,
+  userId?: string
 ): Promise<DailyVividInsight> {
+  const startTime = Date.now();
   const model = geminiClient.getGenerativeModel({
     model: modelName,
     systemInstruction: systemPrompt,
   });
 
   const result = await withGeminiRetry(() => model.generateContent(request));
+
+  // AI 사용량 로깅
+  if (userId) {
+    const usageMetadata = result.response.usageMetadata;
+    const usage = usageMetadata
+      ? {
+          prompt_tokens: usageMetadata.promptTokenCount || 0,
+          completion_tokens: usageMetadata.candidatesTokenCount || 0,
+          total_tokens: usageMetadata.totalTokenCount || 0,
+          cached_tokens: 0,
+        }
+      : null;
+    if (usage) {
+      logAIRequestAsync({
+        userId,
+        model: modelName,
+        requestType: "daily_vivid_insight",
+        sectionName: "insight",
+        usage,
+        duration_ms: Date.now() - startTime,
+        success: true,
+      });
+    }
+  }
 
   let content: string;
   try {
@@ -847,33 +939,45 @@ async function tryGenerateInsightWithModel(
   }
 
   const parsed = parseJsonRobust(content, "daily_vivid_insight") as {
-    praise?: string[];
     feedback?: string[];
     improvements?: string[];
     summary?: string;
+    suggested_today?: string[];
   };
 
-  const praise = Array.isArray(parsed?.praise)
-    ? parsed.praise.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
-    : [];
   const feedback = Array.isArray(parsed?.feedback)
     ? parsed.feedback.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
     : [];
   const improvements = Array.isArray(parsed?.improvements)
     ? parsed.improvements.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
     : [];
+  const suggestedToday = Array.isArray(parsed?.suggested_today)
+    ? parsed.suggested_today.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    : [];
 
   const resultInsight: DailyVividInsight = {
-    praise,
     feedback,
     improvements,
   };
   if (typeof parsed?.summary === "string" && parsed.summary.trim()) {
     resultInsight.summary = parsed.summary.trim();
   }
+  if (suggestedToday.length > 0) {
+    resultInsight.suggested_today = suggestedToday;
+  } else if (improvements.length > 0) {
+    // AI가 suggested_today를 비웠을 때 improvements에서 짧은 할 일 형태로 변환
+    const derived = improvements
+      .map((s) => {
+        const trimmed = s.replace(/[.!?].*$/, "").trim();
+        const short = trimmed.slice(0, 10).replace(/\s+$/, "");
+        return short.length >= 2 ? `${short}하기` : null;
+      })
+      .filter((x): x is string => !!x && x.length <= 20);
+    if (derived.length > 0) resultInsight.suggested_today = derived.slice(0, 5);
+  }
 
   // 모든 섹션이 비어있으면 리포트 기반 폴백 summary 생성
-  if (praise.length === 0 && feedback.length === 0 && improvements.length === 0) {
+  if (feedback.length === 0 && improvements.length === 0) {
     const fallbackSummary =
       report.current_summary?.slice(0, 80) ||
       report.future_summary?.slice(0, 80) ||
@@ -897,11 +1001,20 @@ function buildFallbackInsight(report: Report): DailyVividInsight {
     parts.length > 0
       ? parts.join(" ").slice(0, 120) + (parts.join(" ").length > 120 ? "…" : "")
       : "오늘의 비비드 기록을 확인해 보세요.";
+
+  // 폴백 시에도 오늘 제안하는 일은 기본 항목 제공
+  const fallbackSuggested: string[] = [];
+  if (report.current_keywords?.length) {
+    const kw = report.current_keywords[0];
+    if (kw && kw.length <= 8) fallbackSuggested.push(`${kw} 집중하기`);
+  }
+  fallbackSuggested.push("오늘의 기록 돌아보기", "내일 계획 세우기");
+
   return {
-    praise: [],
     feedback: [],
     improvements: [],
     summary,
+    suggested_today: fallbackSuggested.slice(0, 5),
   };
 }
 
@@ -912,7 +1025,8 @@ function buildFallbackInsight(report: Report): DailyVividInsight {
 export async function generateDailyVividInsight(
   report: Report,
   persona: Record<string, unknown>,
-  userName?: string
+  userName?: string,
+  userId?: string
 ): Promise<DailyVividInsight> {
   const { formatPersonaForPrompt } = await import("@/lib/user-persona");
   const personaBlock = formatPersonaForPrompt(persona);
@@ -965,7 +1079,8 @@ ${personaBlock}
 ${reportSummary}
 
 ---
-위 ${userLabel}의 오늘 계획과 페르소나를 비교 분석하여, praise/feedback/improvements 각각 1~3개씩 완전한 문장으로 JSON에 작성하세요.`;
+위 ${userLabel}의 오늘 계획과 페르소나를 비교 분석하여, feedback/improvements 각각 1~3개씩 완전한 문장으로 JSON에 작성하세요.
+suggested_today는 반드시 2~5개의 오늘 할 일 제안을 포함하세요. 비워두지 마세요. improvements가 있으면 그 내용을 "~하기" 형태로 변환해 넣고, 추가로 오늘 하면 좋을 일도 제안하세요.`;
 
   const request = {
     contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
@@ -974,12 +1089,16 @@ ${reportSummary}
       responseSchema: {
         type: "object",
         properties: {
-          praise: { type: "array", items: { type: "string" } },
           feedback: { type: "array", items: { type: "string" } },
           improvements: { type: "array", items: { type: "string" } },
           summary: { type: "string" },
+          suggested_today: {
+            type: "array",
+            items: { type: "string" },
+            description: "오늘 할 일로 바로 추가 가능한 구체적 제안 1~3개",
+          },
         },
-        required: ["praise", "feedback", "improvements"],
+        required: ["feedback", "improvements", "suggested_today"],
       },
       maxOutputTokens: 2048,
     },
@@ -997,7 +1116,8 @@ ${reportSummary}
           enhancedSystemPrompt,
           prompt,
           request,
-          report
+          report,
+          userId
         );
       } catch (err) {
         console.warn(

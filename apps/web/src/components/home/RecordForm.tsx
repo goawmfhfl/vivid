@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ChevronDown, ChevronUp, BookOpen, Lock, Loader2 } from "lucide-react";
+import { Plus, BookOpen, Lock, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
@@ -26,13 +26,13 @@ import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
 import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
+import { TodoGuidePanel } from "./TodoGuidePanel";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
 import {
   useCreateTodoList,
   useAddTodoItem,
   useReorderTodoItems,
 } from "@/hooks/useTodoList";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
   closestCenter,
@@ -49,12 +49,17 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { TodoItemRow } from "./TodoItemRow";
+import { motion } from "framer-motion";
+
+export type HomeTabType = "vivid" | "review" | "todo";
 
 interface RecordFormProps {
   onSuccess?: () => void;
   selectedDate?: string; // YYYY-MM-DD
   onTypeChange?: (type: RecordType | null) => void;
+  onTabChange?: (tab: HomeTabType) => void;
   initialType?: RecordType | null;
+  activeTab?: HomeTabType;
 }
 
 const STORAGE_KEY = "record-form-draft";
@@ -66,7 +71,9 @@ export function RecordForm({
   onSuccess,
   selectedDate,
   onTypeChange,
+  onTabChange,
   initialType,
+  activeTab: activeTabProp,
 }: RecordFormProps) {
   const [content, setContent] = useState("");
   const [q1Content, setQ1Content] = useState("");
@@ -78,9 +85,10 @@ export function RecordForm({
   const [emotionFactors, setEmotionFactors] = useState<string[]>([]);
   const [emotionReason, setEmotionReason] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
-  const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [internalTab, setInternalTab] = useState<HomeTabType>("vivid");
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
-  const [todoSectionExpanded, setTodoSectionExpanded] = useState(true);
+  const [showTodoGuidePanel, setShowTodoGuidePanel] = useState(false);
+  const activeTab = activeTabProp ?? internalTab;
   const [newTodoContents, setNewTodoContents] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const q1TextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -105,18 +113,11 @@ export function RecordForm({
   const todayIso = getKSTDateString();
   const targetDateIso = selectedDate || todayIso;
 
-  // 예정된 할 일(미래 날짜)일 때 드롭다운 닫힌 상태로 시작
-  useEffect(() => {
-    if (targetDateIso && targetDateIso > todayIso) {
-      setTodoSectionExpanded(false);
-    } else {
-      setTodoSectionExpanded(true);
-    }
-  }, [targetDateIso, todayIso]);
-
-  // 회고 탭에서만 오늘의 비비드 조회
+  // 회고·할 일 탭에서 오늘의 비비드 조회 (할 일 목록용)
   const vividDate =
-    selectedType === "review" && targetDateIso ? targetDateIso : "";
+    (selectedType === "review" || activeTab === "todo") && targetDateIso
+      ? targetDateIso
+      : "";
   const { data: vividFeedback } = useGetDailyVivid(vividDate, "vivid");
   const createTodoList = useCreateTodoList(targetDateIso || "");
   const addTodoItem = useAddTodoItem(targetDateIso || "");
@@ -152,26 +153,42 @@ export function RecordForm({
     if (!hasAppliedInitialTypeRef.current) {
       if (initialType && allowedTypes.includes(initialType)) {
         setSelectedType(initialType);
+        setInternalTab(initialType === "review" ? "review" : "vivid");
         hasAppliedInitialTypeRef.current = true;
         return;
       }
 
       if (allowedTypes.length > 0 && !selectedType) {
-        setSelectedType(allowedTypes[0] as RecordType);
+        const defaultType = allowedTypes[0] as RecordType;
+        setSelectedType(defaultType);
+        setInternalTab(defaultType === "review" ? "review" : "vivid");
         hasAppliedInitialTypeRef.current = true;
         return;
       }
     }
 
     if (selectedType && !allowedTypes.includes(selectedType)) {
-      // 현재 선택된 타입이 허용되지 않으면 첫 번째 타입으로 변경
-      setSelectedType(allowedTypes[0] as RecordType);
+      const fallback = allowedTypes[0] as RecordType;
+      setSelectedType(fallback);
+      setInternalTab(fallback === "review" ? "review" : "vivid");
     }
   }, [getRecordTypeOptions, selectedType, initialType]);
 
+  // 부모에서 activeTab 제어 시 internalTab 동기화
   useEffect(() => {
-    onTypeChange?.(selectedType);
-  }, [onTypeChange, selectedType]);
+    if (activeTabProp != null) {
+      setInternalTab(activeTabProp);
+      if (activeTabProp === "vivid") setSelectedType("dream");
+      else if (activeTabProp === "review") setSelectedType("review");
+    }
+  }, [activeTabProp]);
+
+  // 할 일 탭에서는 onTypeChange 호출 안 함 (URL이 type=review로 덮어쓰이는 것 방지)
+  useEffect(() => {
+    if (activeTab !== "todo") {
+      onTypeChange?.(selectedType);
+    }
+  }, [onTypeChange, selectedType, activeTab]);
 
   // localStorage에서 초기값 불러오기
   useEffect(() => {
@@ -762,12 +779,10 @@ export function RecordForm({
     }
   }, []);
 
-  const { allowedTypes, displayTypes } = getRecordTypeOptions();
+  const { allowedTypes } = getRecordTypeOptions();
   const recordType = selectedType || allowedTypes[0] || "dream";
-  const availableTypes = displayTypes;
   const isReviewLocked = !subscription?.isPro;
-  const isTypeDisabled = (typeId: RecordType) =>
-    typeId === "review" && isReviewLocked;
+  const isTodoLocked = !subscription?.isPro;
 
   // q3 textarea의 scrollIntoView 영구 오버라이드 (스크롤 점프 방지, 회고 탭 마운트 시 적용)
   useEffect(() => {
@@ -824,26 +839,30 @@ export function RecordForm({
     overlay: "rgba(127, 143, 122, 0.08)", // primary.500 기반
   };
 
-  // 외부 클릭 시 드롭다운 닫기
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (
-        showTypeSelector &&
-        !target.closest("[data-type-selector]") &&
-        !target.closest("[data-type-label]")
-      ) {
-        setShowTypeSelector(false);
+  const handleTabClick = useCallback(
+    (tab: HomeTabType) => {
+      if (tab === "review" && isReviewLocked) {
+        router.push("/membership");
+        return;
       }
-    };
-
-    if (showTypeSelector) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [showTypeSelector]);
+      // 할 일 탭: Pro 아니어도 탭 전환 (Pro 전용 메시지 표시)
+      if (tab === "todo" && isTodoLocked) {
+        setInternalTab("todo");
+        onTabChange?.("todo");
+        return;
+      }
+      setInternalTab(tab);
+      onTabChange?.(tab);
+      if (tab === "vivid") {
+        setSelectedType("dream");
+        onTypeChange?.("dream");
+      } else if (tab === "review") {
+        setSelectedType("review");
+        onTypeChange?.("review");
+      }
+    },
+    [isReviewLocked, isTodoLocked, onTabChange, onTypeChange, router]
+  );
 
   return (
     <>
@@ -875,208 +894,63 @@ export function RecordForm({
       )}
 
       <div className="mb-6">
-        {/* 모던한 타입 라벨 - 텍스트에어리어 위쪽 */}
-        {recordType && !timerState.isRunning && (
-          <div className="mb-3 flex justify-between items-center relative">
-            {/* 타이머 */}
+        {/* 비비드 | 회고 | 할 일 3탭 - 물결 인디케이터 */}
+        {!timerState.isRunning && (
+          <div className="mb-3 flex justify-between items-center gap-2">
             <Timer />
             <div
-              data-type-label
-              className="cursor-pointer inline-flex relative overflow-hidden"
-              onClick={() => setShowTypeSelector(!showTypeSelector)}
+              className="relative flex rounded-full p-1"
               style={{
-                background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
-                padding: "0.375rem 0.75rem",
-                borderRadius: "20px",
-                boxShadow: SHADOWS.default,
-                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background =
-                  GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
-                e.currentTarget.style.boxShadow = SHADOWS.elevation2;
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
-                  COLORS.brand.light,
-                  "50"
-                );
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
-                e.currentTarget.style.boxShadow = SHADOWS.default;
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
-                  COLORS.brand.light,
-                  "30"
-                );
+                backgroundColor: COLORS.background.hover,
+                border: `1px solid ${COLORS.border.light}`,
+                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
               }}
             >
-            <div className="relative z-10 flex items-center gap-1.5">
-              <span
+              {(
+                [
+                  { id: "vivid" as const, label: "VIVID", locked: false },
+                  { id: "review" as const, label: "회고", locked: isReviewLocked },
+                  { id: "todo" as const, label: "할 일", locked: isTodoLocked },
+                ] as const
+              ).map(({ id, label, locked }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => handleTabClick(id)}
+                  className="relative flex-1 min-w-0 px-3 py-1.5 text-center flex items-center justify-center gap-1 z-10 transition-colors duration-200"
+                  style={{
+                    fontSize: "0.6875rem",
+                    fontWeight: activeTab === id ? "600" : "500",
+                    color: activeTab === id ? COLORS.text.primary : COLORS.text.tertiary,
+                  }}
+                >
+                  {label}
+                  {locked && <Lock className="w-2.5 h-2.5 flex-shrink-0" style={{ color: COLORS.text.tertiary }} />}
+                </button>
+              ))}
+              {/* 물결처럼 흘러가는 선택 인디케이터 - 버튼과 정확히 정렬 */}
+              <motion.div
+                layoutId="tab-indicator"
+                className="absolute top-1 bottom-1 rounded-full z-0"
                 style={{
-                  fontSize: "0.75rem",
-                  fontWeight: "500",
-                  color: COLORS.text.secondary,
-                  letterSpacing: "0.01em",
+                  width: "calc((100% - 8px) / 3)",
+                  left: `calc(4px + ${["vivid", "review", "todo"].indexOf(activeTab)} * (100% - 8px) / 3)`,
+                  backgroundColor: COLORS.background.card,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset",
+                  border: `1px solid ${COLORS.border.light}`,
                 }}
-              >
-                {RECORD_TYPES.find((t) => t.id === recordType)?.title}
-              </span>
-              <ChevronDown
-                className="w-3 h-3"
-                style={{
-                  color: COLORS.text.tertiary,
-                  transform: showTypeSelector
-                    ? "rotate(180deg)"
-                    : "rotate(0deg)",
-                  transition: "transform 0.2s ease",
-                  opacity: 0.6,
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
                 }}
               />
             </div>
           </div>
+        )}
 
-          {/* 타입 선택 드롭다운 */}
-          {showTypeSelector && availableTypes.length > 0 && (
-            <div
-              data-type-selector
-              className="absolute z-30 overflow-hidden"
-              style={{
-                top: "100%",
-                right: 0,
-                marginTop: "0.5rem",
-                backgroundColor: COLORS.background.base,
-                borderRadius: "12px",
-                boxShadow: `
-                  0 4px 16px rgba(0,0,0,0.12),
-                  0 2px 8px rgba(0,0,0,0.08),
-                  inset 0 1px 0 rgba(255,255,255,0.6)
-                `,
-                border: `1px solid ${COLORS.border.light}`,
-                padding: "0.375rem",
-                minWidth: "160px",
-                // 종이 질감 배경 패턴
-                backgroundImage: `
-                  /* 가로 줄무늬 */
-                  repeating-linear-gradient(
-                    to bottom,
-                    transparent 0px,
-                    transparent 27px,
-                    rgba(107, 122, 111, 0.08) 27px,
-                    rgba(107, 122, 111, 0.08) 28px
-                  ),
-                  /* 종이 텍스처 노이즈 */
-                  repeating-linear-gradient(
-                    45deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(107, 122, 111, 0.01) 2px,
-                    rgba(107, 122, 111, 0.01) 4px
-                  )
-                `,
-                backgroundSize: "100% 28px, 8px 8px",
-                backgroundPosition: "0 2px, 0 0",
-                filter: "contrast(1.02) brightness(1.01)",
-              }}
-            >
-              {/* 종이 질감 오버레이 */}
-              <div
-                className="absolute inset-0 pointer-events-none rounded-xl"
-                style={{
-                  background: `
-                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 40%),
-                    radial-gradient(circle at 75% 75%, ${COLORS.brand.light}15 0%, transparent 40%)
-                  `,
-                  mixBlendMode: "overlay",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="relative z-10">
-                {availableTypes.map((typeId) => {
-                  const type = RECORD_TYPES.find((t) => t.id === typeId);
-                  if (!type) return null;
-                  const isLocked = type.id === "review" && isReviewLocked;
-                  const isDisabled = isTypeDisabled(type.id);
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      onClick={() => {
-                        if (isLocked) {
-                          setShowTypeSelector(false);
-                          router.push("/membership");
-                          return;
-                        }
-                        if (isDisabled) return;
-                        setSelectedType(type.id);
-                        onTypeChange?.(type.id);
-                        setShowTypeSelector(false);
-                      }}
-                      disabled={isDisabled && !isLocked}
-                      className="w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2"
-                      style={{
-                        backgroundColor:
-                          recordType === type.id
-                            ? COLORS.background.hover
-                            : "transparent",
-                        border:
-                          recordType === type.id
-                            ? `1px solid ${COLORS.brand.primary}`
-                            : "1px solid transparent",
-                        opacity: isDisabled && !isLocked ? 0.5 : 1,
-                        cursor: isLocked ? "pointer" : isDisabled ? "not-allowed" : "pointer",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (recordType !== type.id && (isLocked || !isDisabled)) {
-                          e.currentTarget.style.backgroundColor =
-                            COLORS.background.hover;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (recordType !== type.id && (isLocked || !isDisabled)) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.8125rem",
-                          color: COLORS.text.primary,
-                          fontWeight: recordType === type.id ? "500" : "400",
-                        }}
-                      >
-                        {type.title}
-                      </span>
-                      {isLocked && (
-                        <Lock
-                          className="w-3.5 h-3.5 ml-auto flex-shrink-0"
-                          style={{ color: COLORS.text.tertiary }}
-                        />
-                      )}
-                      {isDisabled && !isLocked && (
-                        <span
-                          className={TYPOGRAPHY.caption.fontSize}
-                          style={{
-                            color: COLORS.text.tertiary,
-                            marginLeft: "auto",
-                          }}
-                        >
-                          Pro 전용
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* dream 타입일 때 2개의 질문 입력 필드 */}
-      {recordType === "dream" ? (
+      {/* 비비드 탭: Q1, Q2만 */}
+      {activeTab === "vivid" && recordType === "dream" ? (
         <>
           {/* Q1 입력 필드 */}
           <div className="mb-4">
@@ -1332,261 +1206,9 @@ export function RecordForm({
             </Button>
           </div>
         </>
-      ) : recordType === "review" ? (
+      ) : activeTab === "review" && recordType === "review" ? (
         <>
-          {/* 오늘의 할 일 / 예정된 할 일 (Pro + (비비드 있음 또는 스케줄된 todo 있음 또는 미래 날짜)) */}
-          {subscription?.isPro &&
-            (vividFeedback?.is_vivid_ai_generated ||
-              (vividFeedback?.todoLists?.length ?? 0) > 0 ||
-              (targetDateIso && targetDateIso > todayIso)) && (
-            <div className="mb-4 space-y-2">
-              {/* 할 일이 없을 때: 실제 비비드+네이티브 없음+오늘/과거 → 생성 버튼만 */}
-              {vividFeedback?.report != null &&
-                vividFeedback?.is_vivid_ai_generated &&
-                !vividFeedback?.hasNativeTodoList &&
-                (!targetDateIso || targetDateIso <= todayIso) && (
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      createTodoList.mutate(undefined, {
-                        onError: (err) =>
-                          showToast(
-                            err instanceof Error
-                              ? err.message
-                              : "생성에 실패했어요."
-                          ),
-                      })
-                    }
-                    disabled={createTodoList.isPending}
-                    className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
-                    style={{
-                      backgroundColor: COLORS.primary[600],
-                      border: `2px solid ${COLORS.primary[600]}`,
-                      color: COLORS.text.white,
-                      fontWeight: "700",
-                      fontSize: "0.9375rem",
-                      boxShadow: SHADOWS.elevation2,
-                    }}
-                  >
-                    {createTodoList.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        생성 중...
-                      </>
-                    ) : (
-                      "오늘의 할 일 생성하기"
-                    )}
-                  </Button>
-                )}
-              {/* 할 일 목록 또는 예정된 할 일 드롭다운 (오늘+항목있음, 또는 미래날짜) */}
-              {((vividFeedback?.todoLists?.length ?? 0) > 0 ||
-                (targetDateIso && targetDateIso > todayIso)) && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setTodoSectionExpanded((p) => !p)}
-                    className="w-full text-left flex items-center justify-between gap-2 py-3 px-4 rounded-xl transition-colors hover:bg-black/[0.02]"
-                    style={{
-                      ...CARD_STYLES.default,
-                      borderRadius: "12px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "0.875rem",
-                        fontWeight: "600",
-                        color: COLORS.text.primary,
-                      }}
-                    >
-                      {targetDateIso && targetDateIso > todayIso
-                        ? "예정된 할 일"
-                        : "오늘의 할 일"}
-                    </span>
-                    {todoSectionExpanded ? (
-                      <ChevronUp
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: COLORS.text.tertiary }}
-                      />
-                    ) : (
-                      <ChevronDown
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: COLORS.text.tertiary }}
-                      />
-                    )}
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {todoSectionExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{
-                          duration: 0.25,
-                          ease: [0.4, 0, 0.2, 1],
-                        }}
-                        className="overflow-hidden"
-                      >
-                        {(vividFeedback?.todoLists?.length ?? 0) > 0 && (
-                        <div
-                          className="mt-2 px-3 py-2 rounded-xl space-y-0"
-                          style={{
-                            ...CARD_STYLES.default,
-                            borderRadius: "12px",
-                          }}
-                        >
-                          <DndContext
-                            sensors={dndSensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={(event: DragEndEvent) => {
-                              const { active, over } = event;
-                              if (!over || active.id === over.id) return;
-                              const items = vividFeedback?.todoLists ?? [];
-                              const oldIndex = items.findIndex(
-                                (i) => i.id === active.id
-                              );
-                              const newIndex = items.findIndex(
-                                (i) => i.id === over.id
-                              );
-                              if (oldIndex === -1 || newIndex === -1) return;
-                              const reordered = arrayMove(
-                                items,
-                                oldIndex,
-                                newIndex
-                              );
-                              reorderTodoItems.mutate(
-                                reordered.map((i) => i.id)
-                              );
-                            }}
-                          >
-                            <SortableContext
-                              items={
-                                vividFeedback?.todoLists?.map((i) => i.id) ?? []
-                              }
-                              strategy={verticalListSortingStrategy}
-                            >
-                              {vividFeedback?.todoLists?.map((item) => (
-                                <TodoItemRow
-                                  key={item.id}
-                                  item={item}
-                                  date={targetDateIso || ""}
-                                />
-                              ))}
-                            </SortableContext>
-                          </DndContext>
-                        </div>
-                        )}
-                        {targetDateIso &&
-                          targetDateIso > todayIso &&
-                          (vividFeedback?.todoLists?.length ?? 0) === 0 && (
-                            <div
-                              className="mt-2 px-3 py-6 rounded-xl text-center"
-                              style={{
-                                ...CARD_STYLES.default,
-                                borderRadius: "12px",
-                                color: COLORS.text.tertiary,
-                                fontSize: "0.8125rem",
-                              }}
-                            >
-                              예정된 할 일이 없습니다.
-                            </div>
-                          )}
-                        {/* 새 할 일 입력: 생성 후 오늘의 할 일, 또는 예정된 할 일(미래 날짜) 드롭다운 안에서 표시 */}
-                        {(vividFeedback?.hasNativeTodoList ||
-                          (targetDateIso && targetDateIso > todayIso)) && (
-                        <div className="mt-2 flex gap-2 items-stretch">
-                              <input
-                                type="text"
-                                value={newTodoContents}
-                                onChange={(e) =>
-                                  setNewTodoContents(e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") {
-                                    if (e.nativeEvent.isComposing || addTodoItem.isPending) return;
-                                    e.preventDefault();
-                                    const trimmed = (e.target as HTMLInputElement).value.trim();
-                                    if (trimmed) {
-                                      addTodoItem.mutate(trimmed, {
-                                        onSuccess: () =>
-                                          setNewTodoContents(""),
-                                        onError: (err) => {
-                                          showToast(
-                                            err instanceof Error
-                                              ? err.message
-                                              : "추가에 실패했어요."
-                                          );
-                                          setNewTodoContents(trimmed);
-                                        },
-                                      });
-                                      setNewTodoContents("");
-                                    }
-                                  }
-                                }}
-                                placeholder="새 할 일 입력..."
-                                className="flex-1 h-10 px-3 rounded-lg text-sm outline-none transition-colors placeholder:text-muted-foreground"
-                                style={{
-                                  fontFamily: FONTS.sans,
-                                  border: `1.5px solid ${COLORS.border.light}`,
-                                  backgroundColor: COLORS.background.base,
-                                  color: COLORS.text.primary,
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor =
-                                    COLORS.brand.primary;
-                                  e.target.style.boxShadow = `0 0 0 2px ${COLORS.brand.primary}30`;
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor =
-                                    COLORS.border.light;
-                                  e.target.style.boxShadow = "none";
-                                }}
-                              />
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => {
-                                  const trimmed = newTodoContents.trim();
-                                  if (trimmed) {
-                                    addTodoItem.mutate(trimmed, {
-                                      onSuccess: () =>
-                                        setNewTodoContents(""),
-                                      onError: (err) => {
-                                        showToast(
-                                          err instanceof Error
-                                            ? err.message
-                                            : "추가에 실패했어요."
-                                        );
-                                        setNewTodoContents(trimmed);
-                                      },
-                                    });
-                                    setNewTodoContents("");
-                                  }
-                                }}
-                                disabled={
-                                  addTodoItem.isPending ||
-                                  !newTodoContents.trim()
-                                }
-                                className="h-10 rounded-lg text-sm font-semibold min-w-[72px] transition-all hover:opacity-90 active:scale-[0.98]"
-                                style={{
-                                  backgroundColor: COLORS.brand.primary,
-                                  color: COLORS.text.white,
-                                  border: `1.5px solid ${COLORS.brand.primary}`,
-                                  boxShadow: SHADOWS.elevation2,
-                                }}
-                              >
-                                추가
-                              </Button>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Q3 입력 필드 */}
+          {/* 회고 탭: Q3만 (할 일 없음) */}
           <div className="mb-4">
             <div
               className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
@@ -1750,6 +1372,229 @@ export function RecordForm({
             onClose={() => setShowReviewGuidePanel(false)}
           />
         </>
+      ) : activeTab === "todo" && subscription?.isPro ? (
+        /* 할 일 탭: 할 일만 관리, 항상 펼쳐진 상태 */
+        <div className="mb-4 space-y-2">
+          {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 가이드 버튼 (항상 표시) */}
+          <div className="flex items-center justify-between gap-2 w-full">
+            <span
+              className="text-base font-semibold"
+              style={{ color: COLORS.text.primary, fontSize: "0.875rem" }}
+            >
+              {targetDateIso && targetDateIso > todayIso
+                ? "예정된 할 일"
+                : "오늘의 할 일"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowTodoGuidePanel(true)}
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+              style={{
+                background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                color: COLORS.brand.primary,
+                boxShadow: SHADOWS.default,
+              }}
+              aria-label="할 일 가이드 보기"
+              title="가이드"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+          </div>
+          <TodoGuidePanel
+            open={showTodoGuidePanel}
+            onClose={() => setShowTodoGuidePanel(false)}
+          />
+          {!vividFeedback?.report && (!targetDateIso || targetDateIso <= todayIso) ? (
+            <div
+              className="px-3 py-6 rounded-xl text-center"
+              style={{
+                ...CARD_STYLES.default,
+                borderRadius: "12px",
+                color: COLORS.text.tertiary,
+                fontSize: "0.8125rem",
+              }}
+            >
+              비비드와 회고를 먼저 작성하면 할 일을 생성할 수 있어요.
+            </div>
+          ) : (
+            <>
+              {vividFeedback?.report != null &&
+                (vividFeedback?.type === "vivid" || vividFeedback?.is_vivid_ai_generated) &&
+                !vividFeedback?.hasNativeTodoList &&
+                (!targetDateIso || targetDateIso <= todayIso) && (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      createTodoList.mutate(undefined, {
+                        onError: (err) =>
+                          showToast(
+                            err instanceof Error ? err.message : "생성에 실패했어요."
+                          ),
+                      })
+                    }
+                    disabled={createTodoList.isPending}
+                    className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    style={{
+                      backgroundColor: COLORS.primary[600],
+                      border: `2px solid ${COLORS.primary[600]}`,
+                      color: COLORS.text.white,
+                      fontWeight: "700",
+                      fontSize: "0.9375rem",
+                      boxShadow: SHADOWS.elevation2,
+                    }}
+                  >
+                    {createTodoList.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        생성 중...
+                      </>
+                    ) : (
+                      "오늘의 할 일 생성하기"
+                    )}
+                  </Button>
+                )}
+              <div className="space-y-2">
+                {(vividFeedback?.todoLists?.length ?? 0) > 0 ? (
+                  <div
+                    className="px-3 py-2 rounded-xl space-y-0"
+                    style={{ ...CARD_STYLES.default, borderRadius: "12px" }}
+                  >
+                    <DndContext
+                      sensors={dndSensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event: DragEndEvent) => {
+                        const { active, over } = event;
+                        if (!over || active.id === over.id) return;
+                        const items = vividFeedback?.todoLists ?? [];
+                        const oldIndex = items.findIndex((i) => i.id === active.id);
+                        const newIndex = items.findIndex((i) => i.id === over.id);
+                        if (oldIndex === -1 || newIndex === -1) return;
+                        const reordered = arrayMove(items, oldIndex, newIndex);
+                        reorderTodoItems.mutate(reordered.map((i) => i.id));
+                      }}
+                    >
+                      <SortableContext
+                        items={vividFeedback?.todoLists?.map((i) => i.id) ?? []}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {vividFeedback?.todoLists?.map((item) => (
+                          <TodoItemRow
+                            key={item.id}
+                            item={item}
+                            date={targetDateIso || ""}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                ) : (
+                  <div
+                    className="px-3 py-6 rounded-xl text-center"
+                    style={{
+                      ...CARD_STYLES.default,
+                      borderRadius: "12px",
+                      color: COLORS.text.tertiary,
+                      fontSize: "0.8125rem",
+                    }}
+                  >
+                    {targetDateIso && targetDateIso > todayIso
+                      ? "예정된 할 일이 없습니다."
+                      : "오늘의 할 일이 없습니다."}
+                  </div>
+                )}
+                {(vividFeedback?.hasNativeTodoList ||
+                (targetDateIso && targetDateIso > todayIso)) && (
+                <div className="flex gap-2 items-stretch">
+                  <input
+                    type="text"
+                    value={newTodoContents}
+                    onChange={(e) => setNewTodoContents(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (e.nativeEvent.isComposing || addTodoItem.isPending) return;
+                        e.preventDefault();
+                        const trimmed = (e.target as HTMLInputElement).value.trim();
+                        if (trimmed) {
+                          addTodoItem.mutate(trimmed, {
+                            onSuccess: () => setNewTodoContents(""),
+                            onError: (err) => {
+                              showToast(
+                                err instanceof Error ? err.message : "추가에 실패했어요."
+                              );
+                              setNewTodoContents(trimmed);
+                            },
+                          });
+                          setNewTodoContents("");
+                        }
+                      }
+                    }}
+                    placeholder="새 할 일 입력..."
+                    className="flex-1 h-10 px-3 rounded-lg text-sm outline-none transition-colors placeholder:text-muted-foreground"
+                    style={{
+                      fontFamily: FONTS.sans,
+                      border: `1.5px solid ${COLORS.border.light}`,
+                      backgroundColor: COLORS.background.base,
+                      color: COLORS.text.primary,
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = COLORS.brand.primary;
+                      e.target.style.boxShadow = `0 0 0 2px ${COLORS.brand.primary}30`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = COLORS.border.light;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      const trimmed = newTodoContents.trim();
+                      if (trimmed) {
+                        addTodoItem.mutate(trimmed, {
+                          onSuccess: () => setNewTodoContents(""),
+                          onError: (err) => {
+                            showToast(
+                              err instanceof Error ? err.message : "추가에 실패했어요."
+                            );
+                            setNewTodoContents(trimmed);
+                          },
+                        });
+                        setNewTodoContents("");
+                      }
+                    }}
+                    disabled={
+                      addTodoItem.isPending || !newTodoContents.trim()
+                    }
+                    className="h-10 rounded-lg text-sm font-semibold min-w-[72px] transition-all hover:opacity-90 active:scale-[0.98]"
+                    style={{
+                      backgroundColor: COLORS.brand.primary,
+                      color: COLORS.text.white,
+                      border: `1.5px solid ${COLORS.brand.primary}`,
+                      boxShadow: SHADOWS.elevation2,
+                    }}
+                  >
+                    추가
+                  </Button>
+                </div>
+              )}
+              </div>
+            </>
+          )}
+        </div>
+      ) : activeTab === "todo" && !subscription?.isPro ? (
+        <div
+          className="px-3 py-8 rounded-xl text-center"
+          style={{
+            ...CARD_STYLES.default,
+            borderRadius: "12px",
+            color: COLORS.text.tertiary,
+            fontSize: "0.875rem",
+          }}
+        >
+          할 일 관리는 Pro 회원 전용 기능이에요.
+        </div>
       ) : recordType === "emotion" ? (
         <div
           className={cn(

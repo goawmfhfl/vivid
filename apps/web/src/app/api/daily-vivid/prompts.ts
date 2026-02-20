@@ -24,7 +24,7 @@ export function buildReportPrompt(
     personaContext && personaContext.trim()
       ? personaContext.trim() +
         "\n\n[페르소나 반영 지침]\n" +
-        "- current_evaluation, future_evaluation, retrospective_evaluation 중 적어도 1~2곳에서, 이 사용자의 페르소나(특성·지향·패턴)와 오늘 기록을 연결하는 문장을 자연스럽게 넣어주세요.\n" +
+        "- current_evaluation, future_evaluation 중 적어도 1~2곳에서, 이 사용자의 페르소나(특성·지향·패턴)와 오늘 기록을 연결하는 문장을 자연스럽게 넣어주세요.\n" +
         "- 예: '평소 몰입을 추구하는 성향이 오늘의 기록에서도 드러난다', '지향하는 자아와 오늘의 비전이 잘 맞닿아 있다' 등. 과하지 않게, 1문장 정도로.\n" +
         "- user_characteristics나 aspired_traits에 페르소나와 일치하는 특성이 있으면 그대로 반영하세요.\n\n"
       : "";
@@ -72,22 +72,12 @@ export function buildReportPrompt(
     "- Q2 답변에서 자주 등장한 키워드를 추출합니다.",
     "- 지향하는 가치와 목표를 나타내는 핵심 단어들로 5~8개 정도 뽑아주세요.",
     "",
-    "### 🔎 회고 인사이트 - Q3 분석",
-    "7) retrospective_summary:",
-    "- Q3가 있을 때만 회고 요약을 작성합니다. 없으면 반드시 null로 반환합니다.",
-    "- 오늘의 실행/경험을 간결하게 정리하되, 구체적인 맥락을 포함합니다.",
-    "",
-    "8) retrospective_evaluation:",
-    "- Q3가 있을 때만 회고 평가를 작성합니다. 없으면 반드시 null로 반환합니다.",
-    "- 오늘의 회고에 어울리는 피드백을 담백하고 따뜻한 톤으로 작성합니다.",
-    "- [페르소나가 제공된 경우] 사용자의 걸림돌·에너지원 등 패턴과 오늘 실행을 연결하는 문장을 1개 정도 자연스럽게 넣을 수 있습니다.",
-    "",
     "### 📊 일치도 분석",
     hasIdealSelfInPersona
       ? "- [페르소나의 지향하는 자아(ideal_self) 기반] Q1(오늘의 계획)과 페르소나에 기록된 '지향하는 자아'를 비교하여 일치도를 산정합니다. Q2는 보조 참고만 하세요."
       : "- [Q2 기반] Q1(오늘의 계획)과 Q2(미래 비전)의 내용을 비교하여 일치도를 산정합니다.",
     "",
-    "9) alignment_score:",
+    "7) alignment_score:",
     hasIdealSelfInPersona
       ? "- Q1과 페르소나의 '지향하는 자아'가 얼마나 정렬되어 있는지 0-100점으로 산정합니다."
       : "- Q1과 Q2의 내용이 얼마나 유사한지 단순 비교해 0-100점으로 산정합니다.",
@@ -98,7 +88,7 @@ export function buildReportPrompt(
     "- 과도한 해석 없이 유사성만 판단하세요",
     "- 결과는 가능한 한 빠르게 산출하세요",
     "",
-    "10) alignment_analysis_points:",
+    "8) alignment_analysis_points:",
     hasIdealSelfInPersona
       ? "- Q1과 페르소나의 지향하는 자아 사이에서 핵심적으로 겹치는 키워드나 주제를 분석합니다."
       : "- Q1과 Q2 사이에서 핵심적으로 겹치는 키워드나 주제를 분석합니다.",
@@ -106,33 +96,19 @@ export function buildReportPrompt(
     '- 예시: ["\'성장\'이라는 공통 키워드", "아침 운동에 대한 의지가 일치함", "새로운 도전에 대한 긍정적 태도"]',
     "- 겹치는 주제가 적으면 \"공통 주제가 거의 없음\"과 같이 명시하세요.",
     "",
-    "11) alignment_based_on_persona:",
+    "9) alignment_based_on_persona:",
     hasIdealSelfInPersona
       ? "- 반드시 true를 반환합니다. (페르소나의 지향하는 자아를 기준으로 산정했으므로)"
       : "- 반드시 false를 반환합니다. (Q2만 기준으로 산정했으므로)",
     "",
-    "### ⚡ 실행력 점수 (Q1 <-> Q3)",
-    "12) execution_score:",
-    "- Q3가 있을 경우: Q1(계획)과 Q3(실행)의 일치도를 0-100점으로 산정합니다.",
-    "- Q3가 없으면 반드시 null로 반환합니다.",
-    todoCheckInfo
-      ? `- [투두 체크리스트] 오늘의 할 일 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료. 이 비율을 execution_score 산정에 반드시 반영하세요. 체크 완료율이 높을수록 실행력 점수를 높게 산정합니다.`
-      : "",
-    "",
-    "13) execution_analysis_points:",
-    "- Q3가 있을 경우에만 핵심 근거 1~3개를 작성합니다. 없으면 null.",
-    todoCheckInfo
-      ? `- [투두 체크리스트가 있는 경우] execution_analysis_points에 '체크리스트 ${todoCheckInfo.checked}/${todoCheckInfo.total} 항목 완료'를 근거 중 하나로 포함하세요.`
-      : "",
-    "",
     "### 🔍 사용자 특성 분석",
-    "14) user_characteristics:",
+    "10) user_characteristics:",
     "- 기록 패턴과 내용을 분석해 도출한 사용자 특성을 최대 5가지 작성합니다.",
     "- [페르소나가 제공된 경우] 페르소나의 특성·지향과 오늘 기록이 맞는 부분을 우선 반영하세요. '이전에 파악한 너의 모습'과 일관되게.",
     "- '너는 이런 사람이다'라고 낙인찍지 말고, 가능성과 방향성을 보여주는 문장으로 작성하세요.",
     '- 예: "자기 성찰을 중시하는", "미래 지향적인", "감정 표현이 풍부한" 등',
     "",
-    "15) aspired_traits:",
+    "11) aspired_traits:",
     "- 오늘의 VIVID 기록(Q1, Q2 모두)에서 드러난 지향 모습을 최대 5가지 작성합니다.",
     "- [페르소나가 제공된 경우] 페르소나의 지향하는 자아·원동력과 오늘 기록에서 드러난 지향이 겹치는 부분을 반영하세요.",
     "- 사용자가 추구하는 가치와 방향성을 나타내는 특성으로 작성하세요.",
@@ -148,6 +124,68 @@ export function buildReportPrompt(
     `아래는 ${date} (${dayOfWeek}) 하루의 VIVID 기록입니다.\n${instruction}\n\n`;
 
   targetRecords.forEach((record, idx) => {
+    const createdAt = new Date(record.created_at);
+    const kstTime = createdAt.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Seoul",
+    });
+    prompt += `${idx + 1}. [${kstTime}] ${record.content}\n`;
+  });
+
+  return prompt;
+}
+
+/** 회고 전용 프롬프트 (Q3 + 투두 + user_persona "나의 특징" 기반) */
+export function buildReviewReportPrompt(
+  records: Record[],
+  date: string,
+  dayOfWeek: string,
+  todoItems: { contents: string; is_checked: boolean }[],
+  personaTraitsBlock: string,
+  userName?: string
+): string {
+  const q3Records = records.filter((r) =>
+    /Q3\.\s*오늘의 나는 어떤 하루를 보냈을까\?/i.test(r.content || "")
+  );
+  if (q3Records.length === 0) return "";
+
+  const honorificRule =
+    userName && userName !== "회원"
+      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${userName}님'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요.\n\n`
+      : "응답 문장에서 '당신'이라는 단어를 사용하지 마세요. '회원님' 등으로 호칭하세요.\n\n";
+
+  const completedTodos = todoItems.filter((t) => t.is_checked).map((t) => t.contents);
+  const uncompletedTodos = todoItems.filter((t) => !t.is_checked).map((t) => t.contents);
+
+  const instruction = [
+    "회고 전용 리포트를 생성하세요. 아래 JSON 스키마에 맞게 채워주세요.",
+    "",
+    "Q3(오늘의 나는 어떤 하루를 보냈을까?)만을 분석합니다. Q1, Q2는 사용하지 않습니다.",
+    "",
+    "1) retrospective_summary: Q3 요약. 오늘의 실행/경험을 간결하게 정리.",
+    "2) retrospective_evaluation: Q3 평가. 담백하고 따뜻한 톤으로 피드백.",
+    "3) execution_score: 투두 체크 완료율을 반영한 실행력 점수 (0-100).",
+    "4) execution_analysis_points: 실행력 점수 근거 1~3개.",
+    "5) completed_todos: 완료한 할 일 목록 (사용자 입력 그대로 또는 요약).",
+    "6) uncompleted_todos: 미완료 할 일 목록.",
+    "7) todo_feedback: user_persona '나의 특징' 기반으로 각 투두에 대한 피드백 1~3개.",
+    "8) daily_summary: 오늘 한 일 간단 요약.",
+    "9) suggested_todos_for_tomorrow: { reason: string, items: string[] } - 내일을 위한 할 일 제안. reason에 권장 이유(1~2문장), items에 구체적 할 일 2~4개. 오늘 회고와 미완료/피드백을 바탕으로 내일 하면 좋을 일을 제안.",
+    "",
+    "톤은 담백하고 과하지 않게, 사용자를 조용히 응원하는 호스트처럼 작성하세요.",
+    "",
+    honorificRule.trim(),
+  ].join("\n");
+
+  let prompt = "";
+  if (personaTraitsBlock.trim()) {
+    prompt += `[사용자 페르소나 - 나의 특징]\n${personaTraitsBlock}\n\n`;
+  }
+  prompt += `[투두 현황]\n완료: ${completedTodos.join(" / ") || "(없음)"}\n미완료: ${uncompletedTodos.join(" / ") || "(없음)"}\n\n`;
+  prompt += `아래는 ${date} (${dayOfWeek}) 회고 기록입니다.\n${instruction}\n\n`;
+
+  q3Records.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);
     const kstTime = createdAt.toLocaleTimeString("ko-KR", {
       hour: "2-digit",

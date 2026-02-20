@@ -65,25 +65,25 @@ export function RecentTrendsSection({
     const rows = scoreEntries
       .map((entry) => ({
         reportDate: entry.report_date,
-        alignmentScore: entry.report?.alignment_score,
+        alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
         executionScore: entry.report?.execution_score ?? null,
       }))
       .filter(
         (row): row is {
           reportDate: string;
-          alignmentScore: number;
+          alignmentScore: number | undefined;
           executionScore: number | null;
         } =>
-          typeof row.alignmentScore === "number" &&
-          Number.isFinite(row.alignmentScore)
+          (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
+          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
       );
 
     if (rows.length === 0) return null;
 
-    const n = rows.length;
-    const alignmentAverage = Math.round(
-      rows.reduce((sum, row) => sum + row.alignmentScore, 0) / n
-    );
+    const withAlignment = rows.filter((r) => typeof r.alignmentScore === "number" && Number.isFinite(r.alignmentScore));
+    const alignmentAverage = withAlignment.length > 0
+      ? Math.round(withAlignment.reduce((sum, row) => sum + (row.alignmentScore ?? 0), 0) / withAlignment.length)
+      : 0;
     const withExecution = rows.filter((r) => r.executionScore != null && Number.isFinite(r.executionScore));
     const hasExecutionData = withExecution.length > 0;
     const executionAverage = hasExecutionData
@@ -381,7 +381,7 @@ export function RecentTrendsSection({
                         className="rounded-t transition-all duration-1000 ease-out"
                         style={{
                           width: hasExecutionData && item.executionScore != null ? 8 : 16,
-                          height: `${isAnimated ? Math.max(4, item.alignmentScore * 0.64) : 0}px`,
+                          height: `${isAnimated ? Math.max(4, (item.alignmentScore ?? 0) * 0.64) : 0}px`,
                           backgroundColor: COLORS.chart.alignment,
                         }}
                       />

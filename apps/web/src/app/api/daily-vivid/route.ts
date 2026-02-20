@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { generateAllReportsWithProgress } from "./ai-service-stream";
+import {
+  generateAllReportsWithProgress,
+  generateReviewReport,
+} from "./ai-service-stream";
 import {
   fetchRecordsByDate,
+  fetchRecordsByDateOptional,
   saveDailyReport,
-  fetchTodoCheckSummary,
+  fetchTodoListForReview,
   checkRegenerationEligibility,
 } from "./db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
+import { fetchUserPersonaOptional, formatPersonaTraitsForReview } from "@/lib/user-persona";
 import { API_ENDPOINTS } from "@/constants";
-import type { Report } from "@/types/daily-vivid";
+import type { Report, ReviewReport } from "@/types/daily-vivid";
 import type { DailyVividRequest, DailyReportResponse } from "./types";
 
 /** 응답 텍스트에서 "당신"을 호칭으로 치환 (userName님) */
@@ -25,6 +30,33 @@ function normalizeUserName(value?: string): string | null {
   return trimmed.endsWith("님") ? trimmed.slice(0, -1).trim() : trimmed;
 }
 
+function replace당신InReviewReport(
+  report: ReviewReport | null,
+  userName: string
+): ReviewReport | null {
+  if (!report) return report;
+  return {
+    ...report,
+    retrospective_summary: replace당신(report.retrospective_summary, userName),
+    retrospective_evaluation: replace당신(report.retrospective_evaluation, userName),
+    execution_analysis_points: (report.execution_analysis_points ?? []).map(
+      (s) => replace당신(s, userName)
+    ),
+    todo_feedback: (report.todo_feedback ?? []).map((s) =>
+      replace당신(s, userName)
+    ),
+    daily_summary: replace당신(report.daily_summary ?? "", userName),
+    suggested_todos_for_tomorrow: report.suggested_todos_for_tomorrow
+      ? {
+          reason: replace당신(report.suggested_todos_for_tomorrow.reason, userName),
+          items: report.suggested_todos_for_tomorrow.items.map((s) =>
+            replace당신(s, userName)
+          ),
+        }
+      : undefined,
+  };
+}
+
 function replace당신InReport(report: Report | null, userName: string): Report | null {
   if (!report) return report;
   return {
@@ -33,18 +65,13 @@ function replace당신InReport(report: Report | null, userName: string): Report 
     current_evaluation: replace당신(report.current_evaluation, userName),
     future_summary: replace당신(report.future_summary, userName),
     future_evaluation: replace당신(report.future_evaluation, userName),
-    retrospective_summary: report.retrospective_summary
-      ? replace당신(report.retrospective_summary, userName)
-      : null,
-    retrospective_evaluation: report.retrospective_evaluation
-      ? replace당신(report.retrospective_evaluation, userName)
-      : null,
+    retrospective_summary: null,
+    retrospective_evaluation: null,
     alignment_analysis_points: (report.alignment_analysis_points ?? []).map(
       (s) => replace당신(s, userName)
     ),
-    execution_analysis_points: report.execution_analysis_points
-      ? report.execution_analysis_points.map((s) => replace당신(s, userName))
-      : null,
+    execution_score: null,
+    execution_analysis_points: null,
     user_characteristics: (report.user_characteristics ?? []).map((s) =>
       replace당신(s, userName)
     ),
@@ -101,24 +128,26 @@ export async function POST(request: NextRequest) {
     }
 
     // 1️⃣ Records 데이터 조회
-    const records = await fetchRecordsByDate(supabase, userId, date);
-    const hasReview = records.some((r) => r.type === "review");
-
-    // 리뷰 생성 시: 오늘 기록에 type=vivid(dream) 1개 이상 + type=review 1개 이상 필요
+    let records: Awaited<ReturnType<typeof fetchRecordsByDate>>;
     if (generationType === "review") {
-      const hasVivid = records.some(
-        (r) => r.type === "vivid" || r.type === "dream"
+      records = await fetchRecordsByDateOptional(supabase, userId, date);
+      const hasQ3 = records.some((r) =>
+        /Q3\.\s*오늘의 나는 어떤 하루를 보냈을까\?/i.test(r.content || "")
       );
-      if (!hasVivid || !hasReview) {
+      if (!hasQ3) {
         return NextResponse.json(
           {
             error:
-              "오늘의 회고를 생성하려면 Q1·Q2(비비드)와 Q3(회고)를 모두 입력해 주세요.",
+              "오늘의 회고를 생성하려면 Q3(오늘의 나는 어떤 하루를 보냈을까?)를 입력해 주세요.",
           },
           { status: 400 }
         );
       }
+    } else {
+      records = await fetchRecordsByDate(supabase, userId, date);
     }
+
+    const hasReview = records.some((r) => r.type === "review");
 
     // 2️⃣ 요일 계산
     const dateObj = new Date(`${date}T00:00:00+09:00`);
@@ -159,53 +188,71 @@ export async function POST(request: NextRequest) {
     const personaContext = "";
     const hasIdealSelfInPersonaFlag = false;
 
-    // 4️⃣ 타입별 리포트 생성 (병렬 처리, 멤버십 정보 전달)
-    // 항상 Flash 모델 사용 (사고모드 제거)
+    // 4️⃣ 타입별 리포트 생성
+    let reportData: Report | ReviewReport | null;
 
-    // 회고 생성 시: 투두 체크 완료율 조회 (execution_score 반영용)
-    let todoCheckInfo: { checked: number; total: number } | undefined;
-    if (generationType === "review" && isPro) {
-      const summary = await fetchTodoCheckSummary(supabase, userId, date);
-      if (summary) todoCheckInfo = summary;
+    if (generationType === "review") {
+      // 회고 전용: Q3 + 투두 + persona 기반
+      const todoItems = (await fetchTodoListForReview(supabase, userId, date)) ?? [];
+      const persona = await fetchUserPersonaOptional(supabase, userId);
+      const personaTraitsBlock = formatPersonaTraitsForReview(persona);
+
+      reportData = await generateReviewReport(
+        records,
+        date,
+        dayOfWeek,
+        todoItems,
+        personaTraitsBlock,
+        isPro,
+        userId,
+        userName
+      );
+
+      if (reportData) {
+        reportData = replace당신InReviewReport(reportData, userName);
+      }
+    } else {
+      // 비비드: Q1+Q2+Q3 통합 리포트 (실행력 분석은 생성하지 않음, review 전용)
+      let allReports = await generateAllReportsWithProgress(
+        records,
+        date,
+        dayOfWeek,
+        isPro,
+        userId,
+        userName,
+        personaContext,
+        undefined,
+        hasIdealSelfInPersonaFlag
+      );
+
+      if (allReports.report) {
+        allReports = {
+          ...allReports,
+          report: replace당신InReport(allReports.report, userName),
+        };
+      }
+
+      if (allReports.report && !hasReview) {
+        allReports = {
+          ...allReports,
+          report: {
+            ...allReports.report,
+            retrospective_summary: null,
+            retrospective_evaluation: null,
+            execution_score: null,
+            execution_analysis_points: null,
+          },
+        };
+      }
+
+      reportData = allReports.report;
     }
 
-    let allReports = await generateAllReportsWithProgress(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId, // AI 사용량 로깅을 위한 userId 전달
-      userName,
-      personaContext,
-      todoCheckInfo,
-      hasIdealSelfInPersonaFlag
-    );
-
-    // 4.5️⃣ 응답 텍스트에서 "당신" → "재영님" 등 친근 호칭으로 후처리
-    if (allReports.report) {
-      allReports = {
-        ...allReports,
-        report: replace당신InReport(allReports.report, userName),
-      };
-    }
-
-    if (allReports.report && !hasReview) {
-      allReports = {
-        ...allReports,
-        report: {
-          ...allReports.report,
-          retrospective_summary: null,
-          retrospective_evaluation: null,
-          execution_score: null,
-          execution_analysis_points: null,
-        },
-      };
-    }
-    // 4️⃣ DailyReportResponse 형식으로 변환 (trend는 user_persona에서 관리하므로 null)
+    // DailyReportResponse 형식으로 변환 (trend는 user_persona에서 관리하므로 null)
     const report: DailyReportResponse = {
       date,
       day_of_week: dayOfWeek,
-      report: allReports.report,
+      report: reportData,
       trend: null,
     };
 

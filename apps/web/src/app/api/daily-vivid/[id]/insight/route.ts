@@ -23,6 +23,7 @@ export async function POST(
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
     const userId = body.userId as string | undefined;
+    const forceRegenerate = body.forceRegenerate === true;
 
     if (!userId?.trim()) {
       return NextResponse.json(
@@ -73,18 +74,18 @@ export async function POST(
     };
 
     // type=vivid(비비드)일 때만 인사이트 생성/반환
-    if (row.is_vivid_ai_generated !== true) {
+    const rowType = row.type ?? (row.is_vivid_ai_generated === true ? "vivid" : "review");
+    if (rowType !== "vivid") {
       return NextResponse.json(
         { error: "Insight is only available for vivid type (not review)" },
         { status: 400 }
       );
     }
 
-    // 기존 구조화된 인사이트가 있으면 즉시 반환
-    if (decrypted.insight && typeof decrypted.insight === "object") {
+    // 기존 구조화된 인사이트가 있으면 즉시 반환 (forceRegenerate 요청 시 제외)
+    if (!forceRegenerate && decrypted.insight && typeof decrypted.insight === "object") {
       const insight = decrypted.insight as DailyVividInsight;
       if (
-        (insight.praise?.length ?? 0) > 0 ||
         (insight.feedback?.length ?? 0) > 0 ||
         (insight.improvements?.length ?? 0) > 0
       ) {
@@ -92,12 +93,11 @@ export async function POST(
       }
     }
 
-    // 하위 호환: insight 없고 insight_message만 있으면 summary 형태로 반환
-    if (decrypted.insight_message?.trim()) {
+    // 하위 호환: insight 없고 insight_message만 있으면 summary 형태로 반환 (forceRegenerate 시 제외)
+    if (!forceRegenerate && decrypted.insight_message?.trim()) {
       return NextResponse.json(
         {
           insight: {
-            praise: [],
             feedback: [],
             improvements: [],
             summary: decrypted.insight_message,
@@ -121,7 +121,6 @@ export async function POST(
       return NextResponse.json(
         {
           insight: {
-            praise: [],
             feedback: [],
             improvements: [],
             summary: "페르소나를 설정해 주시면 맞춤 인사이트를 받을 수 있습니다.",
@@ -141,7 +140,8 @@ export async function POST(
     const insight = await generateDailyVividInsight(
       report,
       persona,
-      userName
+      userName,
+      userId
     );
 
     const encryptedInsight = encryptJsonbFields(insight as unknown as JsonbValue);

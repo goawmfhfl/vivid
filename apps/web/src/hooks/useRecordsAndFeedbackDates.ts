@@ -34,15 +34,19 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
   // AI 피드백 날짜 조회 (비비드 또는 리뷰 생성된 날짜, report 존재하는 실제 비비드만)
   const { data: feedbacks, error: feedbackError } = await supabase
     .from(API_ENDPOINTS.DAILY_VIVID)
-    .select("report_date, is_vivid_ai_generated, is_review_ai_generated")
+    .select("report_date, type, is_vivid_ai_generated, is_review_ai_generated")
     .eq("user_id", userId)
-    .or("is_vivid_ai_generated.eq.true,is_review_ai_generated.eq.true")
     .not("report", "is", null)
     .gte("report_date", startDate);
 
   if (feedbackError) {
     throw new Error(`Failed to fetch feedback dates: ${feedbackError.message}`);
   }
+
+  const isVividDate = (f: { type?: string | null; is_vivid_ai_generated?: boolean | null }) =>
+    f.type === "vivid" || (f.type == null && f.is_vivid_ai_generated === true);
+  const isReviewDate = (f: { type?: string | null; is_review_ai_generated?: boolean | null }) =>
+    f.type === "review" || (f.type == null && f.is_review_ai_generated === true);
 
   // 중복 제거 및 정렬
   const recordDates = Array.from(
@@ -51,17 +55,13 @@ const fetchRecordsAndFeedbackDates = async (): Promise<{
 
   const vividFeedbackDates = Array.from(
     new Set(
-      (feedbacks || [])
-        .filter((f) => f.is_vivid_ai_generated === true)
-        .map((f) => f.report_date as string)
+      (feedbacks || []).filter(isVividDate).map((f) => f.report_date as string)
     )
   ).sort();
 
   const reviewFeedbackDates = Array.from(
     new Set(
-      (feedbacks || [])
-        .filter((f) => f.is_review_ai_generated === true)
-        .map((f) => f.report_date as string)
+      (feedbacks || []).filter(isReviewDate).map((f) => f.report_date as string)
     )
   ).sort();
 

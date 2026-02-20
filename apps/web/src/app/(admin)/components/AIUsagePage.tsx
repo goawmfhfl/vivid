@@ -35,11 +35,21 @@ const GEMINI_MODELS = [
 ];
 
 const REQUEST_TYPE_LABELS: Record<string, string> = {
-  daily_vivid: "Daily Vivid",
+  // Daily Vivid 세부 타입
+  daily_vivid_report: "비비드 리포트",
+  daily_vivid_trend: "최근 동향",
+  daily_vivid_integrated: "통합 리포트",
+  daily_vivid_insight: "인사이트",
+  daily_vivid_todo_list: "투두 리스트",
+  daily_vivid_review: "회고",
+  daily_vivid: "Daily Vivid (레거시)",
+  // 기타
   weekly_vivid: "Weekly Vivid",
   monthly_vivid: "Monthly Vivid",
   user_persona: "User Persona",
   user_trends: "User Trends",
+  user_trends_weekly: "Cron 주간 성장",
+  user_trends_monthly: "Cron 월간 성장",
 };
 
 interface ExtendedStats extends AIUsageStats {
@@ -63,6 +73,7 @@ export function AIUsagePage() {
     totalPages: 0,
   });
   const [modelFilter, setModelFilter] = useState("");
+  const [requestTypeFilter, setRequestTypeFilter] = useState("");
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -91,6 +102,7 @@ export function AIUsagePage() {
           limit: "20",
         });
         if (modelFilter) params.append("model", modelFilter);
+        if (requestTypeFilter) params.append("requestType", requestTypeFilter);
         const res = await adminApiFetch(`/api/admin/ai-usage/list?${params}`);
         if (!res.ok) throw new Error("목록을 불러오는데 실패했습니다.");
         const data = await res.json();
@@ -103,7 +115,7 @@ export function AIUsagePage() {
       }
     };
     fetchList();
-  }, [listPage, modelFilter]);
+  }, [listPage, modelFilter, requestTypeFilter]);
 
   if (loading && !stats) {
     return (
@@ -142,6 +154,14 @@ export function AIUsagePage() {
       { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" }
     );
   }
+
+  const requestTypeOptions = [
+    { value: "", label: "전체 타입" },
+    ...Object.entries(REQUEST_TYPE_LABELS).map(([value, label]) => ({
+      value,
+      label,
+    })),
+  ];
 
   return (
     <div className="space-y-6">
@@ -333,15 +353,26 @@ export function AIUsagePage() {
               전체 요청 리스트
             </h3>
           </div>
-          <AdminSelect
-            value={modelFilter}
-            onChange={(e) => {
-              setModelFilter(e.target.value);
-              setListPage(1);
-            }}
-            options={modelOptions}
-            containerClassName="w-48"
-          />
+          <div className="flex flex-wrap gap-2">
+            <AdminSelect
+              value={requestTypeFilter}
+              onChange={(e) => {
+                setRequestTypeFilter(e.target.value);
+                setListPage(1);
+              }}
+              options={requestTypeOptions}
+              containerClassName="w-40"
+            />
+            <AdminSelect
+              value={modelFilter}
+              onChange={(e) => {
+                setModelFilter(e.target.value);
+                setListPage(1);
+              }}
+              options={modelOptions}
+              containerClassName="w-48"
+            />
+          </div>
         </div>
 
         {listLoading ? (

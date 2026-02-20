@@ -816,15 +816,23 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                               className="text-sm"
                               style={{ color: COLORS.text.secondary }}
                             >
-                              {detail.request_type === "daily_vivid"
-                                ? "Daily"
-                                : detail.request_type === "weekly_vivid"
-                                  ? "Weekly"
-                                  : detail.request_type === "monthly_vivid"
-                                    ? "Monthly"
-                                    : detail.request_type === "user_persona"
-                                      ? "Persona"
-                                      : detail.request_type}
+                              {(
+                                {
+                                  daily_vivid_report: "비비드 리포트",
+                                  daily_vivid_trend: "최근 동향",
+                                  daily_vivid_integrated: "통합 리포트",
+                                  daily_vivid_insight: "인사이트",
+                                  daily_vivid_todo_list: "투두 리스트",
+                                  daily_vivid_review: "회고",
+                                  daily_vivid: "Daily Vivid",
+                                  weekly_vivid: "Weekly Vivid",
+                                  monthly_vivid: "Monthly Vivid",
+                                  user_persona: "User Persona",
+                                  user_trends: "User Trends",
+                                  user_trends_weekly: "Cron 주간 성장",
+                                  user_trends_monthly: "Cron 월간 성장",
+                                } as Record<string, string>
+                              )[detail.request_type] || detail.request_type}
                             </span>
                           </td>
                           <td className="px-4 py-3">

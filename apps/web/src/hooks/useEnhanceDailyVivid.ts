@@ -4,7 +4,7 @@ import { getCurrentUserId } from "./useCurrentUser";
 import { useToastStore } from "@/store/useToastStore";
 import type { DailyVividRow, DailyVividInsight } from "@/types/daily-vivid";
 
-async function enhanceDailyVivid(id: string): Promise<{
+async function enhanceDailyVivid(id: string, forceRegenerate = false): Promise<{
   insight: DailyVividInsight;
 }> {
   const userId = await getCurrentUserId();
@@ -16,7 +16,7 @@ async function enhanceDailyVivid(id: string): Promise<{
       const res = await fetch(`/api/daily-vivid/${id}/insight`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, forceRegenerate }),
       });
 
       if (!res.ok) {
@@ -56,7 +56,8 @@ export function useEnhanceDailyVivid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id }: { id: string }) => enhanceDailyVivid(id),
+    mutationFn: ({ id, forceRegenerate }: { id: string; forceRegenerate?: boolean }) =>
+      enhanceDailyVivid(id, forceRegenerate),
     onSuccess: (data, variables) => {
       queryClient.setQueryData<DailyVividRow | null>(
         [QUERY_KEYS.DAILY_VIVID, "id", variables.id],

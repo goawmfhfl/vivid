@@ -1,4 +1,4 @@
-import type { Report, TrendData } from "@/types/daily-vivid";
+import type { Report, ReviewReport, TrendData } from "@/types/daily-vivid";
 
 // Record 타입 정의
 export interface Record {
@@ -15,8 +15,8 @@ export interface DailyReportResponse {
   date: string;
   day_of_week: string;
 
-  // 통합 리포트
-  report: Report | null;
+  // 통합 리포트 - vivid: Report, review: ReviewReport
+  report: Report | ReviewReport | null;
   trend: TrendData | null; // 최근 동향 데이터
 }
 

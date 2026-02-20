@@ -9,7 +9,7 @@ import type { SubmitFeedbackRequest } from "@/types/vivid-feedback";
 export async function POST(request: NextRequest) {
   try {
     const body: SubmitFeedbackRequest = await request.json();
-    const { pageType, rating, comment } = body;
+    const { pageType, vividType, rating, comment } = body;
 
     // 필수 필드 검증
     if (!pageType || typeof pageType !== "string") {
@@ -35,6 +35,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // vividType 유효성 (데일리 페이지일 때만)
+    if (vividType !== undefined) {
+      if (pageType !== "daily") {
+        return NextResponse.json(
+          { error: "vividType is only valid for daily page" },
+          { status: 400 }
+        );
+      }
+      if (!["vivid", "review"].includes(vividType)) {
+        return NextResponse.json(
+          { error: "vividType must be vivid or review" },
+          { status: 400 }
+        );
+      }
+    }
+
     // comment 길이 제한 (선택사항이지만 있으면 검증)
     if (comment && comment.length > 2000) {
       return NextResponse.json(
@@ -45,14 +61,19 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
+    const insertPayload: Record<string, unknown> = {
+      page_type: pageType,
+      rating: rating,
+      comment: comment?.trim() || null,
+    };
+    if (pageType === "daily" && vividType) {
+      insertPayload.vivid_type = vividType;
+    }
+
     // 피드백 저장 (익명, user_id 없음)
     const { data, error } = await supabase
       .from("user_feedbacks")
-      .insert({
-        page_type: pageType,
-        rating: rating,
-        comment: comment?.trim() || null,
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

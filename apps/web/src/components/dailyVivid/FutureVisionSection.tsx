@@ -35,7 +35,7 @@ export function FutureVisionSection({ view }: SectionProps) {
             className={cn(TYPOGRAPHY.h2.fontSize, TYPOGRAPHY.h2.fontWeight)}
             style={{ color: COLORS.text.primary }}
           >
-            앞으로의 나의 모습 (미래 비전)
+            앞으로의 나의 모습
           </h3>
         </div>
         <div className="space-y-5">

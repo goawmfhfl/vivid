@@ -6,13 +6,22 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { COLORS, SPACING, TYPOGRAPHY, CARD_STYLES } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import type { PageType, SubmitFeedbackRequest } from "@/types/vivid-feedback";
+import type {
+  PageType,
+  SubmitFeedbackRequest,
+  VividType,
+} from "@/types/vivid-feedback";
 
 type VividFeedbackSectionProps = {
   pageType: PageType;
+  /** 데일리 페이지일 때: vivid(비전) | review(회고) */
+  vividType?: VividType;
 };
 
-export function VividFeedbackSection({ pageType }: VividFeedbackSectionProps) {
+export function VividFeedbackSection({
+  pageType,
+  vividType,
+}: VividFeedbackSectionProps) {
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
@@ -40,6 +49,7 @@ export function VividFeedbackSection({ pageType }: VividFeedbackSectionProps) {
         pageType,
         rating,
         comment: comment.trim() || undefined,
+        ...(pageType === "daily" && vividType && { vividType }),
       };
 
       const response = await fetch("/api/vivid-feedback", {

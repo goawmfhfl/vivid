@@ -128,6 +128,27 @@ export function buildPersonaContextBlock(
 }
 
 /**
+ * 회고용: 페르소나 "나의 특징"(identity.traits 등) 블록.
+ * todo_feedback 생성 시 참고용.
+ */
+export function formatPersonaTraitsForReview(
+  persona: Record<string, unknown> | null
+): string {
+  if (!persona || typeof persona !== "object") return "";
+  const identity = persona.identity as Record<string, unknown> | undefined;
+  if (!identity || typeof identity !== "object") return "";
+  const traits = joinList(identity.traits as unknown[] | undefined);
+  const ideal = joinList(identity.ideal_self as unknown[] | undefined);
+  const forces = joinList(identity.driving_forces as unknown[] | undefined);
+  const parts = [
+    traits && `특성: ${traits}`,
+    ideal && `지향하는 자아: ${ideal}`,
+    forces && `원동력: ${forces}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" / ") : "";
+}
+
+/**
  * 페르소나에 '지향하는 자아'(ideal_self)가 있는지 확인.
  * 일치도 분석 시 user_persona 기반으로 산정할 수 있는지 판단용.
  */

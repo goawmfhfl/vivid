@@ -83,13 +83,18 @@ export function FeedbackManagementPage() {
     });
   };
 
-  const getPageTypeLabel = (pageType: string) => {
+  const getPageTypeLabel = (feedback: VividFeedback) => {
     const labels: Record<string, string> = {
       daily: "데일리",
       weekly: "주간",
       monthly: "월간",
     };
-    return labels[pageType] || pageType;
+    const base = labels[feedback.page_type] || feedback.page_type;
+    if (feedback.page_type === "daily" && feedback.vivid_type) {
+      const typeLabel = feedback.vivid_type === "vivid" ? "비전" : "회고";
+      return `${base} (${typeLabel})`;
+    }
+    return base;
   };
 
   if (isLoading && feedbacks.length === 0) {
@@ -433,7 +438,7 @@ export function FeedbackManagementPage() {
                             color: COLORS.brand.primary,
                           }}
                         >
-                          {getPageTypeLabel(feedback.page_type)}
+                          {getPageTypeLabel(feedback)}
                         </span>
                         <div className="flex items-center gap-1">
                           <span

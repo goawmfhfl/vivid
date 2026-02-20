@@ -30,7 +30,7 @@ export async function GET(
     const { data: dailyVividRows, count: dailyCount, error: dailyError } = await supabase
       .from(API_ENDPOINTS.DAILY_VIVID)
       .select(
-        "id, report_date, day_of_week, created_at, updated_at, is_vivid_ai_generated, is_review_ai_generated, generation_duration_seconds",
+        "id, report_date, day_of_week, created_at, updated_at, type, is_vivid_ai_generated, is_review_ai_generated, generation_duration_seconds",
         { count: "exact" }
       )
       .eq("user_id", userId)
@@ -92,18 +92,22 @@ export async function GET(
 
 
     return NextResponse.json({
-      daily: (dailyVividRows || []).map((fb) => ({
-        id: fb.id,
-        type: "daily" as const,
-        date: fb.report_date,
-        day_of_week: fb.day_of_week,
-        created_at: fb.created_at,
-        updated_at: fb.updated_at,
-        is_ai_generated:
-          (fb as { is_vivid_ai_generated?: boolean; is_review_ai_generated?: boolean }).is_vivid_ai_generated === true ||
-          (fb as { is_vivid_ai_generated?: boolean; is_review_ai_generated?: boolean }).is_review_ai_generated === true,
-        generation_duration_seconds: fb.generation_duration_seconds ?? null,
-      })),
+      daily: (dailyVividRows || []).map((fb) => {
+        const row = fb as { type?: string; is_vivid_ai_generated?: boolean; is_review_ai_generated?: boolean };
+        const feedbackType = row.type ?? (row.is_review_ai_generated ? "review" : "vivid");
+        return {
+          id: fb.id,
+          type: "daily" as const,
+          feedbackType: feedbackType as "vivid" | "review",
+          date: fb.report_date,
+          day_of_week: fb.day_of_week,
+          created_at: fb.created_at,
+          updated_at: fb.updated_at,
+          is_ai_generated:
+            row.is_vivid_ai_generated === true || row.is_review_ai_generated === true,
+          generation_duration_seconds: fb.generation_duration_seconds ?? null,
+        };
+      }),
       dailyPagination: {
         page: dailyPage,
         limit: dailyLimit,

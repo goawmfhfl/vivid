@@ -75,13 +75,12 @@ export async function checkRegenerationEligibility(
   date: string,
   generationType: DailyReportGenerationType
 ): Promise<{ eligible: boolean; error?: string }> {
-  const isVivid = generationType === "vivid";
   const { data: rows, error } = await supabase
     .from("daily_vivid")
     .select("id, is_regenerated")
     .eq("user_id", userId)
     .eq("report_date", date)
-    .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
+    .eq("type", generationType)
     .limit(1);
 
   if (error) {
@@ -105,15 +104,13 @@ export async function saveDailyReport(
   generationType: DailyReportGenerationType = "vivid",
   isRegeneration = false
 ): Promise<DailyVividRow> {
-  const isVivid = generationType === "vivid";
-
   // 해당 (user_id, report_date)에서 현재 generationType에 해당하는 행 조회
   const { data: existingRows, error: checkError } = await supabase
     .from("daily_vivid")
     .select("id, is_regenerated")
     .eq("user_id", userId)
     .eq("report_date", report.date)
-    .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
+    .eq("type", generationType)
     .limit(1);
 
   if (checkError) {
@@ -138,8 +135,7 @@ export async function saveDailyReport(
     report_date: report.date,
     day_of_week: report.day_of_week ?? null,
     report: encryptedNewReports.report || null,
-    is_vivid_ai_generated: isVivid,
-    is_review_ai_generated: !isVivid,
+    type: generationType,
     generation_duration_seconds: generationDurationSeconds ?? null,
   };
 
@@ -202,11 +198,17 @@ export async function saveDailyReport(
 export interface TodoItemToSave {
   contents: string;
   category: string;
+  /** 보존된 항목(직접 추가)의 체크 상태. 새로 생성되는 항목은 false */
+  is_checked?: boolean;
 }
+
+/** 인사이트/회고에서 직접 추가한 항목의 category 값 */
+export const MANUAL_ADD_CATEGORY = "직접 추가";
 
 /**
  * 투두 리스트 항목 저장 (Pro 전용, vivid 생성 시 호출)
  * 기존 항목 중 scheduled_at이 null인 것만 삭제 후 새로 삽입 (미룬 항목은 보존)
+ * items에 기존 수동 추가 항목이 포함되면 is_checked를 유지
  */
 export async function saveTodoListItems(
   supabase: SupabaseClient,
@@ -227,7 +229,7 @@ export async function saveTodoListItems(
     daily_vivid_id: dailyVividId,
     user_id: userId,
     contents: encrypt(item.contents),
-    is_checked: false,
+    is_checked: item.is_checked ?? false,
     category: encrypt(item.category),
     sort_order: idx,
   }));
@@ -252,7 +254,7 @@ export async function fetchTodoCheckSummary(
     .select("id")
     .eq("user_id", userId)
     .eq("report_date", date)
-    .eq("is_vivid_ai_generated", true)
+    .eq("type", "vivid")
     .maybeSingle();
 
   if (!dv?.id) return null;
@@ -266,6 +268,37 @@ export async function fetchTodoCheckSummary(
 
   const checked = items.filter((i) => i.is_checked === true).length;
   return { checked, total: items.length };
+}
+
+/** 회고 생성용: 같은 날짜 vivid의 투두 목록(contents, is_checked) 조회 */
+export async function fetchTodoListForReview(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string
+): Promise<{ contents: string; is_checked: boolean }[] | null> {
+  const { data: dv } = await supabase
+    .from("daily_vivid")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("report_date", date)
+    .eq("type", "vivid")
+    .maybeSingle();
+
+  if (!dv?.id) return null;
+
+  const { data: items } = await supabase
+    .from("todo_list_items")
+    .select("contents, is_checked")
+    .eq("daily_vivid_id", dv.id)
+    .is("scheduled_at", null)
+    .order("sort_order", { ascending: true });
+
+  if (!items?.length) return null;
+
+  return items.map((i) => ({
+    contents: decrypt(i.contents),
+    is_checked: i.is_checked === true,
+  }));
 }
 
 export interface TodoListItemRow {

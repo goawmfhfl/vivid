@@ -54,11 +54,19 @@ interface CostCalculation {
  */
 /** request_type 값: ai_requests 테이블 및 관리자 조회에서 사용 */
 export type AIRequestType =
-  | "daily_vivid"
+  | "daily_vivid_report"      // 비비드 리포트 (Q1+Q2)
+  | "daily_vivid_trend"       // 최근 동향
+  | "daily_vivid_integrated"  // 통합 리포트 (report+trend)
+  | "daily_vivid_insight"     // 인사이트 (칭찬/피드백/개선)
+  | "daily_vivid_todo_list"  // 투두 리스트
+  | "daily_vivid_review"      // 회고 리포트
+  | "daily_vivid"             // 하위 호환 (레거시)
   | "weekly_vivid"
   | "monthly_vivid"
   | "user_persona"
-  | "user_trends";
+  | "user_trends"
+  | "user_trends_weekly"      // cron 주간 성장 인사이트
+  | "user_trends_monthly";    // cron 월간 성장 인사이트
 
 export interface LogAIRequestParams {
   userId: string;
@@ -144,21 +152,21 @@ export async function logAIRequest(
 
     const supabase = getServiceSupabase();
 
-    // section_name에 접두사 추가
+    // section_name에 접두사 추가 (레거시용, 새 세부 타입은 request_type으로 구분)
     let prefixedSectionName: string | null = null;
     if (sectionName) {
       const prefix =
-        requestType === "daily_vivid"
+        requestType.startsWith("daily_vivid")
           ? "[daily]"
           : requestType === "weekly_vivid"
             ? "[weekly]"
-            : requestType === "monthly_vivid"
+            : requestType.startsWith("monthly_vivid") || requestType === "user_trends_monthly"
               ? "[monthly]"
               : requestType === "user_persona"
                 ? "[persona]"
-                : requestType === "user_trends"
+                : requestType === "user_trends" || requestType === "user_trends_weekly"
                   ? "[trends]"
-                : "";
+                  : "";
       prefixedSectionName = prefix ? `${prefix} ${sectionName}` : sectionName;
     }
 

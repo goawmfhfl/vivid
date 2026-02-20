@@ -81,20 +81,21 @@ export function FourWeekTrendsSection({
     const rows = scoreEntries
       .map((entry) => ({
         reportDate: entry.report_date,
-        alignmentScore: entry.report?.alignment_score,
+        alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
         executionScore: entry.report?.execution_score ?? null,
       }))
       .filter(
-        (row): row is { reportDate: string; alignmentScore: number; executionScore: number | null } =>
-          typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)
+        (row): row is { reportDate: string; alignmentScore: number | undefined; executionScore: number | null } =>
+          (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
+          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
       );
 
     if (rows.length === 0) return null;
 
     const hasExecutionData = rows.some((r) => r.executionScore != null && Number.isFinite(r.executionScore));
 
-    // 최신일 기준 정렬, 중복 날짜 제거 (날짜당 1개). execution 없으면 alignment만 사용
-    const byDate = new Map<string, { alignmentScore: number; executionScore: number | null }>();
+    // 최신일 기준 정렬, 중복 날짜 제거 (날짜당 1개)
+    const byDate = new Map<string, { alignmentScore?: number; executionScore: number | null }>();
     for (const r of rows) {
       if (!byDate.has(r.reportDate)) {
         byDate.set(r.reportDate, {
@@ -127,9 +128,12 @@ export function FourWeekTrendsSection({
       const [month, day] = endDate.slice(5).split("-").map(Number);
       const weekLabel = formatMonthWeek(month, day);
 
-      const alignmentAvg = Math.round(
-        chunk.reduce((s, [, r]) => s + r.alignmentScore, 0) / chunk.length
-      );
+      const alignmentValues = chunk
+        .map(([, r]) => r.alignmentScore)
+        .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+      const alignmentAvg = alignmentValues.length > 0
+        ? Math.round(alignmentValues.reduce((s, v) => s + v, 0) / alignmentValues.length)
+        : 0;
       const execValues = chunk
         .map(([, r]) => r.executionScore)
         .filter((v): v is number => v != null && Number.isFinite(v));

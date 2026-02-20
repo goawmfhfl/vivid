@@ -282,7 +282,7 @@ async function generateWeeklyTrendFromDailyData(
     await logAIRequest({
       userId,
       model: modelName,
-      requestType: "user_trends",
+      requestType: "user_trends_weekly",
       sectionName: "weekly_trend",
       usage,
       duration_ms,
@@ -303,7 +303,7 @@ async function generateWeeklyTrendFromDailyData(
     await logAIRequest({
       userId,
       model: modelName,
-      requestType: "user_trends",
+      requestType: "user_trends_weekly",
       sectionName: "weekly_trend",
       usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
       duration_ms: Date.now() - startTime,
@@ -609,7 +609,8 @@ export async function updateUserTrendsMonthlyForUser(
     monthLabel,
     isPro,
     userId,
-    userName
+    userName,
+    "user_trends_monthly"
   );
 
   if (!trend) {

@@ -111,6 +111,8 @@ export const useCreateDailyVivid = () => {
 
       // useRecordsAndFeedbackDates의 aiFeedbackDates 업데이트 (비비드 또는 회고 생성 시)
       const hasAiFeedback =
+        data?.type === "vivid" ||
+        data?.type === "review" ||
         data?.is_vivid_ai_generated === true ||
         data?.is_review_ai_generated === true;
       if (hasAiFeedback) {
@@ -131,14 +133,14 @@ export const useCreateDailyVivid = () => {
         let nextReviewDates = reviewFeedbackDates;
 
         if (
-          data?.is_vivid_ai_generated === true &&
+          (data?.type === "vivid" || data?.is_vivid_ai_generated === true) &&
           !vividFeedbackDates.includes(variables.date)
         ) {
           nextVividDates = [...vividFeedbackDates, variables.date].sort();
         }
 
         if (
-          data?.is_review_ai_generated === true &&
+          (data?.type === "review" || data?.is_review_ai_generated === true) &&
           !reviewFeedbackDates.includes(variables.date)
         ) {
           nextReviewDates = [...reviewFeedbackDates, variables.date].sort();

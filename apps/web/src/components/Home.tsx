@@ -1,13 +1,16 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, MessageCircle } from "lucide-react";
+import { Sparkles, MessageCircle, CalendarPlus, CheckCircle2, RefreshCw } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { type RecordType } from "./signup/RecordTypeCard";
-import { RecordForm } from "./home/RecordForm";
+import { RecordForm, type HomeTabType } from "./home/RecordForm";
 import { RecordList } from "./home/RecordList";
 import { EditRecordDialog } from "./home/EditRecordDialog";
 import { DeleteRecordDialog } from "./home/DeleteRecordDialog";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
+import { useEnhanceDailyVivid } from "@/hooks/useEnhanceDailyVivid";
+import { useToast } from "@/hooks/useToast";
+import { useAddTodoToDate } from "@/hooks/useTodoList";
 import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
@@ -50,20 +53,30 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const [activeRecordType, setActiveRecordType] = useState<RecordType | null>(
     null
   );
+  const [activeTab, setActiveTab] = useState<HomeTabType>("vivid");
   const searchParamsString = searchParams?.toString() ?? "";
-  const initialRecordType = useMemo(() => {
+  const initialTab = useMemo((): HomeTabType | null => {
     const typeParam = searchParams?.get("type");
-    if (typeParam === "emotion") {
-      return "emotion";
-    }
-    if (typeParam === "review") {
-      return "review";
-    }
-    if (typeParam === "vivid") {
-      return "dream";
-    }
+    if (typeParam === "todo") return "todo";
+    if (typeParam === "review") return "review";
+    if (typeParam === "vivid") return "vivid";
+    if (typeParam === "emotion") return "review"; // emotion은 회고로 매핑
     return null;
   }, [searchParams]);
+
+  const initialRecordType = useMemo(() => {
+    const typeParam = searchParams?.get("type");
+    if (typeParam === "emotion") return "emotion";
+    if (typeParam === "review") return "review";
+    if (typeParam === "vivid") return "dream";
+    return null;
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     if (initialRecordType && activeRecordType === null) {
@@ -82,6 +95,18 @@ export function Home({ selectedDate }: HomeProps = {}) {
       }
       const nextQuery = params.toString();
       router.replace(nextQuery ? `${pathname ?? "/"}?${nextQuery}` : pathname ?? "/");
+    },
+    [router, pathname, searchParamsString]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: HomeTabType) => {
+      setActiveTab(tab);
+      const params = new URLSearchParams(searchParamsString);
+      params.set("type", tab);
+      router.replace(`${pathname ?? "/"}?${params.toString()}`);
+      if (tab === "vivid") setActiveRecordType("dream");
+      else if (tab === "review") setActiveRecordType("review");
     },
     [router, pathname, searchParamsString]
   );
@@ -186,16 +211,17 @@ export function Home({ selectedDate }: HomeProps = {}) {
     isVividQuerySuccess &&
     !!vividFeedback &&
     vividFeedback.report_date === activeDate &&
-    vividFeedback.is_vivid_ai_generated === true &&
+    (vividFeedback.type === "vivid" || vividFeedback.is_vivid_ai_generated === true) &&
     vividFeedback.report != null;
   const hasReviewFeedback =
     isReviewQuerySuccess &&
     !!reviewFeedback &&
     reviewFeedback.report_date === activeDate &&
-    reviewFeedback.is_review_ai_generated === true &&
+    (reviewFeedback.type === "review" || reviewFeedback.is_review_ai_generated === true) &&
     reviewFeedback.report != null;
 
-  const isReviewTab = activeRecordType === "review";
+  const isReviewTab = activeTab === "review";
+  const isTodoTab = activeTab === "todo";
   const hasDateFeedback = isReviewTab ? hasReviewFeedback : hasVividFeedback;
   const dateFeedback = isReviewTab ? reviewFeedback : vividFeedback;
 
@@ -209,21 +235,28 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   const { isPro } = useSubscription();
   const [isInsightDialogOpen, setIsInsightDialogOpen] = useState(false);
+  const [insightAddedItems, setInsightAddedItems] = useState<Set<string>>(new Set());
+  const [hasInsightRegenerated, setHasInsightRegenerated] = useState(false);
+  const addTodoToDate = useAddTodoToDate();
+  const enhanceInsightMutation = useEnhanceDailyVivid();
+  const { showToast } = useToast();
   const insight = vividFeedback?.insight as
-    | { praise?: string[]; feedback?: string[]; improvements?: string[]; summary?: string }
+    | { feedback?: string[]; improvements?: string[]; summary?: string; suggested_today?: string[] }
     | null
     | undefined;
   const hasStructuredInsight =
     insight &&
-    ((insight.praise?.length ?? 0) > 0 ||
-      (insight.feedback?.length ?? 0) > 0 ||
+    ((insight.feedback?.length ?? 0) > 0 ||
       (insight.improvements?.length ?? 0) > 0 ||
+      (insight.suggested_today?.length ?? 0) > 0 ||
       !!(insight.summary?.trim()));
   const hasLegacyInsight = !!vividFeedback?.insight_message?.trim();
   const hasInsightData = hasStructuredInsight || hasLegacyInsight;
-  // 인사이트는 type=vivid(비비드)일 때만 표시
+  // 인사이트는 비비드 탭일 때만 표시 (회고·할 일 탭에서는 숨김)
   const showInsightButton =
     isPro &&
+    !isReviewTab &&
+    !isTodoTab &&
     hasVividFeedback &&
     hasInsightData &&
     !!vividFeedback?.id;
@@ -435,20 +468,24 @@ export function Home({ selectedDate }: HomeProps = {}) {
       <RecordForm
         selectedDate={activeDate}
         onTypeChange={handleTypeChange}
+        onTabChange={handleTabChange}
+        activeTab={activeTab}
         initialType={initialRecordType}
       />
-      <RecordList
-        records={allRecords}
-        isLoading={isLoading}
-        error={error}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onRetry={() => refetchRecords()}
-        selectedDate={activeDate}
-        activeRecordType={activeRecordType}
-      />
+      {!isTodoTab && (
+        <RecordList
+          records={allRecords}
+          isLoading={isLoading}
+          error={error}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onRetry={() => refetchRecords()}
+          selectedDate={activeDate}
+          activeRecordType={activeRecordType}
+        />
+      )}
 
-      {hasDateRecords && (
+      {hasDateRecords && !isTodoTab && (
         <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50">
           <div className="flex items-center gap-2 sm:gap-3 justify-center">
             <div
@@ -644,65 +681,71 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
       <Dialog
         open={isInsightDialogOpen}
-        onOpenChange={setIsInsightDialogOpen}
+        onOpenChange={(open) => {
+          setIsInsightDialogOpen(open);
+          if (!open) {
+            setInsightAddedItems(new Set());
+            setHasInsightRegenerated(false);
+          }
+        }}
       >
         <DialogContent
           className={cn(
             "w-[min(calc(100vw-24px),400px)] max-h-[85vh] p-4 sm:p-6",
-            "flex flex-col gap-4"
+            "flex flex-col gap-4 overflow-hidden"
           )}
           style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "85vh",
+            maxHeight: "85vh",
             backgroundColor: COLORS.background.card,
             border: `1px solid ${COLORS.border.light}`,
           }}
         >
-          <DialogHeader className="flex-shrink-0">
+          <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between gap-2 pr-0">
             <DialogTitle
               className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
               style={{ color: COLORS.text.primary }}
             >
               오늘의 인사이트
             </DialogTitle>
+            <button
+              type="button"
+              onClick={() => setIsInsightDialogOpen(false)}
+              className="flex-shrink-0 p-2 rounded-lg hover:bg-black/5 transition-colors"
+              style={{ color: COLORS.text.muted }}
+              aria-label="닫기"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
           </DialogHeader>
           <div
             className={cn(
-              "flex flex-col gap-4 overflow-y-auto max-h-[70vh]",
+              "flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto overflow-x-hidden hide-scrollbar",
               "text-sm leading-relaxed"
             )}
-            style={{ color: COLORS.text.secondary }}
+            style={{
+              color: COLORS.text.secondary,
+              minHeight: 0,
+              WebkitOverflowScrolling: "touch",
+            }}
           >
             {hasStructuredInsight && insight ? (
               <>
-                {insight.praise?.length ? (
-                  <div className="space-y-2">
-                    <h4
-                      className={cn(
-                        TYPOGRAPHY.label.fontSize,
-                        TYPOGRAPHY.label.fontWeight
-                      )}
-                      style={{ color: COLORS.section.summary.primary }}
-                    >
-                      잘 맞는 점
-                    </h4>
-                    <ul className="space-y-1.5 ml-0 list-none">
-                      {insight.praise.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex gap-2"
-                          style={{ color: COLORS.text.secondary }}
-                        >
-                          <span
-                            className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: COLORS.section.summary.primary,
-                            }}
-                          />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
                 {insight.feedback?.length ? (
                   <div className="space-y-2">
                     <h4
@@ -763,6 +806,76 @@ export function Home({ selectedDate }: HomeProps = {}) {
                     </ul>
                   </div>
                 ) : null}
+                {insight.suggested_today?.length ? (
+                  <div className="space-y-2">
+                    <h4
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight
+                      )}
+                      style={{ color: COLORS.brand.primary }}
+                    >
+                      오늘 제안하는 일
+                    </h4>
+                    <ul className="space-y-1.5 ml-0 list-none">
+                      {insight.suggested_today.map((item, i) => {
+                        const isAdded = insightAddedItems.has(item);
+                        return (
+                          <li
+                            key={i}
+                            className="flex items-center gap-2"
+                            style={{ color: COLORS.text.secondary }}
+                          >
+                            <span
+                              className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: COLORS.brand.primary,
+                              }}
+                            />
+                            <span className="flex-1 min-w-0">{item}</span>
+                            {isAdded ? (
+                              <span
+                                className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm"
+                                style={{
+                                  color: COLORS.status.success,
+                                  backgroundColor: `${COLORS.status.success}15`,
+                                }}
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>추가됨</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  addTodoToDate.mutate(
+                                    { date: todayIso, contents: item },
+                                    {
+                                      onSuccess: () => {
+                                        setInsightAddedItems((prev) =>
+                                          new Set(prev).add(item)
+                                        );
+                                      },
+                                    }
+                                  );
+                                }}
+                                disabled={addTodoToDate.isPending}
+                                className="flex-shrink-0 p-2 rounded-lg hover:bg-black/5 transition-colors disabled:opacity-50"
+                                style={{
+                                  color: COLORS.brand.primary,
+                                  border: `1px solid ${COLORS.border.light}`,
+                                }}
+                                aria-label={`${item} 오늘 할 일에 추가`}
+                              >
+                                <CalendarPlus className="w-4 h-4" />
+                              </button>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
                 {insight.summary?.trim() ? (
                   <p
                     className={cn(TYPOGRAPHY.bodySmall.fontSize, "pt-2")}
@@ -781,16 +894,54 @@ export function Home({ selectedDate }: HomeProps = {}) {
               </div>
             )}
           </div>
-          <DialogFooter className="flex-shrink-0 flex flex-col gap-2 sm:flex-col">
+          <DialogFooter className="flex-shrink-0 flex flex-col gap-2 sm:flex-col pt-2">
+                        {hasStructuredInsight && vividFeedback?.id && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (hasInsightRegenerated) return;
+                  setHasInsightRegenerated(true);
+                  enhanceInsightMutation.mutate(
+                    { id: vividFeedback.id, forceRegenerate: true },
+                    {
+                      onSuccess: () => {
+                        showToast("인사이트가 다시 생성되었어요.");
+                      },
+                    }
+                  );
+                }}
+                disabled={enhanceInsightMutation.isPending || hasInsightRegenerated}
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs transition-colors mt-2"
+                style={{
+                  color: COLORS.text.tertiary,
+                  border: `1px solid ${COLORS.border.light}`,
+                  backgroundColor: "transparent",
+                }}
+              >
+                {enhanceInsightMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    <span>재생성 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-3 h-3" />
+                    <span>인사이트 다시 생성</span>
+                  </>
+                )}
+              </button>
+            )}
             <p
               className={cn(TYPOGRAPHY.caption.fontSize)}
               style={{
                 color: COLORS.text.muted,
                 lineHeight: 1.4,
+                textAlign: "center",
               }}
             >
-              이 피드백은 AI가 생성한 것으로, 최종 선택은 사용자의 몫입니다.
+              AI의 제안은 성장을 돕는 작은 힌트일 뿐입니다.
             </p>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>

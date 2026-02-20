@@ -282,6 +282,31 @@ function applyReorderToCache(
 
 const OPTIMISTIC_ID_PREFIX = "optimistic-todo-";
 
+/** 특정 날짜에 투두 추가 (회고 페이지에서 내일/미래 일정에 추가할 때 사용) */
+export function useAddTodoToDate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ date, contents }: { date: string; contents: string }) =>
+      addTodoItem(date, contents),
+    onSuccess: (_data, { date }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+    },
+  });
+}
+
+/** id + date로 투두 삭제 (회고 페이지에서 추가한 일정 삭제 시 사용) */
+export function useDeleteTodoItemByDate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) => deleteTodoItem(id),
+    onSuccess: (_data, { date }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+    },
+  });
+}
+
 export function useAddTodoItem(date: string) {
   const queryClient = useQueryClient();
 

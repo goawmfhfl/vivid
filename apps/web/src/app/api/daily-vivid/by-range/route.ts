@@ -68,10 +68,10 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     const { data, error } = await supabase
-    .from(API_ENDPOINTS.DAILY_VIVID)
+      .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
-      .eq("is_vivid_ai_generated", true)
+      .eq("type", "vivid")
       .gte("report_date", dateRange.start_date)
       .lte("report_date", dateRange.end_date)
       .order("report_date", { ascending: true });

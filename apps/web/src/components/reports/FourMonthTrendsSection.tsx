@@ -74,19 +74,20 @@ export function FourMonthTrendsSection({
     const rows = scoreEntries
       .map((entry) => ({
         reportDate: entry.report_date,
-        alignmentScore: entry.report?.alignment_score,
+        alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
         executionScore: entry.report?.execution_score ?? null,
       }))
       .filter(
-        (row): row is { reportDate: string; alignmentScore: number; executionScore: number | null } =>
-          typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)
+        (row): row is { reportDate: string; alignmentScore: number | undefined; executionScore: number | null } =>
+          (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
+          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
       );
 
     if (rows.length === 0) return null;
 
     const hasExecutionData = rows.some((r) => r.executionScore != null && Number.isFinite(r.executionScore));
 
-    const byDate = new Map<string, { alignmentScore: number; executionScore: number | null }>();
+    const byDate = new Map<string, { alignmentScore?: number; executionScore: number | null }>();
     for (const r of rows) {
       if (!byDate.has(r.reportDate)) {
         byDate.set(r.reportDate, {
@@ -111,7 +112,9 @@ export function FourMonthTrendsSection({
         byMonth.set(month, { alignmentScore: [], executionScore: [] });
       }
       const m = byMonth.get(month)!;
-      m.alignmentScore.push(scores.alignmentScore);
+      if (typeof scores.alignmentScore === "number" && Number.isFinite(scores.alignmentScore)) {
+        m.alignmentScore.push(scores.alignmentScore);
+      }
       if (scores.executionScore != null && Number.isFinite(scores.executionScore)) {
         m.executionScore.push(scores.executionScore);
       }
@@ -130,9 +133,9 @@ export function FourMonthTrendsSection({
 
     for (const month of sortedMonths) {
       const m = byMonth.get(month)!;
-      const alignmentAvg = Math.round(
-        m.alignmentScore.reduce((s, v) => s + v, 0) / m.alignmentScore.length
-      );
+      const alignmentAvg = m.alignmentScore.length > 0
+        ? Math.round(m.alignmentScore.reduce((s, v) => s + v, 0) / m.alignmentScore.length)
+        : 0;
       const monthHasExecution = m.executionScore.length > 0;
       const executionAvg = monthHasExecution
         ? Math.round(

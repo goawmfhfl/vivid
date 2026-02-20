@@ -44,29 +44,6 @@ export const DailyVividReportSchema = {
         type: "boolean",
         description: "일치도가 user_persona의 지향하는 자아(ideal_self)를 기준으로 산정되었으면 true, Q2만 기준이면 false",
       },
-      // 회고 인사이트 (Q3)
-      retrospective_summary: {
-        type: ["string", "null"],
-        description: "Q3가 입력된 경우에만 요약, 없으면 null",
-      },
-      retrospective_evaluation: {
-        type: ["string", "null"],
-        description: "Q3가 입력된 경우에만 평가, 없으면 null",
-      },
-      // 실행력 점수 (Q1 <-> Q3)
-      execution_score: {
-        type: ["number", "null"],
-        minimum: 0,
-        maximum: 100,
-        description: "Q3가 있을 경우: Q1과 Q3의 일치도, 없으면 null",
-      },
-      execution_analysis_points: {
-        type: ["array", "null"],
-        items: { type: "string" },
-        minItems: 0,
-        maxItems: 3,
-        description: "Q3가 있을 경우: 실행 점수의 핵심 근거 3가지, 없으면 null",
-      },
       // 사용자 특성 분석
       user_characteristics: {
         type: "array",
@@ -90,10 +67,6 @@ export const DailyVividReportSchema = {
       "future_keywords",
       "alignment_score",
       "alignment_analysis_points",
-      "retrospective_summary",
-      "retrospective_evaluation",
-      "execution_score",
-      "execution_analysis_points",
       "user_characteristics",
       "aspired_traits",
     ],
@@ -136,6 +109,52 @@ export const TrendDataSchema = {
   strict: true,
 } as const;
 
+/** 회고 전용 리포트 스키마 (오늘의 VIVID/앞으로의 나/일치도 제외) */
+export const ReviewReportSchema = {
+  name: "ReviewReport",
+  schema: {
+    type: "object",
+    properties: {
+      retrospective_summary: { type: "string" },
+      retrospective_evaluation: { type: "string" },
+      execution_score: { type: "number", minimum: 0, maximum: 100 },
+      execution_analysis_points: {
+        type: "array",
+        items: { type: "string" },
+      },
+      completed_todos: { type: "array", items: { type: "string" } },
+      uncompleted_todos: { type: "array", items: { type: "string" } },
+      todo_feedback: { type: "array", items: { type: "string" } },
+      daily_summary: { type: "string" },
+      suggested_todos_for_tomorrow: {
+        type: "object",
+        properties: {
+          reason: { type: "string" },
+          items: { type: "array", items: { type: "string" } },
+        },
+        required: ["reason", "items"],
+      },
+    },
+    required: [
+      "retrospective_summary",
+      "retrospective_evaluation",
+      "execution_score",
+      "execution_analysis_points",
+      "completed_todos",
+      "uncompleted_todos",
+      "todo_feedback",
+      "daily_summary",
+    ],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
+export const SYSTEM_PROMPT_REVIEW = `
+당신은 사용자의 회고 기록(Q3)과 투두 체크 현황을 분석하여 회고 전용 리포트를 생성합니다.
+오늘의 VIVID(Q1), 앞으로의 나(Q2), 일치도 분석은 제외하고, Q3와 투두 실행 현황만을 기반으로 작성합니다.
+`;
+
 export const IntegratedDailyVividSchema = {
   name: "IntegratedDailyVividReport",
   schema: {
@@ -157,7 +176,7 @@ export const SYSTEM_PROMPT_REPORT = `
 - vision_keywords는 6~10개 필수로 추출합니다.
 - vision_ai_feedback는 3개 요소의 배열로 반환합니다. 각 요소는 핵심 피드백 한 문장입니다.
 - VIVID 기록(Q1, Q2)은 비전 분석에 사용합니다.
-- 회고 기록(Q3)이 없으면 retrospective/ execution 관련 필드는 반드시 null로 반환합니다.
+- 회고(retrospective)·실행력(execution) 관련 필드는 vivid에서 생성하지 않습니다. (review 전용)
 `;
 
 export const SYSTEM_PROMPT_TREND = `
@@ -192,7 +211,7 @@ export const SYSTEM_PROMPT_INTEGRATED = `
 
 ## 공통 규칙
 - VIVID 기록(Q1, Q2)은 비전 분석에 사용합니다.
-- 회고 기록(Q3)이 없으면 retrospective/ execution 관련 필드는 반드시 null로 반환합니다.
+- 회고(retrospective)·실행력(execution) 관련 필드는 vivid에서 생성하지 않습니다. (review 전용)
 
 ## 1. Report 섹션 규칙
 - vision_keywords는 6~10개 필수로 추출합니다.

@@ -4,9 +4,7 @@ import { SectionHeader } from "../common/feedback";
 import { SectionProps } from "./types";
 import { CurrentVividSection } from "./CurrentVividSection";
 import { FutureVisionSection } from "./FutureVisionSection";
-import { RetrospectiveSection } from "./RetrospectiveSection";
 import { AlignmentAnalysisSection } from "./AlignmentAnalysisSection";
-import { ExecutionAnalysisSection } from "./ExecutionAnalysisSection";
 import { UserCharacteristicsSection } from "./UserCharacteristicsSection";
 
 export function VisionSection({ view, isPro = false }: SectionProps) {
@@ -22,9 +20,7 @@ export function VisionSection({ view, isPro = false }: SectionProps) {
       />
       <CurrentVividSection view={view} />
       <FutureVisionSection view={view} />
-      <RetrospectiveSection view={view} />
       <AlignmentAnalysisSection view={view} isPro={isPro} />
-      <ExecutionAnalysisSection view={view} />
       <UserCharacteristicsSection view={view} isPro={isPro} />
     </div>
   );

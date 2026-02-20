@@ -43,6 +43,18 @@ export type DailyReportData = {
   /** 지향하는 모습 (최대 5가지) */
   aspired_traits: string[];
 
+  // ========== 회고 전용 (ReviewReport) ==========
+  /** 완료한 할 일 (회고 전용) */
+  completed_todos?: string[];
+  /** 미완료 할 일 (회고 전용) */
+  uncompleted_todos?: string[];
+  /** user_persona 기반 투두 피드백 (회고 전용) */
+  todo_feedback?: string[];
+  /** 오늘 한 일 간단 요약 (회고 전용) */
+  daily_summary?: string;
+  /** 내일을 위한 할 일 제안 (회고 전용) */
+  suggested_todos_for_tomorrow?: { reason: string; items: string[] };
+
   // ========== 감정 분석 데이터 ==========
   /** 감정 valence (-1~1). 문자열로 들어올 수 있음 */
   ai_mood_valence?: number | string | null;

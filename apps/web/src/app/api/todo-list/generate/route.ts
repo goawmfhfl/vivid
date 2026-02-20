@@ -7,6 +7,7 @@ import {
   fetchRecordsByDateOptional,
   saveTodoListItems,
   decryptTodoListItems,
+  MANUAL_ADD_CATEGORY,
 } from "@/app/api/daily-vivid/db-service";
 
 /**
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       .select("id")
       .eq("user_id", userId)
       .eq("report_date", date)
-      .eq("is_vivid_ai_generated", true)
+      .eq("type", "vivid")
       .maybeSingle();
 
     if (dvError || !dailyVivid?.id) {
@@ -84,16 +85,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 인사이트/회고에서 직접 추가한 항목(직접 추가)은 보존하고 AI 생성 항목과 병합
+    const { data: existingRows } = await supabase
+      .from("todo_list_items")
+      .select("contents, is_checked, category")
+      .eq("daily_vivid_id", dailyVivid.id)
+      .is("scheduled_at", null);
+
+    const existingManual =
+      existingRows?.length
+        ? decryptTodoListItems(existingRows)
+            .filter((r) => (r.category ?? "").trim() === MANUAL_ADD_CATEGORY)
+            .map((r) => ({
+              contents: r.contents,
+              category: r.category,
+              is_checked: r.is_checked ?? false,
+            }))
+        : [];
+
+    const merged = [
+      ...existingManual,
+      ...todoItems.map((t) => ({ contents: t.contents, category: t.category })),
+    ];
+
     await saveTodoListItems(
       supabase,
       dailyVivid.id,
       userId,
-      todoItems
+      merged
     );
 
     const { data: savedItems } = await supabase
       .from("todo_list_items")
-      .select("id, contents, is_checked, category")
+      .select("id, contents, is_checked, category, sort_order, scheduled_at")
       .eq("daily_vivid_id", dailyVivid.id)
       .order("sort_order", { ascending: true });
 

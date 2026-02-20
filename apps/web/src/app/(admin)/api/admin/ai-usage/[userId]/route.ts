@@ -124,18 +124,28 @@ export async function GET(
       0
     );
 
-    // 타입별 통계
+    // 타입별 통계 (daily_vivid* = 비비드 리포트/인사이트/투두/회고 등 모두 포함)
     const dailyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "daily_vivid")
+        ?.filter((r) =>
+          r.request_type === "daily_vivid" || r.request_type?.startsWith("daily_vivid_")
+        )
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
     const weeklyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "weekly_vivid")
+        ?.filter(
+          (r) =>
+            r.request_type === "weekly_vivid" ||
+            r.request_type === "user_trends_weekly"
+        )
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
     const monthlyTypeCost =
       allRequests
-        ?.filter((r) => r.request_type === "monthly_vivid")
+        ?.filter(
+          (r) =>
+            r.request_type === "monthly_vivid" ||
+            r.request_type === "user_trends_monthly"
+        )
         .reduce((sum, r) => sum + Number(r.cost_krw || 0), 0) || 0;
 
     const details: AIUsageDetail[] =
@@ -187,20 +197,28 @@ export async function GET(
         byType: {
           daily: {
             requests:
-              allRequests?.filter((r) => r.request_type === "daily_vivid")
-                .length || 0,
+              allRequests?.filter((r) =>
+                r.request_type === "daily_vivid" || r.request_type?.startsWith("daily_vivid_")
+              ).length || 0,
             cost_krw: dailyTypeCost,
           },
           weekly: {
             requests:
-              allRequests?.filter((r) => r.request_type === "weekly_vivid")
-                .length || 0,
+              allRequests?.filter(
+                (r) =>
+                  r.request_type === "weekly_vivid" ||
+                  r.request_type === "user_trends_weekly"
+              ).length || 0,
             cost_krw: weeklyTypeCost,
           },
           monthly: {
             requests:
-              allRequests?.filter((r) => r.request_type === "monthly_vivid")
-                .length || 0,
+              allRequests?.filter(
+                (r) =>
+                  r.request_type === "monthly_vivid" ||
+                  r.request_type === "user_trends_monthly" ||
+                  r.request_type?.startsWith("monthly_vivid_")
+              ).length || 0,
             cost_krw: monthlyTypeCost,
           },
         },

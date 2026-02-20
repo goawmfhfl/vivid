@@ -10,7 +10,8 @@ import {
 import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { useEnhanceDailyVivid } from "@/hooks/useEnhanceDailyVivid";
 import { VisionSection } from "./Vision";
-import { hasExecutionAnalysisData } from "./ExecutionAnalysisSection";
+import { ReviewReportSection } from "./review";
+import { getDailyVividType } from "@/types/daily-vivid";
 import { EmptyState } from "./States";
 import { mapDailyVividRowToReport } from "./mappers";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
@@ -85,12 +86,14 @@ export function DailyVividView({
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = useState(false);
 
+  const rowType = data ? getDailyVividType(data) : "vivid";
+
   // Pro 전용: 상세 페이지 마운트 시 인사이트 생성 요청 (type=vivid일 때만)
   useEffect(() => {
     if (
       !isPro ||
       !data?.id ||
-      data?.is_vivid_ai_generated !== true ||
+      rowType !== "vivid" ||
       data.insight ||
       data.insight_message ||
       insightTriggeredRef.current ||
@@ -103,7 +106,7 @@ export function DailyVividView({
   }, [
     isPro,
     data?.id,
-    data?.is_vivid_ai_generated,
+    rowType,
     data?.insight,
     data?.insight_message,
     enhanceMutation,
@@ -112,7 +115,7 @@ export function DailyVividView({
   const isRegenerating =
     createDailyVivid.isPending || timerProgress !== null;
 
-  const generationType = data?.is_vivid_ai_generated ? "vivid" : "review";
+  const generationType = rowType;
   const canRegenerate =
     !!data &&
     !data.is_regenerated &&
@@ -255,16 +258,19 @@ export function DailyVividView({
 
   if (!view) return <EmptyState onBack={onBack} />;
 
-  // 섹션 노출 가드: 리포트 데이터가 null이면 렌더링 제외
   const hasDreamSection = !!(
     (view.current_summary && view.current_summary.trim()) ||
     (view.future_summary && view.future_summary.trim()) ||
-    (view.retrospective_summary && view.retrospective_summary.trim()) ||
-    (view.retrospective_evaluation && view.retrospective_evaluation.trim()) ||
     (view.alignment_score !== null && view.alignment_score !== undefined) ||
-    hasExecutionAnalysisData(view) ||
     (view.user_characteristics && view.user_characteristics.length > 0) ||
     (view.aspired_traits && view.aspired_traits.length > 0)
+  );
+
+  const hasReviewSection = !!(
+    view.completed_todos?.length ||
+    view.uncompleted_todos?.length ||
+    view.todo_feedback?.length ||
+    (view.daily_summary && view.daily_summary.trim())
   );
 
   return (
@@ -304,8 +310,8 @@ export function DailyVividView({
           </div>
         </div>
 
-        {/* 오늘의 VIVID 섹션 */}
-        {hasDreamSection && (
+        {/* 오늘의 VIVID 섹션 (type=vivid) */}
+        {rowType === "vivid" && hasDreamSection && (
           <ScrollAnimation>
             <div className="mb-16">
               <VisionSection view={view} isPro={isPro} />
@@ -313,9 +319,22 @@ export function DailyVividView({
           </ScrollAnimation>
         )}
 
+        {/* 회고 섹션 (type=review) */}
+        {rowType === "review" && (hasReviewSection || hasDreamSection) && (
+          <ScrollAnimation>
+            <div className="mb-16">
+              <ReviewReportSection
+                view={view}
+                todoLists={data?.todoLists ?? []}
+                date={view.date}
+              />
+            </div>
+          </ScrollAnimation>
+        )}
+
         {/* 피드백 섹션 */}
         <ScrollAnimation delay={200}>
-          <VividFeedbackSection pageType="daily" />
+          <VividFeedbackSection pageType="daily" vividType={rowType} />
         </ScrollAnimation>
 
         <div className="grid grid-cols-2 gap-3 pt-4 pb-32">

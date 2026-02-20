@@ -106,13 +106,12 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    const isVivid = generationType === "vivid";
     const { data: rows, error } = await supabase
       .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
       .eq("report_date", date)
-      .eq(isVivid ? "is_vivid_ai_generated" : "is_review_ai_generated", true)
+      .eq("type", generationType)
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -122,12 +121,26 @@ export async function GET(request: NextRequest) {
 
     const data = rows?.[0] ?? null;
 
-    // vivid가 없어도 todoLists(스케줄된 항목) 조회
+    // todoLists는 같은 날짜 vivid에 연결된 항목 사용 (회고도 vivid의 투두 참조)
+    let vividIdForTodo: string | null = data?.id ?? null;
+    if (generationType === "review" && data) {
+      const { data: vividRow } = await supabase
+        .from(API_ENDPOINTS.DAILY_VIVID)
+        .select("id")
+        .eq("user_id", userId)
+        .eq("report_date", date)
+        .eq("type", "vivid")
+        .maybeSingle();
+      vividIdForTodo = vividRow?.id ?? null;
+    } else if (generationType === "vivid") {
+      vividIdForTodo = data?.id ?? null;
+    }
+
     const { todoLists, hasNativeTodoList } = await fetchTodoListsForDate(
       supabase,
       userId,
       date,
-      data?.id ?? null
+      vividIdForTodo
     );
 
     if (!data) {

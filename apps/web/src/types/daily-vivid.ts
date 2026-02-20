@@ -1,3 +1,20 @@
+/** 회고 전용 리포트 - 오늘의 VIVID/앞으로의 나/일치도 제외 */
+export interface ReviewReport {
+  retrospective_summary: string;
+  retrospective_evaluation: string;
+  execution_score: number;
+  execution_analysis_points: string[];
+  completed_todos: string[];
+  uncompleted_todos: string[];
+  todo_feedback: string[];
+  daily_summary: string;
+  /** 내일을 위한 할 일 제안 (권장 이유 + 항목 목록) */
+  suggested_todos_for_tomorrow?: {
+    reason: string;
+    items: string[];
+  };
+}
+
 export interface Report {
   // 오늘의 VIVID (현재 모습)
   current_summary: string; // 오늘의 비비드 요약 - 오늘 기록한 VIVID 내용의 요약, 하루의 핵심 내용을 간결하게 정리
@@ -45,12 +62,13 @@ export interface TrendData {
   personality_trait: string; // 나라는 사람의 성향 1개
 }
 
-/** Pro 전용: 구조화된 인사이트 (칭찬, 피드백, 개선할 점) */
+/** Pro 전용: 구조화된 인사이트 (피드백, 개선할 점) */
 export interface DailyVividInsight {
-  praise: string[]; // 칭찬 - 잘한 점, 지향과 일치하는 점
   feedback: string[]; // 피드백 - 관찰/분석
   improvements: string[]; // 개선할 점 - 실행 가능한 제안
   summary?: string; // (선택) 한 줄 요약
+  /** 오늘 제안하는 일 - 오늘 할 일로 바로 추가 가능한 구체적 제안 1~3개 */
+  suggested_today?: string[];
 }
 
 
@@ -64,14 +82,18 @@ export interface DailyVividRow {
   report_date: string;
   day_of_week: string | null;
 
-  // 통합 리포트 (jsonb)
-  report: Report | null;
+  // 통합 리포트 (jsonb) - vivid: Report, review: ReviewReport
+  report: Report | ReviewReport | null;
   trend: TrendData | null; // 최근 동향 데이터 (JSONB)
 
   created_at: string;
   updated_at: string;
-  is_vivid_ai_generated: boolean | null;
-  is_review_ai_generated: boolean | null;
+  /** vivid | review - 기존 is_vivid_ai_generated/is_review_ai_generated 대체 */
+  type?: "vivid" | "review";
+  /** @deprecated type 사용. 하위 호환용 */
+  is_vivid_ai_generated?: boolean | null;
+  /** @deprecated type 사용. 하위 호환용 */
+  is_review_ai_generated?: boolean | null;
   generation_duration_seconds?: number; // 피드백 생성에 소요된 시간 (초 단위)
   is_regenerated?: boolean | null; // 재생성 여부. true이면 1회 재생성 완료
   todoLists?: TodoListItem[]; // Pro 전용: Q1 기반 AI 투두 리스트
@@ -81,4 +103,27 @@ export interface DailyVividRow {
   insight?: DailyVividInsight | null;
   /** @deprecated insight로 마이그레이션됨. 하위 호환용 */
   insight_message?: string | null;
+}
+
+/** report가 vivid용 Report인지 확인 */
+export function isVividReport(
+  report: Report | ReviewReport | null
+): report is Report {
+  if (!report) return false;
+  return "current_summary" in report && "alignment_score" in report;
+}
+
+/** report가 회고용 ReviewReport인지 확인 */
+export function isReviewReport(
+  report: Report | ReviewReport | null
+): report is ReviewReport {
+  if (!report) return false;
+  return "completed_todos" in report && "uncompleted_todos" in report;
+}
+
+/** DailyVividRow의 type 또는 레거시 컬럼으로 vivid/review 판별 */
+export function getDailyVividType(row: DailyVividRow): "vivid" | "review" {
+  if (row.type) return row.type;
+  if (row.is_review_ai_generated) return "review";
+  return "vivid";
 }
