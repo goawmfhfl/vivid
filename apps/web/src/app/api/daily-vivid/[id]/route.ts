@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { decryptDailyVivid } from "@/lib/jsonb-encryption";
+import { fetchTodoListsForDate } from "../db-service";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
 import {
@@ -10,6 +11,7 @@ import {
 
 /**
  * GET 핸들러: 일일 비비드 조회 (id 기반)
+ * review 타입일 때 vivid의 todoLists를, vivid 타입일 때 해당 row의 todoLists를 조회해 포함
  */
 export async function GET(
   request: NextRequest,
@@ -34,7 +36,7 @@ export async function GET(
     const supabase = getServiceSupabase();
 
     const { data, error } = await supabase
-    .from(API_ENDPOINTS.DAILY_VIVID)
+      .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
       .eq("id", id)
@@ -51,13 +53,40 @@ export async function GET(
       );
     }
 
-    // 서버 사이드에서 복호화 처리
     const decrypted = decryptDailyVivid(
       data as unknown as { [key: string]: unknown }
     ) as unknown as DailyVividRow;
 
+    const reportDate = decrypted.report_date;
+    const rowType = decrypted.type ?? "vivid";
+
+    let vividIdForTodo: string | null = decrypted.id ?? null;
+    if (rowType === "review" && reportDate) {
+      const { data: vividRow } = await supabase
+        .from(API_ENDPOINTS.DAILY_VIVID)
+        .select("id")
+        .eq("user_id", userId)
+        .eq("report_date", reportDate)
+        .eq("type", "vivid")
+        .maybeSingle();
+      vividIdForTodo = vividRow?.id ?? null;
+    }
+
+    const { todoLists, hasNativeTodoList } = await fetchTodoListsForDate(
+      supabase,
+      userId,
+      reportDate ?? "",
+      vividIdForTodo
+    );
+
+    const result: DailyVividRow = {
+      ...decrypted,
+      todoLists: todoLists.length > 0 ? todoLists : (decrypted.todoLists ?? []),
+      hasNativeTodoList: decrypted.hasNativeTodoList ?? hasNativeTodoList,
+    };
+
     return NextResponse.json(
-      { data: decrypted },
+      { data: result },
       {
         status: 200,
         headers: {

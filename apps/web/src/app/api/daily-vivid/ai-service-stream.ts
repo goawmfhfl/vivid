@@ -3,6 +3,7 @@ import { GoogleGenerativeAI, type GenerateContentRequest } from "@google/generat
 import {
   DailyVividReportSchema,
   ReviewReportSchema,
+  ReviewReportSchemaMinimal,
   SYSTEM_PROMPT_REPORT,
   SYSTEM_PROMPT_REVIEW,
   SYSTEM_PROMPT_TREND,
@@ -12,7 +13,7 @@ import {
 } from "./schema";
 import { TodoListSchema, SYSTEM_PROMPT_TODO } from "./todo-schema";
 import type { Record as FeedbackRecord } from "./types";
-import { buildReportPrompt, buildReviewReportPrompt } from "./prompts";
+import { buildReportPrompt, buildReviewReportPrompt, buildReviewReportPromptMinimal } from "./prompts";
 import type {
   Report,
   ReviewReport,
@@ -580,10 +581,8 @@ async function generateReport(
     if (result && typeof result.alignment_based_on_persona !== "boolean") {
       result.alignment_based_on_persona = hasIdealSelfInPersona ?? false;
     }
-    // vivid 타입은 실행력 분석·회고를 생성하지 않음 (review 전용)
+    // vivid 타입은 회고·투두 달성률을 생성하지 않음 (review 전용)
     if (result) {
-      result.execution_score = null;
-      result.execution_analysis_points = null;
       result.retrospective_summary = null;
       result.retrospective_evaluation = null;
     }
@@ -781,6 +780,8 @@ export async function generateTodoListFromQ1(
 
 /**
  * 회고 전용 리포트 생성 (Q3 + 투두 + user_persona 기반)
+ * todoItems 없을 때: 최소 스키마만 사용, todo_completion_score 관련 인사이트 미포함
+ * todoItems 있을 때: todo_completion_score, todo_completion_analysis를 투두 달성률로 서버에서 주입
  */
 export async function generateReviewReport(
   records: FeedbackRecord[],
@@ -792,14 +793,11 @@ export async function generateReviewReport(
   userId?: string,
   userName?: string
 ): Promise<ReviewReport | null> {
-  const prompt = buildReviewReportPrompt(
-    records,
-    date,
-    dayOfWeek,
-    todoItems,
-    personaTraitsBlock,
-    userName
-  );
+  const hasTodos = todoItems.length > 0;
+  const prompt = hasTodos
+    ? buildReviewReportPrompt(records, date, dayOfWeek, todoItems, personaTraitsBlock, userName)
+    : buildReviewReportPromptMinimal(records, date, dayOfWeek, personaTraitsBlock, userName);
+
   if (!prompt.trim()) {
     console.log("[generateReviewReport] Q3 기록 없어서 null 반환");
     return null;
@@ -807,7 +805,43 @@ export async function generateReviewReport(
 
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_REVIEW, prompt);
 
+  const runMinimalAndReturn = async (): Promise<ReviewReport | null> => {
+    const minimalPrompt =
+      hasTodos
+        ? buildReviewReportPromptMinimal(records, date, dayOfWeek, personaTraitsBlock, userName, true)
+        : prompt;
+    if (!minimalPrompt.trim()) return null;
+    const minimalCacheKey = generateCacheKey(SYSTEM_PROMPT_REVIEW, minimalPrompt);
+    const minimalResult = await generateSection<{
+      retrospective_summary: string;
+      retrospective_evaluation: string;
+    }>(
+      SYSTEM_PROMPT_REVIEW,
+      minimalPrompt,
+      ReviewReportSchemaMinimal,
+      minimalCacheKey,
+      isPro,
+      "review_report",
+      userId
+    );
+    if (!minimalResult) return null;
+    const result: ReviewReport = {
+      ...minimalResult,
+      completed_todos: [],
+      uncompleted_todos: [],
+      todo_feedback: [],
+    } as ReviewReport;
+    console.log(
+      `[generateReviewReport] 생성 완료 (할 일 ${hasTodos ? "있음→실패 후" : "없음"} minimal, Pro: ${isPro})`
+    );
+    return result;
+  };
+
   try {
+    if (!hasTodos) {
+      return runMinimalAndReturn();
+    }
+
     const result = await generateSection<ReviewReport>(
       SYSTEM_PROMPT_REVIEW,
       prompt,
@@ -817,11 +851,21 @@ export async function generateReviewReport(
       "review_report",
       userId
     );
-    console.log(`[generateReviewReport] 생성 완료 (Pro: ${isPro})`);
-    return result;
+    if (result) {
+      console.log(`[generateReviewReport] 생성 완료 (Pro: ${isPro})`);
+      return result;
+    }
+    console.log("[generateReviewReport] 전체 스키마 실패, minimal로 fallback 시도");
+    return runMinimalAndReturn();
   } catch (error) {
     console.error("[generateReviewReport] 생성 실패:", error);
-    return null;
+    console.log("[generateReviewReport] minimal로 fallback 시도");
+    try {
+      return runMinimalAndReturn();
+    } catch (fallbackError) {
+      console.error("[generateReviewReport] minimal fallback도 실패:", fallbackError);
+      return null;
+    }
   }
 }
 

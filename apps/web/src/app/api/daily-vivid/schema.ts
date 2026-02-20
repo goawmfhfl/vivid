@@ -109,7 +109,22 @@ export const TrendDataSchema = {
   strict: true,
 } as const;
 
-/** 회고 전용 리포트 스키마 (오늘의 VIVID/앞으로의 나/일치도 제외) */
+/** 할 일 없을 때 회고 전용 최소 스키마 (execution/todo 관련은 서버에서 주입) */
+export const ReviewReportSchemaMinimal = {
+  name: "ReviewReportMinimal",
+  schema: {
+    type: "object",
+    properties: {
+      retrospective_summary: { type: "string" },
+      retrospective_evaluation: { type: "string" },
+    },
+    required: ["retrospective_summary", "retrospective_evaluation"],
+    additionalProperties: false,
+  },
+  strict: true,
+} as const;
+
+/** 회고 전용 리포트 스키마 (AI용 - todo_completion_score/todo_completion_analysis 제외, 서버에서 투두 달성률로 주입) */
 export const ReviewReportSchema = {
   name: "ReviewReport",
   schema: {
@@ -117,15 +132,9 @@ export const ReviewReportSchema = {
     properties: {
       retrospective_summary: { type: "string" },
       retrospective_evaluation: { type: "string" },
-      execution_score: { type: "number", minimum: 0, maximum: 100 },
-      execution_analysis_points: {
-        type: "array",
-        items: { type: "string" },
-      },
       completed_todos: { type: "array", items: { type: "string" } },
       uncompleted_todos: { type: "array", items: { type: "string" } },
       todo_feedback: { type: "array", items: { type: "string" } },
-      daily_summary: { type: "string" },
       suggested_todos_for_tomorrow: {
         type: "object",
         properties: {
@@ -138,12 +147,9 @@ export const ReviewReportSchema = {
     required: [
       "retrospective_summary",
       "retrospective_evaluation",
-      "execution_score",
-      "execution_analysis_points",
       "completed_todos",
       "uncompleted_todos",
       "todo_feedback",
-      "daily_summary",
     ],
     additionalProperties: false,
   },

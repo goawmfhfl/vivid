@@ -11,6 +11,10 @@ interface CircularProgressProps {
   className?: string;
   animated?: boolean;
   duration?: number;
+  /** 진행 바 색상 (기본: #A8BBA8) */
+  strokeColor?: string;
+  /** 텍스트 색상 (기본: #6B7A6F) */
+  textColor?: string;
 }
 
 export function CircularProgress({
@@ -22,6 +26,8 @@ export function CircularProgress({
   className = "",
   animated = true,
   duration = 1000,
+  strokeColor = "#A8BBA8",
+  textColor = "#6B7A6F",
 }: CircularProgressProps) {
   // 훅은 항상 동일한 순서로 호출해야 하므로 무조건 먼저 호출하고, 값만 조건부로 사용
   const countedPercentage = useCountUp(percentage, duration, true);
@@ -63,7 +69,7 @@ export function CircularProgress({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#A8BBA8"
+          stroke={strokeColor}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -79,7 +85,7 @@ export function CircularProgress({
         <div
           className={`absolute inset-0 flex items-center justify-center ${textSizeClasses[textSize]}`}
           style={{
-            color: "#6B7A6F",
+            color: textColor,
             fontWeight: "600",
           }}
         >

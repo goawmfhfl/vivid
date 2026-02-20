@@ -34,10 +34,6 @@ export type DailyReportData = {
   retrospective_summary?: string | null;
   /** 회고 평가 (Q3) */
   retrospective_evaluation?: string | null;
-  /** 실행력 점수 (Q1 <-> Q3) */
-  execution_score?: number | null;
-  /** 실행력 점수 근거 (1~3개) */
-  execution_analysis_points?: string[] | null;
   /** 기록을 쓰는 사람의 특징 (최대 5가지) */
   user_characteristics: string[];
   /** 지향하는 모습 (최대 5가지) */
@@ -50,8 +46,6 @@ export type DailyReportData = {
   uncompleted_todos?: string[];
   /** user_persona 기반 투두 피드백 (회고 전용) */
   todo_feedback?: string[];
-  /** 오늘 한 일 간단 요약 (회고 전용) */
-  daily_summary?: string;
   /** 내일을 위한 할 일 제안 (회고 전용) */
   suggested_todos_for_tomorrow?: { reason: string; items: string[] };
 

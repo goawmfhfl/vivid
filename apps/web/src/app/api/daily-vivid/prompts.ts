@@ -158,6 +158,8 @@ export function buildReviewReportPrompt(
   const completedTodos = todoItems.filter((t) => t.is_checked).map((t) => t.contents);
   const uncompletedTodos = todoItems.filter((t) => !t.is_checked).map((t) => t.contents);
 
+  const hasTodos = todoItems.length > 0;
+
   const instruction = [
     "회고 전용 리포트를 생성하세요. 아래 JSON 스키마에 맞게 채워주세요.",
     "",
@@ -165,13 +167,17 @@ export function buildReviewReportPrompt(
     "",
     "1) retrospective_summary: Q3 요약. 오늘의 실행/경험을 간결하게 정리.",
     "2) retrospective_evaluation: Q3 평가. 담백하고 따뜻한 톤으로 피드백.",
-    "3) execution_score: 투두 체크 완료율을 반영한 실행력 점수 (0-100).",
-    "4) execution_analysis_points: 실행력 점수 근거 1~3개.",
-    "5) completed_todos: 완료한 할 일 목록 (사용자 입력 그대로 또는 요약).",
-    "6) uncompleted_todos: 미완료 할 일 목록.",
-    "7) todo_feedback: user_persona '나의 특징' 기반으로 각 투두에 대한 피드백 1~3개.",
-    "8) daily_summary: 오늘 한 일 간단 요약.",
-    "9) suggested_todos_for_tomorrow: { reason: string, items: string[] } - 내일을 위한 할 일 제안. reason에 권장 이유(1~2문장), items에 구체적 할 일 2~4개. 오늘 회고와 미완료/피드백을 바탕으로 내일 하면 좋을 일을 제안.",
+    "3) completed_todos: 완료한 할 일 목록 (사용자 입력 그대로 또는 요약).",
+    "4) uncompleted_todos: 미완료 할 일 목록.",
+    ...(hasTodos
+      ? [
+          "5) todo_feedback: user_persona '나의 특징' 기반으로 각 투두에 대한 피드백 1~3개.",
+          "6) suggested_todos_for_tomorrow: { reason: string, items: string[] } - 내일을 위한 할 일 제안. reason에 권장 이유(1~2문장), items에 구체적 할 일 2~4개.",
+        ]
+      : [
+          "5) todo_feedback: 빈 배열 [] 반환 (할 일 목록이 없으므로 피드백 불가).",
+          "6) suggested_todos_for_tomorrow: 반환하지 마세요 (할 일 목록이 없으므로 제안 불가).",
+        ]),
     "",
     "톤은 담백하고 과하지 않게, 사용자를 조용히 응원하는 호스트처럼 작성하세요.",
     "",
@@ -184,6 +190,62 @@ export function buildReviewReportPrompt(
   }
   prompt += `[투두 현황]\n완료: ${completedTodos.join(" / ") || "(없음)"}\n미완료: ${uncompletedTodos.join(" / ") || "(없음)"}\n\n`;
   prompt += `아래는 ${date} (${dayOfWeek}) 회고 기록입니다.\n${instruction}\n\n`;
+
+  q3Records.forEach((record, idx) => {
+    const createdAt = new Date(record.created_at);
+    const kstTime = createdAt.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Seoul",
+    });
+    prompt += `${idx + 1}. [${kstTime}] ${record.content}\n`;
+  });
+
+  return prompt;
+}
+
+/** 할 일 없을 때 또는 fallback 시 회고 최소 프롬프트 (Q3만 분석) */
+export function buildReviewReportPromptMinimal(
+  records: Record[],
+  date: string,
+  dayOfWeek: string,
+  personaTraitsBlock: string,
+  userName?: string,
+  /** true: 할 일이 있지만 전체 분석 실패 → Q3만 분석 */
+  isFallback?: boolean
+): string {
+  const q3Records = records.filter((r) =>
+    /Q3\.\s*오늘의 나는 어떤 하루를 보냈을까\?/i.test(r.content || "")
+  );
+  if (q3Records.length === 0) return "";
+
+  const honorificRule =
+    userName && userName !== "회원"
+      ? `응답 문장에서 사용자를 지칭할 때는 반드시 '${userName}님'으로 호칭하고, '당신'이라는 단어를 사용하지 마세요.\n\n`
+      : "응답 문장에서 '당신'이라는 단어를 사용하지 마세요. '회원님' 등으로 호칭하세요.\n\n";
+
+  const q3OnlyReason = isFallback
+    ? "할 일 분석은 생략하고 Q3(회고)만 분석합니다."
+    : "오늘의 할 일 목록이 없으므로 Q3(회고)만 분석합니다.";
+
+  const instruction = [
+    "회고 전용 리포트를 생성하세요. 아래 JSON 스키마에 맞게 채워주세요.",
+    q3OnlyReason,
+    "",
+    "1) retrospective_summary: Q3 요약. 오늘의 실행/경험을 간결하게 정리.",
+    "2) retrospective_evaluation: Q3 평가. 담백하고 따뜻한 톤으로 피드백.",
+    "",
+    "톤은 담백하고 과하지 않게, 사용자를 조용히 응원하는 호스트처럼 작성하세요.",
+    "",
+    honorificRule.trim(),
+  ].join("\n");
+
+  const contextNote = isFallback ? "Q3만 분석" : "오늘의 할 일 목록 없음";
+  let prompt = "";
+  if (personaTraitsBlock.trim()) {
+    prompt += `[사용자 페르소나 - 나의 특징]\n${personaTraitsBlock}\n\n`;
+  }
+  prompt += `아래는 ${date} (${dayOfWeek}) 회고 기록입니다. (${contextNote})\n${instruction}\n\n`;
 
   q3Records.forEach((record, idx) => {
     const createdAt = new Date(record.created_at);

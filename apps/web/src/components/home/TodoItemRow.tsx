@@ -10,6 +10,7 @@ import {
   useUpdateTodoCheck,
   useUpdateTodoItem,
   useDeleteTodoItem,
+  OPTIMISTIC_ID_PREFIX,
 } from "@/hooks/useTodoList";
 import {
   Dialog,
@@ -57,6 +58,7 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
   const updateTodoItem = useUpdateTodoItem(date);
   const deleteTodoItem = useDeleteTodoItem(date);
 
+  const isOptimistic = item.id.startsWith(OPTIMISTIC_ID_PREFIX);
   const {
     attributes,
     listeners,
@@ -64,7 +66,7 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id });
+  } = useSortable({ id: item.id, disabled: isOptimistic });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -213,10 +215,10 @@ export function TodoItemRow({ item, date }: TodoItemRowProps) {
 
         {/* 내용 - 수정 시 표시 UI와 동일한 인라인 편집 (수정하기 메뉴로 진입) */}
         <div
-          {...(!isEditing ? { ...attributes, ...listeners } : {})}
+          {...(!isEditing && !isOptimistic ? { ...attributes, ...listeners } : {})}
           className={cn(
             "flex-1 min-w-0",
-            !isEditing && "cursor-grab active:cursor-grabbing"
+            !isEditing && !isOptimistic && "cursor-grab active:cursor-grabbing"
           )}
         >
           <div className="space-y-0.5">

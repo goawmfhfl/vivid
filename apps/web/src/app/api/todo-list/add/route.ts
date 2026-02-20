@@ -17,15 +17,17 @@ async function getOrCreateDailyVividForDate(
   userId: string,
   date: string
 ): Promise<{ id: string }> {
-  const { data: existing, error: fetchError } = await supabase
+  const { data: rows, error: fetchError } = await supabase
     .from(API_ENDPOINTS.DAILY_VIVID)
     .select("id")
     .eq("user_id", userId)
     .eq("report_date", date)
     .eq("type", "vivid")
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   if (fetchError) throw new Error(`Failed to fetch daily vivid: ${fetchError.message}`);
+  const existing = rows?.[0] ?? null;
   if (existing?.id) return { id: existing.id };
 
   const dateObj = new Date(`${date}T00:00:00+09:00`);

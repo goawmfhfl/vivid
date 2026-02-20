@@ -26,12 +26,12 @@ function getFourWeekPlaceholderMetrics(): {
   weekPoints: Array<{
     weekLabel: string;
     alignmentAverage: number;
-    executionAverage: number;
+    todoCompletionAverage: number;
     totalAverage: number;
-    weekHasExecution?: boolean;
+    weekHasTodoCompletion?: boolean;
   }>;
   alignmentAverage: number;
-  executionAverage: number;
+  todoCompletionAverage: number;
   totalAverage: number;
 } {
   const today = new Date();
@@ -44,15 +44,15 @@ function getFourWeekPlaceholderMetrics(): {
     return {
       weekLabel: `${month}월 ${weekOfMonth}주차`,
       alignmentAverage: 72 + (i % 2) * 4,
-      executionAverage: 68 + (i % 3) * 3,
+      todoCompletionAverage: 68 + (i % 3) * 3,
       totalAverage: 70 + (i % 2) * 3,
-      weekHasExecution: true,
+      weekHasTodoCompletion: true,
     };
   });
   return {
     weekPoints,
     alignmentAverage: 74,
-    executionAverage: 69,
+    todoCompletionAverage: 69,
     totalAverage: 72,
   };
 }
@@ -82,25 +82,25 @@ export function FourWeekTrendsSection({
       .map((entry) => ({
         reportDate: entry.report_date,
         alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
-        executionScore: entry.report?.execution_score ?? null,
+        todoCompletionScore: entry.report && "todo_completion_score" in entry.report ? entry.report.todo_completion_score : null,
       }))
       .filter(
-        (row): row is { reportDate: string; alignmentScore: number | undefined; executionScore: number | null } =>
+        (row): row is { reportDate: string; alignmentScore: number | undefined; todoCompletionScore: number | null } =>
           (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
-          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
+          (typeof row.todoCompletionScore === "number" && Number.isFinite(row.todoCompletionScore))
       );
 
     if (rows.length === 0) return null;
 
-    const hasExecutionData = rows.some((r) => r.executionScore != null && Number.isFinite(r.executionScore));
+    const hasTodoCompletionData = rows.some((r) => r.todoCompletionScore != null && Number.isFinite(r.todoCompletionScore));
 
     // 최신일 기준 정렬, 중복 날짜 제거 (날짜당 1개)
-    const byDate = new Map<string, { alignmentScore?: number; executionScore: number | null }>();
+    const byDate = new Map<string, { alignmentScore?: number; todoCompletionScore: number | null }>();
     for (const r of rows) {
       if (!byDate.has(r.reportDate)) {
         byDate.set(r.reportDate, {
           alignmentScore: r.alignmentScore,
-          executionScore: r.executionScore,
+          todoCompletionScore: r.todoCompletionScore,
         });
       }
     }
@@ -114,9 +114,9 @@ export function FourWeekTrendsSection({
     const weekPoints: Array<{
       weekLabel: string;
       alignmentAverage: number;
-      executionAverage: number;
+      todoCompletionAverage: number;
       totalAverage: number;
-      weekHasExecution: boolean;
+      weekHasTodoCompletion: boolean;
     }> = [];
 
     for (let w = 0; w < 4; w++) {
@@ -134,22 +134,22 @@ export function FourWeekTrendsSection({
       const alignmentAvg = alignmentValues.length > 0
         ? Math.round(alignmentValues.reduce((s, v) => s + v, 0) / alignmentValues.length)
         : 0;
-      const execValues = chunk
-        .map(([, r]) => r.executionScore)
+      const todoValues = chunk
+        .map(([, r]) => r.todoCompletionScore)
         .filter((v): v is number => v != null && Number.isFinite(v));
-      const weekHasExecution = execValues.length > 0;
-      const executionAvg = weekHasExecution
-        ? Math.round(execValues.reduce((s, v) => s + v, 0) / execValues.length)
+      const weekHasTodoCompletion = todoValues.length > 0;
+      const todoCompletionAvg = weekHasTodoCompletion
+        ? Math.round(todoValues.reduce((s, v) => s + v, 0) / todoValues.length)
         : 0;
-      const totalAvg = weekHasExecution
-        ? Math.round((alignmentAvg + executionAvg) / 2)
+      const totalAvg = weekHasTodoCompletion
+        ? Math.round((alignmentAvg + todoCompletionAvg) / 2)
         : alignmentAvg;
       weekPoints.push({
         weekLabel,
         alignmentAverage: alignmentAvg,
-        executionAverage: executionAvg,
+        todoCompletionAverage: todoCompletionAvg,
         totalAverage: totalAvg,
-        weekHasExecution,
+        weekHasTodoCompletion,
       });
     }
 
@@ -161,30 +161,34 @@ export function FourWeekTrendsSection({
     const alignmentAverage = Math.round(
       weekPoints.reduce((s, p) => s + p.alignmentAverage, 0) / weekPoints.length
     );
-    const execPoints = weekPoints.filter((p) => p.weekHasExecution !== false);
-    const executionAverage =
-      execPoints.length > 0
+    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (일자 수로 나누지 않음)
+    const allTodoScoresInRange = uniqueDates
+      .map(([, r]) => r.todoCompletionScore)
+      .filter((v): v is number => v != null && Number.isFinite(v));
+    const todoCompletionAverage =
+      allTodoScoresInRange.length > 0
         ? Math.round(
-            execPoints.reduce((s, p) => s + p.executionAverage, 0) / execPoints.length
+            allTodoScoresInRange.reduce((s, v) => s + v, 0) / allTodoScoresInRange.length
           )
         : 0;
-    const totalAverage = hasExecutionData && execPoints.length > 0
-      ? Math.round((alignmentAverage + executionAverage) / 2)
+    const todoPoints = weekPoints.filter((p) => p.weekHasTodoCompletion !== false);
+    const totalAverage = hasTodoCompletionData && allTodoScoresInRange.length > 0
+      ? Math.round((alignmentAverage + todoCompletionAverage) / 2)
       : alignmentAverage;
 
     return {
       weekPoints,
       alignmentAverage,
-      executionAverage,
+      todoCompletionAverage,
       totalAverage,
-      hasExecutionData,
+      hasTodoCompletionData,
     };
   }, [scoreEntries]);
 
   const placeholderMetrics = useMemo(() => getFourWeekPlaceholderMetrics(), []);
   const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
   const hasRealData = !!scoreMetrics;
-  const hasExecutionData = scoreMetrics?.hasExecutionData ?? true;
+  const hasTodoCompletionData = scoreMetrics?.hasTodoCompletionData ?? true;
 
   const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
   const displayAlignment = useCountUp(
@@ -192,8 +196,8 @@ export function FourWeekTrendsSection({
     900,
     isAnimated
   );
-  const displayExecution = useCountUp(
-    effectiveMetrics.executionAverage,
+  const displayTodoCompletion = useCountUp(
+    effectiveMetrics.todoCompletionAverage ?? 0,
     900,
     isAnimated
   );
@@ -364,7 +368,7 @@ export function FourWeekTrendsSection({
 
               <div
                 className="grid gap-2.5"
-                style={{ gridTemplateColumns: hasExecutionData ? "1fr 1fr" : "1fr" }}
+                style={{ gridTemplateColumns: hasTodoCompletionData ? "1fr 1fr" : "1fr" }}
               >
                 <div
                   className="rounded-lg p-3"
@@ -383,7 +387,7 @@ export function FourWeekTrendsSection({
                     {displayAlignment}
                   </p>
                 </div>
-                {hasExecutionData && (
+                {hasTodoCompletionData && (
                   <div
                     className="rounded-lg p-3"
                     style={{
@@ -392,13 +396,13 @@ export function FourWeekTrendsSection({
                     }}
                   >
                     <p className="text-xs mb-1" style={{ color: COLORS.text.secondary }}>
-                      실행력 평균
+                      할 일 달성률 평균
                     </p>
                     <p
                       className="text-xl font-semibold tabular-nums"
                       style={{ color: COLORS.chart.execution }}
                     >
-                      {displayExecution}
+                      {displayTodoCompletion}
                     </p>
                   </div>
                 )}
@@ -429,21 +433,21 @@ export function FourWeekTrendsSection({
                     <div key={point.weekLabel} className="flex flex-col items-center gap-1">
                       <div
                         className="w-full h-16 flex items-end justify-center"
-                        style={{ gap: hasExecutionData ? 4 : 0 }}
+                        style={{ gap: hasTodoCompletionData ? 4 : 0 }}
                       >
                         <div
                           className="rounded-t transition-all duration-1000 ease-out"
                           style={{
-                            width: hasExecutionData ? 8 : 16,
+                            width: hasTodoCompletionData ? 8 : 16,
                             height: `${isAnimated ? Math.max(4, point.alignmentAverage * 0.64) : 0}px`,
                             backgroundColor: COLORS.chart.alignment,
                           }}
                         />
-                        {hasExecutionData && (
+                        {hasTodoCompletionData && (
                           <div
                             className="w-2 rounded-t transition-all duration-1000 ease-out"
                             style={{
-                              height: `${isAnimated ? Math.max(4, point.executionAverage * 0.64) : 0}px`,
+                              height: `${isAnimated ? Math.max(4, point.todoCompletionAverage * 0.64) : 0}px`,
                               backgroundColor: COLORS.chart.execution,
                             }}
                           />

@@ -21,13 +21,14 @@ function getFourMonthPlaceholderMetrics(): {
   monthPoints: Array<{
     monthLabel: string;
     alignmentAverage: number;
-    executionAverage: number;
+    todoCompletionAverage: number;
     totalAverage: number;
-    monthHasExecution?: boolean;
+    monthHasTodoCompletion: boolean;
   }>;
   alignmentAverage: number;
-  executionAverage: number;
+  todoCompletionAverage: number;
   totalAverage: number;
+  hasTodoCompletionData: boolean;
 } {
   const today = new Date();
   const monthPoints = Array.from({ length: 4 }, (_, i) => {
@@ -37,16 +38,17 @@ function getFourMonthPlaceholderMetrics(): {
     return {
       monthLabel: `${year}년 ${month}월`,
       alignmentAverage: 72 + (i % 2) * 4,
-      executionAverage: 68 + (i % 3) * 3,
+      todoCompletionAverage: 68 + (i % 3) * 3,
       totalAverage: 70 + (i % 2) * 3,
-      monthHasExecution: true,
+      monthHasTodoCompletion: true,
     };
   });
   return {
     monthPoints,
     alignmentAverage: 74,
-    executionAverage: 69,
+    todoCompletionAverage: 69,
     totalAverage: 72,
+    hasTodoCompletionData: true,
   };
 }
 
@@ -75,25 +77,22 @@ export function FourMonthTrendsSection({
       .map((entry) => ({
         reportDate: entry.report_date,
         alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
-        executionScore: entry.report?.execution_score ?? null,
+        todoCompletionScore: entry.report && "todo_completion_score" in entry.report ? entry.report.todo_completion_score : null,
       }))
       .filter(
-        (row): row is { reportDate: string; alignmentScore: number | undefined; executionScore: number | null } =>
+        (row): row is { reportDate: string; alignmentScore: number | undefined; todoCompletionScore: number | null } =>
           (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
-          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
+          (typeof row.todoCompletionScore === "number" && Number.isFinite(row.todoCompletionScore))
       );
 
     if (rows.length === 0) return null;
 
-    const hasExecutionData = rows.some((r) => r.executionScore != null && Number.isFinite(r.executionScore));
+    const hasTodoCompletionData = rows.some((r) => r.todoCompletionScore != null && Number.isFinite(r.todoCompletionScore));
 
-    const byDate = new Map<string, { alignmentScore?: number; executionScore: number | null }>();
+    const byDate = new Map<string, { alignmentScore?: number; todoCompletionScore: number | null }>();
     for (const r of rows) {
       if (!byDate.has(r.reportDate)) {
-        byDate.set(r.reportDate, {
-          alignmentScore: r.alignmentScore,
-          executionScore: r.executionScore,
-        });
+        byDate.set(r.reportDate, { alignmentScore: r.alignmentScore, todoCompletionScore: r.todoCompletionScore });
       }
     }
     const uniqueDates = Array.from(byDate.entries())
@@ -102,21 +101,18 @@ export function FourMonthTrendsSection({
 
     if (uniqueDates.length === 0) return null;
 
-    const byMonth = new Map<
-      string,
-      { alignmentScore: number[]; executionScore: number[] }
-    >();
+    const byMonth = new Map<string, { alignmentScore: number[]; todoCompletionScore: number[] }>();
     for (const [date, scores] of uniqueDates) {
       const month = date.slice(0, 7);
       if (!byMonth.has(month)) {
-        byMonth.set(month, { alignmentScore: [], executionScore: [] });
+        byMonth.set(month, { alignmentScore: [], todoCompletionScore: [] });
       }
       const m = byMonth.get(month)!;
       if (typeof scores.alignmentScore === "number" && Number.isFinite(scores.alignmentScore)) {
         m.alignmentScore.push(scores.alignmentScore);
       }
-      if (scores.executionScore != null && Number.isFinite(scores.executionScore)) {
-        m.executionScore.push(scores.executionScore);
+      if (scores.todoCompletionScore != null && Number.isFinite(scores.todoCompletionScore)) {
+        m.todoCompletionScore.push(scores.todoCompletionScore);
       }
     }
 
@@ -126,9 +122,9 @@ export function FourMonthTrendsSection({
     const monthPoints: Array<{
       monthLabel: string;
       alignmentAverage: number;
-      executionAverage: number;
+      todoCompletionAverage: number;
       totalAverage: number;
-      monthHasExecution: boolean;
+      monthHasTodoCompletion: boolean;
     }> = [];
 
     for (const month of sortedMonths) {
@@ -136,22 +132,20 @@ export function FourMonthTrendsSection({
       const alignmentAvg = m.alignmentScore.length > 0
         ? Math.round(m.alignmentScore.reduce((s, v) => s + v, 0) / m.alignmentScore.length)
         : 0;
-      const monthHasExecution = m.executionScore.length > 0;
-      const executionAvg = monthHasExecution
-        ? Math.round(
-            m.executionScore.reduce((s, v) => s + v, 0) / m.executionScore.length
-          )
+      const monthHasTodoCompletion = m.todoCompletionScore.length > 0;
+      const todoCompletionAvg = monthHasTodoCompletion
+        ? Math.round(m.todoCompletionScore.reduce((s, v) => s + v, 0) / m.todoCompletionScore.length)
         : 0;
-      const totalAvg = monthHasExecution
-        ? Math.round((alignmentAvg + executionAvg) / 2)
+      const totalAvg = monthHasTodoCompletion
+        ? Math.round((alignmentAvg + todoCompletionAvg) / 2)
         : alignmentAvg;
       const [y, mo] = month.split("-").map(Number);
       monthPoints.push({
         monthLabel: `${y}년 ${mo}월`,
         alignmentAverage: alignmentAvg,
-        executionAverage: executionAvg,
+        todoCompletionAverage: todoCompletionAvg,
         totalAverage: totalAvg,
-        monthHasExecution,
+        monthHasTodoCompletion,
       });
     }
 
@@ -160,32 +154,35 @@ export function FourMonthTrendsSection({
     const alignmentAverage = Math.round(
       monthPoints.reduce((s, p) => s + p.alignmentAverage, 0) / monthPoints.length
     );
-    const execPoints = monthPoints.filter((p) => p.monthHasExecution);
-    const executionAverage =
-      execPoints.length > 0
+    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (일자 수로 나누지 않음)
+    const allTodoScoresInRange = uniqueDates
+      .map(([, scores]) => scores.todoCompletionScore)
+      .filter((v): v is number => v != null && Number.isFinite(v));
+    const todoCompletionAverage =
+      allTodoScoresInRange.length > 0
         ? Math.round(
-            execPoints.reduce((s, p) => s + p.executionAverage, 0) /
-              execPoints.length
+            allTodoScoresInRange.reduce((s, v) => s + v, 0) / allTodoScoresInRange.length
           )
         : 0;
+    const todoPoints = monthPoints.filter((p) => p.monthHasTodoCompletion);
     const totalAverage =
-      hasExecutionData && execPoints.length > 0
-        ? Math.round((alignmentAverage + executionAverage) / 2)
+      hasTodoCompletionData && allTodoScoresInRange.length > 0
+        ? Math.round((alignmentAverage + todoCompletionAverage) / 2)
         : alignmentAverage;
 
     return {
       monthPoints,
       alignmentAverage,
-      executionAverage,
+      todoCompletionAverage,
       totalAverage,
-      hasExecutionData,
+      hasTodoCompletionData,
     };
   }, [scoreEntries]);
 
   const placeholderMetrics = useMemo(() => getFourMonthPlaceholderMetrics(), []);
   const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
   const hasRealData = !!scoreMetrics;
-  const hasExecutionData = scoreMetrics?.hasExecutionData ?? true;
+  const hasTodoCompletionData = scoreMetrics?.hasTodoCompletionData ?? true;
 
   const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
   const displayAlignment = useCountUp(
@@ -193,8 +190,8 @@ export function FourMonthTrendsSection({
     900,
     isAnimated
   );
-  const displayExecution = useCountUp(
-    effectiveMetrics.executionAverage,
+  const displayTodoCompletion = useCountUp(
+    effectiveMetrics.todoCompletionAverage ?? 0,
     900,
     isAnimated
   );
@@ -365,7 +362,7 @@ export function FourMonthTrendsSection({
 
               <div
                 className="grid gap-2.5"
-                style={{ gridTemplateColumns: hasExecutionData ? "1fr 1fr" : "1fr" }}
+                style={{ gridTemplateColumns: hasTodoCompletionData ? "1fr 1fr" : "1fr" }}
               >
                 <div
                   className="rounded-lg p-3"
@@ -384,7 +381,7 @@ export function FourMonthTrendsSection({
                     {displayAlignment}
                   </p>
                 </div>
-                {hasExecutionData && (
+                {hasTodoCompletionData && (
                   <div
                     className="rounded-lg p-3"
                     style={{
@@ -393,13 +390,13 @@ export function FourMonthTrendsSection({
                     }}
                   >
                     <p className="text-xs mb-1" style={{ color: COLORS.text.secondary }}>
-                      실행력 평균
+                      할 일 달성률 평균
                     </p>
                     <p
                       className="text-xl font-semibold tabular-nums"
                       style={{ color: COLORS.chart.execution }}
                     >
-                      {displayExecution}
+                      {displayTodoCompletion}
                     </p>
                   </div>
                 )}
@@ -430,21 +427,21 @@ export function FourMonthTrendsSection({
                     <div key={point.monthLabel} className="flex flex-col items-center gap-1">
                       <div
                         className="w-full h-16 flex items-end justify-center"
-                        style={{ gap: hasExecutionData ? 4 : 0 }}
+                        style={{ gap: hasTodoCompletionData ? 4 : 0 }}
                       >
                         <div
                           className="rounded-t transition-all duration-1000 ease-out"
                           style={{
-                            width: hasExecutionData ? 8 : 16,
+                            width: hasTodoCompletionData ? 8 : 16,
                             height: `${isAnimated ? Math.max(4, point.alignmentAverage * 0.64) : 0}px`,
                             backgroundColor: COLORS.chart.alignment,
                           }}
                         />
-                        {hasExecutionData && (
+                        {hasTodoCompletionData && (
                           <div
                             className="w-2 rounded-t transition-all duration-1000 ease-out"
                             style={{
-                              height: `${isAnimated ? Math.max(4, point.executionAverage * 0.64) : 0}px`,
+                              height: `${isAnimated ? Math.max(4, point.todoCompletionAverage * 0.64) : 0}px`,
                               backgroundColor: COLORS.chart.execution,
                             }}
                           />

@@ -2,12 +2,9 @@
 export interface ReviewReport {
   retrospective_summary: string;
   retrospective_evaluation: string;
-  execution_score: number;
-  execution_analysis_points: string[];
   completed_todos: string[];
   uncompleted_todos: string[];
   todo_feedback: string[];
-  daily_summary: string;
   /** 내일을 위한 할 일 제안 (권장 이유 + 항목 목록) */
   suggested_todos_for_tomorrow?: {
     reason: string;
@@ -34,10 +31,6 @@ export interface Report {
   // 회고 인사이트 (Q3)
   retrospective_summary: string | null; // Q3 요약 (없으면 null)
   retrospective_evaluation: string | null; // Q3 평가 (없으면 null)
-
-  // 실행력 점수 (Q1 <-> Q3)
-  execution_score: number | null; // Q3가 있을 때만 점수, 없으면 null
-  execution_analysis_points: string[] | null; // 실행 점수 근거 (1~3개), 없으면 null
 
   // 사용자 특성 분석
   user_characteristics: string[]; // 기록을 쓰는 사람의 특징 (최대 5가지) - 기록 패턴과 내용을 분석해 도출한 사용자 특성 (예: "자기 성찰을 중시하는", "미래 지향적인", "감정 표현이 풍부한" 등)

@@ -14,8 +14,8 @@ import { PreviewDataNotice } from "./PreviewDataNotice";
 function getPlaceholderMetrics(): {
   totalAverage: number;
   alignmentAverage: number;
-  executionAverage: number;
-  rows: Array<{ reportDate: string; alignmentScore: number; executionScore: number }>;
+  todoCompletionAverage: number;
+  rows: Array<{ reportDate: string; alignmentScore: number; todoCompletionScore: number }>;
 } {
   const today = new Date();
   const rows = Array.from({ length: 7 }, (_, i) => {
@@ -24,13 +24,13 @@ function getPlaceholderMetrics(): {
     return {
       reportDate: getKSTDateString(d),
       alignmentScore: 70 + (i % 3) * 5,
-      executionScore: 68 + (i % 4) * 4,
+      todoCompletionScore: 68 + (i % 4) * 4,
     };
   });
   return {
     totalAverage: 72,
     alignmentAverage: 75,
-    executionAverage: 68,
+    todoCompletionAverage: 68,
     rows,
   };
 }
@@ -58,7 +58,7 @@ export function RecentTrendsSection({
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // 꿈 일치도(alignment_score)가 1일 이상 있으면 실제 데이터 사용. execution_score는 회고 있을 때만 있음
+  // 꿈 일치도(alignment_score)=vivid, 투두 달성률(todo_completion_score)=review
   const scoreMetrics = useMemo(() => {
     if (!scoreEntries || scoreEntries.length === 0) return null;
 
@@ -66,16 +66,16 @@ export function RecentTrendsSection({
       .map((entry) => ({
         reportDate: entry.report_date,
         alignmentScore: entry.report && "alignment_score" in entry.report ? entry.report.alignment_score : undefined,
-        executionScore: entry.report?.execution_score ?? null,
+        todoCompletionScore: entry.report && "todo_completion_score" in entry.report ? entry.report.todo_completion_score : null,
       }))
       .filter(
         (row): row is {
           reportDate: string;
           alignmentScore: number | undefined;
-          executionScore: number | null;
+          todoCompletionScore: number | null;
         } =>
           (typeof row.alignmentScore === "number" && Number.isFinite(row.alignmentScore)) ||
-          (typeof row.executionScore === "number" && Number.isFinite(row.executionScore))
+          (typeof row.todoCompletionScore === "number" && Number.isFinite(row.todoCompletionScore))
       );
 
     if (rows.length === 0) return null;
@@ -84,34 +84,34 @@ export function RecentTrendsSection({
     const alignmentAverage = withAlignment.length > 0
       ? Math.round(withAlignment.reduce((sum, row) => sum + (row.alignmentScore ?? 0), 0) / withAlignment.length)
       : 0;
-    const withExecution = rows.filter((r) => r.executionScore != null && Number.isFinite(r.executionScore));
-    const hasExecutionData = withExecution.length > 0;
-    const executionAverage = hasExecutionData
+    const withTodoCompletion = rows.filter((r) => r.todoCompletionScore != null && Number.isFinite(r.todoCompletionScore));
+    const hasTodoCompletionData = withTodoCompletion.length > 0;
+    const todoCompletionAverage = hasTodoCompletionData
       ? Math.round(
-          withExecution.reduce((sum, r) => sum + (r.executionScore ?? 0), 0) / withExecution.length
+          withTodoCompletion.reduce((sum, r) => sum + (r.todoCompletionScore ?? 0), 0) / withTodoCompletion.length
         )
-      : 0; // 표시 안 함
-    const totalAverage = hasExecutionData
-      ? Math.round((alignmentAverage + executionAverage) / 2)
+      : 0;
+    const totalAverage = hasTodoCompletionData
+      ? Math.round((alignmentAverage + todoCompletionAverage) / 2)
       : alignmentAverage;
 
     return {
       rows: rows.map((r) => ({
         reportDate: r.reportDate,
         alignmentScore: r.alignmentScore,
-        executionScore: r.executionScore,
+        todoCompletionScore: r.todoCompletionScore,
       })),
       alignmentAverage,
-      executionAverage,
+      todoCompletionAverage,
       totalAverage,
-      hasExecutionData,
+      hasTodoCompletionData,
     };
   }, [scoreEntries]);
 
   // 실제 데이터 있으면 사용, 없으면 플레이스홀더로 UI 미리보기
   const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
   const hasRealData = !!scoreMetrics;
-  const hasExecutionData = scoreMetrics?.hasExecutionData ?? true; // placeholder는 둘 다 있음
+  const hasTodoCompletionData = scoreMetrics?.hasTodoCompletionData ?? true; // placeholder는 둘 다 있음
 
   const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
   const displayAlignment = useCountUp(
@@ -119,8 +119,8 @@ export function RecentTrendsSection({
     900,
     isAnimated
   );
-  const displayExecution = useCountUp(
-    effectiveMetrics.executionAverage,
+  const displayTodoCompletion = useCountUp(
+    effectiveMetrics.todoCompletionAverage ?? 0,
     900,
     isAnimated
   );
@@ -309,7 +309,7 @@ export function RecentTrendsSection({
                       {displayTotal}
                     </span>
                     <span className="text-xs" style={{ color: COLORS.text.muted }}>
-                      {hasExecutionData ? "통합 평균" : "꿈 일치도 평균"}
+                      {hasTodoCompletionData ? "통합 평균" : "꿈 일치도 평균"}
                     </span>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ export function RecentTrendsSection({
               <div
                 className="grid gap-2.5"
                 style={{
-                  gridTemplateColumns: hasExecutionData ? "1fr 1fr" : "1fr",
+                  gridTemplateColumns: hasTodoCompletionData ? "1fr 1fr" : "1fr",
                 }}
               >
                 <div
@@ -338,7 +338,7 @@ export function RecentTrendsSection({
                     {displayAlignment}
                   </p>
                 </div>
-                {hasExecutionData && (
+                {hasTodoCompletionData && (
                   <div
                     className="rounded-lg p-3"
                     style={{
@@ -347,13 +347,13 @@ export function RecentTrendsSection({
                     }}
                   >
                     <p className="text-xs mb-1" style={{ color: COLORS.text.secondary }}>
-                      실행력 평균
+                      할 일 달성률 평균
                     </p>
                     <p
                       className="text-xl font-semibold tabular-nums"
                       style={{ color: COLORS.chart.execution }}
                     >
-                      {displayExecution}
+                      {displayTodoCompletion}
                     </p>
                   </div>
                 )}
@@ -375,21 +375,21 @@ export function RecentTrendsSection({
                   <div key={item.reportDate} className="flex flex-col items-center gap-1">
                     <div
                       className="w-full h-16 flex items-end justify-center"
-                      style={{ gap: hasExecutionData && item.executionScore != null ? 4 : 0 }}
+                      style={{ gap: hasTodoCompletionData && item.todoCompletionScore != null ? 4 : 0 }}
                     >
                       <div
                         className="rounded-t transition-all duration-1000 ease-out"
                         style={{
-                          width: hasExecutionData && item.executionScore != null ? 8 : 16,
+                          width: hasTodoCompletionData && item.todoCompletionScore != null ? 8 : 16,
                           height: `${isAnimated ? Math.max(4, (item.alignmentScore ?? 0) * 0.64) : 0}px`,
                           backgroundColor: COLORS.chart.alignment,
                         }}
                       />
-                      {hasExecutionData && item.executionScore != null && (
+                      {hasTodoCompletionData && item.todoCompletionScore != null && (
                         <div
                           className="w-2 rounded-t transition-all duration-1000 ease-out"
                           style={{
-                            height: `${isAnimated ? Math.max(4, item.executionScore * 0.64) : 0}px`,
+                            height: `${isAnimated ? Math.max(4, item.todoCompletionScore * 0.64) : 0}px`,
                             backgroundColor: COLORS.chart.execution,
                           }}
                         />

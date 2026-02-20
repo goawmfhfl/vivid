@@ -14,27 +14,26 @@ export function mapDailyVividRowToReport(
   const isReview = rowType === "review" || isReviewReport(report);
   const r = report as Report | ReviewReport | null;
 
-  const currentSummary = !isReview && r && "current_summary" in r ? r.current_summary : "";
-  const currentEvaluation = !isReview && r && "current_evaluation" in r ? r.current_evaluation : "";
-  const currentKeywords = !isReview && r && "current_keywords" in r ? (r.current_keywords ?? []) : [];
-  const futureSummary = !isReview && r && "future_summary" in r ? r.future_summary : "";
-  const futureEvaluation = !isReview && r && "future_evaluation" in r ? r.future_evaluation : "";
-  const futureKeywords = !isReview && r && "future_keywords" in r ? (r.future_keywords ?? []) : [];
-  const alignmentScore = !isReview && r && "alignment_score" in r ? r.alignment_score : null;
+  // vivid 필드: Report 또는 병합된 report에서 (꿈 일치도=vivid)
+  const currentSummary = r && "current_summary" in r ? r.current_summary : "";
+  const currentEvaluation = r && "current_evaluation" in r ? r.current_evaluation : "";
+  const currentKeywords = r && "current_keywords" in r ? (r.current_keywords ?? []) : [];
+  const futureSummary = r && "future_summary" in r ? r.future_summary : "";
+  const futureEvaluation = r && "future_evaluation" in r ? r.future_evaluation : "";
+  const futureKeywords = r && "future_keywords" in r ? (r.future_keywords ?? []) : [];
+  // 꿈 일치도: vivid에서, 투두 달성률: review에서 (병합된 report는 둘 다 가질 수 있음)
+  const alignmentScore = r && "alignment_score" in r ? r.alignment_score : null;
   const alignmentAnalysisPoints =
-    !isReview && r && "alignment_analysis_points" in r
+    r && "alignment_analysis_points" in r
       ? (r.alignment_analysis_points ?? [])
       : (r as { alignment_score_reason?: string[] })?.alignment_score_reason ?? [];
   const retrospectiveSummary = r && "retrospective_summary" in r ? (r.retrospective_summary ?? null) : null;
   const retrospectiveEvaluation = r && "retrospective_evaluation" in r ? (r.retrospective_evaluation ?? null) : null;
-  const executionScore = r && "execution_score" in r ? r.execution_score : null;
-  const executionAnalysisPoints = r && "execution_analysis_points" in r ? (r.execution_analysis_points ?? []) : null;
-  const userCharacteristics = !isReview && r && "user_characteristics" in r ? (r.user_characteristics ?? []) : [];
-  const aspiredTraits = !isReview && r && "aspired_traits" in r ? (r.aspired_traits ?? []) : [];
+  const userCharacteristics = r && "user_characteristics" in r ? (r.user_characteristics ?? []) : [];
+  const aspiredTraits = r && "aspired_traits" in r ? (r.aspired_traits ?? []) : [];
   const completedTodos = isReview && r ? (Array.isArray((r as ReviewReport).completed_todos) ? (r as ReviewReport).completed_todos : []) : undefined;
   const uncompletedTodos = isReview && r ? (Array.isArray((r as ReviewReport).uncompleted_todos) ? (r as ReviewReport).uncompleted_todos : []) : undefined;
   const todoFeedback = isReview && r ? (Array.isArray((r as ReviewReport).todo_feedback) ? (r as ReviewReport).todo_feedback : []) : undefined;
-  const dailySummary = isReview && r && "daily_summary" in r ? ((r as ReviewReport).daily_summary ?? "") : undefined;
   const rawSuggested = isReview && r && "suggested_todos_for_tomorrow" in r
     ? (r as ReviewReport).suggested_todos_for_tomorrow
     : undefined;
@@ -56,7 +55,9 @@ export function mapDailyVividRowToReport(
   const dreamGoals = null;
   const dreamerTraits = null;
 
-  const narrativeSummary = isReview && dailySummary ? dailySummary : currentSummary || futureSummary;
+  const narrativeSummary = isReview
+    ? (retrospectiveSummary ?? (currentSummary || futureSummary))
+    : (currentSummary || futureSummary);
 
   return {
     date: row.report_date,
@@ -72,17 +73,14 @@ export function mapDailyVividRowToReport(
     future_keywords: futureKeywords,
     alignment_score: alignmentScore,
     alignment_analysis_points: alignmentAnalysisPoints,
-    alignment_based_on_persona: !isReview && r && "alignment_based_on_persona" in r ? r.alignment_based_on_persona : undefined,
+    alignment_based_on_persona: r && "alignment_based_on_persona" in r ? r.alignment_based_on_persona : undefined,
     retrospective_summary: retrospectiveSummary,
     retrospective_evaluation: retrospectiveEvaluation,
-    execution_score: executionScore,
-    execution_analysis_points: executionAnalysisPoints,
     user_characteristics: userCharacteristics,
     aspired_traits: aspiredTraits,
     completed_todos: completedTodos,
     uncompleted_todos: uncompletedTodos,
     todo_feedback: todoFeedback,
-    daily_summary: dailySummary,
     suggested_todos_for_tomorrow: suggestedTodosForTomorrow,
 
     // 하위 호환성을 위한 레거시 필드

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DailyReportResponse, Record } from "./types";
-import type { DailyVividRow } from "@/types/daily-vivid";
+import type { DailyVividRow, TodoListItem } from "@/types/daily-vivid";
 import { decrypt, encrypt } from "@/lib/encryption";
 import {
   encryptDailyVivid,
@@ -242,7 +242,7 @@ export async function saveTodoListItems(
 }
 
 /**
- * 해당 날짜 vivid의 투두 체크 완료 정보 조회 (회고 생성 시 execution_score 반영용)
+ * 해당 날짜 vivid의 투두 체크 완료 정보 조회 (회고 생성 시 todo_completion_score 반영용)
  */
 export async function fetchTodoCheckSummary(
   supabase: SupabaseClient,
@@ -321,4 +321,69 @@ export function decryptTodoListItems(
     contents: decrypt(row.contents),
     category: decrypt(row.category),
   }));
+}
+
+/**
+ * 날짜 X의 "오늘의 할 일" 조회
+ * (A) 해당 날짜 vivid에 연결된 todo (scheduled_at null) - 네이티브
+ * (B) scheduled_at = X 인 todo (다른 날짜에서 미룬 것) - 스케줄된 항목
+ * (C) 해당 날짜 vivid에서 미룬 항목 (scheduled_at 있음) - 오늘 목록에 유지
+ * @returns { todoLists, hasNativeTodoList }
+ */
+export async function fetchTodoListsForDate(
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+  dailyVividId: string | null
+): Promise<{ todoLists: TodoListItem[]; hasNativeTodoList: boolean }> {
+  const nativeItems: TodoListItem[] = [];
+  const scheduledItems: TodoListItem[] = [];
+  const postponedItems: TodoListItem[] = [];
+
+  if (dailyVividId) {
+    const { data: nativeRows } = await supabase
+      .from("todo_list_items")
+      .select("id, contents, is_checked, category, sort_order, scheduled_at")
+      .eq("daily_vivid_id", dailyVividId)
+      .is("scheduled_at", null)
+      .order("sort_order", { ascending: true });
+    if (nativeRows?.length) {
+      nativeItems.push(
+        ...(decryptTodoListItems(nativeRows) as TodoListItem[])
+      );
+    }
+
+    const { data: postponedRows } = await supabase
+      .from("todo_list_items")
+      .select("id, contents, is_checked, category, sort_order, scheduled_at")
+      .eq("daily_vivid_id", dailyVividId)
+      .not("scheduled_at", "is", null)
+      .order("sort_order", { ascending: true });
+    if (postponedRows?.length) {
+      postponedItems.push(
+        ...(decryptTodoListItems(postponedRows) as TodoListItem[])
+      );
+    }
+  }
+
+  const { data: scheduledRows } = await supabase
+    .from("todo_list_items")
+    .select("id, contents, is_checked, category, sort_order, scheduled_at")
+    .eq("user_id", userId)
+    .eq("scheduled_at", date)
+    .order("sort_order", { ascending: true });
+  if (scheduledRows?.length) {
+    scheduledItems.push(
+      ...(decryptTodoListItems(scheduledRows) as TodoListItem[])
+    );
+  }
+
+  const merged = [...nativeItems, ...postponedItems, ...scheduledItems];
+  const todoLists = merged.sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+  );
+  const hasNativeTodoList = nativeItems.some(
+    (item) => (item.category ?? "").trim() !== MANUAL_ADD_CATEGORY
+  );
+  return { todoLists, hasNativeTodoList };
 }

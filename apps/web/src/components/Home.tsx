@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, MessageCircle, CalendarPlus, CheckCircle2, RefreshCw } from "lucide-react";
+import { Sparkles, MessageCircle, CalendarPlus, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
 import { type RecordType } from "./signup/RecordTypeCard";
 import { RecordForm, type HomeTabType } from "./home/RecordForm";
@@ -202,6 +202,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
     data: vividFeedback,
     isSuccess: isVividQuerySuccess,
   } = useGetDailyVivid(activeDate, "vivid");
+  const { data: todayVividForInsight } = useGetDailyVivid(todayIso, "vivid");
   const {
     data: reviewFeedback,
     isSuccess: isReviewQuerySuccess,
@@ -235,7 +236,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   const { isPro } = useSubscription();
   const [isInsightDialogOpen, setIsInsightDialogOpen] = useState(false);
-  const [insightAddedItems, setInsightAddedItems] = useState<Set<string>>(new Set());
+  const [insightAddingItem, setInsightAddingItem] = useState<string | null>(null);
   const [hasInsightRegenerated, setHasInsightRegenerated] = useState(false);
   const addTodoToDate = useAddTodoToDate();
   const enhanceInsightMutation = useEnhanceDailyVivid();
@@ -244,6 +245,18 @@ export function Home({ selectedDate }: HomeProps = {}) {
     | { feedback?: string[]; improvements?: string[]; summary?: string; suggested_today?: string[] }
     | null
     | undefined;
+
+  // 오늘 할 일에 이미 추가된 제안 항목 (서버 todoLists에서 파생, 새로고침 후에도 유지)
+  const insightAddedItems = useMemo(() => {
+    const todayTodoList = todayVividForInsight?.todoLists ?? [];
+    const suggested = insight?.suggested_today ?? [];
+    return new Set(
+      suggested.filter((s) =>
+        todayTodoList.some((t) => t.contents?.trim() === s.trim())
+      )
+    );
+  }, [todayVividForInsight?.todoLists, insight?.suggested_today]);
+
   const hasStructuredInsight =
     insight &&
     ((insight.feedback?.length ?? 0) > 0 ||
@@ -684,7 +697,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
         onOpenChange={(open) => {
           setIsInsightDialogOpen(open);
           if (!open) {
-            setInsightAddedItems(new Set());
             setHasInsightRegenerated(false);
           }
         }}
@@ -848,26 +860,31 @@ export function Home({ selectedDate }: HomeProps = {}) {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  setInsightAddingItem(item);
                                   addTodoToDate.mutate(
                                     { date: todayIso, contents: item },
                                     {
-                                      onSuccess: () => {
-                                        setInsightAddedItems((prev) =>
-                                          new Set(prev).add(item)
-                                        );
+                                      onSettled: () => {
+                                        setInsightAddingItem(null);
                                       },
                                     }
                                   );
                                 }}
-                                disabled={addTodoToDate.isPending}
-                                className="flex-shrink-0 p-2 rounded-lg hover:bg-black/5 transition-colors disabled:opacity-50"
+                                disabled={
+                                  addTodoToDate.isPending && insightAddingItem === item
+                                }
+                                className="flex-shrink-0 p-2 rounded-lg hover:bg-black/5 transition-colors disabled:opacity-100 disabled:hover:opacity-100"
                                 style={{
                                   color: COLORS.brand.primary,
                                   border: `1px solid ${COLORS.border.light}`,
                                 }}
                                 aria-label={`${item} 오늘 할 일에 추가`}
                               >
-                                <CalendarPlus className="w-4 h-4" />
+                                {insightAddingItem === item && addTodoToDate.isPending ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CalendarPlus className="w-4 h-4" />
+                                )}
                               </button>
                             )}
                           </li>
@@ -894,8 +911,13 @@ export function Home({ selectedDate }: HomeProps = {}) {
               </div>
             )}
           </div>
-          <DialogFooter className="flex-shrink-0 flex flex-col gap-2 sm:flex-col pt-2">
-                        {hasStructuredInsight && vividFeedback?.id && (
+          <DialogFooter
+            className={cn(
+              "flex-shrink-0 flex flex-col sm:flex-col items-center gap-2 pt-2",
+              "sm:justify-center sm:items-center"
+            )}
+          >
+            {hasStructuredInsight && vividFeedback?.id && (
               <button
                 type="button"
                 onClick={() => {
@@ -911,7 +933,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
                   );
                 }}
                 disabled={enhanceInsightMutation.isPending || hasInsightRegenerated}
-                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs transition-colors mt-2"
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs transition-colors shrink-0"
                 style={{
                   color: COLORS.text.tertiary,
                   border: `1px solid ${COLORS.border.light}`,
@@ -932,16 +954,14 @@ export function Home({ selectedDate }: HomeProps = {}) {
               </button>
             )}
             <p
-              className={cn(TYPOGRAPHY.caption.fontSize)}
+              className={cn(TYPOGRAPHY.caption.fontSize, "text-center shrink-0")}
               style={{
                 color: COLORS.text.muted,
                 lineHeight: 1.4,
-                textAlign: "center",
               }}
             >
               AI의 제안은 성장을 돕는 작은 힌트일 뿐입니다.
             </p>
-
           </DialogFooter>
         </DialogContent>
       </Dialog>

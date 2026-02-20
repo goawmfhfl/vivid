@@ -1,162 +1,187 @@
 "use client";
 
-import { CheckCircle2, Circle, MessageSquare } from "lucide-react";
+import { CheckCircle2, Circle, ListTodo } from "lucide-react";
 import { ScrollAnimation } from "../../ui/ScrollAnimation";
 import { ChartGlassCard } from "../analysisShared";
+import { CircularProgress } from "../../ui/CircularProgress";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { hexToRgbTriplet } from "../colorUtils";
+import { ReviewSectionHeader } from "./ReviewSectionHeader";
+import {
+  REVIEW_ACCENT,
+  REVIEW_ACCENT_RGB,
+  LIST_ITEM_STYLE,
+  LIST_ITEM_MUTED_STYLE,
+} from "./reviewSectionStyles";
 import type { TodoListItem } from "@/types/daily-vivid";
-import type { DailyReportData } from "../types";
-
-const executionColor = COLORS.chart.execution;
-const executionGradientColor = hexToRgbTriplet(executionColor);
-
-const itemBaseStyle = {
-  background: `rgba(${executionGradientColor}, 0.06)`,
-  border: `1px solid rgba(${executionGradientColor}, 0.2)`,
-} as const;
-
-const uncompletedItemStyle = {
-  background: `rgba(${executionGradientColor}, 0.03)`,
-  border: `1px solid rgba(${executionGradientColor}, 0.12)`,
-} as const;
 
 interface ReviewTodayTodosSectionProps {
-  view: DailyReportData;
   todoLists: TodoListItem[];
+  isLoading?: boolean;
   renderAddToScheduleButton: (contents: string) => React.ReactNode;
   renderRescheduleButton: (item: TodoListItem) => React.ReactNode;
 }
 
+/** 오늘의 투두리스트 - todo_list_items 데이터 기반 (마운트 시 별도 조회) */
 export function ReviewTodayTodosSection({
-  view,
   todoLists,
+  isLoading = false,
   renderAddToScheduleButton,
   renderRescheduleButton,
 }: ReviewTodayTodosSectionProps) {
-  const dailySummary = view.daily_summary ?? "";
-  const completedTodos = view.completed_todos ?? [];
-  const uncompletedTodos = view.uncompleted_todos ?? [];
-  const uncompletedItems = todoLists.filter((t) => !t.is_checked && !t.scheduled_at);
-  const hasUncompletedItems = uncompletedItems.length > 0;
-  const hasUncompletedTodosOnly = uncompletedTodos.length > 0 && !hasUncompletedItems;
+  if (isLoading) {
+    return (
+      <ScrollAnimation delay={180}>
+        <div className="mb-12">
+          <ReviewSectionHeader icon={ListTodo} title="오늘의 투두리스트" />
+          <ChartGlassCard gradientColor={REVIEW_ACCENT_RGB}>
+            <div className="space-y-4">
+              <div
+                className="h-24 rounded-xl animate-pulse"
+                style={{ backgroundColor: `${REVIEW_ACCENT}10` }}
+              />
+              <div
+                className="h-12 rounded-xl animate-pulse"
+                style={{ backgroundColor: `${REVIEW_ACCENT}08` }}
+              />
+              <div
+                className="h-12 rounded-xl animate-pulse"
+                style={{ backgroundColor: `${REVIEW_ACCENT}08` }}
+              />
+            </div>
+          </ChartGlassCard>
+        </div>
+      </ScrollAnimation>
+    );
+  }
+  if (todoLists.length === 0) return null;
 
-  const hasContent = dailySummary || completedTodos.length > 0 || hasUncompletedItems || hasUncompletedTodosOnly;
-  if (!hasContent) return null;
+  const completedItems = todoLists.filter((t) => t.is_checked);
+  const uncompletedItems = todoLists.filter((t) => !t.is_checked && !t.scheduled_at);
+  const total = todoLists.length;
+  const checked = completedItems.length;
+  const executionScore = total > 0 ? Math.round((checked / total) * 100) : 0;
 
   return (
-    <ScrollAnimation delay={260}>
+    <ScrollAnimation delay={180}>
       <div className="mb-60">
-        <ChartGlassCard gradientColor={executionGradientColor}>
-          <div className="space-y-4">
-            {/* 오늘 한 일 요약 */}
-            {dailySummary && (
-              <div
-                className="flex items-start gap-3 px-4 py-3.5 rounded-xl min-w-0"
-                style={itemBaseStyle}
+        <ReviewSectionHeader icon={ListTodo} title="오늘의 투두리스트" />
+        <ChartGlassCard gradientColor={REVIEW_ACCENT_RGB}>
+          {/* 실행 점수 시각화 */}
+          <div
+            className="mb-6 px-5 py-5 rounded-xl flex flex-col sm:flex-row items-center gap-6"
+            style={LIST_ITEM_STYLE}
+          >
+            <div className="flex-shrink-0">
+              <CircularProgress
+                percentage={executionScore}
+                size={100}
+                strokeWidth={8}
+                showText={true}
+                textSize="lg"
+                animated={true}
+                duration={1200}
+                strokeColor={REVIEW_ACCENT}
+                textColor={REVIEW_ACCENT}
+              />
+            </div>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <p
+                className={cn(
+                  TYPOGRAPHY.label.fontSize,
+                  TYPOGRAPHY.label.fontWeight,
+                  TYPOGRAPHY.label.letterSpacing,
+                  "uppercase mb-1"
+                )}
+                style={{ color: COLORS.text.secondary }}
               >
-                <MessageSquare
-                  className="w-4 h-4 flex-shrink-0 mt-0.5"
-                  style={{ color: executionColor }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={cn(TYPOGRAPHY.label.fontSize, "mb-1.5")}
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    오늘 한 일 요약
-                  </p>
-                  <p
-                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {dailySummary}
-                  </p>
-                </div>
-              </div>
-            )}
+                오늘의 할 일 실행 점수
+              </p>
+              <p
+                className={cn(TYPOGRAPHY.body.fontSize)}
+                style={{ color: COLORS.text.muted }}
+              >
+                완료 {checked}개 / 전체 {total}개
+              </p>
+            </div>
+          </div>
 
+          <div className="space-y-4">
             {/* 완료한 일 */}
-            {completedTodos.length > 0 && (
+            {completedItems.length > 0 && (
               <div className="space-y-1.5">
                 <p
-                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, "px-1")}
+                  className={cn(
+                    TYPOGRAPHY.label.fontSize,
+                    TYPOGRAPHY.label.fontWeight,
+                    TYPOGRAPHY.label.letterSpacing,
+                    "uppercase px-1"
+                  )}
                   style={{ color: COLORS.text.secondary }}
                 >
                   완료한 일
                 </p>
-                {completedTodos.map((todo, i) => (
+                {completedItems.map((item) => (
                   <div
-                    key={i}
+                    key={item.id}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl min-w-0"
-                    style={itemBaseStyle}
+                    style={LIST_ITEM_STYLE}
                   >
                     <CheckCircle2
                       className="w-4 h-4 flex-shrink-0"
-                      style={{ color: executionColor }}
+                      style={{ color: REVIEW_ACCENT }}
                     />
                     <span
-                      className={cn(TYPOGRAPHY.body.fontSize, "flex-1 min-w-0 break-words")}
+                      className={cn(
+                        TYPOGRAPHY.body.fontSize,
+                        "flex-1 min-w-0 break-words"
+                      )}
                       style={{ color: COLORS.text.primary }}
                     >
-                      {todo}
+                      {item.contents}
                     </span>
-                    {renderAddToScheduleButton(todo)}
+                    {renderAddToScheduleButton(item.contents)}
                   </div>
                 ))}
               </div>
             )}
 
             {/* 미완료한 일 */}
-            {(hasUncompletedItems || hasUncompletedTodosOnly) && (
+            {uncompletedItems.length > 0 && (
               <div className="space-y-1.5">
                 <p
-                  className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, "px-1")}
+                  className={cn(
+                    TYPOGRAPHY.label.fontSize,
+                    TYPOGRAPHY.label.fontWeight,
+                    TYPOGRAPHY.label.letterSpacing,
+                    "uppercase px-1"
+                  )}
                   style={{ color: COLORS.text.secondary }}
                 >
                   미완료한 일
                 </p>
-                {hasUncompletedItems &&
-                  uncompletedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl min-w-0"
-                      style={uncompletedItemStyle}
+                {uncompletedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl min-w-0"
+                    style={LIST_ITEM_MUTED_STYLE}
+                  >
+                    <Circle
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: COLORS.text.muted }}
+                    />
+                    <span
+                      className={cn(
+                        TYPOGRAPHY.body.fontSize,
+                        "flex-1 min-w-0 break-words"
+                      )}
+                      style={{ color: COLORS.text.primary }}
                     >
-                      <Circle
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: COLORS.text.muted }}
-                      />
-                      <span
-                        className={cn(TYPOGRAPHY.body.fontSize, "flex-1 min-w-0 break-words")}
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        {item.contents}
-                      </span>
-                      {renderRescheduleButton(item)}
-                    </div>
-                  ))}
-                {hasUncompletedTodosOnly &&
-                  uncompletedTodos.map((todo, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl min-w-0"
-                      style={uncompletedItemStyle}
-                    >
-                      <Circle
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: COLORS.text.muted }}
-                      />
-                      <span
-                        className={cn(TYPOGRAPHY.body.fontSize, "flex-1 min-w-0 break-words")}
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        {todo}
-                      </span>
-                      {renderAddToScheduleButton(todo)}
-                    </div>
-                  ))}
+                      {item.contents}
+                    </span>
+                    {renderRescheduleButton(item)}
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -30,6 +30,7 @@ type VividRecordRow = {
 type DailyScoreRow = {
   report_date: string;
   report: Report | null;
+  type?: string;
 };
 
 type WeeklyTrendRow = {
@@ -155,19 +156,11 @@ function computeWeeklyMetrics(
   const reports = dailyRows
     .map((row) => row.report)
     .filter((report): report is Report => report != null);
-  const _combinedScores = reports
-    .map((report) => {
-      if (!isValidScore(report.alignment_score) || !isValidScore(report.execution_score)) {
-        return null;
-      }
-      return (report.alignment_score + report.execution_score) / 2;
-    })
-    .filter((score): score is number => score != null);
 
   const uniqueDates = unique(dailyRows.map((row) => row.report_date));
   const reflectiveDates = unique(
     dailyRows
-      .filter((row) => isValidScore(row.report?.execution_score))
+      .filter((row) => row.type === "review")
       .map((row) => row.report_date)
   );
   const reflectionContinuity =
@@ -360,13 +353,14 @@ async function fetchDailyScores(
     throw new Error(`Failed to fetch daily_vivid: ${error.message}`);
   }
 
-  const decryptedRows = (data || []).map((item) =>
-    decryptDailyVivid(item as unknown as Record<string, unknown>)
-  ) as Array<{ report_date?: string; report?: Report | null }>;
+  const decryptedRows = (data || []).map((item) => {
+    const decrypted = decryptDailyVivid(item as unknown as Record<string, unknown>);
+    return { ...decrypted, type: (item as { type?: string }).type };
+  }) as Array<{ report_date?: string; report?: Report | null; type?: string }>;
 
   return decryptedRows
-    .filter((row): row is { report_date: string; report: Report | null } => !!row.report_date)
-    .map((row) => ({ report_date: row.report_date, report: row.report ?? null }));
+    .filter((row): row is { report_date: string; report: Report | null; type?: string } => !!row.report_date)
+    .map((row) => ({ report_date: row.report_date, report: row.report ?? null, type: row.type }));
 }
 
 type RawHistoryRow = {

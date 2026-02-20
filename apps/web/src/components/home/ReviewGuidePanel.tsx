@@ -112,7 +112,7 @@ export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
             <p style={{ color: COLORS.text.secondary }}>
               비비드 기록과 합쳐진 인사이트와, 오늘 보낸 하루에 대한 정리, 그리고{" "}
               <strong style={{ color: COLORS.brand.primary }}>
-                실행력 분석
+                할 일 달성률
               </strong>{" "}
               인사이트를 얻을 수 있습니다.
             </p>

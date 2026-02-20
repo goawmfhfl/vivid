@@ -15,6 +15,7 @@ import {
 import { verifySubscription } from "@/lib/subscription-utils";
 import { fetchUserPersonaOptional, formatPersonaTraitsForReview } from "@/lib/user-persona";
 import { API_ENDPOINTS } from "@/constants";
+import { removeTrackingFromObject } from "../utils/remove-tracking";
 import type { Report, ReviewReport } from "@/types/daily-vivid";
 import type { DailyVividRequest, DailyReportResponse } from "./types";
 
@@ -39,13 +40,9 @@ function replace당신InReviewReport(
     ...report,
     retrospective_summary: replace당신(report.retrospective_summary, userName),
     retrospective_evaluation: replace당신(report.retrospective_evaluation, userName),
-    execution_analysis_points: (report.execution_analysis_points ?? []).map(
-      (s) => replace당신(s, userName)
-    ),
     todo_feedback: (report.todo_feedback ?? []).map((s) =>
       replace당신(s, userName)
     ),
-    daily_summary: replace당신(report.daily_summary ?? "", userName),
     suggested_todos_for_tomorrow: report.suggested_todos_for_tomorrow
       ? {
           reason: replace당신(report.suggested_todos_for_tomorrow.reason, userName),
@@ -70,8 +67,6 @@ function replace당신InReport(report: Report | null, userName: string): Report 
     alignment_analysis_points: (report.alignment_analysis_points ?? []).map(
       (s) => replace당신(s, userName)
     ),
-    execution_score: null,
-    execution_analysis_points: null,
     user_characteristics: (report.user_characteristics ?? []).map((s) =>
       replace당신(s, userName)
     ),
@@ -239,8 +234,6 @@ export async function POST(request: NextRequest) {
             ...allReports.report,
             retrospective_summary: null,
             retrospective_evaluation: null,
-            execution_score: null,
-            execution_analysis_points: null,
           },
         };
       }
@@ -248,11 +241,28 @@ export async function POST(request: NextRequest) {
       reportData = allReports.report;
     }
 
+    if (!reportData) {
+      return NextResponse.json(
+        {
+          error:
+            generationType === "review"
+              ? "회고 인사이트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요."
+              : "리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+        },
+        { status: 500 }
+      );
+    }
+
+    // __tracking(디버깅 메타데이터) 제거 후 DB 저장
+    const reportToSave = removeTrackingFromObject(
+      reportData as unknown as Record<string, unknown>
+    ) as unknown as Report | ReviewReport;
+
     // DailyReportResponse 형식으로 변환 (trend는 user_persona에서 관리하므로 null)
     const report: DailyReportResponse = {
       date,
       day_of_week: dayOfWeek,
-      report: reportData,
+      report: reportToSave,
       trend: null,
     };
 

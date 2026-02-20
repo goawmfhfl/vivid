@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from(API_ENDPOINTS.DAILY_VIVID)
       .select("*")
       .eq("user_id", userId)
@@ -81,20 +81,19 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch daily vivid: ${error.message}`);
     }
 
-    console.log(
-      `[Daily Vivid By Range] Found ${data?.length || 0} daily vivid entries`
-    );
-
-    // 서버 사이드에서 복호화 처리
-    const decryptedFeedbacks = (data || []).map(
+    const decrypted = (rows || []).map(
       (item) =>
         decryptDailyVivid(
           item as unknown as { [key: string]: unknown }
         ) as unknown as DailyVividRow
     );
 
+    console.log(
+      `[Daily Vivid By Range] Found ${decrypted.length} vivid rows`
+    );
+
     return NextResponse.json(
-      { data: decryptedFeedbacks },
+      { data: decrypted },
       {
         status: 200,
         headers: {

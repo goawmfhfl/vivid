@@ -1,7 +1,32 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
 import type { TodoListItem, DailyVividRow } from "@/types/daily-vivid";
+
+async function fetchTodoListByDate(date: string): Promise<TodoListItem[]> {
+  const userId = await getCurrentUserId();
+  const res = await fetch(
+    `/api/todo-list/by-date?userId=${userId}&date=${date}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to fetch todo list");
+  }
+  const { todoLists } = await res.json();
+  return Array.isArray(todoLists) ? todoLists : [];
+}
+
+/** 해당 날짜의 todo_list_items 조회 (회고 페이지 마운트 시 사용) */
+export function useTodoListForDate(date: string | null) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date],
+    queryFn: () => fetchTodoListByDate(date!),
+    enabled: !!date,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
 
 async function createTodoList(date: string): Promise<TodoListItem[]> {
   const userId = await getCurrentUserId();
@@ -235,10 +260,12 @@ export function useUpdateTodoItem(date: string) {
       );
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
     },
   });
 }
@@ -280,7 +307,7 @@ function applyReorderToCache(
   return { ...prev, todoLists: reordered };
 }
 
-const OPTIMISTIC_ID_PREFIX = "optimistic-todo-";
+export const OPTIMISTIC_ID_PREFIX = "optimistic-todo-";
 
 /** 특정 날짜에 투두 추가 (회고 페이지에서 내일/미래 일정에 추가할 때 사용) */
 export function useAddTodoToDate() {
@@ -289,30 +316,7 @@ export function useAddTodoToDate() {
   return useMutation({
     mutationFn: ({ date, contents }: { date: string; contents: string }) =>
       addTodoItem(date, contents),
-    onSuccess: (_data, { date }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
-    },
-  });
-}
-
-/** id + date로 투두 삭제 (회고 페이지에서 추가한 일정 삭제 시 사용) */
-export function useDeleteTodoItemByDate() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, date }: { id: string; date: string }) => deleteTodoItem(id),
-    onSuccess: (_data, { date }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
-    },
-  });
-}
-
-export function useAddTodoItem(date: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (contents: string) => addTodoItem(date, contents),
-    onMutate: async (contents) => {
+    onMutate: async ({ date, contents }) => {
       await queryClient.cancelQueries({
         queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
       });
@@ -340,6 +344,112 @@ export function useAddTodoItem(date: string) {
             } as DailyVividRow;
           }
           const existing = prev.todoLists ?? [];
+          const maxOrder = Math.max(-1, ...existing.map((t) => t.sort_order ?? 0));
+          const itemWithOrder = {
+            ...optimisticItem,
+            sort_order: maxOrder + 1,
+          };
+          return {
+            ...prev,
+            todoLists: [...existing, itemWithOrder],
+            hasNativeTodoList: true,
+          };
+        }
+      );
+      return { previous, optimisticId, date };
+    },
+    onError: (_err, { date }, context) => {
+      if (context?.previous != null) {
+        queryClient.setQueryData(
+          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+          context.previous
+        );
+      }
+    },
+    onSuccess: (newItem, { date }, context) => {
+      const optimisticId = context?.optimisticId;
+      queryClient.setQueryData<DailyVividRow | null>(
+        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+        (prev) => {
+          if (!prev?.todoLists) return prev;
+          const existing = prev.todoLists ?? [];
+          const updated = optimisticId
+            ? existing.map((t) => (t.id === optimisticId ? newItem : t))
+            : existing.some((t) => t.id === newItem.id)
+              ? existing.map((t) => (t.id === newItem.id ? newItem : t))
+              : [...existing, newItem];
+          return {
+            ...prev,
+            todoLists: updated,
+            hasNativeTodoList: true,
+          };
+        }
+      );
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
+      });
+    },
+    onSettled: (_data, _err, { date }) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
+      });
+    },
+  });
+}
+
+/** id + date로 투두 삭제 (회고 페이지에서 추가한 일정 삭제 시 사용) */
+export function useDeleteTodoItemByDate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) => deleteTodoItem(id),
+    onSuccess: (_data, { date }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
+    },
+    onSettled: (_data, _err, { date }) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
+    },
+  });
+}
+
+export function useAddTodoItem(date: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (contents: string) => addTodoItem(date, contents),
+    onMutate: async (contents) => {
+      await queryClient.cancelQueries({
+        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      });
+      const previous = queryClient.getQueryData<DailyVividRow | null>([
+        QUERY_KEYS.DAILY_VIVID,
+        date,
+        "vivid",
+      ]);
+      const optimisticId = `${OPTIMISTIC_ID_PREFIX}${Date.now()}`;
+      queryClient.setQueryData<DailyVividRow | null>(
+        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+        (prev) => {
+          const existing = prev?.todoLists ?? [];
+          const maxOrder = Math.max(-1, ...existing.map((t) => t.sort_order ?? 0));
+          const optimisticItem: TodoListItem = {
+            id: optimisticId,
+            contents: contents.trim(),
+            is_checked: false,
+            category: "직접 추가",
+            sort_order: maxOrder + 1,
+            scheduled_at: null,
+          };
+          if (!prev) {
+            return {
+              todoLists: [optimisticItem],
+              hasNativeTodoList: true,
+            } as DailyVividRow;
+          }
           return {
             ...prev,
             todoLists: [...existing, optimisticItem],

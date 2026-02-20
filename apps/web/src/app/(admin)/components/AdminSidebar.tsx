@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Ticket,
   ClipboardList,
+  Database,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -51,6 +52,12 @@ const menuItems = [
     title: "크론 테스트",
     href: "/admin/cron/update-persona",
     icon: FileText,
+    enabled: true,
+  },
+  {
+    title: "마이그레이션 (실행력)",
+    href: "/admin/migration/execution-score",
+    icon: Database,
     enabled: true,
   },
   {

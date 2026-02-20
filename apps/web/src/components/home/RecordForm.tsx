@@ -32,6 +32,7 @@ import {
   useCreateTodoList,
   useAddTodoItem,
   useReorderTodoItems,
+  OPTIMISTIC_ID_PREFIX,
 } from "@/hooks/useTodoList";
 import {
   DndContext,
@@ -1466,12 +1467,16 @@ export function RecordForm({
                       onDragEnd={(event: DragEndEvent) => {
                         const { active, over } = event;
                         if (!over || active.id === over.id) return;
+                        if (String(active.id).startsWith(OPTIMISTIC_ID_PREFIX)) return;
                         const items = vividFeedback?.todoLists ?? [];
                         const oldIndex = items.findIndex((i) => i.id === active.id);
                         const newIndex = items.findIndex((i) => i.id === over.id);
                         if (oldIndex === -1 || newIndex === -1) return;
                         const reordered = arrayMove(items, oldIndex, newIndex);
-                        reorderTodoItems.mutate(reordered.map((i) => i.id));
+                        const realIds = reordered
+                          .map((i) => i.id)
+                          .filter((id) => !String(id).startsWith(OPTIMISTIC_ID_PREFIX));
+                        if (realIds.length > 0) reorderTodoItems.mutate(realIds);
                       }}
                     >
                       <SortableContext
@@ -1512,7 +1517,7 @@ export function RecordForm({
                     onChange={(e) => setNewTodoContents(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        if (e.nativeEvent.isComposing || addTodoItem.isPending) return;
+                        if (e.nativeEvent.isComposing) return;
                         e.preventDefault();
                         const trimmed = (e.target as HTMLInputElement).value.trim();
                         if (trimmed) {
@@ -1564,10 +1569,8 @@ export function RecordForm({
                         setNewTodoContents("");
                       }
                     }}
-                    disabled={
-                      addTodoItem.isPending || !newTodoContents.trim()
-                    }
-                    className="h-10 rounded-lg text-sm font-semibold min-w-[72px] transition-all hover:opacity-90 active:scale-[0.98]"
+                    disabled={!newTodoContents.trim()}
+                    className="h-10 rounded-lg text-sm font-semibold min-w-[72px] transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-100 disabled:hover:opacity-100"
                     style={{
                       backgroundColor: COLORS.brand.primary,
                       color: COLORS.text.white,

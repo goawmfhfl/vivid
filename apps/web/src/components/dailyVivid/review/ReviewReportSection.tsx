@@ -15,6 +15,7 @@ import {
 } from "../../ui/dropdown-menu";
 import { COLORS } from "@/lib/design-system";
 import {
+  useTodoListForDate,
   useUpdateTodoItem,
   useAddTodoToDate,
   useDeleteTodoItemByDate,
@@ -22,25 +23,25 @@ import {
 import { getKSTDateString } from "@/lib/date-utils";
 import type { TodoListItem } from "@/types/daily-vivid";
 import type { DailyReportData } from "../types";
-import { ReviewReportHeaderSection } from "./ReviewReportHeaderSection";
 import { ReviewSummarySection } from "./ReviewSummarySection";
-import { ReviewExecutionScoreSection } from "./ReviewExecutionScoreSection";
 import { ReviewTodayTodosSection } from "./ReviewTodayTodosSection";
-import { ReviewTodoFeedbackSection } from "./ReviewTodoFeedbackSection";
-import { ReviewSuggestedTodosSection } from "./ReviewSuggestedTodosSection";
+import { ReviewSuggestionsSection } from "./ReviewSuggestionsSection";
 import { ReviewScheduleDialogs } from "./ReviewScheduleDialogs";
 
 interface ReviewReportSectionProps {
   view: DailyReportData;
-  todoLists: TodoListItem[];
+  todoLists?: TodoListItem[];
   date: string;
 }
 
 export function ReviewReportSection({
   view,
-  todoLists,
+  todoLists: todoListsProp,
   date,
 }: ReviewReportSectionProps) {
+
+  const { data: todoListsFetched, isLoading: isTodoLoading } = useTodoListForDate(date);
+  const todoLists = todoListsFetched ?? todoListsProp ?? [];
   const [scheduleItemId, setScheduleItemId] = useState<string | null>(null);
   const [scheduleValue, setScheduleValue] = useState<string | null>(null);
   const [addToDateContents, setAddToDateContents] = useState<string | null>(null);
@@ -294,20 +295,22 @@ export function ReviewReportSection({
     </DropdownMenu>
   );
 
+
   return (
     <div className="mb-16">
-      <ReviewReportHeaderSection />
+      
       <ReviewSummarySection view={view} />
-      <ReviewExecutionScoreSection view={view} />
-      <ReviewTodayTodosSection
+      {(isTodoLoading || todoLists.length > 0) && (
+        <ReviewTodayTodosSection
+          todoLists={todoLists}
+          isLoading={isTodoLoading}
+          renderAddToScheduleButton={renderAddToScheduleButton}
+          renderRescheduleButton={renderRescheduleButton}
+        />
+      )}
+      <ReviewSuggestionsSection
         view={view}
         todoLists={todoLists}
-        renderAddToScheduleButton={renderAddToScheduleButton}
-        renderRescheduleButton={renderRescheduleButton}
-      />
-      <ReviewTodoFeedbackSection view={view} />
-      <ReviewSuggestedTodosSection
-        view={view}
         renderAddToScheduleButton={renderAddToScheduleButton}
       />
 

@@ -59,7 +59,7 @@ export function DailyVividView({
     isLoading: isLoadingByDate,
     error: errorByDate,
     refetch: refetchByDate,
-  } = useGetDailyVivid(date || "");
+  } = useGetDailyVivid(date || "", "vivid");
   const {
     data: dataById,
     isLoading: isLoadingById,
@@ -269,8 +269,13 @@ export function DailyVividView({
   const hasReviewSection = !!(
     view.completed_todos?.length ||
     view.uncompleted_todos?.length ||
-    view.todo_feedback?.length ||
-    (view.daily_summary && view.daily_summary.trim())
+    view.todo_feedback?.length
+  );
+
+  // Q3 회고 인사이트만 있어도 표시 (투두 없을 때 minimal 스키마로 생성된 경우)
+  const hasRetrospectiveInsight = !!(
+    (view.retrospective_summary && view.retrospective_summary.trim()) ||
+    (view.retrospective_evaluation && view.retrospective_evaluation.trim())
   );
 
   return (
@@ -320,7 +325,7 @@ export function DailyVividView({
         )}
 
         {/* 회고 섹션 (type=review) */}
-        {rowType === "review" && (hasReviewSection || hasDreamSection) && (
+        {rowType === "review" && (hasReviewSection || hasDreamSection || hasRetrospectiveInsight) && (
           <ScrollAnimation>
             <div className="mb-16">
               <ReviewReportSection

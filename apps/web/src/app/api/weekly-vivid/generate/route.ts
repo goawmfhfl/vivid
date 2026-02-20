@@ -12,21 +12,21 @@ import type { WeeklyVivid } from "@/types/weekly-vivid";
 
 import type { WithTracking } from "../../types";
 import type { ApiError } from "../../types";
+import { removeTrackingFromObject } from "../../utils/remove-tracking";
 
 function removeTrackingInfo(
   feedback: WithTracking<WeeklyVivid>
 ): WeeklyVivid {
   const cleaned = { ...feedback } as Record<string, unknown>;
 
-  const sections = ["report"];
+  if ("__tracking" in cleaned) {
+    delete cleaned.__tracking;
+  }
 
+  const sections = ["report"];
   for (const key of sections) {
     if (cleaned[key] && typeof cleaned[key] === "object") {
-      const { __tracking: _, ...rest } = cleaned[key] as Record<
-        string,
-        unknown
-      > & { __tracking?: unknown };
-      cleaned[key] = rest;
+      cleaned[key] = removeTrackingFromObject(cleaned[key] as Record<string, unknown>);
     }
   }
 

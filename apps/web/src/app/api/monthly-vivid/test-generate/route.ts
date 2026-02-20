@@ -7,6 +7,7 @@ import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
 import type { WithTracking } from "../../types";
+import { removeTrackingFromObject } from "../../utils/remove-tracking";
 
 /**
  * __tracking 정보 제거 (DB 저장 전)
@@ -16,65 +17,28 @@ function removeTrackingInfo(
 ): MonthlyVivid {
   const cleaned = { ...feedback } as Record<string, unknown>;
 
-  // __tracking 제거
   if ("__tracking" in cleaned) {
     delete cleaned.__tracking;
   }
 
-  // title이 객체인 경우 처리 (__tracking 제거 및 title 추출)
   if (cleaned.title && typeof cleaned.title === "object" && cleaned.title !== null) {
     const titleObj = cleaned.title as Record<string, unknown> & { __tracking?: unknown; title?: string };
     if (titleObj.title && typeof titleObj.title === "string") {
       cleaned.title = titleObj.title;
     } else {
-      // title 필드가 없으면 __tracking만 제거
-      const { __tracking: _, ...rest } = titleObj;
-      cleaned.title = rest;
+      cleaned.title = removeTrackingFromObject(titleObj);
     }
   }
 
-  // report에서 __tracking 제거 (재귀적으로)
   if (cleaned.report && typeof cleaned.report === "object" && cleaned.report !== null) {
     cleaned.report = removeTrackingFromObject(cleaned.report as Record<string, unknown>);
   }
 
-  // trend에서 __tracking 제거
   if (cleaned.trend && typeof cleaned.trend === "object" && cleaned.trend !== null) {
-    const { __tracking: _, ...rest } = cleaned.trend as Record<
-      string,
-      unknown
-    > & { __tracking?: unknown };
-    cleaned.trend = rest;
+    cleaned.trend = removeTrackingFromObject(cleaned.trend as Record<string, unknown>);
   }
 
   return cleaned as MonthlyVivid;
-}
-
-/**
- * 객체에서 재귀적으로 __tracking 제거
- */
-function removeTrackingFromObject(obj: Record<string, unknown>): unknown {
-  const cleaned = { ...obj };
-  
-  if ("__tracking" in cleaned) {
-    delete cleaned.__tracking;
-  }
-
-  // 모든 속성을 순회하며 재귀적으로 처리
-  for (const key in cleaned) {
-    if (cleaned[key] && typeof cleaned[key] === "object" && !Array.isArray(cleaned[key])) {
-      cleaned[key] = removeTrackingFromObject(cleaned[key] as Record<string, unknown>);
-    } else if (Array.isArray(cleaned[key])) {
-      cleaned[key] = (cleaned[key] as unknown[]).map(item => {
-        if (item && typeof item === "object" && !Array.isArray(item)) {
-          return removeTrackingFromObject(item as Record<string, unknown>);
-        }
-        return item;
-      });
-    }
-  }
-
-  return cleaned;
 }
 
 /**

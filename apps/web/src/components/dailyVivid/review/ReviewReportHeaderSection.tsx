@@ -1,11 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { hexToRgbTriplet } from "../colorUtils";
-
-const executionColor = COLORS.chart.execution;
-const executionGradientColor = hexToRgbTriplet(executionColor);
-const executionGlow = `rgba(${executionGradientColor}, 0.45)`;
+import { SECTION_HEADER_ICON_STYLE } from "./reviewSectionStyles";
 
 export function ReviewReportHeaderSection() {
   return (
@@ -13,8 +9,8 @@ export function ReviewReportHeaderSection() {
       <div
         className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 relative overflow-hidden group transition-transform duration-300 hover:scale-110"
         style={{
-          background: `linear-gradient(135deg, ${executionColor} 0%, ${executionColor}DD 100%)`,
-          boxShadow: `0 4px 12px ${executionGlow}`,
+          background: SECTION_HEADER_ICON_STYLE.background,
+          boxShadow: SECTION_HEADER_ICON_STYLE.boxShadow,
         }}
       >
         <div
