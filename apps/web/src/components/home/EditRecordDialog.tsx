@@ -9,13 +9,6 @@ import { COLORS, TYPOGRAPHY, SPACING, TRANSITIONS } from "@/lib/design-system";
 import { useSubscription } from "@/hooks/useSubscription";
 import { type RecordType } from "../signup/RecordTypeCard";
 import { cn } from "@/lib/utils";
-import {
-  type EmotionIntensity,
-} from "@/lib/emotion-data";
-import { EmotionIntensityPicker } from "@/components/emotion/EmotionIntensityPicker";
-import { EmotionKeywordPicker } from "@/components/emotion/EmotionKeywordPicker";
-import { EmotionFactorPicker } from "@/components/emotion/EmotionFactorPicker";
-import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
 
 interface EditRecordDialogProps {
   record: Record | null;
@@ -30,11 +23,6 @@ interface EditState {
   q3Content: string;
   hasSeparated: boolean;
   selectedType: RecordType | null;
-  // 감정 관련 상태
-  emotionIntensity?: EmotionIntensity;
-  emotionKeywords: string[];
-  emotionFactors: string[];
-  emotionReason: string;
 }
 
 export function EditRecordDialog({
@@ -53,10 +41,6 @@ export function EditRecordDialog({
     q3Content: "",
     hasSeparated: false,
     selectedType: null,
-    emotionIntensity: undefined,
-    emotionKeywords: [],
-    emotionFactors: [],
-    emotionReason: "",
   });
 
   const updateRecordMutation = useUpdateRecord();
@@ -116,7 +100,7 @@ export function EditRecordDialog({
     }
     
     if (plan === "pro") {
-      return ["review", "dream", "emotion"];
+      return ["review", "dream"];
     }
     
     return ["dream"];
@@ -130,13 +114,6 @@ export function EditRecordDialog({
       const recordType = record.type as RecordType | null;
       const parsed = parseVividContent(record.content, recordType);
       
-      // 감정 데이터 초기화
-      const emotionData = record.emotion;
-      const emotionIntensity = emotionData?.intensity as EmotionIntensity | undefined;
-      const emotionKeywords = emotionData?.keywords || [];
-      const emotionFactors = emotionData?.factors || [];
-      const emotionReason = emotionData?.reasonText || "";
-      
       const newInitialState: EditState = parsed.hasSeparated
         ? {
             editContent: "",
@@ -149,10 +126,6 @@ export function EditRecordDialog({
               : allowedTypes.length > 0
               ? allowedTypes[0]
               : "dream",
-            emotionIntensity,
-            emotionKeywords,
-            emotionFactors,
-            emotionReason,
           }
         : {
             editContent: record.content || "",
@@ -165,10 +138,6 @@ export function EditRecordDialog({
               : allowedTypes.length > 0
               ? allowedTypes[0]
               : "dream",
-            emotionIntensity,
-            emotionKeywords,
-            emotionFactors,
-            emotionReason,
           };
 
       setInitialState(newInitialState);
@@ -188,10 +157,6 @@ export function EditRecordDialog({
         q3Content: "",
         hasSeparated: false,
         selectedType: null,
-        emotionIntensity: undefined,
-        emotionKeywords: [],
-        emotionFactors: [],
-        emotionReason: "",
       });
       isInitializedRef.current = false;
     }
@@ -200,52 +165,7 @@ export function EditRecordDialog({
   const handleSaveEdit = () => {
     if (!record || !editState) return;
 
-    // 감정 타입인 경우
-    if (editState.selectedType === "emotion") {
-      if (!editState.emotionIntensity || 
-          editState.emotionKeywords.length === 0 || 
-          editState.emotionFactors.length === 0) {
-        return;
-      }
-
-      const updateData: { 
-        content: string; 
-        type?: string;
-        emotion?: {
-          intensity: number;
-          keywords: string[];
-          factors: string[];
-          reasonText: string | null;
-        };
-      } = {
-        content: record.content || "", // 감정 타입은 content가 필요 없지만 API 요구사항
-        type: "emotion",
-        emotion: {
-          intensity: editState.emotionIntensity,
-          keywords: editState.emotionKeywords,
-          factors: editState.emotionFactors,
-          reasonText: editState.emotionReason.trim() || null,
-        },
-      };
-
-      updateRecordMutation.mutate(
-        {
-          id: record.id,
-          data: updateData,
-        },
-        {
-          onSuccess: () => {
-            onOpenChange(false);
-          },
-          onError: (error) => {
-            console.error("기록 수정 실패:", error.message);
-          },
-        }
-      );
-      return;
-    }
-
-    // 일반 타입인 경우
+    // 비비드/회고 타입인 경우
     let contentToSave = "";
     if (editState.hasSeparated && editState.selectedType === "dream") {
       const q1Text = editState.q1Content.trim();
@@ -288,40 +208,8 @@ export function EditRecordDialog({
     );
   };
 
-  // 감정 관련 핸들러
-  const handleIntensityChange = (intensity: EmotionIntensity) => {
-    setEditState((prev) => ({
-      ...prev,
-      emotionIntensity: intensity,
-      // intensity가 변경되면 키워드 초기화 (새로운 intensity에 맞는 키워드 선택 필요)
-      emotionKeywords: [],
-    }));
-  };
-
-  const handleToggleKeyword = (keyword: string) => {
-    setEditState((prev) => ({
-      ...prev,
-      emotionKeywords: prev.emotionKeywords.includes(keyword)
-        ? prev.emotionKeywords.filter((k) => k !== keyword)
-        : [...prev.emotionKeywords, keyword],
-    }));
-  };
-
-  const handleToggleFactor = (factor: string) => {
-    setEditState((prev) => ({
-      ...prev,
-      emotionFactors: prev.emotionFactors.includes(factor)
-        ? prev.emotionFactors.filter((f) => f !== factor)
-        : [...prev.emotionFactors, factor],
-    }));
-  };
-
   const isSaveDisabled =
-    (editState.selectedType === "emotion"
-      ? !editState.emotionIntensity ||
-        editState.emotionKeywords.length === 0 ||
-        editState.emotionFactors.length === 0
-      : editState.hasSeparated && editState.selectedType === "dream"
+    (editState.hasSeparated && editState.selectedType === "dream"
       ? !editState.q1Content.trim() && !editState.q2Content.trim()
       : editState.hasSeparated && editState.selectedType === "review"
       ? !editState.q3Content.trim()
@@ -340,7 +228,7 @@ export function EditRecordDialog({
       <DialogContent
         className="sm:max-w-md hide-scrollbar edit-record-dialog"
         style={{
-          maxWidth: editState.selectedType === "emotion" ? "672px" : "672px",
+          maxWidth: "672px",
           width: "calc(100vw - 2rem)",
           maxHeight: "90vh",
           backgroundColor: COLORS.background.base,
@@ -406,64 +294,7 @@ export function EditRecordDialog({
             overflowX: "hidden",
           }}
         >
-          {editState.selectedType === "emotion" ? (
-            <div
-              className={cn(
-                "flex flex-col gap-8",
-                SPACING.element.marginBottomLarge
-              )}
-            >
-              <div className={`flex flex-col ${SPACING.element.gapSmall}`}>
-                <p
-                  className={cn(TYPOGRAPHY.bodySmall.fontSize, "text-center")}
-                  style={{ color: COLORS.text.muted }}
-                >
-                  생각하지 않아도 고를 수 있는 지금의 감정
-                </p>
-                <EmotionIntensityPicker
-                  value={editState.emotionIntensity}
-                  onChange={handleIntensityChange}
-                />
-              </div>
-              <div
-                className="h-px w-full"
-                style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-              />
-              <EmotionKeywordPicker
-                intensity={editState.emotionIntensity}
-                selectedKeywords={editState.emotionKeywords}
-                onToggle={handleToggleKeyword}
-              />
-              <div
-                className="h-px w-full"
-                style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-              />
-              <EmotionFactorPicker
-                intensity={editState.emotionIntensity}
-                selectedFactors={editState.emotionFactors}
-                onToggle={handleToggleFactor}
-              />
-              <div
-                className="h-px w-full"
-                style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-              />
-              <EmotionReasonInput
-                value={editState.emotionReason}
-                onChange={(value) => {
-                  setEditState((prev) => ({
-                    ...prev,
-                    emotionReason: value,
-                  }));
-                }}
-                onHelpOpen={() => {}}
-                accentColor={
-                  editState.emotionIntensity
-                    ? COLORS.emotion.intensity[editState.emotionIntensity]
-                    : COLORS.brand.primary
-                }
-              />
-            </div>
-          ) : editState.hasSeparated && editState.selectedType === "dream" ? (
+          {editState.hasSeparated && editState.selectedType === "dream" ? (
             <div className="space-y-6">
               {/* Q1 섹션 */}
               <div className="space-y-3">

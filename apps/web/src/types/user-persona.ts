@@ -11,8 +11,14 @@ export interface UserPersonaTrend {
   current_self: string[];
 }
 
+export interface UserPersonaTodoAnalysis {
+  current_projects: string[];
+  recurring_tasks: string[];
+}
+
 export interface UserPersona {
   trend?: UserPersonaTrend;
+  todo_analysis?: UserPersonaTodoAnalysis;
 }
 
 /** @deprecated persona에 trend만 유지할 예정 */

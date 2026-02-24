@@ -60,6 +60,7 @@ const bottomNavHiddenRules: RouteRule[] = [
   { type: "exact", value: "/auth/reset-password" },
   { type: "prefix", value: "/admin" }, // 어드민 페이지에서 BottomNavigation 비활성화
   { type: "prefix", value: "/policy" }, // 정책 페이지에서 BottomNavigation 비활성화
+  { type: "prefix", value: "/membership" }, // 멤버십 페이지에서 BottomNavigation 비활성화
 ];
 
 export function shouldShowBottomNav(pathname: string): boolean {
@@ -92,6 +93,7 @@ const footerHiddenRules: RouteRule[] = [
   { type: "prefix", value: "/analysis" }, // 분석 페이지
   { type: "prefix", value: "/logs" }, // 로그 페이지
   { type: "prefix", value: "/admin" }, // 어드민 페이지
+  { type: "prefix", value: "/membership" }, // 멤버십 페이지
 ];
 
 export function shouldShowFooter(pathname: string): boolean {

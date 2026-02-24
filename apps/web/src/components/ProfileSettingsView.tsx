@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Bell,
   ChevronRight,
+  Megaphone,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath } from "@/lib/navigation";
@@ -403,6 +404,32 @@ export function ProfileSettingsView() {
                 <ChevronRight className="h-4 w-4 text-[#C5C1B8]" />
               </div>
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title="공지사항"
+            description="서비스 업데이트와 소식을 확인하세요."
+          >
+            <button
+              type="button"
+              onClick={() => router.push("/announcements")}
+              className="w-full flex items-center justify-between p-4 rounded-xl transition-colors hover:opacity-90"
+              style={{
+                backgroundColor: "#FBFAF7",
+                border: "1px solid #F4F1EA",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: COLORS.brand.light + "40" }}>
+                  <Megaphone className="h-5 w-5" style={{ color: COLORS.brand.primary }} />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-[#333333]">공지 목록 보기</p>
+                  <p className="text-xs text-[#6B7A6F] mt-0.5">서비스 공지와 업데이트 확인</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-[#C5C1B8]" />
+            </button>
           </SectionCard>
 
           <SubmitButton

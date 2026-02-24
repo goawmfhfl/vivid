@@ -44,7 +44,7 @@ const COLORS_CHART = [
   COLORS.brand.primary,
   COLORS.brand.secondary,
   COLORS.brand.light,
-  COLORS.section.emotion.primary,
+  COLORS.section.insight.primary,
 ];
 
 /**

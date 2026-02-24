@@ -15,16 +15,6 @@ import { Timer } from "./Timer";
 import { useTimer } from "@/hooks/useTimer";
 import { useToast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
-import {
-  getEmotionIntensityLabel,
-  type EmotionIntensity,
-} from "@/lib/emotion-data";
-import { EmotionIntensityPicker } from "@/components/emotion/EmotionIntensityPicker";
-import { EmotionKeywordPicker } from "@/components/emotion/EmotionKeywordPicker";
-import { EmotionFactorPicker } from "@/components/emotion/EmotionFactorPicker";
-import { EmotionReasonInput } from "@/components/emotion/EmotionReasonInput";
-import { EmotionSaveButton } from "@/components/emotion/EmotionSaveButton";
-import { useEnvironment } from "@/hooks/useEnvironment";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
 import { TodoGuidePanel } from "./TodoGuidePanel";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
@@ -80,11 +70,6 @@ export function RecordForm({
   const [q1Content, setQ1Content] = useState("");
   const [q2Content, setQ2Content] = useState("");
   const [q3Content, setQ3Content] = useState("");
-  const [emotionIntensity, setEmotionIntensity] =
-    useState<EmotionIntensity | undefined>(4);
-  const [emotionKeywords, setEmotionKeywords] = useState<string[]>([]);
-  const [emotionFactors, setEmotionFactors] = useState<string[]>([]);
-  const [emotionReason, setEmotionReason] = useState("");
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
   const [internalTab, setInternalTab] = useState<HomeTabType>("vivid");
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
@@ -106,7 +91,6 @@ export function RecordForm({
   const lastQ3ScrollBeforeChangeRef = useRef<{ x: number; y: number } | null>(null);
   const router = useRouter();
   const { subscription } = useSubscription();
-  const { isDevelopment } = useEnvironment();
   const { state: timerState } = useTimer();
   const { showToast } = useToast();
 
@@ -132,21 +116,17 @@ export function RecordForm({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 → 감정 순, 회고는 Pro 아니어도 드롭다운에 표시)
+  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 순, 회고는 Pro 아니어도 드롭다운에 표시)
   const getRecordTypeOptions = useCallback(() => {
-    const allowEmotion = !!subscription?.isPro && isDevelopment;
     const allowedTypes: RecordType[] = ["dream"];
     if (subscription?.isPro) {
       allowedTypes.push("review");
-      if (allowEmotion) {
-        allowedTypes.push("emotion");
-      }
     }
     // 회고는 Pro 아니어도 드롭다운에 표시 (자물쇠와 함께, 클릭 시 결제 유도)
     const displayTypes: RecordType[] =
       allowedTypes.includes("review") ? [...allowedTypes] : ["dream", "review"];
-    return { allowedTypes, displayTypes, allowEmotion };
-  }, [subscription?.isPro, isDevelopment]);
+    return { allowedTypes, displayTypes };
+  }, [subscription?.isPro]);
 
   // 첫 번째 타입을 기본값으로 설정
   useEffect(() => {
@@ -487,88 +467,9 @@ export function RecordForm({
     }
   }, [q3Content]);
 
-  const handleToggleKeyword = (keyword: string) => {
-    setEmotionKeywords((prev) =>
-      prev.includes(keyword)
-        ? prev.filter((item) => item !== keyword)
-        : [...prev, keyword]
-    );
-  };
-
-  const handleIntensityChange = (value: EmotionIntensity) => {
-    setEmotionIntensity(value);
-    setEmotionKeywords([]);
-    setEmotionFactors([]);
-  };
-
-  const handleToggleFactor = (factor: string) => {
-    setEmotionFactors((prev) =>
-      prev.includes(factor)
-        ? prev.filter((item) => item !== factor)
-        : [...prev, factor]
-    );
-  };
-
-  const buildEmotionSummary = () => {
-    if (!emotionIntensity) return "";
-    const label = getEmotionIntensityLabel(emotionIntensity);
-    const keywordCount = emotionKeywords.length;
-    const factorCount = emotionFactors.length;
-    return `감정: ${label} · 키워드 ${keywordCount} · 요인 ${factorCount}`;
-  };
-
-  const handleEmotionSubmit = () => {
-    if (
-      !emotionIntensity ||
-      emotionKeywords.length === 0 ||
-      emotionFactors.length === 0 ||
-      createRecordMutation.isPending
-    )
-      return;
-
-    const summary = buildEmotionSummary();
-    if (!summary) return;
-
-    createRecordMutation.mutate(
-      {
-        content: summary,
-        type: "emotion",
-        emotion: {
-          intensity: emotionIntensity,
-          keywords: emotionKeywords,
-          factors: emotionFactors,
-          reasonText: emotionReason.trim() || null,
-        },
-        ...(selectedDate && { kst_date: selectedDate }),
-      },
-      {
-        onSuccess: () => {
-          const message =
-            emotionReason.trim().length > 0
-              ? "오늘의 감정 단서가 저장됐어요."
-              : "감정은 저장됐어요. 다음엔 한 줄 남겨도 좋아요.";
-          showToast(message);
-          setEmotionIntensity(undefined);
-          setEmotionKeywords([]);
-          setEmotionFactors([]);
-          setEmotionReason("");
-          onSuccess?.();
-        },
-        onError: (error) => {
-          console.error("감정 기록 생성 실패:", error.message);
-        },
-      }
-    );
-  };
-
   const handleSubmit = () => {
     const { allowedTypes } = getRecordTypeOptions();
     const recordType = selectedType || allowedTypes[0] || "dream";
-
-    if (recordType === "emotion") {
-      handleEmotionSubmit();
-      return;
-    }
 
     if (recordType === "review") {
       if (q3Content.trim()) {
@@ -826,12 +727,6 @@ export function RecordForm({
     return () => observer.disconnect();
   }, [recordType]);
 
-  useEffect(() => {
-    if (recordType === "emotion" && !emotionIntensity) {
-      setEmotionIntensity(4);
-    }
-  }, [recordType, emotionIntensity]);
-  
   // 프로젝트 기본 색상 (타입별 색상 변경 없이 고정)
   const defaultColors = {
     background: COLORS.background.card,
@@ -1406,25 +1301,10 @@ export function RecordForm({
             open={showTodoGuidePanel}
             onClose={() => setShowTodoGuidePanel(false)}
           />
-          {!vividFeedback?.report && (!targetDateIso || targetDateIso <= todayIso) ? (
-            <div
-              className="px-3 py-6 rounded-xl text-center"
-              style={{
-                ...CARD_STYLES.default,
-                borderRadius: "12px",
-                color: COLORS.text.tertiary,
-                fontSize: "0.8125rem",
-              }}
-            >
-              비비드와 회고를 먼저 작성하면 할 일을 생성할 수 있어요.
-            </div>
-          ) : (
-            <>
-              {vividFeedback?.report != null &&
-                (vividFeedback?.type === "vivid" || vividFeedback?.is_vivid_ai_generated) &&
-                !vividFeedback?.hasNativeTodoList &&
-                (!targetDateIso || targetDateIso <= todayIso) && (
-                  <Button
+          <>
+            {!vividFeedback?.hasNativeTodoList &&
+              (!targetDateIso || targetDateIso <= todayIso) && (
+                <Button
                     type="button"
                     onClick={() =>
                       createTodoList.mutate(undefined, {
@@ -1508,8 +1388,6 @@ export function RecordForm({
                       : "오늘의 할 일이 없습니다."}
                   </div>
                 )}
-                {(vividFeedback?.hasNativeTodoList ||
-                (targetDateIso && targetDateIso > todayIso)) && (
                 <div className="flex gap-2 items-stretch">
                   <input
                     type="text"
@@ -1581,10 +1459,8 @@ export function RecordForm({
                     추가
                   </Button>
                 </div>
-              )}
               </div>
             </>
-          )}
         </div>
       ) : activeTab === "todo" && !subscription?.isPro ? (
         <div
@@ -1598,65 +1474,8 @@ export function RecordForm({
         >
           할 일 관리는 Pro 회원 전용 기능이에요.
         </div>
-      ) : recordType === "emotion" ? (
-        <div
-          className={cn(
-            "flex flex-col gap-8",
-            SPACING.element.marginBottomLarge
-          )}
-        >
-          <div className={`flex flex-col ${SPACING.element.gapSmall}`}>
-            <p
-              className={cn(TYPOGRAPHY.bodySmall.fontSize, "text-center")}
-              style={{ color: COLORS.text.muted }}
-            >
-              생각하지 않아도 고를 수 있는 지금의 감정
-            </p>
-            <EmotionIntensityPicker
-              value={emotionIntensity}
-              onChange={handleIntensityChange}
-            />
-          </div>
-          <div
-            className="h-px w-full"
-            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-          />
-          <EmotionKeywordPicker
-            intensity={emotionIntensity}
-            selectedKeywords={emotionKeywords}
-            onToggle={handleToggleKeyword}
-          />
-          <div
-            className="h-px w-full"
-            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-          />
-          <EmotionFactorPicker
-            intensity={emotionIntensity}
-            selectedFactors={emotionFactors}
-            onToggle={handleToggleFactor}
-          />
-          <div
-            className="h-px w-full"
-            style={{ backgroundColor: COLORS.border.light, opacity: 0.6 }}
-          />
-          <EmotionReasonInput
-            value={emotionReason}
-            onChange={setEmotionReason}
-            onHelpOpen={() => {}}
-            accentColor={emotionIntensity ? COLORS.emotion.intensity[emotionIntensity] : COLORS.brand.primary}
-          />
-          <EmotionSaveButton
-            disabled={
-              !emotionIntensity ||
-              emotionKeywords.length === 0 ||
-              emotionFactors.length === 0
-            }
-            isSaving={createRecordMutation.isPending}
-            onClick={handleEmotionSubmit}
-          />
-        </div>
       ) : (
-        /* 다른 타입일 때 기존 단일 입력 필드 */
+        /* 비비드/회고 타입일 때 기존 단일 입력 필드 */
         <div
           className={`${SPACING.card.padding} ${CARD_STYLES.hover.transition} relative`}
           style={{

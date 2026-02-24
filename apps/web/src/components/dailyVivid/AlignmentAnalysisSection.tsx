@@ -301,8 +301,8 @@ export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) 
           </div>
           <p
             className={cn(
-              TYPOGRAPHY.body.fontSize,
-              TYPOGRAPHY.body.lineHeight,
+              TYPOGRAPHY.bodySmall.fontSize,
+              TYPOGRAPHY.bodySmall.lineHeight,
               "mt-6"
             )}
             style={{ color: COLORS.text.muted }}

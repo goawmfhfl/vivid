@@ -9,6 +9,7 @@ import {
 } from "@/hooks/useGetDailyVivid";
 import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { useEnhanceDailyVivid } from "@/hooks/useEnhanceDailyVivid";
+import { useCreateTodoList } from "@/hooks/useTodoList";
 import { VisionSection } from "./Vision";
 import { ReviewReportSection } from "./review";
 import { getDailyVividType } from "@/types/daily-vivid";
@@ -77,7 +78,9 @@ export function DailyVividView({
   const { isPro } = useSubscription();
   const createDailyVivid = useCreateDailyVivid();
   const enhanceMutation = useEnhanceDailyVivid();
+  const createTodoList = useCreateTodoList(data?.report_date || date || "");
   const insightTriggeredRef = useRef(false);
+  const todoListTriggeredRef = useRef(false);
   const openErrorModal = useModalStore((s) => s.openErrorModal);
   const setDailyVividProgress = useModalStore((s) => s.setDailyVividProgress);
   const clearDailyVividProgress = useModalStore((s) => s.clearDailyVividProgress);
@@ -88,19 +91,46 @@ export function DailyVividView({
 
   const rowType = data ? getDailyVividType(data) : "vivid";
 
-  // Pro 전용: 상세 페이지 마운트 시 인사이트 생성 요청 (type=vivid일 때만)
+  // 투두 리스트 자동 생성 (type=vivid일 때, 투두 리스트가 없으면 생성) - 먼저 실행
+  useEffect(() => {
+    if (
+      !data?.id ||
+      rowType !== "vivid" ||
+      data.hasNativeTodoList ||
+      todoListTriggeredRef.current ||
+      createTodoList.isPending
+    ) {
+      return;
+    }
+    todoListTriggeredRef.current = true;
+    createTodoList.mutate(undefined, {
+      onError: () => {
+        todoListTriggeredRef.current = false;
+      },
+    });
+  }, [data?.id, rowType, data?.hasNativeTodoList, createTodoList]);
+
+  // Pro 전용: 인사이트 생성 - 투두 완료 후에만 실행 (캐시 업데이트 경쟁 방지)
   useEffect(() => {
     if (
       !isPro ||
       !data?.id ||
       rowType !== "vivid" ||
-      data.insight ||
-      data.insight_message ||
       insightTriggeredRef.current ||
       enhanceMutation.isPending
     ) {
       return;
     }
+    const hasCompleteInsight = data.insight?.today_feedback;
+    if (hasCompleteInsight) return;
+
+    // 투두가 먼저 준비되어야 함: 이미 있거나, 생성 완료/실패 후
+    const todosReady =
+      data.hasNativeTodoList ||
+      createTodoList.isSuccess ||
+      createTodoList.isError;
+    if (!todosReady) return;
+
     insightTriggeredRef.current = true;
     enhanceMutation.mutate({ id: data.id });
   }, [
@@ -108,12 +138,17 @@ export function DailyVividView({
     data?.id,
     rowType,
     data?.insight,
-    data?.insight_message,
+    data?.insight?.today_feedback,
+    data?.hasNativeTodoList,
+    createTodoList.isSuccess,
+    createTodoList.isError,
     enhanceMutation,
   ]);
 
   const isRegenerating =
     createDailyVivid.isPending || timerProgress !== null;
+
+  const isGeneratingTodo = createTodoList.isPending && !data?.hasNativeTodoList;
 
   const generationType = rowType;
   const canRegenerate =
@@ -319,7 +354,17 @@ export function DailyVividView({
         {rowType === "vivid" && hasDreamSection && (
           <ScrollAnimation>
             <div className="mb-16">
-              <VisionSection view={view} isPro={isPro} />
+              <VisionSection 
+                view={view} 
+                isPro={isPro} 
+                todoLists={data?.todoLists}
+                isGeneratingTodo={isGeneratingTodo}
+                todayFeedback={
+                  data?.insight?.today_feedback ??
+                  (enhanceMutation.isSuccess ? enhanceMutation.data?.insight?.today_feedback : null)
+                }
+                isLoadingInsight={enhanceMutation.isPending}
+              />
             </div>
           </ScrollAnimation>
         )}
@@ -337,62 +382,63 @@ export function DailyVividView({
           </ScrollAnimation>
         )}
 
-        {/* 피드백 섹션 */}
+        {/* 피드백 섹션 + 하단 버튼 (함께 애니메이션) */}
         <ScrollAnimation delay={200}>
-          <VividFeedbackSection pageType="daily" vividType={rowType} />
-        </ScrollAnimation>
-
-        <div className="grid grid-cols-2 gap-3 pt-4 pb-32">
-          {canRegenerate && (
-            <Button
-              variant="outline"
-              onClick={() => setIsRegenerateDialogOpen(true)}
-              disabled={isRegenerating}
-              className="rounded-full px-4 py-6 sm:px-6 sm:py-5 flex flex-col items-center justify-center gap-1 min-w-0"
-              style={{
-                borderColor: COLORS.brand.primary,
-                color: COLORS.brand.primary,
-                opacity: isRegenerating ? 0.7 : 1,
-              }}
-            >
-              {isRegenerating ? (
-                <div className="flex items-center gap-2">
-                  <CircularProgress
-                    percentage={progressPercentage}
-                    size={24}
-                    strokeWidth={3}
-                    showText={false}
-                    animated={false}
-                  />
-                  <span>재생성 중...</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-0.5">
-                  <div className="flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4 flex-shrink-0" />
-                    <span className="font-semibold">다시 생성하기</span>
-                  </div>
-                  <span
-                    className="text-xs"
-                    style={{ color: COLORS.text.secondary, opacity: 0.9 }}
-                  >
-                    1번 재생성 가능합니다
-                  </span>
-                </div>
+          <div className="space-y-0">
+            <VividFeedbackSection pageType="daily" vividType={rowType} />
+            <div className="grid grid-cols-2 gap-3 pt-4 pb-32">
+              {canRegenerate && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsRegenerateDialogOpen(true)}
+                  disabled={isRegenerating}
+                  className="rounded-full px-4 py-6 sm:px-6 sm:py-5 flex flex-col items-center justify-center gap-1 min-w-0"
+                  style={{
+                    borderColor: COLORS.brand.primary,
+                    color: COLORS.brand.primary,
+                    opacity: isRegenerating ? 0.7 : 1,
+                  }}
+                >
+                  {isRegenerating ? (
+                    <div className="flex items-center gap-2">
+                      <CircularProgress
+                        percentage={progressPercentage}
+                        size={24}
+                        strokeWidth={3}
+                        showText={false}
+                        animated={false}
+                      />
+                      <span>재생성 중...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <RotateCcw className="w-4 h-4 flex-shrink-0" />
+                        <span className="font-semibold">다시 생성하기</span>
+                      </div>
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.text.secondary, opacity: 0.9 }}
+                      >
+                        1번 재생성 가능합니다
+                      </span>
+                    </div>
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
-          <Button
-            onClick={onBack}
-            className={`rounded-full px-4 py-6 sm:px-6 sm:py-5 min-w-0 ${!canRegenerate ? "col-span-2" : ""}`}
-            style={{
-              backgroundColor: COLORS.brand.primary,
-              color: COLORS.text.white,
-            }}
-          >
-            돌아가기
-          </Button>
-        </div>
+              <Button
+                onClick={onBack}
+                className={`rounded-full px-4 py-6 sm:px-6 sm:py-5 min-w-0 ${!canRegenerate ? "col-span-2" : ""}`}
+                style={{
+                  backgroundColor: COLORS.brand.primary,
+                  color: COLORS.text.white,
+                }}
+              >
+                돌아가기
+              </Button>
+            </div>
+          </div>
+        </ScrollAnimation>
 
         {/* 다시 생성 모드 선택 다이얼로그 */}
         <Dialog

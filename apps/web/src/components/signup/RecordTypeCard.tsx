@@ -3,7 +3,6 @@ import { Check } from "lucide-react";
 
 export type RecordType =
   | "daily"
-  | "emotion"
   | "dream"
   | "insight"
   | "feedback"
@@ -23,13 +22,6 @@ export const RECORD_TYPES: RecordTypeInfo[] = [
     description:
       "일상적인 기록, 일상중에서 떠오르는 자연스러운 생각들을 적는 기록",
     icon: "📝",
-  },
-  {
-    id: "emotion",
-    title: "감정",
-    description:
-      "일상중에 떠오르는 감정에 대한 기록, 감정 위주의 기록을 하는 사람들에게 적합",
-    icon: "💭",
   },
   {
     id: "dream",
@@ -78,14 +70,6 @@ export const RECORD_TYPE_COLORS: Record<
     text: "#333333",
     lineColor: "rgba(139, 120, 100, 0.1)", // 따뜻한 브라운 계열 줄무늬
     overlay: "rgba(168, 150, 130, 0.12)", // 따뜻한 베이지 오버레이
-  },
-  emotion: {
-    // 감정 기록: 따뜻하고 감성적인 코랄/피치 톤
-    background: "#FFF8F5", // 연한 피치
-    border: "#FFE8E0", // 따뜻한 코랄 테두리
-    text: "#333333",
-    lineColor: "rgba(255, 140, 120, 0.12)", // 따뜻한 코랄 줄무늬
-    overlay: "rgba(255, 180, 160, 0.15)", // 부드러운 피치 오버레이
   },
   dream: {
     // VIVID 기록: 희망적이고 밝은 머스터드 옐로우 톤 (프로젝트 Secondary 색상 활용)

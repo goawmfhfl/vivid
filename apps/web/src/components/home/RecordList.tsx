@@ -51,15 +51,12 @@ export function RecordList({
   const vividRecords = filteredRecords.filter(
     (record) => (record.type || "dream") === "dream"
   );
-  const emotionRecords = filteredRecords.filter(
-    (record) => (record.type || "dream") === "emotion"
-  );
   const reviewRecords = filteredRecords.filter(
     (record) => (record.type || "dream") === "review"
   );
   const otherRecords = filteredRecords.filter(
     (record) =>
-      !["dream", "emotion", "review"].includes((record.type || "dream") as string)
+      !["dream", "review"].includes((record.type || "dream") as string)
   );
 
   const normalizedActiveType = activeRecordType || null;
@@ -81,11 +78,8 @@ export function RecordList({
 
   // 표시할 통계 계산 (모든 훅은 early return 전에 호출되어야 함)
   const displayStat = useMemo(() => {
-    if (normalizedActiveType === "emotion") {
-      return emotionRecords.length > 0 ? emotionRecords.length : null;
-    }
     return totalCharCount > 0 ? totalCharCount : null;
-  }, [normalizedActiveType, emotionRecords.length, totalCharCount]);
+  }, [totalCharCount]);
 
   const handleRetry = () => {
     setRetryCount((c) => c + 1);
@@ -178,8 +172,6 @@ export function RecordList({
   const title =
     normalizedActiveType === "dream"
       ? "오늘의 VIVID"
-      : normalizedActiveType === "emotion"
-      ? "오늘의 감정"
       : normalizedActiveType === "review"
       ? "오늘의 회고"
       : isToday
@@ -204,86 +196,45 @@ export function RecordList({
               opacity: 0.6,
             }}
           >
-            {normalizedActiveType === "emotion" 
-              ? `총 ${displayStat.toLocaleString()}개`
-              : `총 ${displayStat.toLocaleString()}자`}
+            총 {displayStat.toLocaleString()}자
           </span>
         )}
       </div>
 
       <div className={cn("space-y-6", SPACING.element.marginBottomLarge)}>
-        {/* 비비드+회고 통합 리스트 (RecordItem으로 타입 구분) */}
-        {(normalizedActiveType === "dream" ||
-          normalizedActiveType === "review" ||
-          !normalizedActiveType) && (
-          <div className="space-y-3">
-            {filteredVividAndReview.length > 0 ? (
-              filteredVividAndReview.map((record) => (
-                <RecordItem
-                  key={record.id}
-                  record={record}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  showMeta={normalizedActiveType === "dream" ? false : undefined}
-                />
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <PenLine
-                  className="w-12 h-12 mx-auto mb-3"
-                  style={{ color: COLORS.text.muted, opacity: 0.5 }}
-                />
-                <p
-                  className={cn(
-                    TYPOGRAPHY.body.fontSize,
-                    TYPOGRAPHY.body.lineHeight
-                  )}
-                  style={{
-                    color: COLORS.text.secondary,
-                    opacity: 0.6,
-                  }}
-                >
-                  기록이 존재하지 않습니다
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 감정 섹션 (별도) */}
-        {(normalizedActiveType === "emotion" || !normalizedActiveType) && (
-          <div className="space-y-3">
-            {emotionRecords.length > 0 ? (
-              emotionRecords.map((record) => (
-                <RecordItem
-                  key={record.id}
-                  record={record}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <PenLine
-                  className="w-12 h-12 mx-auto mb-3"
-                  style={{ color: COLORS.text.muted, opacity: 0.5 }}
-                />
-                <p
-                  className={cn(
-                    TYPOGRAPHY.body.fontSize,
-                    TYPOGRAPHY.body.lineHeight
-                  )}
-                  style={{
-                    color: COLORS.text.secondary,
-                    opacity: 0.6,
-                  }}
-                >
-                  기록이 존재하지 않습니다
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 비비드+회고 통합 리스트 */}
+        <div className="space-y-3">
+          {filteredVividAndReview.length > 0 ? (
+            filteredVividAndReview.map((record) => (
+              <RecordItem
+                key={record.id}
+                record={record}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                showMeta={normalizedActiveType === "dream" ? false : undefined}
+              />
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <PenLine
+                className="w-12 h-12 mx-auto mb-3"
+                style={{ color: COLORS.text.muted, opacity: 0.5 }}
+              />
+              <p
+                className={cn(
+                  TYPOGRAPHY.body.fontSize,
+                  TYPOGRAPHY.body.lineHeight
+                )}
+                style={{
+                  color: COLORS.text.secondary,
+                  opacity: 0.6,
+                }}
+              >
+                기록이 존재하지 않습니다
+              </p>
+            </div>
+          )}
+        </div>
 
         {otherRecords.length > 0 && !normalizedActiveType && (
           <div className="space-y-3">

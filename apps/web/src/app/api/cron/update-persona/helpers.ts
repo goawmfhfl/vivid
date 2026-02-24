@@ -28,6 +28,14 @@ type PersonaRow = {
   updated_at: string;
 };
 
+type TodoRow = {
+  id: string;
+  contents: string;
+  is_checked: boolean;
+  scheduled_at: string | null;
+  created_at: string;
+};
+
 export type PersonaResult = {
   userId: string;
   status: "updated" | "skipped";
@@ -300,6 +308,49 @@ async function fetchVividRecords(
   return (data || []) as VividRecordRow[];
 }
 
+async function fetchTodoList(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<TodoRow[]> {
+  // 1. 생성된 투두 (기간 내)
+  const { data: createdTodos, error: createdError } = await supabase
+    .from("todo_list_items")
+    .select("id, contents, is_checked, scheduled_at, created_at")
+    .eq("user_id", userId)
+    .gte("created_at", `${startDate}T00:00:00`)
+    .lte("created_at", `${endDate}T23:59:59`);
+
+  if (createdError) {
+    throw new Error(`Failed to fetch created todos: ${createdError.message}`);
+  }
+
+  // 2. 일정 잡힌 투두 (기간 내)
+  const { data: scheduledTodos, error: scheduledError } = await supabase
+    .from("todo_list_items")
+    .select("id, contents, is_checked, scheduled_at, created_at")
+    .eq("user_id", userId)
+    .gte("scheduled_at", startDate)
+    .lte("scheduled_at", endDate);
+
+  if (scheduledError) {
+    throw new Error(`Failed to fetch scheduled todos: ${scheduledError.message}`);
+  }
+
+  // 3. 중복 제거
+  const allTodos = [...(createdTodos || []), ...(scheduledTodos || [])];
+  const uniqueTodos = Array.from(
+    new Map(allTodos.map((item) => [item.id, item])).values()
+  );
+
+  // 4. 복호화
+  return uniqueTodos.map((todo) => ({
+    ...todo,
+    contents: decrypt(todo.contents),
+  }));
+}
+
 export async function updatePersonaForUser(
   supabase: ReturnType<typeof getServiceSupabase>,
   userId: string,
@@ -307,14 +358,15 @@ export async function updatePersonaForUser(
   endDate: string
 ): Promise<PersonaResult> {
   const vividRecords = await fetchVividRecords(supabase, userId, startDate, endDate);
+  const todos = await fetchTodoList(supabase, userId, startDate, endDate);
 
-  if (!vividRecords.length) {
+  if (!vividRecords.length && !todos.length) {
     return { userId, status: "skipped", reason: "no_records" };
   }
 
-  // 일주일 구간에서 vivid-records가 7개 미만이면 인사이트 생성하지 않음
+  // 일주일 구간에서 vivid-records + todos가 7개 미만이면 인사이트 생성하지 않음
   const MIN_RECORDS_FOR_PERSONA = 7;
-  if (vividRecords.length < MIN_RECORDS_FOR_PERSONA) {
+  if (vividRecords.length + todos.length < MIN_RECORDS_FOR_PERSONA) {
     return {
       userId,
       status: "skipped",
@@ -336,12 +388,31 @@ export async function updatePersonaForUser(
       content: row.content,
       created_at: row.created_at,
     })),
+    todos: todos.map((t) => ({
+      contents: t.contents,
+      is_checked: t.is_checked,
+      scheduled_at: t.scheduled_at,
+      created_at: t.created_at,
+    })),
     startDate,
     endDate,
     existingPersona: existingPersonaRow?.persona || null,
   });
 
-  const persona = await generatePersona(prompt);
+  let persona = await generatePersona(prompt);
+
+  // todo_analysis 필드가 누락되거나 형식이 맞지 않을 경우 보정
+  if (!persona.todo_analysis || typeof persona.todo_analysis !== "object") {
+    persona = {
+      ...persona,
+      todo_analysis: { current_projects: [], recurring_tasks: [] },
+    };
+  } else {
+    const ta = persona.todo_analysis as Record<string, unknown>;
+    if (!Array.isArray(ta.current_projects)) ta.current_projects = [];
+    if (!Array.isArray(ta.recurring_tasks)) ta.recurring_tasks = [];
+  }
+
   const encryptedPersona = encryptJsonbFields(persona as JsonbValue) as Record<
     string,
     unknown

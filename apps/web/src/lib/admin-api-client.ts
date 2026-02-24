@@ -17,14 +17,19 @@ export async function adminApiFetch(
     throw new Error("로그인이 필요합니다.");
   }
 
-  // Authorization 헤더 포함하여 요청
+  // FormData일 때 Content-Type 생략 (boundary 자동 설정)
+  const isFormData = options.body instanceof FormData;
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+    Authorization: `Bearer ${session.access_token}`,
+  };
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
   return fetch(url, {
     ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     credentials: "include",
   });
 }

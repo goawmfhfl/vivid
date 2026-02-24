@@ -58,6 +58,7 @@ export type AIRequestType =
   | "daily_vivid_trend"       // 최근 동향
   | "daily_vivid_integrated"  // 통합 리포트 (report+trend)
   | "daily_vivid_insight"     // 인사이트 (칭찬/피드백/개선)
+  | "daily_vivid_today_feedback"  // 오늘의 피드백 (todo_analysis 기반)
   | "daily_vivid_todo_list"  // 투두 리스트
   | "daily_vivid_review"      // 회고 리포트
   | "daily_vivid"             // 하위 호환 (레거시)

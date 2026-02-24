@@ -4,6 +4,7 @@ import { LoadingModal } from "./LoadingModal";
 import { ErrorModal } from "./ErrorModal";
 import { SuccessModal } from "./SuccessModal";
 import { AICostModal } from "./AICostModal";
+import { UpdateModal } from "./UpdateModal";
 import { Toast } from "../Toast";
 import { useModalStore } from "@/store/useModalStore";
 import { useToastStore } from "@/store/useToastStore";
@@ -61,6 +62,7 @@ export function GlobalModals() {
         onClose={hideToast}
         duration={toast.duration}
       />
+      <UpdateModal />
       {isDevelopment && <AICostModal />}
     </>
   );

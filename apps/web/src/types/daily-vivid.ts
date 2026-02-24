@@ -55,6 +55,22 @@ export interface TrendData {
   personality_trait: string; // 나라는 사람의 성향 1개
 }
 
+/** 제안 타입별 분류 (성장/휴식 벨런스) */
+export interface TodayFeedbackSuggestions {
+  growth: string[];  // 성장을 위한 제안
+  rest: string[];    // 휴식을 위한 제안
+}
+
+/** 오늘의 피드백 - todo_analysis + 오늘의 할일 기반 인사이트 */
+export interface TodayFeedbackContent {
+  /** 지금까지의 흐름 - 영역(업무/건강/학습 등)별 구체적 맥락 */
+  past_context: string;
+  /** 방향성 분석 - 어떤 방향으로 개발 중인지 구체적·확실한 피드백 */
+  direction_analysis: string;
+  /** 타입별 제안 (성장/휴식 벨런스). 레거시: string[] */
+  suggestions: TodayFeedbackSuggestions | string[];
+}
+
 /** Pro 전용: 구조화된 인사이트 (피드백, 개선할 점) */
 export interface DailyVividInsight {
   feedback: string[]; // 피드백 - 관찰/분석
@@ -62,6 +78,8 @@ export interface DailyVividInsight {
   summary?: string; // (선택) 한 줄 요약
   /** 오늘 제안하는 일 - 오늘 할 일로 바로 추가 가능한 구체적 제안 1~3개 */
   suggested_today?: string[];
+  /** todo_analysis 기반 오늘의 피드백 */
+  today_feedback?: TodayFeedbackContent;
 }
 
 

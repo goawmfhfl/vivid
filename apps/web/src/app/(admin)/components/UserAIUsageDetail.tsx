@@ -70,9 +70,140 @@ const COLORS_CHART = [
   COLORS.brand.primary,
   COLORS.brand.secondary,
   COLORS.brand.light,
-  COLORS.section.emotion.primary,
+  COLORS.section.insight.primary,
   COLORS.section.insight.primary,
 ];
+
+const REQUEST_TYPE_LABELS: Record<string, string> = {
+  daily_vivid_report: "비비드 리포트",
+  daily_vivid_trend: "최근 동향",
+  daily_vivid_integrated: "통합 리포트",
+  daily_vivid_insight: "인사이트",
+  daily_vivid_todo_list: "투두 리스트",
+  daily_vivid_review: "회고",
+  daily_vivid: "Daily Vivid",
+  weekly_vivid: "Weekly Vivid",
+  monthly_vivid: "Monthly Vivid",
+  user_persona: "User Persona",
+  user_trends: "User Trends",
+  user_trends_weekly: "Cron 주간 성장",
+  user_trends_monthly: "Cron 월간 성장",
+};
+
+/** 요청 타입별 구분용 컬러 (시각적 식별) */
+const REQUEST_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
+  daily_vivid_report: { bg: COLORS.brand.primary + "25", text: COLORS.brand.dark },
+  daily_vivid_trend: { bg: COLORS.section.insight.primary + "25", text: COLORS.section.insight.primary },
+  daily_vivid_integrated: { bg: COLORS.primary[400] + "25", text: COLORS.primary[700] },
+  daily_vivid_insight: { bg: COLORS.section.recovery.primary + "25", text: COLORS.section.recovery.primary },
+  daily_vivid_todo_list: { bg: COLORS.secondary[400] + "25", text: COLORS.secondary[700] },
+  daily_vivid_review: { bg: COLORS.section.feedback.primary + "25", text: COLORS.section.feedback.primary },
+  daily_vivid: { bg: COLORS.brand.light + "40", text: COLORS.brand.secondary },
+  weekly_vivid: { bg: COLORS.weekly.primary + "25", text: COLORS.weekly.dark },
+  monthly_vivid: { bg: COLORS.monthly.primary + "25", text: COLORS.monthly.dark },
+  user_persona: { bg: COLORS.accent[400] + "25", text: COLORS.accent[700] },
+  user_trends: { bg: COLORS.chart.alignment + "25", text: COLORS.chart.execution },
+  user_trends_weekly: { bg: COLORS.weekly.light + "60", text: COLORS.weekly.dark },
+  user_trends_monthly: { bg: COLORS.monthly.light + "60", text: COLORS.monthly.dark },
+};
+
+function getRequestTypeStyle(requestType: string) {
+  return REQUEST_TYPE_COLORS[requestType] ?? {
+    bg: COLORS.background.hover,
+    text: COLORS.text.secondary,
+  };
+}
+
+function formatDuration(detail: AIUsageDetail): string {
+  if (!detail.duration_ms) return "-";
+  return detail.duration_ms < 1000
+    ? `${Math.round(detail.duration_ms)}ms`
+    : `${Math.round(detail.duration_ms / 1000)}초`;
+}
+
+function UsageDetailCard({ detail }: { detail: AIUsageDetail }) {
+  const durationText = formatDuration(detail);
+  const typeStyle = getRequestTypeStyle(detail.request_type);
+
+  return (
+    <div
+      className="rounded-xl p-4 space-y-3"
+      style={{
+        ...CARD_STYLES.default,
+        backgroundColor: COLORS.background.cardElevated,
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold" style={{ color: COLORS.text.primary }}>
+            {formatKSTDate(detail.created_at)} {formatKSTTime(detail.created_at)}
+          </p>
+          <span
+            className="inline-block mt-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border"
+            style={{
+              backgroundColor: typeStyle.bg,
+              color: typeStyle.text,
+              borderColor: typeStyle.text + "30",
+            }}
+          >
+            {REQUEST_TYPE_LABELS[detail.request_type] || detail.request_type}
+            {detail.section_name ? ` · ${detail.section_name}` : ""}
+          </span>
+        </div>
+        <span
+          className="shrink-0 px-2 py-1 rounded text-xs font-medium"
+          style={{
+            backgroundColor: detail.success
+              ? COLORS.status.success + "20"
+              : COLORS.status.error + "20",
+            color: detail.success ? COLORS.status.success : COLORS.status.error,
+          }}
+        >
+          {detail.success ? "성공" : "실패"}
+        </span>
+      </div>
+      {/* 소요 시간·비용 강조 영역 */}
+      <div
+        className="rounded-lg p-3 grid grid-cols-2 gap-3"
+        style={{ backgroundColor: COLORS.background.hover }}
+      >
+        <div>
+          <p className="text-xs font-medium mb-0.5" style={{ color: COLORS.text.tertiary }}>
+            소요 시간
+          </p>
+          <p className="text-base font-bold" style={{ color: COLORS.section.vision.primary }}>
+            {durationText}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium mb-0.5" style={{ color: COLORS.text.tertiary }}>
+            비용
+          </p>
+          <p className="text-base font-bold" style={{ color: COLORS.brand.primary }}>
+            ₩{Math.round(detail.cost_krw).toLocaleString()}
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <div>
+          <span style={{ color: COLORS.text.tertiary }}>모델 </span>
+          <span style={{ color: COLORS.text.primary }}>{detail.model}</span>
+        </div>
+        <div>
+          <span style={{ color: COLORS.text.tertiary }}>토큰 </span>
+          <span style={{ color: COLORS.text.primary }}>
+            {detail.total_tokens.toLocaleString()}
+            {detail.cached_tokens > 0 && (
+              <span style={{ color: COLORS.text.muted }}>
+                {" "}(캐시 {detail.cached_tokens.toLocaleString()})
+              </span>
+            )}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
   const router = useRouter();
@@ -510,14 +641,14 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
 
           {/* 전체 사용량 목록 */}
           <div
-            className="rounded-xl p-6"
+            className="rounded-xl p-4 sm:p-6"
             style={{
               ...CARD_STYLES.default,
             }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <h2
-                className="text-xl font-semibold"
+                className="text-lg sm:text-xl font-semibold truncate"
                 style={{ color: COLORS.text.primary }}
               >
                 사용량 상세 내역
@@ -711,7 +842,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
               </div>
             </div>
 
-            {/* 테이블 */}
+            {/* 테이블 / 카드 뷰 (반응형) */}
             {details.length === 0 ? (
               <div className="text-center py-8">
                 <p style={{ color: COLORS.text.muted }}>
@@ -720,8 +851,16 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                {/* 좁은 뷰포트: 카드 레이아웃 */}
+                <div className="md:hidden space-y-3">
+                  {details.map((detail) => (
+                    <UsageDetailCard key={detail.id} detail={detail} />
+                  ))}
+                </div>
+
+                {/* 넓은 뷰포트: 테이블 */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full min-w-[720px]">
                     <thead>
                       <tr
                         style={{
@@ -760,16 +899,16 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           토큰
                         </th>
                         <th
-                          className="px-4 py-3 text-right text-sm font-semibold"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          비용
-                        </th>
-                        <th
                           className="px-4 py-3 text-left text-sm font-semibold"
                           style={{ color: COLORS.text.primary }}
                         >
                           소요 시간
+                        </th>
+                        <th
+                          className="px-4 py-3 text-right text-sm font-semibold"
+                          style={{ color: COLORS.text.primary }}
+                        >
+                          비용
                         </th>
                         <th
                           className="px-4 py-3 text-center text-sm font-semibold"
@@ -813,26 +952,15 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className="text-sm"
-                              style={{ color: COLORS.text.secondary }}
+                              className="inline-flex px-2.5 py-1 rounded-lg text-xs font-semibold"
+                              style={{
+                                backgroundColor: getRequestTypeStyle(detail.request_type).bg,
+                                color: getRequestTypeStyle(detail.request_type).text,
+                                border: `1px solid ${getRequestTypeStyle(detail.request_type).text}30`,
+                              }}
                             >
-                              {(
-                                {
-                                  daily_vivid_report: "비비드 리포트",
-                                  daily_vivid_trend: "최근 동향",
-                                  daily_vivid_integrated: "통합 리포트",
-                                  daily_vivid_insight: "인사이트",
-                                  daily_vivid_todo_list: "투두 리스트",
-                                  daily_vivid_review: "회고",
-                                  daily_vivid: "Daily Vivid",
-                                  weekly_vivid: "Weekly Vivid",
-                                  monthly_vivid: "Monthly Vivid",
-                                  user_persona: "User Persona",
-                                  user_trends: "User Trends",
-                                  user_trends_weekly: "Cron 주간 성장",
-                                  user_trends_monthly: "Cron 월간 성장",
-                                } as Record<string, string>
-                              )[detail.request_type] || detail.request_type}
+                              {REQUEST_TYPE_LABELS[detail.request_type] || detail.request_type}
+                              {detail.section_name ? ` · ${detail.section_name}` : ""}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -862,33 +990,37 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <div>
+                          <td className="px-4 py-3">
+                            <div
+                              className="inline-flex flex-col py-1 px-2 rounded"
+                              style={{ backgroundColor: COLORS.section.vision.primary + "15" }}
+                            >
                               <span
-                                className="text-sm font-semibold"
-                                style={{ color: COLORS.text.primary }}
+                                className="text-sm font-bold"
+                                style={{ color: COLORS.section.vision.primary }}
+                              >
+                                {formatDuration(detail)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div
+                              className="inline-flex flex-col items-end py-1 px-2 rounded"
+                              style={{ backgroundColor: COLORS.brand.primary + "12" }}
+                            >
+                              <span
+                                className="text-sm font-bold"
+                                style={{ color: COLORS.brand.primary }}
                               >
                                 ₩{Math.round(detail.cost_krw).toLocaleString()}
                               </span>
                               <span
-                                className="text-xs ml-2"
+                                className="text-xs"
                                 style={{ color: COLORS.text.tertiary }}
                               >
                                 ${detail.cost_usd.toFixed(4)}
                               </span>
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className="text-sm"
-                              style={{ color: COLORS.text.secondary }}
-                            >
-                              {detail.duration_ms
-                                ? detail.duration_ms < 1000
-                                  ? `${Math.round(detail.duration_ms)}ms`
-                                  : `${Math.round(detail.duration_ms / 1000)}초`
-                                : "-"}
-                            </span>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span
@@ -914,10 +1046,10 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                 {/* 페이지네이션 */}
                 {pagination.totalPages > 1 && (
                   <div
-                    className="flex items-center justify-between pt-4 border-t mt-4"
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t mt-4"
                     style={{ borderColor: COLORS.border.light }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center sm:justify-start">
                       <span
                         className="text-sm"
                         style={{ color: COLORS.text.secondary }}
@@ -926,7 +1058,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                         {pagination.total}개)
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() =>
                           setPagination({

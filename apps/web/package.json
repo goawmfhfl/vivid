@@ -8,7 +8,8 @@
     "build": "npx next build",
     "start": "next start",
     "lint": "eslint",
-    "diagnose:decryption": "tsx scripts/diagnose-decryption-issues.ts"
+    "diagnose:decryption": "tsx scripts/diagnose-decryption-issues.ts",
+    "analytics:daily-vivid": "tsx scripts/analytics-daily-vivid.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

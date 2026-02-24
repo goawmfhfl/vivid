@@ -71,6 +71,11 @@ export function MyInfoView() {
         ]
       : []),
     {
+      title: "공지사항",
+      href: "/announcements",
+      enabled: true,
+    },
+    {
       title: "쿠폰 등록",
       href: "/coupon/register",
       enabled: true,

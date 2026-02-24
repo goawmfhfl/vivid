@@ -1,7 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, QueryClient } from "@tanstack/react-query";
 import { getCurrentUserId } from "./useCurrentUser";
 import { QUERY_KEYS } from "@/constants";
 import type { TodoListItem, DailyVividRow } from "@/types/daily-vivid";
+
+function isDailyVividRow(data: unknown): data is DailyVividRow {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "report_date" in data &&
+    "id" in data
+  );
+}
 
 async function fetchTodoListByDate(date: string): Promise<TodoListItem[]> {
   const userId = await getCurrentUserId();
@@ -129,30 +138,52 @@ async function addTodoItem(
   return data;
 }
 
+// Helper to update all queries matching the date (both by-date and by-id)
+function updateCacheForDate(
+  queryClient: QueryClient,
+  date: string,
+  updater: (prev: DailyVividRow) => DailyVividRow
+) {
+  queryClient.setQueriesData<unknown>(
+    { queryKey: [QUERY_KEYS.DAILY_VIVID] },
+    (oldData: unknown) => {
+      if (!isDailyVividRow(oldData)) return oldData;
+      // Update if report_date matches the target date
+      if (oldData.report_date === date) {
+        return updater(oldData);
+      }
+      return oldData;
+    }
+  );
+}
+
 export function useCreateTodoList(date: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => createTodoList(date),
     onSuccess: (todoLists) => {
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
-          if (!prev) return null;
-          // 스케줄된 항목 유지 (scheduled_at === 이 날짜)
-          const scheduled = (prev.todoLists ?? []).filter(
-            (t) => t.scheduled_at === date
-          );
-          const merged = [...todoLists, ...scheduled];
-          return {
-            ...prev,
-            todoLists: merged,
-            hasNativeTodoList: todoLists.length > 0,
-          };
-        }
-      );
+      updateCacheForDate(queryClient, date, (prev) => {
+        // 스케줄된 항목 유지 (scheduled_at === 이 날짜)
+        const scheduled = (prev?.todoLists ?? []).filter(
+          (t) => t.scheduled_at === date
+        );
+        const merged = [...todoLists, ...scheduled];
+        return {
+          ...prev,
+          todoLists: merged,
+          hasNativeTodoList: todoLists.length > 0,
+        };
+      });
+      
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
+        queryKey: [QUERY_KEYS.DAILY_VIVID],
+        predicate: (query) => {
+            // Invalidate queries that might contain this date
+            // We can't check data easily, so broad invalidation for active queries is acceptable
+            // or we rely on setQueriesData for immediate update.
+            return query.queryKey.includes(QUERY_KEYS.DAILY_VIVID);
+        }
       });
     },
   });
@@ -165,43 +196,40 @@ export function useUpdateTodoCheck(date: string) {
     mutationFn: ({ id, is_checked }: { id: string; is_checked: boolean }) =>
       updateTodoCheck(id, is_checked),
     onMutate: async ({ id, is_checked }) => {
-      await queryClient.cancelQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      
+      // Snapshot previous data
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
       });
-      const previous = queryClient.getQueryData<DailyVividRow | null>([
-        QUERY_KEYS.DAILY_VIVID,
-        date,
-        "vivid",
-      ]);
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
-          if (!prev?.todoLists) return prev;
-          return {
-            ...prev,
-            todoLists: prev.todoLists.map((item) =>
-              item.id === id ? { ...item, is_checked } : item
-            ),
-          };
-        }
-      );
-      return { previous };
+
+      updateCacheForDate(queryClient, date, (prev) => {
+        if (!prev?.todoLists) return prev;
+        return {
+          ...prev,
+          todoLists: prev.todoLists.map((item) =>
+            item.id === id ? { ...item, is_checked } : item
+          ),
+        };
+      });
+
+      return { previousData };
     },
     onError: (_err, _variables, context) => {
-      if (context?.previous != null) {
-        queryClient.setQueryData(
-          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-          context.previous
-        );
+      if (context?.previousData) {
+        context.previousData.forEach((data, queryKey) => {
+            queryClient.setQueryData(queryKey as unknown[], data);
+        });
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
   });
 }
@@ -213,58 +241,52 @@ export function useUpdateTodoItem(date: string) {
     onMutate: async (payload) => {
       if (payload.contents === undefined && payload.scheduled_at === undefined)
         return undefined;
-      await queryClient.cancelQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
       });
-      const previous = queryClient.getQueryData<DailyVividRow | null>([
-        QUERY_KEYS.DAILY_VIVID,
-        date,
-        "vivid",
-      ]);
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
-          if (!prev?.todoLists) return prev;
-          return {
-            ...prev,
-            todoLists: prev.todoLists.map((item) =>
-              item.id === payload.id
-                ? { ...item, ...payload }
-                : item
-            ),
-          };
-        }
-      );
-      return { previous };
+
+      updateCacheForDate(queryClient, date, (prev) => {
+        if (!prev?.todoLists) return prev;
+        return {
+          ...prev,
+          todoLists: prev.todoLists.map((item) =>
+            item.id === payload.id
+              ? { ...item, ...payload }
+              : item
+          ),
+        };
+      });
+      return { previousData };
     },
     onError: (_err, _payload, context) => {
-      if (context?.previous != null) {
-        queryClient.setQueryData(
-          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-          context.previous
-        );
-      }
+        if (context?.previousData) {
+            context.previousData.forEach((data, queryKey) => {
+                queryClient.setQueryData(queryKey as unknown[], data);
+            });
+        }
     },
     onSuccess: (updated) => {
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
-          if (!prev?.todoLists) return prev;
-          return {
-            ...prev,
-            todoLists: prev.todoLists.map((item) =>
-              item.id === updated.id ? { ...item, ...updated } : item
-            ),
-          };
-        }
-      );
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      updateCacheForDate(queryClient, date, (prev) => {
+        if (!prev?.todoLists) return prev;
+        return {
+          ...prev,
+          todoLists: prev.todoLists.map((item) =>
+            item.id === updated.id ? { ...item, ...updated } : item
+          ),
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
     },
   });
@@ -274,36 +296,67 @@ export function useDeleteTodoItem(date: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteTodoItem,
-    onSuccess: (_data, id) => {
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      
+      // Optimistic delete
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
+      });
+
+      updateCacheForDate(queryClient, date, (prev) => {
           if (!prev?.todoLists) return prev;
+          const newLists = prev.todoLists.filter((item) => item.id !== id);
           return {
             ...prev,
-            todoLists: prev.todoLists.filter((item) => item.id !== id),
+            todoLists: newLists,
+            hasNativeTodoList: newLists.length > 0,
           };
+      });
+      
+      return { previousData };
+    },
+    onError: (_err, _id, context) => {
+        if (context?.previousData) {
+            context.previousData.forEach((data, queryKey) => {
+                queryClient.setQueryData(queryKey as unknown[], data);
+            });
         }
-      );
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+    },
+    onSuccess: (_data, id) => {
+      // Logic handled in onMutate (optimistic) and onSettled (invalidation)
+      // But we can ensure consistency here too
+      updateCacheForDate(queryClient, date, (prev) => {
+        if (!prev?.todoLists) return prev;
+        return {
+          ...prev,
+          todoLists: prev.todoLists.filter((item) => item.id !== id),
+        };
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
   });
 }
 
 function applyReorderToCache(
-  prev: DailyVividRow | null,
+  prev: DailyVividRow,
   itemIds: string[]
-): DailyVividRow | null {
+): DailyVividRow {
   if (!prev?.todoLists) return prev;
   const byId = new Map(prev.todoLists.map((t) => [t.id, t]));
   const reordered = itemIds
     .map((id) => byId.get(id))
     .filter((t): t is TodoListItem => t != null);
+  // Keep items not in itemIds (e.g. optimistic or different category) appended?
+  // Usually reorder sends all IDs. If itemIds is partial, we should be careful.
+  // Assuming itemIds contains all relevant IDs for the list.
   return { ...prev, todoLists: reordered };
 }
 
@@ -317,14 +370,17 @@ export function useAddTodoToDate() {
     mutationFn: ({ date, contents }: { date: string; contents: string }) =>
       addTodoItem(date, contents),
     onMutate: async ({ date, contents }) => {
-      await queryClient.cancelQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
       });
-      const previous = queryClient.getQueryData<DailyVividRow | null>([
-        QUERY_KEYS.DAILY_VIVID,
-        date,
-        "vivid",
-      ]);
+
       const optimisticId = `${OPTIMISTIC_ID_PREFIX}${Date.now()}`;
       const optimisticItem: TodoListItem = {
         id: optimisticId,
@@ -334,15 +390,8 @@ export function useAddTodoToDate() {
         sort_order: 0,
         scheduled_at: null,
       };
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
-          if (!prev) {
-            return {
-              todoLists: [optimisticItem],
-              hasNativeTodoList: true,
-            } as DailyVividRow;
-          }
+
+      updateCacheForDate(queryClient, date, (prev) => {
           const existing = prev.todoLists ?? [];
           const maxOrder = Math.max(-1, ...existing.map((t) => t.sort_order ?? 0));
           const itemWithOrder = {
@@ -354,23 +403,20 @@ export function useAddTodoToDate() {
             todoLists: [...existing, itemWithOrder],
             hasNativeTodoList: true,
           };
-        }
-      );
-      return { previous, optimisticId, date };
+      });
+
+      return { previousData, optimisticId, date };
     },
     onError: (_err, { date }, context) => {
-      if (context?.previous != null) {
-        queryClient.setQueryData(
-          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-          context.previous
-        );
-      }
+        if (context?.previousData) {
+            context.previousData.forEach((data, queryKey) => {
+                queryClient.setQueryData(queryKey as unknown[], data);
+            });
+        }
     },
     onSuccess: (newItem, { date }, context) => {
       const optimisticId = context?.optimisticId;
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
+      updateCacheForDate(queryClient, date, (prev) => {
           if (!prev?.todoLists) return prev;
           const existing = prev.todoLists ?? [];
           const updated = optimisticId
@@ -383,19 +429,11 @@ export function useAddTodoToDate() {
             todoLists: updated,
             hasNativeTodoList: true,
           };
-        }
-      );
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
       });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
     onSettled: (_data, _err, { date }) => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
   });
 }
@@ -406,8 +444,17 @@ export function useDeleteTodoItemByDate() {
 
   return useMutation({
     mutationFn: ({ id, date }: { id: string; date: string }) => deleteTodoItem(id),
-    onSuccess: (_data, { date }) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+    onSuccess: (_data, { id, date }) => {
+       updateCacheForDate(queryClient, date, (prev) => {
+          if (!prev?.todoLists) return prev;
+          const newLists = prev.todoLists.filter((item) => item.id !== id);
+          return {
+            ...prev,
+            todoLists: newLists,
+            hasNativeTodoList: newLists.length > 0,
+          };
+      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, "todo-by-date", date] });
     },
     onSettled: (_data, _err, { date }) => {
@@ -422,18 +469,20 @@ export function useAddTodoItem(date: string) {
   return useMutation({
     mutationFn: (contents: string) => addTodoItem(date, contents),
     onMutate: async (contents) => {
-      await queryClient.cancelQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
       });
-      const previous = queryClient.getQueryData<DailyVividRow | null>([
-        QUERY_KEYS.DAILY_VIVID,
-        date,
-        "vivid",
-      ]);
+
       const optimisticId = `${OPTIMISTIC_ID_PREFIX}${Date.now()}`;
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
+      
+      updateCacheForDate(queryClient, date, (prev) => {
           const existing = prev?.todoLists ?? [];
           const maxOrder = Math.max(-1, ...existing.map((t) => t.sort_order ?? 0));
           const optimisticItem: TodoListItem = {
@@ -444,34 +493,25 @@ export function useAddTodoItem(date: string) {
             sort_order: maxOrder + 1,
             scheduled_at: null,
           };
-          if (!prev) {
-            return {
-              todoLists: [optimisticItem],
-              hasNativeTodoList: true,
-            } as DailyVividRow;
-          }
           return {
             ...prev,
             todoLists: [...existing, optimisticItem],
             hasNativeTodoList: true,
           };
-        }
-      );
-      return { previous, optimisticId };
+      });
+      
+      return { previousData, optimisticId };
     },
     onError: (_err, _contents, context) => {
-      if (context?.previous != null) {
-        queryClient.setQueryData(
-          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-          context.previous
-        );
-      }
+        if (context?.previousData) {
+            context.previousData.forEach((data, queryKey) => {
+                queryClient.setQueryData(queryKey as unknown[], data);
+            });
+        }
     },
     onSuccess: (newItem, _contents, context) => {
       const optimisticId = context?.optimisticId;
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => {
+      updateCacheForDate(queryClient, date, (prev) => {
           if (!prev?.todoLists) return prev;
           const existing = prev.todoLists ?? [];
           const updated = optimisticId
@@ -484,11 +524,8 @@ export function useAddTodoItem(date: string) {
             todoLists: updated,
             hasNativeTodoList: true,
           };
-        }
-      );
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date],
       });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
   });
 }
@@ -498,31 +535,32 @@ export function useReorderTodoItems(date: string) {
   return useMutation({
     mutationFn: reorderTodoItems,
     onMutate: async (itemIds) => {
-      await queryClient.cancelQueries({
-        queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      
+      const previousData = new Map<unknown, DailyVividRow | undefined>();
+      const queries = queryClient.getQueryCache().findAll({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
+      queries.forEach(query => {
+          const data = query.state.data;
+          if (isDailyVividRow(data) && data.report_date === date) {
+              previousData.set(query.queryKey, data as DailyVividRow);
+          }
       });
-      const previous = queryClient.getQueryData<DailyVividRow | null>([
-        QUERY_KEYS.DAILY_VIVID,
-        date,
-        "vivid",
-      ]);
-      queryClient.setQueryData<DailyVividRow | null>(
-        [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-        (prev) => applyReorderToCache(prev ?? null, itemIds)
+
+      updateCacheForDate(queryClient, date, (prev) => 
+        applyReorderToCache(prev, itemIds)
       );
-      return { previous };
+      
+      return { previousData };
     },
     onError: (_err, _itemIds, context) => {
-      if (context?.previous != null) {
-        queryClient.setQueryData(
-          [QUERY_KEYS.DAILY_VIVID, date, "vivid"],
-          context.previous
-        );
-      }
+        if (context?.previousData) {
+            context.previousData.forEach((data, queryKey) => {
+                queryClient.setQueryData(queryKey as unknown[]  , data);
+            });
+        }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date, "vivid"] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID, date] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
     },
   });
 }

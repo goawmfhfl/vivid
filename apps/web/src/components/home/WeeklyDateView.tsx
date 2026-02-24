@@ -302,7 +302,7 @@ export function WeeklyDateView({
               const hasReviewFeedback = reviewFeedbackDates.includes(dateIso);
               const vividDotColor = isActive
                 ? COLORS.text.white
-                : COLORS.emotion.intensity[7];
+                : COLORS.brand.primary;
               const reviewDotColor = isActive
                 ? COLORS.brand.light
                 : COLORS.brand.primary;

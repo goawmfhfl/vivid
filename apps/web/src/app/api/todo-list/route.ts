@@ -36,25 +36,25 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    const { data, error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from("todo_list_items")
       .update(updates)
       .eq("id", id)
       .eq("user_id", userId)
-      .select("id, contents, is_checked, category, sort_order, scheduled_at")
-      .single();
+      .select("id, contents, is_checked, category, sort_order, scheduled_at");
 
     if (error) {
       throw new Error(`Failed to update todo: ${error.message}`);
     }
 
-    if (!data) {
+    if (!updatedData || updatedData.length === 0) {
       return NextResponse.json(
         { error: "Todo item not found or access denied" },
         { status: 404 }
       );
     }
 
+    const data = updatedData[0];
     const decrypted = decryptTodoListItems([data])[0];
     return NextResponse.json(
       { data: { ...decrypted, sort_order: data.sort_order, scheduled_at: data.scheduled_at } },

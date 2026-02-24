@@ -47,28 +47,33 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
           {hasUserCharacteristics && (
             <Card
               className={cn(
-                "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:-translate-y-0.5"
               )}
               style={{
-                background: `linear-gradient(135deg, rgba(${alignmentGradientColor}, 0.12) 0%, rgba(${alignmentGradientColor}, 0.06) 50%, ${COLORS.text.white} 100%)`,
-                border: `1.5px solid rgba(${alignmentGradientColor}, 0.25)`,
-                borderRadius: "20px",
-                boxShadow: `${SHADOWS.elevation3}, inset 0 1px 0 ${hexToRgba(
-                  COLORS.text.white,
-                  0.9
-                )}`,
+                background: `linear-gradient(135deg, rgba(${alignmentGradientColor}, 0.18) 0%, rgba(${alignmentGradientColor}, 0.08) 45%, ${COLORS.glass.surface} 100%)`,
+                border: `1px solid rgba(${alignmentGradientColor}, 0.35)`,
+                borderRadius: "24px",
+                boxShadow: `${SHADOWS.glowSoft}, inset 0 1px 0 ${COLORS.glass.highlight}`,
+                backdropFilter: "blur(32px)",
+                WebkitBackdropFilter: "blur(32px)",
               }}
             >
               <div
-                className="absolute top-0 right-0 w-64 h-64 opacity-4 group-hover:opacity-6 transition-opacity duration-300 pointer-events-none"
+                className="absolute top-0 right-0 w-64 h-64 opacity-12 transition-opacity duration-300 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 80% 20%, rgba(${alignmentGradientColor}, 0.15) 0%, transparent 60%)`,
+                  background: `radial-gradient(circle at 80% 20%, rgba(${alignmentGradientColor}, 0.28) 0%, transparent 60%)`,
                 }}
               />
               <div
-                className="absolute bottom-0 left-0 w-48 h-48 opacity-3 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
+                className="absolute bottom-0 left-0 w-48 h-48 opacity-8 transition-opacity duration-300 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 20% 80%, rgba(${alignmentGradientColor}, 0.1) 0%, transparent 50%)`,
+                  background: `radial-gradient(circle at 20% 80%, rgba(${alignmentGradientColor}, 0.2) 0%, transparent 50%)`,
+                }}
+              />
+              <div
+                className="absolute inset-0 opacity-60 pointer-events-none"
+                style={{
+                  background: `linear-gradient(120deg, ${hexToRgba(COLORS.text.white, 0.35)} 0%, ${hexToRgba(COLORS.text.white, 0.08)} 35%, transparent 60%)`,
                 }}
               />
               <div className="relative z-10">
@@ -106,8 +111,8 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
                       />
                       <p
                         className={cn(
-                          TYPOGRAPHY.body.fontSize,
-                          TYPOGRAPHY.body.lineHeight,
+                          TYPOGRAPHY.bodySmall.fontSize,
+                          TYPOGRAPHY.bodySmall.lineHeight,
                           "flex-1"
                         )}
                         style={{ color: COLORS.text.primary }}
@@ -150,28 +155,33 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
           {hasAspiredTraits && (
             <Card
               className={cn(
-                "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                "p-5 sm:p-6 relative overflow-hidden group transition-all duration-300 hover:-translate-y-0.5"
               )}
               style={{
-                background: `linear-gradient(135deg, rgba(${futureGradientColor}, 0.12) 0%, rgba(${futureGradientColor}, 0.06) 50%, ${COLORS.text.white} 100%)`,
-                border: `1.5px solid rgba(${futureGradientColor}, 0.25)`,
-                borderRadius: "20px",
-                boxShadow: `${SHADOWS.elevation3}, inset 0 1px 0 ${hexToRgba(
-                  COLORS.text.white,
-                  0.8
-                )}`,
+                background: `linear-gradient(135deg, rgba(${futureGradientColor}, 0.18) 0%, rgba(${futureGradientColor}, 0.08) 45%, ${COLORS.glass.surface} 100%)`,
+                border: `1px solid rgba(${futureGradientColor}, 0.35)`,
+                borderRadius: "24px",
+                boxShadow: `${SHADOWS.glowSoft}, inset 0 1px 0 ${COLORS.glass.highlight}`,
+                backdropFilter: "blur(32px)",
+                WebkitBackdropFilter: "blur(32px)",
               }}
             >
               <div
-                className="absolute top-0 right-0 w-64 h-64 opacity-8 group-hover:opacity-12 transition-opacity duration-300 pointer-events-none"
+                className="absolute top-0 right-0 w-64 h-64 opacity-12 transition-opacity duration-300 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 80% 20%, rgba(${futureGradientColor}, 0.25) 0%, transparent 60%)`,
+                  background: `radial-gradient(circle at 80% 20%, rgba(${futureGradientColor}, 0.28) 0%, transparent 60%)`,
                 }}
               />
               <div
-                className="absolute bottom-0 left-0 w-48 h-48 opacity-5 group-hover:opacity-8 transition-opacity duration-300 pointer-events-none"
+                className="absolute bottom-0 left-0 w-48 h-48 opacity-8 transition-opacity duration-300 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle at 20% 80%, rgba(${futureGradientColor}, 0.15) 0%, transparent 50%)`,
+                  background: `radial-gradient(circle at 20% 80%, rgba(${futureGradientColor}, 0.2) 0%, transparent 50%)`,
+                }}
+              />
+              <div
+                className="absolute inset-0 opacity-60 pointer-events-none"
+                style={{
+                  background: `linear-gradient(120deg, ${hexToRgba(COLORS.text.white, 0.35)} 0%, ${hexToRgba(COLORS.text.white, 0.08)} 35%, transparent 60%)`,
                 }}
               />
               <div className="relative z-10">
@@ -209,8 +219,8 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
                       />
                       <p
                         className={cn(
-                          TYPOGRAPHY.body.fontSize,
-                          TYPOGRAPHY.body.lineHeight,
+                          TYPOGRAPHY.bodySmall.fontSize,
+                          TYPOGRAPHY.bodySmall.lineHeight,
                           "flex-1"
                         )}
                         style={{ color: COLORS.text.primary }}

@@ -1,459 +1,307 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSubscription } from "@/hooks/useSubscription";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import Link from "next/link";
 import { AppHeader } from "@/components/common/AppHeader";
-import { COLORS, SPACING, GRADIENT_UTILS, hexToRgba } from "@/lib/design-system";
-import { Crown, Calendar, Sparkles, Zap, TrendingUp, Users } from "lucide-react";
-import { formatKSTDate } from "@/lib/date-utils";
+import { LazyMembershipImage } from "@/components/membership/LazyMembershipImage";
+import { useNotionPolicies } from "@/hooks/useNotionPolicies";
+import { COLORS, SPACING, GRADIENT_UTILS } from "@/lib/design-system";
+import { RotateCcw, Check, ArrowLeft } from "lucide-react";
+
+import img0 from "@/assets/membership/0.png";
+import img1 from "@/assets/membership/1.png";
+import img2 from "@/assets/membership/2.png";
+import img3 from "@/assets/membership/3.png";
+import img4 from "@/assets/membership/4.png";
+import img5 from "@/assets/membership/5.png";
+import img6 from "@/assets/membership/6.png";
+import img7 from "@/assets/membership/7.png";
+import img8 from "@/assets/membership/8.png";
+
+const MEMBERSHIP_IMAGES = [
+  { src: img1, alt: "프로 멤버십 1" },
+  { src: img2, alt: "프로 멤버십 2" },
+  { src: img3, alt: "프로 멤버십 3" },
+  { src: img4, alt: "프로 멤버십 4" },
+  { src: img5, alt: "프로 멤버십 5" },
+  { src: img6, alt: "프로 멤버십 6" },
+  { src: img7, alt: "프로 멤버십 7" },
+  { src: img8, alt: "프로 멤버십 8" },
+];
+
+type PlanType = "annual" | "monthly";
+
+interface PlanDetails {
+  id: PlanType;
+  title: string;
+  price: number;
+  originalPrice?: number;
+  period: string;
+  discount?: number;
+  description: string;
+}
+
+const PLANS: Record<PlanType, PlanDetails> = {
+  annual: {
+    id: "annual",
+    title: "연간",
+    price: 25000,
+    originalPrice: 30000,
+    period: "년",
+    discount: 20,
+    description: "연마다 결제",
+  },
+  monthly: {
+    id: "monthly",
+    title: "월간",
+    price: 2500,
+    period: "월",
+    description: "월마다 결제",
+  },
+};
+
+function PlanSelectionCard({
+  plan,
+  isSelected,
+  onSelect,
+}: {
+  plan: PlanDetails;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="w-full relative overflow-hidden text-left transition-all duration-300"
+      style={{
+        backgroundColor: isSelected
+          ? COLORS.brand.primary
+          : COLORS.background.card,
+        border: `2px solid ${
+          isSelected ? COLORS.brand.primary : COLORS.border.light
+        }`,
+        borderRadius: "16px",
+        padding: "20px",
+        color: isSelected ? COLORS.text.white : COLORS.text.primary,
+      }}
+    >
+      {plan.discount && (
+        <div
+          className="absolute top-0 left-0 px-3 py-1 text-xs font-bold rounded-br-xl"
+          style={{
+            backgroundColor: isSelected ? "#FFFFFF" : COLORS.brand.primary,
+            color: isSelected ? COLORS.brand.primary : COLORS.text.white,
+          }}
+        >
+          -{plan.discount}%
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+            style={{
+              borderColor: isSelected ? COLORS.text.white : COLORS.border.default,
+              backgroundColor: isSelected ? "transparent" : "transparent",
+            }}
+          >
+            {isSelected && (
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: COLORS.text.white }}
+              />
+            )}
+          </div>
+          <span className="text-lg font-bold">{plan.title}</span>
+        </div>
+        <span className="text-lg font-bold">
+          ₩{plan.price.toLocaleString()}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between pl-8">
+        <span
+          className="text-sm"
+          style={{
+            color: isSelected ? "rgba(255,255,255,0.8)" : COLORS.text.secondary,
+          }}
+        >
+          {plan.description}
+        </span>
+        {plan.originalPrice && (
+          <span
+            className="text-sm line-through"
+            style={{
+              color: isSelected ? "rgba(255,255,255,0.6)" : COLORS.text.tertiary,
+            }}
+          >
+            ₩{plan.originalPrice.toLocaleString()}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+}
+
+function MembershipHeader() {
+  const router = useRouter();
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 h-[56px] flex items-center bg-transparent">
+      <button
+        onClick={() => router.back()}
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm border border-black/5"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-700" />
+      </button>
+    </header>
+  );
+}
 
 function MembershipPageContent() {
   const router = useRouter();
-  const { subscription, isPro } = useSubscription();
-  const { data: currentUser } = useCurrentUser();
+  const { data: policies } = useNotionPolicies();
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
 
-  // Admin 여부 확인
-  const isAdmin = currentUser?.user_metadata?.role === "admin";
+  const handleStartNow = () => {
+    const planInfo = PLANS[selectedPlan];
+    console.log("Selected Plan:", planInfo);
+    // TODO: 결제 플로우 연결 (planInfo 전달)
+  };
+
+  const handleRestorePurchases = () => {
+    // TODO: Apple 구입 내역 복원 API 연결
+  };
+
+  const privacyPolicy = policies?.find(
+    (p) =>
+      p.name?.includes("개인정보") ||
+      p.title?.includes("개인정보처리방침") ||
+      p.type === "privacy"
+  );
+  const termsPolicy = policies?.find(
+    (p) =>
+      p.name?.includes("이용약관") ||
+      p.title?.includes("이용약관") ||
+      p.type === "terms"
+  );
 
   return (
     <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24`}
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-32 pt-14`}
     >
-      <AppHeader title="프로 멤버십" showBackButton={true} />
+      <MembershipHeader />
 
-      <div className="space-y-6 mt-6">
-        {/* 현재 멤버십 상태 */}
-        <div
-          className="relative overflow-hidden rounded-3xl p-5 sm:p-7 md:p-9"
-          style={{
-            background: isPro || isAdmin
-              ? `linear-gradient(135deg, #3B82F612 0%, #60A5FA08 50%, ${COLORS.background.card} 100%)`
-              : `linear-gradient(135deg, ${hexToRgba(
-                  COLORS.brand.primary,
-                  0.18
-                )} 0%, ${hexToRgba(COLORS.brand.light, 0.12)} 50%, ${
-                  COLORS.background.card
-                } 100%)`,
-            border: `2px solid ${
-              isPro || isAdmin
-                ? `#3B82F660`
-                : GRADIENT_UTILS.borderColor(COLORS.brand.primary, "40")
-            }`,
-            boxShadow: isPro || isAdmin
-              ? `0 8px 32px #3B82F625, 0 4px 16px #3B82F615, inset 0 1px 0 rgba(255,255,255,0.5)`
-              : `0 8px 24px ${hexToRgba(
-                  COLORS.brand.primary,
-                  0.18
-                )}, 0 4px 12px ${hexToRgba(
-                  COLORS.brand.primary,
-                  0.1
-                )}, inset 0 1px 0 ${hexToRgba(COLORS.text.white, 0.6)}`,
-          }}
-        >
-          {/* 배경 장식 - 애니메이션 효과 */}
-          {isPro || isAdmin ? (
-            <>
-              <div
-                className="absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 opacity-12 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle, #3B82F6 0%, transparent 70%)`,
-                  borderRadius: "50%",
-                  transform: "translate(30%, -30%)",
-                  filter: "blur(30px)",
-                }}
-              />
-              <div
-                className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 opacity-10 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle, #2563EB 0%, transparent 60%)`,
-                  borderRadius: "50%",
-                  transform: "translate(-20%, 20%)",
-                  filter: "blur(24px)",
-                }}
-              />
-            </>
+      {/* 최상단 이미지 (img0) */}
+      <div className="mb-4">
+        <LazyMembershipImage
+          src={img0}
+          alt="프로 멤버십 소개"
+          priority={true}
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <PlanSelectionCard
+          plan={PLANS.annual}
+          isSelected={selectedPlan === "annual"}
+          onSelect={() => setSelectedPlan("annual")}
+        />
+        <PlanSelectionCard
+          plan={PLANS.monthly}
+          isSelected={selectedPlan === "monthly"}
+          onSelect={() => setSelectedPlan("monthly")}
+        />
+      </div>
+
+      {/* 이미지 목록 (lazy loading) */}
+      <div className="flex flex-col mt-4" style={{ gap: 120 }}>
+        {MEMBERSHIP_IMAGES.map((img, idx) => (
+          <LazyMembershipImage
+            key={idx}
+            src={img.src}
+            alt={img.alt}
+            priority={false}
+          />
+        ))}
+      </div>
+
+      {/* 하단 플랜 선택 */}
+      <div className="mt-12 flex flex-col gap-3">
+        <PlanSelectionCard
+          plan={PLANS.annual}
+          isSelected={selectedPlan === "annual"}
+          onSelect={() => setSelectedPlan("annual")}
+        />
+        <PlanSelectionCard
+          plan={PLANS.monthly}
+          isSelected={selectedPlan === "monthly"}
+          onSelect={() => setSelectedPlan("monthly")}
+        />
+      </div>
+
+      {/* Apple 정책 영역 */}
+      <div className="mt-6 pb-8 flex items-center justify-between px-1">
+        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+          {privacyPolicy ? (
+            <Link
+              href={`/policy/${privacyPolicy.id}`}
+              className="hover:text-gray-600 transition-colors"
+            >
+              개인정보 처리방침
+            </Link>
           ) : (
-            <div
-              className="absolute top-0 right-0 w-40 h-40 opacity-6 pointer-events-none"
-              style={{
-                background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.35),
-                borderRadius: "50%",
-                transform: "translate(20%, -20%)",
-              }}
-            />
+            <span>개인정보 처리방침</span>
           )}
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 sm:gap-4 mb-4">
-              <div
-                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300"
-                style={{
-                  background: isPro || isAdmin
-                    ? `linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)`
-                    : GRADIENT_UTILS.iconBadge(COLORS.brand.primary, 0.2),
-                  boxShadow: isPro || isAdmin
-                    ? `0 4px 12px #60A5FA40`
-                    : `0 4px 12px ${hexToRgba(COLORS.brand.primary, 0.3)}`,
-                }}
-              >
-                {isPro || isAdmin ? (
-                  <Crown
-                    className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
-                    style={{ color: COLORS.text.white }}
-                  />
-                ) : (
-                  <Sparkles
-                    className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
-                    style={{ color: COLORS.text.white }}
-                  />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2
-                  className="text-lg sm:text-xl md:text-2xl font-bold mb-1 truncate"
-                  style={{ color: COLORS.text.primary }}
-                >
-                  {isAdmin ? "관리자" : isPro ? "Pro 멤버십" : "Free 멤버십"}
-                </h2>
-                <p
-                  className="text-xs sm:text-sm md:text-base"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  {isAdmin
-                    ? "모든 기능을 사용할 수 있습니다"
-                    : isPro
-                    ? "프로 기능을 사용할 수 있습니다"
-                    : "기본 기능을 사용할 수 있습니다"}
-                </p>
-              </div>
-            </div>
-
-            {isPro && subscription?.expires_at && (
-              <div
-                className="mt-4 pt-4 border-t flex items-center gap-2"
-                style={{ borderColor: COLORS.border.light }}
-              >
-                <Calendar className="w-4 h-4" style={{ color: COLORS.text.tertiary }} />
-                <span
-                  className="text-sm"
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  만료일: {formatKSTDate(subscription.expires_at)}
-                </span>
-              </div>
-            )}
-          </div>
+          <span className="text-gray-300 text-[9px]">|</span>
+          {termsPolicy ? (
+            <Link
+              href={`/policy/${termsPolicy.id}`}
+              className="hover:text-gray-600 transition-colors"
+            >
+              이용 약관
+            </Link>
+          ) : (
+            <span>이용 약관</span>
+          )}
         </div>
-
-        {/* Pro 핵심 기능 강조 섹션 */}
-        <div
-          className="relative overflow-hidden rounded-3xl p-5 sm:p-7 md:p-9"
-          style={{
-            background: `linear-gradient(135deg, #3B82F608 0%, #60A5FA05 50%, ${COLORS.background.card} 100%)`,
-            border: `2px solid #3B82F640`,
-            boxShadow: `0 8px 32px #3B82F620, 0 4px 16px #3B82F615, inset 0 1px 0 rgba(255,255,255,0.8)`,
-          }}
+        <button
+          type="button"
+          onClick={handleRestorePurchases}
+          className="flex items-center gap-1 py-1 px-2 rounded-md text-[11px] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all"
         >
-          {/* 배경 장식 */}
-          <div
-            className="absolute top-0 right-0 w-72 h-72 sm:w-96 sm:h-96 opacity-12 pointer-events-none"
+          <RotateCcw className="w-3 h-3" />
+          <span>구입 내역 복원</span>
+        </button>
+      </div>
+
+      {/* 플로팅 CTA - 바텀 네비 위 */}
+      <div
+        className="fixed left-0 right-0 z-[99] px-4 pb-2"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+        }}
+      >
+        <div className={`${SPACING.page.maxWidthNarrow} mx-auto`}>
+          <button
+            type="button"
+            onClick={handleStartNow}
+            className="w-full py-4 rounded-2xl font-semibold text-base shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             style={{
-              background: `radial-gradient(circle, #3B82F6 0%, transparent 60%)`,
-              borderRadius: "50%",
-              transform: "translate(25%, -25%)",
-              filter: "blur(50px)",
-            }}
-          />
-          <div
-            className="absolute bottom-0 left-0 w-56 h-56 sm:w-72 sm:h-72 opacity-10 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle, #60A5FA 0%, transparent 50%)`,
-              borderRadius: "50%",
-              transform: "translate(-20%, 20%)",
-              filter: "blur(40px)",
-            }}
-          />
-
-          <div className="relative z-10">
-            {/* 타이틀 영역 */}
-            <div className="mb-6 sm:mb-8">
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)`,
-                    boxShadow: `0 4px 16px #60A5FA30`,
-                  }}
-                >
-                  <Crown
-                    className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7"
-                    style={{ color: COLORS.text.white }}
-                  />
-                </div>
-                <div>
-                  <h3
-                    className="text-xl sm:text-2xl md:text-3xl font-bold"
-                    style={{
-                      background: `linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #60A5FA 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    Pro 멤버십으로 열리는 핵심 기능들
-                  </h3>
-                  <p
-                    className="mt-2 text-xs sm:text-sm leading-relaxed"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    매일·매주·매달의 기록을 수익과 성장을 향한 방향으로 정리해 주는,
-                    VIVID만의 프리미엄 기능들이 한 번에 열립니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 핵심 기능 카드들 */}
-            <div className="grid grid-cols-1 gap-4 sm:gap-5">
-              
-
-              {/* 2. 주간 · 월간 VIVID 리포트 */}
-              <div
-                className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
-                style={{
-                  background: GRADIENT_UTILS.cardBackground("#2563EB", 0.18, COLORS.background.card),
-                  border: `1.5px solid ${GRADIENT_UTILS.borderColor("#2563EB", "40")}`,
-                  boxShadow: `0 8px 24px #2563EB25, 0 4px 12px #2563EB15, inset 0 1px 0 rgba(255,255,255,0.6)`,
-                }}
-              >
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 opacity-10 pointer-events-none"
-                  style={{
-                    background: GRADIENT_UTILS.decoration("#2563EB", 0.6),
-                    borderRadius: "50%",
-                    transform: "translate(20%, -20%)",
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: GRADIENT_UTILS.iconBadge("#60A5FA", 0.25),
-                        boxShadow: `0 2px 8px #60A5FA40`,
-                      }}
-                    >
-                      <TrendingUp className="w-4 h-4" style={{ color: COLORS.text.white }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm sm:text-base font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        주간 · 월간 VIVID 리포트
-                      </p>
-                      <p
-                        className="text-xs sm:text-sm leading-relaxed"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        한 주·한 달 전체를 통틀어 나의 흐름과 패턴을 요약해
-                        방향성을 잡을 수 있게 도와줍니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. 감정 패턴 분석 인사이트 */}
-              <div
-                className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
-                style={{
-                  background: GRADIENT_UTILS.cardBackground("#4A90E2", 0.18, COLORS.background.card),
-                  border: `1.5px solid ${GRADIENT_UTILS.borderColor("#4A90E2", "40")}`,
-                  boxShadow: `0 8px 24px #4A90E225, 0 4px 12px #4A90E215, inset 0 1px 0 rgba(255,255,255,0.6)`,
-                }}
-              >
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 opacity-10 pointer-events-none"
-                  style={{
-                    background: GRADIENT_UTILS.decoration("#4A90E2", 0.6),
-                    borderRadius: "50%",
-                    transform: "translate(20%, -20%)",
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: GRADIENT_UTILS.iconBadge("#60A5FA", 0.25),
-                        boxShadow: `0 2px 8px #60A5FA40`,
-                      }}
-                    >
-                      <Zap className="w-4 h-4" style={{ color: COLORS.text.white }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm sm:text-base font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        감정 패턴 분석 인사이트
-                      </p>
-                      <p
-                        className="text-xs sm:text-sm leading-relaxed"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        내가 어디에서 에너지를 쓰고, 어디에서 소진되는지
-                        감정 패턴을 분석해 주는 심층 리포트를 제공합니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. VIVID 커뮤니티 (준비 중 안내) */}
-              <div
-                className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
-                style={{
-                  background: GRADIENT_UTILS.cardBackground("#60A5FA", 0.18, COLORS.background.card),
-                  border: `1.5px solid ${GRADIENT_UTILS.borderColor("#60A5FA", "40")}`,
-                  boxShadow: `0 8px 24px #60A5FA25, 0 4px 12px #60A5FA15, inset 0 1px 0 rgba(255,255,255,0.6)`,
-                }}
-              >
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 opacity-10 pointer-events-none"
-                  style={{
-                    background: GRADIENT_UTILS.decoration("#60A5FA", 0.6),
-                    borderRadius: "50%",
-                    transform: "translate(20%, -20%)",
-                  }}
-                />
-                <div className="relative z-10">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: GRADIENT_UTILS.iconBadge("#7AB8F5", 0.25),
-                        boxShadow: `0 2px 8px #7AB8F540`,
-                      }}
-                    >
-                      <Users className="w-4 h-4" style={{ color: COLORS.text.white }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-sm sm:text-base font-semibold mb-1"
-                        style={{ color: COLORS.text.primary }}
-                      >
-                        VIVID 커뮤니티 (준비 중)
-                      </p>
-                      <p
-                        className="text-xs sm:text-sm leading-relaxed"
-                        style={{ color: COLORS.text.secondary }}
-                      >
-                        Pro 멤버만을 위한 기록 공유, Q&A, 성장 피드백 커뮤니티를
-                        순차적으로 오픈할 예정입니다.
-                      </p>
-                    </div>
-                  </div>
-                  <p
-                    className="mt-1 text-[11px] sm:text-xs"
-                    style={{ color: COLORS.text.tertiary }}
-                  >
-                    * 커뮤니티 기능은 단계적으로 업데이트될 수 있어요.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 업그레이드 안내 */}
-        {!isPro && !isAdmin && (
-          <div
-            className="relative overflow-hidden rounded-3xl p-6 sm:p-8 md:p-10 cursor-pointer"
-            onClick={() => router.push("/membership")}
-            style={{
-              background: `linear-gradient(135deg, ${COLORS.brand.primary}15 0%, ${
-                COLORS.brand.light || COLORS.brand.primary
-              }10 50%, ${COLORS.background.card} 100%)`,
-              border: `2px solid ${COLORS.brand.primary}40`,
-              boxShadow: `0 12px 40px ${COLORS.brand.primary}26, 0 6px 20px ${COLORS.brand.primary}1F, inset 0 1px 0 rgba(255,255,255,0.7)`,
+              backgroundColor: COLORS.brand.primary,
+              color: COLORS.text.white,
+              boxShadow: "0 8px 24px rgba(127, 143, 122, 0.4)",
             }}
           >
-            {/* 배경 장식 */}
-            <div
-              className="absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 opacity-12 pointer-events-none"
-              style={{
-                background: GRADIENT_UTILS.decoration(COLORS.brand.primary, 0.8),
-                borderRadius: "50%",
-                transform: "translate(25%, -25%)",
-                filter: "blur(42px)",
-              }}
-            />
-            <div
-              className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 opacity-10 pointer-events-none"
-              style={{
-                background: GRADIENT_UTILS.decoration(
-                  COLORS.brand.secondary || COLORS.brand.primary,
-                  0.7
-                ),
-                borderRadius: "50%",
-                transform: "translate(-20%, 20%)",
-                filter: "blur(34px)",
-              }}
-            />
-
-            <div className="relative z-10">
-              <div className="flex items-start gap-4 sm:gap-5 mb-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${
-                      COLORS.brand.secondary || COLORS.brand.primary
-                    } 100%)`,
-                    boxShadow: `0 8px 24px ${COLORS.brand.primary}4D, 0 4px 12px ${COLORS.brand.primary}33`,
-                  }}
-                >
-                  <Sparkles
-                    className="w-7 h-7 sm:w-8 sm:h-8"
-                    style={{ color: COLORS.text.white }}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="text-xl sm:text-2xl md:text-3xl font-bold mb-3"
-                    style={{
-                      color: COLORS.text.primary,
-                    }}
-                  >
-                    Pro 멤버십으로 업그레이드
-                  </h3>
-                  <p
-                    className="text-sm sm:text-base mb-4 leading-relaxed font-medium"
-                    style={{ color: COLORS.text.secondary }}
-                  >
-                    주간 및 월간 VIVID를 생성하고 더 많은 인사이트를 받아보세요.
-                  </p>
-                  <div
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold"
-                    style={{
-                      background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${
-                        COLORS.brand.secondary || COLORS.brand.primary
-                      } 100%)`,
-                      color: COLORS.text.white,
-                      boxShadow: `0 4px 12px ${COLORS.brand.primary}40`,
-                    }}
-                  >
-                    <Crown className="w-4 h-4" />
-                    <span>프리미엄 기능 체험하기</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            <span>지금 시작하기</span>
+            <span className="text-sm font-normal opacity-90">
+              ({PLANS[selectedPlan].title} {PLANS[selectedPlan].discount ? `-${PLANS[selectedPlan].discount}%` : ""})
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );

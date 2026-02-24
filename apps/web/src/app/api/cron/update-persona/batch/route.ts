@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
     const concurrency = getConcurrency(request.nextUrl.searchParams.get("concurrency"));
     const supabase = getServiceSupabase();
 
+    // 단일/전체 동일: updatePersonaForUser가 vivid + todo 조회 후
+    // todo_analysis(current_projects, recurring_tasks) 포함 persona 생성·저장
     const results = await processWithConcurrency(userIds, concurrency, async (userId) => {
       try {
         return await updatePersonaForUser(supabase, userId, startDate, endDate);

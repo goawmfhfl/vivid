@@ -19,6 +19,7 @@ import type {
   ReviewReport,
   TrendData,
   DailyVividInsight,
+  TodayFeedbackContent,
 } from "@/types/daily-vivid";
 import {
   generateCacheKey,
@@ -778,6 +779,38 @@ export async function generateTodoListFromQ1(
   }
 }
 
+/** Q1 없을 때 일반적인 할 일 목록 생성 (Pro 전용) */
+export async function generateTodoListGeneric(
+  date: string,
+  dayOfWeek: string,
+  isPro: boolean,
+  userId?: string
+): Promise<TodoListItemGenerated[] | null> {
+  const prompt = `${date} (${dayOfWeek}) 오늘의 일반적인 할 일 목록을 생성해주세요. 업무, 운동, 학습, 생활, 개인 관리 등 다양한 카테고리에서 실행 가능한 할 일 3~6개를 제안해주세요.`;
+
+  const cacheKey = generateCacheKey(SYSTEM_PROMPT_TODO, prompt);
+
+  try {
+    const result = await generateSection<{ items: TodoListItemGenerated[] }>(
+      SYSTEM_PROMPT_TODO,
+      prompt,
+      TodoListSchema,
+      cacheKey,
+      isPro,
+      "todo_list",
+      userId
+    );
+    if (!result?.items?.length) {
+      console.log("[generateTodoListGeneric] 생성된 항목 없음");
+      return null;
+    }
+    return result.items;
+  } catch (error) {
+    console.error("[generateTodoListGeneric] 생성 실패:", error);
+    return null;
+  }
+}
+
 /**
  * 회고 전용 리포트 생성 (Q3 + 투두 + user_persona 기반)
  * todoItems 없을 때: 최소 스키마만 사용, todo_completion_score 관련 인사이트 미포함
@@ -909,7 +942,7 @@ const INSIGHT_SYSTEM_PROMPT = `
 
 ## 인사이트 작성 원칙
 1. **완전한 문장**: 모든 문장을 끝까지 완성합니다. "~적"처럼 형용사만으로 끝내지 않습니다.
-2. **구체적 연결**: 오늘의 계획과 페르소나(지향하는 자아, 관심사, 패턴)를 구체적으로 연결해 설명합니다.
+2. **구체적 연결**: 오늘의 계획과 페르소나(지향하는 자아, 관심사, 패턴, todo_analysis)를 구체적으로 연결해 설명합니다.
 3. **실행 가능한 제안**: 막연한 조언이 아니라 "구체적으로 무엇을 할 수 있는지" 제시합니다.
 4. **친근하고 따뜻한 톤**: 비난보다 이해와 응원을 담아 작성합니다.
 
@@ -919,15 +952,22 @@ const INSIGHT_SYSTEM_PROMPT = `
   "feedback": ["피드백/관찰 문장1"],
   "improvements": ["개선 제안 문장1"],
   "summary": "한 줄 요약 (선택)",
-  "suggested_today": ["오늘 할 일 제안1", "제안2"]
+  "suggested_today": ["오늘 할 일 제안1", "제안2"],
+  "today_feedback": {
+    "past_context": "지금까지의 흐름 (2~4문장)",
+    "direction_analysis": "방향성 분석 (2~4문장)",
+    "suggestions": { "growth": ["성장 제안1"], "rest": ["휴식 제안1"] }
+  }
 }
 
 - feedback: 관찰/분석. 1~2개. 완전한 문장.
 - improvements: 실행 가능한 구체적 제안. 1~2개. 완전한 문장.
 - summary: (선택) 한 줄 요약. 없으면 빈 문자열 또는 생략 가능.
-- suggested_today: **필수. 절대 비우지 마세요.** 오늘 바로 실행할 수 있는 구체적인 할 일 2~5개. improvements가 있으면 각 항목을 "~하기", "~해보기" 형태로 변환하여 포함. improvements가 없어도 리포트/계획에서 오늘 하면 좋을 일을 도출. 각 항목은 15자 이내 짧은 문장. 예: "딱 5분만 해보기", "30분 산책하기", "중요한 일 1개 먼저 하기"
-- 최소 1개 섹션은 비어있지 않아야 함.
-- 각 배열의 모든 문장을 끝까지 완성하세요. 중간에 끊기지 않도록 주의.
+- suggested_today: **필수. 절대 비우지 마세요.** 오늘 바로 실행할 수 있는 구체적인 할 일 2~5개.
+- today_feedback: **필수.** 오늘의 비비드 요약 + persona의 todo_analysis(현재 프로젝트, 반복 작업)를 바탕으로:
+  - past_context: 업무/개발/건강/학습/생활 등 영역을 명시하고, 각 영역에서 진행해온 일·맥락·패턴을 구체적으로 서술.
+  - direction_analysis: 현재 어떤 방향으로 개발/성장 중인지, 구체적 행동과 결과를 포함해 기술.
+  - suggestions: growth(성장 제안 1~3개), rest(휴식 제안 1~3개). 균형 있게 작성.
 `;
 
 /** 인사이트 생성 시도 (모델 지정) */
@@ -987,6 +1027,11 @@ async function tryGenerateInsightWithModel(
     improvements?: string[];
     summary?: string;
     suggested_today?: string[];
+    today_feedback?: {
+      past_context?: string;
+      direction_analysis?: string;
+      suggestions?: { growth?: string[]; rest?: string[] };
+    };
   };
 
   const feedback = Array.isArray(parsed?.feedback)
@@ -1018,6 +1063,26 @@ async function tryGenerateInsightWithModel(
       })
       .filter((x): x is string => !!x && x.length <= 20);
     if (derived.length > 0) resultInsight.suggested_today = derived.slice(0, 5);
+  }
+
+  // today_feedback 파싱 (persona todo_analysis + report 기반, DB todo 불필요)
+  const tf = parsed?.today_feedback;
+  if (tf && typeof tf === "object") {
+    const growth = Array.isArray(tf.suggestions?.growth)
+      ? tf.suggestions.growth.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      : [];
+    const rest = Array.isArray(tf.suggestions?.rest)
+      ? tf.suggestions.rest.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      : [];
+    const pastContext = typeof tf.past_context === "string" ? tf.past_context.trim() : "";
+    const directionAnalysis = typeof tf.direction_analysis === "string" ? tf.direction_analysis.trim() : "";
+    if (pastContext || directionAnalysis || growth.length > 0 || rest.length > 0) {
+      resultInsight.today_feedback = {
+        past_context: pastContext || "할 일 패턴을 분석해 보강 중입니다.",
+        direction_analysis: directionAnalysis,
+        suggestions: { growth, rest },
+      };
+    }
   }
 
   // 모든 섹션이 비어있으면 리포트 기반 폴백 summary 생성
@@ -1059,6 +1124,202 @@ function buildFallbackInsight(report: Report): DailyVividInsight {
     improvements: [],
     summary,
     suggested_today: fallbackSuggested.slice(0, 5),
+    today_feedback: {
+      past_context: summary,
+      direction_analysis: "오늘의 기록을 바탕으로 방향성을 살펴보세요.",
+      suggestions: { growth: ["오늘의 기록 돌아보기"], rest: ["잠시 쉬어가기"] },
+    },
+  };
+}
+
+const TODAY_FEEDBACK_SYSTEM_PROMPT = `
+당신은 사용자의 할 일 패턴과 방향성을 분석하는 코치입니다.
+
+## 입력 정보
+- current_projects: 사용자가 현재 진행 중인 프로젝트/목표
+- recurring_tasks: 반복적으로 하는 작업 패턴 (참고용)
+- 오늘의 할 일: 해당 날짜의 투두 목록
+
+## 출력 형식 (JSON)
+{
+  "past_context": "지금까지의 흐름에 대한 구체적 맥락. 반드시 영역(업무/개발/건강/학습/생활 등)을 명시하고, 각 영역에서 어떤 일들을 진행해왔는지, 어떤 맥락·패턴이 있는지 디테일하게 작성. 모호한 표현 금지.",
+  "direction_analysis": "방향성 분석. 어떤 방향으로 개발/성장하고 있는지 구체적으로 기술. 도움이 되는 부분과 개선이 필요한 부분을 확실하고 명확하게. '~적', '~적인' 같은 모호한 표현 대신 구체적 행동·결과를 언급.",
+  "suggestions": {
+    "growth": ["성장을 위한 구체적 제안 1", "제안 2"],
+    "rest": ["휴식을 위한 구체적 제안 1", "제안 2"]
+  }
+}
+
+- past_context: 필수. 4~8문장. 업무/개발/건강/학습/생활 등 영역을 반드시 명시하고, 각 영역에서 진행한 일·맥락·패턴을 구체적으로 서술. 절대 비우거나 한 문장으로 끝내지 마세요.
+- direction_analysis: 4~8문장. 현재 어떤 방향으로 개발/성장 중인지, 구체적 행동과 결과를 포함.
+- suggestions: growth와 rest를 균형 있게 (각 1~6개까지 가능). 성장만 치우치지 않고 휴식도 포함.
+`;
+
+/**
+ * 오늘의 피드백 생성 (todo_analysis + 오늘의 할일 기반)
+ */
+export async function generateTodayFeedback(
+  todos: Array<{ contents: string; is_checked?: boolean }>,
+  todoAnalysis: { current_projects: string[]; recurring_tasks: string[] },
+  userId?: string
+): Promise<TodayFeedbackContent> {
+  const geminiClient = getGeminiClient();
+  const startTime = Date.now();
+
+  const projectsBlock =
+    todoAnalysis.current_projects?.length > 0
+      ? todoAnalysis.current_projects.join(", ")
+      : "(없음)";
+  const recurringBlock =
+    todoAnalysis.recurring_tasks?.length > 0
+      ? todoAnalysis.recurring_tasks.join(", ")
+      : "(없음)";
+  const todoBlock =
+    todos.length > 0
+      ? todos
+          .map((t) => `- ${t.contents}${t.is_checked ? " (완료)" : ""}`)
+          .join("\n")
+      : "(오늘 할 일 없음)";
+
+  const prompt = `[현재 프로젝트/목표]
+${projectsBlock}
+
+[반복하는 작업 패턴]
+${recurringBlock}
+
+[오늘의 할 일]
+${todoBlock}
+
+---
+위 정보를 바탕으로 반드시 다음 JSON 구조를 정확히 작성하세요:
+1. past_context: 2~4문장. 업무/개발/건강/학습/생활 등 영역을 명시하고, 각 영역에서 진행해온 일·맥락·패턴을 구체적으로 서술. 절대 비우지 마세요.
+2. direction_analysis: 2~4문장. 현재 어떤 방향으로 개발/성장 중인지, 구체적 행동과 결과를 포함해 기술.
+3. suggestions: growth 배열(성장 제안 1~3개), rest 배열(휴식 제안 1~3개). 균형 있게 작성.`;
+
+  const modelName = "gemini-3.1-pro-preview";
+  const enhancedSystemPrompt = enhanceSystemPromptWithGlobal(
+    TODAY_FEEDBACK_SYSTEM_PROMPT,
+    true
+  );
+  const model = geminiClient.getGenerativeModel({
+    model: modelName,
+    systemInstruction: enhancedSystemPrompt,
+  });
+
+  const request = {
+    contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          past_context: { type: "string" },
+          direction_analysis: { type: "string" },
+          suggestions: {
+            type: "object",
+            properties: {
+              growth: {
+                type: "array",
+                items: { type: "string" },
+              },
+              rest: {
+                type: "array",
+                items: { type: "string" },
+              },
+            },
+            required: ["growth", "rest"],
+          },
+        },
+        required: ["past_context", "direction_analysis", "suggestions"],
+      },
+      maxOutputTokens: 2048,
+    },
+  } as unknown as GenerateContentRequest;
+
+  const result = await withGeminiRetry(() => model.generateContent(request));
+
+  if (userId) {
+    const usageMetadata = result.response.usageMetadata;
+    const usage = usageMetadata
+      ? {
+          prompt_tokens: usageMetadata.promptTokenCount || 0,
+          completion_tokens: usageMetadata.candidatesTokenCount || 0,
+          total_tokens: usageMetadata.totalTokenCount || 0,
+          cached_tokens: 0,
+        }
+      : null;
+    if (usage) {
+      logAIRequestAsync({
+        userId,
+        model: modelName,
+        requestType: "daily_vivid_today_feedback",
+        sectionName: "today_feedback",
+        usage,
+        duration_ms: Date.now() - startTime,
+        success: true,
+      });
+    }
+  }
+
+  let content: string;
+  try {
+    content = result.response.text();
+  } catch (e) {
+    throw new Error(
+      `Gemini response.text() failed: ${e instanceof Error ? e.message : String(e)}`
+    );
+  }
+  if (!content?.trim()) {
+    throw new Error("No content from Gemini (daily_vivid_today_feedback)");
+  }
+
+  const parsed = parseJsonRobust(content, "today_feedback") as {
+    past_context?: string;
+    direction_analysis?: string;
+    suggestions?: {
+      growth?: string[];
+      rest?: string[];
+    };
+  };
+
+  const ensureStringArray = (arr: unknown): string[] =>
+    Array.isArray(arr)
+      ? arr
+          .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+          .map((s) => s.trim())
+      : [];
+
+  const suggestions = parsed?.suggestions && typeof parsed.suggestions === "object"
+    ? {
+        growth: ensureStringArray(parsed.suggestions.growth),
+        rest: ensureStringArray(parsed.suggestions.rest),
+      }
+    : { growth: [], rest: [] };
+
+  const pastContext =
+    typeof parsed?.past_context === "string" ? parsed.past_context.trim() : "";
+  const directionAnalysis =
+    typeof parsed?.direction_analysis === "string"
+      ? parsed.direction_analysis.trim()
+      : "";
+
+  if (!pastContext && (projectsBlock !== "(없음)" || todoBlock !== "(오늘 할 일 없음)")) {
+    console.warn(
+      "[today_feedback] AI가 past_context를 비움. projects:",
+      projectsBlock,
+      "todos:",
+      todoBlock?.slice(0, 100)
+    );
+  }
+
+  return {
+    past_context:
+      pastContext ||
+      (projectsBlock !== "(없음)"
+        ? `현재 ${projectsBlock} 관련 일들을 진행 중입니다.`
+        : "할 일 패턴을 분석해 보강 중입니다."),
+    direction_analysis: directionAnalysis,
+    suggestions,
   };
 }
 
@@ -1115,16 +1376,35 @@ export async function generateDailyVividInsight(
   }
   const reportSummary = reportParts.join("\n\n");
 
+  const todoAnalysis = persona?.todo_analysis as
+    | { current_projects?: string[]; recurring_tasks?: string[] }
+    | null
+    | undefined;
+  const projectsBlock =
+    Array.isArray(todoAnalysis?.current_projects) && todoAnalysis.current_projects.length > 0
+      ? todoAnalysis.current_projects.join(", ")
+      : "(없음)";
+  const recurringBlock =
+    Array.isArray(todoAnalysis?.recurring_tasks) && todoAnalysis.recurring_tasks.length > 0
+      ? todoAnalysis.recurring_tasks.join(", ")
+      : "(없음)";
+
   const userLabel = userName ? `${userName}님` : "사용자";
   const prompt = `[사용자 페르소나]
 ${personaBlock}
+
+[할 일 패턴 분석 (todo_analysis)]
+- 현재 프로젝트/목표: ${projectsBlock}
+- 반복하는 작업 패턴: ${recurringBlock}
 
 [오늘의 비비드 리포트]
 ${reportSummary}
 
 ---
-위 ${userLabel}의 오늘 계획과 페르소나를 비교 분석하여, feedback/improvements 각각 1~3개씩 완전한 문장으로 JSON에 작성하세요.
-suggested_today는 반드시 2~5개의 오늘 할 일 제안을 포함하세요. 비워두지 마세요. improvements가 있으면 그 내용을 "~하기" 형태로 변환해 넣고, 추가로 오늘 하면 좋을 일도 제안하세요.`;
+위 ${userLabel}의 오늘 계획과 페르소나(todo_analysis 포함)를 비교 분석하여 JSON에 작성하세요.
+1. feedback/improvements: 각 1~3개씩 완전한 문장.
+2. suggested_today: 2~5개의 오늘 할 일 제안. 비워두지 마세요.
+3. today_feedback: past_context, direction_analysis, suggestions(growth/rest)를 report와 todo_analysis 기반으로 구체적으로 작성.`;
 
   const request = {
     contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
@@ -1139,12 +1419,28 @@ suggested_today는 반드시 2~5개의 오늘 할 일 제안을 포함하세요.
           suggested_today: {
             type: "array",
             items: { type: "string" },
-            description: "오늘 할 일로 바로 추가 가능한 구체적 제안 1~3개",
+            description: "오늘 할 일로 바로 추가 가능한 구체적 제안",
+          },
+          today_feedback: {
+            type: "object",
+            properties: {
+              past_context: { type: "string" },
+              direction_analysis: { type: "string" },
+              suggestions: {
+                type: "object",
+                properties: {
+                  growth: { type: "array", items: { type: "string" } },
+                  rest: { type: "array", items: { type: "string" } },
+                },
+                required: ["growth", "rest"],
+              },
+            },
+            required: ["past_context", "direction_analysis", "suggestions"],
           },
         },
-        required: ["feedback", "improvements", "suggested_today"],
+        required: ["feedback", "improvements", "suggested_today", "today_feedback"],
       },
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
     },
   } as unknown as GenerateContentRequest;
 

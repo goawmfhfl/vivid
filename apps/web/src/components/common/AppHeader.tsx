@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { User, LogOut, Settings, Crown, ChevronDown, ArrowLeft, Shield } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ import { getKSTDate } from "@/lib/date-utils";
 
 interface AppHeaderProps {
   title: string;
+  titleIcon?: LucideIcon;
   subtitle?: string;
   showDatePicker?: boolean;
   selectedDate?: string; // YYYY-MM-DD
@@ -36,6 +38,7 @@ interface AppHeaderProps {
 
 export function AppHeader({
   title,
+  titleIcon: TitleIcon,
   subtitle,
   showDatePicker = false,
   selectedDate,
@@ -190,9 +193,10 @@ export function AppHeader({
               </button>
             ) : (
               <h1
-                className={`mb-1 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
+                className={`mb-1 flex items-center justify-center gap-1.5 ${TYPOGRAPHY.h2.fontSize} ${TYPOGRAPHY.h2.fontWeight}`}
                 style={{ color: COLORS.text.primary }}
               >
+                {TitleIcon && <TitleIcon className="w-5 h-5 flex-shrink-0" />}
                 {title}
               </h1>
             )}

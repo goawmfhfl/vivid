@@ -8,6 +8,7 @@ import type {
   UserPersonaIdentity,
   UserPersonaPatterns,
   UserPersonaContext,
+  UserPersonaTodoAnalysis,
 } from "@/types/user-persona";
 
 export interface UserPersonaInsightsResponse {
@@ -15,6 +16,7 @@ export interface UserPersonaInsightsResponse {
   identity: UserPersonaIdentity | null;
   patterns: UserPersonaPatterns | null;
   context: UserPersonaContext | null;
+  todo_analysis: UserPersonaTodoAnalysis | null;
   source_start: string | null;
   source_end: string | null;
 }
@@ -43,6 +45,7 @@ export async function GET(request: NextRequest) {
           context: null,
           source_start: null,
           source_end: null,
+          todo_analysis: null,
         });
       }
       throw new Error(`Failed to fetch user_persona: ${error.message}`);
@@ -54,6 +57,7 @@ export async function GET(request: NextRequest) {
         identity: null,
         patterns: null,
         context: null,
+        todo_analysis: null,
         source_start: data?.source_start ?? null,
         source_end: data?.source_end ?? null,
       });
@@ -68,12 +72,14 @@ export async function GET(request: NextRequest) {
     const identity = (persona.identity as UserPersonaIdentity) ?? null;
     const patterns = (persona.patterns as UserPersonaPatterns) ?? null;
     const context = (persona.context as UserPersonaContext) ?? null;
+    const todo_analysis = (persona.todo_analysis as UserPersonaTodoAnalysis) ?? null;
 
     return NextResponse.json<UserPersonaInsightsResponse>({
       growth_insights,
       identity,
       patterns,
       context,
+      todo_analysis,
       source_start: data.source_start ?? null,
       source_end: data.source_end ?? null,
     });

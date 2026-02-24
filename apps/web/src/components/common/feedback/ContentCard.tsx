@@ -95,7 +95,7 @@ export function ContentCard({
         </p>
       </div>
       <p
-        className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+        className={cn(TYPOGRAPHY.bodySmall.fontSize, TYPOGRAPHY.bodySmall.lineHeight)}
         style={{ color: COLORS.text.primary }}
       >
         {content}

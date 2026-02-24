@@ -294,7 +294,7 @@ export function AIUsagePage() {
                   borderRadius: "8px",
                 }}
                 labelFormatter={(v) => new Date(v).toLocaleDateString("ko-KR")}
-                formatter={(value: number) => [`₩${Math.round(value).toLocaleString()}`, "비용"]}
+                formatter={(value: number | undefined) => [`₩${Math.round(value ?? 0).toLocaleString()}`, "비용"]}
               />
               <Bar
                 dataKey="cost_krw"

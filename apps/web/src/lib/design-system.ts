@@ -120,6 +120,13 @@ export const COLORS = {
     light: "#e2deec", // 프로스티드 글라스 느낌 연한 퍼플
     dark: "#8b7a9e", // 리파인드 딥 라벤더
   },
+  // 오늘의 할 일 & 피드백 섹션 전용 - 세련된 보랏빛
+  todoFeedback: {
+    primary: "#9b8bb5", // 소프트 바이올렛
+    light: "#f0edf5", // 연한 라벤더 배경
+    border: "#d4cce0", // 라벤더 테두리
+    accent: "#b8a9d4", // 포인트 퍼플
+  },
   // 상태 색상
   status: {
     success: "#7f8f7a",
@@ -133,18 +140,6 @@ export const COLORS = {
     errorDark: "#8b4a35",
     info: "#6f859c", // 더스티 블루
   },
-  // 감정 입력 전용 색상
-  emotion: {
-    intensity: {
-      1: "#6b5b95", // 아주 좋지 않음: 보라 톤
-      2: "#8aa6c1", // 좋지 않음: 창백한 파란빛
-      3: "#5d9aae", // 약간 불쾌함: 푸른 에메랄드
-      4: "#7ec8c1", // 보통: 에메랄드 아이스
-      5: "#a8cfa3", // 약간 기분 좋음: 연한 초록
-      6: "#e6d189", // 기분 좋음: 연한 노랑
-      7: "#e48a2a", // 아주 기분 좋음: 노란빛 주홍
-    },
-  },
   // 섹션별 컬러 (월간 비비드 리포트용) - 새로운 색상 시스템 적용
   section: {
     summary: {
@@ -152,12 +147,6 @@ export const COLORS = {
       gradient: "linear-gradient(135deg, #7f8f7a 0%, #5f6b3a 100%)",
       light: "#7f8f7a20",
       border: "#7f8f7a40",
-    },
-    emotion: {
-      primary: "#b38e3a", // 머스터드 옐로우
-      gradient: "linear-gradient(135deg, #b38e3a 0%, #947331 100%)",
-      light: "#b38e3a20",
-      border: "#b38e3a40",
     },
     insight: {
       primary: "#6f859c", // 더스티 블루
@@ -434,27 +423,6 @@ export const TRANSITIONS = {
 // ============================================
 export const INPUT_STYLES = {
   textareaMinHeight: "min-h-[120px]",
-} as const;
-
-// ============================================
-// 감정 강도 UI 스타일
-// ============================================
-export const EMOTION_INTENSITY_STYLES = {
-  ring: {
-    outer: "180px",
-    middle: "136px",
-    inner: "96px",
-    core: "12px",
-  },
-  glowOpacity: {
-    outer: 0.08,
-    middle: 0.12,
-    inner: 0.18,
-  },
-  slider: {
-    trackHeight: "10px",
-    thumbSize: "24px",
-  },
 } as const;
 
 // ============================================

@@ -6,17 +6,16 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { COLORS } from "@/lib/design-system";
 import {
-  LayoutDashboard,
   Users,
   BarChart3,
   FileText,
   Settings,
   Menu,
   X,
-  MessageSquare,
   Ticket,
   ClipboardList,
-  Database,
+  LineChart,
+  Megaphone,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -24,12 +23,6 @@ interface AdminSidebarProps {
 }
 
 const menuItems = [
-  {
-    title: "대시보드",
-    href: "/admin",
-    icon: LayoutDashboard,
-    enabled: true,
-  },
   {
     title: "유저 관리",
     href: "/admin/users",
@@ -43,33 +36,21 @@ const menuItems = [
     enabled: true,
   },
   {
+    title: "사용 분석",
+    href: "/admin/analytics",
+    icon: LineChart,
+    enabled: true,
+  },
+  {
     title: "쿠폰 관리",
     href: "/admin/coupons",
     icon: Ticket,
     enabled: true,
   },
   {
-    title: "크론 테스트",
-    href: "/admin/cron/update-persona",
+    title: "테스트",
+    href: "/admin/test",
     icon: FileText,
-    enabled: true,
-  },
-  {
-    title: "마이그레이션 (실행력)",
-    href: "/admin/migration/execution-score",
-    icon: Database,
-    enabled: true,
-  },
-  {
-    title: "문의사항 관리",
-    href: "/admin/inquiries",
-    icon: MessageSquare,
-    enabled: true,
-  },
-  {
-    title: "피드백 관리",
-    href: "/admin/user-feedbacks",
-    icon: MessageSquare,
     enabled: true,
   },
   {
@@ -79,16 +60,16 @@ const menuItems = [
     enabled: true,
   },
   {
-    title: "탈퇴 사유 관리",
-    href: "/admin/account-deletions",
-    icon: Users,
+    title: "공지 관리",
+    href: "/admin/announcements",
+    icon: Megaphone,
     enabled: true,
   },
   {
     title: "시스템 설정",
     href: "/admin/settings",
     icon: Settings,
-    enabled: false, // 비활성화
+    enabled: true,
   },
 ];
 

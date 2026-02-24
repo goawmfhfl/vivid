@@ -15,6 +15,7 @@ import type { Report, DailyVividInsight } from "@/types/daily-vivid";
  * POST: Daily Vivid 인사이트 생성 (Pro 전용)
  * 오늘의 계획과 user_persona 기반 일치도 분석 + 행동 제안
  */
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -82,13 +83,15 @@ export async function POST(
       );
     }
 
-    // 기존 구조화된 인사이트가 있으면 즉시 반환 (forceRegenerate 요청 시 제외)
+    const persona = await fetchUserPersonaOptional(supabase, userId);
+
     if (!forceRegenerate && decrypted.insight && typeof decrypted.insight === "object") {
       const insight = decrypted.insight as DailyVividInsight;
-      if (
+      const hasBaseInsight =
         (insight.feedback?.length ?? 0) > 0 ||
-        (insight.improvements?.length ?? 0) > 0
-      ) {
+        (insight.improvements?.length ?? 0) > 0;
+
+      if (hasBaseInsight) {
         return NextResponse.json({ insight }, { status: 200 });
       }
     }
@@ -115,7 +118,6 @@ export async function POST(
       );
     }
 
-    const persona = await fetchUserPersonaOptional(supabase, userId);
     if (!persona || typeof persona !== "object") {
       // persona 없을 때 400 대신 안내용 인사이트 반환 (UI에서 "페르소나 업데이트 필요" 표시 가능)
       return NextResponse.json(

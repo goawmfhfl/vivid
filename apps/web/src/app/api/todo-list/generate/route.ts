@@ -2,17 +2,65 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
-import { generateTodoListFromQ1 } from "@/app/api/daily-vivid/ai-service-stream";
+import {
+  generateTodoListFromQ1,
+  generateTodoListGeneric,
+} from "@/app/api/daily-vivid/ai-service-stream";
 import {
   fetchRecordsByDateOptional,
   saveTodoListItems,
   decryptTodoListItems,
   MANUAL_ADD_CATEGORY,
 } from "@/app/api/daily-vivid/db-service";
+import { encryptDailyVivid } from "@/lib/jsonb-encryption";
+
+async function getOrCreateDailyVividForDate(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  userId: string,
+  date: string
+): Promise<{ id: string }> {
+  const { data: rows, error: fetchError } = await supabase
+    .from(API_ENDPOINTS.DAILY_VIVID)
+    .select("id")
+    .eq("user_id", userId)
+    .eq("report_date", date)
+    .eq("type", "vivid")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (fetchError) throw new Error(`Failed to fetch daily vivid: ${fetchError.message}`);
+  const existing = rows?.[0] ?? null;
+  if (existing?.id) return { id: existing.id };
+
+  const dateObj = new Date(`${date}T00:00:00+09:00`);
+  const dayOfWeek = dateObj.toLocaleDateString("ko-KR", {
+    weekday: "long",
+    timeZone: "Asia/Seoul",
+  });
+
+  const encrypted = encryptDailyVivid({ report: null });
+  const { data: inserted, error: insertError } = await supabase
+    .from(API_ENDPOINTS.DAILY_VIVID)
+    .insert({
+      user_id: userId,
+      report_date: date,
+      day_of_week: dayOfWeek,
+      report: encrypted.report ?? null,
+      type: "vivid",
+    })
+    .select("id")
+    .single();
+
+  if (insertError || !inserted?.id) {
+    throw new Error(`Failed to create daily vivid: ${insertError?.message ?? "unknown"}`);
+  }
+  return { id: inserted.id };
+}
 
 /**
  * POST: 오늘의 할 일 생성 (Pro 전용)
  * Body: { userId: string, date: string } (YYYY-MM-DD)
+ * 비비드/Q1 없어도 생성 가능 (일반 할 일 목록 생성)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -35,21 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceSupabase();
-
-    const { data: dailyVivid, error: dvError } = await supabase
-      .from(API_ENDPOINTS.DAILY_VIVID)
-      .select("id")
-      .eq("user_id", userId)
-      .eq("report_date", date)
-      .eq("type", "vivid")
-      .maybeSingle();
-
-    if (dvError || !dailyVivid?.id) {
-      return NextResponse.json(
-        { error: "해당 날짜의 비비드가 없습니다. 먼저 비비드를 생성해주세요." },
-        { status: 404 }
-      );
-    }
+    const dailyVivid = await getOrCreateDailyVividForDate(supabase, userId, date);
 
     const records = await fetchRecordsByDateOptional(supabase, userId, date);
     const hasQ1 = records.some((r) => {
@@ -57,30 +91,23 @@ export async function POST(request: NextRequest) {
       return /Q1\.\s*오늘 하루를 어떻게 보낼까\?/i.test(content);
     });
 
-    if (!hasQ1) {
-      return NextResponse.json(
-        { error: "Q1(오늘 하루를 어떻게 보낼까?) 기록이 없어 투두를 생성할 수 없습니다." },
-        { status: 400 }
-      );
-    }
-
     const dateObj = new Date(`${date}T00:00:00+09:00`);
     const dayOfWeek = dateObj.toLocaleDateString("ko-KR", {
       weekday: "long",
       timeZone: "Asia/Seoul",
     });
 
-    const todoItems = await generateTodoListFromQ1(
-      records,
-      date,
-      dayOfWeek,
-      isPro,
-      userId
-    );
+    const todoItems = hasQ1
+      ? await generateTodoListFromQ1(records, date, dayOfWeek, isPro, userId)
+      : await generateTodoListGeneric(date, dayOfWeek, isPro, userId);
 
     if (!todoItems?.length) {
       return NextResponse.json(
-        { error: "투두 리스트를 생성할 수 없습니다. Q1 내용을 더 구체적으로 작성해주세요." },
+        {
+          error: hasQ1
+            ? "투두 리스트를 생성할 수 없습니다. Q1 내용을 더 구체적으로 작성해주세요."
+            : "투두 리스트를 생성할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+        },
         { status: 400 }
       );
     }

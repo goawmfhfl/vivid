@@ -14,7 +14,6 @@ import {
   TRANSITIONS,
   CARD_STYLES,
   SPACING,
-  hexToRgba,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import {
@@ -22,10 +21,6 @@ import {
   type RecordType,
 } from "../signup/RecordTypeCard";
 import { formatKSTTime } from "@/lib/date-utils";
-import {
-  getEmotionIntensityLabel,
-  type EmotionIntensity,
-} from "@/lib/emotion-data";
 
 interface RecordItemProps {
   record: Record;
@@ -44,16 +39,7 @@ export function RecordItem({
 }: RecordItemProps) {
   const recordType = (record.type as RecordType) || "dream";
   const typeInfo = RECORD_TYPES.find((t) => t.id === recordType);
-  const isEmotion = recordType === "emotion";
   const isReview = recordType === "review";
-  const emotionData = record.emotion;
-  const intensityValue = emotionData?.intensity as EmotionIntensity | undefined;
-  const intensityLabel = intensityValue
-    ? getEmotionIntensityLabel(intensityValue)
-    : null;
-  const intensityColor = intensityValue
-    ? COLORS.emotion.intensity[intensityValue]
-    : COLORS.brand.primary;
 
   // 프로젝트 기본 색상 (타입별 색상 변경 없이 고정)
   const defaultColors = {
@@ -467,145 +453,6 @@ export function RecordItem({
                 </p>
               </div>
             )}
-          </div>
-        ) : isEmotion ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(TYPOGRAPHY.caption.fontSize)}
-                  style={{ color: COLORS.text.tertiary }}
-                >
-                  감정 상태
-                </span>
-                <span className="relative inline-flex h-2.5 w-2.5 items-center justify-center">
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      border: `1px solid ${hexToRgba(intensityColor, 0.5)}`,
-                      boxShadow: `0 0 0 3px ${hexToRgba(intensityColor, 0.08)}`,
-                    }}
-                  />
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ backgroundColor: intensityColor }}
-                  />
-                </span>
-              </div>
-              {intensityLabel && (
-                <div className="flex flex-wrap gap-2">
-                  <span
-                    className={cn(
-                      TYPOGRAPHY.caption.fontSize,
-                      "rounded-full px-3 py-1"
-                    )}
-                    style={{
-                      color: intensityColor,
-                      border: `1px solid ${hexToRgba(intensityColor, 0.45)}`,
-                      backgroundColor: hexToRgba(intensityColor, 0.12),
-                    }}
-                  >
-                    {intensityLabel}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {emotionData?.keywords?.length ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(TYPOGRAPHY.caption.fontSize)}
-                    style={{ color: COLORS.text.tertiary }}
-                  >
-                    감정 키워드
-                  </span>
-                  <span
-                    className="inline-flex h-1.5 w-1.5 rounded-full"
-                    style={{ backgroundColor: intensityColor }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {emotionData.keywords.map((keyword) => (
-                    <span
-                      key={`keyword-${keyword}`}
-                      className={cn(
-                        "rounded-full px-3 py-1",
-                        TYPOGRAPHY.caption.fontSize
-                      )}
-                      style={{
-                        backgroundColor: hexToRgba(intensityColor, 0.12),
-                        border: `1px solid ${hexToRgba(intensityColor, 0.4)}`,
-                        color: intensityColor,
-                      }}
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {emotionData?.factors?.length ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(TYPOGRAPHY.caption.fontSize)}
-                    style={{ color: COLORS.text.tertiary }}
-                  >
-                    감정 요인
-                  </span>
-                  <span
-                    className="inline-flex h-1.5 w-1.5 rounded-full"
-                    style={{ backgroundColor: COLORS.status.warning }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {emotionData.factors.map((factor) => (
-                    <span
-                      key={`factor-${factor}`}
-                      className={cn(
-                        "rounded-full px-3 py-1",
-                        TYPOGRAPHY.caption.fontSize
-                      )}
-                      style={{
-                        backgroundColor: COLORS.background.hover,
-                        border: `1px solid ${COLORS.border.light}`,
-                        color: COLORS.text.secondary,
-                      }}
-                    >
-                      {factor}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {emotionData?.reasonText ? (
-              <div className="space-y-2">
-                <span
-                  className={cn(TYPOGRAPHY.caption.fontSize)}
-                  style={{ color: COLORS.text.tertiary }}
-                >
-                  한 줄 이유
-                </span>
-                <div
-                  className={cn(TYPOGRAPHY.bodySmall.fontSize)}
-                  style={{
-                    color: COLORS.text.secondary,
-                    lineHeight: "1.7",
-                    backgroundColor: COLORS.background.hoverLight,
-                    border: `1px solid ${COLORS.border.light}`,
-                    borderRadius: "12px",
-                    padding: "0.75rem 0.875rem",
-                  }}
-                >
-                  {emotionData.reasonText}
-                </div>
-              </div>
-            ) : null}
           </div>
         ) : (
           <p

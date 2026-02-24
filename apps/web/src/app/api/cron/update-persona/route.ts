@@ -6,6 +6,7 @@ import {
   getKstDateRange,
   getKstDateRangeFromBase,
   isValidDateString,
+  updatePersonaForUser,
 } from "./helpers";
 
 export const maxDuration = 180;
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
     const batchSize = getBatchSize(searchParams.get("batchSize"));
     const baseDate = searchParams.get("baseDate");
     const targetUserId = searchParams.get("userId");
+    const sync = searchParams.get("sync") === "1";
 
     const supabase = getServiceSupabase();
 
@@ -84,6 +86,25 @@ export async function GET(request: NextRequest) {
         });
       }
       users = [{ id: targetUserId }];
+
+      // sync=1: 단일 유저 동기 실행 (테스트용, 즉시 결과 반환)
+      if (sync) {
+        const result = await updatePersonaForUser(
+          supabase,
+          targetUserId,
+          startDate,
+          endDate
+        );
+        return NextResponse.json({
+          ok: true,
+          sync: true,
+          userId: targetUserId,
+          status: result.status,
+          reason: result.reason,
+          startDate,
+          endDate,
+        });
+      }
     } else {
       const { data: usersData, error: usersError } =
         await supabase.auth.admin.listUsers({
@@ -98,6 +119,51 @@ export async function GET(request: NextRequest) {
       users = allUsers.filter((u) =>
         isProFromMetadata(u.user_metadata as Record<string, unknown> | undefined)
       );
+
+      // sync=1: 전체 유저 배치를 QStash 대신 현재 서버에서 동기 실행 (todo_analysis 포함)
+      // QStash 콜백이 프로덕션을 가리키면 배치는 이전 코드로 실행되므로, sync 시 직접 실행
+      if (sync && users.length > 0) {
+        const userIds = users.map((u) => u.id);
+        const batchPayloads: PersonaBatchPayload[] = [];
+        for (let i = 0; i < userIds.length; i += batchSize) {
+          batchPayloads.push({
+            userIds: userIds.slice(i, i + batchSize),
+            startDate,
+            endDate,
+          });
+        }
+        const results: Array<{ userId: string; status: string; reason?: string }> = [];
+        for (const payload of batchPayloads) {
+          for (const uid of payload.userIds) {
+            try {
+              const r = await updatePersonaForUser(
+                supabase,
+                uid,
+                payload.startDate,
+                payload.endDate
+              );
+              results.push({
+                userId: uid,
+                status: r.status,
+                ...(r.reason && { reason: r.reason }),
+              });
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              results.push({ userId: uid, status: "skipped", reason: msg });
+            }
+          }
+        }
+        return NextResponse.json({
+          ok: true,
+          sync: true,
+          startDate,
+          endDate,
+          processed: results.length,
+          updated: results.filter((r) => r.status === "updated").length,
+          skipped: results.filter((r) => r.status === "skipped").length,
+          results,
+        });
+      }
     }
 
     const hasMoreAuthPages = !targetUserId && authPageFull;

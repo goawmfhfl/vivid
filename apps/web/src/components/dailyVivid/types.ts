@@ -49,29 +49,6 @@ export type DailyReportData = {
   /** 내일을 위한 할 일 제안 (회고 전용) */
   suggested_todos_for_tomorrow?: { reason: string; items: string[] };
 
-  // ========== 감정 분석 데이터 ==========
-  /** 감정 valence (-1~1). 문자열로 들어올 수 있음 */
-  ai_mood_valence?: number | string | null;
-  /** 감정 arousal (0~1). 문자열로 들어올 수 있음 */
-  ai_mood_arousal?: number | string | null;
-  /** 감정 사분면 라벨 */
-  emotion_quadrant?: string | null;
-  /** 감정 사분면 설명 */
-  emotion_quadrant_explanation?: string | null;
-  /** 감정 흐름 */
-  emotion_curve?: string[];
-  /** 시간대별 감정 흐름 */
-  emotion_timeline?: { time_range: string; emotion: string }[];
-  /** 대표 감정 */
-  dominant_emotion?: string | null;
-  /** 감정에 영향을 준 사건 */
-  emotion_events?: {
-    emotion: string;
-    event: string;
-    reason?: string | null;
-    suggestion?: string | null;
-  }[];
-  
   // 하위 호환성을 위한 레거시 필드
   /** @deprecated vision_summary는 current_summary를 사용하세요 */
   vision_summary: string;
@@ -87,12 +64,22 @@ export type DailyReportData = {
   dreamer_traits: string[] | null;
 };
 
+import { TodoListItem, TodayFeedbackContent } from "@/types/daily-vivid";
+
 /**
  * 각 섹션 컴포넌트에 전달되는 Props 타입
  */
 export type SectionProps = {
   /** 일일 리포트 데이터 */
   view: DailyReportData;
+  /** 투두 리스트 데이터 (Vivid 타입일 때 사용) */
+  todoLists?: TodoListItem[];
+  /** 투두 리스트 생성 중 여부 */
+  isGeneratingTodo?: boolean;
   /** Pro 멤버십 여부 */
   isPro?: boolean;
+  /** 오늘의 피드백 (todo_analysis 기반) */
+  todayFeedback?: TodayFeedbackContent | null;
+  /** 인사이트(오늘의 피드백 포함) 생성 중 여부 */
+  isLoadingInsight?: boolean;
 };
