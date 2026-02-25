@@ -274,8 +274,8 @@ export function DatePickerBottomSheet({
                     ? COLORS.text.white
                     : COLORS.brand.primary;
                   const reviewDotColor = isActive
-                    ? COLORS.brand.light
-                    : COLORS.brand.primary;
+                    ? COLORS.text.white
+                    : COLORS.dailyVivid.current;
 
                   return (
                     <button

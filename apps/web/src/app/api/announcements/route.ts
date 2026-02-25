@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
         display_from,
         display_until,
         sort_order,
-        created_at
+        created_at,
+        version
       `
       )
       .eq("is_active", true)

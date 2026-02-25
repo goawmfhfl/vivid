@@ -13,9 +13,8 @@ import {
   Menu,
   X,
   Ticket,
-  ClipboardList,
-  LineChart,
   Megaphone,
+  ExternalLink,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -30,15 +29,9 @@ const menuItems = [
     enabled: true,
   },
   {
-    title: "AI 사용량",
-    href: "/admin/ai-usage",
+    title: "사용량",
+    href: "/admin/usage",
     icon: BarChart3,
-    enabled: true,
-  },
-  {
-    title: "사용 분석",
-    href: "/admin/analytics",
-    icon: LineChart,
     enabled: true,
   },
   {
@@ -51,12 +44,6 @@ const menuItems = [
     title: "테스트",
     href: "/admin/test",
     icon: FileText,
-    enabled: true,
-  },
-  {
-    title: "설문 결과",
-    href: "/admin/survey-results",
-    icon: ClipboardList,
     enabled: true,
   },
   {
@@ -149,6 +136,25 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           );
         })}
       </nav>
+
+      {/* 소비자 페이지로 이동 */}
+      <div
+        className="px-4 py-3 border-t"
+        style={{ borderColor: COLORS.border.light }}
+      >
+        <Link
+          href="/"
+          onClick={() => setIsMobileOpen(false)}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover:opacity-90"
+          style={{
+            backgroundColor: COLORS.brand.light + "20",
+            color: COLORS.brand.primary,
+          }}
+        >
+          <ExternalLink className="w-5 h-5" />
+          <span className="text-sm font-medium">소비자 페이지로</span>
+        </Link>
+      </div>
     </div>
   );
 

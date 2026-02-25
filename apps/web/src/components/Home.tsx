@@ -18,6 +18,7 @@ import { WeeklyDateView } from "./home/WeeklyDateView";
 import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
 import { useSubscription } from "@/hooks/useSubscription";
+import { UpdateModal } from "./ui/modals/UpdateModal";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -586,6 +587,9 @@ export function Home({ selectedDate }: HomeProps = {}) {
         open={!!deletingRecordId}
         onOpenChange={(open) => !open && setDeletingRecordId(null)}
       />
+
+      {/* 업데이트 공지: 로그인된 유저가 홈에서만 볼 수 있음 (Home은 withAuth로 보호됨) */}
+      <UpdateModal />
     </div>
   );
 }

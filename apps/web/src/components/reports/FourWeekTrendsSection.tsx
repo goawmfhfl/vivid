@@ -136,7 +136,7 @@ export function FourWeekTrendsSection({
         : 0;
       const todoValues = chunk
         .map(([, r]) => r.todoCompletionScore)
-        .filter((v): v is number => v != null && Number.isFinite(v));
+        .filter((v): v is number => v != null && Number.isFinite(v) && v > 0);
       const weekHasTodoCompletion = todoValues.length > 0;
       const todoCompletionAvg = weekHasTodoCompletion
         ? Math.round(todoValues.reduce((s, v) => s + v, 0) / todoValues.length)
@@ -161,10 +161,10 @@ export function FourWeekTrendsSection({
     const alignmentAverage = Math.round(
       weekPoints.reduce((s, p) => s + p.alignmentAverage, 0) / weekPoints.length
     );
-    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (일자 수로 나누지 않음)
+    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (체크가 하나도 안 된 날은 제외)
     const allTodoScoresInRange = uniqueDates
       .map(([, r]) => r.todoCompletionScore)
-      .filter((v): v is number => v != null && Number.isFinite(v));
+      .filter((v): v is number => v != null && Number.isFinite(v) && v > 0);
     const todoCompletionAverage =
       allTodoScoresInRange.length > 0
         ? Math.round(

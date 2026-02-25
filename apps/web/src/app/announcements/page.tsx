@@ -19,6 +19,7 @@ type Announcement = {
   created_at: string;
   thumbnail_path: string | null;
   thumbnail_url: string | null;
+  version: string | null;
 };
 
 function AnnouncementsPageInner() {
@@ -98,11 +99,25 @@ function AnnouncementsPageInner() {
                     <h3 className="font-semibold truncate" style={{ color: COLORS.text.primary }}>
                       {a.title}
                     </h3>
-                    {dateStr && (
-                      <p className="text-xs mt-0.5" style={{ color: COLORS.text.tertiary }}>
-                        {dateStr}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {a.version && (
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{
+                            backgroundColor: COLORS.brand.light + "40",
+                            color: COLORS.brand.primary,
+                            fontWeight: 500,
+                          }}
+                        >
+                          v{a.version}
+                        </span>
+                      )}
+                      {dateStr && (
+                        <p className="text-xs" style={{ color: COLORS.text.tertiary }}>
+                          {dateStr}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: COLORS.text.tertiary }} />
                 </button>

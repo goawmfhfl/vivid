@@ -16,6 +16,7 @@ type Announcement = {
   is_active: boolean;
   sort_order: number;
   image_count: number;
+  version: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -184,6 +185,9 @@ export function AnnouncementList() {
                   이미지
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold" style={{ color: COLORS.text.primary }}>
+                  버전
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold" style={{ color: COLORS.text.primary }}>
                   노출 기간
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold" style={{ color: COLORS.text.primary }}>
@@ -195,7 +199,7 @@ export function AnnouncementList() {
             <tbody>
               {announcements.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center" style={{ color: COLORS.text.secondary }}>
+                  <td colSpan={7} className="px-4 py-12 text-center" style={{ color: COLORS.text.secondary }}>
                     등록된 공지가 없습니다.
                   </td>
                 </tr>
@@ -218,6 +222,11 @@ export function AnnouncementList() {
                     <td className="px-4 py-3">
                       <span className="text-sm" style={{ color: COLORS.text.secondary }}>
                         {a.image_count}개
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-medium" style={{ color: COLORS.brand.primary }}>
+                        {a.version ?? "-"}
                       </span>
                     </td>
                     <td className="px-4 py-3">

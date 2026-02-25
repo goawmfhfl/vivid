@@ -138,7 +138,7 @@ export default function AdminTestPage() {
   };
 
   return (
-    <div className={cn("space-y-6", SPACING.page.maxWidth)}>
+    <div className="w-full space-y-6">
       <div className="space-y-2">
         <h1
           className={cn(

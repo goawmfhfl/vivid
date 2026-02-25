@@ -142,10 +142,11 @@ export function UpdateModal() {
             <X className="w-5 h-5" />
           </button>
         </DialogClose>
-        <div className="flex flex-col items-center pt-2 pb-3 px-4">
+        <div className="flex flex-col items-center overflow-hidden">
+          {/* 이미지 중심 레이아웃 */}
           <div
-            className="relative w-full aspect-square rounded-xl overflow-hidden flex-1 flex min-h-0"
-            style={{ maxWidth: 340, maxHeight: 340 }}
+            className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
+            style={{ maxWidth: 365 }}
           >
             <img
               src={modal.image_url}
@@ -153,14 +154,15 @@ export function UpdateModal() {
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="flex gap-2 w-full mt-2" style={{ maxWidth: 340 }}>
+          <div className="flex gap-2 w-full p-3" style={{ maxWidth: 365 }}>
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 py-2 rounded-lg text-xs"
+              className="flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors"
               style={{
                 backgroundColor: "transparent",
                 color: COLORS.text.tertiary,
+                border: `1px solid ${COLORS.border.light}`,
               }}
             >
               더이상 보지 않기
@@ -168,7 +170,7 @@ export function UpdateModal() {
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 py-2 rounded-lg text-sm font-medium"
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium"
               style={{
                 backgroundColor: COLORS.brand.primary,
                 color: COLORS.text.white,

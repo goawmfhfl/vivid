@@ -111,7 +111,7 @@ export function FourMonthTrendsSection({
       if (typeof scores.alignmentScore === "number" && Number.isFinite(scores.alignmentScore)) {
         m.alignmentScore.push(scores.alignmentScore);
       }
-      if (scores.todoCompletionScore != null && Number.isFinite(scores.todoCompletionScore)) {
+      if (scores.todoCompletionScore != null && Number.isFinite(scores.todoCompletionScore) && scores.todoCompletionScore > 0) {
         m.todoCompletionScore.push(scores.todoCompletionScore);
       }
     }
@@ -154,10 +154,10 @@ export function FourMonthTrendsSection({
     const alignmentAverage = Math.round(
       monthPoints.reduce((s, p) => s + p.alignmentAverage, 0) / monthPoints.length
     );
-    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (일자 수로 나누지 않음)
+    // 할 일 달성률: 범위 내 실제 투두 작성한 날만 기준으로 평균 (체크가 하나도 안 된 날은 제외)
     const allTodoScoresInRange = uniqueDates
       .map(([, scores]) => scores.todoCompletionScore)
-      .filter((v): v is number => v != null && Number.isFinite(v));
+      .filter((v): v is number => v != null && Number.isFinite(v) && v > 0);
     const todoCompletionAverage =
       allTodoScoresInRange.length > 0
         ? Math.round(

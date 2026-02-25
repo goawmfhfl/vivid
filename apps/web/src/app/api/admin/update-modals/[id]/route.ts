@@ -74,15 +74,25 @@ export async function PATCH(
       destination_path,
       display_from,
       display_until,
+      is_displayed,
     } = body as {
       title?: string;
       image_path?: string;
       destination_path?: string;
       display_from?: string;
       display_until?: string | null;
+      is_displayed?: boolean;
     };
 
     const supabase = getServiceSupabase();
+
+    if (is_displayed === true) {
+      await supabase
+        .from("admin_update_modals")
+        .update({ is_displayed: false, updated_at: new Date().toISOString() })
+        .eq("is_displayed", true);
+    }
+
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
@@ -98,6 +108,7 @@ export async function PATCH(
       updates.display_until = display_until
         ? new Date(display_until).toISOString()
         : null;
+    if (is_displayed !== undefined) updates.is_displayed = is_displayed;
 
     const { error } = await supabase
       .from("admin_update_modals")

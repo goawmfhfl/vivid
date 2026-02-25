@@ -304,8 +304,8 @@ export function WeeklyDateView({
                 ? COLORS.text.white
                 : COLORS.brand.primary;
               const reviewDotColor = isActive
-                ? COLORS.brand.light
-                : COLORS.brand.primary;
+                ? COLORS.text.white
+                : COLORS.dailyVivid.current;
               const dayOfWeek = WEEKDAYS[index];
               const dayNumber = date.getDate();
 

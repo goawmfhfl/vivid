@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   COLORS,
-  SPACING,
   TYPOGRAPHY,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -12,8 +11,10 @@ import { UserList } from "@/app/(admin)/components/UserList";
 import { InquiryList } from "@/app/(admin)/components/InquiryList";
 import { UserFeedbackList } from "@/app/(admin)/components/UserFeedbackList";
 import { AccountDeletionsPage } from "@/app/(admin)/components/AccountDeletionsPage";
+import { SurveyResultsView } from "@/app/(admin)/components/SurveyResultsView";
+import { ClipboardList } from "lucide-react";
 
-type UsersTab = "user-list" | "inquiries" | "feedbacks" | "account-deletions";
+type UsersTab = "user-list" | "inquiries" | "feedbacks" | "account-deletions" | "survey-results";
 
 export default function UserListPage() {
   const [activeTab, setActiveTab] = useState<UsersTab>("user-list");
@@ -22,11 +23,12 @@ export default function UserListPage() {
     { id: "user-list", label: "유저 목록", icon: Users },
     { id: "inquiries", label: "문의사항", icon: MessageSquare },
     { id: "feedbacks", label: "피드백", icon: ThumbsUp },
+    { id: "survey-results", label: "설문 결과", icon: ClipboardList },
     { id: "account-deletions", label: "탈퇴 사유 관리", icon: UserX },
   ];
 
   return (
-    <div className={cn("space-y-6", SPACING.page.maxWidth)}>
+    <div className="w-full space-y-6">
       <div className="space-y-2">
         <h1
           className={cn(
@@ -39,7 +41,7 @@ export default function UserListPage() {
           유저 관리
         </h1>
         <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
-          유저 목록, 문의사항, 피드백, 탈퇴 사유를 확인하고 관리하세요.
+          유저 목록, 문의사항, 피드백, 설문 결과, 탈퇴 사유를 확인하고 관리하세요.
         </p>
       </div>
 
@@ -121,6 +123,30 @@ export default function UserListPage() {
             </p>
           </div>
           <UserFeedbackList />
+        </div>
+      )}
+
+      {activeTab === "survey-results" && (
+        <div className="space-y-6">
+          <div>
+            <h2
+              className={cn(
+                TYPOGRAPHY.h3.fontSize,
+                TYPOGRAPHY.h3.fontWeight,
+                TYPOGRAPHY.h3.lineHeight
+              )}
+              style={{ color: TYPOGRAPHY.h3.color }}
+            >
+              설문 결과
+            </h2>
+            <p
+              className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+              style={{ color: COLORS.text.tertiary }}
+            >
+              설문 응답 결과를 확인하고 분석하세요.
+            </p>
+          </div>
+          <SurveyResultsView />
         </div>
       )}
 

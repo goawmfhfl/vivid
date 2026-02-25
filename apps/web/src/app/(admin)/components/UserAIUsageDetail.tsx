@@ -305,7 +305,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
       {/* 헤더 섹션 */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => router.push("/admin/ai-usage")}
+          onClick={() => router.push("/admin/usage")}
           className="p-2 rounded-lg hover:bg-opacity-50"
           style={{ backgroundColor: COLORS.background.hover }}
         >

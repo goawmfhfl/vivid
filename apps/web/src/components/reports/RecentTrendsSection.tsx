@@ -84,7 +84,7 @@ export function RecentTrendsSection({
     const alignmentAverage = withAlignment.length > 0
       ? Math.round(withAlignment.reduce((sum, row) => sum + (row.alignmentScore ?? 0), 0) / withAlignment.length)
       : 0;
-    const withTodoCompletion = rows.filter((r) => r.todoCompletionScore != null && Number.isFinite(r.todoCompletionScore));
+    const withTodoCompletion = rows.filter((r) => r.todoCompletionScore != null && Number.isFinite(r.todoCompletionScore) && r.todoCompletionScore > 0);
     const hasTodoCompletionData = withTodoCompletion.length > 0;
     const todoCompletionAverage = hasTodoCompletionData
       ? Math.round(
