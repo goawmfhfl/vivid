@@ -22,6 +22,8 @@ const nextConfig = {
   devIndicators: false,
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    workerThreads: false,
+    cpus: 1,
   },
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
