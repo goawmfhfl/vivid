@@ -76,9 +76,9 @@ export function SummariesView() {
   const handleTabChange = (tab: string) => {
     const newTab = tab as "weekly" | "monthly";
     if (newTab === "weekly") {
-      router.push("/analysis?tab=weekly");
+      router.push("/reports?tab=weekly");
     } else {
-      router.push("/analysis?tab=monthly");
+      router.push("/reports?tab=monthly");
     }
   };
 
