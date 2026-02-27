@@ -8,9 +8,6 @@ import { NotionRenderer } from "@/components/notion/NotionRenderer";
 import { getPolicies, getPolicyContent } from "@/lib/server/notion";
 import type { NotionBlock } from "@/lib/types/notion";
 
-/** workUnitAsyncStorage prerender 버그 회피 - generateStaticParams 제거, 동적 렌더로 전환 (Next.js 이슈) */
-export const dynamic = "force-dynamic";
-
 export default async function PolicyPage({
   params,
 }: {
