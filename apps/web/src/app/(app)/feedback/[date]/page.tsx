@@ -1,14 +1,17 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { use } from "react";
+import { useRouter } from "next/navigation";
 import { DailyVividView } from "@/components/dailyVivid/DailyVividView";
 import { withAuth } from "@/components/auth";
 
-function DateFeedbackPage() {
-  const params = useParams();
+function DateFeedbackPage({
+  params,
+}: {
+  params: Promise<{ date: string }>;
+}) {
   const router = useRouter();
-
-  const dateStr = (params?.date ?? "") as string;
+  const { date: dateStr } = use(params);
 
   const handleBack = () => {
     router.push("/logs");

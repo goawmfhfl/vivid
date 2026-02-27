@@ -6,8 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  redirects: async () => [
-    // /analysis -> /reports (쿼리 파라미터 유지)
+  redirects: () => [
+    // /analysis -> /reports (쿼리 파라미터 유지) - sync으로 빌드 워커 이슈 회피
     { source: "/analysis", destination: "/reports", permanent: true },
   ],
   images: {
@@ -22,6 +22,8 @@ const nextConfig = {
   devIndicators: false,
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    workerThreads: false,
+    cpus: 1,
   },
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
-import { useParams } from "next/navigation";
+import { use, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Home } from "@/components/Home";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { withAuth } from "@/components/auth";
 import { QUERY_KEYS } from "@/constants";
 
-function DatePage() {
-  const params = useParams();
-  const date = (params?.date ?? "") as string;
+function DatePage({ params }: { params: Promise<{ date: string }> }) {
+  const { date } = use(params);
   const queryClient = useQueryClient();
 
   const handleRefresh = useCallback(async () => {

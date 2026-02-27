@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { use, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { withAuth } from "@/components/auth";
 import { supabase } from "@/lib/supabase";
 import { COLORS } from "@/lib/design-system";
@@ -15,10 +15,13 @@ type ImageItem = {
   image_url: string;
 };
 
-function AnnouncementDetailPageInner() {
+function AnnouncementDetailPageInner({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  const params = useParams();
-  const id = params?.id as string;
+  const { id } = use(params);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

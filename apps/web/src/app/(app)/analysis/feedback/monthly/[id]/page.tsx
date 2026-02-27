@@ -1,16 +1,19 @@
 "use client";
 
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { MonthlyVividView } from "@/components/monthlyVivid/MonthlyVividView";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants";
 
-export default function MonthlyViewPage() {
+export default function MonthlyViewPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  const params = useParams();
   const queryClient = useQueryClient();
-  const id = params?.id as string;
+  const { id } = use(params);
 
   const handleBack = useCallback(() => {
     // 월간 흐름 및 월간 후보 데이터를 무효화하여 최신 데이터를 가져오도록 함

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -10,10 +10,13 @@ import { NotionRenderer } from "@/components/notion/NotionRenderer";
 import type { NotionBlock } from "@/lib/types/notion";
 import { AuthHeader } from "@/components/forms/AuthHeader";
 
-export default function FAQDetailPage() {
-  const params = useParams();
+export default function FAQDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  const id = params?.id as string;
+  const { id } = use(params);
   const [title, setTitle] = useState<string>("");
   const [blocks, setBlocks] = useState<NotionBlock[]>([]);
   const [loading, setLoading] = useState(true);

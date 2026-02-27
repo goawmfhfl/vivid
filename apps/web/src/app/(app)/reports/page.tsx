@@ -1,5 +1,8 @@
 "use client";
 
+/** 동적 함수(cookies, headers 등) 사용 시 빌드 에러로 원인 파악 */
+export const dynamic = "error";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
