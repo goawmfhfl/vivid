@@ -1,5 +1,5 @@
 {
-  "buildCommand": "rm -rf .next && npx next build --webpack",
+  "buildCommand": "rm -rf .next && npx next build",
   "installCommand": "pnpm install && rm -rf .next/cache",
   "crons": [
     {"path": "/api/cron/update-persona", "schedule": "0 18 * * 0"},
