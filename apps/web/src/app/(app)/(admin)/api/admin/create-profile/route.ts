@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserIdFromCookie,
-} from "../../../../api/utils/auth";
+} from "@/app/api/utils/auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 
 /**

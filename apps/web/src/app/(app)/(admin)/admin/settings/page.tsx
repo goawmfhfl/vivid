@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ModalManagementSection } from "@/app/(admin)/components/ModalManagementSection";
+import { ModalManagementSection } from "@/app/(app)/(admin)/components/ModalManagementSection";
 import { COLORS } from "@/lib/design-system";
 import { Megaphone } from "lucide-react";
 

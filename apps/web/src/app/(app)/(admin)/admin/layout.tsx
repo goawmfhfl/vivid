@@ -1,7 +1,7 @@
 "use client";
 
-import { AdminSidebar } from "@/app/(admin)/components/AdminSidebar";
-import { AdminAuthProvider } from "@/app/(admin)/components/AdminAuthContext";
+import { AdminSidebar } from "@/app/(app)/(admin)/components/AdminSidebar";
+import { AdminAuthProvider } from "@/app/(app)/(admin)/components/AdminAuthContext";
 import { COLORS } from "@/lib/design-system";
 
 export default function AdminLayout({

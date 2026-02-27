@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/app/(admin)/api/admin/util/admin-auth";
+import { requireAdmin } from "@/app/(app)/(admin)/api/admin/util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 
 const BUCKET = "announcement-images";

@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { UserDetail } from "@/app/(admin)/components/UserDetail";
+import { UserDetail } from "@/app/(app)/(admin)/components/UserDetail";
 
 export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

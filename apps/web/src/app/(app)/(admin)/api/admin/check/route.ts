@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserIdFromCookie,
-} from "../../../../api/utils/auth";
+} from "@/app/api/utils/auth";
 import { isAdmin } from "../util/admin-auth";
 
 /**

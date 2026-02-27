@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { BarChart3, LineChart } from "lucide-react";
-import { AIUsagePage } from "@/app/(admin)/components/AIUsagePage";
+import { AIUsagePage } from "@/app/(app)/(admin)/components/AIUsagePage";
 import AdminAnalyticsPage from "../analytics/page";
 
 type UsageTab = "ai-usage" | "analytics";

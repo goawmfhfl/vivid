@@ -3,7 +3,7 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import {
   getAuthenticatedUserId,
   getAuthenticatedUserIdFromCookie,
-} from "../../../../api/utils/auth";
+} from "@/app/api/utils/auth";
 
 /**
  * 관리자 권한 확인 함수

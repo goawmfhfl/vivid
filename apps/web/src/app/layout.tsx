@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { JournalProvider } from "./providers";
-import { BottomNavigation } from "../components/common/BottomNavigation";
-import { GlobalModals } from "../components/ui/modals/GlobalModals";
 
 export const metadata: Metadata = {
   title: "VIVID",
@@ -47,6 +44,10 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+/**
+ * 루트 레이아웃 - Provider 없음 (useContext 0%).
+ * /404 prerender 시 안전. 앱 페이지는 (app)/layout.tsx에서 Provider 적용.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,15 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased hide-scrollbar">
-        <JournalProvider>
-          <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#e4e2dd" }}>
-            <main className="flex-1 hide-scrollbar" style={{ overflowX: "hidden" }}>{children}</main>
-            <BottomNavigation />
-            <GlobalModals />
-          </div>
-        </JournalProvider>
-      </body>
+      <body className="antialiased hide-scrollbar">{children}</body>
     </html>
   );
 }

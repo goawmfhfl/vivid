@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { UserAIUsageDetail } from "@/app/(admin)/components/UserAIUsageDetail";
+import { UserAIUsageDetail } from "@/app/(app)/(admin)/components/UserAIUsageDetail";
 
 export default function UserAIUsageDetailPage({
   params,

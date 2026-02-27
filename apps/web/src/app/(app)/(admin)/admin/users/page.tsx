@@ -7,11 +7,11 @@ import {
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { Users, MessageSquare, ThumbsUp, UserX } from "lucide-react";
-import { UserList } from "@/app/(admin)/components/UserList";
-import { InquiryList } from "@/app/(admin)/components/InquiryList";
-import { UserFeedbackList } from "@/app/(admin)/components/UserFeedbackList";
-import { AccountDeletionsPage } from "@/app/(admin)/components/AccountDeletionsPage";
-import { SurveyResultsView } from "@/app/(admin)/components/SurveyResultsView";
+import { UserList } from "@/app/(app)/(admin)/components/UserList";
+import { InquiryList } from "@/app/(app)/(admin)/components/InquiryList";
+import { UserFeedbackList } from "@/app/(app)/(admin)/components/UserFeedbackList";
+import { AccountDeletionsPage } from "@/app/(app)/(admin)/components/AccountDeletionsPage";
+import { SurveyResultsView } from "@/app/(app)/(admin)/components/SurveyResultsView";
 import { ClipboardList } from "lucide-react";
 
 type UsersTab = "user-list" | "inquiries" | "feedbacks" | "account-deletions" | "survey-results";
