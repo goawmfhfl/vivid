@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { upsertSubscription } from "@/lib/subscription-utils";
+import {
+  upsertSubscription,
+  normalizeAndValidateStatus,
+  normalizeAndValidatePlan,
+  VALID_SUBSCRIPTION_STATUSES,
+} from "@/lib/subscription-utils";
 
 /**
  * GET /api/admin/subscriptions
@@ -128,16 +133,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["free", "pro"].includes(plan)) {
+    const validatedPlan = normalizeAndValidatePlan(plan);
+    if (!validatedPlan) {
       return NextResponse.json(
         { error: "plan은 'free' 또는 'pro'여야 합니다." },
         { status: 400 }
       );
     }
 
-    if (status && !["none", "active", "canceled"].includes(status)) {
+    const validatedStatus = status
+      ? normalizeAndValidateStatus(status)
+      : "active";
+    if (validatedStatus === null) {
       return NextResponse.json(
-        { error: "유효하지 않은 status입니다. (none, active, canceled만 가능)" },
+        {
+          error: "유효하지 않은 status입니다.",
+          received: status,
+          expected: [...VALID_SUBSCRIPTION_STATUSES],
+        },
         { status: 400 }
       );
     }
@@ -148,8 +161,8 @@ export async function POST(request: NextRequest) {
     const resolvedStartedAt = started_at || current_period_start || null;
     
     await upsertSubscription(userId, {
-      plan: plan as "free" | "pro",
-      status: (status as "none" | "active" | "canceled") || "active",
+      plan: validatedPlan,
+      status: validatedStatus,
       expires_at: expires_at || null,
       started_at: resolvedStartedAt,
     });
@@ -220,29 +233,36 @@ export async function PATCH(request: NextRequest) {
     // 업데이트할 데이터 준비
     const updateData: {
       plan?: "free" | "pro";
-      status?: "none" | "active" | "canceled";
+      status?: "none" | "active" | "canceled" | "expired" | "past_due";
       expires_at?: string | null;
       started_at?: string | null;
     } = {};
 
-    if (plan) {
-      if (!["free", "pro"].includes(plan)) {
+    if (plan !== undefined && plan !== null && plan !== "") {
+      const validatedPlan = normalizeAndValidatePlan(plan);
+      if (!validatedPlan) {
         return NextResponse.json(
           { error: "plan은 'free' 또는 'pro'여야 합니다." },
           { status: 400 }
         );
       }
-      updateData.plan = plan as "free" | "pro";
+      updateData.plan = validatedPlan;
     }
 
-    if (status) {
-      if (!["none", "active", "canceled"].includes(status)) {
+    if (status !== undefined && status !== null && status !== "") {
+      const validatedStatus = normalizeAndValidateStatus(status);
+      if (validatedStatus === null) {
         return NextResponse.json(
-          { error: "유효하지 않은 status입니다." },
+          {
+            error: "유효하지 않은 status입니다.",
+            received: status,
+            receivedType: typeof status,
+            expected: [...VALID_SUBSCRIPTION_STATUSES],
+          },
           { status: 400 }
         );
       }
-      updateData.status = status as "none" | "active" | "canceled";
+      updateData.status = validatedStatus;
     }
 
     if (expires_at !== undefined) {
@@ -254,11 +274,27 @@ export async function PATCH(request: NextRequest) {
     }
 
     // user_metadata 업데이트
+    // null을 명시적으로 전달한 경우에도 저장되도록 함 (?? 사용 시 null이 기존 값으로 대체되는 문제 방지)
+    const resolvedPlan =
+      updateData.plan ?? (currentSubscription.plan as "free" | "pro") ?? "free";
+    const resolvedStatus =
+      updateData.status ??
+      (currentSubscription.status as string) ??
+      "none";
+    const resolvedExpiresAt =
+      "expires_at" in updateData
+        ? (updateData.expires_at ?? null)
+        : (currentSubscription.expires_at ?? null);
+    const resolvedStartedAt =
+      "started_at" in updateData
+        ? (updateData.started_at ?? null)
+        : (currentSubscription.started_at ?? null);
+
     await upsertSubscription(userId, {
-      plan: updateData.plan || (currentSubscription.plan as "free" | "pro") || "free",
-      status: updateData.status || (currentSubscription.status as "none" | "active" | "canceled") || "none",
-      expires_at: updateData.expires_at ?? currentSubscription.expires_at ?? null,
-      started_at: updateData.started_at ?? currentSubscription.started_at ?? null,
+      plan: resolvedPlan,
+      status: resolvedStatus as "none" | "active" | "canceled" | "expired" | "past_due",
+      expires_at: resolvedExpiresAt,
+      started_at: resolvedStartedAt,
     });
 
     return NextResponse.json({

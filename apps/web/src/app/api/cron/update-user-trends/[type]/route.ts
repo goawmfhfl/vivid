@@ -6,15 +6,23 @@ import { API_ENDPOINTS } from "@/constants";
 import {
   updateUserTrendsForUser,
   updateUserTrendsMonthlyForUser,
-} from "./helpers";
+} from "../helpers";
 import {
   getKstDateRangeFromBase,
   getPreviousWeekKstRange,
   getPreviousMonthKstRange,
   isValidDateString,
-} from "../update-persona/helpers";
+} from "../../update-persona/helpers";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 180;
+
+const REQUIRED_ENV = [
+  "CRON_SECRET",
+  "QSTASH_TOKEN",
+  "QSTASH_CURRENT_SIGNING_KEY",
+  "QSTASH_NEXT_SIGNING_KEY",
+] as const;
 
 type UserTrendsBatchPayload = {
   userIds: string[];
@@ -53,9 +61,31 @@ function isAuthorizedCron(request: NextRequest): boolean {
   return isSecretValid || isVercelCron || isDevSecret;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ type: string }> }
+) {
   if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { type: typeParam } = await context.params;
+  const type = typeParam as "weekly" | "monthly";
+
+  if (type !== "weekly" && type !== "monthly") {
+    return NextResponse.json(
+      { error: "Invalid type. Use /weekly or /monthly" },
+      { status: 404 }
+    );
+  }
+
+  const missingEnv = REQUIRED_ENV.filter((k) => !process.env[k]);
+  if (missingEnv.length) {
+    console.error("[cron] update-user-trends missing env:", missingEnv);
+    return NextResponse.json(
+      { error: "Configuration error", missing: missingEnv },
+      { status: 500 }
+    );
   }
 
   try {
@@ -69,7 +99,8 @@ export async function GET(request: NextRequest) {
     const baseDate = searchParams.get("baseDate");
     const targetUserId = searchParams.get("userId");
     const sync = searchParams.get("sync") === "1";
-    const type = (searchParams.get("type") || "weekly") as "weekly" | "monthly";
+
+    console.log("[cron] update-user-trends invoked", { type, page, limit });
 
     if (baseDate && !isValidDateString(baseDate)) {
       return NextResponse.json(
@@ -174,6 +205,7 @@ export async function GET(request: NextRequest) {
       users = allUsers.filter((user) =>
         isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)
       );
+      console.log("[cron] update-user-trends Pro users:", users.length);
     }
 
     // 다음 페이지 존재 여부: auth에서 full page를 받았으면 더 있을 수 있음
@@ -186,8 +218,8 @@ export async function GET(request: NextRequest) {
         const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
         const cronSecret = process.env.CRON_SECRET;
         const qstash = getQstashClient();
-        const nextUrl = new URL(`${baseUrl}/api/cron/update-user-trends`);
-        nextUrl.searchParams.set("type", type);
+        const nextPath = `${baseUrl}/api/cron/update-user-trends/${type}`;
+        const nextUrl = new URL(nextPath);
         nextUrl.searchParams.set("page", String(nextPage));
         nextUrl.searchParams.set("limit", String(limit));
         nextUrl.searchParams.set("batchSize", String(batchSize));
@@ -242,12 +274,14 @@ export async function GET(request: NextRequest) {
       )
     );
 
+    console.log("[cron] update-user-trends published batches:", batches.length);
+
     // 다음 페이지가 있으면 QStash로 체이닝 (모든 Pro 유저 처리)
     let nextPageScheduled = false;
     if (nextPage) {
       const cronSecret = process.env.CRON_SECRET;
-      const nextUrl = new URL(`${baseUrl}/api/cron/update-user-trends`);
-      nextUrl.searchParams.set("type", type);
+      const nextPath = `${baseUrl}/api/cron/update-user-trends/${type}`;
+      const nextUrl = new URL(nextPath);
       nextUrl.searchParams.set("page", String(nextPage));
       nextUrl.searchParams.set("limit", String(limit));
       nextUrl.searchParams.set("batchSize", String(batchSize));

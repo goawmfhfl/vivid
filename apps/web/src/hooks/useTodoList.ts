@@ -33,6 +33,7 @@ export function useTodoListForDate(date: string | null) {
     queryFn: () => fetchTodoListByDate(date!),
     enabled: !!date,
     staleTime: 0,
+    gcTime: 0, // 할 일 섹션: 날짜별 캐시 혼선 방지
     refetchOnMount: "always",
   });
 }

@@ -36,12 +36,14 @@ const fetchDailyVividByDate = async (
     return {
       todoLists: result.todoLists,
       hasNativeTodoList: result.hasNativeTodoList ?? false,
+      report_date: date,
     } as DailyVividRow;
   }
   if (Array.isArray(result.todoLists)) {
     return {
       todoLists: result.todoLists,
       hasNativeTodoList: result.hasNativeTodoList ?? false,
+      report_date: date,
     } as DailyVividRow;
   }
   return null;
@@ -101,6 +103,7 @@ export const useGetDailyVivid = (
     queryFn: () => fetchDailyVividByDate(date, generationType),
     enabled: !!date,
     staleTime: 0, // 보기/생성하기 버튼 상태 정확도를 위해 항상 최신 데이터
+    gcTime: 0, // 할 일 섹션: 날짜별 캐시 혼선 방지를 위해 오래된 날짜 캐시 즉시 정리
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     refetchOnMount: "always",

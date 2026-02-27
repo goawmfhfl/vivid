@@ -1,6 +1,43 @@
 import { getServiceSupabase } from "./supabase-service";
 import type { SubscriptionVerification, SubscriptionMetadata } from "@/types/subscription";
 
+/** 허용되는 구독 상태 (API 검증용) */
+export const VALID_SUBSCRIPTION_STATUSES = [
+  "none",
+  "active",
+  "canceled",
+  "expired",
+  "past_due",
+] as const;
+
+const STATUS_SET = new Set<string>(VALID_SUBSCRIPTION_STATUSES);
+
+/** 허용되는 플랜 (API 검증용) */
+export const VALID_PLANS = ["free", "pro"] as const;
+
+/** status 값을 정규화하고 검증. 유효하면 정규화된 문자열 반환, 아니면 null */
+export function normalizeAndValidateStatus(
+  value: unknown
+): (typeof VALID_SUBSCRIPTION_STATUSES)[number] | null {
+  if (value === undefined || value === null) return null;
+  const str = String(value).trim().toLowerCase();
+  if (STATUS_SET.has(str)) {
+    return str as (typeof VALID_SUBSCRIPTION_STATUSES)[number];
+  }
+  return null;
+}
+
+/** plan 값을 정규화하고 검증 */
+export function normalizeAndValidatePlan(
+  value: unknown
+): (typeof VALID_PLANS)[number] | null {
+  if (value === undefined || value === null) return null;
+  const str = String(value).trim().toLowerCase();
+  return VALID_PLANS.includes(str as (typeof VALID_PLANS)[number])
+    ? (str as (typeof VALID_PLANS)[number])
+    : null;
+}
+
 /**
  * user_metadata만으로 Pro 여부 판단 (동기, listUsers 결과 필터용)
  */
@@ -16,7 +53,7 @@ export function isProFromMetadata(userMetadata: Record<string, unknown> | undefi
   const now = new Date();
   return (
     plan === "pro" &&
-    status === "active" &&
+    (status === "active" || status === "canceled") &&
     started_at !== null &&
     started_at < now &&
     expires_at !== null &&
@@ -75,10 +112,10 @@ export async function verifySubscription(
   const isExpired = expires_at ? expires_at < now : false;
 
   // Pro 멤버십 체크
-  // plan이 "pro", status가 "active", started_at이 현재보다 과거, expires_at이 현재보다 미래일 때 Pro 멤버십
+  // plan이 "pro", status가 "active" 또는 "canceled"(만료 전까지 Pro 유지), started_at 과거, expires_at 미래일 때 Pro
   const isPro =
     plan === "pro" &&
-    status === "active" &&
+    (status === "active" || status === "canceled") &&
     started_at !== null &&
     started_at < now &&
     expires_at !== null &&
@@ -98,17 +135,15 @@ export async function updateSubscriptionMetadata(
   userId: string,
   subscriptionData: {
     plan: "free" | "pro";
-    status: "none" | "active" | "canceled";
+    status: "none" | "active" | "canceled" | "expired" | "past_due";
     started_at?: string | null;
     expires_at?: string | null;
   }
 ): Promise<void> {
   const supabase = getServiceSupabase();
 
-  // Service Role을 사용하여 사용자 정보 가져오기
-  const { data: { user }, error: getUserError } = await supabase.auth.admin.getUserById(
-    userId
-  );
+  const { data: { user }, error: getUserError } =
+    await supabase.auth.admin.getUserById(userId);
 
   if (getUserError || !user) {
     throw new Error(`Failed to get user: ${getUserError?.message || "User not found"}`);
@@ -117,26 +152,31 @@ export async function updateSubscriptionMetadata(
   const currentMetadata = user.user_metadata || {};
   const currentSubscription = (currentMetadata.subscription as SubscriptionMetadata) || {};
 
-  // 기존 구독이 pro이고 새로운 요청이 free면 업데이트하지 않음
-  if (currentSubscription.plan === "pro" && subscriptionData.plan === "free") {
-    console.log("[SubscriptionUtils] Pro 구독 유지 - downgrade 방지");
-    return; // 기존 pro 구독 유지
+  // started_at 처리: 명시적으로 전달된 값(null 포함) > 기존 값 > null
+  // undefined가 아닌 null을 전달한 경우에는 null로 저장 (?? 사용 시 null이 기존 값으로 대체되는 문제 방지)
+  // Pro 플랜으로 업그레이드 시 started_at이 undefined(미전달)이고 기존 값도 없을 때만 현재 시간으로 설정
+  let startedAt: string | null;
+  if (subscriptionData.started_at !== undefined) {
+    startedAt = subscriptionData.started_at ?? null;
+  } else {
+    startedAt = currentSubscription.started_at ?? null;
+    if (subscriptionData.plan === "pro" && subscriptionData.status === "active" && !startedAt) {
+      startedAt = new Date().toISOString();
+      console.log("[SubscriptionUtils] started_at이 없어서 현재 시간으로 설정:", startedAt);
+    }
   }
 
-  // started_at 처리: 명시적으로 전달된 값 > 기존 값 > null
-  // Pro 플랜으로 업그레이드 시 started_at이 없으면 현재 시간으로 설정
-  let startedAt = subscriptionData.started_at ?? currentSubscription.started_at ?? null;
-  if (subscriptionData.plan === "pro" && subscriptionData.status === "active" && !startedAt) {
-    startedAt = new Date().toISOString();
-    console.log("[SubscriptionUtils] started_at이 없어서 현재 시간으로 설정:", startedAt);
-  }
+  // expires_at 처리: 명시적으로 전달된 값(null 포함) > 기존 값 > null
+  const expiresAt =
+    subscriptionData.expires_at !== undefined
+      ? (subscriptionData.expires_at ?? null)
+      : (currentSubscription.expires_at ?? null);
 
-  // 구독 정보 업데이트 (기존 값 보존)
   const subscriptionMetadata: SubscriptionMetadata = {
     plan: subscriptionData.plan,
     status: subscriptionData.status,
     started_at: startedAt,
-    expires_at: subscriptionData.expires_at ?? currentSubscription.expires_at ?? null,
+    expires_at: expiresAt,
     updated_at: new Date().toISOString(),
   };
 
@@ -170,7 +210,7 @@ export async function upsertSubscription(
   userId: string,
   subscriptionData: {
     plan: "free" | "pro";
-    status: "none" | "active" | "canceled";
+    status: "none" | "active" | "canceled" | "expired" | "past_due";
     started_at?: string | null;
     expires_at?: string | null;
   }

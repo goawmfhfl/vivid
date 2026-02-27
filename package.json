@@ -19,10 +19,16 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "patch-package": "^8.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    }
   }
 }

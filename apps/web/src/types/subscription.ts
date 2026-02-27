@@ -1,7 +1,12 @@
 // 구독 정보 타입 정의
 
 export type SubscriptionPlan = "free" | "pro";
-export type SubscriptionStatus = "none" | "active" | "canceled";
+export type SubscriptionStatus =
+  | "none"
+  | "active"
+  | "canceled"
+  | "expired"
+  | "past_due";
 
 // user_metadata에 저장되는 구독 정보
 export interface SubscriptionMetadata {

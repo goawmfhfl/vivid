@@ -1,12 +1,27 @@
 "use client";
 
-import { Home } from "@/components/Home";
-import { withAuth } from "@/components/auth";
+import { useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { Home } from "@/components/Home";
+import { PullToRefresh } from "@/components/common/PullToRefresh";
+import { withAuth } from "@/components/auth";
+import { QUERY_KEYS } from "@/constants";
 
 function DatePage() {
   const params = useParams();
   const date = (params?.date ?? "") as string;
+  const queryClient = useQueryClient();
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.RECORDS] }),
+      queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.RECORDS, "dates", "all"],
+      }),
+      queryClient.refetchQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] }),
+    ]);
+  }, [queryClient]);
 
   // 날짜 형식 검증 (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -18,7 +33,11 @@ function DatePage() {
     );
   }
 
-  return <Home selectedDate={date} />;
+  return (
+    <PullToRefresh onRefresh={handleRefresh}>
+      <Home selectedDate={date} />
+    </PullToRefresh>
+  );
 }
 
 export default withAuth(DatePage);

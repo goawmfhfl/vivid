@@ -6,9 +6,14 @@ import {
   SafeAreaView,
   StatusBar,
   Text,
+  Pressable,
+  Alert,
+  Platform,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import Purchases from "react-native-purchases";
 import { supabase } from "../lib/supabase";
 
 const WEB_APP_URL_BASE =
@@ -22,9 +27,11 @@ const WEB_APP_URL = WEB_APP_URL_BASE
   : "";
 
 export default function Page() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const webViewRef = useRef<WebView>(null);
+  const purchaseSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideNativeSplash = React.useCallback(async () => {
     try {
       await SplashScreen.hideAsync();
@@ -87,24 +94,188 @@ export default function Page() {
     void hideNativeSplash();
   };
 
-  // WebView에서 메시지 수신 (웹 앱과 통신)
   const handleMessage = (event: any) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
-      console.log("Message from web:", data);
-      // 여기서 웹 앱과의 통신 처리
-    } catch (error) {
-      console.error("Failed to parse message:", error);
+      const data = JSON.parse(event.nativeEvent.data) as {
+        type?: string;
+        plan?: string;
+        userId?: string;
+      };
+      if (data.type === "SUPABASE_SESSION_READY" && data.userId && Platform.OS === "ios") {
+        Purchases.logIn(data.userId).catch((e) =>
+          console.warn("[RevenueCat] logIn from SUPABASE_SESSION_READY failed:", e)
+        );
+      } else if (data.type === "MEMBERSHIP_LOADED") {
+        console.log("[Membership] MEMBERSHIP_LOADED 수신 → 가격 전송 시작");
+        void sendOfferingsToWeb();
+      } else if (
+        data.type === "PURCHASE" &&
+        (data.plan === "annual" || data.plan === "monthly")
+      ) {
+        console.log("[Membership] 지금 시작하기 → PURCHASE 수신, plan:", data.plan);
+        void handlePurchaseFromWeb(data.plan);
+      } else if (data.type === "PURCHASE_SYNC_DONE") {
+        console.log("[Membership] 구독 sync 완료 수신 → 홈으로 이동");
+        if (purchaseSyncTimeoutRef.current) {
+          clearTimeout(purchaseSyncTimeoutRef.current);
+          purchaseSyncTimeoutRef.current = null;
+        }
+        router.replace("/");
+      }
+    } catch {
+      // ignore parse errors
+    }
+  };
+
+  const sendOfferingsToWeb = async () => {
+    if (!webViewRef.current) return;
+    try {
+      const offerings = await Purchases.getOfferings();
+      const current = offerings.current ?? offerings.all["Default"];
+      if (current) {
+        const payload = {
+          type: "OFFERINGS",
+          annual: current.annual
+            ? { priceString: current.annual.product.priceString }
+            : null,
+          monthly: current.monthly
+            ? { priceString: current.monthly.product.priceString }
+            : null,
+        };
+        console.log("[Membership] OFFERINGS 전송:", payload);
+        webViewRef.current.postMessage(JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.warn("[Membership] OFFERINGS 조회/전송 실패:", e);
+    }
+  };
+
+  const handlePurchaseFromWeb = async (plan: "annual" | "monthly") => {
+    console.log("[Membership] handlePurchaseFromWeb 시작, plan:", plan);
+    try {
+      // RevenueCat app_user_id = Supabase user id 보장 (웹훅 404 방지)
+      if (Platform.OS === "ios") {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await Purchases.logIn(session.user.id).catch((e) =>
+            console.warn("[RevenueCat] logIn before purchase failed:", e)
+          );
+        }
+      }
+      const offerings = await Purchases.getOfferings();
+      const current = offerings.current ?? offerings.all["Default"];
+      if (!current) {
+        console.warn("[Membership] 상품 정보 없음");
+        Alert.alert("오류", "상품 정보를 불러올 수 없습니다.");
+        return;
+      }
+      const pkg = plan === "annual" ? current.annual : current.monthly;
+      if (!pkg) {
+        console.warn("[Membership] 선택한 상품 없음, plan:", plan);
+        Alert.alert("오류", "선택한 상품을 찾을 수 없습니다.");
+        return;
+      }
+      console.log("[Membership] purchasePackage 호출 중...");
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+      const isPro = customerInfo.entitlements.active["pro"] != null;
+      console.log("[Membership] 결제 완료, isPro:", isPro);
+      if (isPro) {
+        // 1) 네이티브에 세션이 있으면 API 직접 호출 (fallback)
+        const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
+        const tryNativeSync = async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token && apiBase) {
+              const res = await fetch(
+                `${apiBase}/api/subscriptions/complete-purchase`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`,
+                  },
+                  body: JSON.stringify({ planType: plan }),
+                }
+              );
+              if (res.ok) {
+                console.log("[Membership] 네이티브에서 구독 sync 완료");
+                router.replace("/");
+                return true;
+              }
+            }
+          } catch (_e) {
+            // 무시
+          }
+          return false;
+        };
+
+        const nativeDone = await tryNativeSync();
+        if (nativeDone) return;
+
+        // 2) 웹(WebView)에서 sync - localStorage에 세션이 있음
+        try {
+          const escapedPlan = plan.replace(/"/g, '\\"');
+          const script = `(function(){
+            var p="${escapedPlan}";
+            var postDone=function(){try{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:"PURCHASE_SYNC_DONE"}));}catch(e){}};
+            if(window.__completePurchaseSync){
+              window.__completePurchaseSync(p).then(postDone).catch(postDone);
+            }else{
+              console.warn("[Membership] __completePurchaseSync 없음");
+              postDone();
+            }
+            true;
+          })();`;
+          webViewRef.current?.injectJavaScript(script);
+        } catch (injErr) {
+          console.warn("[Membership] injectJavaScript 오류:", injErr);
+        }
+
+        // 3) 3초 이내 PURCHASE_SYNC_DONE 미수신 시에도 홈으로 이동
+        purchaseSyncTimeoutRef.current = setTimeout(() => {
+          purchaseSyncTimeoutRef.current = null;
+          router.replace("/");
+        }, 3000);
+      }
+    } catch (e) {
+      const err = e as {
+        userCancelled?: boolean;
+        code?: number;
+        message?: string;
+      };
+      const cancelled =
+        err.userCancelled === true ||
+        err.code === 1 ||
+        /cancelled|canceled/i.test((err?.message as string) ?? "");
+      console.log("[Membership] 결제 에러:", {
+        cancelled,
+        code: err.code,
+        message: err?.message,
+      });
+      if (!cancelled) {
+        Alert.alert(
+          "결제 실패",
+          (err?.message as string) ?? "결제 중 오류가 발생했습니다."
+        );
+      }
+      // 취소 시 Alert는 patchConsoleForPurchaseCancel에서 1회만 표시
     }
   };
 
   // Supabase 세션 확인 및 WebView에 전달
   React.useEffect(() => {
+    const auth = supabase.auth as {
+      getSession: () => Promise<{ data: { session: unknown } }>;
+      onAuthStateChange: (
+        cb: (e: unknown, s: unknown) => void
+      ) => { data: { subscription: { unsubscribe: () => void } } };
+    };
+
     const checkSession = async () => {
       try {
         const {
           data: { session },
-        } = await supabase.auth.getSession();
+        } = await auth.getSession();
         if (session && webViewRef.current) {
           // 세션 정보를 WebView로 전달할 수 있습니다
           webViewRef.current.postMessage(
@@ -124,7 +295,7 @@ export default function Page() {
     // Supabase 인증 상태 변화 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    } = auth.onAuthStateChange((_event: unknown, session: unknown) => {
       if (webViewRef.current) {
         webViewRef.current.postMessage(
           JSON.stringify({
@@ -156,6 +327,18 @@ export default function Page() {
             {WEB_APP_URL ? (
               <Text style={styles.errorUrl}>URL: {WEB_APP_URL}</Text>
             ) : null}
+            <Pressable
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed && styles.retryButtonPressed,
+              ]}
+              onPress={() => {
+                setError(null);
+                setLoading(true);
+              }}
+            >
+              <Text style={styles.retryButtonText}>다시 시도</Text>
+            </Pressable>
           </View>
         </View>
       )}
@@ -165,8 +348,18 @@ export default function Page() {
           source={{ uri: WEB_APP_URL }}
         style={styles.webview}
         onLoadEnd={handleLoadEnd}
-        onError={handleError}
+          onError={handleError}
         onMessage={handleMessage}
+        injectedJavaScriptBeforeContentLoaded={`
+          window.ReactNativeWebView = {
+            postMessage: function(data) {
+              var msg = typeof data === 'string' ? data : JSON.stringify(data);
+              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ReactNativeWebView) {
+                window.webkit.messageHandlers.ReactNativeWebView.postMessage(msg);
+              }
+            }
+          };
+        `}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         sharedCookiesEnabled={true}
@@ -219,6 +412,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAFAF8",
     zIndex: 2,
     padding: 20,
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: "#6B7A6F",
+    borderRadius: 8,
+  },
+  retryButtonPressed: {
+    opacity: 0.8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   errorBox: {
     backgroundColor: "white",

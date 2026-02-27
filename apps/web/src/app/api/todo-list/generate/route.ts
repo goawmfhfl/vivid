@@ -11,6 +11,7 @@ import {
   saveTodoListItems,
   decryptTodoListItems,
   MANUAL_ADD_CATEGORY,
+  TodoListItemRow,
 } from "@/app/api/daily-vivid/db-service";
 import { encryptDailyVivid } from "@/lib/jsonb-encryption";
 
@@ -75,12 +76,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { isPro } = await verifySubscription(userId);
-    if (!isPro) {
-      return NextResponse.json(
-        { error: "Pro 멤버십이 필요합니다." },
-        { status: 403 }
-      );
-    }
 
     const supabase = getServiceSupabase();
     const dailyVivid = await getOrCreateDailyVividForDate(supabase, userId, date);
@@ -121,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const existingManual =
       existingRows?.length
-        ? decryptTodoListItems(existingRows)
+        ? decryptTodoListItems(existingRows as TodoListItemRow[])
             .filter((r) => (r.category ?? "").trim() === MANUAL_ADD_CATEGORY)
             .map((r) => ({
               contents: r.contents,

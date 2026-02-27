@@ -442,21 +442,17 @@ export function UserDetail({ userId }: UserDetailProps) {
         expires_at?: string | null;
       } = {
         userId: user.id,
+        plan: subscriptionEditData.plan || undefined,
+        status: subscriptionEditData.status || undefined,
+        started_at:
+          subscriptionEditData.started_at !== undefined
+            ? subscriptionEditData.started_at || null
+            : undefined,
+        expires_at:
+          subscriptionEditData.expires_at !== undefined
+            ? subscriptionEditData.expires_at || null
+            : undefined,
       };
-
-      if (subscriptionEditData.plan) {
-        updatePayload.plan = subscriptionEditData.plan;
-      }
-      if (subscriptionEditData.status) {
-        updatePayload.status = subscriptionEditData.status;
-      }
-      // started_at과 expires_at은 빈 문자열이면 null로 전송
-      if (subscriptionEditData.started_at !== undefined) {
-        updatePayload.started_at = subscriptionEditData.started_at || null;
-      }
-      if (subscriptionEditData.expires_at !== undefined) {
-        updatePayload.expires_at = subscriptionEditData.expires_at || null;
-      }
 
       const response = await adminApiFetch("/api/admin/subscriptions", {
         method: "PATCH",
@@ -465,8 +461,12 @@ export function UserDetail({ userId }: UserDetailProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const detail =
+          errorData.received != null
+            ? ` (수신값: ${JSON.stringify(errorData.received)})`
+            : "";
         throw new Error(
-          errorData.error || "구독 정보를 수정하는데 실패했습니다."
+          (errorData.error || "구독 정보를 수정하는데 실패했습니다.") + detail
         );
       }
 
@@ -917,6 +917,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                       })
                     }
                     options={[
+                      { value: "none", label: "없음" },
                       { value: "active", label: "활성" },
                       { value: "canceled", label: "취소됨" },
                       { value: "expired", label: "만료됨" },
@@ -930,22 +931,43 @@ export function UserDetail({ userId }: UserDetailProps) {
                     >
                       구독 시작일
                     </label>
-                    <input
-                      type="date"
-                      value={subscriptionEditData.started_at}
-                      onChange={(e) =>
-                        setSubscriptionEditData({
-                          ...subscriptionEditData,
-                          started_at: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-lg border text-base"
-                      style={{
-                        borderColor: COLORS.border.input,
-                        backgroundColor: COLORS.background.card,
-                        color: COLORS.text.primary,
-                      }}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="date"
+                        value={subscriptionEditData.started_at}
+                        onChange={(e) =>
+                          setSubscriptionEditData({
+                            ...subscriptionEditData,
+                            started_at: e.target.value,
+                          })
+                        }
+                        className="flex-1 px-4 py-2.5 rounded-lg border text-base min-w-0"
+                        style={{
+                          borderColor: COLORS.border.input,
+                          backgroundColor: COLORS.background.card,
+                          color: COLORS.text.primary,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSubscriptionEditData({
+                            ...subscriptionEditData,
+                            started_at: "",
+                          })
+                        }
+                        className="px-3 py-2 text-sm rounded-lg shrink-0"
+                        style={{
+                          color: COLORS.text.secondary,
+                          backgroundColor: COLORS.background.hover,
+                        }}
+                      >
+                        지우기
+                      </button>
+                    </div>
+                    <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+                      비어 있으면 Pro로 인정되지 않음
+                    </p>
                   </div>
                   <div>
                     <label
@@ -954,22 +976,43 @@ export function UserDetail({ userId }: UserDetailProps) {
                     >
                       만료일
                     </label>
-                    <input
-                      type="date"
-                      value={subscriptionEditData.expires_at}
-                      onChange={(e) =>
-                        setSubscriptionEditData({
-                          ...subscriptionEditData,
-                          expires_at: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 rounded-lg border text-base"
-                      style={{
-                        borderColor: COLORS.border.input,
-                        backgroundColor: COLORS.background.card,
-                        color: COLORS.text.primary,
-                      }}
-                    />
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="date"
+                        value={subscriptionEditData.expires_at}
+                        onChange={(e) =>
+                          setSubscriptionEditData({
+                            ...subscriptionEditData,
+                            expires_at: e.target.value,
+                          })
+                        }
+                        className="flex-1 px-4 py-2.5 rounded-lg border text-base min-w-0"
+                        style={{
+                          borderColor: COLORS.border.input,
+                          backgroundColor: COLORS.background.card,
+                          color: COLORS.text.primary,
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSubscriptionEditData({
+                            ...subscriptionEditData,
+                            expires_at: "",
+                          })
+                        }
+                        className="px-3 py-2 text-sm rounded-lg shrink-0"
+                        style={{
+                          color: COLORS.text.secondary,
+                          backgroundColor: COLORS.background.hover,
+                        }}
+                      >
+                        지우기
+                      </button>
+                    </div>
+                    <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+                      비어 있으면 Pro로 인정되지 않음
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1075,7 +1118,11 @@ export function UserDetail({ userId }: UserDetailProps) {
                           ? "취소됨"
                           : user.subscription.status === "expired"
                           ? "만료됨"
-                          : "연체"}
+                          : user.subscription.status === "past_due"
+                          ? "연체"
+                          : user.subscription.status === "none"
+                          ? "없음"
+                          : user.subscription.status}
                       </span>
                     </div>
                     <div>

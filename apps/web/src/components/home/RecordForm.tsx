@@ -116,17 +116,12 @@ export function RecordForm({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // 사용 가능한 기록 타입 가져오기 (비비드 → 회고 순, 회고는 Pro 아니어도 드롭다운에 표시)
+  // 사용 가능한 기록 타입 가져오기 (비비드, 회고 모두 모든 멤버 사용 가능)
   const getRecordTypeOptions = useCallback(() => {
-    const allowedTypes: RecordType[] = ["dream"];
-    if (subscription?.isPro) {
-      allowedTypes.push("review");
-    }
-    // 회고는 Pro 아니어도 드롭다운에 표시 (자물쇠와 함께, 클릭 시 결제 유도)
-    const displayTypes: RecordType[] =
-      allowedTypes.includes("review") ? [...allowedTypes] : ["dream", "review"];
+    const allowedTypes: RecordType[] = ["dream", "review"];
+    const displayTypes: RecordType[] = [...allowedTypes];
     return { allowedTypes, displayTypes };
-  }, [subscription?.isPro]);
+  }, []);
 
   // 첫 번째 타입을 기본값으로 설정
   useEffect(() => {
@@ -683,8 +678,6 @@ export function RecordForm({
 
   const { allowedTypes } = getRecordTypeOptions();
   const recordType = selectedType || allowedTypes[0] || "dream";
-  const isReviewLocked = !subscription?.isPro;
-  const isTodoLocked = !subscription?.isPro;
 
   // q3 textarea의 scrollIntoView 영구 오버라이드 (스크롤 점프 방지, 회고 탭 마운트 시 적용)
   useEffect(() => {
@@ -737,16 +730,6 @@ export function RecordForm({
 
   const handleTabClick = useCallback(
     (tab: HomeTabType) => {
-      if (tab === "review" && isReviewLocked) {
-        router.push("/membership");
-        return;
-      }
-      // 할 일 탭: Pro 아니어도 탭 전환 (Pro 전용 메시지 표시)
-      if (tab === "todo" && isTodoLocked) {
-        setInternalTab("todo");
-        onTabChange?.("todo");
-        return;
-      }
       setInternalTab(tab);
       onTabChange?.(tab);
       if (tab === "vivid") {
@@ -757,7 +740,7 @@ export function RecordForm({
         onTypeChange?.("review");
       }
     },
-    [isReviewLocked, isTodoLocked, onTabChange, onTypeChange, router]
+    [onTabChange, onTypeChange]
   );
 
   return (
@@ -805,8 +788,8 @@ export function RecordForm({
               {(
                 [
                   { id: "vivid" as const, label: "VIVID", locked: false },
-                  { id: "review" as const, label: "회고", locked: isReviewLocked },
-                  { id: "todo" as const, label: "할 일", locked: isTodoLocked },
+                  { id: "review" as const, label: "회고", locked: false },
+                  { id: "todo" as const, label: "할 일", locked: false },
                 ] as const
               ).map(({ id, label, locked }) => (
                 <button
@@ -1268,7 +1251,7 @@ export function RecordForm({
             onClose={() => setShowReviewGuidePanel(false)}
           />
         </>
-      ) : activeTab === "todo" && subscription?.isPro ? (
+      ) : activeTab === "todo" ? (
         /* 할 일 탭: 할 일만 관리, 항상 펼쳐진 상태 */
         <div className="mb-4 space-y-2">
           {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 가이드 버튼 (항상 표시) */}
@@ -1461,18 +1444,6 @@ export function RecordForm({
                 </div>
               </div>
             </>
-        </div>
-      ) : activeTab === "todo" && !subscription?.isPro ? (
-        <div
-          className="px-3 py-8 rounded-xl text-center"
-          style={{
-            ...CARD_STYLES.default,
-            borderRadius: "12px",
-            color: COLORS.text.tertiary,
-            fontSize: "0.875rem",
-          }}
-        >
-          할 일 관리는 Pro 회원 전용 기능이에요.
         </div>
       ) : (
         /* 비비드/회고 타입일 때 기존 단일 입력 필드 */

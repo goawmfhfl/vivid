@@ -1,13 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AppHeader } from "@/components/common/AppHeader";
 import { LazyMembershipImage } from "@/components/membership/LazyMembershipImage";
 import { useNotionPolicies } from "@/hooks/useNotionPolicies";
-import { COLORS, SPACING, GRADIENT_UTILS } from "@/lib/design-system";
-import { RotateCcw, Check, ArrowLeft } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { COLORS, SPACING } from "@/lib/design-system";
+import { RotateCcw, ArrowLeft } from "lucide-react";
 
 import img0 from "@/assets/membership/0.png";
 import img1 from "@/assets/membership/1.png";
@@ -70,6 +70,7 @@ function PlanSelectionCard({
   isSelected: boolean;
   onSelect: () => void;
 }) {
+  const displayPrice = `₩${plan.price.toLocaleString("ko-KR")}`;
   return (
     <button
       type="button"
@@ -117,9 +118,7 @@ function PlanSelectionCard({
           </div>
           <span className="text-lg font-bold">{plan.title}</span>
         </div>
-        <span className="text-lg font-bold">
-          ₩{plan.price.toLocaleString()}
-        </span>
+        <span className="text-lg font-bold">{displayPrice}</span>
       </div>
 
       <div className="flex items-center justify-between pl-8">
@@ -138,7 +137,7 @@ function PlanSelectionCard({
               color: isSelected ? "rgba(255,255,255,0.6)" : COLORS.text.tertiary,
             }}
           >
-            ₩{plan.originalPrice.toLocaleString()}
+            ₩{plan.originalPrice.toLocaleString("ko-KR")}
           </span>
         )}
       </div>
@@ -162,14 +161,58 @@ function MembershipHeader() {
 }
 
 function MembershipPageContent() {
-  const router = useRouter();
   const { data: policies } = useNotionPolicies();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
 
+  // embed=1은 라우팅 시 사라지므로, WebView 내 여부는 ReactNativeWebView 존재로 판단
+  const isInApp =
+    typeof window !== "undefined" &&
+    !!(window as { ReactNativeWebView?: { postMessage?: unknown } })
+      .ReactNativeWebView;
+
+  useEffect(() => {
+    if (!isInApp || typeof window === "undefined") return;
+    console.log("[Membership] MEMBERSHIP_LOADED 전송 (네이티브에 가격 요청)");
+    (window as any).ReactNativeWebView?.postMessage?.(
+      JSON.stringify({ type: "MEMBERSHIP_LOADED" })
+    );
+  }, [isInApp]);
+
+  // WebView: 세션 있으면 RevenueCat app_user_id 연동을 위해 userId 전달
+  useEffect(() => {
+    if (!isInApp || typeof window === "undefined") return;
+    let mounted = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted || !session?.user?.id) return;
+      (window as any).ReactNativeWebView?.postMessage?.(
+        JSON.stringify({ type: "SUPABASE_SESSION_READY", userId: session.user.id })
+      );
+    });
+    return () => { mounted = false; };
+  }, [isInApp]);
+
   const handleStartNow = () => {
     const planInfo = PLANS[selectedPlan];
-    console.log("Selected Plan:", planInfo);
-    // TODO: 결제 플로우 연결 (planInfo 전달)
+    const payload = { type: "PURCHASE", plan: planInfo.id };
+    console.log("[Membership] 지금 시작하기 클릭", {
+      planInfo,
+      isInApp,
+      hasReactNativeWebView: typeof window !== "undefined" && !!(window as any).ReactNativeWebView,
+      hasPostMessage: typeof window !== "undefined" && !!(window as any).ReactNativeWebView?.postMessage,
+    });
+    if (isInApp) {
+      if (
+        typeof window !== "undefined" &&
+        (window as any).ReactNativeWebView?.postMessage
+      ) {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify(payload));
+        console.log("[Membership] postMessage 전송:", payload);
+      } else {
+        console.warn("[Membership] ReactNativeWebView.postMessage 없음 – WebView 내 앱이 아닐 수 있음");
+      }
+    } else {
+      console.log("[Membership] 웹 브라우저 모드 – 결제는 앱 내에서만 가능");
+    }
   };
 
   const handleRestorePurchases = () => {

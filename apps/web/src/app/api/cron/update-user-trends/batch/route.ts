@@ -7,6 +7,7 @@ import {
   type UserTrendResult,
 } from "../helpers";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 180;
 
 type UserTrendsBatchPayload = {
@@ -136,6 +137,13 @@ export async function POST(request: NextRequest) {
 
     const updatedCount = results.filter((result) => result.status === "updated").length;
     const skippedCount = results.length - updatedCount;
+
+    console.log("[cron] update-user-trends batch processed:", {
+      processed: results.length,
+      updated: updatedCount,
+      skipped: skippedCount,
+      type,
+    });
 
     return NextResponse.json({
       ok: true,

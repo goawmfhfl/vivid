@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase-service";
-import { verifySubscription } from "@/lib/subscription-utils";
 import { decryptTodoListItems } from "@/app/api/daily-vivid/db-service";
 import { encryptDailyVivid } from "@/lib/jsonb-encryption";
 import { encrypt } from "@/lib/encryption";
@@ -82,14 +81,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "contents is required and cannot be empty" },
         { status: 400 }
-      );
-    }
-
-    const { isPro } = await verifySubscription(userId);
-    if (!isPro) {
-      return NextResponse.json(
-        { error: "Pro 멤버십이 필요합니다." },
-        { status: 403 }
       );
     }
 

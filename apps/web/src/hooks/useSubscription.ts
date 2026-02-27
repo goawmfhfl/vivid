@@ -58,10 +58,10 @@ export const useSubscription = () => {
     const isExpired = expires_at ? new Date(expires_at) < now : false;
 
     // Pro 멤버십 체크
-    // plan이 "pro", status가 "active", started_at이 현재보다 과거, expires_at이 현재보다 미래일 때 Pro 멤버십
+    // plan이 "pro", status가 "active" 또는 "canceled"(만료 전까지 Pro 유지), started_at 과거, expires_at 미래일 때 Pro
     const isPro =
       plan === "pro" &&
-      status === "active" &&
+      (status === "active" || status === "canceled") &&
       started_at !== null &&
       new Date(started_at) < now &&
       expires_at !== null &&

@@ -4,8 +4,15 @@ import { decryptDailyVivid } from "@/lib/jsonb-encryption";
 import { fetchTodoListsForDate } from "../db-service";
 import type { DailyVividRow } from "@/types/daily-vivid";
 import { API_ENDPOINTS } from "@/constants";
+
+export const dynamic = "force-dynamic";
+
 // 날짜별 조회는 버튼 라벨(보기/생성하기)에 직결되므로 항상 최신 상태 필요 → 캐시 비활성화
-const BY_DATE_NO_CACHE = "private, max-age=0, must-revalidate";
+const BY_DATE_HEADERS = {
+  "Cache-Control": "private, no-store, no-cache, must-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+} as const;
 
 /**
  * GET 핸들러: 일일 비비드 조회 (date 기반)
@@ -78,7 +85,7 @@ export async function GET(request: NextRequest) {
         },
         {
           status: 200,
-          headers: { "Cache-Control": BY_DATE_NO_CACHE },
+          headers: BY_DATE_HEADERS,
         }
       );
     }
@@ -96,7 +103,7 @@ export async function GET(request: NextRequest) {
         },
         {
           status: 200,
-          headers: { "Cache-Control": BY_DATE_NO_CACHE },
+          headers: BY_DATE_HEADERS,
         }
       );
     }
@@ -111,7 +118,7 @@ export async function GET(request: NextRequest) {
       { data: result },
       {
         status: 200,
-        headers: { "Cache-Control": BY_DATE_NO_CACHE },
+        headers: BY_DATE_HEADERS,
       }
     );
   } catch (error) {

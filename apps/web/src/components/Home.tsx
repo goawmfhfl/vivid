@@ -101,10 +101,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const buildDatePath = useCallback(
     (date: string) => {
       const params = new URLSearchParams(searchParamsString);
+      // 날짜 이동 시 현재 탭(activeTab)을 항상 유지 - type=todo 등 쿼리 초기화 방지
+      params.set("type", activeTab);
       const query = params.toString();
       return query ? `/${date}?${query}` : `/${date}`;
     },
-    [searchParamsString]
+    [searchParamsString, activeTab]
   );
   const createDailyVivid = useCreateDailyVivid();
 

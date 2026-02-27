@@ -163,11 +163,7 @@ export function PullToRefresh({
                 TYPOGRAPHY.bodySmall.lineHeight
               )}
             >
-               {isRefreshing
-                 ? "새로고침 중..."
-                 : isReady
-                 ? "손을 떼면 새로고침"
-                 : "당겨서 새로고침"}
+              { isRefreshing && "새로고침 중..."}
              </span>
            </div>
          )}
