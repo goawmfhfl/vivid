@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const nextConfig: NextConfig = {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
   images: {
     remotePatterns: [
@@ -16,12 +19,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
 };
 
 export default nextConfig;
