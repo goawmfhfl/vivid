@@ -1,5 +1,8 @@
 "use client";
 
+/** workUnitAsyncStorage prerender 버그 회피 (Next.js 이슈) */
+export const dynamic = "force-dynamic";
+
 /**
  * Root layout 실패 시 사용되는 에러 핸들러.
  * Next.js 규칙: global-error는 root layout을 완전히 대체하므로
