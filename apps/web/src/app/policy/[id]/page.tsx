@@ -8,20 +8,8 @@ import { NotionRenderer } from "@/components/notion/NotionRenderer";
 import { getPolicies, getPolicyContent } from "@/lib/server/notion";
 import type { NotionBlock } from "@/lib/types/notion";
 
-// ISR: 1시간마다 재검증 (SSG이지만 필요시 업데이트)
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  try {
-    const policies = await getPolicies();
-    return policies.map((policy) => ({
-      id: policy.id,
-    }));
-  } catch (error) {
-    console.error("Error generating static params for policies:", error);
-    return [];
-  }
-}
+/** workUnitAsyncStorage prerender 버그 회피 - generateStaticParams 제거, 동적 렌더로 전환 (Next.js 이슈) */
+export const dynamic = "force-dynamic";
 
 export default async function PolicyPage({
   params,
