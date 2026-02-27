@@ -4,6 +4,9 @@ import { JournalProvider } from "./providers";
 import { BottomNavigation } from "../components/common/BottomNavigation";
 import { GlobalModals } from "../components/ui/modals/GlobalModals";
 
+/** workUnitAsyncStorage prerender 버그 회피 - _global-error, faq 등 전체 (Next.js 15.6 canary 이슈) */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "VIVID",
   description: "오늘의 기록을 남기고 분석하는 일기 앱",
