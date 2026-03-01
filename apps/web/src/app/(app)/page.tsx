@@ -1,7 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoginPath } from "@/lib/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,10 +9,17 @@ import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { withAuth } from "@/components/auth";
 import { QUERY_KEYS } from "@/constants";
 
-function RootPageInner() {
+/**
+ * 홈 페이지 - 날짜는 searchParams.date로만 관리.
+ * / 와 /?date=yyyy-mm-dd 가 동일 페이지 → Link 클릭 시 라우트 변경 없음 → 깜빡임 없음.
+ */
+function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+
+  // 쿼리 파라미터에서 날짜 (없으면 오늘)
+  const selectedDate = searchParams?.get("date") ?? undefined;
 
   useEffect(() => {
     if (typeof window !== "undefined" && searchParams) {
@@ -21,11 +27,11 @@ function RootPageInner() {
       const errorCode = searchParams.get("error_code");
       const typeParam = searchParams.get("type");
 
-      // OAuth 에러가 루트 URL로 리다이렉션된 경우 처리
       if (errorParam && typeParam === "vivid") {
-        // identity_already_exists 에러인 경우 연동 플로우로 간주
-        if (errorCode === "identity_already_exists" || errorParam === "identity_already_exists") {
-          // 프로필 설정 페이지로 리다이렉션 (에러 메시지와 함께)
+        if (
+          errorCode === "identity_already_exists" ||
+          errorParam === "identity_already_exists"
+        ) {
           router.replace(
             "/user?error=kakao_already_linked&message=" +
               encodeURIComponent(
@@ -35,8 +41,6 @@ function RootPageInner() {
           );
           return;
         }
-
-        // 기타 OAuth 에러는 로그인 페이지로 리다이렉션 (embed 유지)
         const errorDescription = searchParams.get("error_description");
         const errorMessage =
           errorDescription ||
@@ -62,13 +66,15 @@ function RootPageInner() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <Home />
+      <Home selectedDate={selectedDate} />
     </PullToRefresh>
   );
 }
 
-const RootPageWithAuth = withAuth(RootPageInner);
-export default dynamic(() => Promise.resolve(RootPageWithAuth), {
-  ssr: false,
-  loading: () => <div className="min-h-screen" style={{ backgroundColor: "#e4e2dd" }} />,
+export default withAuth(function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageInner />
+    </Suspense>
+  );
 });

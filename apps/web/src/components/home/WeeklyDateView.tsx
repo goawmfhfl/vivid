@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 import { getMondayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
@@ -11,6 +11,7 @@ import { DateButtonSkeleton } from "@/components/ui/Skeleton";
 interface WeeklyDateViewProps {
   selectedDate?: string; // YYYY-MM-DD 형식
   onDateSelect?: (date: string) => void;
+  getDateHref?: (date: string) => string; // Link prefetch용 - 없으면 onDateSelect 사용
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
   vividFeedbackDates?: string[]; // 비비드 AI 피드백이 생성된 날짜 목록
@@ -27,6 +28,7 @@ const TRANSITION_TIMEOUT_MS = 600;
 export function WeeklyDateView({
   selectedDate,
   onDateSelect,
+  getDateHref,
   recordDates: _recordDates = [],
   aiFeedbackDates = [],
   vividFeedbackDates,
@@ -34,7 +36,6 @@ export function WeeklyDateView({
   onMonthChange,
   isLoading = false,
 }: WeeklyDateViewProps) {
-  const router = useRouter();
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const today = getKSTDate();
     const selected = selectedDate ? getKSTDate(new Date(selectedDate)) : today;
@@ -124,8 +125,10 @@ export function WeeklyDateView({
     setTouchEnd(null);
   };
 
-  // 마우스 드래그 이벤트
+  // 마우스 드래그 이벤트 (Link 클릭 시 preventDefault 호출 안 함 → 클라이언트 라우팅 정상 동작)
   const onMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("a")) return;
     e.preventDefault();
     setMouseEnd(null);
     setMouseStart(e.clientX);
@@ -191,15 +194,11 @@ export function WeeklyDateView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWeekStart]);
 
-  // 날짜 선택 핸들러
-  const handleDateClick = (date: Date) => {
-    const dateIso = getKSTDateString(date);
-    if (onDateSelect) {
-      onDateSelect(dateIso);
-    } else {
-      router.push(`/${dateIso}`);
-    }
-  };
+  // Link href - getDateHref 우선, 없으면 /?date={date}
+  const getHref = useCallback(
+    (dateIso: string) => getDateHref?.(dateIso) ?? `/?date=${dateIso}`,
+    [getDateHref]
+  );
 
   // selectedDate가 변경되면 해당 주로 이동 (날짜 클릭/URL 변경 시)
   useEffect(() => {
@@ -328,11 +327,11 @@ export function WeeklyDateView({
                     {dayOfWeek}
                   </div>
 
-                  {/* 날짜 버튼 — 리포트 카드와 동일한 박스 스타일 */}
-                  <button
-                    onClick={() => handleDateClick(date)}
-                    className={`w-12 h-12 max-[411px]:w-10 max-[411px]:h-10 md:w-16 md:h-16 rounded-xl max-[411px]:rounded-lg md:rounded-2xl flex items-center justify-center text-sm max-[411px]:text-[13px] md:text-base font-semibold ${TRANSITIONS.default} relative`}
-                    style={{
+                  {/* 날짜 버튼 — Link로 prefetch·클라이언트 라우팅 */}
+                  {(() => {
+                    const href = getHref(dateIso);
+                    const btnClass = `w-12 h-12 max-[411px]:w-10 max-[411px]:h-10 md:w-16 md:h-16 rounded-xl max-[411px]:rounded-lg md:rounded-2xl flex items-center justify-center text-sm max-[411px]:text-[13px] md:text-base font-semibold ${TRANSITIONS.default} relative`;
+                    const btnStyle = {
                       background: isActive
                         ? COLORS.brand.primary
                         : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
@@ -344,58 +343,86 @@ export function WeeklyDateView({
                       transform: "none",
                       backfaceVisibility: "hidden",
                       WebkitBackfaceVisibility: "hidden",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background =
-                          GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
-                        e.currentTarget.style.boxShadow = SHADOWS.elevation2;
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
-                          COLORS.brand.light,
-                          "50"
-                        );
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background =
-                          GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
-                        e.currentTarget.style.boxShadow = SHADOWS.default;
-                        e.currentTarget.style.transform = "none";
-                        e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
-                          COLORS.brand.light,
-                          "30"
-                        );
-                      }
-                    }}
-                  >
-                    {dayNumber}
-                    {/* daily-vivid dot 표시 */}
-                    {(hasDailyVivid || hasReviewFeedback) && (
+                      textDecoration: "none",
+                    } as React.CSSProperties;
+                    return isActive ? (
                       <div
-                        className="absolute bottom-1 max-[411px]:bottom-0.5 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
-                        style={{ pointerEvents: "none" }}
+                        className={btnClass}
+                        style={btnStyle}
+                        aria-current="date"
                       >
-                        {hasDailyVivid && (
+                        {dayNumber}
+                        {(hasDailyVivid || hasReviewFeedback) && (
                           <div
-                            className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: vividDotColor,
-                            }}
-                          />
-                        )}
-                        {hasReviewFeedback && (
-                          <div
-                            className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
-                            style={{
-                              backgroundColor: reviewDotColor,
-                            }}
-                          />
+                            className="absolute bottom-1 max-[411px]:bottom-0.5 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            {hasDailyVivid && (
+                              <div
+                                className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
+                                style={{ backgroundColor: vividDotColor }}
+                              />
+                            )}
+                            {hasReviewFeedback && (
+                              <div
+                                className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
+                                style={{ backgroundColor: reviewDotColor }}
+                              />
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </button>
+                    ) : (
+                      <Link
+                        href={href}
+                        className={btnClass}
+                        style={btnStyle}
+                        scroll={false}
+                        prefetch
+                        onMouseEnter={(e) => {
+                          const t = e.currentTarget;
+                          t.style.background =
+                            GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
+                          t.style.boxShadow = SHADOWS.elevation2;
+                          t.style.borderColor = GRADIENT_UTILS.borderColor(
+                            COLORS.brand.light,
+                            "50"
+                          );
+                        }}
+                        onMouseLeave={(e) => {
+                          const t = e.currentTarget;
+                          t.style.background =
+                            GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
+                          t.style.boxShadow = SHADOWS.default;
+                          t.style.borderColor = GRADIENT_UTILS.borderColor(
+                            COLORS.brand.light,
+                            "30"
+                          );
+                        }}
+                      >
+                        {dayNumber}
+                        {(hasDailyVivid || hasReviewFeedback) && (
+                          <div
+                            className="absolute bottom-1 max-[411px]:bottom-0.5 md:bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5 md:gap-1"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            {hasDailyVivid && (
+                              <div
+                                className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
+                                style={{ backgroundColor: vividDotColor }}
+                              />
+                            )}
+                            {hasReviewFeedback && (
+                              <div
+                                className="w-1 h-1 max-[411px]:w-[3px] max-[411px]:h-[3px] md:w-1.5 md:h-1.5 rounded-full"
+                                style={{ backgroundColor: reviewDotColor }}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </Link>
+                    );
+                  })()}
                 </div>
               );
             })}

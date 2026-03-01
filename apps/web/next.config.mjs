@@ -7,8 +7,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname, "../.."),
   redirects: () => [
-    // /analysis -> /reports (쿼리 파라미터 유지) - sync으로 빌드 워커 이슈 회피
     { source: "/analysis", destination: "/reports", permanent: true },
+    // /2025-02-27 등 기존 path 형식 -> /?date=2025-02-27 (클라이언트 라우팅용)
+    {
+      source: "/:date(\\d{4}-\\d{2}-\\d{2})",
+      destination: "/?date=:date",
+      permanent: false,
+    },
   ],
   images: {
     remotePatterns: [

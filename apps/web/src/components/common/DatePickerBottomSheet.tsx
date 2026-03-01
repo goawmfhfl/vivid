@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
 import { COLORS, CARD_STYLES, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,6 +12,7 @@ interface DatePickerBottomSheetProps {
   onClose: () => void;
   selectedDate?: string; // YYYY-MM-DD
   onDateSelect?: (date: string) => void;
+  getDateHref?: (date: string) => string; // Link용 - 없으면 /{date}
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
   reviewFeedbackDates?: string[]; // 회고 AI 피드백이 생성된 날짜 목록
@@ -24,11 +25,15 @@ export function DatePickerBottomSheet({
   onClose,
   selectedDate,
   onDateSelect,
+  getDateHref,
   recordDates: _recordDates = [],
   aiFeedbackDates = [],
   reviewFeedbackDates = [],
 }: DatePickerBottomSheetProps) {
-  const router = useRouter();
+  const getHref = useCallback(
+    (dateIso: string) => getDateHref?.(dateIso) ?? `/?date=${dateIso}`,
+    [getDateHref]
+  );
   const [currentMonth, setCurrentMonth] = useState<Date>(() => {
     const today = getKSTDate();
     if (selectedDate) {
@@ -83,39 +88,9 @@ export function DatePickerBottomSheet({
     });
   };
 
-  // 날짜 선택
-  const handleDateClick = (date: Date) => {
-    const dateIso = getKSTDateString(date);
-    // 먼저 바텀 시트를 닫음
+  // Link 클릭 시 시트 닫기 (navigate는 Link가 처리)
+  const handleLinkClick = () => {
     onClose();
-    // 약간의 지연 후 페이지 이동 (애니메이션이 시작되도록)
-    setTimeout(() => {
-      if (onDateSelect) {
-        onDateSelect(dateIso);
-      } else {
-        router.push(`/${dateIso}`);
-      }
-    }, 100);
-  };
-
-  // 오늘 날짜로 이동
-  const goToToday = () => {
-    const today = getKSTDate();
-    const todayIso = getKSTDateString(today);
-
-    // 오늘 날짜의 월로 이동
-    setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-
-    // 먼저 바텀 시트를 닫음
-    onClose();
-    // 약간의 지연 후 페이지 이동 (애니메이션이 시작되도록)
-    setTimeout(() => {
-      if (onDateSelect) {
-        onDateSelect(todayIso);
-      } else {
-        router.push(`/${todayIso}`);
-      }
-    }, 100);
   };
 
   // 외부 클릭 시 닫기
@@ -210,14 +185,18 @@ export function DatePickerBottomSheet({
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-            <button
-              onClick={goToToday}
+            <Link
+              href={getHref(todayIso)}
+              onClick={handleLinkClick}
+              scroll={false}
+              prefetch
               className={`px-3 py-1.5 rounded-full text-xs font-medium ${TRANSITIONS.default}`}
               style={{
                 backgroundColor: COLORS.brand.primary,
                 color: COLORS.text.white,
                 border: `1.5px solid ${COLORS.brand.primary}`,
                 boxShadow: SHADOWS.default,
+                textDecoration: "none",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.brand.dark;
@@ -231,7 +210,7 @@ export function DatePickerBottomSheet({
               }}
             >
               오늘
-            </button>
+            </Link>
           </div>
 
           {/* 달력 */}
@@ -277,57 +256,37 @@ export function DatePickerBottomSheet({
                     ? COLORS.text.white
                     : COLORS.dailyVivid.current;
 
-                  return (
-                    <button
+                  const href = getHref(dateIso);
+                  const baseClass = `aspect-square rounded-xl flex items-center justify-center text-sm font-semibold ${TRANSITIONS.default} relative`;
+                  const baseStyle = {
+                    background: isActive
+                      ? COLORS.brand.primary
+                      : isToday && !isActive
+                      ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
+                      : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                    color: isActive
+                      ? COLORS.text.white
+                      : isCurrentMonth
+                      ? COLORS.text.primary
+                      : COLORS.text.tertiary,
+                    border: isActive
+                      ? `1.5px solid ${COLORS.brand.primary}`
+                      : isToday && !isActive
+                      ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")}`
+                      : `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                    boxShadow: isActive ? SHADOWS.elevation3 : SHADOWS.default,
+                    opacity: isCurrentMonth ? 1 : 0.4,
+                    textDecoration: "none" as const,
+                  };
+
+                  return isActive ? (
+                    <div
                       key={dateIso}
-                      onClick={() => handleDateClick(date)}
-                      className={`aspect-square rounded-xl flex items-center justify-center text-sm font-semibold ${TRANSITIONS.default} relative`}
-                      style={{
-                        background: isActive
-                          ? COLORS.brand.primary
-                          : isToday && !isActive
-                          ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
-                          : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
-                        color: isActive
-                          ? COLORS.text.white
-                          : isCurrentMonth
-                          ? COLORS.text.primary
-                          : COLORS.text.tertiary,
-                        border: isActive
-                          ? `1.5px solid ${COLORS.brand.primary}`
-                          : isToday && !isActive
-                          ? `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")}`
-                          : `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
-                        boxShadow: isActive ? SHADOWS.elevation3 : SHADOWS.default,
-                        opacity: isCurrentMonth ? 1 : 0.4,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background =
-                            GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
-                          e.currentTarget.style.boxShadow = SHADOWS.elevation2;
-                          e.currentTarget.style.borderColor = GRADIENT_UTILS.borderColor(
-                            COLORS.brand.light,
-                            "50"
-                          );
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background =
-                            isToday && !isActive
-                              ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
-                              : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
-                          e.currentTarget.style.boxShadow = SHADOWS.default;
-                          e.currentTarget.style.borderColor =
-                            isToday && !isActive
-                              ? GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")
-                              : GRADIENT_UTILS.borderColor(COLORS.brand.light, "30");
-                        }
-                      }}
+                      className={baseClass}
+                      style={baseStyle}
+                      aria-current="date"
                     >
                       {date.getDate()}
-                      {/* daily-vivid dot 표시 */}
                       {(hasDailyVivid || hasReviewFeedback) && (
                         <div
                           className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-0.5 mt-0.5"
@@ -336,22 +295,70 @@ export function DatePickerBottomSheet({
                           {hasDailyVivid && (
                             <div
                               className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-                              style={{
-                                backgroundColor: vividDotColor,
-                              }}
+                              style={{ backgroundColor: vividDotColor }}
                             />
                           )}
                           {hasReviewFeedback && (
                             <div
                               className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
-                              style={{
-                                backgroundColor: reviewDotColor,
-                              }}
+                              style={{ backgroundColor: reviewDotColor }}
                             />
                           )}
                         </div>
                       )}
-                    </button>
+                    </div>
+                  ) : (
+                    <Link
+                      key={dateIso}
+                      href={href}
+                      onClick={handleLinkClick}
+                      scroll={false}
+                      prefetch
+                      className={baseClass}
+                      style={baseStyle}
+                      onMouseEnter={(e) => {
+                        const t = e.currentTarget;
+                        t.style.background =
+                          GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.22);
+                        t.style.boxShadow = SHADOWS.elevation2;
+                        t.style.borderColor = GRADIENT_UTILS.borderColor(
+                          COLORS.brand.light,
+                          "50"
+                        );
+                      }}
+                      onMouseLeave={(e) => {
+                        const t = e.currentTarget;
+                        t.style.background =
+                          isToday
+                            ? GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.2)
+                            : GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15);
+                        t.style.boxShadow = SHADOWS.default;
+                        t.style.borderColor = isToday
+                          ? GRADIENT_UTILS.borderColor(COLORS.brand.light, "40")
+                          : GRADIENT_UTILS.borderColor(COLORS.brand.light, "30");
+                      }}
+                    >
+                      {date.getDate()}
+                      {(hasDailyVivid || hasReviewFeedback) && (
+                        <div
+                          className="absolute bottom-0.5 sm:bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-0.5 mt-0.5"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          {hasDailyVivid && (
+                            <div
+                              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
+                              style={{ backgroundColor: vividDotColor }}
+                            />
+                          )}
+                          {hasReviewFeedback && (
+                            <div
+                              className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
+                              style={{ backgroundColor: reviewDotColor }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </Link>
                   );
                 })
               )}

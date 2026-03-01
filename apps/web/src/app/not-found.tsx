@@ -1,8 +1,3 @@
-/**
- * 404 페이지 - Pure Component (Context 의존성 0%)
- * 훅, withAuth, AppHeader, design-system 등 어떤 의존도 없음.
- * 표준 HTML + 인라인 CSS만 사용.
- */
 export default function NotFound() {
   return (
     <div

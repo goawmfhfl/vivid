@@ -118,24 +118,6 @@ export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
             </p>
           </section>
 
-          <section>
-            <h3
-              className="text-xs font-semibold mb-1"
-              style={{ color: COLORS.text.primary }}
-            >
-              생성하기가 비활성화된 이유
-            </h3>
-            <p style={{ color: COLORS.text.secondary }}>
-              오늘의 회고를 생성하려면 먼저{" "}
-              <strong style={{ color: COLORS.brand.primary }}>비비드 탭</strong>에서
-              &quot;오늘의 비비드&quot; 기록이 있어야 하고, 그다음 이{" "}
-              <strong style={{ color: COLORS.brand.primary }}>회고 탭</strong>에서
-              회고를 작성해 주셔야 합니다.
-              <br/>
-              두 가지가 모두 있을 때만 버튼이
-              활성화됩니다.
-            </p>
-          </section>
         </div>
       </div>
     </div>

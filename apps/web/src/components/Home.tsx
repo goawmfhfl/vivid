@@ -98,13 +98,13 @@ export function Home({ selectedDate }: HomeProps = {}) {
     [router, pathname, searchParamsString]
   );
 
+  // /?date=yyyy-mm-dd 형식 - 같은 페이지에서 쿼리만 변경 → Link 클릭 시 깜빡임 없음
   const buildDatePath = useCallback(
     (date: string) => {
       const params = new URLSearchParams(searchParamsString);
-      // 날짜 이동 시 현재 탭(activeTab)을 항상 유지 - type=todo 등 쿼리 초기화 방지
       params.set("type", activeTab);
-      const query = params.toString();
-      return query ? `/${date}?${query}` : `/${date}`;
+      params.set("date", date);
+      return `/?${params.toString()}`;
     },
     [searchParamsString, activeTab]
   );
@@ -214,11 +214,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const hasDateFeedback = isReviewTab ? hasReviewFeedback : hasVividFeedback;
   const dateFeedback = isReviewTab ? reviewFeedback : vividFeedback;
 
-  const hasVividRecord = records.some(
-    (r) => r.type === "vivid" || r.type === "dream"
-  );
   const hasReviewRecord = records.some((r) => r.type === "review");
-  const canCreateReview = hasVividRecord && hasReviewRecord;
+  const canCreateReview = hasReviewRecord;
   const isCreateButtonDisabled =
     isReviewTab && !canCreateReview && !hasDateFeedback;
 
@@ -404,7 +401,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
         title={isToday ? "오늘의 기록" : "기록"}
         showDatePicker={true}
         selectedDate={activeDate}
-        onDateSelect={(date) => router.push(buildDatePath(date))}
+        getDateHref={buildDatePath}
         currentMonth={currentMonth}
         recordDates={recordDates}
         vividFeedbackDates={vividFeedbackDates}
@@ -413,7 +410,7 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
       <WeeklyDateView
         selectedDate={activeDate}
-        onDateSelect={(date) => router.push(buildDatePath(date))}
+        getDateHref={buildDatePath}
         recordDates={recordDates}
         vividFeedbackDates={vividFeedbackDates}
         reviewFeedbackDates={reviewFeedbackDates}

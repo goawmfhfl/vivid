@@ -27,6 +27,7 @@ interface AppHeaderProps {
   showDatePicker?: boolean;
   selectedDate?: string; // YYYY-MM-DD
   onDateSelect?: (date: string) => void;
+  getDateHref?: (date: string) => string; // Link prefetch용
   currentMonth?: { year: number; month: number }; // 현재 표시 중인 월
   recordDates?: string[]; // 기록이 있는 날짜 목록
   aiFeedbackDates?: string[]; // AI 피드백이 생성된 날짜 목록
@@ -43,6 +44,7 @@ export function AppHeader({
   showDatePicker = false,
   selectedDate,
   onDateSelect,
+  getDateHref,
   currentMonth,
   recordDates = [],
   aiFeedbackDates = [],
@@ -414,7 +416,7 @@ export function AppHeader({
           isOpen={showDatePickerSheet}
           onClose={() => setShowDatePickerSheet(false)}
           selectedDate={selectedDate}
-          onDateSelect={onDateSelect}
+          getDateHref={getDateHref}
           recordDates={recordDates}
           aiFeedbackDates={effectiveVividFeedbackDates}
           reviewFeedbackDates={reviewFeedbackDates}
