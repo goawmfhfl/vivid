@@ -82,6 +82,20 @@ export async function GET(request: NextRequest) {
 
     console.log("[cron] generate-monthly-vivid-report invoked", { page, limit });
 
+    // 자동 크론( baseDate 없음)인 경우: 전월 말일 15:00 UTC = 다음 달 1일 00:00 KST에만 실행.
+    // 28~31일 15:00 UTC에 호출되므로, "내일이 1일"인 날(즉 말일)에만 실제 생성 수행.
+    if (!baseDate) {
+      const now = new Date();
+      const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      if (tomorrow.getUTCDate() !== 1) {
+        return NextResponse.json({
+          ok: true,
+          skipped: true,
+          reason: "Not last day of month (UTC); run at 15:00 UTC on 28–31 so that KST is next day 00:00.",
+        });
+      }
+    }
+
     if (baseDate && !isValidDateString(baseDate)) {
       return NextResponse.json(
         { error: "Invalid baseDate format (YYYY-MM-DD required)" },
