@@ -36,8 +36,13 @@ function isCronSecretAuthorized(request: NextRequest): boolean {
   return !!cronSecret && authHeader === `Bearer ${cronSecret}`;
 }
 
-function getConcurrency(value: string | null): number {
-  const fallback = parseInt(process.env.USER_TRENDS_BATCH_CONCURRENCY || "3", 10);
+function getConcurrency(value: string | null, type: "weekly" | "monthly"): number {
+  const envKey =
+    type === "monthly" ? "USER_TRENDS_MONTHLY_CONCURRENCY" : "USER_TRENDS_WEEKLY_CONCURRENCY";
+  const fallback = parseInt(
+    process.env[envKey] || process.env.USER_TRENDS_BATCH_CONCURRENCY || "2",
+    10
+  );
   const parsed = parseInt(value || String(fallback), 10);
   return Math.min(Math.max(parsed, 1), 10);
 }
@@ -111,7 +116,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { startDate, endDate, userIds, type = "weekly", month } = payload;
-    const concurrency = getConcurrency(request.nextUrl.searchParams.get("concurrency"));
+    const concurrency = getConcurrency(
+      request.nextUrl.searchParams.get("concurrency"),
+      type
+    );
     const supabase = getServiceSupabase();
     const isMonthly = type === "monthly";
     const monthForMonthly = isMonthly ? month || "" : "";

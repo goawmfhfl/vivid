@@ -53,6 +53,8 @@ export default function AdminTestPage() {
   const [userId, setUserId] = useState("1bebb0d4-9908-4e98-817b-06e19331cd0f");
   const [page, setPage] = useState("1");
   const [limit, setLimit] = useState("25");
+  const [batchSize, setBatchSize] = useState("5");
+  const [concurrency, setConcurrency] = useState("2");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CronResult | null>(null);
   const [trendsResult, setTrendsResult] = useState<CronResult | null>(null);
@@ -89,7 +91,7 @@ export default function AdminTestPage() {
 
   const executeCron = async (
     path: string,
-    options?: { sync?: boolean; type?: "weekly" | "monthly" }
+    options?: { sync?: boolean; type?: "weekly" | "monthly"; batchSize?: string; concurrency?: string }
   ) => {
     const params = new URLSearchParams();
     if (baseDate.trim()) params.set("baseDate", baseDate.trim());
@@ -97,6 +99,8 @@ export default function AdminTestPage() {
     if (page.trim()) params.set("page", page.trim());
     if (limit.trim()) params.set("limit", limit.trim());
     if (options?.sync) params.set("sync", "1");
+    if (options?.batchSize?.trim()) params.set("batchSize", options.batchSize.trim());
+    if (options?.concurrency?.trim()) params.set("concurrency", options.concurrency.trim());
 
     const query = params.toString();
     const fullUrl = query ? `${path}?${query}` : path;
@@ -135,6 +139,8 @@ export default function AdminTestPage() {
     try {
       const data = await executeCron("/api/cron/update-user-trends/weekly", {
         sync: runSync && userId.trim().length > 0,
+        batchSize,
+        concurrency,
       });
       setTrendsResult(data);
     } catch (err) {
@@ -151,6 +157,8 @@ export default function AdminTestPage() {
     try {
       const data = await executeCron("/api/cron/update-user-trends/monthly", {
         sync: runSync && userId.trim().length > 0,
+        batchSize,
+        concurrency,
       });
       setTrendsMonthlyResult(data);
     } catch (err) {
@@ -750,9 +758,55 @@ export default function AdminTestPage() {
               크론 테스트: User Trends (주간 / 월간)
             </h3>
             <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-              baseDate/userId/page/limit로 user_trends 크론을 실행합니다.
+              baseDate/userId/page/limit/batchSize/concurrency로 user_trends 크론을 실행합니다.
               주간: 이전 주(월~일) 성장 인사이트. 월간: 이전 달 성장 인사이트. 특정 유저만 테스트하려면 userId를 입력하세요.
             </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                  batchSize (배치당 유저 수)
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="100"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${COLORS.border.input}`,
+                    backgroundColor: COLORS.background.cardElevated,
+                    color: COLORS.text.primary,
+                  }}
+                  placeholder="5"
+                />
+                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                  기본 5. 주간/월간 공통.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                  concurrency (동시 처리 수)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={concurrency}
+                  onChange={(e) => setConcurrency(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm"
+                  style={{
+                    border: `1px solid ${COLORS.border.input}`,
+                    backgroundColor: COLORS.background.cardElevated,
+                    color: COLORS.text.primary,
+                  }}
+                  placeholder="2"
+                />
+                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                  기본 2. 배치 내 동시 처리.
+                </p>
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"

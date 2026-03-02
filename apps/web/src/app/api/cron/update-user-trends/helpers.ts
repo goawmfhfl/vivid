@@ -19,6 +19,11 @@ import {
   SYSTEM_PROMPT_WEEKLY_TREND,
   WeeklyTrendDataSchema,
 } from "./schema";
+import {
+  SYSTEM_PROMPT_MONTHLY_TREND,
+  MonthlyTrendDataSchema,
+} from "@/app/api/monthly-vivid/schema";
+import type { MonthlyTrendData } from "@/types/monthly-vivid";
 import { withGeminiRetry } from "../../utils/gemini-retry";
 
 type VividRecordRow = {
@@ -217,6 +222,42 @@ function buildWeeklyTrendContext({
   ].join("\n\n");
 }
 
+/** 월간: daily-vivid 기반 컨텍스트 (토큰 절감을 위해 slice 적용, 해당 월 전체 일별 데이터) */
+function buildMonthlyTrendContext({
+  records,
+  dailyRows,
+  startDate,
+  endDate,
+}: RecordEvidenceContextParams): string {
+  const summaries = dailyRows
+    .filter((r) => r.report?.current_summary)
+    .map((r) => `- ${r.report_date}: ${(r.report!.current_summary || "").slice(0, 100)}...`)
+    .join("\n");
+  const futureSummaries = dailyRows
+    .filter((r) => r.report?.future_summary)
+    .map((r) => `- ${r.report_date}: ${(r.report!.future_summary || "").slice(0, 80)}...`)
+    .join("\n");
+  const allKeywords = dailyRows.flatMap((r) => r.report?.current_keywords || []);
+  const allFutureKeywords = dailyRows.flatMap((r) => r.report?.future_keywords || []);
+  const allTraits = dailyRows.flatMap((r) => r.report?.aspired_traits || []);
+  const allChars = dailyRows.flatMap((r) => r.report?.user_characteristics || []);
+  const sampleRecords = records
+    .slice(0, 8)
+    .map((r) => `- ${r.kst_date} [${r.type}]: ${r.content.replace(/\s+/g, " ").trim().slice(0, 80)}...`)
+    .join("\n");
+
+  return [
+    `기간: ${startDate} ~ ${endDate} (해당 월 전체)`,
+    `[일별 오늘의 비비드 요약]\n${summaries || "없음"}`,
+    `[일별 앞으로의 모습 요약]\n${futureSummaries || "없음"}`,
+    `[자주 등장한 키워드] ${[...new Set(allKeywords)].slice(0, 10).join(", ") || "없음"}`,
+    `[지향하는 모습 키워드] ${[...new Set(allFutureKeywords)].slice(0, 8).join(", ") || "없음"}`,
+    `[사용자 특성] ${[...new Set(allChars)].slice(0, 5).join(", ") || "없음"}`,
+    `[지향하는 모습] ${[...new Set(allTraits)].slice(0, 5).join(", ") || "없음"}`,
+    `[기록 샘플]\n${sampleRecords || "없음"}`,
+  ].join("\n\n");
+}
+
 async function generateWeeklyTrendFromDailyData(
   records: VividRecordRow[],
   dailyRows: DailyScoreRow[],
@@ -298,6 +339,96 @@ async function generateWeeklyTrendFromDailyData(
       model: modelName,
       requestType: "user_trends_weekly",
       sectionName: "weekly_trend",
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      duration_ms: Date.now() - startTime,
+      success: false,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+async function generateMonthlyTrendFromDailyData(
+  records: VividRecordRow[],
+  dailyRows: DailyScoreRow[],
+  startDate: string,
+  endDate: string,
+  monthLabel: string,
+  userId: string
+): Promise<MonthlyTrendData | null> {
+  const context = buildMonthlyTrendContext({ records, dailyRows, startDate, endDate });
+  const prompt = `다음은 사용자의 ${startDate} ~ ${endDate} ${monthLabel} 월간 기록 분석입니다.\n\n${context}\n\n위 내용을 바탕으로 recurring_self, effort_to_keep, most_meaningful, biggest_change 4가지 필드를 생성해주세요. JSON 형식으로 {"recurring_self": "...", "effort_to_keep": "...", "most_meaningful": "...", "biggest_change": "..."}만 출력해주세요.`;
+
+  const geminiClient = getGeminiClient();
+  const modelName = "gemini-3-flash-preview";
+  const startTime = Date.now();
+  const model = geminiClient.getGenerativeModel({
+    model: modelName,
+    systemInstruction: SYSTEM_PROMPT_MONTHLY_TREND,
+  });
+
+  const cleanedSchema = cleanSchemaRecursive(MonthlyTrendDataSchema.schema) as {
+    type: "object";
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+
+  const request = {
+    contents: [{ role: "user" as const, parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: cleanedSchema.properties,
+        ...(cleanedSchema.required && { required: cleanedSchema.required }),
+      },
+    },
+  } as unknown as GenerateContentRequest;
+
+  try {
+    const result = await withGeminiRetry(() => model.generateContent(request));
+    const content = result.response.text();
+    const duration_ms = Date.now() - startTime;
+    const usageMetadata = result.response?.usageMetadata as
+      | { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number }
+      | undefined;
+    const usage = usageMetadata
+      ? {
+          prompt_tokens: usageMetadata.promptTokenCount ?? 0,
+          completion_tokens: usageMetadata.candidatesTokenCount ?? 0,
+          total_tokens:
+            usageMetadata.totalTokenCount ??
+            (usageMetadata.promptTokenCount ?? 0) + (usageMetadata.candidatesTokenCount ?? 0),
+          cached_tokens: 0,
+        }
+      : { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+    await logAIRequest({
+      userId,
+      model: modelName,
+      requestType: "user_trends_monthly",
+      sectionName: "monthly_trend",
+      usage,
+      duration_ms,
+      success: true,
+    });
+
+    const parsed = JSON.parse(content || "{}") as Partial<MonthlyTrendData>;
+    if (
+      typeof parsed.recurring_self !== "string" ||
+      typeof parsed.effort_to_keep !== "string" ||
+      typeof parsed.most_meaningful !== "string" ||
+      typeof parsed.biggest_change !== "string"
+    ) {
+      throw new Error("Invalid monthly trend response");
+    }
+    return parsed as MonthlyTrendData;
+  } catch (error) {
+    await logAIRequest({
+      userId,
+      model: modelName,
+      requestType: "user_trends_monthly",
+      sectionName: "monthly_trend",
       usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
       duration_ms: Date.now() - startTime,
       success: false,
@@ -521,7 +652,7 @@ export async function updateUserTrendsForUser(
 
 /**
  * 월간 user_trends 생성 (성장 인사이트)
- * monthly_vivid가 있으면 report 활용, 없으면 records에서 report 생성 후 trend 생성
+ * 주간과 동일하게 daily-vivid 기반으로 생성. startDate~endDate는 해당 월 기준(예: 3월 1~31일, 2월 1~28일)
  */
 export async function updateUserTrendsMonthlyForUser(
   supabase: SupabaseClient,
@@ -530,90 +661,37 @@ export async function updateUserTrendsMonthlyForUser(
   startDate: string,
   endDate: string
 ): Promise<UserTrendResult> {
-  const { generateMonthlyTrend } = await import(
-    "@/app/api/monthly-vivid/sections/trend"
-  );
-  const { fetchMonthlyVividByMonth } = await import(
-    "@/app/api/monthly-vivid/monthly-vivid-db"
-  );
-  const { generateVividReportFromRecords } = await import(
-    "@/app/api/monthly-vivid/sections/vivid-from-records"
-  );
-  const { verifySubscription } = await import("@/lib/subscription-utils");
-
-  const { isPro } = await verifySubscription(userId);
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  let report: import("@/types/monthly-vivid").MonthlyReport | null = null;
-  let userName: string | undefined;
-
-  const monthlyVivid = await fetchMonthlyVividByMonth(supabase, userId, month);
-  if (monthlyVivid?.report) {
-    report = monthlyVivid.report;
+  const dailyRows = await fetchDailyScores(supabase, userId, startDate, endDate);
+  if (dailyRows.length === 0) {
+    return { userId, status: "skipped", reason: "no_daily_scores" };
   }
 
-  if (!report) {
-    const { fetchRecordsByDateRange } = await import(
-      "@/app/api/monthly-vivid/records-db"
-    );
-    const records = await fetchRecordsByDateRange(
-      supabase,
-      userId,
-      startDate,
-      endDate
-    );
-    if (records.length === 0) {
-      return { userId, status: "skipped", reason: "no_records" };
-    }
+  const records = await fetchVividRecords(supabase, userId, startDate, endDate);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("name")
-      .eq("id", userId)
-      .single();
-    userName = profile?.name || undefined;
-
-    const dateRange = { start_date: startDate, end_date: endDate };
-    report = await generateVividReportFromRecords(
-      records,
-      month,
-      dateRange,
-      isPro,
-      userId,
-      userName,
-      ""
-    );
-  } else if (monthlyVivid?.month_label) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("name")
-      .eq("id", userId)
-      .single();
-    userName = profile?.name || undefined;
-  }
-
-  if (!report) {
-    return { userId, status: "skipped", reason: "no_report" };
-  }
-
-  const trend = await generateMonthlyTrend(
-    report,
-    month,
+  const monthlyTrend = await generateMonthlyTrendFromDailyData(
+    records,
+    dailyRows,
+    startDate,
+    endDate,
     monthLabel,
-    isPro,
-    userId,
-    userName,
-    "user_trends_monthly"
+    userId
   );
 
-  if (!trend) {
+  if (!monthlyTrend) {
     return { userId, status: "skipped", reason: "trend_generation_failed" };
   }
 
-  const encryptedTrend = encryptJsonbFields(
-    trend as unknown as JsonbValue
-  ) as Record<string, unknown>;
+  const trendPayload: Record<string, unknown> = {
+    ...monthlyTrend,
+    source_count: dailyRows.length,
+  };
+  const trendEncrypted = encryptJsonbFields(trendPayload as unknown as JsonbValue) as Record<
+    string,
+    unknown
+  >;
   const now = new Date().toISOString();
 
   const { error } = await supabase.from(API_ENDPOINTS.USER_TRENDS).upsert(
@@ -622,7 +700,7 @@ export async function updateUserTrendsMonthlyForUser(
       type: "monthly",
       period_start: startDate,
       period_end: endDate,
-      trend: encryptedTrend,
+      trend: trendEncrypted,
       generated_at: now,
       created_at: now,
       updated_at: now,

@@ -40,10 +40,13 @@ function getQstashClient(): Client {
   return new Client({ token });
 }
 
-function getBatchSize(value: string | null): number {
-  const fallback = parseInt(process.env.USER_TRENDS_BATCH_SIZE || "25", 10);
+function getBatchSize(value: string | null, type: "weekly" | "monthly"): number {
+  const envKey =
+    type === "monthly" ? "USER_TRENDS_MONTHLY_BATCH_SIZE" : "USER_TRENDS_WEEKLY_BATCH_SIZE";
+  const fallback =
+    parseInt(process.env[envKey] || process.env.USER_TRENDS_BATCH_SIZE || "5", 10);
   const parsed = parseInt(value || String(fallback), 10);
-  return Math.min(Math.max(parsed, 1), 100);
+  return Math.min(Math.max(parsed, 5), 100);
 }
 
 function isAuthorizedCron(request: NextRequest): boolean {
@@ -95,7 +98,8 @@ export async function GET(
       Math.max(parseInt(searchParams.get("limit") || "100", 10), 1),
       100
     );
-    const batchSize = getBatchSize(searchParams.get("batchSize"));
+    const batchSize = getBatchSize(searchParams.get("batchSize"), type);
+    const concurrencyParam = searchParams.get("concurrency");
     const baseDate = searchParams.get("baseDate");
     const targetUserId = searchParams.get("userId");
     const sync = searchParams.get("sync") === "1";
@@ -144,6 +148,32 @@ export async function GET(
           type === "monthly"
             ? getPreviousMonthKstRange(baseDate || undefined).month
             : undefined;
+
+        if (type === "monthly") {
+          const { count } = await supabase
+            .from(API_ENDPOINTS.DAILY_VIVID)
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", targetUserId)
+            .gte("report_date", startDate)
+            .lte("report_date", endDate);
+          if ((count ?? 0) < 7) {
+            return NextResponse.json({
+              ok: true,
+              mode: "sync",
+              type: "monthly",
+              userId: targetUserId,
+              startDate,
+              endDate,
+              month,
+              result: {
+                userId: targetUserId,
+                status: "skipped",
+                reason: "daily_vivid_count_under_7",
+              },
+              message: "해당 월에 daily-vivid가 7개 이상 있어야 월간 트렌드를 생성할 수 있습니다.",
+            });
+          }
+        }
 
         const result =
           type === "monthly"
@@ -208,6 +238,32 @@ export async function GET(
       console.log("[cron] update-user-trends Pro users:", users.length);
     }
 
+    // monthly: daily-vivid 7개 이상인 유저만 포함
+    if (type === "monthly" && users.length > 0) {
+      const userIdsBefore = users.map((u) => u.id);
+      const { data: dailyRows } = await supabase
+        .from(API_ENDPOINTS.DAILY_VIVID)
+        .select("user_id")
+        .in("user_id", userIdsBefore)
+        .gte("report_date", startDate)
+        .lte("report_date", endDate);
+      const countByUser = new Map<string, number>();
+      for (const row of dailyRows || []) {
+        const uid = (row as { user_id?: string }).user_id;
+        if (uid) countByUser.set(uid, (countByUser.get(uid) || 0) + 1);
+      }
+      const minDailyVivid = 7;
+      users = users.filter((u) => (countByUser.get(u.id) || 0) >= minDailyVivid);
+      if (users.length < userIdsBefore.length) {
+        console.log(
+          "[cron] update-user-trends monthly: filtered to users with >= 7 daily_vivid:",
+          users.length,
+          "of",
+          userIdsBefore.length
+        );
+      }
+    }
+
     // 다음 페이지 존재 여부: auth에서 full page를 받았으면 더 있을 수 있음
     const hasMoreAuthPages = !targetUserId && authPageFull;
     const nextPage = hasMoreAuthPages ? page + 1 : null;
@@ -223,6 +279,8 @@ export async function GET(
         nextUrl.searchParams.set("page", String(nextPage));
         nextUrl.searchParams.set("limit", String(limit));
         nextUrl.searchParams.set("batchSize", String(batchSize));
+        if (concurrencyParam != null && concurrencyParam !== "")
+          nextUrl.searchParams.set("concurrency", concurrencyParam);
         if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
 
         if (cronSecret) {
@@ -251,7 +309,11 @@ export async function GET(
     const month = type === "monthly" ? getPreviousMonthKstRange(baseDate || undefined).month : undefined;
 
     const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
-    const batchUrl = `${baseUrl}/api/cron/update-user-trends/batch`;
+    const batchUrlBase = `${baseUrl}/api/cron/update-user-trends/batch`;
+    const batchUrl =
+      concurrencyParam != null && concurrencyParam !== ""
+        ? `${batchUrlBase}?concurrency=${encodeURIComponent(concurrencyParam)}`
+        : batchUrlBase;
     const qstash = getQstashClient();
     const userIds = users.map((user) => user.id);
     const batches: UserTrendsBatchPayload[] = [];
@@ -285,6 +347,8 @@ export async function GET(
       nextUrl.searchParams.set("page", String(nextPage));
       nextUrl.searchParams.set("limit", String(limit));
       nextUrl.searchParams.set("batchSize", String(batchSize));
+      if (concurrencyParam != null && concurrencyParam !== "")
+        nextUrl.searchParams.set("concurrency", concurrencyParam);
       if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
 
       if (cronSecret) {
