@@ -87,9 +87,16 @@ export async function GET(request: NextRequest) {
 
     const { data: allFeedbacks } = await statsQuery;
 
-    // 통계 계산
+    // 별점 통계: daily/weekly/monthly 이고 rating non-null 인 행만 사용
+    const ratingOnly = (allFeedbacks || []).filter(
+      (f) =>
+        ["daily", "weekly", "monthly"].includes(f.page_type) &&
+        f.rating != null
+    );
+    const ratingCount = ratingOnly.length;
+
     const stats: FeedbackStats = {
-      total: allFeedbacks?.length || 0,
+      total: ratingCount,
       byPageType: {
         daily: allFeedbacks?.filter((f) => f.page_type === "daily").length || 0,
         weekly:
@@ -105,11 +112,11 @@ export async function GET(request: NextRequest) {
         5: allFeedbacks?.filter((f) => f.rating === 5).length || 0,
       },
       averageRating:
-        allFeedbacks && allFeedbacks.length > 0
+        ratingCount > 0
           ? Number(
               (
-                allFeedbacks.reduce((sum, f) => sum + f.rating, 0) /
-                allFeedbacks.length
+                ratingOnly.reduce((sum, f) => sum + (f.rating as number), 0) /
+                ratingCount
               ).toFixed(2)
             )
           : 0,

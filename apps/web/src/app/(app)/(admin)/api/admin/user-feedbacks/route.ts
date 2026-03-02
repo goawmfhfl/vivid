@@ -5,9 +5,10 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 interface UserFeedbackRow {
   id: string;
   page_type: string;
-  rating: number;
+  rating: number | null;
   comment: string | null;
   created_at: string;
+  announcement_id?: string | null;
 }
 
 /**
@@ -57,27 +58,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 통계 계산
+    // 통계 계산 (별점 통계는 daily/weekly/monthly + rating non-null 만 포함)
     const { data: allFeedbacks } = await supabase
       .from("user_feedbacks")
       .select("rating, page_type");
 
+    const ratingOnly = (allFeedbacks || []).filter(
+      (f) =>
+        ["daily", "weekly", "monthly"].includes(f.page_type) &&
+        f.rating != null
+    );
+    const ratingCount = ratingOnly.length;
+
     const stats = {
       total: allFeedbacks?.length || 0,
-      averageRating: allFeedbacks?.length
-        ? (allFeedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / allFeedbacks.length).toFixed(2)
+      averageRating: ratingCount
+        ? (ratingOnly.reduce((sum, f) => sum + (f.rating as number), 0) / ratingCount).toFixed(2)
         : "0",
       byPageType: {
-        daily: allFeedbacks?.filter(f => f.page_type === "daily").length || 0,
-        weekly: allFeedbacks?.filter(f => f.page_type === "weekly").length || 0,
-        monthly: allFeedbacks?.filter(f => f.page_type === "monthly").length || 0,
+        daily: allFeedbacks?.filter((f) => f.page_type === "daily").length || 0,
+        weekly: allFeedbacks?.filter((f) => f.page_type === "weekly").length || 0,
+        monthly: allFeedbacks?.filter((f) => f.page_type === "monthly").length || 0,
       },
       byRating: {
-        1: allFeedbacks?.filter(f => f.rating === 1).length || 0,
-        2: allFeedbacks?.filter(f => f.rating === 2).length || 0,
-        3: allFeedbacks?.filter(f => f.rating === 3).length || 0,
-        4: allFeedbacks?.filter(f => f.rating === 4).length || 0,
-        5: allFeedbacks?.filter(f => f.rating === 5).length || 0,
+        1: allFeedbacks?.filter((f) => f.rating === 1).length || 0,
+        2: allFeedbacks?.filter((f) => f.rating === 2).length || 0,
+        3: allFeedbacks?.filter((f) => f.rating === 3).length || 0,
+        4: allFeedbacks?.filter((f) => f.rating === 4).length || 0,
+        5: allFeedbacks?.filter((f) => f.rating === 5).length || 0,
       },
     };
 
@@ -88,6 +96,7 @@ export async function GET(request: NextRequest) {
       rating: feedback.rating,
       comment: feedback.comment,
       createdAt: feedback.created_at,
+      announcementId: feedback.announcement_id ?? null,
     }));
 
     return NextResponse.json({

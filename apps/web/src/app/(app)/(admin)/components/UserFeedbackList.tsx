@@ -19,9 +19,10 @@ import { AdminSelect } from "./AdminSelect";
 interface UserFeedback {
   id: string;
   pageType: string;
-  rating: number;
+  rating: number | null;
   comment: string | null;
   createdAt: string;
+  announcementId?: string | null;
 }
 
 interface FeedbackStats {
@@ -56,6 +57,7 @@ const PAGE_TYPE_LABELS: Record<string, string> = {
   daily: "Daily Vivid",
   weekly: "Weekly Vivid",
   monthly: "Monthly Vivid",
+  announcement: "공지사항",
 };
 
 export function UserFeedbackList() {
@@ -301,26 +303,32 @@ export function UserFeedbackList() {
               평점 분포
             </span>
             <div className="mt-2 space-y-1">
-              {[5, 4, 3, 2, 1].map((rating) => (
-                <div key={rating} className="flex items-center gap-2 text-sm">
-                  <span style={{ color: COLORS.text.tertiary }}>{rating}점</span>
-                  <div
-                    className="flex-1 h-2 rounded-full overflow-hidden"
-                    style={{ backgroundColor: COLORS.background.hover }}
-                  >
+              {(() => {
+                const ratingTotal = [1, 2, 3, 4, 5].reduce(
+                  (sum, r) => sum + stats.byRating[r as keyof typeof stats.byRating],
+                  0
+                );
+                return [5, 4, 3, 2, 1].map((rating) => (
+                  <div key={rating} className="flex items-center gap-2 text-sm">
+                    <span style={{ color: COLORS.text.tertiary }}>{rating}점</span>
                     <div
-                      className="h-full rounded-full"
-                      style={{
-                        backgroundColor: COLORS.brand.primary,
-                        width: `${stats.total > 0 ? (stats.byRating[rating as keyof typeof stats.byRating] / stats.total) * 100 : 0}%`,
-                      }}
-                    />
+                      className="flex-1 h-2 rounded-full overflow-hidden"
+                      style={{ backgroundColor: COLORS.background.hover }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          backgroundColor: COLORS.brand.primary,
+                          width: `${ratingTotal > 0 ? (stats.byRating[rating as keyof typeof stats.byRating] / ratingTotal) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                    <span style={{ color: COLORS.text.primary, minWidth: "24px" }}>
+                      {stats.byRating[rating as keyof typeof stats.byRating]}
+                    </span>
                   </div>
-                  <span style={{ color: COLORS.text.primary, minWidth: "24px" }}>
-                    {stats.byRating[rating as keyof typeof stats.byRating]}
-                  </span>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -344,6 +352,7 @@ export function UserFeedbackList() {
               { value: "daily", label: "Daily Vivid" },
               { value: "weekly", label: "Weekly Vivid" },
               { value: "monthly", label: "Monthly Vivid" },
+              { value: "announcement", label: "공지사항" },
             ]}
           />
           <AdminSelect
@@ -582,7 +591,7 @@ export function UserFeedbackList() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <span
                       className="px-2 py-1 rounded text-xs font-medium"
                       style={{
@@ -592,7 +601,16 @@ export function UserFeedbackList() {
                     >
                       {PAGE_TYPE_LABELS[feedback.pageType] || feedback.pageType}
                     </span>
-                    {renderStars(feedback.rating)}
+                    {feedback.pageType === "announcement" ? (
+                      <span className="text-xs" style={{ color: COLORS.text.tertiary }}>
+                        공지 피드백
+                        {feedback.announcementId && (
+                          <> · 공지 ID: {feedback.announcementId.slice(0, 8)}…</>
+                        )}
+                      </span>
+                    ) : (
+                      feedback.rating != null && renderStars(feedback.rating)
+                    )}
                     <span
                       className="text-sm"
                       style={{ color: COLORS.text.tertiary }}
