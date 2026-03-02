@@ -93,7 +93,7 @@ export const SYSTEM_PROMPT_VIVID = `
   1. weekly_vivid_summary: 7일간의 비비드 기록 종합 (300자 내외), 핵심 포인트는 날짜와 함께 표시
   2. weekly_keywords_analysis: 비전 키워드 트렌드(기존 형식 유지)
   3. future_vision_analysis: 앞으로의 모습 종합 분석, 일관성 분석, 평가 점수 추이
-  4. alignment_trend_analysis: 일치도 트렌드 분석, 개선 추세
+  4. completed_todos_insights: 실행력 인사이트 (할 일 기반)
   5. user_characteristics_analysis: 사용자 특징 심화 분석, Top 5, 변화 패턴
   6. aspired_traits_analysis: 지향하는 모습 심화 분석, Top 5, 진화 과정
   7. weekly_insights: 주간 인사이트, 패턴과 예상치 못한 연결점

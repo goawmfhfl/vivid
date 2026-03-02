@@ -5,6 +5,7 @@ import {
   buildPersonaContextBlock,
 } from "@/lib/user-persona";
 import { fetchRecordsByDateRange, saveWeeklyVivid } from "../db-service";
+import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { generateWeeklyVividFromRecordsWithProgress } from "../ai-service-stream";
 import type { WeeklyVividGenerateRequest } from "../types";
 import { verifySubscription } from "@/lib/subscription-utils";
@@ -130,6 +131,14 @@ export async function POST(request: NextRequest) {
       // 조회/복호화 실패 시 빈 문자열 유지
     }
 
+    // 1.6️⃣ 할 일 데이터 조회 (실행력 인사이트용)
+    const todoData = await fetchTodoItemsByDateRange(
+      supabase,
+      userId,
+      start,
+      end
+    );
+
     // 2️⃣ AI 요청: Weekly Vivid 생성 (Gemini API 사용, 기록 기반)
     const weeklyVivid = await generateWeeklyVividFromRecordsWithProgress(
       records,
@@ -137,7 +146,8 @@ export async function POST(request: NextRequest) {
       isPro,
       userId, // AI 사용량 로깅을 위한 userId 전달
       userName, // 사용자 이름 전달
-      personaContext
+      personaContext,
+      todoData
     );
 
     // 추적 정보 제거 (DB 저장 전)

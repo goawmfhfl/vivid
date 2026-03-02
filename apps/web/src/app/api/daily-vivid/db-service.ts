@@ -387,3 +387,96 @@ export async function fetchTodoListsForDate(
   );
   return { todoLists, hasNativeTodoList };
 }
+
+export type TodoItemByDateRange = {
+  date: string;
+  contents: string;
+  category: string;
+  is_checked: boolean;
+};
+
+/**
+ * 주간 비비드용: 날짜 범위 내 todo_list_items 조회
+ * - daily_vivid 기반 네이티브 + scheduled_at 기반 스케줄
+ * - uses_todo_list: 할 일을 만들고 1개 이상 체크한 사람만 true
+ */
+export async function fetchTodoItemsByDateRange(
+  supabase: SupabaseClient,
+  userId: string,
+  startDate: string,
+  endDate: string
+): Promise<{
+  items: TodoItemByDateRange[];
+  uses_todo_list: boolean;
+}> {
+  const dates: string[] = [];
+  const d = new Date(startDate);
+  const end = new Date(endDate);
+  while (d <= end) {
+    dates.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 1);
+  }
+
+  if (dates.length === 0) {
+    return { items: [], uses_todo_list: false };
+  }
+
+  const { data: vividRows } = await supabase
+    .from("daily_vivid")
+    .select("id, report_date")
+    .eq("user_id", userId)
+    .eq("type", "vivid")
+    .in("report_date", dates);
+
+  const vividIdByDate = new Map<string, string>();
+  for (const r of vividRows ?? []) {
+    vividIdByDate.set(r.report_date, r.id);
+  }
+
+  const vividIds = Array.from(vividIdByDate.values());
+  const items: TodoItemByDateRange[] = [];
+  const seenIds = new Set<string>();
+
+  if (vividIds.length > 0) {
+    const { data: nativeRows } = await supabase
+      .from("todo_list_items")
+      .select("id, daily_vivid_id, contents, category, is_checked")
+      .in("daily_vivid_id", vividIds);
+    for (const row of nativeRows ?? []) {
+      if (seenIds.has(row.id)) continue;
+      seenIds.add(row.id);
+      const date = [...vividIdByDate.entries()].find(
+        ([, id]) => id === row.daily_vivid_id
+      )?.[0];
+      if (date) {
+        items.push({
+          date,
+          contents: decrypt(row.contents),
+          category: decrypt(row.category),
+          is_checked: row.is_checked === true,
+        });
+      }
+    }
+  }
+
+  const { data: scheduledRows } = await supabase
+    .from("todo_list_items")
+    .select("id, scheduled_at, contents, category, is_checked")
+    .eq("user_id", userId)
+    .in("scheduled_at", dates);
+  for (const row of scheduledRows ?? []) {
+    const d = row.scheduled_at;
+    if (d && !seenIds.has(row.id)) {
+      seenIds.add(row.id);
+      items.push({
+        date: d,
+        contents: decrypt(row.contents),
+        category: decrypt(row.category),
+        is_checked: row.is_checked === true,
+      });
+    }
+  }
+
+  const uses_todo_list = items.some((i) => i.is_checked);
+  return { items, uses_todo_list };
+}

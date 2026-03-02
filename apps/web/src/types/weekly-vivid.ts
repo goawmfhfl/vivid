@@ -49,23 +49,20 @@ export type WeeklyReport = {
     }>;
   };
 
-  // 4. 일치도 트렌드 분석
-  alignment_trend_analysis: {
-    daily_alignment_scores: Array<{
-      date: string;
-      score: number;
+  // 4. 실행력 인사이트 (할 일 기반) - 기존 리포트 호환을 위해 optional
+  completed_todos_insights?: {
+    uses_todo_list: boolean; // DB/로직에서 계산 (할 일 만들고 1개 이상 체크한 사람만 true)
+    completed_by_category: Array<{
+      category: string;
+      count: number;
+      items: string[]; // 구체적 한 줄 설명 (예: "RevenueCat 결제 연동 및 구독 플로우 설계 진행")
+      description?: string; // 카테고리 전체 구체적 요약 (기존 리포트 호환용 optional)
     }>;
-    highest_alignment_day: {
-      date: string;
-      score: number;
-      pattern: string;
-    };
-    lowest_alignment_day: {
-      date: string;
-      score: number;
-      pattern: string;
-    };
-    trend: "improving" | "declining" | "stable";
+    time_investment_summary: string;
+    time_investment_breakdown?: Array<{ category: string; percentage: number }>; // 도넛 차트용
+    repetitive_patterns: string[];
+    new_areas: string[];
+    incomplete_patterns: string[] | null;
   };
 
   // 5. 사용자 특징 심화 분석

@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/common/feedback";
 import { WeeklyVividSummarySection } from "./sections/WeeklyVividSummarySection";
 import { WeeklyKeywordsAnalysisSection } from "./sections/WeeklyKeywordsAnalysisSection";
 import { FutureVisionAnalysisSection } from "./sections/FutureVisionAnalysisSection";
-import { AlignmentTrendAnalysisSection } from "./sections/AlignmentTrendAnalysisSection";
+import { CompletedTodosInsightsSection } from "./sections/CompletedTodosInsightsSection";
 import { UserCharacteristicsAnalysisSection } from "./sections/UserCharacteristicsAnalysisSection";
 import { AspiredTraitsAnalysisSection } from "./sections/AspiredTraitsAnalysisSection";
 import { WeeklyInsightsSection } from "./sections/WeeklyInsightsSection";
@@ -20,7 +20,7 @@ type VividSectionProps = {
 /**
  * 주간 비비드 리포트 섹션
  * 7개 주요 섹션을 포함: 주간 비비드 요약, 주간 키워드 분석,
- * 앞으로의 모습 종합 분석, 일치도 트렌드 분석, 사용자 특징 심화 분석,
+ * 앞으로의 모습 종합 분석, 실행력 인사이트, 사용자 특징 심화 분석,
  * 지향하는 모습 심화 분석, 주간 인사이트
  */
 export function VividSection({
@@ -58,9 +58,9 @@ export function VividSection({
           futureVisionAnalysis={vividReport.future_vision_analysis}
         />
 
-        {/* 4. 일치도 트렌드 분석 */}
-        <AlignmentTrendAnalysisSection
-          alignmentTrendAnalysis={vividReport.alignment_trend_analysis}
+        {/* 4. 실행력 인사이트 */}
+        <CompletedTodosInsightsSection
+          completedTodosInsights={vividReport.completed_todos_insights}
           vividColor={vividColor}
         />
 

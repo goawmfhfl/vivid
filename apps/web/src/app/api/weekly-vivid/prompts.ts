@@ -1,5 +1,6 @@
 import type { DailyVividForWeekly, RecordsForWeekly } from "./types";
 import type { WeeklyReport } from "@/types/weekly-vivid";
+import type { TodoItemByDateRange } from "@/app/api/daily-vivid/db-service";
 
 /**
  * 모든 섹션을 포함하는 통합 프롬프트 생성
@@ -80,7 +81,7 @@ export function buildUnifiedWeeklyVividPrompt(
 4. 날짜 표현 시 정확한 날짜와 요일을 함께 언급하세요.
 
 **섹션별 요구사항:**
-1. report: 일주일간의 비비드 분석 - 8개 섹션 모두 포함 (주간 비비드 요약, 평가, 키워드 분석, 앞으로의 모습 분석, 일치도 트렌드, 사용자 특징 분석, 지향하는 모습 분석, 주간 인사이트)
+1. report: 일주일간의 비비드 분석 - 7개 섹션 모두 포함 (주간 비비드 요약, 키워드 분석, 앞으로의 모습 분석, 실행력 인사이트, 사용자 특징 분석, 지향하는 모습 분석, 주간 인사이트)
 
 모든 섹션을 스키마에 맞게 완전히 작성해주세요.`;
 
@@ -182,11 +183,11 @@ export function buildWeeklyVividPrompt(
    - consistency_analysis: 일관성 있는 비전 vs 변화하는 비전 분석
    - evaluation_trend: 주간 비전 평가 점수 추이 (future_evaluation 점수 추이)
 
-4. **alignment_trend_analysis (일치도 트렌드 분석)**
-   - daily_alignment_scores: ${weekRange.start}부터 ${weekRange.end}까지 일치도 점수 변화 (alignment_score 추이)
-   - highest_alignment_day/lowest_alignment_day: 일치도가 높았던/낮았던 날의 패턴
-   - trend: "improving" | "declining" | "stable" 중 하나
-
+4. **completed_todos_insights (실행력 인사이트)** - 할 일 데이터가 제공된 경우에만 분석
+   - completed_by_category: 카테고리별(count, items, description). items는 각 완료 항목을 구체적으로 한 줄로 (예: "RevenueCat 결제 연동 및 구독 플로우 설계 진행"), description은 카테고리 전체 구체적 요약
+   - time_investment_summary, time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%, 도넛 차트용)
+   - repetitive_patterns, new_areas
+   - incomplete_patterns: uses_todo_list가 true일 때만 (false면 빈 배열)
 5. **user_characteristics_analysis (사용자 특징 심화 분석)**
    - consistency_summary: ${userName ? `"${userName}님"` : "사용자"}을(를) 명시적으로 언급하며, ${weekRange.start}부터 ${weekRange.end}까지 특징의 일관성을 요약${userName ? ` (예: "${userName}님은 이번 주 동안...")` : ""}
    - top_5_characteristics: ${userName ? `"${userName}님"` : "사용자"}의 이름을 기반으로 명확하게 어떤 특징이 있는지 분석한 Top 5 (frequency와 dates 포함${userName ? `, 각 특징 설명 시 "${userName}님"을 포함` : ""})
@@ -207,6 +208,11 @@ export function buildWeeklyVividPrompt(
   return prompt;
 }
 
+export type TodoDataForWeekly = {
+  items: TodoItemByDateRange[];
+  uses_todo_list: boolean;
+};
+
 /**
  * 기록 기반 주간 비비드 프롬프트 생성
  * vivid-records의 실제 기록을 기반으로 주간 피드백 생성
@@ -215,7 +221,8 @@ export function buildWeeklyVividPromptFromRecords(
   records: RecordsForWeekly,
   weekRange: { start: string; end: string; timezone: string },
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForWeekly
 ): string {
   // 기록이 없으면 빈 문자열 반환
   if (!records || records.length === 0) {
@@ -277,6 +284,30 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
     });
   });
 
+  // 할 일 현황 블록 (todoData가 있을 때만)
+  if (todoData && todoData.items.length > 0) {
+    prompt += `\n\n[할 일 현황] (uses_todo_list: ${todoData.uses_todo_list})\n`;
+    const itemsByDate = new Map<string, typeof todoData.items>();
+    todoData.items.forEach((item) => {
+      if (!itemsByDate.has(item.date)) itemsByDate.set(item.date, []);
+      itemsByDate.get(item.date)!.push(item);
+    });
+    Array.from(itemsByDate.keys())
+      .sort()
+      .forEach((date) => {
+        const items = itemsByDate.get(date)!;
+        const completed = items.filter((i) => i.is_checked);
+        const incomplete = items.filter((i) => !i.is_checked);
+        prompt += `\n${date}:\n`;
+        if (completed.length > 0) {
+          prompt += `  완료: ${completed.map((i) => `[${i.category}] ${i.contents}`).join(" | ")}\n`;
+        }
+        if (incomplete.length > 0) {
+          prompt += `  미완료: ${incomplete.map((i) => `[${i.category}] ${i.contents}`).join(" | ")}\n`;
+        }
+      });
+  }
+
   prompt += `\n\n위 기록들을 종합하여 주간 비비드 리포트(report)의 7개 섹션을 모두 생성하세요:
 
 **⚠️ 중요: 반드시 ${weekRange.start}부터 ${weekRange.end}까지의 전체 기간을 분석해야 합니다.**
@@ -300,11 +331,13 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
    - consistency_analysis: 일관성 있는 비전 vs 변화하는 비전 분석
    - evaluation_trend: 주간 비전의 명확성과 일관성 추이 분석
 
-4. **alignment_trend_analysis (일치도 트렌드 분석)**
-   - daily_alignment_scores: ${weekRange.start}부터 ${weekRange.end}까지 Q1(오늘의 계획)과 Q2(미래 비전)의 일치도를 날짜별로 분석
-   - highest_alignment_day/lowest_alignment_day: Q1과 Q2가 가장 잘 일치했던/일치하지 않았던 날의 패턴 분석
-   - trend: "improving" | "declining" | "stable" 중 하나
-
+4. **completed_todos_insights (실행력 인사이트)** - 아래 [할 일 현황] 데이터 기반
+   - completed_by_category: 카테고리별(업무/운동/학습/생활/관계/기타) 완료 현황. description은 카테고리 전체를 한 줄로 구체적으로 요약 (어떤 일을 어떻게 진행했는지). items는 각 완료 항목을 구체적으로 한 줄로 표현 (예: "RevenueCat 조사" 대신 "RevenueCat 결제 연동 및 구독 플로우 설계 진행")
+   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약
+   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%), 도넛 차트 시각화용
+   - repetitive_patterns: 반복되는 패턴
+   - new_areas: 새로 나타난 영역
+   - incomplete_patterns: uses_todo_list가 true일 때만 미완료 패턴 분석 (false면 빈 배열)
 5. **user_characteristics_analysis (사용자 특징 심화 분석)**
    - consistency_summary: ${userName ? `"${userName}님"` : "사용자"}을(를) 명시적으로 언급하며, ${weekRange.start}부터 ${weekRange.end}까지 기록에서 드러난 특징의 일관성을 요약${userName ? ` (예: "${userName}님은 이번 주 동안...")` : ""}
    - top_5_characteristics: ${userName ? `"${userName}님"` : "사용자"}의 이름을 기반으로 기록에서 드러난 특징을 명확하게 분석한 Top 5 (frequency와 dates 포함${userName ? `, 각 특징 설명 시 "${userName}님"을 포함` : ""})

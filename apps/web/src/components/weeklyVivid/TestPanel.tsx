@@ -65,8 +65,8 @@ export function TestPanel({ view, isPro, onTogglePro }: TestPanelProps) {
           isPro: false,
         },
         {
-          name: "alignment_trend_analysis",
-          path: "view.report.alignment_trend_analysis",
+          name: "completed_todos_insights",
+          path: "view.report.completed_todos_insights",
           isPro: false,
         },
         {

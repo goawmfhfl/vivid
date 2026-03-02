@@ -131,57 +131,69 @@ export function getVividReportSchema(isPro: boolean) {
         ],
       },
 
-      // 4. 일치도 트렌드 분석
-      alignment_trend_analysis: {
+      // 4. 실행력 인사이트 (할 일 기반, uses_todo_list는 AI 스키마 제외, 서버에서 주입)
+      completed_todos_insights: {
         type: "object",
         additionalProperties: false,
         properties: {
-          daily_alignment_scores: {
+          completed_by_category: {
             type: "array",
             items: {
               type: "object",
               additionalProperties: false,
               properties: {
-                date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-                score: { type: "number", minimum: 0, maximum: 100 },
+                category: { type: "string" },
+                count: { type: "integer", minimum: 0 },
+                items: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "각 항목을 구체적으로 한 줄로 표현 (예: RevenueCat 조사 → RevenueCat 결제 연동 및 구독 플로우 설계 진행)",
+                },
+                description: {
+                  type: "string",
+                  description: "카테고리 전체를 한 줄로 구체적으로 요약 (어떤 일을 어떻게 진행했는지)",
+                },
               },
-              required: ["date", "score"],
+              required: ["category", "count", "items"],
             },
-            minItems: 0,
-            maxItems: 7,
-            description: "7일간 일치도 점수 변화",
+            description: "카테고리별 완료 현황",
           },
-          highest_alignment_day: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-              score: { type: "number", minimum: 0, maximum: 100 },
-              pattern: { type: "string" },
+          time_investment_summary: { type: "string" },
+          time_investment_breakdown: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                percentage: { type: "number", minimum: 0, maximum: 100 },
+              },
+              required: ["category", "percentage"],
             },
-            required: ["date", "score", "pattern"],
+            description: "카테고리별 시간 투자 비율 (합계 100%, 도넛 차트용)",
           },
-          lowest_alignment_day: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
-              score: { type: "number", minimum: 0, maximum: 100 },
-              pattern: { type: "string" },
-            },
-            required: ["date", "score", "pattern"],
+          repetitive_patterns: {
+            type: "array",
+            items: { type: "string" },
+            description: "반복 패턴",
           },
-          trend: {
-            type: "string",
-            enum: ["improving", "declining", "stable"],
-            description: "일치도 개선 추세",
+          new_areas: {
+            type: "array",
+            items: { type: "string" },
+            description: "새로운 영역",
+          },
+          incomplete_patterns: {
+            type: "array",
+            items: { type: "string" },
+            description: "미완료 패턴 (uses_todo_list true일 때만, false면 빈 배열)",
           },
         },
         required: [
-          "daily_alignment_scores",
-          "highest_alignment_day",
-          "lowest_alignment_day",
-          "trend",
+          "completed_by_category",
+          "time_investment_summary",
+          "repetitive_patterns",
+          "new_areas",
+          "incomplete_patterns",
         ],
       },
 
@@ -385,7 +397,7 @@ export function getVividReportSchema(isPro: boolean) {
       "weekly_vivid_summary",
       "weekly_keywords_analysis",
       "future_vision_analysis",
-      "alignment_trend_analysis",
+      "completed_todos_insights",
       "user_characteristics_analysis",
       "aspired_traits_analysis",
       "weekly_insights",

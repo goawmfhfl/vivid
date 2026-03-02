@@ -4,6 +4,7 @@ import {
   SYSTEM_PROMPT_VIVID,
 } from "./schema";
 import type { RecordsForWeekly } from "./types";
+import type { TodoDataForWeekly } from "./prompts";
 import {
   buildWeeklyVividPromptFromRecords,
 } from "./prompts";
@@ -487,13 +488,15 @@ async function generateWeeklyVividDataFromRecords(
   isPro: boolean,
   userId?: string,
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForWeekly
 ): Promise<Partial<WeeklyVivid>> {
   const prompt = buildWeeklyVividPromptFromRecords(
     records,
     range,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
   const schema = getWeeklyVividSchema(isPro);
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, prompt);
@@ -514,8 +517,34 @@ async function generateWeeklyVividDataFromRecords(
   }
 
   // response가 직접 { weekly_vivid: ... } 구조인지 확인
-  if (response.weekly_vivid) {
-    return response.weekly_vivid;
+  let result = response.weekly_vivid;
+  const cti = result?.report?.completed_todos_insights;
+  if (result && cti) {
+    // uses_todo_list: todoData가 있으면 해당 값 사용, 없으면 실제 데이터 유무로 추론
+    const hasContent =
+      (cti.completed_by_category?.length ?? 0) > 0 ||
+      !!cti.time_investment_summary ||
+      (cti.time_investment_breakdown?.length ?? 0) > 0 ||
+      (cti.repetitive_patterns?.length ?? 0) > 0 ||
+      (cti.new_areas?.length ?? 0) > 0 ||
+      (cti.incomplete_patterns?.length ?? 0) > 0;
+    const usesTodoList =
+      todoData?.uses_todo_list ?? (hasContent ? true : false);
+
+    result = {
+      ...result,
+      report: {
+        ...result.report,
+        completed_todos_insights: {
+          ...cti,
+          uses_todo_list: usesTodoList,
+        },
+      },
+    };
+  }
+
+  if (result) {
+    return result;
   }
 
   // 혹시라도 구조가 다르게 왔을 경우 처리 (예: 직접 객체 반환)
@@ -544,7 +573,8 @@ export async function generateWeeklyVividFromRecordsWithProgress(
   isPro: boolean = false,
   userId?: string,
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForWeekly
 ): Promise<WeeklyVivid> {
   // report, title만 생성 (trend는 user-trends cron에서 별도 생성)
   const weeklyVividData = await generateWeeklyVividDataFromRecords(
@@ -553,7 +583,8 @@ export async function generateWeeklyVividFromRecordsWithProgress(
     isPro,
     userId,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
 
   // 데이터 검증 및 기본값 처리

@@ -4,6 +4,7 @@ import {
   buildPersonaContextBlock,
 } from "@/lib/user-persona";
 import { fetchRecordsByDateRange, saveWeeklyVivid } from "@/app/api/weekly-vivid/db-service";
+import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { generateWeeklyVividFromRecordsWithProgress } from "@/app/api/weekly-vivid/ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { WeeklyVivid } from "@/types/weekly-vivid";
@@ -78,13 +79,21 @@ export async function generateWeeklyReportForUser(
     timezone: "Asia/Seoul",
   };
 
+  const todoData = await fetchTodoItemsByDateRange(
+    supabase,
+    userId,
+    startDate,
+    endDate
+  );
+
   const weeklyVivid = await generateWeeklyVividFromRecordsWithProgress(
     records,
     range,
     isPro,
     userId,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
 
   const cleanedFeedback = removeTrackingInfo(weeklyVivid);
