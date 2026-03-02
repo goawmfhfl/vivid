@@ -1,5 +1,6 @@
 import type { MonthlyReport } from "@/types/monthly-vivid";
 import type { Record } from "../../daily-vivid/types";
+import type { TodoDataForMonthly } from "../prompts/vivid-from-records";
 import { getSectionSchema } from "../schema-helpers";
 import { generateSection } from "../ai-helpers";
 import { SYSTEM_PROMPT_VIVID } from "../system-prompts";
@@ -16,7 +17,8 @@ export async function generateVividReportFromRecords(
   isPro: boolean,
   userId?: string,
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForMonthly
 ): Promise<MonthlyReport> {
   const schema = getSectionSchema("report", isPro);
   const userPrompt = buildVividReportPromptFromRecords(
@@ -24,7 +26,8 @@ export async function generateVividReportFromRecords(
     month,
     dateRange,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
   const cacheKey = generateCacheKey(SYSTEM_PROMPT_VIVID, userPrompt);
 

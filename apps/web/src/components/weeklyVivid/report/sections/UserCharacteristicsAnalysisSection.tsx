@@ -84,7 +84,7 @@ export function UserCharacteristicsAnalysisSection({
 
   return (
     <ScrollAnimation delay={500}>
-      <div className="space-y-5">
+      <div className="space-y-5 mb-60">
       <ContentCard
         label="사용자 특징 심화 분석"
         content={

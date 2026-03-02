@@ -9,8 +9,9 @@ import {
   BarChart3,
   ChevronDown,
   ChevronUp,
+  MessageCircle,
 } from "lucide-react";
-import type { WeeklyReport } from "@/types/weekly-vivid";
+import type { MonthlyReport } from "@/types/monthly-vivid";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { GradientCard } from "@/components/common/feedback";
@@ -38,17 +39,17 @@ function toRadarData(
   }));
 }
 
-/** 이번 주 한 일 분석 섹션 전용 그린 컬러 (프로젝트 브랜드) */
+/** 이번 달 한 일 분석 섹션 전용 그린 컬러 (프로젝트 브랜드) */
 const SECTION_GREEN = COLORS.primary[500]; // #7f8f7a
 const SECTION_GREEN_RGB = "127, 143, 122";
 
 type CompletedTodosInsightsSectionProps = {
-  completedTodosInsights: WeeklyReport["completed_todos_insights"] | undefined;
+  completedTodosInsights: MonthlyReport["completed_todos_insights"] | undefined;
   vividColor: string;
 };
 
 /**
- * 이번 주 한 일 분석 섹션 (실행력 인사이트)
+ * 이번 달 한 일 분석 섹션 (실행력 인사이트)
  * - exclude_todo_completion이 true면 섹션 숨김
  * - uses_todo_list가 false면 할 일 미사용 안내
  * - 그린 컬러 일관 적용, 도넛 차트, 카테고리별 드롭다운
@@ -59,14 +60,43 @@ export function CompletedTodosInsightsSection({
 }: CompletedTodosInsightsSectionProps) {
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
 
-  
 
   const greenColor = SECTION_GREEN;
   const rgb = SECTION_GREEN_RGB;
 
   // 데이터 없음 (이전 버전 리포트 또는 로딩)
   if (!completedTodosInsights) {
-    return null
+    return (
+      <ScrollAnimation delay={0}>
+        <GradientCard gradientColor={rgb}>
+          <div className="flex items-start gap-4 mb-60">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: `linear-gradient(135deg, ${greenColor}, ${greenColor}cc)`,
+                boxShadow: `0 2px 12px ${greenColor}40`,
+              }}
+            >
+              <ListTodo className="w-6 h-6" style={{ color: "white" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3
+                className={cn(TYPOGRAPHY.body.fontSize, "font-semibold mb-1")}
+                style={{ color: COLORS.text.primary }}
+              >
+                이번 달 한 일 분석
+              </h3>
+              <p
+                className={cn(TYPOGRAPHY.bodySmall.fontSize, TYPOGRAPHY.bodySmall.lineHeight)}
+                style={{ color: COLORS.text.tertiary }}
+              >
+                이전 버전의 리포트입니다. 새로운 월간 비비드를 생성하면 실행력 인사이트를 확인할 수 있습니다.
+              </p>
+            </div>
+          </div>
+        </GradientCard>
+      </ScrollAnimation>
+    );
   }
 
   const { uses_todo_list } = completedTodosInsights;
@@ -77,6 +107,8 @@ export function CompletedTodosInsightsSection({
     repetitive_patterns,
     new_areas,
     incomplete_patterns,
+    encouragement_message,
+    encouragement_insight,
   } = completedTodosInsights;
 
   const hasAnyContent =
@@ -85,7 +117,9 @@ export function CompletedTodosInsightsSection({
     (time_investment_breakdown?.length ?? 0) > 0 ||
     (repetitive_patterns?.length ?? 0) > 0 ||
     (new_areas?.length ?? 0) > 0 ||
-    (incomplete_patterns?.length ?? 0) > 0;
+    (incomplete_patterns?.length ?? 0) > 0 ||
+    !!encouragement_message ||
+    !!encouragement_insight;
 
   // 할 일 미사용 (만들었지만 체크 없음)
   if (!uses_todo_list && !hasAnyContent) {
@@ -107,13 +141,13 @@ export function CompletedTodosInsightsSection({
                 className={cn(TYPOGRAPHY.body.fontSize, "font-semibold mb-1")}
                 style={{ color: COLORS.text.primary }}
               >
-                이번 주 한 일 분석
+                이번 달 한 일 분석
               </h3>
               <p
                 className={cn(TYPOGRAPHY.bodySmall.fontSize, TYPOGRAPHY.bodySmall.lineHeight)}
                 style={{ color: COLORS.text.secondary }}
               >
-                이번 주 할 일 기록이 없어 실행력 인사이트를 제공할 수 없습니다. 할 일을 작성하고 완료하면 여기서 분석 결과를 확인할 수 있습니다.
+                이번 달 할 일 기록이 없어 실행력 인사이트를 제공할 수 없습니다. 할 일을 작성하고 완료하면 여기서 분석 결과를 확인할 수 있습니다.
               </p>
             </div>
           </div>
@@ -122,44 +156,52 @@ export function CompletedTodosInsightsSection({
     );
   }
 
-  const CHART_COLORS = [
-    COLORS.primary[500],
-    COLORS.primary[400],
-    COLORS.primary[600],
-    COLORS.primary[300],
-    COLORS.primary[700],
-    COLORS.secondary[400],
-  ];
 
   return (
     <ScrollAnimation delay={300}>
-      <div className="space-y-5 max-w-4xl mx-auto w-full">
-        {/* 4. 이번 주 한 일 분석 - 섹션 헤더 (앞으로의 모습 종합 분석과 동일 스타일) */}
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{
-              background: `linear-gradient(135deg, ${greenColor}, ${greenColor}cc)`,
-              boxShadow: `0 2px 12px ${greenColor}40`,
-            }}
-          >
-            <span
-              className={cn(TYPOGRAPHY.body.fontSize, "font-bold")}
-              style={{ color: "white" }}
+      <div className="space-y-5 max-w-4xl mx-auto w-full mb-60">
+        {/* 5. 이번 달 한 일 분석 - 섹션 헤더 (2번·6번과 동일 스타일) */}
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, ${greenColor}, ${greenColor}cc)`,
+                boxShadow: `0 4px 12px ${greenColor}30, inset 0 1px 0 rgba(255, 255, 255, 0.2)`,
+              }}
             >
-              4
-            </span>
+              <span
+                className={cn(
+                  TYPOGRAPHY.h3.fontSize,
+                  TYPOGRAPHY.h3.fontWeight,
+                  "relative z-10"
+                )}
+                style={{ color: "white" }}
+              >
+                5
+              </span>
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: `radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%)`,
+                }}
+              />
+            </div>
           </div>
-          <div>
-            <h3
-              className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight, "uppercase tracking-wide")}
-              style={{ color: COLORS.text.secondary }}
+          <div className="flex-1 pt-1">
+            <h2
+              className={cn(
+                TYPOGRAPHY.h2.fontSize,
+                TYPOGRAPHY.h2.fontWeight,
+                "mb-2"
+              )}
+              style={{ color: COLORS.text.primary }}
             >
-              이번 주 한 일 분석
-            </h3>
+              이번 달 한 일 분석
+            </h2>
             <p
-              className={cn(TYPOGRAPHY.caption.fontSize)}
-              style={{ color: COLORS.text.tertiary }}
+              className={cn(TYPOGRAPHY.body.fontSize, "leading-relaxed")}
+              style={{ color: COLORS.text.secondary }}
             >
               완료한 할 일을 기반으로 한 실행력 인사이트
             </p>
@@ -174,7 +216,7 @@ export function CompletedTodosInsightsSection({
                 className={cn(TYPOGRAPHY.bodySmall.fontSize)}
                 style={{ color: COLORS.text.secondary }}
               >
-                이번 주 완료한 할 일에 대한 상세 분석이 준비되었습니다.
+                이번 달 완료한 할 일에 대한 상세 분석이 준비되었습니다.
               </p>
             </div>
           </GradientCard>
@@ -227,7 +269,6 @@ export function CompletedTodosInsightsSection({
                                 backgroundColor: `${greenColor}18`,
                               }}
                             >
-                              {cat.count}개
                               {isExpanded ? (
                                 <ChevronUp className="w-3.5 h-3.5" />
                               ) : (
@@ -279,7 +320,7 @@ export function CompletedTodosInsightsSection({
               </GradientCard>
             )}
 
-            {/* 시간 투자 요약 - 도넛 차트 + 텍스트 */}
+            {/* 시간 투자 요약 - 도넛 차트 + 진행 바 */}
             {((time_investment_breakdown?.length ?? 0) > 0 || time_investment_summary) && (
               <GradientCard gradientColor={rgb}>
                 <div className="flex items-center gap-2 mb-4">
@@ -296,56 +337,7 @@ export function CompletedTodosInsightsSection({
                   return (
                   <div className="mb-4">
                     <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-stretch sm:justify-center">
-                      {/* 1) 카테고리별 진행 바 - 어떤 게 얼마인지 한눈에 (모바일 최우선) */}
-                      <div className="flex-1 min-w-0 space-y-4">
-                        {(time_investment_breakdown ?? []).map((item, index) => (
-                          <div
-                            key={item.category}
-                            className="flex flex-col gap-1.5 min-w-0"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span
-                                  className="w-3 h-3 rounded-full flex-shrink-0"
-                                  style={{
-                                    backgroundColor:
-                                      CHART_COLORS[index % CHART_COLORS.length],
-                                  }}
-                                />
-                                <span
-                                  className="text-sm sm:text-base font-medium"
-                                  style={{ color: COLORS.text.primary }}
-                                >
-                                  {item.category}
-                                </span>
-                              </div>
-                              <span
-                                className="text-sm sm:text-base font-semibold tabular-nums flex-shrink-0"
-                                style={{ color: greenColor }}
-                              >
-                                {item.percentage}%
-                              </span>
-                            </div>
-                            <div
-                              className="h-2.5 rounded-full overflow-hidden"
-                              style={{
-                                backgroundColor: "rgba(0,0,0,0.06)",
-                                minHeight: 10,
-                              }}
-                            >
-                              <div
-                                className="h-full rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${item.percentage}%`,
-                                  backgroundColor:
-                                    CHART_COLORS[index % CHART_COLORS.length],
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* 2) 스파이더 차트 - 최대값 정규화로 비율 차이 강조 */}
+                      
                       <div className="w-full sm:w-44 flex-shrink-0 flex items-center justify-center">
                         <ResponsiveContainer width="100%" height={180}>
                           <RadarChart data={radarData}>
@@ -410,6 +402,39 @@ export function CompletedTodosInsightsSection({
                     {time_investment_summary}
                   </p>
                 )}
+              </GradientCard>
+            )}
+
+            {/* 월간 할 일 응원 메시지·인사이트 */}
+            {(encouragement_message || encouragement_insight) && (
+              <GradientCard gradientColor={rgb}>
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageCircle className="w-4 h-4" style={{ color: greenColor }} />
+                  <span
+                    className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}
+                    style={{ color: COLORS.text.secondary }}
+                  >
+                    이번 달 할 일 응원
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {encouragement_message && (
+                    <p
+                      className={cn(TYPOGRAPHY.body.fontSize, "leading-relaxed")}
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      {encouragement_message}
+                    </p>
+                  )}
+                  {encouragement_insight && (
+                    <p
+                      className={cn(TYPOGRAPHY.bodySmall.fontSize, TYPOGRAPHY.bodySmall.lineHeight)}
+                      style={{ color: COLORS.text.secondary }}
+                    >
+                      {encouragement_insight}
+                    </p>
+                  )}
+                </div>
               </GradientCard>
             )}
 

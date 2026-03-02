@@ -15,7 +15,7 @@ export function FutureVisionAnalysisSection({
 
   return (
     <ScrollAnimation delay={300}>
-      <div className="space-y-5">
+      <div className="space-y-5 mb-60">
       <ContentCard
         label="앞으로의 모습 종합 분석"
         content={futureVisionAnalysis.integrated_summary}

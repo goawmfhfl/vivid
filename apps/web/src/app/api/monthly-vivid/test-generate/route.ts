@@ -3,6 +3,7 @@ import { getServiceSupabase } from "@/lib/supabase-service";
 import { saveMonthlyVivid } from "../db-service";
 import { generateMonthlyVividFromRecordsWithProgress } from "../ai-service-from-records";
 import { fetchRecordsByDateRange } from "../records-db";
+import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
@@ -171,6 +172,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let personaContext = "";
+    try {
+      const { fetchUserPersonaOptional, buildPersonaContextBlock } = await import("@/lib/user-persona");
+      const persona = await fetchUserPersonaOptional(supabase, userId);
+      personaContext = buildPersonaContextBlock(persona);
+    } catch {
+      // ignore
+    }
+
+    const todoData = await fetchTodoItemsByDateRange(
+      supabase,
+      userId,
+      dateRange.start_date,
+      dateRange.end_date
+    );
+
     // 2️⃣ AI 요청: Monthly Vivid 생성 (Gemini 2.0 Flash Exp Pro 모델 사용, 기록 기반)
     const monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
       records,
@@ -178,7 +195,9 @@ export async function POST(request: NextRequest) {
       dateRange,
       isPro,
       userId,
-      userName
+      userName,
+      personaContext,
+      todoData
     );
 
     // month_label 설정 (없는 경우)

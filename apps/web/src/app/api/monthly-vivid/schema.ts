@@ -300,7 +300,51 @@ export const MonthlyReportSchema = {
             },
             required: ["trait_mapping", "trait_evolution", "focus_traits"],
           },
-          // 5. 실행 가능한 다음 달 플랜 (10%)
+          // 5. 이번 달 한 일 분석 (할 일 기반, uses_todo_list는 서버에서 주입)
+          completed_todos_insights: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              completed_by_category: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    category: { type: "string" },
+                    count: { type: "integer", minimum: 0 },
+                    items: { type: "array", items: { type: "string" } },
+                    description: { type: "string" },
+                  },
+                  required: ["category", "count", "items"],
+                },
+              },
+              time_investment_summary: { type: "string" },
+              time_investment_breakdown: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    category: { type: "string" },
+                    percentage: { type: "number", minimum: 0, maximum: 100 },
+                  },
+                  required: ["category", "percentage"],
+                },
+              },
+              repetitive_patterns: { type: "array", items: { type: "string" } },
+              new_areas: { type: "array", items: { type: "string" } },
+              incomplete_patterns: { type: "array", items: { type: "string" } },
+            },
+            required: [
+              "completed_by_category",
+              "time_investment_summary",
+              "repetitive_patterns",
+              "new_areas",
+              "incomplete_patterns",
+            ],
+          },
+          // 6. 실행 가능한 다음 달 플랜 (10%)
           next_month_plan: {
             type: "object",
             additionalProperties: false,
@@ -358,6 +402,7 @@ export const MonthlyReportSchema = {
           "alignment_analysis",
           "daily_life_patterns",
           "identity_alignment",
+          "completed_todos_insights",
           "next_month_plan",
         ],
       },

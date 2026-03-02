@@ -142,7 +142,23 @@ export type MonthlyReport = {
     }>;
   };
 
-  // 5. 다음 달 계획 (10%)
+  // 5. 이번 달 한 일 분석 (할 일 기반) - 기존 리포트 호환을 위해 optional
+  completed_todos_insights?: {
+    uses_todo_list: boolean;
+    completed_by_category: Array<{
+      category: string;
+      count: number;
+      items: string[];
+      description?: string;
+    }>;
+    time_investment_summary: string;
+    time_investment_breakdown?: Array<{ category: string; percentage: number }>;
+    repetitive_patterns: string[];
+    new_areas: string[];
+    incomplete_patterns: string[] | null;
+  };
+
+  // 6. 다음 달 계획 (10%)
   next_month_plan: {
     focus_areas?: Array<{
       area: string;

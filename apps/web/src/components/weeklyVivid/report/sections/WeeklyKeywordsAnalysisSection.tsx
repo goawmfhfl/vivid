@@ -73,7 +73,7 @@ export function WeeklyKeywordsAnalysisSection({
 
   return (
     <ScrollAnimation delay={200}>
-      <div className="space-y-5">
+      <div className="space-y-5 mb-60">
         {/* 섹션 번호 배지 */}
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-shrink-0">

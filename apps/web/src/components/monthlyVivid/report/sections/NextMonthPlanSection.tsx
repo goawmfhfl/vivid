@@ -40,7 +40,7 @@ export function NextMonthPlanSection({
                   )}
                   style={{ color: "white" }}
                 >
-                  5
+                  6
                 </span>
                 {/* 미묘한 그라데이션 오버레이 */}
                 <div
@@ -97,7 +97,7 @@ export function NextMonthPlanSection({
                     )}
                     style={{ color: "white" }}
                   >
-                    5-1
+                    6-1
                   </span>
                   <div
                     className="absolute inset-0 opacity-25"
@@ -266,7 +266,7 @@ export function NextMonthPlanSection({
                     )}
                     style={{ color: "white" }}
                   >
-                    5-2
+                    6-2
                   </span>
                   <div
                     className="absolute inset-0 opacity-25"
@@ -371,7 +371,7 @@ export function NextMonthPlanSection({
                     )}
                     style={{ color: "white" }}
                   >
-                    5-3
+                    6-3
                   </span>
                   <div
                     className="absolute inset-0 opacity-25"

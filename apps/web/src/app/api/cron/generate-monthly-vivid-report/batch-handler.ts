@@ -6,6 +6,7 @@ import {
 import { saveMonthlyVivid } from "@/app/api/monthly-vivid/db-service";
 import { generateMonthlyVividFromRecordsWithProgress } from "@/app/api/monthly-vivid/ai-service-from-records";
 import { fetchRecordsByDateRange } from "@/app/api/monthly-vivid/records-db";
+import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
@@ -100,6 +101,13 @@ export async function generateMonthlyReportForUser(
 
   const dateRange = { start_date: startDate, end_date: endDate };
 
+  const todoData = await fetchTodoItemsByDateRange(
+    supabase,
+    userId,
+    startDate,
+    endDate
+  );
+
   const monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
     records,
     month,
@@ -107,7 +115,8 @@ export async function generateMonthlyReportForUser(
     isPro,
     userId,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
 
   if (!monthlyVivid.month_label) {

@@ -1,5 +1,6 @@
 import type { MonthlyVivid } from "@/types/monthly-vivid";
 import type { Record } from "../daily-vivid/types";
+import type { TodoDataForMonthly } from "./prompts/vivid-from-records";
 import { generateVividReportFromRecords } from "./sections/vivid-from-records";
 import { generateTitle } from "./sections/title";
 
@@ -15,7 +16,8 @@ export async function generateMonthlyVividFromRecordsWithProgress(
   isPro: boolean,
   userId?: string,
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForMonthly
 ): Promise<MonthlyVivid> {
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
@@ -33,15 +35,35 @@ export async function generateMonthlyVividFromRecordsWithProgress(
   const recordedDays = recordedDates.size;
 
   // 1. Monthly Report 생성 (vivid-records 기반)
-  const report = await generateVividReportFromRecords(
+  let report = await generateVividReportFromRecords(
     records,
     month,
     dateRange,
     isPro,
     userId,
     userName,
-    personaContext
+    personaContext,
+    todoData
   );
+
+  // completed_todos_insights에 uses_todo_list 주입
+  if (report.completed_todos_insights) {
+    const cti = report.completed_todos_insights;
+    const hasContent =
+      (cti.completed_by_category?.length ?? 0) > 0 ||
+      !!cti.time_investment_summary ||
+      (cti.time_investment_breakdown?.length ?? 0) > 0 ||
+      (cti.repetitive_patterns?.length ?? 0) > 0 ||
+      (cti.new_areas?.length ?? 0) > 0 ||
+      (cti.incomplete_patterns?.length ?? 0) > 0;
+    report = {
+      ...report,
+      completed_todos_insights: {
+        ...cti,
+        uses_todo_list: todoData?.uses_todo_list ?? (hasContent ? true : false),
+      },
+    };
+  }
 
   // 2. Title 생성 (report 기반)
   // title 생성은 report 기반이므로 dailyVivid 대신 빈 배열 전달

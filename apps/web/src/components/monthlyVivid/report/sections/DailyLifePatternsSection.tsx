@@ -101,7 +101,7 @@ export function DailyLifePatternsSection({
   if (!dailyLifePatterns) return null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 mb-60">
       <GradientCard gradientColor="163, 191, 217">
         <div className="relative mb-8 pb-6 border-b" style={{ borderColor: `rgba(163, 191, 217, 0.2)` }}>
           <div className="flex items-start gap-4">

@@ -7,6 +7,7 @@ import {
 import { saveMonthlyVivid } from "../db-service";
 import { generateMonthlyVividFromRecordsWithProgress } from "../ai-service-from-records";
 import { fetchRecordsByDateRange } from "../records-db";
+import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { getKSTDateString } from "@/lib/date-utils";
 import { verifySubscription } from "@/lib/subscription-utils";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
@@ -182,6 +183,14 @@ export async function POST(request: NextRequest) {
       // 조회/복호화 실패 시 빈 문자열 유지
     }
 
+    // 1.6️⃣ 할 일 데이터 조회 (이번 달 한 일 분석용)
+    const todoData = await fetchTodoItemsByDateRange(
+      supabase,
+      userId,
+      dateRange.start_date,
+      dateRange.end_date
+    );
+
     // 2️⃣ AI 요청: Monthly Vivid 생성 (Gemini 2.0 Flash Exp Pro 모델 사용, 기록 기반)
     const monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
       records,
@@ -190,7 +199,8 @@ export async function POST(request: NextRequest) {
       isPro,
       userId,
       userName,
-      personaContext
+      personaContext,
+      todoData
     );
 
     // month_label 설정 (없는 경우)

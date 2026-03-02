@@ -1,5 +1,10 @@
 import type { Record } from "../../daily-vivid/types";
 
+export type TodoDataForMonthly = {
+  items: Array<{ date: string; contents: string; category: string; is_checked: boolean }>;
+  uses_todo_list: boolean;
+};
+
 /**
  * 기록 기반 월간 비비드 프롬프트 생성
  * vivid-records의 실제 기록을 기반으로 월간 피드백 생성
@@ -9,7 +14,8 @@ export function buildVividReportPromptFromRecords(
   month: string,
   dateRange: { start_date: string; end_date: string },
   userName?: string,
-  personaContext?: string
+  personaContext?: string,
+  todoData?: TodoDataForMonthly
 ): string {
   // 기록이 없으면 빈 문자열 반환
   if (!records || records.length === 0) {
@@ -73,13 +79,37 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
     });
   });
 
-  prompt += `\n\n위 기록들을 종합하여 월간 비비드 리포트(report)의 5개 섹션을 모두 생성하세요:
+  // 할 일 현황 블록 (todoData가 있을 때만)
+  if (todoData && todoData.items.length > 0) {
+    prompt += `\n\n[할 일 현황] (uses_todo_list: ${todoData.uses_todo_list})\n`;
+    const itemsByDate = new Map<string, typeof todoData.items>();
+    todoData.items.forEach((item) => {
+      if (!itemsByDate.has(item.date)) itemsByDate.set(item.date, []);
+      itemsByDate.get(item.date)!.push(item);
+    });
+    Array.from(itemsByDate.keys())
+      .sort()
+      .forEach((date) => {
+        const items = itemsByDate.get(date)!;
+        const completed = items.filter((i) => i.is_checked);
+        const incomplete = items.filter((i) => !i.is_checked);
+        prompt += `\n${date}:\n`;
+        if (completed.length > 0) {
+          prompt += `  완료: ${completed.map((i) => `[${i.category}] ${i.contents}`).join(" | ")}\n`;
+        }
+        if (incomplete.length > 0) {
+          prompt += `  미완료: ${incomplete.map((i) => `[${i.category}] ${i.contents}`).join(" | ")}\n`;
+        }
+      });
+  }
+
+  prompt += `\n\n위 기록들을 종합하여 월간 비비드 리포트(report)의 6개 섹션을 모두 생성하세요:
 
 **⚠️ 중요: 반드시 ${dateRange.start_date}부터 ${dateRange.end_date}까지의 전체 기간을 분석해야 합니다.**
 **실제 포함된 기록 날짜: ${actualDatesText} (총 ${records.length}개 기록)**
 **만약 특정 날짜의 기록이 없다면, 해당 날짜를 명시적으로 언급하고 전체 기간(${dateRange.start_date} ~ ${dateRange.end_date})의 맥락에서 분석하세요.**
 
-## 5개 섹션 구성:
+## 6개 섹션 구성:
 
 ### 1. 비전 진화 스토리 (30%)
 - Q2 기록("앞으로의 나는 어떤 모습일까?")을 분석하여 한 달 동안 "앞으로의 나"가 어떻게 변했는지 추적하세요.
@@ -104,8 +134,16 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
 - trait_evolution: 한 달 동안 강해진 특성, 새로 나타난 특성, 사라진 특성을 추적하세요. 구체적인 날짜와 함께 제시하세요.
 - focus_traits: 다음 달에 집중할 특성을 선별하고, 구체적인 월간 액션을 제안하세요.
 
-### 5. 실행 가능한 다음 달 플랜 (10%)
-- 위 4개 섹션의 분석 결과를 바탕으로 구체적이고 실행 가능한 다음 달 플랜을 제안하세요.
+### 5. 이번 달 한 일 분석 - 아래 [할 일 현황] 데이터 기반 (할 일 없으면 빈 배열/빈 문자열)
+   - completed_by_category: 카테고리별(업무/운동/학습/생활/관계/기타) 완료 현황. description은 카테고리 전체를 한 줄로 구체적으로 요약. items는 각 완료 항목을 구체적으로 한 줄로 표현
+   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약
+   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%), 도넛 차트 시각화용
+   - repetitive_patterns: 한 달 동안 반복되는 패턴
+   - new_areas: 새로 나타난 영역
+   - incomplete_patterns: uses_todo_list가 true일 때만 미완료 패턴 분석 (false면 빈 배열)
+
+### 6. 실행 가능한 다음 달 플랜 (10%)
+- 위 5개 섹션의 분석 결과를 바탕으로 구체적이고 실행 가능한 다음 달 플랜을 제안하세요.
 - focus_areas: 다음 달에 집중할 3가지 영역을 선정하고, 각 영역의 현재 상태와 원하는 상태를 명확히 제시하세요.
 - maintain_patterns: 유지할 좋은 패턴과 그 이유, 유지 방법을 제안하세요.
 - experiment_patterns: 시도해볼 새로운 패턴과 그 이유, 시작 방법을 제안하세요.

@@ -82,7 +82,7 @@ export function WeeklyVividSummarySection({
 
   return (
     <ScrollAnimation delay={0}>
-      <div className="space-y-5">
+      <div className="space-y-5 mb-60">
       <ContentCard
         label="주간 비비드 요약"
         content={weeklyVividSummary.summary}

@@ -5,6 +5,7 @@ import { VisionEvolutionSection } from "./sections/VisionEvolutionSection";
 import { AlignmentAnalysisSection } from "./sections/AlignmentAnalysisSection";
 import { DailyLifePatternsSection } from "./sections/DailyLifePatternsSection";
 import { IdentityAlignmentSection } from "./sections/IdentityAlignmentSection";
+import { CompletedTodosInsightsSection } from "./sections/CompletedTodosInsightsSection";
 import { NextMonthPlanSection } from "./sections/NextMonthPlanSection";
 
 type VividSectionProps = {
@@ -14,7 +15,7 @@ type VividSectionProps = {
 
 /**
  * 월간 비비드 리포트 섹션
- * 5개 주요 섹션을 포함: 비전 진화, 일치도 분석, 패턴 인사이트, 나의 모습과 목표 연결, 다음 달 플랜
+ * 6개 주요 섹션을 포함: 비전 진화, 일치도 분석, 패턴 인사이트, 나의 모습과 목표 연결, 이번 달 한 일 분석, 다음 달 플랜
  */
 export function VividSection({
   vividReport,
@@ -52,7 +53,13 @@ export function VividSection({
         vividColor={vividColor}
       />
 
-      {/* 5. 실행 가능한 다음 달 플랜 (10%) */}
+      {/* 5. 이번 달 한 일 분석 */}
+      <CompletedTodosInsightsSection
+        completedTodosInsights={vividReport.completed_todos_insights}
+        vividColor={vividColor}
+      />
+
+      {/* 6. 실행 가능한 다음 달 플랜 (10%) */}
       <NextMonthPlanSection
         nextMonthPlan={vividReport.next_month_plan}
         vividColor={vividColor}
