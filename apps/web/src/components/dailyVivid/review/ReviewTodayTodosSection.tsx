@@ -14,6 +14,8 @@ import {
   LIST_ITEM_MUTED_STYLE,
 } from "./reviewSectionStyles";
 import type { TodoListItem } from "@/types/daily-vivid";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getExcludeTodoCompletion } from "@/hooks/useTodoCompletionSetting";
 
 interface ReviewTodayTodosSectionProps {
   todoLists: TodoListItem[];
@@ -29,6 +31,9 @@ export function ReviewTodayTodosSection({
   renderAddToScheduleButton,
   renderRescheduleButton,
 }: ReviewTodayTodosSectionProps) {
+  const { data: user } = useCurrentUser();
+  const excludeTodoCompletion = getExcludeTodoCompletion(user?.user_metadata);
+
   if (isLoading) {
     return (
       <ScrollAnimation delay={180}>
@@ -67,44 +72,46 @@ export function ReviewTodayTodosSection({
       <div className="mb-60">
         <ReviewSectionHeader icon={ListTodo} title="오늘의 투두리스트" />
         <ChartGlassCard gradientColor={REVIEW_ACCENT_RGB}>
-          {/* 실행 점수 시각화 */}
-          <div
-            className="mb-6 px-5 py-5 rounded-xl flex flex-col sm:flex-row items-center gap-6"
-            style={LIST_ITEM_STYLE}
-          >
-            <div className="flex-shrink-0">
-              <CircularProgress
-                percentage={executionScore}
-                size={100}
-                strokeWidth={8}
-                showText={true}
-                textSize="lg"
-                animated={true}
-                duration={1200}
-                strokeColor={REVIEW_ACCENT}
-                textColor={REVIEW_ACCENT}
-              />
+          {/* 실행 점수 시각화 (할 일 달성률 계산하지 않기 설정 시 숨김) */}
+          {!excludeTodoCompletion && (
+            <div
+              className="mb-6 px-5 py-5 rounded-xl flex flex-col sm:flex-row items-center gap-6"
+              style={LIST_ITEM_STYLE}
+            >
+              <div className="flex-shrink-0">
+                <CircularProgress
+                  percentage={executionScore}
+                  size={100}
+                  strokeWidth={8}
+                  showText={true}
+                  textSize="lg"
+                  animated={true}
+                  duration={1200}
+                  strokeColor={REVIEW_ACCENT}
+                  textColor={REVIEW_ACCENT}
+                />
+              </div>
+              <div className="flex-1 min-w-0 text-center sm:text-left">
+                <p
+                  className={cn(
+                    TYPOGRAPHY.label.fontSize,
+                    TYPOGRAPHY.label.fontWeight,
+                    TYPOGRAPHY.label.letterSpacing,
+                    "uppercase mb-1"
+                  )}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  오늘의 할 일 실행 점수
+                </p>
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize)}
+                  style={{ color: COLORS.text.muted }}
+                >
+                  완료 {checked}개 / 전체 {total}개
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <p
-                className={cn(
-                  TYPOGRAPHY.label.fontSize,
-                  TYPOGRAPHY.label.fontWeight,
-                  TYPOGRAPHY.label.letterSpacing,
-                  "uppercase mb-1"
-                )}
-                style={{ color: COLORS.text.secondary }}
-              >
-                오늘의 할 일 실행 점수
-              </p>
-              <p
-                className={cn(TYPOGRAPHY.body.fontSize)}
-                style={{ color: COLORS.text.muted }}
-              >
-                완료 {checked}개 / 전체 {total}개
-              </p>
-            </div>
-          </div>
+          )}
 
           <div className="space-y-4">
             {/* 완료한 일 */}

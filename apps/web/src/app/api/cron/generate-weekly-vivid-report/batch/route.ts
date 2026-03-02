@@ -2,21 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { Receiver } from "@upstash/qstash";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import {
-  updateUserTrendsForUser,
-  updateUserTrendsMonthlyForUser,
-  type UserTrendResult,
-} from "../helpers";
+  generateWeeklyReportForUser,
+  type WeeklyReportResult,
+} from "../batch-handler";
 import { CRON_CONCURRENCY } from "@/constants/cron";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 180;
+export const maxDuration = 300;
 
-type UserTrendsBatchPayload = {
+type WeeklyReportBatchPayload = {
   userIds: string[];
   startDate: string;
   endDate: string;
-  type?: "weekly" | "monthly";
-  month?: string; // "YYYY-MM", required when type=monthly
 };
 
 function getQstashReceiver(): Receiver {
@@ -37,10 +34,8 @@ function isCronSecretAuthorized(request: NextRequest): boolean {
   return !!cronSecret && authHeader === `Bearer ${cronSecret}`;
 }
 
-function getConcurrency(value: string | null, type: "weekly" | "monthly"): number {
-  const fallback =
-    type === "monthly" ? CRON_CONCURRENCY.USER_TRENDS_MONTHLY : CRON_CONCURRENCY.USER_TRENDS_WEEKLY;
-  const parsed = parseInt(value || String(fallback), 10);
+function getConcurrency(value: string | null): number {
+  const parsed = parseInt(value || String(CRON_CONCURRENCY.WEEKLY_REPORT), 10);
   return Math.min(Math.max(parsed, 1), 10);
 }
 
@@ -53,7 +48,9 @@ function getSignatureVerificationUrl(request: NextRequest): string {
   return request.url;
 }
 
-async function parseQstashPayload(request: NextRequest): Promise<UserTrendsBatchPayload> {
+async function parseQstashPayload(
+  request: NextRequest
+): Promise<WeeklyReportBatchPayload> {
   const receiver = getQstashReceiver();
   const signature = request.headers.get("upstash-signature") || "";
   const body = await request.text();
@@ -69,15 +66,15 @@ async function parseQstashPayload(request: NextRequest): Promise<UserTrendsBatch
     throw new Error("Invalid QStash signature");
   }
 
-  return JSON.parse(body) as UserTrendsBatchPayload;
+  return JSON.parse(body) as WeeklyReportBatchPayload;
 }
 
 async function processWithConcurrency(
   userIds: string[],
   concurrency: number,
-  handler: (userId: string) => Promise<UserTrendResult>
-): Promise<UserTrendResult[]> {
-  const results = new Array<UserTrendResult>(userIds.length);
+  handler: (userId: string) => Promise<WeeklyReportResult>
+): Promise<WeeklyReportResult[]> {
+  const results = new Array<WeeklyReportResult>(userIds.length);
   let index = 0;
 
   const workers = Array.from(
@@ -100,10 +97,10 @@ async function processWithConcurrency(
 
 export async function POST(request: NextRequest) {
   try {
-    let payload: UserTrendsBatchPayload;
+    let payload: WeeklyReportBatchPayload;
 
     if (isCronSecretAuthorized(request)) {
-      payload = (await request.json()) as UserTrendsBatchPayload;
+      payload = (await request.json()) as WeeklyReportBatchPayload;
     } else {
       payload = await parseQstashPayload(request);
     }
@@ -112,42 +109,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, processed: 0, updated: 0, skipped: 0 });
     }
 
-    const { startDate, endDate, userIds, type = "weekly", month } = payload;
+    const { startDate, endDate, userIds } = payload;
     const concurrency = getConcurrency(
-      request.nextUrl.searchParams.get("concurrency"),
-      type
+      request.nextUrl.searchParams.get("concurrency")
     );
     const supabase = getServiceSupabase();
-    const isMonthly = type === "monthly";
-    const monthForMonthly = isMonthly ? month || "" : "";
 
-    const results = await processWithConcurrency(userIds, concurrency, async (userId) => {
-      try {
-        if (isMonthly && monthForMonthly) {
-          return await updateUserTrendsMonthlyForUser(
+    const results = await processWithConcurrency(
+      userIds,
+      concurrency,
+      async (userId) => {
+        try {
+          return await generateWeeklyReportForUser(
             supabase,
             userId,
-            monthForMonthly,
             startDate,
             endDate
           );
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`[generate-weekly-vivid-report] user ${userId} failed:`, message);
+          return { userId, status: "skipped", reason: message };
         }
-        return await updateUserTrendsForUser(supabase, userId, startDate, endDate);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error(`[update-user-trends] user ${userId} failed:`, message);
-        return { userId, status: "skipped", reason: message };
       }
-    });
+    );
 
-    const updatedCount = results.filter((result) => result.status === "updated").length;
+    const updatedCount = results.filter((r) => r.status === "updated").length;
     const skippedCount = results.length - updatedCount;
 
-    console.log("[cron] update-user-trends batch processed:", {
+    console.log("[cron] generate-weekly-vivid-report batch processed:", {
       processed: results.length,
       updated: updatedCount,
       skipped: skippedCount,
-      type,
     });
 
     return NextResponse.json({
@@ -158,7 +151,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error("Cron update-user-trends batch error:", error);
+    console.error("Cron generate-weekly-vivid-report batch error:", error);
     const status = message === "Invalid QStash signature" ? 401 : 500;
     return NextResponse.json(
       { error: "Internal server error", details: message },

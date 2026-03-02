@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, BookOpen, Lock, Loader2 } from "lucide-react";
+import { Plus, BookOpen, Lock, Loader2, Settings } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
 import { TodoGuidePanel } from "./TodoGuidePanel";
+import { TodoSettingsModal } from "./TodoSettingsModal";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
 import {
   useCreateTodoList,
@@ -74,6 +75,7 @@ export function RecordForm({
   const [internalTab, setInternalTab] = useState<HomeTabType>("vivid");
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
   const [showTodoGuidePanel, setShowTodoGuidePanel] = useState(false);
+  const [showTodoSettingsModal, setShowTodoSettingsModal] = useState(false);
   const activeTab = activeTabProp ?? internalTab;
   const [newTodoContents, setNewTodoContents] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1254,19 +1256,35 @@ export function RecordForm({
       ) : activeTab === "todo" ? (
         /* 할 일 탭: 할 일만 관리, 항상 펼쳐진 상태 */
         <div className="mb-4 space-y-2">
-          {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 가이드 버튼 (항상 표시) */}
+          {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 조그만 가이드 버튼 + 환경설정 버튼 */}
           <div className="flex items-center justify-between gap-2 w-full">
-            <span
-              className="text-base font-semibold"
-              style={{ color: COLORS.text.primary, fontSize: "0.875rem" }}
-            >
-              {targetDateIso && targetDateIso > todayIso
-                ? "예정된 할 일"
-                : "오늘의 할 일"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="text-base font-semibold"
+                style={{ color: COLORS.text.primary, fontSize: "0.875rem" }}
+              >
+                {targetDateIso && targetDateIso > todayIso
+                  ? "예정된 할 일"
+                  : "오늘의 할 일"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTodoGuidePanel(true)}
+                className="flex items-center justify-center w-6 h-6 rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+                style={{
+                  background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                  border: `1px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                  color: COLORS.brand.primary,
+                }}
+                aria-label="할 일 가이드 보기"
+                title="가이드"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => setShowTodoGuidePanel(true)}
+              onClick={() => setShowTodoSettingsModal(true)}
               className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
               style={{
                 background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
@@ -1274,15 +1292,19 @@ export function RecordForm({
                 color: COLORS.brand.primary,
                 boxShadow: SHADOWS.default,
               }}
-              aria-label="할 일 가이드 보기"
-              title="가이드"
+              aria-label="할 일 환경설정"
+              title="환경설정"
             >
-              <BookOpen className="w-4 h-4" />
+              <Settings className="w-4 h-4" />
             </button>
           </div>
           <TodoGuidePanel
             open={showTodoGuidePanel}
             onClose={() => setShowTodoGuidePanel(false)}
+          />
+          <TodoSettingsModal
+            open={showTodoSettingsModal}
+            onClose={() => setShowTodoSettingsModal(false)}
           />
           <>
             {!vividFeedback?.hasNativeTodoList &&

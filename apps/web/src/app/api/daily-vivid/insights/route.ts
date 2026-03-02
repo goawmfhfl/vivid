@@ -130,7 +130,18 @@ export async function GET(request: NextRequest) {
 
     const alignmentByDate = extractAlignmentByDate(decrypted);
     const allDates = [...new Set(decrypted.map((r) => r.report_date))];
-    const todoCompletionMap = await fetchTodoCompletionByDateRange(supabase, userId, allDates);
+
+    let excludeTodoCompletion = false;
+    try {
+      const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+      excludeTodoCompletion = (user?.user_metadata as Record<string, unknown> | undefined)?.exclude_todo_completion === true;
+    } catch {
+      // metadata 조회 실패 시 기본값 false
+    }
+
+    const todoCompletionMap = excludeTodoCompletion
+      ? new Map<string, number>()
+      : await fetchTodoCompletionByDateRange(supabase, userId, allDates);
 
     const allDatesSet = new Set([...alignmentByDate.keys(), ...todoCompletionMap.keys()]);
     const mergedAsRows = Array.from(allDatesSet)
@@ -140,7 +151,7 @@ export async function GET(request: NextRequest) {
         report_date,
         report: {
           alignment_score: alignmentByDate.get(report_date) ?? null,
-          todo_completion_score: todoCompletionMap.get(report_date) ?? null,
+          todo_completion_score: excludeTodoCompletion ? null : (todoCompletionMap.get(report_date) ?? null),
         },
       })) as unknown as DailyVividRow[];
 

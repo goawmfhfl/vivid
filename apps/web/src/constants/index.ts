@@ -40,6 +40,9 @@ export const RECORD_TYPES = {
   VISUALIZING: "visualizing",
 } as const;
 
+// Cron 배치/동시성 설정
+export { CRON_BATCH, CRON_CONCURRENCY } from "./cron";
+
 // Error Messages
 export const ERROR_MESSAGES = {
   LOGIN_REQUIRED: "로그인이 필요합니다.",

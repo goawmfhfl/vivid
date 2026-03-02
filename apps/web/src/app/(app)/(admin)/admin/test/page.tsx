@@ -10,7 +10,7 @@ import {
   TYPOGRAPHY,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
-import { TestTube, CreditCard } from "lucide-react";
+import { TestTube, CreditCard, User, TrendingUp, FileText } from "lucide-react";
 
 type CronResult = Record<string, unknown>;
 
@@ -65,6 +65,23 @@ export default function AdminTestPage() {
   const [isTrendsLoading, setIsTrendsLoading] = useState(false);
   const [isTrendsMonthlyLoading, setIsTrendsMonthlyLoading] = useState(false);
   const [runSync, setRunSync] = useState(true);
+
+  // 리포트 전용 cron 상태 (테스트용: 특정 유저만 실행)
+  const [reportResult, setReportResult] = useState<CronResult | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [isReportLoading, setIsReportLoading] = useState(false);
+  const [reportUserId, setReportUserId] = useState("1bebb0d4-9908-4e98-817b-06e19331cd0f");
+  const [reportBaseDate, setReportBaseDate] = useState("");
+
+  // 월간 리포트 전용 cron 상태
+  const [monthlyReportResult, setMonthlyReportResult] = useState<CronResult | null>(null);
+  const [monthlyReportError, setMonthlyReportError] = useState<string | null>(null);
+  const [isMonthlyReportLoading, setIsMonthlyReportLoading] = useState(false);
+  const [monthlyReportUserId, setMonthlyReportUserId] = useState("1bebb0d4-9908-4e98-817b-06e19331cd0f");
+  const [monthlyReportBaseDate, setMonthlyReportBaseDate] = useState("");
+
+  // 크론 서브탭: persona | trends | report | monthlyReport
+  const [cronSubTab, setCronSubTab] = useState<"persona" | "trends" | "report" | "monthlyReport">("persona");
 
   // User Persona 조회 상태
   const [personaResult, setPersonaResult] = useState<Record<string, unknown> | null>(null);
@@ -165,6 +182,110 @@ export default function AdminTestPage() {
       setTrendsMonthlyError(err instanceof Error ? err.message : "알 수 없는 오류");
     } finally {
       setIsTrendsMonthlyLoading(false);
+    }
+  };
+
+  const handleRunWeeklyReport = async () => {
+    if (!reportUserId.trim()) {
+      setReportError("테스트를 위해 userId를 입력해주세요.");
+      return;
+    }
+    setIsReportLoading(true);
+    setReportError(null);
+    setReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("userId", reportUserId.trim());
+      params.set("sync", "1");
+      if (reportBaseDate.trim()) params.set("baseDate", reportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-weekly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setReportResult(data as CronResult);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsReportLoading(false);
+    }
+  };
+
+  const handleRunWeeklyReportAll = async () => {
+    setIsReportLoading(true);
+    setReportError(null);
+    setReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      if (reportBaseDate.trim()) params.set("baseDate", reportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-weekly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setReportResult(data as CronResult);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsReportLoading(false);
+    }
+  };
+
+  const handleRunMonthlyReport = async () => {
+    if (!monthlyReportUserId.trim()) {
+      setMonthlyReportError("테스트를 위해 userId를 입력해주세요.");
+      return;
+    }
+    setIsMonthlyReportLoading(true);
+    setMonthlyReportError(null);
+    setMonthlyReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("userId", monthlyReportUserId.trim());
+      params.set("sync", "1");
+      if (monthlyReportBaseDate.trim()) params.set("baseDate", monthlyReportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-monthly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setMonthlyReportResult(data as CronResult);
+    } catch (err) {
+      setMonthlyReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsMonthlyReportLoading(false);
+    }
+  };
+
+  const handleRunMonthlyReportAll = async () => {
+    setIsMonthlyReportLoading(true);
+    setMonthlyReportError(null);
+    setMonthlyReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      if (monthlyReportBaseDate.trim()) params.set("baseDate", monthlyReportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-monthly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setMonthlyReportResult(data as CronResult);
+    } catch (err) {
+      setMonthlyReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsMonthlyReportLoading(false);
     }
   };
 
@@ -550,22 +671,74 @@ export default function AdminTestPage() {
       {/* 크론 테스트 콘텐츠 */}
       {activeTab === "cron" && (
         <div className="space-y-6">
-          <div className="space-y-2">
-            <h2
+          {/* 크론 서브탭: User Persona | User Trends | User Report */}
+          <div
+            className="flex gap-2 pb-4 border-b"
+            style={{ borderColor: COLORS.border.light }}
+          >
+            <button
+              type="button"
+              onClick={() => setCronSubTab("persona")}
               className={cn(
-                TYPOGRAPHY.h3.fontSize,
-                TYPOGRAPHY.h3.fontWeight,
-                TYPOGRAPHY.h3.lineHeight
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                cronSubTab === "persona" ? "font-semibold" : ""
               )}
-              style={{ color: TYPOGRAPHY.h3.color }}
+              style={{
+                backgroundColor: cronSubTab === "persona" ? COLORS.brand.light + "30" : "transparent",
+                color: cronSubTab === "persona" ? COLORS.brand.primary : COLORS.text.secondary,
+              }}
             >
-              크론 테스트: User Persona 업데이트
-            </h2>
-            <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
-              원하는 날짜/유저 기준으로 크론을 수동 실행할 수 있습니다. 내 계정만 실행하려면 userId에 본인 계정의 userId를 입력하세요.
-            </p>
+              <User className="w-4 h-4" />
+              User Persona
+            </button>
+            <button
+              type="button"
+              onClick={() => setCronSubTab("trends")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                cronSubTab === "trends" ? "font-semibold" : ""
+              )}
+              style={{
+                backgroundColor: cronSubTab === "trends" ? COLORS.brand.light + "30" : "transparent",
+                color: cronSubTab === "trends" ? COLORS.brand.primary : COLORS.text.secondary,
+              }}
+            >
+              <TrendingUp className="w-4 h-4" />
+              User Trends
+            </button>
+            <button
+              type="button"
+              onClick={() => setCronSubTab("report")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                cronSubTab === "report" ? "font-semibold" : ""
+              )}
+              style={{
+                backgroundColor: cronSubTab === "report" ? COLORS.brand.light + "30" : "transparent",
+                color: cronSubTab === "report" ? COLORS.brand.primary : COLORS.text.secondary,
+              }}
+            >
+              <FileText className="w-4 h-4" />
+              Weekly Report
+            </button>
+            <button
+              type="button"
+              onClick={() => setCronSubTab("monthlyReport")}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                cronSubTab === "monthlyReport" ? "font-semibold" : ""
+              )}
+              style={{
+                backgroundColor: cronSubTab === "monthlyReport" ? COLORS.brand.light + "30" : "transparent",
+                color: cronSubTab === "monthlyReport" ? COLORS.brand.primary : COLORS.text.secondary,
+              }}
+            >
+              <FileText className="w-4 h-4" />
+              Monthly Report
+            </button>
           </div>
 
+          {/* 공통: CRON_SECRET */}
           <div
             className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)}
             style={{ ...CARD_STYLES.default }}
@@ -587,314 +760,322 @@ export default function AdminTestPage() {
                 placeholder="Bearer 토큰 문자열"
               />
             </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
-                  baseDate (YYYY-MM-DD)
-                </label>
-                <input
-                  type="date"
-                  value={baseDate}
-                  onChange={(e) => setBaseDate(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
-                  userId (옵션)
-                </label>
-                <input
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                  placeholder="내 계정만 테스트 시 본인 userId 입력"
-                />
-                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-                  비워두면 Pro 전체 유저 대상. 특정 유저만 실행하려면 해당 유저의 userId를 입력하세요.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>page</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={page}
-                  onChange={(e) => setPage(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>limit</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={limit}
-                  onChange={(e) => setLimit(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleRun}
-                disabled={isLoading || !cronSecret.trim()}
-                className={cn(
-                  "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-                  BUTTON_STYLES.primary.borderRadius,
-                  BUTTON_STYLES.primary.padding
-                )}
-                style={{
-                  backgroundColor: BUTTON_STYLES.primary.background,
-                  color: BUTTON_STYLES.primary.color,
-                }}
-              >
-                {isLoading ? "실행 중..." : "크론 실행"}
-              </button>
-              <button
-                type="button"
-                onClick={handleFetchPersona}
-                disabled={isPersonaLoading || !userId.trim()}
-                className={cn(
-                  "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-                  BUTTON_STYLES.secondary.borderRadius,
-                  BUTTON_STYLES.secondary.padding
-                )}
-                style={{
-                  backgroundColor: BUTTON_STYLES.secondary.background,
-                  color: BUTTON_STYLES.secondary.color,
-                  border: `1px solid ${COLORS.border.light}`,
-                }}
-              >
-                {isPersonaLoading ? "조회 중..." : "Persona 조회"}
-              </button>
-              <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-                baseDate 미입력 시 오늘(KST)을 기준으로 7일 계산합니다.
-              </p>
-            </div>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={runSync} onChange={(e) => setRunSync(e.target.checked)} />
-              <span className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
-                동기 실행(sync=1): Persona는 현재 서버에서 즉시 실행 (todo_analysis 포함). userId 없어도 전체 유저 배치 동기 실행.
-              </span>
-            </label>
           </div>
 
-          {error && (
-            <div
-              className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)}
-              style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}
-            >
-              {error}
-            </div>
-          )}
-
-          {result && (
-            <div
-              className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
-              style={{ ...CARD_STYLES.default }}
-            >
-              <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
-                실행 결과
-              </h3>
-              <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>
-                {JSON.stringify(result, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          {personaError && (
-            <div
-              className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)}
-              style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}
-            >
-              {personaError}
-            </div>
-          )}
-
-          {personaResult && (
-            <div
-              className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
-              style={{ ...CARD_STYLES.default }}
-            >
-              <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
-                User Persona 조회 결과 ({userId})
-              </h3>
-              <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>
-                {JSON.stringify(personaResult, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          <div className="space-y-2 pt-6 border-t" style={{ borderColor: COLORS.border.light }}>
-            <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
-              크론 테스트: User Trends (주간 / 월간)
-            </h3>
-            <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-              baseDate/userId/page/limit/batchSize/concurrency로 user_trends 크론을 실행합니다.
-              주간: 이전 주(월~일) 성장 인사이트. 월간: 이전 달 성장 인사이트. 특정 유저만 테스트하려면 userId를 입력하세요.
-            </p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* User Persona 탭 */}
+          {cronSubTab === "persona" && (
+            <div className="space-y-6">
               <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
-                  batchSize (배치당 유저 수)
-                </label>
-                <input
-                  type="number"
-                  min="5"
-                  max="100"
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                  placeholder="5"
-                />
-                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-                  기본 5. 주간/월간 공통.
+                <h2 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+                  User Persona 업데이트
+                </h2>
+                <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
+                  원하는 날짜/유저 기준으로 Persona 크론을 수동 실행합니다. userId 없으면 Pro 전체 유저 대상.
                 </p>
               </div>
-              <div className="space-y-2">
-                <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
-                  concurrency (동시 처리 수)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={concurrency}
-                  onChange={(e) => setConcurrency(e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm"
-                  style={{
-                    border: `1px solid ${COLORS.border.input}`,
-                    backgroundColor: COLORS.background.cardElevated,
-                    color: COLORS.text.primary,
-                  }}
-                  placeholder="2"
-                />
-                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
-                  기본 2. 배치 내 동시 처리.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleRunUserTrendsWeekly}
-                disabled={isTrendsLoading || !cronSecret.trim()}
-                className={cn(
-                  "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-                  BUTTON_STYLES.primary.borderRadius,
-                  BUTTON_STYLES.primary.padding
-                )}
-                style={{
-                  backgroundColor: BUTTON_STYLES.primary.background,
-                  color: BUTTON_STYLES.primary.color,
-                }}
-              >
-                {isTrendsLoading ? "실행 중..." : "Weekly user_trends 실행"}
-              </button>
-              <button
-                type="button"
-                onClick={handleRunUserTrendsMonthly}
-                disabled={isTrendsMonthlyLoading || !cronSecret.trim()}
-                className={cn(
-                  "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
-                  BUTTON_STYLES.primary.borderRadius,
-                  BUTTON_STYLES.primary.padding
-                )}
-                style={{
-                  backgroundColor: BUTTON_STYLES.primary.background,
-                  color: BUTTON_STYLES.primary.color,
-                }}
-              >
-                {isTrendsMonthlyLoading ? "실행 중..." : "Monthly user_trends 실행"}
-              </button>
-            </div>
-          </div>
-
-          {(trendsError || trendsMonthlyError) && (
-            <div
-              className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)}
-              style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}
-            >
-              {trendsError || trendsMonthlyError}
-            </div>
-          )}
-
-          {trendsResult && (
-            <div
-              className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
-              style={{ ...CARD_STYLES.default }}
-            >
-              <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
-                Weekly user_trends 실행 결과
-              </h3>
-              <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>
-                {JSON.stringify(trendsResult, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          {trendsMonthlyResult && (
-            <div
-              className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)}
-              style={{ ...CARD_STYLES.default }}
-            >
-              <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
-                Monthly user_trends 실행 결과
-              </h3>
-              <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>
-                {JSON.stringify(trendsMonthlyResult, null, 2)}
-              </pre>
-              {"latest" in trendsMonthlyResult && trendsMonthlyResult.latest ? (
-                <div
-                  className={cn("rounded-lg px-3 py-2")}
-                  style={{
-                    backgroundColor: COLORS.background.base,
-                    border: `1px solid ${COLORS.border.light}`,
-                  }}
-                >
-                  <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
-                    trend 생성 체크
-                  </p>
-                  <p className={cn(TYPOGRAPHY.body.fontSize)} style={{ color: COLORS.text.primary }}>
-                    {(trendsMonthlyResult.latest as Record<string, unknown>).has_trend
-                      ? "trend 생성됨"
-                      : "trend 미생성"}
-                  </p>
+              <div className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>baseDate (YYYY-MM-DD)</label>
+                    <input type="date" value={baseDate} onChange={(e) => setBaseDate(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>userId (옵션)</label>
+                    <input type="text" value={userId} onChange={(e) => setUserId(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} placeholder="비워두면 Pro 전체 유저" />
+                  </div>
                 </div>
-              ) : null}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>page</label>
+                    <input type="number" min="1" value={page} onChange={(e) => setPage(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>limit</label>
+                    <input type="number" min="1" max="100" value={limit} onChange={(e) => setLimit(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={handleRun} disabled={isLoading || !cronSecret.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.primary.borderRadius, BUTTON_STYLES.primary.padding)} style={{ backgroundColor: BUTTON_STYLES.primary.background, color: BUTTON_STYLES.primary.color }}>
+                    {isLoading ? "실행 중..." : "Persona 크론 실행"}
+                  </button>
+                  <button type="button" onClick={handleFetchPersona} disabled={isPersonaLoading || !userId.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.secondary.borderRadius, BUTTON_STYLES.secondary.padding)} style={{ backgroundColor: BUTTON_STYLES.secondary.background, color: BUTTON_STYLES.secondary.color, border: `1px solid ${COLORS.border.light}` }}>
+                    {isPersonaLoading ? "조회 중..." : "Persona 조회"}
+                  </button>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={runSync} onChange={(e) => setRunSync(e.target.checked)} />
+                  <span className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>동기 실행 (sync=1)</span>
+                </label>
+              </div>
+              {error && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{error}</div>}
+              {result && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>실행 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(result, null, 2)}</pre></div>}
+              {personaError && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{personaError}</div>}
+              {personaResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Persona 조회 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(personaResult, null, 2)}</pre></div>}
+            </div>
+          )}
+
+          {/* User Trends 탭 */}
+          {cronSubTab === "trends" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h2 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+                  User Trends (주간 / 월간)
+                </h2>
+                <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
+                  baseDate/userId/page/limit/batchSize/concurrency로 user_trends 크론 실행. 주간: 이전 주(월~일). 월간: 이전 달.
+                </p>
+              </div>
+              <div className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>baseDate</label>
+                    <input type="date" value={baseDate} onChange={(e) => setBaseDate(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>userId (옵션)</label>
+                    <input type="text" value={userId} onChange={(e) => setUserId(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} placeholder="특정 유저만 테스트" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>page</label>
+                    <input type="number" min="1" value={page} onChange={(e) => setPage(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>limit</label>
+                    <input type="number" min="1" max="100" value={limit} onChange={(e) => setLimit(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>batchSize</label>
+                    <input type="number" min="5" max="100" value={batchSize} onChange={(e) => setBatchSize(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>concurrency</label>
+                    <input type="number" min="1" max="10" value={concurrency} onChange={(e) => setConcurrency(e.target.value)} className="w-full rounded-lg px-3 py-2 text-sm" style={{ border: `1px solid ${COLORS.border.input}`, backgroundColor: COLORS.background.cardElevated, color: COLORS.text.primary }} />
+                  </div>
+                </div>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={runSync} onChange={(e) => setRunSync(e.target.checked)} />
+                  <span className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>동기 실행 (userId 지정 시 sync=1)</span>
+                </label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={handleRunUserTrendsWeekly} disabled={isTrendsLoading || !cronSecret.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.primary.borderRadius, BUTTON_STYLES.primary.padding)} style={{ backgroundColor: BUTTON_STYLES.primary.background, color: BUTTON_STYLES.primary.color }}>
+                    {isTrendsLoading ? "실행 중..." : "Weekly user_trends 실행"}
+                  </button>
+                  <button type="button" onClick={handleRunUserTrendsMonthly} disabled={isTrendsMonthlyLoading || !cronSecret.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.primary.borderRadius, BUTTON_STYLES.primary.padding)} style={{ backgroundColor: BUTTON_STYLES.primary.background, color: BUTTON_STYLES.primary.color }}>
+                    {isTrendsMonthlyLoading ? "실행 중..." : "Monthly user_trends 실행"}
+                  </button>
+                </div>
+              </div>
+              {(trendsError || trendsMonthlyError) && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{trendsError || trendsMonthlyError}</div>}
+              {trendsResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Weekly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsResult, null, 2)}</pre></div>}
+              {trendsMonthlyResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Monthly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsMonthlyResult, null, 2)}</pre></div>}
+            </div>
+          )}
+
+          {/* User Report 탭 - 테스트: 특정 유저만 실행 */}
+          {cronSubTab === "report" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h2 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+                  주간 비비드 리포트 생성
+                </h2>
+                <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}>
+                  vivid-records 기반 주간 리포트 생성. <strong>특정 유저</strong> 테스트 또는 <strong>Pro 전체 유저</strong> 생성 가능.
+                </p>
+              </div>
+              <div className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                      userId (특정 유저 테스트 시)
+                    </label>
+                    <input
+                      type="text"
+                      value={reportUserId}
+                      onChange={(e) => setReportUserId(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm"
+                      style={{
+                        border: `1px solid ${COLORS.border.input}`,
+                        backgroundColor: COLORS.background.cardElevated,
+                        color: COLORS.text.primary,
+                      }}
+                      placeholder="테스트할 유저 UUID"
+                    />
+                    <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                      특정 유저 테스트 시 입력.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                      baseDate (옵션)
+                    </label>
+                    <input
+                      type="date"
+                      value={reportBaseDate}
+                      onChange={(e) => setReportBaseDate(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm"
+                      style={{
+                        border: `1px solid ${COLORS.border.input}`,
+                        backgroundColor: COLORS.background.cardElevated,
+                        color: COLORS.text.primary,
+                      }}
+                    />
+                    <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                      비워두면 오늘 기준 직전 주(일~토).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRunWeeklyReport}
+                    disabled={isReportLoading || !cronSecret.trim() || !reportUserId.trim()}
+                    className={cn(
+                      "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                      BUTTON_STYLES.primary.borderRadius,
+                      BUTTON_STYLES.primary.padding
+                    )}
+                    style={{
+                      backgroundColor: BUTTON_STYLES.primary.background,
+                      color: BUTTON_STYLES.primary.color,
+                    }}
+                  >
+                    {isReportLoading ? "실행 중..." : "특정 유저 생성"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRunWeeklyReportAll}
+                    disabled={isReportLoading || !cronSecret.trim()}
+                    className={cn(
+                      "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                      BUTTON_STYLES.secondary.borderRadius,
+                      BUTTON_STYLES.secondary.padding
+                    )}
+                    style={{
+                      backgroundColor: BUTTON_STYLES.secondary.background,
+                      color: BUTTON_STYLES.secondary.color,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    {isReportLoading ? "실행 중..." : "Pro 전체 유저 생성"}
+                  </button>
+                </div>
+              </div>
+              {reportError && (
+                <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>
+                  {reportError}
+                </div>
+              )}
+              {reportResult && (
+                <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                  <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>실행 결과</h3>
+                  <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(reportResult, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Monthly Report 탭 - 테스트: 특정 유저만 실행 */}
+          {cronSubTab === "monthlyReport" && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h2 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+                  월간 비비드 리포트 생성
+                </h2>
+                <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)} style={{ color: COLORS.text.secondary }}>
+                  vivid-records 기반 월간 리포트 생성. <strong>특정 유저</strong> 테스트 또는 <strong>Pro 전체 유저</strong> 생성 가능. 매월 1일 00:00 KST에 자동 실행됩니다.
+                </p>
+              </div>
+              <div className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                      userId (특정 유저 테스트 시)
+                    </label>
+                    <input
+                      type="text"
+                      value={monthlyReportUserId}
+                      onChange={(e) => setMonthlyReportUserId(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm"
+                      style={{
+                        border: `1px solid ${COLORS.border.input}`,
+                        backgroundColor: COLORS.background.cardElevated,
+                        color: COLORS.text.primary,
+                      }}
+                      placeholder="테스트할 유저 UUID"
+                    />
+                    <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                      특정 유저 테스트 시 입력.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>
+                      baseDate (옵션)
+                    </label>
+                    <input
+                      type="date"
+                      value={monthlyReportBaseDate}
+                      onChange={(e) => setMonthlyReportBaseDate(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm"
+                      style={{
+                        border: `1px solid ${COLORS.border.input}`,
+                        backgroundColor: COLORS.background.cardElevated,
+                        color: COLORS.text.primary,
+                      }}
+                    />
+                    <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                      비워두면 오늘 기준 직전 달.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRunMonthlyReport}
+                    disabled={isMonthlyReportLoading || !cronSecret.trim() || !monthlyReportUserId.trim()}
+                    className={cn(
+                      "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                      BUTTON_STYLES.primary.borderRadius,
+                      BUTTON_STYLES.primary.padding
+                    )}
+                    style={{
+                      backgroundColor: BUTTON_STYLES.primary.background,
+                      color: BUTTON_STYLES.primary.color,
+                    }}
+                  >
+                    {isMonthlyReportLoading ? "실행 중..." : "특정 유저 생성"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRunMonthlyReportAll}
+                    disabled={isMonthlyReportLoading || !cronSecret.trim()}
+                    className={cn(
+                      "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                      BUTTON_STYLES.secondary.borderRadius,
+                      BUTTON_STYLES.secondary.padding
+                    )}
+                    style={{
+                      backgroundColor: BUTTON_STYLES.secondary.background,
+                      color: BUTTON_STYLES.secondary.color,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    {isMonthlyReportLoading ? "실행 중..." : "Pro 전체 유저 생성"}
+                  </button>
+                </div>
+              </div>
+              {monthlyReportError && (
+                <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>
+                  {monthlyReportError}
+                </div>
+              )}
+              {monthlyReportResult && (
+                <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                  <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>실행 결과</h3>
+                  <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(monthlyReportResult, null, 2)}</pre>
+                </div>
+              )}
             </div>
           )}
         </div>

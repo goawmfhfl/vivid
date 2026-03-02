@@ -6,6 +6,8 @@ import { OneViewCardSkeleton } from "@/components/reports/GrowthInsightsSkeleton
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { COLORS } from "@/lib/design-system";
 import { useDailyVividInsights } from "@/hooks/useDailyVividInsights";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getExcludeTodoCompletion } from "@/hooks/useTodoCompletionSetting";
 import { useCountUp } from "@/hooks/useCountUp";
 import { getKSTDateString } from "@/lib/date-utils";
 import { PreviewDataNotice } from "./PreviewDataNotice";
@@ -45,6 +47,7 @@ export function RecentTrendsSection({
   error = null,
 }: RecentTrendsSectionProps) {
   const [isAnimated, setIsAnimated] = useState(false);
+  const { data: user } = useCurrentUser();
   const {
     data: scoreEntries,
     isLoading: isLoadingScores,
@@ -111,7 +114,10 @@ export function RecentTrendsSection({
   // 실제 데이터 있으면 사용, 없으면 플레이스홀더로 UI 미리보기
   const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
   const hasRealData = !!scoreMetrics;
-  const hasTodoCompletionData = scoreMetrics?.hasTodoCompletionData ?? true; // placeholder는 둘 다 있음
+  const excludeTodoCompletion = getExcludeTodoCompletion(user?.user_metadata);
+  const hasTodoCompletionData = excludeTodoCompletion
+    ? false
+    : (scoreMetrics?.hasTodoCompletionData ?? true); // placeholder는 둘 다 있음
 
   const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
   const displayAlignment = useCountUp(

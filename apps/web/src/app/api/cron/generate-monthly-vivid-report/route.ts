@@ -5,15 +5,9 @@ import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils"
 import { API_ENDPOINTS } from "@/constants";
 import { CRON_BATCH } from "@/constants/cron";
 import {
-  updateUserTrendsForUser,
-  updateUserTrendsMonthlyForUser,
-} from "../helpers";
-import {
-  getKstDateRangeFromBase,
-  getPreviousWeekKstRange,
   getPreviousMonthKstRange,
   isValidDateString,
-} from "../../update-persona/helpers";
+} from "../update-persona/helpers";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 180;
@@ -25,12 +19,11 @@ const REQUIRED_ENV = [
   "QSTASH_NEXT_SIGNING_KEY",
 ] as const;
 
-type UserTrendsBatchPayload = {
+type MonthlyReportBatchPayload = {
   userIds: string[];
+  month: string;
   startDate: string;
   endDate: string;
-  type?: "weekly" | "monthly";
-  month?: string; // "YYYY-MM", required when type=monthly
 };
 
 function getQstashClient(): Client {
@@ -41,11 +34,9 @@ function getQstashClient(): Client {
   return new Client({ token });
 }
 
-function getBatchSize(value: string | null, type: "weekly" | "monthly"): number {
-  const fallback =
-    type === "monthly" ? CRON_BATCH.USER_TRENDS_MONTHLY : CRON_BATCH.USER_TRENDS_WEEKLY;
-  const parsed = parseInt(value || String(fallback), 10);
-  return Math.min(Math.max(parsed, 5), 100);
+function getBatchSize(value: string | null): number {
+  const parsed = parseInt(value || String(CRON_BATCH.MONTHLY_REPORT), 10);
+  return Math.min(Math.max(parsed, 1), 50);
 }
 
 function isAuthorizedCron(request: NextRequest): boolean {
@@ -54,7 +45,6 @@ function isAuthorizedCron(request: NextRequest): boolean {
   const isSecretValid = !!cronSecret && authHeader === `Bearer ${cronSecret}`;
   const isVercelCron = request.headers.get("x-vercel-cron") === "1";
 
-  // 로컬 개발: query param secret 허용 (NODE_ENV=development만)
   const isDevSecret =
     process.env.NODE_ENV === "development" &&
     !!cronSecret &&
@@ -63,27 +53,14 @@ function isAuthorizedCron(request: NextRequest): boolean {
   return isSecretValid || isVercelCron || isDevSecret;
 }
 
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ type: string }> }
-) {
+export async function GET(request: NextRequest) {
   if (!isAuthorizedCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { type: typeParam } = await context.params;
-  const type = typeParam as "weekly" | "monthly";
-
-  if (type !== "weekly" && type !== "monthly") {
-    return NextResponse.json(
-      { error: "Invalid type. Use /weekly or /monthly" },
-      { status: 404 }
-    );
-  }
-
   const missingEnv = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missingEnv.length) {
-    console.error("[cron] update-user-trends missing env:", missingEnv);
+    console.error("[cron] generate-monthly-vivid-report missing env:", missingEnv);
     return NextResponse.json(
       { error: "Configuration error", missing: missingEnv },
       { status: 500 }
@@ -97,13 +74,13 @@ export async function GET(
       Math.max(parseInt(searchParams.get("limit") || "100", 10), 1),
       100
     );
-    const batchSize = getBatchSize(searchParams.get("batchSize"), type);
+    const batchSize = getBatchSize(searchParams.get("batchSize"));
     const concurrencyParam = searchParams.get("concurrency");
     const baseDate = searchParams.get("baseDate");
     const targetUserId = searchParams.get("userId");
     const sync = searchParams.get("sync") === "1";
 
-    console.log("[cron] update-user-trends invoked", { type, page, limit });
+    console.log("[cron] generate-monthly-vivid-report invoked", { page, limit });
 
     if (baseDate && !isValidDateString(baseDate)) {
       return NextResponse.json(
@@ -112,20 +89,14 @@ export async function GET(
       );
     }
 
-    const { startDate, endDate } =
-      type === "monthly"
-        ? (() => {
-            const r = getPreviousMonthKstRange(baseDate || undefined);
-            return { startDate: r.startDate, endDate: r.endDate };
-          })()
-        : baseDate
-          ? getKstDateRangeFromBase(baseDate, 7)
-          : getPreviousWeekKstRange(baseDate || undefined);
+    const { startDate, endDate, month } =
+      getPreviousMonthKstRange(baseDate || undefined);
 
     const supabase = getServiceSupabase();
 
     let users: Array<{ id: string }> = [];
-    let authPageFull = false; // auth에서 full page 수신 여부 (다음 페이지 체이닝용)
+    let authPageFull = false;
+
     if (targetUserId) {
       const { isPro } = await verifySubscription(targetUserId);
       if (!isPro) {
@@ -137,95 +108,37 @@ export async function GET(
           users: 0,
           batches: 0,
           nextPage: null,
-          message: "Target user is not Pro; user_trends cron runs for Pro only.",
+          month,
+          message: "Target user is not Pro; monthly report cron runs for Pro only.",
         });
       }
       users = [{ id: targetUserId }];
 
       if (sync) {
-        const month =
-          type === "monthly"
-            ? getPreviousMonthKstRange(baseDate || undefined).month
-            : undefined;
-
-        if (type === "monthly") {
-          const { count } = await supabase
-            .from(API_ENDPOINTS.DAILY_VIVID)
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", targetUserId)
-            .gte("report_date", startDate)
-            .lte("report_date", endDate);
-          if ((count ?? 0) < 7) {
-            return NextResponse.json({
-              ok: true,
-              mode: "sync",
-              type: "monthly",
-              userId: targetUserId,
-              startDate,
-              endDate,
-              month,
-              result: {
-                userId: targetUserId,
-                status: "skipped",
-                reason: "daily_vivid_count_under_7",
-              },
-              message: "해당 월에 daily-vivid가 7개 이상 있어야 월간 트렌드를 생성할 수 있습니다.",
-            });
-          }
-        }
-
-        const result =
-          type === "monthly"
-            ? await updateUserTrendsMonthlyForUser(
-                supabase,
-                targetUserId,
-                month!,
-                startDate,
-                endDate
-              )
-            : await updateUserTrendsForUser(
-                supabase,
-                targetUserId,
-                startDate,
-                endDate
-              );
-
-        const { data: latestRow } = await supabase
-          .from(API_ENDPOINTS.USER_TRENDS)
-          .select("id, period_start, period_end, trend, generated_at")
-          .eq("user_id", targetUserId)
-          .eq("type", type)
-          .order("period_end", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
+        const { generateMonthlyReportForUser } = await import("./batch-handler");
+        const result = await generateMonthlyReportForUser(
+          supabase,
+          targetUserId,
+          month,
+          startDate,
+          endDate
+        );
         return NextResponse.json({
           ok: true,
           mode: "sync",
-          type,
           userId: targetUserId,
+          month,
           startDate,
           endDate,
-          ...(type === "monthly" && { month }),
           result,
-          latest: latestRow
-            ? {
-                id: latestRow.id,
-                period_start: latestRow.period_start,
-                period_end: latestRow.period_end,
-                generated_at: latestRow.generated_at,
-                ...(type === "monthly" && {
-                  has_trend: !!latestRow.trend,
-                }),
-              }
-            : null,
         });
       }
     } else {
-      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers({
-        page,
-        perPage: limit,
-      });
+      const { data: usersData, error: usersError } =
+        await supabase.auth.admin.listUsers({
+          page,
+          perPage: limit,
+        });
       if (usersError) {
         throw new Error(`Failed to list users: ${usersError.message}`);
       }
@@ -234,36 +147,60 @@ export async function GET(
       users = allUsers.filter((user) =>
         isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)
       );
-      console.log("[cron] update-user-trends Pro users:", users.length);
+      console.log("[cron] generate-monthly-vivid-report Pro users:", users.length);
     }
 
-    // monthly: daily-vivid 7개 이상인 유저만 포함
-    if (type === "monthly" && users.length > 0) {
+    if (users.length > 0) {
       const userIdsBefore = users.map((u) => u.id);
-      const { data: dailyRows } = await supabase
-        .from(API_ENDPOINTS.DAILY_VIVID)
+      const { data: recordRows } = await supabase
+        .from(API_ENDPOINTS.RECORDS)
         .select("user_id")
         .in("user_id", userIdsBefore)
-        .gte("report_date", startDate)
-        .lte("report_date", endDate);
-      const countByUser = new Map<string, number>();
-      for (const row of dailyRows || []) {
+        .in("type", ["vivid", "dream"])
+        .gte("kst_date", startDate)
+        .lte("kst_date", endDate);
+
+      const hasRecordsByUser = new Set<string>();
+      for (const row of recordRows || []) {
         const uid = (row as { user_id?: string }).user_id;
-        if (uid) countByUser.set(uid, (countByUser.get(uid) || 0) + 1);
+        if (uid) hasRecordsByUser.add(uid);
       }
-      const minDailyVivid = 7;
-      users = users.filter((u) => (countByUser.get(u.id) || 0) >= minDailyVivid);
+
+      users = users.filter((u) => hasRecordsByUser.has(u.id));
       if (users.length < userIdsBefore.length) {
         console.log(
-          "[cron] update-user-trends monthly: filtered to users with >= 7 daily_vivid:",
+          "[cron] generate-monthly-vivid-report: filtered to users with vivid_records:",
           users.length,
           "of",
           userIdsBefore.length
         );
       }
+
+      // 이미 monthly_vivid가 있는 유저 제외
+      if (users.length > 0) {
+        const { data: existingRows } = await supabase
+          .from(API_ENDPOINTS.MONTHLY_VIVID)
+          .select("user_id")
+          .in("user_id", users.map((u) => u.id))
+          .eq("month", month)
+          .eq("is_ai_generated", true);
+
+        const hasMonthlyByUser = new Set(
+          (existingRows || []).map((r) => (r as { user_id: string }).user_id)
+        );
+        const beforeFilter = users.length;
+        users = users.filter((u) => !hasMonthlyByUser.has(u.id));
+        if (users.length < beforeFilter) {
+          console.log(
+            "[cron] generate-monthly-vivid-report: filtered out users with existing monthly_vivid:",
+            users.length,
+            "of",
+            beforeFilter
+          );
+        }
+      }
     }
 
-    // 다음 페이지 존재 여부: auth에서 full page를 받았으면 더 있을 수 있음
     const hasMoreAuthPages = !targetUserId && authPageFull;
     const nextPage = hasMoreAuthPages ? page + 1 : null;
 
@@ -273,7 +210,7 @@ export async function GET(
         const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
         const cronSecret = process.env.CRON_SECRET;
         const qstash = getQstashClient();
-        const nextPath = `${baseUrl}/api/cron/update-user-trends/${type}`;
+        const nextPath = `${baseUrl}/api/cron/generate-monthly-vivid-report`;
         const nextUrl = new URL(nextPath);
         nextUrl.searchParams.set("page", String(nextPage));
         nextUrl.searchParams.set("limit", String(limit));
@@ -288,7 +225,7 @@ export async function GET(
             body: {},
             method: "GET",
             headers: { Authorization: `Bearer ${cronSecret}` },
-            delay: "10s",
+            delay: "60s",
           });
           nextPageScheduled = true;
         }
@@ -302,27 +239,27 @@ export async function GET(
         batches: 0,
         nextPage,
         ...(nextPageScheduled && { nextPageScheduled: true }),
+        month,
+        startDate,
+        endDate,
       });
     }
 
-    const month = type === "monthly" ? getPreviousMonthKstRange(baseDate || undefined).month : undefined;
-
     const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
-    const batchUrlBase = `${baseUrl}/api/cron/update-user-trends/batch`;
+    const batchUrlBase = `${baseUrl}/api/cron/generate-monthly-vivid-report/batch`;
     const batchUrl =
       concurrencyParam != null && concurrencyParam !== ""
         ? `${batchUrlBase}?concurrency=${encodeURIComponent(concurrencyParam)}`
         : batchUrlBase;
     const qstash = getQstashClient();
     const userIds = users.map((user) => user.id);
-    const batches: UserTrendsBatchPayload[] = [];
+    const batches: MonthlyReportBatchPayload[] = [];
     for (let idx = 0; idx < userIds.length; idx += batchSize) {
       batches.push({
         userIds: userIds.slice(idx, idx + batchSize),
+        month,
         startDate,
         endDate,
-        type,
-        ...(type === "monthly" && month && { month }),
       });
     }
 
@@ -335,13 +272,12 @@ export async function GET(
       )
     );
 
-    console.log("[cron] update-user-trends published batches:", batches.length);
+    console.log("[cron] generate-monthly-vivid-report published batches:", batches.length);
 
-    // 다음 페이지가 있으면 QStash로 체이닝 (모든 Pro 유저 처리)
     let nextPageScheduled = false;
     if (nextPage) {
       const cronSecret = process.env.CRON_SECRET;
-      const nextPath = `${baseUrl}/api/cron/update-user-trends/${type}`;
+      const nextPath = `${baseUrl}/api/cron/generate-monthly-vivid-report`;
       const nextUrl = new URL(nextPath);
       nextUrl.searchParams.set("page", String(nextPage));
       nextUrl.searchParams.set("limit", String(limit));
@@ -356,7 +292,7 @@ export async function GET(
           body: {},
           method: "GET",
           headers: { Authorization: `Bearer ${cronSecret}` },
-          delay: "10s",
+          delay: "60s",
         });
         nextPageScheduled = true;
       }
@@ -367,17 +303,16 @@ export async function GET(
       page,
       limit,
       batchSize,
-      type,
       users: users.length,
       batches: batches.length,
       nextPage,
       ...(nextPageScheduled && { nextPageScheduled: true }),
+      month,
       startDate,
       endDate,
-      ...(type === "monthly" && month && { month }),
     });
   } catch (error) {
-    console.error("Cron update-user-trends error:", error);
+    console.error("Cron generate-monthly-vivid-report error:", error);
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: "Internal server error", details: message },

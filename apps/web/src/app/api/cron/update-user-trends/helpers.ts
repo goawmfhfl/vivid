@@ -24,6 +24,7 @@ import {
   MonthlyTrendDataSchema,
 } from "@/app/api/monthly-vivid/schema";
 import type { MonthlyTrendData } from "@/types/monthly-vivid";
+import { GEMINI_MODELS } from "../../utils/gemini-model";
 import { withGeminiRetry } from "../../utils/gemini-retry";
 
 type VividRecordRow = {
@@ -270,7 +271,7 @@ async function generateWeeklyTrendFromDailyData(
 
   const geminiClient = getGeminiClient();
   // cron 인사이트: 항상 Flash (rate limit·비용 고려)
-  const modelName = "gemini-3-flash-preview";
+  const modelName = GEMINI_MODELS.flash;
   const startTime = Date.now();
   const model = geminiClient.getGenerativeModel({
     model: modelName,
@@ -360,7 +361,7 @@ async function generateMonthlyTrendFromDailyData(
   const prompt = `다음은 사용자의 ${startDate} ~ ${endDate} ${monthLabel} 월간 기록 분석입니다.\n\n${context}\n\n위 내용을 바탕으로 recurring_self, effort_to_keep, most_meaningful, biggest_change 4가지 필드를 생성해주세요. JSON 형식으로 {"recurring_self": "...", "effort_to_keep": "...", "most_meaningful": "...", "biggest_change": "..."}만 출력해주세요.`;
 
   const geminiClient = getGeminiClient();
-  const modelName = "gemini-3-flash-preview";
+  const modelName = GEMINI_MODELS.flash;
   const startTime = Date.now();
   const model = geminiClient.getGenerativeModel({
     model: modelName,

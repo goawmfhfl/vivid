@@ -7,6 +7,8 @@ import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { ProNoticeBox } from "@/components/reports/ProNoticeBox";
 import { COLORS } from "@/lib/design-system";
 import { useDailyVividInsights } from "@/hooks/useDailyVividInsights";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getExcludeTodoCompletion } from "@/hooks/useTodoCompletionSetting";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PreviewDataNotice } from "./PreviewDataNotice";
@@ -62,6 +64,7 @@ export function FourWeekTrendsSection({
   error = null,
 }: FourWeekTrendsSectionProps) {
   const { isPro } = useSubscription();
+  const { data: user } = useCurrentUser();
   const [isAnimated, setIsAnimated] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const {
@@ -188,7 +191,10 @@ export function FourWeekTrendsSection({
   const placeholderMetrics = useMemo(() => getFourWeekPlaceholderMetrics(), []);
   const effectiveMetrics = scoreMetrics ?? placeholderMetrics;
   const hasRealData = !!scoreMetrics;
-  const hasTodoCompletionData = scoreMetrics?.hasTodoCompletionData ?? true;
+  const excludeTodoCompletion = getExcludeTodoCompletion(user?.user_metadata);
+  const hasTodoCompletionData = excludeTodoCompletion
+    ? false
+    : (scoreMetrics?.hasTodoCompletionData ?? true);
 
   const displayTotal = useCountUp(effectiveMetrics.totalAverage, 1000, isAnimated);
   const displayAlignment = useCountUp(

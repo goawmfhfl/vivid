@@ -157,6 +157,26 @@ export function getPreviousWeekKstRange(baseDate?: string): {
   };
 }
 
+/** 이전 주(일~토)의 KST 날짜 범위. baseDate=일요일 00:00 KST일 때 직전 주 반환 */
+export function getPreviousWeekSunToSatKstRange(baseDate?: string): {
+  startDate: string;
+  endDate: string;
+} {
+  const refDateStr = baseDate || getKSTDateString();
+  const ref = new Date(`${refDateStr}T00:00:00+09:00`);
+  const dayOfWeek = ref.getUTCDay(); // 0=Sun, 1=Mon, ...
+  const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
+  const lastSunday = new Date(ref);
+  lastSunday.setUTCDate(ref.getUTCDate() - daysToLastSunday);
+  const lastSaturday = new Date(lastSunday);
+  lastSaturday.setUTCDate(lastSunday.getUTCDate() + 6);
+
+  return {
+    startDate: getKSTDateString(lastSunday),
+    endDate: getKSTDateString(lastSaturday),
+  };
+}
+
 /** 이전 월의 KST 날짜 범위 반환. baseDate가 비어있으면 오늘(KST) 기준 */
 export function getPreviousMonthKstRange(baseDate?: string): {
   startDate: string;
