@@ -313,7 +313,12 @@ export const MonthlyReportSchema = {
                   properties: {
                     category: { type: "string" },
                     count: { type: "integer", minimum: 0 },
-                    items: { type: "array", items: { type: "string" } },
+                    items: {
+                      type: "array",
+                      items: { type: "string" },
+                      maxItems: 5,
+                      description: "핵심 업무 최대 5개만 한 줄 요약",
+                    },
                     description: { type: "string" },
                   },
                   required: ["category", "count", "items"],
@@ -335,6 +340,14 @@ export const MonthlyReportSchema = {
               repetitive_patterns: { type: "array", items: { type: "string" } },
               new_areas: { type: "array", items: { type: "string" } },
               incomplete_patterns: { type: "array", items: { type: "string" } },
+              encouragement_message: {
+                type: "string",
+                description: "월간 할 일에 대한 따뜻한 응원 메시지 (존댓말)",
+              },
+              encouragement_insight: {
+                type: "string",
+                description: "월간 할 일에 대한 인사이트·조언 (존댓말)",
+              },
             },
             required: [
               "completed_by_category",
@@ -342,6 +355,8 @@ export const MonthlyReportSchema = {
               "repetitive_patterns",
               "new_areas",
               "incomplete_patterns",
+              "encouragement_message",
+              "encouragement_insight",
             ],
           },
           // 6. 실행 가능한 다음 달 플랜 (10%)

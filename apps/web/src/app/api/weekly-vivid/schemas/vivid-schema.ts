@@ -147,7 +147,8 @@ export function getVividReportSchema(isPro: boolean) {
                 items: {
                   type: "array",
                   items: { type: "string" },
-                  description: "각 항목을 구체적으로 한 줄로 표현 (예: RevenueCat 조사 → RevenueCat 결제 연동 및 구독 플로우 설계 진행)",
+                  maxItems: 5,
+                  description: "핵심 업무 최대 5개만 한 줄 요약",
                 },
                 description: {
                   type: "string",

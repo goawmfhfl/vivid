@@ -135,12 +135,14 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
 - focus_traits: 다음 달에 집중할 특성을 선별하고, 구체적인 월간 액션을 제안하세요.
 
 ### 5. 이번 달 한 일 분석 - 아래 [할 일 현황] 데이터 기반 (할 일 없으면 빈 배열/빈 문자열)
-   - completed_by_category: 카테고리별(업무/운동/학습/생활/관계/기타) 완료 현황. description은 카테고리 전체를 한 줄로 구체적으로 요약. items는 각 완료 항목을 구체적으로 한 줄로 표현
-   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약
-   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%), 도넛 차트 시각화용
+   - completed_by_category: 카테고리별 완료 현황. **category와 description은 반드시 한국어만 사용** (예: 업무, 운동, 학습, 생활, 관계, 기타). 괄호 안 영어(Work, Life 등) 금지. items는 핵심 최대 5개만 한 줄로 요약
+   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약. **반드시 존댓말로 작성** (예: "다졌어요", "다졌습니다")
+   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%). **category는 한국어만** (업무, 운동, 학습, 생활, 관계, 기타). 영어 번역 금지
    - repetitive_patterns: 한 달 동안 반복되는 패턴
    - new_areas: 새로 나타난 영역
    - incomplete_patterns: uses_todo_list가 true일 때만 미완료 패턴 분석 (false면 빈 배열)
+   - encouragement_message: 월간 할 일에 대한 따뜻한 응원 메시지 (반드시 존댓말로 작성, 할 일 없으면 빈 문자열)
+   - encouragement_insight: 월간 할 일에 대한 인사이트·조언 (반드시 존댓말로 작성, 할 일 없으면 빈 문자열)
 
 ### 6. 실행 가능한 다음 달 플랜 (10%)
 - 위 5개 섹션의 분석 결과를 바탕으로 구체적이고 실행 가능한 다음 달 플랜을 제안하세요.

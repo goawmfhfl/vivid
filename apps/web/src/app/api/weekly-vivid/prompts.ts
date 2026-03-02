@@ -184,8 +184,9 @@ export function buildWeeklyVividPrompt(
    - evaluation_trend: 주간 비전 평가 점수 추이 (future_evaluation 점수 추이)
 
 4. **completed_todos_insights (실행력 인사이트)** - 할 일 데이터가 제공된 경우에만 분석
-   - completed_by_category: 카테고리별(count, items, description). items는 각 완료 항목을 구체적으로 한 줄로 (예: "RevenueCat 결제 연동 및 구독 플로우 설계 진행"), description은 카테고리 전체 구체적 요약
-   - time_investment_summary, time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%, 도넛 차트용)
+   - completed_by_category: 카테고리별(count, items, description). **category는 한국어만** (업무, 운동, 학습, 생활, 관계, 기타). 영어 번역 금지. items는 핵심 최대 5개만 한 줄로 요약
+   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약. **존댓말로 작성**
+   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%). **category는 한국어만** (업무, 운동, 학습, 생활, 관계, 기타)
    - repetitive_patterns, new_areas
    - incomplete_patterns: uses_todo_list가 true일 때만 (false면 빈 배열)
 5. **user_characteristics_analysis (사용자 특징 심화 분석)**
@@ -332,9 +333,9 @@ VIVID 기록은 두 가지 질문으로 구성되어 있습니다:
    - evaluation_trend: 주간 비전의 명확성과 일관성 추이 분석
 
 4. **completed_todos_insights (실행력 인사이트)** - 아래 [할 일 현황] 데이터 기반
-   - completed_by_category: 카테고리별(업무/운동/학습/생활/관계/기타) 완료 현황. description은 카테고리 전체를 한 줄로 구체적으로 요약 (어떤 일을 어떻게 진행했는지). items는 각 완료 항목을 구체적으로 한 줄로 표현 (예: "RevenueCat 조사" 대신 "RevenueCat 결제 연동 및 구독 플로우 설계 진행")
-   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약
-   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%), 도넛 차트 시각화용
+   - completed_by_category: 카테고리별 완료 현황. **category는 한국어만** (업무, 운동, 학습, 생활, 관계, 기타). 영어(Work, Life 등) 금지. description은 카테고리 전체 구체적 요약. items는 핵심 최대 5개만 한 줄 요약
+   - time_investment_summary: 어떤 영역에 시간을 많이 투자했는지 요약. **존댓말로 작성**
+   - time_investment_breakdown: 카테고리별 퍼센트 배열 (합계 100%). **category는 한국어만** (업무, 운동, 학습, 생활, 관계, 기타)
    - repetitive_patterns: 반복되는 패턴
    - new_areas: 새로 나타난 영역
    - incomplete_patterns: uses_todo_list가 true일 때만 미완료 패턴 분석 (false면 빈 배열)

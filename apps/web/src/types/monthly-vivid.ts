@@ -156,6 +156,8 @@ export type MonthlyReport = {
     repetitive_patterns: string[];
     new_areas: string[];
     incomplete_patterns: string[] | null;
+    encouragement_message?: string;
+    encouragement_insight?: string;
   };
 
   // 6. 다음 달 계획 (10%)
