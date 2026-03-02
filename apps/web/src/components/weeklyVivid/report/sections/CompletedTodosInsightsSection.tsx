@@ -227,7 +227,6 @@ export function CompletedTodosInsightsSection({
                                 backgroundColor: `${greenColor}18`,
                               }}
                             >
-                              {cat.count}개
                               {isExpanded ? (
                                 <ChevronUp className="w-3.5 h-3.5" />
                               ) : (

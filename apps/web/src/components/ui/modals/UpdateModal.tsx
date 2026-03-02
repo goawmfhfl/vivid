@@ -10,7 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { COLORS } from "@/lib/design-system";
+import {
+  COLORS,
+  SPACING,
+  TYPOGRAPHY,
+  BUTTON_STYLES,
+  CARD_STYLES,
+  SHADOWS,
+  TRANSITIONS,
+} from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
 const PERMANENTLY_DISMISSED_KEY = "vivid_update_modal_permanent_v1";
 
@@ -125,28 +134,30 @@ export function UpdateModal() {
     <Dialog open={true} onOpenChange={handleOpenChange}>
       <DialogContent
         hideOverlay
-        className="max-w-[365px] w-[calc(100vw-2rem)] p-0 overflow-hidden gap-0"
-        style={{ width: 365 }}
+        className={cn(
+          "max-w-[380px] w-[calc(100vw-2rem)] p-0 overflow-hidden gap-0 border-0",
+          TRANSITIONS.default
+        )}
+        style={{
+          width: 380,
+          borderRadius: CARD_STYLES.default.borderRadius,
+          boxShadow: SHADOWS.elevation5,
+          backgroundColor: COLORS.surface.elevated,
+          border: CARD_STYLES.default.border,
+        }}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">{modal.title}</DialogTitle>
-        <DialogClose asChild>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="absolute top-2 right-2 z-10 p-1.5 rounded-full hover:bg-black/5 transition-colors"
-            style={{ color: COLORS.text.tertiary }}
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </DialogClose>
-        <div className="flex flex-col items-center overflow-hidden">
-          {/* 이미지 중심 레이아웃 */}
+      
+        <div className="flex flex-col overflow-hidden">
+          {/* 이미지 영역 */}
           <div
             className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
-            style={{ maxWidth: 365 }}
+            style={{
+              maxWidth: 380,
+              backgroundColor: COLORS.background.card,
+            }}
           >
             <img
               src={modal.image_url}
@@ -154,29 +165,65 @@ export function UpdateModal() {
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="flex gap-2 w-full p-3" style={{ maxWidth: 365 }}>
+          {/* 액션 영역 */}
+          <div
+            className={cn("flex gap-3 w-full", SPACING.card.padding)}
+            style={{
+              paddingTop: 16,
+              paddingBottom: 20,
+              borderTop: `1px solid ${COLORS.border.light}`,
+              backgroundColor: COLORS.surface.elevated,
+            }}
+          >
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors"
+              className={cn(
+                "flex-1 rounded-xl text-sm font-medium",
+                BUTTON_STYLES.ghost.padding,
+                TRANSITIONS.colors
+              )}
               style={{
+                color: COLORS.text.secondary,
+                border: `1.5px solid ${COLORS.border.light}`,
                 backgroundColor: "transparent",
-                color: COLORS.text.tertiary,
-                border: `1px solid ${COLORS.border.light}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.background.hover;
+                e.currentTarget.style.borderColor = COLORS.border.default;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.borderColor = COLORS.border.light;
               }}
             >
-              더이상 보지 않기
+              <span className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}>
+                더이상 보지 않기
+              </span>
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 py-2.5 rounded-lg text-sm font-medium"
+              className={cn(
+                "flex-1 rounded-xl font-medium",
+                BUTTON_STYLES.primary.padding,
+                BUTTON_STYLES.primary.borderRadius,
+                TRANSITIONS.colors
+              )}
               style={{
                 backgroundColor: COLORS.brand.primary,
                 color: COLORS.text.white,
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.brand.secondary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.brand.primary;
+              }}
             >
-              확인하기
+              <span className={cn(TYPOGRAPHY.body.fontSize, "font-semibold")}>
+                확인하기
+              </span>
             </button>
           </div>
         </div>

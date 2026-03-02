@@ -142,7 +142,6 @@ function ReportsPage() {
       >
         <AppHeader
           title="리포트"
-          subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
         />
         <ReportsPageSkeleton />
       </div>
@@ -156,7 +155,6 @@ function ReportsPage() {
       >
         <AppHeader
           title="리포트"
-          subtitle="주간 및 월간 기록을 분석하고 인사이트를 확인하세요"
         />
 
       <div
