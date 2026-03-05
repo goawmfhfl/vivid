@@ -712,6 +712,7 @@ export function UserAIUsageDetail({ userId }: UserAIUsageDetailProps) {
                     }}
                   >
                     <option value="">전체</option>
+                    <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
                     <option value="gemini-3-flash-preview">gemini-3-flash-preview</option>
                     <option value="gemini-2.0-flash">gemini-2.0-flash</option>
                     <option value="gemini-1.5-flash">gemini-1.5-flash</option>

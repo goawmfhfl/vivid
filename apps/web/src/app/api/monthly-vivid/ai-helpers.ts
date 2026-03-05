@@ -48,7 +48,7 @@ export async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  const modelName = "gemini-3-pro-preview";
+  const modelName = "gemini-3.1-pro-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(

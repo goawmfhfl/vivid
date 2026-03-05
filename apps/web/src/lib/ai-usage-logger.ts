@@ -26,7 +26,8 @@ const PRICING: Record<
   "gemini-3.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 }, // 별칭 지원
   "gemini-1.5-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
   "gemini-1.5-pro": { input: 1.25, inputCached: 0.625, output: 5.0 },
-  "gemini-3-pro-preview": { input: 1.25, inputCached: 0.625, output: 5.0 },
+  "gemini-3-pro-preview": { input: 1.25, inputCached: 0.625, output: 5.0 }, // 레거시 로그 호환
+  "gemini-3.1-pro-preview": { input: 1.25, inputCached: 0.625, output: 5.0 },
 };
 
 const USD_TO_KRW = 1350; // 기본 환율

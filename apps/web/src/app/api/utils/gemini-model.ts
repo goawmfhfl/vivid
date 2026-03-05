@@ -5,7 +5,7 @@
  */
 
 export const GEMINI_MODELS = {
-  pro: "gemini-3-pro-preview",
+  pro: "gemini-3.1-pro-preview",
   flash: "gemini-3-flash-preview",
 } as const;
 

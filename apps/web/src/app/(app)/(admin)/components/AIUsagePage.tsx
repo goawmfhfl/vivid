@@ -31,7 +31,7 @@ const GEMINI_MODELS = [
   "gemini-2.0-flash-exp",
   "gemini-1.5-flash",
   "gemini-1.5-pro",
-  "gemini-3-pro-preview",
+  "gemini-3.1-pro-preview",
 ];
 
 const REQUEST_TYPE_LABELS: Record<string, string> = {
