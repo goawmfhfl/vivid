@@ -26,6 +26,7 @@ export function UserList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -42,7 +43,7 @@ export function UserList() {
       try {
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: "20",
+          limit: limit.toString(),
         });
         if (search) params.append("search", search);
         if (roleFilter) params.append("role", roleFilter);
@@ -65,7 +66,7 @@ export function UserList() {
     };
 
     fetchUsers();
-  }, [page, search, roleFilter, activeFilter]);
+  }, [page, limit, search, roleFilter, activeFilter]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +118,7 @@ export function UserList() {
               />
               <input
                 type="text"
-                placeholder="이름 또는 이메일로 검색..."
+                placeholder="이메일 또는 username으로 검색..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border"
@@ -153,6 +154,19 @@ export function UserList() {
                 { value: "false", label: "비활성" },
               ]}
               containerClassName="w-36"
+            />
+            <AdminSelect
+              value={limit.toString()}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              options={[
+                { value: "20", label: "20개씩" },
+                { value: "50", label: "50개씩" },
+                { value: "100", label: "100개씩" },
+              ]}
+              containerClassName="w-28"
             />
           </div>
         </form>
@@ -482,22 +496,28 @@ export function UserList() {
           </div>
 
           {/* 페이지네이션 */}
-          {pagination.totalPages > 1 && (
+          {pagination.total > 0 && (
             <div
-              className="px-4 py-3 flex items-center justify-between border-t"
+              className="px-4 py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t"
               style={{ borderColor: COLORS.border.light }}
             >
-              <div style={{ color: COLORS.text.secondary }}>
+              <div
+                className="text-sm text-center sm:text-left"
+                style={{ color: COLORS.text.secondary }}
+              >
                 총 {pagination.total.toLocaleString()}명 중{" "}
                 {(pagination.page - 1) * pagination.limit + 1}-
-                {Math.min(pagination.page * pagination.limit, pagination.total)}
+                {Math.min(
+                  pagination.page * pagination.limit,
+                  pagination.total
+                )}
                 명 표시
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center justify-center gap-1 sm:gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 rounded-lg border disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,
@@ -506,12 +526,72 @@ export function UserList() {
                 >
                   이전
                 </button>
+                <div className="flex items-center gap-1">
+                  {(() => {
+                    const total = pagination.totalPages;
+                    const current = page;
+                    const delta = 2;
+                    const range: number[] = [];
+                    const rangeWithDots: (number | "ellipsis")[] = [];
+                    let l: number | undefined;
+                    for (let i = 1; i <= total; i++) {
+                      if (
+                        i === 1 ||
+                        i === total ||
+                        (i >= current - delta && i <= current + delta)
+                      ) {
+                        range.push(i);
+                      }
+                    }
+                    for (const i of range) {
+                      if (l !== undefined && i - l !== 1) {
+                        rangeWithDots.push("ellipsis");
+                      }
+                      rangeWithDots.push(i);
+                      l = i;
+                    }
+                    return rangeWithDots.map((n, idx) =>
+                      n === "ellipsis" ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-1"
+                          style={{ color: COLORS.text.muted }}
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={n}
+                          onClick={() => setPage(n)}
+                          className="min-w-[2rem] px-2 py-2 rounded-lg text-sm font-medium transition-colors"
+                          style={{
+                            backgroundColor:
+                              page === n
+                                ? COLORS.brand.primary
+                                : COLORS.background.card,
+                            color:
+                              page === n
+                                ? COLORS.text.white
+                                : COLORS.text.primary,
+                            border: `1px solid ${
+                              page === n
+                                ? COLORS.brand.primary
+                                : COLORS.border.input
+                            }`,
+                          }}
+                        >
+                          {n}
+                        </button>
+                      )
+                    );
+                  })()}
+                </div>
                 <button
                   onClick={() =>
                     setPage((p) => Math.min(pagination.totalPages, p + 1))
                   }
                   disabled={page === pagination.totalPages}
-                  className="px-4 py-2 rounded-lg border disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: COLORS.border.input,
                     backgroundColor: COLORS.background.card,

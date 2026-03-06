@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { User } from "@supabase/supabase-js";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import type { UserListItem } from "@/types/admin";
@@ -18,38 +19,59 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
-    const search = searchParams.get("search") || "";
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || "20", 10), 1),
+      100
+    );
+    const search = (searchParams.get("search") || "").trim();
     const role = searchParams.get("role") || "";
+    const isActiveParam = searchParams.get("is_active") || "";
 
     const supabase = getServiceSupabase();
-    const offset = (page - 1) * limit;
 
-    // 모든 사용자 조회 (페이지네이션 적용)
-    const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({
-      page: page,
-      perPage: limit,
-    });
+    // Supabase listUsers는 페이지 단위로만 반환하므로, 검색/필터 시 전체 유저를 페칭 후 필터링
+    const PER_PAGE = 1000;
+    let allUsers: User[] = [];
+    let currentPage = 1;
+    let hasMore = true;
 
-    if (listError) {
-      console.error("유저 목록 조회 실패:", listError);
-      return NextResponse.json(
-        { error: "유저 목록을 불러오는데 실패했습니다." },
-        { status: 500 }
-      );
+    while (hasMore) {
+      const { data: chunk, error: listError } =
+        await supabase.auth.admin.listUsers({
+          page: currentPage,
+          perPage: PER_PAGE,
+        });
+
+      if (listError) {
+        console.error("유저 목록 조회 실패:", listError);
+        return NextResponse.json(
+          { error: "유저 목록을 불러오는데 실패했습니다." },
+          { status: 500 }
+        );
+      }
+
+      const users = chunk.users || [];
+      allUsers = allUsers.concat(users);
+      hasMore = users.length === PER_PAGE;
+      currentPage += 1;
     }
 
-    const allUsers = usersData.users || [];
     let filteredUsers = allUsers;
 
-    // 검색 필터 (이메일, 이름)
+    // 검색 필터 (이메일, 이름, username)
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredUsers = filteredUsers.filter(
-        (user) =>
-          user.email?.toLowerCase().includes(searchLower) ||
-          (user.user_metadata?.name as string)?.toLowerCase().includes(searchLower)
-      );
+      filteredUsers = filteredUsers.filter((user) => {
+        const email = user.email?.toLowerCase() ?? "";
+        const name = (user.user_metadata?.name as string)?.toLowerCase() ?? "";
+        const username =
+          (user.user_metadata?.username as string)?.toLowerCase() ?? "";
+        return (
+          email.includes(searchLower) ||
+          name.includes(searchLower) ||
+          username.includes(searchLower)
+        );
+      });
     }
 
     // 역할 필터
@@ -59,16 +81,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // is_active 필터 (user_metadata.is_active)
+    if (isActiveParam === "true" || isActiveParam === "false") {
+      const active = isActiveParam === "true";
+      filteredUsers = filteredUsers.filter((user) => {
+        const meta = user.user_metadata as Record<string, unknown> | undefined;
+        const isActive =
+          meta?.is_active === undefined ? true : meta?.is_active === true;
+        return isActive === active;
+      });
+    }
+
     // 현재 로그인한 관리자가 목록에 없으면 항상 포함 (본인 데이터 접근 가능)
     const adminInList = filteredUsers.some((u) => u.id === currentAdminId);
     if (!adminInList) {
-      const { data: { user: adminUser } } = await supabase.auth.admin.getUserById(currentAdminId);
+      const {
+        data: { user: adminUser },
+      } = await supabase.auth.admin.getUserById(currentAdminId);
       if (adminUser) {
-        const matchesSearch = !search ||
-          adminUser.email?.toLowerCase().includes(search.toLowerCase()) ||
-          (adminUser.user_metadata?.name as string)?.toLowerCase().includes(search.toLowerCase());
-        const matchesRole = !role || (adminUser.user_metadata?.role as string) === role;
-        if (matchesSearch && matchesRole) {
+        const searchLower = search.toLowerCase();
+        const matchesSearch =
+          !search ||
+          adminUser.email?.toLowerCase().includes(searchLower) ||
+          (adminUser.user_metadata?.name as string)
+            ?.toLowerCase()
+            .includes(searchLower) ||
+          (adminUser.user_metadata?.username as string)
+            ?.toLowerCase()
+            .includes(searchLower);
+        const matchesRole =
+          !role || (adminUser.user_metadata?.role as string) === role;
+        const matchesActive =
+          !isActiveParam ||
+          (isActiveParam === "true" &&
+            (adminUser.user_metadata as Record<string, unknown>)?.is_active !==
+              false) ||
+          (isActiveParam === "false" &&
+            (adminUser.user_metadata as Record<string, unknown>)?.is_active ===
+              false);
+        if (matchesSearch && matchesRole && matchesActive) {
           filteredUsers = [adminUser, ...filteredUsers];
         }
       }
@@ -78,6 +129,7 @@ export async function GET(request: NextRequest) {
     const totalCount = filteredUsers.length;
 
     // 페이지네이션 적용
+    const offset = (page - 1) * limit;
     const paginatedUsers = filteredUsers.slice(offset, offset + limit);
 
     // AI 사용량 조회
@@ -122,12 +174,15 @@ export async function GET(request: NextRequest) {
       const subscription = metadata.subscription as SubscriptionMetadata | undefined;
       const userRole = (metadata.role as string) || "user";
 
+      const isActive =
+        metadata.is_active === undefined ? true : metadata.is_active === true;
+
       return {
         id: user.id,
         email: user.email || "",
         name: (metadata.name as string) || "",
         role: userRole as "user" | "admin",
-        is_active: true, // user_metadata에 is_active가 없으면 기본값 true
+        is_active: isActive,
         created_at: user.created_at,
         last_login_at: (metadata.last_login_at as string) || null,
         subscription: subscription

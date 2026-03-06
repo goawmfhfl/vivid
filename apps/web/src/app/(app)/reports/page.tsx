@@ -118,6 +118,7 @@ function ReportsPage() {
     await Promise.all(tasks);
   }, [queryClient, isPro, refetchInsights]);
 
+
   // Pro: 실제 데이터 있으면 사용, 없으면 미리보기. 비Pro: 미리보기
   const growthInsightsToShow =
     isPro && personaInsights?.growth_insights
