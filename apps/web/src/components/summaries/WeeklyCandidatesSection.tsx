@@ -11,7 +11,6 @@ import { getKSTDateString } from "@/lib/date-utils";
 import { useAIRequestStore } from "@/store/useAIRequestStore";
 import { useEnvironment } from "@/hooks/useEnvironment";
 import { useModalStore } from "@/store/useModalStore";
-import { getMondayOfWeek } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS } from "@/lib/design-system";
 import { CandidatesNoticeBox } from "./CandidatesNoticeBox";
 import { fetchWeeklyTrends } from "@/hooks/useWeeklyTrends";
@@ -382,9 +381,7 @@ export function WeeklyCandidatesSection() {
 
         // WEEKLY_CANDIDATES에서 해당 주의 weekly_vivid_id 업데이트
         if (feedbackData.id) {
-          const weekStartDate = new Date(feedbackData.week_range.start);
-          const weekStartDateObj = getMondayOfWeek(weekStartDate);
-          const weekStartStr = weekStartDateObj.toISOString().split("T")[0];
+          const weekStartStr = feedbackData.week_range.start;
 
           queryClient.setQueryData<
             import("@/types/weekly-candidate").WeeklyCandidateWithFeedback[]

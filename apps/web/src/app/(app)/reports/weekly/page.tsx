@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";
 import { FourWeekTrendsSection } from "@/components/reports/FourWeekTrendsSection";
-import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
+// import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
 import { useWeeklyTrends } from "@/hooks/useWeeklyTrends";
 import { useSubscription } from "@/hooks/useSubscription";
 import {
@@ -65,10 +65,10 @@ function WeeklyReportsPage() {
           onBack={() => router.push("/reports")}
         />
 
-      {/* 아직 생성되지 않은 주간 vivid 알림 */}
-      <div className="mb-8">
+      {/* 아직 생성되지 않은 주간 vivid 알림 - 일단 비표시 */}
+      {/* <div className="mb-8">
         <WeeklyCandidatesSection />
-      </div>
+      </div> */}
 
       {/* 주간 리스트 보러가기 버튼 - 하늘빛 블루 */}
       <div className="mb-12">

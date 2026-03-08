@@ -38,6 +38,12 @@
       "expo-font",
       "expo-asset"
     ],
-    "scheme": "vivid"
+    "scheme": "vivid",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6cf6a0dd-a3a5-42a2-bac0-88ee86c1f82f"
+      }
+    }
   }
 }

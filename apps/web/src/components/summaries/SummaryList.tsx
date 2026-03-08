@@ -129,8 +129,9 @@ export function SummaryList({
                       fontSize: "0.875rem",
                     }}
                   >
-                    {summary.period}{" "}
-                    {summary.type === "weekly" ? "주간 vivid" : "월간 인사이트 & VIVID"}
+                    {summary.type === "weekly"
+                      ? `${summary.dateRange} 주간 vivid`
+                      : `${summary.period} 월간 인사이트 & VIVID`}
                   </p>
                 </div>
               </div>

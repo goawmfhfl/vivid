@@ -2,13 +2,12 @@ import type { PeriodSummary } from "@/types/Entry";
 import type { WeeklyVividListItem } from "@/types/weekly-vivid";
 
 /**
- * 주의 시작일 계산 (월요일 기준)
+ * 주의 시작일 계산 (일요일 기준)
  */
 function getWeekStart(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay();
-  // 일요일(0)이면 -6, 월요일(1)이면 0, 화요일(2)이면 -1, ...
-  const diff = day === 0 ? -6 : 1 - day;
+  const day = d.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
+  const diff = -day; // 일요일(0)=0, 월요일(1)=-1, ...
   const weekStart = new Date(d);
   weekStart.setDate(d.getDate() + diff);
   weekStart.setHours(0, 0, 0, 0);
@@ -16,7 +15,7 @@ function getWeekStart(date: Date): Date {
 }
 
 /**
- * 주의 종료일 계산 (일요일 기준)
+ * 주의 종료일 계산 (토요일 기준, 일요일 + 6일)
  */
 function getWeekEnd(date: Date): Date {
   const weekStart = getWeekStart(date);

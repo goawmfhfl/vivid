@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getKSTDateString, getKSTDate } from "@/lib/date-utils";
-import { getMondayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
+import { getSundayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate-filter";
 import { COLORS, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { motion, AnimatePresence } from "framer-motion";
 import { DateButtonSkeleton } from "@/components/ui/Skeleton";
@@ -20,7 +20,7 @@ interface WeeklyDateViewProps {
   isLoading?: boolean; // 데이터 로딩 상태
 }
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 /** 애니메이션 완료 대기 최대 시간 (ms) - onExitComplete 미호출 시 복구 */
 const TRANSITION_TIMEOUT_MS = 600;
@@ -39,7 +39,7 @@ export function WeeklyDateView({
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const today = getKSTDate();
     const selected = selectedDate ? getKSTDate(new Date(selectedDate)) : today;
-    return getMondayOfWeek(selected);
+    return getSundayOfWeek(selected);
   });
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -204,7 +204,7 @@ export function WeeklyDateView({
   useEffect(() => {
     if (selectedDate) {
       const selected = getKSTDate(new Date(selectedDate));
-      const weekStart = getMondayOfWeek(selected);
+      const weekStart = getSundayOfWeek(selected);
       setCurrentWeekStart(weekStart);
       setDirection(null);
       setIsTransitioning(false); // 전환 상태 초기화

@@ -10,7 +10,7 @@ import {
 } from "../helpers";
 import {
   getKstDateRangeFromBase,
-  getPreviousWeekKstRange,
+  getPreviousWeekSunToSatKstRange,
   getPreviousMonthKstRange,
   isValidDateString,
 } from "../../update-persona/helpers";
@@ -120,7 +120,7 @@ export async function GET(
           })()
         : baseDate
           ? getKstDateRangeFromBase(baseDate, 7)
-          : getPreviousWeekKstRange(baseDate || undefined);
+          : getPreviousWeekSunToSatKstRange(baseDate || undefined);
 
     const supabase = getServiceSupabase();
 
