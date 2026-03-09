@@ -216,7 +216,12 @@ function MembershipPageContent() {
   };
 
   const handleRestorePurchases = () => {
-    // TODO: Apple 구입 내역 복원 API 연결
+    if (isInApp && typeof window !== "undefined" && (window as any).ReactNativeWebView?.postMessage) {
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: "RESTORE" }));
+    } else {
+      // 웹 브라우저: 구입 내역 복원은 앱 내에서만 가능
+      console.log("[Membership] 구입 내역 복원은 앱 내에서만 가능합니다.");
+    }
   };
 
   const privacyPolicy = policies?.find(

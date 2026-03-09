@@ -159,6 +159,9 @@ export default function Page() {
       ) {
         console.log("[Membership] 지금 시작하기 → PURCHASE 수신, plan:", data.plan);
         void handlePurchaseFromWeb(data.plan);
+      } else if (data.type === "RESTORE") {
+        console.log("[Membership] 구입 내역 복원 요청 수신");
+        void handleRestoreFromWeb();
       } else if (data.type === "PURCHASE_SYNC_DONE") {
         console.log("[Membership] 구독 sync 완료 수신 → 홈으로 이동");
         if (purchaseSyncTimeoutRef.current) {
@@ -285,6 +288,66 @@ export default function Page() {
         );
       }
       // 취소 시 Alert는 patchConsoleForPurchaseCancel에서 1회만 표시
+    }
+  };
+
+  const handleRestoreFromWeb = async () => {
+    console.log("[Membership] handleRestoreFromWeb 시작");
+    try {
+      if (Platform.OS === "ios") {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          await Purchases.logIn(session.user.id).catch((e) =>
+            console.warn("[RevenueCat] logIn before restore failed:", e)
+          );
+        }
+      }
+      const customerInfo = await Purchases.restorePurchases();
+      const isPro = customerInfo.entitlements.active["pro"] != null;
+      const productId = customerInfo.entitlements.active["pro"]?.productIdentifier ?? undefined;
+      console.log("[Membership] 복원 완료, isPro:", isPro, "productId:", productId);
+      if (isPro) {
+        setSyncingSubscription(true);
+        const nativeDone = await syncSubscription(productId);
+        if (nativeDone) {
+          setSyncingSubscription(false);
+          router.replace("/");
+          return;
+        }
+        try {
+          const productIdArg = productId
+            ? `{ product_id: ${JSON.stringify(productId)} }`
+            : "{}";
+          const script = `(function(){
+            var postDone=function(){try{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:"PURCHASE_SYNC_DONE"}));}catch(e){}};
+            if(window.__completePurchaseSync){
+              window.__completePurchaseSync(${productIdArg}).then(postDone).catch(postDone);
+            }else{
+              postDone();
+            }
+            true;
+          })();`;
+          webViewRef.current?.injectJavaScript(script);
+        } catch (injErr) {
+          console.warn("[Membership] injectJavaScript 오류:", injErr);
+        }
+        purchaseSyncTimeoutRef.current = setTimeout(() => {
+          purchaseSyncTimeoutRef.current = null;
+          setSyncingSubscription(false);
+          router.replace("/");
+        }, 3000);
+      } else {
+        Alert.alert(
+          "복원 결과",
+          "복원할 구독 내역이 없습니다."
+        );
+      }
+    } catch (e) {
+      const err = e as { message?: string };
+      Alert.alert(
+        "복원 실패",
+        err?.message ?? "구입 내역 복원 중 오류가 발생했습니다."
+      );
     }
   };
 
