@@ -9,6 +9,7 @@ interface UserFeedbackRow {
   comment: string | null;
   created_at: string;
   announcement_id?: string | null;
+  picked_for_membership?: boolean | null;
 }
 
 /**
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     // 통계 계산 (별점 통계는 daily/weekly/monthly + rating non-null 만 포함)
     const { data: allFeedbacks } = await supabase
       .from("user_feedbacks")
-      .select("rating, page_type");
+      .select("rating, page_type, picked_for_membership");
 
     const ratingOnly = (allFeedbacks || []).filter(
       (f) =>
@@ -72,6 +73,8 @@ export async function GET(request: NextRequest) {
 
     const stats = {
       total: allFeedbacks?.length || 0,
+      pickedForMembership:
+        allFeedbacks?.filter((f) => f.picked_for_membership === true).length || 0,
       averageRating: ratingCount
         ? (ratingOnly.reduce((sum, f) => sum + (f.rating as number), 0) / ratingCount).toFixed(2)
         : "0",
@@ -97,6 +100,7 @@ export async function GET(request: NextRequest) {
       comment: feedback.comment,
       createdAt: feedback.created_at,
       announcementId: feedback.announcement_id ?? null,
+      pickedForMembership: feedback.picked_for_membership ?? false,
     }));
 
     return NextResponse.json({

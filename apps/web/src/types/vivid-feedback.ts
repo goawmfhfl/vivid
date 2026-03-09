@@ -18,6 +18,7 @@ export interface VividFeedback {
   user_id?: string | null; // 개선점 피드백은 필수, 일반 피드백은 null
   /** 공지사항 피드백일 때만: 해당 공지 id */
   announcement_id?: string | null;
+  picked_for_membership?: boolean;
   created_at: string;
   updated_at?: string;
 }
@@ -32,6 +33,7 @@ export interface SubmitFeedbackRequest {
 
 export interface FeedbackStats {
   total: number;
+  pickedForMembership?: number;
   byPageType: {
     daily: number;
     weekly: number;

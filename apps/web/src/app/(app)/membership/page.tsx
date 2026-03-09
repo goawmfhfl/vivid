@@ -3,32 +3,39 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  BarChart3,
+  Brain,
+  MessageSquareQuote,
+  PieChart,
+  RotateCcw,
+  ArrowLeft,
+  FileText,
+  TrendingUp,
+  Scale,
+} from "lucide-react";
+import { MembershipSection } from "@/components/membership/MembershipSection";
+import { MembershipWeeklyKeywordsPreview } from "@/components/membership/MembershipWeeklyKeywordsPreview";
+import { MembershipMonthlyCoreVisionsPreview } from "@/components/membership/MembershipMonthlyCoreVisionsPreview";
+import { MembershipTodoBalancePreview } from "@/components/membership/MembershipTodoBalancePreview";
+import { MembershipReviewsSection } from "@/components/membership/MembershipReviewsSection";
 import { LazyMembershipImage } from "@/components/membership/LazyMembershipImage";
+import { GrowthInsightsSection } from "@/components/reports/GrowthInsightsSection";
 import { useNotionPolicies } from "@/hooks/useNotionPolicies";
+import {
+  membershipGrowthInsightsPreview,
+  membershipIdentityPreview,
+  membershipPatternsPreview,
+  membershipPreviewCopy,
+  membershipTodoBalancePreview,
+  membershipWeeklyKeywordsPreview,
+  membershipMonthlyVisionPreview,
+} from "@/lib/membership-preview-data";
 import { supabase } from "@/lib/supabase";
-import { COLORS, SPACING } from "@/lib/design-system";
-import { RotateCcw, ArrowLeft } from "lucide-react";
+import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
+import { cn } from "@/lib/utils";
 
 import img0 from "@/assets/membership/0.png";
-import img1 from "@/assets/membership/1.png";
-import img2 from "@/assets/membership/2.png";
-import img3 from "@/assets/membership/3.png";
-import img4 from "@/assets/membership/4.png";
-import img5 from "@/assets/membership/5.png";
-import img6 from "@/assets/membership/6.png";
-import img7 from "@/assets/membership/7.png";
-import img8 from "@/assets/membership/8.png";
-
-const MEMBERSHIP_IMAGES = [
-  { src: img1, alt: "프로 멤버십 1" },
-  { src: img2, alt: "프로 멤버십 2" },
-  { src: img3, alt: "프로 멤버십 3" },
-  { src: img4, alt: "프로 멤버십 4" },
-  { src: img5, alt: "프로 멤버십 5" },
-  { src: img6, alt: "프로 멤버십 6" },
-  { src: img7, alt: "프로 멤버십 7" },
-  { src: img8, alt: "프로 멤버십 8" },
-];
 
 type PlanType = "annual" | "monthly";
 
@@ -84,7 +91,7 @@ function PlanSelectionCard({
           isSelected ? COLORS.brand.primary : COLORS.border.light
         }`,
         borderRadius: "16px",
-        padding: "20px",
+        padding: "16px",
         color: isSelected ? COLORS.text.white : COLORS.text.primary,
       }}
     >
@@ -116,14 +123,14 @@ function PlanSelectionCard({
               />
             )}
           </div>
-          <span className="text-lg font-bold">{plan.title}</span>
+          <span className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}>{plan.title}</span>
         </div>
-        <span className="text-lg font-bold">{displayPrice}</span>
+        <span className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}>{displayPrice}</span>
       </div>
 
       <div className="flex items-center justify-between pl-8">
         <span
-          className="text-sm"
+          className={cn(TYPOGRAPHY.body.fontSize)}
           style={{
             color: isSelected ? "rgba(255,255,255,0.8)" : COLORS.text.secondary,
           }}
@@ -132,7 +139,7 @@ function PlanSelectionCard({
         </span>
         {plan.originalPrice && (
           <span
-            className="text-sm line-through"
+            className={cn(TYPOGRAPHY.body.fontSize, "line-through")}
             style={{
               color: isSelected ? "rgba(255,255,255,0.6)" : COLORS.text.tertiary,
             }}
@@ -243,16 +250,11 @@ function MembershipPageContent() {
     >
       <MembershipHeader />
 
-      {/* 최상단 이미지 (img0) */}
-      <div className="mb-4">
-        <LazyMembershipImage
-          src={img0}
-          alt="프로 멤버십 소개"
-          priority={true}
-        />
+      <div className="-mx-4 sm:-mx-6 mb-8">
+        <LazyMembershipImage src={img0} alt="VIVID 프로 멤버십" priority />
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mb-12">
         <PlanSelectionCard
           plan={PLANS.annual}
           isSelected={selectedPlan === "annual"}
@@ -265,19 +267,241 @@ function MembershipPageContent() {
         />
       </div>
 
-      {/* 이미지 목록 (lazy loading) */}
-      <div className="flex flex-col mt-4" style={{ gap: 120 }}>
-        {MEMBERSHIP_IMAGES.map((img, idx) => (
-          <LazyMembershipImage
-            key={idx}
-            src={img.src}
-            alt={img.alt}
-            priority={false}
+      <div className="space-y-12">
+        <section
+          className="relative overflow-visible rounded-2xl p-5 sm:p-6"
+          style={{
+            background: `linear-gradient(180deg, ${COLORS.background.cardElevated} 0%, ${COLORS.primary[50]} 100%)`,
+            border: `1px solid ${COLORS.primary[200]}`,
+            boxShadow: "0 1px 3px rgba(43, 43, 43, 0.04)",
+          }}
+        >
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+            style={{ backgroundColor: COLORS.brand.primary }}
           />
-        ))}
+          <div className="pl-4 sm:pl-5">
+            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6">
+              <div className="flex flex-col gap-3">
+                <div
+                  className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
+                  style={{
+                    backgroundColor: COLORS.primary[100],
+                    color: COLORS.brand.primary,
+                    border: `1px solid ${COLORS.primary[200]}`,
+                  }}
+                >
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <p
+                    className={cn(
+                      TYPOGRAPHY.label.fontSize,
+                      TYPOGRAPHY.label.fontWeight,
+                      TYPOGRAPHY.label.letterSpacing,
+                      "uppercase"
+                    )}
+                    style={{ color: COLORS.brand.primary }}
+                  >
+                    3가지 인사이트 영역
+                  </p>
+                  <h2
+                    className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {membershipPreviewCopy.heroTitle}
+                  </h2>
+                </div>
+              </div>
+              <div className="sm:pt-0 min-w-0">
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {membershipPreviewCopy.heroDescription}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3 pt-5 pl-1">
+              {[
+                {
+                  label: "주간/월간 VIVID 종합 리포트",
+                  icon: FileText,
+                  color: COLORS.weekly.primary,
+                  bg: COLORS.weekly.light,
+                },
+                {
+                  label: "한눈에 보는 성장 인사이트",
+                  icon: TrendingUp,
+                  color: COLORS.accent[600],
+                  bg: COLORS.accent[50],
+                },
+                {
+                  label: "삶의 균형 분석",
+                  icon: Scale,
+                  color: COLORS.todoFeedback.primary,
+                  bg: COLORS.todoFeedback.light,
+                },
+              ].map(({ label, icon: Icon, color, bg }, index) => (
+                <div
+                  key={label}
+                  className="relative flex items-center gap-4 rounded-xl p-4 overflow-visible"
+                  style={{
+                    backgroundColor: COLORS.background.cardElevated,
+                    border: `1px solid ${COLORS.border.light}`,
+                    boxShadow: `0 1px 2px rgba(0,0,0,0.04)`,
+                  }}
+                >
+                  <span
+                    className="absolute -top-2 -left-2 w-6 h-6 flex items-center justify-center rounded-full font-semibold tabular-nums text-xs shadow-sm"
+                    style={{
+                      backgroundColor: COLORS.text.primary,
+                      color: COLORS.text.white,
+                      boxShadow: "0 1px 3px rgba(43, 43, 43, 0.15)",
+                    }}
+                  >
+                    {index + 1}
+                  </span>
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{
+                      backgroundColor: bg,
+                      color,
+                    }}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p
+                    className={cn(
+                      TYPOGRAPHY.body.fontSize,
+                      TYPOGRAPHY.body.fontWeight,
+                      "leading-snug"
+                    )}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <MembershipSection
+          icon={BarChart3}
+          iconColor={COLORS.brand.primary}
+          eyebrow="Benefit 01"
+          title={membershipPreviewCopy.weeklyMonthlyTitle}
+          description={membershipPreviewCopy.weeklyMonthlyDescription}
+          accentColor={COLORS.brand.primary}
+          accentLight={COLORS.primary[50]}
+          accentBorder={COLORS.primary[200]}
+        >
+          <div className="grid gap-4 xl:grid-cols-2">
+            <MembershipWeeklyKeywordsPreview
+              weeklyKeywordsAnalysis={membershipWeeklyKeywordsPreview}
+            />
+            <MembershipMonthlyCoreVisionsPreview
+              visionEvolution={membershipMonthlyVisionPreview}
+            />
+          </div>
+        </MembershipSection>
+
+        <MembershipSection
+          icon={Brain}
+          iconColor={COLORS.brand.primary}
+          eyebrow="Benefit 02"
+          title={membershipPreviewCopy.growthTitle}
+          description={membershipPreviewCopy.growthDescription}
+          accentColor={COLORS.brand.primary}
+          accentLight={COLORS.primary[50]}
+          accentBorder={COLORS.primary[200]}
+        >
+          <GrowthInsightsSection
+            growth_insights={membershipGrowthInsightsPreview}
+            identity={membershipIdentityPreview}
+            patterns={membershipPatternsPreview}
+            isLocked={false}
+            hasRealData={true}
+          />
+        </MembershipSection>
+
+        <MembershipSection
+          icon={PieChart}
+          iconColor={COLORS.brand.primary}
+          eyebrow="Benefit 03"
+          title={membershipPreviewCopy.balanceTitle}
+          description={membershipPreviewCopy.balanceDescription}
+          accentColor={COLORS.brand.primary}
+          accentLight={COLORS.primary[50]}
+          accentBorder={COLORS.primary[200]}
+        >
+          <MembershipTodoBalancePreview
+            completedTodosInsights={membershipTodoBalancePreview}
+          />
+        </MembershipSection>
+
+        <section
+          className="relative overflow-hidden rounded-2xl p-5 sm:p-6 space-y-5"
+          style={{
+            background: `linear-gradient(180deg, ${COLORS.background.cardElevated} 0%, ${COLORS.primary[50]} 100%)`,
+            border: `1px solid ${COLORS.primary[200]}`,
+            boxShadow: "0 1px 3px rgba(43, 43, 43, 0.04)",
+          }}
+        >
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+            style={{ backgroundColor: COLORS.brand.primary }}
+          />
+          <div className="pl-4 sm:pl-5">
+            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6">
+              <div className="flex flex-col gap-3">
+                <div
+                  className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
+                  style={{
+                    backgroundColor: COLORS.primary[100],
+                    color: COLORS.brand.primary,
+                    border: `1px solid ${COLORS.primary[200]}`,
+                  }}
+                >
+                  <MessageSquareQuote className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <p
+                    className={cn(
+                      TYPOGRAPHY.label.fontSize,
+                      TYPOGRAPHY.label.fontWeight,
+                      TYPOGRAPHY.label.letterSpacing,
+                      "uppercase"
+                    )}
+                    style={{ color: COLORS.brand.primary }}
+                  >
+                    실제 사용자 후기
+                  </p>
+                  <h2
+                    className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+                    style={{ color: COLORS.text.primary }}
+                  >
+                    {membershipPreviewCopy.reviewsTitle}
+                  </h2>
+                </div>
+              </div>
+              <div className="sm:pt-0 min-w-0">
+                <p
+                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {membershipPreviewCopy.reviewsDescription}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="pl-4 sm:pl-5 pt-1">
+            <MembershipReviewsSection />
+          </div>
+        </section>
       </div>
 
-      {/* 하단 플랜 선택 */}
       <div className="mt-12 flex flex-col gap-3">
         <PlanSelectionCard
           plan={PLANS.annual}
@@ -293,22 +517,24 @@ function MembershipPageContent() {
 
       {/* Apple 정책 영역 */}
       <div className="mt-6 pb-8 flex items-center justify-between px-1">
-        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+        <div className={cn("flex items-center gap-2", TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.tertiary }}>
           {privacyPolicy ? (
             <Link
               href={`/policy/${privacyPolicy.id}`}
-              className="hover:text-gray-600 transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: COLORS.text.tertiary }}
             >
               개인정보 처리방침
             </Link>
           ) : (
             <span>개인정보 처리방침</span>
           )}
-          <span className="text-gray-300 text-[9px]">|</span>
+          <span style={{ color: COLORS.border.light }}>|</span>
           {termsPolicy ? (
             <Link
               href={`/policy/${termsPolicy.id}`}
-              className="hover:text-gray-600 transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: COLORS.text.tertiary }}
             >
               이용 약관
             </Link>
@@ -319,9 +545,10 @@ function MembershipPageContent() {
         <button
           type="button"
           onClick={handleRestorePurchases}
-          className="flex items-center gap-1 py-1 px-2 rounded-md text-[11px] text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all"
+          className={cn("flex items-center gap-1 py-1 px-2 rounded-md transition-all hover:opacity-80", TYPOGRAPHY.caption.fontSize)}
+          style={{ color: COLORS.text.tertiary }}
         >
-          <RotateCcw className="w-3 h-3" />
+          <RotateCcw className="w-3 h-3" style={{ color: COLORS.text.tertiary }} />
           <span>구입 내역 복원</span>
         </button>
       </div>

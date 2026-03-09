@@ -127,6 +127,14 @@ export const COLORS = {
     border: "#d4cce0", // 라벤더 테두리
     accent: "#b8a9d4", // 포인트 퍼플
   },
+  // 유저 리뷰 섹션 전용 - 밝은 노란색/골드 톤
+  reviews: {
+    primary: "#e8b428", // 밝은 골드 옐로우
+    light: "#fef9e7", // 연한 크림 옐로우 배경
+    border: "#f0c14b", // 앰버 옐로우 테두리
+    accent: "#d4a017", // 포인트 골드
+    gradient: "linear-gradient(135deg, #fef9e7 0%, #fef3c7 50%, #fef9e7 100%)",
+  },
   // 상태 색상
   status: {
     success: "#7f8f7a",

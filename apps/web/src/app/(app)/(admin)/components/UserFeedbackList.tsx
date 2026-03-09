@@ -11,6 +11,7 @@ import {
   Target,
   Lightbulb,
   ChevronRight,
+  Pin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminApiFetch } from "@/lib/admin-api-client";
@@ -23,11 +24,13 @@ interface UserFeedback {
   comment: string | null;
   createdAt: string;
   announcementId?: string | null;
+  pickedForMembership?: boolean;
 }
 
 interface FeedbackStats {
   total: number;
   averageRating: string;
+  pickedForMembership?: number;
   byPageType: {
     daily: number;
     weekly: number;
@@ -72,6 +75,7 @@ export function UserFeedbackList() {
   const [sortBy, setSortBy] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<string>("desc");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingPickId, setTogglingPickId] = useState<string | null>(null);
 
   // AI 피드백 분석
   const [insightStartDate, setInsightStartDate] = useState("");
@@ -146,6 +150,37 @@ export function UserFeedbackList() {
       alert(err instanceof Error ? err.message : "삭제 중 오류가 발생했습니다.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleToggleMembershipPick = async (feedback: UserFeedback) => {
+    setTogglingPickId(feedback.id);
+
+    try {
+      const response = await adminApiFetch("/api/admin/user-feedbacks/pick", {
+        method: "PATCH",
+        body: JSON.stringify({
+          id: feedback.id,
+          picked: !feedback.pickedForMembership,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || "멤버십 노출 상태 변경에 실패했습니다."
+        );
+      }
+
+      await fetchFeedbacks();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "멤버십 노출 상태 변경 중 오류가 발생했습니다."
+      );
+    } finally {
+      setTogglingPickId(null);
     }
   };
 
@@ -294,6 +329,20 @@ export function UserFeedbackList() {
                 <span style={{ color: COLORS.text.primary }}>{stats.byPageType.monthly}</span>
               </div>
             </div>
+          </div>
+          <div
+            className="rounded-xl p-4"
+            style={CARD_STYLES.default}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Pin className="w-5 h-5" style={{ color: COLORS.brand.primary }} />
+              <span className="text-sm font-medium" style={{ color: COLORS.text.secondary }}>
+                멤버십 노출
+              </span>
+            </div>
+            <p className="text-2xl font-bold" style={{ color: COLORS.text.primary }}>
+              {stats.pickedForMembership ?? 0}/3
+            </p>
           </div>
           <div
             className="rounded-xl p-4"
@@ -617,6 +666,17 @@ export function UserFeedbackList() {
                     >
                       {new Date(feedback.createdAt).toLocaleString("ko-KR")}
                     </span>
+                    {feedback.pickedForMembership && (
+                      <span
+                        className="px-2 py-1 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor: `${COLORS.brand.primary}15`,
+                          color: COLORS.brand.primary,
+                        }}
+                      >
+                        멤버십 노출 중
+                      </span>
+                    )}
                   </div>
                   {feedback.comment ? (
                     <p
@@ -634,15 +694,33 @@ export function UserFeedbackList() {
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(feedback.id)}
-                  disabled={deletingId === feedback.id}
-                  style={{ color: COLORS.status.error }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-1.5 ml-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleMembershipPick(feedback)}
+                    disabled={togglingPickId === feedback.id}
+                    style={{
+                      color: feedback.pickedForMembership
+                        ? COLORS.brand.primary
+                        : COLORS.text.secondary,
+                    }}
+                  >
+                    <Pin className="w-4 h-4" />
+                    <span className="hidden sm:inline">
+                      {feedback.pickedForMembership ? "노출 해제" : "멤버십 노출"}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(feedback.id)}
+                    disabled={deletingId === feedback.id}
+                    style={{ color: COLORS.status.error }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))
