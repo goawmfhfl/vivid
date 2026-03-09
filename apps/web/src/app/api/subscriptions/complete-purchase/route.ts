@@ -21,11 +21,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await request
-      .json()
-      .catch(() => ({}));
+    const body = (await request.json().catch(() => ({}))) as {
+      product_id?: string;
+    };
+    const productId = typeof body?.product_id === "string" ? body.product_id : undefined;
 
-    const { subscription } = await syncRevenueCatSubscriptionToMetadata(userId);
+    const { subscription } = await syncRevenueCatSubscriptionToMetadata(userId, {
+      productIdOverride: productId,
+    });
 
     return NextResponse.json({
       success: true,

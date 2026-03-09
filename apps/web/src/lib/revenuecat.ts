@@ -34,6 +34,7 @@ type RevenueCatSubscriberResponse = {
 
 type RevenueCatSyncOptions = {
   fallbackToExisting?: boolean;
+  productIdOverride?: string;
 };
 
 export type RevenueCatSyncResult = {
@@ -264,7 +265,7 @@ export async function syncRevenueCatSubscriptionToMetadata(
   userId: string,
   options: RevenueCatSyncOptions = {}
 ): Promise<RevenueCatSyncResult> {
-  const { fallbackToExisting = false } = options;
+  const { fallbackToExisting = false, productIdOverride } = options;
   const supabase = getServiceSupabase();
   const {
     data: { user },
@@ -294,8 +295,15 @@ export async function syncRevenueCatSubscriptionToMetadata(
     throw error;
   }
 
-  const revenueCatSubscription =
+  let revenueCatSubscription =
     subscriber && buildSubscriptionMetadataFromRevenueCat(subscriber);
+
+  if (revenueCatSubscription && productIdOverride) {
+    revenueCatSubscription = {
+      ...revenueCatSubscription,
+      product_id: productIdOverride,
+    };
+  }
 
   if (!revenueCatSubscription) {
     if (fallbackToExisting) {

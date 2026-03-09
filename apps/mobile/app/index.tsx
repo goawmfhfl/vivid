@@ -41,41 +41,49 @@ export default function Page() {
     }
   }, []);
 
-  const syncSubscription = React.useCallback(async () => {
-    const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
-    if (!apiBase) {
-      return false;
-    }
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+  const syncSubscription = React.useCallback(
+    async (productId?: string) => {
+      const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
+      if (!apiBase) {
         return false;
       }
 
-      const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({}),
-      });
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          return false;
+        }
 
-      if (!res.ok) {
-        console.warn("[Membership] 구독 정보 sync 실패:", res.status);
+        const body: { product_id?: string } = {};
+        if (typeof productId === "string" && productId) {
+          body.product_id = productId;
+        }
+
+        const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          console.warn("[Membership] 구독 정보 sync 실패:", res.status);
+          return false;
+        }
+
+        console.log("[Membership] RevenueCat 기준 구독 sync 완료");
+        return true;
+      } catch (error) {
+        console.warn("[Membership] 구독 sync 오류:", error);
         return false;
       }
-
-      console.log("[Membership] RevenueCat 기준 구독 sync 완료");
-      return true;
-    } catch (error) {
-      console.warn("[Membership] 구독 sync 오류:", error);
-      return false;
-    }
-  }, []);
+    },
+    []
+  );
 
   // URL이 없으면 바로 에러 표시 (하얀 화면 방지)
   React.useEffect(() => {
@@ -216,11 +224,12 @@ export default function Page() {
       console.log("[Membership] purchasePackage 호출 중...");
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       const isPro = customerInfo.entitlements.active["pro"] != null;
-      console.log("[Membership] 결제 완료, isPro:", isPro);
+      const productId = customerInfo.entitlements.active["pro"]?.productIdentifier ?? undefined;
+      console.log("[Membership] 결제 완료, isPro:", isPro, "productId:", productId);
       if (isPro) {
         setSyncingSubscription(true);
         // 1) 네이티브에서 RevenueCat authoritative sync 시도
-        const nativeDone = await syncSubscription();
+        const nativeDone = await syncSubscription(productId);
         if (nativeDone) {
           setSyncingSubscription(false);
           router.replace("/");
@@ -229,10 +238,13 @@ export default function Page() {
 
         // 2) 웹(WebView)에서 sync - localStorage에 세션이 있음
         try {
+          const productIdArg = productId
+            ? `{ product_id: ${JSON.stringify(productId)} }`
+            : "{}";
           const script = `(function(){
             var postDone=function(){try{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:"PURCHASE_SYNC_DONE"}));}catch(e){}};
             if(window.__completePurchaseSync){
-              window.__completePurchaseSync().then(postDone).catch(postDone);
+              window.__completePurchaseSync(${productIdArg}).then(postDone).catch(postDone);
             }else{
               console.warn("[Membership] __completePurchaseSync 없음");
               postDone();

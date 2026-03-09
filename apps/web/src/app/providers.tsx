@@ -116,12 +116,16 @@ export function JournalProvider({ children }: { children: ReactNode }) {
   // Promise를 반환하여 inject 스크립트가 완료 시점을 알 수 있음
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.__completePurchaseSync = async () => {
+    window.__completePurchaseSync = async (params?: { product_id?: string }) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.access_token) {
           console.warn("[Membership] 구독 sync: 세션 없음");
           return;
+        }
+        const body: { product_id?: string } = {};
+        if (typeof params?.product_id === "string" && params.product_id) {
+          body.product_id = params.product_id;
         }
         const res = await fetch("/api/subscriptions/complete-purchase", {
           method: "POST",
@@ -130,7 +134,7 @@ export function JournalProvider({ children }: { children: ReactNode }) {
             Authorization: `Bearer ${session.access_token}`,
           },
           credentials: "include",
-          body: JSON.stringify({}),
+          body: JSON.stringify(body),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));

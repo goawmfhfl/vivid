@@ -44,28 +44,34 @@ export default function MembershipScreen() {
     useState<PurchasesPackage | null>(null);
   const autoPurchaseTriggered = useRef(false);
 
-  const syncSubscription = useCallback(async (): Promise<boolean> => {
-    const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
-    if (!apiBase) {
-      return false;
-    }
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
+  const syncSubscription = useCallback(
+    async (productId?: string): Promise<boolean> => {
+      const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
+      if (!apiBase) {
         return false;
       }
 
-      const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({}),
-      });
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          return false;
+        }
+
+        const body: { product_id?: string } = {};
+        if (typeof productId === "string" && productId) {
+          body.product_id = productId;
+        }
+
+        const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(body),
+        });
 
       if (!res.ok) {
         console.warn("[Membership] 구독 정보 sync 실패:", res.status);
@@ -132,8 +138,9 @@ export default function MembershipScreen() {
       try {
         const { customerInfo } = await Purchases.purchasePackage(pkg);
         const isPro = customerInfo.entitlements.active["pro"] != null;
+        const productId = customerInfo.entitlements.active["pro"]?.productIdentifier ?? undefined;
         if (isPro) {
-          await syncSubscription();
+          await syncSubscription(productId);
           router.replace("/");
         }
     } catch (e) {
