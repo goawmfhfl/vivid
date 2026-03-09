@@ -30,7 +30,6 @@ type MenuItem = {
 export function MyInfoView() {
   const { data: currentUser, isLoading } = useCurrentUser();
   const { isPro } = useSubscription();
-  const { isDevelopment } = useEnvironment();
 
   if (isLoading) {
     return (
@@ -61,15 +60,11 @@ export function MyInfoView() {
   const userEmail = currentUser.email || "";
 
   const menuItems: MenuItem[] = [
-    ...(isDevelopment
-      ? [
-          {
-            title: "프로 멤버십",
-            href: "/membership",
-            enabled: true,
-          },
-        ]
-      : []),
+    {
+      title: "프로 멤버십",
+      href: "/membership",
+      enabled: true,
+    },
     {
       title: "공지사항",
       href: "/announcements",
