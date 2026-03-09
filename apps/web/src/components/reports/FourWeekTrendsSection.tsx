@@ -16,6 +16,8 @@ import { PreviewDataNotice } from "./PreviewDataNotice";
 interface FourWeekTrendsSectionProps {
   isLoading?: boolean;
   error?: Error | null;
+  /** 한눈에 보기 내부에 중첩될 때 true (제목 생략, 상위에서 "한눈에 보기" 제공) */
+  variant?: "standalone" | "nested";
 }
 
 function formatMonthWeek(month: number, day: number): string {
@@ -62,6 +64,7 @@ function getFourWeekPlaceholderMetrics(): {
 export function FourWeekTrendsSection({
   isLoading = false,
   error = null,
+  variant = "standalone",
 }: FourWeekTrendsSectionProps) {
   const { isPro } = useSubscription();
   const { data: user } = useCurrentUser();
@@ -210,16 +213,35 @@ export function FourWeekTrendsSection({
 
   if (isLoading) {
     return (
-      <section className="mb-10 w-full max-w-2xl min-w-0">
-        <h2
-          className="text-[13px] sm:text-sm font-semibold mb-1"
-          style={{ color: COLORS.text.primary }}
-        >
-          한눈에 보기
-        </h2>
-        <p className="text-[12px] sm:text-sm mb-4" style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}>
-          최근 4주간의 데이터를 기반으로 한 인사이트
-        </p>
+      <section
+        className={
+          variant === "nested" ? "max-w-2xl min-w-0" : "mb-10 w-full max-w-2xl min-w-0"
+        }
+      >
+        {variant === "standalone" && (
+          <>
+            <h2
+              className="text-[13px] sm:text-sm font-semibold mb-1"
+              style={{ color: COLORS.text.primary }}
+            >
+              한눈에 보기
+            </h2>
+            <p
+              className="text-[12px] sm:text-sm mb-4"
+              style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}
+            >
+              최근 4주간의 데이터를 기반으로 한 인사이트
+            </p>
+          </>
+        )}
+        {variant === "nested" && (
+          <h3
+            className="text-xs sm:text-[13px] font-medium mb-3"
+            style={{ color: COLORS.text.secondary }}
+          >
+            최근 4주간 데이터를 기반으로 한 인사이트
+          </h3>
+        )}
         <OneViewCardSkeleton />
       </section>
     );
@@ -242,16 +264,35 @@ export function FourWeekTrendsSection({
   const showScoreSkeleton = isPro && isLoadingScores;
 
   return (
-    <section className="mb-10 w-full max-w-2xl min-w-0">
-      <h2
-        className="text-[13px] sm:text-sm font-semibold mb-1"
-        style={{ color: COLORS.text.primary }}
-      >
-        한눈에 보기
-      </h2>
-      <p className="text-[12px] sm:text-sm mb-4" style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}>
-        최근 4주간의 데이터를 기반으로 한 인사이트
-      </p>
+    <section
+      className={
+        variant === "nested" ? "max-w-2xl min-w-0" : "mb-10 w-full max-w-2xl min-w-0"
+      }
+    >
+      {variant === "standalone" && (
+        <>
+          <h2
+            className="text-[13px] sm:text-sm font-semibold mb-1"
+            style={{ color: COLORS.text.primary }}
+          >
+            한눈에 보기
+          </h2>
+          <p
+            className="text-[12px] sm:text-sm mb-4"
+            style={{ color: COLORS.text.secondary, lineHeight: "1.6" }}
+          >
+            최근 4주간의 데이터를 기반으로 한 인사이트
+          </p>
+        </>
+      )}
+      {variant === "nested" && (
+        <h3
+          className="text-xs sm:text-[13px] font-medium mb-3"
+          style={{ color: COLORS.text.secondary }}
+        >
+          최근 4주간 데이터를 기반으로 한 인사이트
+        </h3>
+      )}
 
       {!isPro && (
         <ProNoticeBox

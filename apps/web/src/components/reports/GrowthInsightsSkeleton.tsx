@@ -329,6 +329,89 @@ export function WeeklyListSkeleton() {
 }
 
 /**
+ * 시간 투자 한눈에 보기 카드용 스켈레톤 (TimeInvestmentOverviewSection)
+ * 카테고리 드롭다운 + 스파이더 차트 + AI 피드백 영역 시뮬레이션
+ */
+export function TimeInvestmentOverviewSkeleton() {
+  return (
+    <div
+      className="relative rounded-xl overflow-hidden min-w-0 animate-pulse"
+      style={{
+        backgroundColor: CARD_BG,
+        border: `1px solid ${CARD_BORDER}`,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1"
+        style={{ backgroundColor: COLORS.weekly.primary }}
+      />
+      <div className="pl-4 pr-4 pt-4 pb-4">
+        <div className="space-y-1">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="rounded-lg px-3 py-3 flex items-center justify-between"
+              style={{
+                backgroundColor: COLORS.background.base,
+                border: `1px solid ${COLORS.border.light}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: COLORS.background.hover }}
+                />
+                <div
+                  className="h-3 w-12 rounded"
+                  style={{ backgroundColor: COLORS.border.light }}
+                />
+              </div>
+              <div
+                className="h-3 w-10 rounded"
+                style={{ backgroundColor: COLORS.border.light }}
+              />
+            </div>
+          ))}
+        </div>
+        {/* 스파이더 차트 영역 */}
+        <div
+          className="mt-6 pt-6 border-t flex justify-center"
+          style={{ borderColor: COLORS.border.light }}
+        >
+          <div
+            className="rounded-full flex-shrink-0"
+            style={{
+              width: 200,
+              height: 200,
+              backgroundColor: COLORS.background.hover,
+              border: `1px solid ${CARD_BORDER}`,
+            }}
+          />
+        </div>
+        {/* AI 피드백 영역 */}
+        <div
+          className="mt-6 pt-6 border-t"
+          style={{ borderColor: COLORS.border.light }}
+        >
+          <div
+            className="h-3 w-24 rounded mb-2"
+            style={{ backgroundColor: COLORS.border.light }}
+          />
+          <div
+            className="rounded-xl h-24"
+            style={{
+              backgroundColor: COLORS.background.hover,
+              border: `1px solid ${CARD_BORDER}`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * 한눈에 보기 카드용 스켈레톤 (FourWeek, FourMonth, Recent trends)
  */
 export function OneViewCardSkeleton() {

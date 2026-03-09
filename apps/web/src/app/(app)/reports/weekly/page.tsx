@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
 import { WeeklyTrendsSection } from "@/components/reports/WeeklyTrendsSection";
 import { FourWeekTrendsSection } from "@/components/reports/FourWeekTrendsSection";
+import { TimeInvestmentOverviewSection } from "@/components/reports/TimeInvestmentOverviewSection";
 // import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
 import { useWeeklyTrends } from "@/hooks/useWeeklyTrends";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -46,6 +47,9 @@ function WeeklyReportsPage() {
     await Promise.all([
       refetchWeeklyTrends(),
       queryClient.refetchQueries({ queryKey: [QUERY_KEYS.WEEKLY_CANDIDATES] }),
+      queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.WEEKLY_VIVID, "recent-time-investment"],
+      }),
     ]);
   }, [queryClient, refetchWeeklyTrends]);
 
@@ -135,9 +139,16 @@ function WeeklyReportsPage() {
         </button>
       </div>
 
-      {/* 최근 4주 인사이트 */}
+      {/* 한눈에 보기: 최근 4주 인사이트 + 시간 투자 변화 */}
       <div className="mb-12">
-        <FourWeekTrendsSection />
+        <h2
+          className="text-base sm:text-lg font-bold mb-6"
+          style={{ color: COLORS.text.primary }}
+        >
+          한눈에 보기
+        </h2>
+        <FourWeekTrendsSection variant="nested" />
+        <TimeInvestmentOverviewSection variant="nested" />
       </div>
 
       {/* 성장인사이트 - 나를 설명하는 4가지 흐름 */}

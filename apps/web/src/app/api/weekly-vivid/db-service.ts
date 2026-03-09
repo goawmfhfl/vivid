@@ -93,6 +93,45 @@ export async function fetchRecordsByDateRange(
 }
 
 /**
+ * 최근 N주 Weekly Vivid 조회 (report 포함, 시간 투자용)
+ */
+export async function fetchRecentWeeklyVivids(
+  supabase: SupabaseClient,
+  userId: string,
+  limit = 4
+): Promise<WeeklyVivid[]> {
+  const { data, error } = await supabase
+    .from(API_ENDPOINTS.WEEKLY_VIVID)
+    .select("id, week_start, week_end, timezone, report")
+    .eq("user_id", userId)
+    .order("week_start", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to fetch recent weekly vivids: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  return data.map((row) => {
+    const rawFeedback = {
+      id: String(row.id),
+      week_range: {
+        start: row.week_start,
+        end: row.week_end,
+        timezone: row.timezone || "Asia/Seoul",
+      },
+      report: row.report as WeeklyVivid["report"],
+    };
+    return decryptWeeklyVivid(
+      rawFeedback as unknown as { [key: string]: unknown }
+    ) as unknown as WeeklyVivid;
+  });
+}
+
+/**
  * Weekly Vivid 리스트 조회 (가벼운 데이터만)
  */
 export async function fetchWeeklyVividList(
