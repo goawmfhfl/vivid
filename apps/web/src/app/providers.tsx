@@ -10,6 +10,12 @@ import { isAuthFailureNoRetry } from "@/lib/auth-error";
 import { QUERY_KEYS } from "@/constants";
 import { getKSTDateString } from "@/lib/date-utils";
 
+declare global {
+  interface Window {
+    __completePurchaseSync?: () => Promise<void>;
+  }
+}
+
 // React Query 클라이언트 생성
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,7 +65,14 @@ export function JournalProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           clearUserDataCache(queryClient);
           // WebView 내 앱: RevenueCat app_user_id 연동을 위해 네이티브에 userId 전달
-          const rnw = typeof window !== "undefined" && (window as { ReactNativeWebView?: { postMessage?: (msg: string) => void } }).ReactNativeWebView;
+          const rnw =
+            typeof window !== "undefined"
+              ? (
+                  window as {
+                    ReactNativeWebView?: { postMessage?: (msg: string) => void };
+                  }
+                ).ReactNativeWebView
+              : undefined;
           if (rnw?.postMessage && session.user.id) {
             rnw.postMessage(JSON.stringify({ type: "SUPABASE_SESSION_READY", userId: session.user.id }));
           }
@@ -85,6 +98,11 @@ export function JournalProvider({ children }: { children: ReactNode }) {
       // 날짜가 바뀌었으면 캐시 무효화 (할 일 최신화)
       const shouldInvalidate = lastDateRef.current !== today;
       lastDateRef.current = today;
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
+      queryClient.refetchQueries({
+        queryKey: [QUERY_KEYS.CURRENT_USER],
+        type: "active",
+      });
       if (shouldInvalidate) {
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DAILY_VIVID] });
       }
@@ -98,7 +116,7 @@ export function JournalProvider({ children }: { children: ReactNode }) {
   // Promise를 반환하여 inject 스크립트가 완료 시점을 알 수 있음
   useEffect(() => {
     if (typeof window === "undefined") return;
-    (window as any).__completePurchaseSync = async (planType: "annual" | "monthly") => {
+    window.__completePurchaseSync = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.access_token) {
@@ -112,21 +130,27 @@ export function JournalProvider({ children }: { children: ReactNode }) {
             Authorization: `Bearer ${session.access_token}`,
           },
           credentials: "include",
-          body: JSON.stringify({ planType }),
+          body: JSON.stringify({}),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           console.warn("[Membership] 구독 sync 실패:", res.status, err);
         } else {
           console.log("[Membership] 구독 정보 Supabase 업데이트 완료");
-          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CURRENT_USER] });
+          await queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.CURRENT_USER],
+          });
+          await queryClient.refetchQueries({
+            queryKey: [QUERY_KEYS.CURRENT_USER],
+            type: "active",
+          });
         }
       } catch (e) {
         console.warn("[Membership] 구독 sync 오류:", e);
       }
     };
     return () => {
-      delete (window as any).__completePurchaseSync;
+      delete window.__completePurchaseSync;
     };
   }, []);
 

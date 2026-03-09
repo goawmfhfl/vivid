@@ -24,6 +24,10 @@ interface SubscriptionMetadata {
   started_at: string | null;
   expires_at: string | null;
   updated_at: string | null;
+  source?: "revenuecat" | "coupon" | "admin" | "system";
+  product_id?: string | null;
+  store?: string | null;
+  last_event_timestamp_ms?: number | null;
 }
 
 interface RevenueCatWebhookEvent {
@@ -58,6 +62,35 @@ function jsonResponse(body: object, status: number) {
     status,
     headers: { "Content-Type": "application/json", ...CORS_HEADERS },
   });
+}
+
+function parseTimestamp(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+type WebhookEventRecorder = {
+  from: (table: string) => any;
+};
+
+async function recordWebhookEvent(
+  supabase: WebhookEventRecorder,
+  payload: RevenueCatWebhookEvent
+) {
+  if (!payload.id) return;
+
+  const { error } = await supabase.from("webhook_events").insert({
+    event_id: payload.id,
+    processed_at: new Date().toISOString(),
+    event_type: payload.type,
+    app_user_id: payload.app_user_id,
+    event_timestamp_ms: payload.event_timestamp_ms ?? null,
+  });
+
+  if (error) {
+    console.warn("[RevenueCat Webhook] Failed to record event:", error);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -131,10 +164,15 @@ Deno.serve(async (req) => {
 
   const purchasedAt = msToISO(payload.purchased_at_ms);
   const expiresAt = msToISO(payload.expiration_at_ms);
+  const incomingEventTimestampMs =
+    typeof payload.event_timestamp_ms === "number"
+      ? payload.event_timestamp_ms
+      : null;
 
   let plan: SubscriptionPlan = "pro";
   let status: SubscriptionStatus = "active";
   let usePayloadDates = true;
+  let shouldUpdateMetadata = true;
 
   switch (eventType) {
     case "INITIAL_PURCHASE":
@@ -156,40 +194,24 @@ Deno.serve(async (req) => {
       usePayloadDates = true;
       break;
     case "BILLING_ISSUE":
-      // Subscription still valid, log only
-      console.log("[RevenueCat Webhook] BILLING_ISSUE:", appUserId, payload);
-      if (eventId) {
-        await supabase.from("webhook_events").insert({
-          event_id: eventId,
-          processed_at: new Date().toISOString(),
-          event_type: eventType,
-          app_user_id: appUserId,
-        });
-      }
-      return jsonResponse({ received: true }, 200);
+      plan = "pro";
+      status = "past_due";
+      usePayloadDates = false;
+      break;
     case "PRODUCT_CHANGE":
-      // Informative only. expiration_at_ms = old product's expiry.
-      // Actual state update happens on RENEWAL when new plan takes effect.
-      console.log("[RevenueCat Webhook] PRODUCT_CHANGE (informative):", appUserId, payload?.product_id, "->", payload.new_product_id);
-      if (eventId) {
-        await supabase.from("webhook_events").insert({
-          event_id: eventId,
-          processed_at: new Date().toISOString(),
-          event_type: eventType,
-          app_user_id: appUserId,
-        });
-      }
-      return jsonResponse({ received: true }, 200);
+      console.log(
+        "[RevenueCat Webhook] PRODUCT_CHANGE:",
+        appUserId,
+        payload?.product_id,
+        "->",
+        payload.new_product_id
+      );
+      usePayloadDates = false;
+      shouldUpdateMetadata = false;
+      break;
     default:
       console.log("[RevenueCat Webhook] Unhandled event type:", eventType);
-      if (eventId) {
-        await supabase.from("webhook_events").insert({
-          event_id: eventId,
-          processed_at: new Date().toISOString(),
-          event_type: eventType,
-          app_user_id: appUserId,
-        });
-      }
+      await recordWebhookEvent(supabase, payload);
       return jsonResponse({ received: true }, 200);
   }
 
@@ -206,6 +228,28 @@ Deno.serve(async (req) => {
     const currentSubscription: Partial<SubscriptionMetadata> =
       (currentMetadata.subscription as SubscriptionMetadata | undefined) ?? {};
 
+    const currentUpdatedAtMs = parseTimestamp(currentSubscription.updated_at);
+    if (
+      incomingEventTimestampMs !== null &&
+      currentUpdatedAtMs !== null &&
+      incomingEventTimestampMs < currentUpdatedAtMs
+    ) {
+      console.log(
+        "[RevenueCat Webhook] Stale event skipped:",
+        eventType,
+        appUserId,
+        incomingEventTimestampMs,
+        currentUpdatedAtMs
+      );
+      await recordWebhookEvent(supabase, payload);
+      return jsonResponse({ received: true, stale: true }, 200);
+    }
+
+    if (!shouldUpdateMetadata) {
+      await recordWebhookEvent(supabase, payload);
+      return jsonResponse({ received: true }, 200);
+    }
+
     const resolvedStartedAt = usePayloadDates
       ? purchasedAt ?? currentSubscription.started_at ?? null
       : currentSubscription.started_at ?? null;
@@ -219,6 +263,16 @@ Deno.serve(async (req) => {
       started_at: resolvedStartedAt,
       expires_at: resolvedExpiresAt,
       updated_at: new Date().toISOString(),
+      source: "revenuecat",
+      product_id:
+        payload.new_product_id ??
+        payload.product_id ??
+        currentSubscription.product_id ??
+        null,
+      store:
+        currentSubscription.store ?? null,
+      last_event_timestamp_ms:
+        incomingEventTimestampMs ?? currentSubscription.last_event_timestamp_ms ?? null,
     };
 
     const { error: updateError } = await supabase.auth.admin.updateUserById(
@@ -240,17 +294,7 @@ Deno.serve(async (req) => {
     }
 
     // Record for idempotency (테이블 없으면 무시)
-    if (eventId) {
-      const { error: insertErr } = await supabase.from("webhook_events").insert({
-        event_id: eventId,
-        processed_at: new Date().toISOString(),
-        event_type: eventType,
-        app_user_id: appUserId,
-      });
-      if (insertErr) {
-        console.warn("[RevenueCat Webhook] Failed to record event_id:", insertErr);
-      }
-    }
+    await recordWebhookEvent(supabase, payload);
 
     console.log("[RevenueCat Webhook] Updated:", appUserId, subscriptionMetadata);
     return jsonResponse({ received: true, updated: true }, 200);

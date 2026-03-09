@@ -44,6 +44,42 @@ export default function MembershipScreen() {
     useState<PurchasesPackage | null>(null);
   const autoPurchaseTriggered = useRef(false);
 
+  const syncSubscription = useCallback(async (): Promise<boolean> => {
+    const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
+    if (!apiBase) {
+      return false;
+    }
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return false;
+      }
+
+      const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        console.warn("[Membership] 구독 정보 sync 실패:", res.status);
+        return false;
+      }
+
+      console.log("[Membership] RevenueCat 기준 구독 sync 완료");
+      return true;
+    } catch (syncErr) {
+      console.warn("[Membership] 구독 sync 오류:", syncErr);
+      return false;
+    }
+  }, []);
+
   const loadOfferings = async () => {
     setLoading(true);
     setError(null);
@@ -91,48 +127,13 @@ export default function MembershipScreen() {
   }, []);
 
   const handlePurchase = useCallback(
-    async (pkg: PurchasesPackage, planType: "annual" | "monthly") => {
+    async (pkg: PurchasesPackage) => {
       setPurchasing(true);
       try {
         const { customerInfo } = await Purchases.purchasePackage(pkg);
         const isPro = customerInfo.entitlements.active["pro"] != null;
         if (isPro) {
-          // Supabase user_metadata.subscription 업데이트
-          const apiBase = (WEB_APP_URL_BASE || "")
-            .replace(/\/$/, "")
-            .split("?")[0];
-          if (apiBase) {
-            try {
-              const {
-                data: { session },
-              } = await supabase.auth.getSession();
-              if (session?.access_token) {
-                const res = await fetch(
-                  `${apiBase}/api/subscriptions/complete-purchase`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${session.access_token}`,
-                    },
-                    body: JSON.stringify({ planType }),
-                  }
-                );
-                if (!res.ok) {
-                  console.warn(
-                    "[Membership] 구독 정보 sync 실패:",
-                    res.status
-                  );
-                } else {
-                  console.log(
-                    "[Membership] 구독 정보 Supabase 업데이트 완료"
-                  );
-                }
-              }
-            } catch (syncErr) {
-              console.warn("[Membership] 구독 sync 오류:", syncErr);
-            }
-          }
+          await syncSubscription();
           router.replace("/");
         }
     } catch (e) {
@@ -156,7 +157,7 @@ export default function MembershipScreen() {
       setPurchasing(false);
     }
   },
-    [router]
+    [router, syncSubscription]
   );
 
   // 웹 "지금 시작하기" 클릭 후 이 화면으로 진입 시 plan 파라미터가 있으면 바로 결제 시트 호출
@@ -173,7 +174,7 @@ export default function MembershipScreen() {
     const pkg = planParam === "annual" ? annualPackage : monthlyPackage;
     if (pkg) {
       autoPurchaseTriggered.current = true;
-      void handlePurchase(pkg, planParam);
+      void handlePurchase(pkg);
     }
   }, [loading, planParam, annualPackage, monthlyPackage, purchasing, handlePurchase]);
 
@@ -183,6 +184,7 @@ export default function MembershipScreen() {
       const customerInfo = await Purchases.restorePurchases();
       const isPro = customerInfo.entitlements.active["pro"] != null;
       if (isPro) {
+        await syncSubscription();
         router.replace("/");
       } else {
         Alert.alert(
@@ -294,10 +296,7 @@ export default function MembershipScreen() {
             ]}
             onPress={() =>
               selectedPackage
-                ? void handlePurchase(
-                    selectedPackage,
-                    selectedPackage === monthlyPackage ? "monthly" : "annual"
-                  )
+                ? void handlePurchase(selectedPackage)
                 : undefined
             }
             disabled={!selectedPackage || purchasing}

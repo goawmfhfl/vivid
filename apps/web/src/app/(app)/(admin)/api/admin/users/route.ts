@@ -185,10 +185,11 @@ export async function GET(request: NextRequest) {
         is_active: isActive,
         created_at: user.created_at,
         last_login_at: (metadata.last_login_at as string) || null,
-        subscription: subscription
+        subscription:
+          subscription && subscription.status !== "none"
           ? {
               plan: subscription.plan,
-              status: subscription.status === "none" ? "active" : subscription.status,
+              status: subscription.status,
               started_at: subscription.started_at || null,
               expires_at: subscription.expires_at,
             }

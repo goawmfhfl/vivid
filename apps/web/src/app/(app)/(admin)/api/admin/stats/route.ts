@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import type { AdminStats } from "@/types/admin";
+import { isProFromMetadata } from "@/lib/subscription-utils";
 
 /**
  * GET /api/admin/stats
@@ -42,8 +43,7 @@ export async function GET(request: NextRequest) {
       totalUsers += users.length;
 
       for (const user of users) {
-        const sub = user.user_metadata?.subscription;
-        if (sub?.plan === "pro" && (sub?.status === "active" || sub?.status === "none")) {
+        if (isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)) {
           proUsers += 1;
         }
         const isActive = user.user_metadata?.is_active;

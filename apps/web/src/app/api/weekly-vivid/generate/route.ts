@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
       start,
       end,
       timezone = "Asia/Seoul",
-      isPro: isProFromRequest,
       generation_duration_seconds,
     }: WeeklyVividGenerateRequest = body;
 
@@ -68,9 +67,9 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase();
 
-    // Pro 멤버십 확인 (요청에 포함되어 있으면 사용, 없으면 서버에서 확인)
+    // Pro 멤버십은 서버에서만 확인
     const subscriptionVerification = await verifySubscription(userId);
-    const isPro = isProFromRequest ?? subscriptionVerification.isPro;
+    const isPro = subscriptionVerification.isPro;
 
     // Pro 멤버십이 아니면 403 에러 반환
     if (!isPro) {

@@ -15,6 +15,10 @@ export interface SubscriptionMetadata {
   started_at: string | null; // ISO string
   expires_at: string | null; // ISO string
   updated_at: string | null; // ISO string (마지막 업데이트 시간)
+  source?: "revenuecat" | "coupon" | "admin" | "system";
+  product_id?: string | null;
+  store?: string | null;
+  last_event_timestamp_ms?: number | null;
 }
 
 // 구독 검증 결과

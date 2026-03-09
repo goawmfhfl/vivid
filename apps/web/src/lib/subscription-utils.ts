@@ -53,7 +53,7 @@ export function isProFromMetadata(userMetadata: Record<string, unknown> | undefi
   const now = new Date();
   return (
     plan === "pro" &&
-    (status === "active" || status === "canceled") &&
+    (status === "active" || status === "canceled" || status === "past_due") &&
     started_at !== null &&
     started_at < now &&
     expires_at !== null &&
@@ -112,10 +112,11 @@ export async function verifySubscription(
   const isExpired = expires_at ? expires_at < now : false;
 
   // Pro 멤버십 체크
-  // plan이 "pro", status가 "active" 또는 "canceled"(만료 전까지 Pro 유지), started_at 과거, expires_at 미래일 때 Pro
+  // plan이 "pro", status가 "active" 또는 "canceled" 또는 "past_due"(만료 전까지 Pro 유지),
+  // started_at 과거, expires_at 미래일 때 Pro
   const isPro =
     plan === "pro" &&
-    (status === "active" || status === "canceled") &&
+    (status === "active" || status === "canceled" || status === "past_due") &&
     started_at !== null &&
     started_at < now &&
     expires_at !== null &&
@@ -138,6 +139,10 @@ export async function updateSubscriptionMetadata(
     status: "none" | "active" | "canceled" | "expired" | "past_due";
     started_at?: string | null;
     expires_at?: string | null;
+    source?: SubscriptionMetadata["source"];
+    product_id?: string | null;
+    store?: string | null;
+    last_event_timestamp_ms?: number | null;
   }
 ): Promise<void> {
   const supabase = getServiceSupabase();
@@ -178,6 +183,22 @@ export async function updateSubscriptionMetadata(
     started_at: startedAt,
     expires_at: expiresAt,
     updated_at: new Date().toISOString(),
+    source:
+      subscriptionData.source !== undefined
+        ? subscriptionData.source
+        : currentSubscription.source,
+    product_id:
+      subscriptionData.product_id !== undefined
+        ? subscriptionData.product_id
+        : currentSubscription.product_id ?? null,
+    store:
+      subscriptionData.store !== undefined
+        ? subscriptionData.store
+        : currentSubscription.store ?? null,
+    last_event_timestamp_ms:
+      subscriptionData.last_event_timestamp_ms !== undefined
+        ? subscriptionData.last_event_timestamp_ms
+        : currentSubscription.last_event_timestamp_ms ?? null,
   };
 
   console.log("[SubscriptionUtils] 구독 메타데이터 업데이트:", {
@@ -213,6 +234,10 @@ export async function upsertSubscription(
     status: "none" | "active" | "canceled" | "expired" | "past_due";
     started_at?: string | null;
     expires_at?: string | null;
+    source?: SubscriptionMetadata["source"];
+    product_id?: string | null;
+    store?: string | null;
+    last_event_timestamp_ms?: number | null;
   }
 ): Promise<void> {
   await updateSubscriptionMetadata(userId, subscriptionData);

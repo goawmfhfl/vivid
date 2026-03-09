@@ -30,6 +30,7 @@ export default function Page() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncingSubscription, setSyncingSubscription] = useState(false);
   const webViewRef = useRef<WebView>(null);
   const purchaseSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideNativeSplash = React.useCallback(async () => {
@@ -37,6 +38,42 @@ export default function Page() {
       await SplashScreen.hideAsync();
     } catch {
       // Ignore if splash is already hidden.
+    }
+  }, []);
+
+  const syncSubscription = React.useCallback(async () => {
+    const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
+    if (!apiBase) {
+      return false;
+    }
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return false;
+      }
+
+      const res = await fetch(`${apiBase}/api/subscriptions/complete-purchase`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        console.warn("[Membership] 구독 정보 sync 실패:", res.status);
+        return false;
+      }
+
+      console.log("[Membership] RevenueCat 기준 구독 sync 완료");
+      return true;
+    } catch (error) {
+      console.warn("[Membership] 구독 sync 오류:", error);
+      return false;
     }
   }, []);
 
@@ -120,6 +157,7 @@ export default function Page() {
           clearTimeout(purchaseSyncTimeoutRef.current);
           purchaseSyncTimeoutRef.current = null;
         }
+        setSyncingSubscription(false);
         router.replace("/");
       }
     } catch {
@@ -180,46 +218,21 @@ export default function Page() {
       const isPro = customerInfo.entitlements.active["pro"] != null;
       console.log("[Membership] 결제 완료, isPro:", isPro);
       if (isPro) {
-        // 1) 네이티브에 세션이 있으면 API 직접 호출 (fallback)
-        const apiBase = (WEB_APP_URL_BASE || "").replace(/\/$/, "").split("?")[0];
-        const tryNativeSync = async () => {
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.access_token && apiBase) {
-              const res = await fetch(
-                `${apiBase}/api/subscriptions/complete-purchase`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${session.access_token}`,
-                  },
-                  body: JSON.stringify({ planType: plan }),
-                }
-              );
-              if (res.ok) {
-                console.log("[Membership] 네이티브에서 구독 sync 완료");
-                router.replace("/");
-                return true;
-              }
-            }
-          } catch (_e) {
-            // 무시
-          }
-          return false;
-        };
-
-        const nativeDone = await tryNativeSync();
-        if (nativeDone) return;
+        setSyncingSubscription(true);
+        // 1) 네이티브에서 RevenueCat authoritative sync 시도
+        const nativeDone = await syncSubscription();
+        if (nativeDone) {
+          setSyncingSubscription(false);
+          router.replace("/");
+          return;
+        }
 
         // 2) 웹(WebView)에서 sync - localStorage에 세션이 있음
         try {
-          const escapedPlan = plan.replace(/"/g, '\\"');
           const script = `(function(){
-            var p="${escapedPlan}";
             var postDone=function(){try{if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(JSON.stringify({type:"PURCHASE_SYNC_DONE"}));}catch(e){}};
             if(window.__completePurchaseSync){
-              window.__completePurchaseSync(p).then(postDone).catch(postDone);
+              window.__completePurchaseSync().then(postDone).catch(postDone);
             }else{
               console.warn("[Membership] __completePurchaseSync 없음");
               postDone();
@@ -234,6 +247,7 @@ export default function Page() {
         // 3) 3초 이내 PURCHASE_SYNC_DONE 미수신 시에도 홈으로 이동
         purchaseSyncTimeoutRef.current = setTimeout(() => {
           purchaseSyncTimeoutRef.current = null;
+          setSyncingSubscription(false);
           router.replace("/");
         }, 3000);
       }
@@ -319,6 +333,12 @@ export default function Page() {
           <ActivityIndicator size="large" color="#6B7A6F" />
         </View>
       )}
+      {syncingSubscription && (
+        <View style={styles.syncLoadingOverlay}>
+          <ActivityIndicator size="large" color="#6B7A6F" />
+          <Text style={styles.syncLoadingText}>구독 정보를 확인하는 중...</Text>
+        </View>
+      )}
       {error && (
         <View style={styles.errorContainer}>
           <View style={styles.errorBox}>
@@ -400,6 +420,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FAFAF8",
     zIndex: 1,
+  },
+  syncLoadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FAFAF8",
+    zIndex: 10,
+  },
+  syncLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#6B7280",
   },
   errorContainer: {
     position: "absolute",

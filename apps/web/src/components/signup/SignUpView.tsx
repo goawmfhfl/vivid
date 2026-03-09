@@ -26,12 +26,6 @@ export function SignUpView({
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = isSocialOnboarding ? 2 : 3;
-  const [infoMessage] = useState<string | null>(
-    initialMessage ??
-      (isSocialOnboarding
-        ? "소셜 로그인(카카오/애플) 정보를 확인했어요. 약관 동의 후 닉네임을 입력하면 가입이 완료됩니다."
-        : null)
-  );
 
   // 폼 데이터 상태
   const [formData, setFormData] = useState({
@@ -300,7 +294,6 @@ export function SignUpView({
               <DisplayNameStep
                 name={formData.name}
                 nameError={errors.name}
-                infoMessage={infoMessage}
                 onNameChange={(value) => {
                   updateFormData("name", value);
                   clearFieldError("name");

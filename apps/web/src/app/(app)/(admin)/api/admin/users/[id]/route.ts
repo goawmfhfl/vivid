@@ -72,10 +72,11 @@ export async function GET(
       is_active: true, // user_metadata에 is_active가 없으면 기본값 true
       created_at: user.created_at,
       last_login_at: (metadata.last_login_at as string) || null,
-      subscription: subscription
+      subscription:
+        subscription && subscription.status !== "none"
         ? {
             plan: subscription.plan,
-            status: subscription.status === "none" ? "active" : subscription.status,
+            status: subscription.status,
             started_at: subscription.started_at || null,
             expires_at: subscription.expires_at,
           }

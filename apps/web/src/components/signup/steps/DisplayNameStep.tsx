@@ -14,7 +14,6 @@ interface DisplayNameStepProps {
 export function DisplayNameStep({
   name,
   nameError,
-  infoMessage,
   onNameChange,
   onClearError,
 }: DisplayNameStepProps) {
@@ -37,11 +36,6 @@ export function DisplayNameStep({
           </span>
           을 입력해 주세요.
         </p>
-        {infoMessage && (
-          <p className="mt-3 text-sm" style={{ color: COLORS.text.tertiary }}>
-            {infoMessage}
-          </p>
-        )}
       </header>
 
       <div className="space-y-2">
