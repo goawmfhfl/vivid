@@ -21,7 +21,7 @@
 		13B07F961A680F5B00A75B9A /* Vivid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vivid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Vivid/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Vivid/Info.plist; sourceTree = "<group>"; };
-		2815E2560C15E572A1B8C3E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Vivid/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2815E2560C15E572A1B8C3E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Vivid/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		71DE433D622F1648286C3F12 /* Pods-Vivid.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Vivid.release.xcconfig"; path = "Target Support Files/Pods-Vivid/Pods-Vivid.release.xcconfig"; sourceTree = "<group>"; };
 		8DB88A4D37EE2337F8740D07 /* Pods-Vivid.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Vivid.debug.xcconfig"; path = "Target Support Files/Pods-Vivid/Pods-Vivid.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Vivid/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -50,7 +50,6 @@
 				8DB88A4D37EE2337F8740D07 /* Pods-Vivid.debug.xcconfig */,
 				71DE433D622F1648286C3F12 /* Pods-Vivid.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -347,6 +346,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Vivid/Vivid.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TJKXD72963;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -383,6 +383,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Vivid/Vivid.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TJKXD72963;
 				INFOPLIST_FILE = Vivid/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
