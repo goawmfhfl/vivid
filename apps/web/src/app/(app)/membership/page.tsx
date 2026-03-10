@@ -10,9 +10,6 @@ import {
   PieChart,
   RotateCcw,
   ArrowLeft,
-  FileText,
-  TrendingUp,
-  Scale,
 } from "lucide-react";
 import { MembershipSection } from "@/components/membership/MembershipSection";
 import { MembershipWeeklyKeywordsPreview } from "@/components/membership/MembershipWeeklyKeywordsPreview";
@@ -21,6 +18,7 @@ import { MembershipTodoBalancePreview } from "@/components/membership/Membership
 import { MembershipReviewsSection } from "@/components/membership/MembershipReviewsSection";
 import { LazyMembershipImage } from "@/components/membership/LazyMembershipImage";
 import { GrowthInsightsSection } from "@/components/reports/GrowthInsightsSection";
+import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { useNotionPolicies } from "@/hooks/useNotionPolicies";
 import {
   membershipGrowthInsightsPreview,
@@ -154,9 +152,45 @@ function PlanSelectionCard({
 
 function MembershipHeader() {
   const router = useRouter();
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY;
+
+      if (currentScrollY <= 24) {
+        setIsVisible(true);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (Math.abs(scrollDelta) < 8) {
+        return;
+      }
+
+      setIsVisible(scrollDelta < 0);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 h-[56px] flex items-center bg-transparent">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 px-4 h-[56px] flex items-center bg-transparent transition-all duration-300"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? "translateY(0)" : "translateY(-10px)",
+        pointerEvents: isVisible ? "auto" : "none",
+      }}
+    >
       <button
         onClick={() => router.back()}
         className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm border border-black/5"
@@ -326,23 +360,17 @@ function MembershipPageContent() {
               {[
                 {
                   label: "주간/월간 VIVID 종합 리포트",
-                  icon: FileText,
-                  color: COLORS.weekly.primary,
-                  bg: COLORS.weekly.light,
+                  icon: BarChart3,
                 },
                 {
                   label: "한눈에 보는 성장 인사이트",
-                  icon: TrendingUp,
-                  color: COLORS.accent[600],
-                  bg: COLORS.accent[50],
+                  icon: Brain,
                 },
                 {
                   label: "삶의 균형 분석",
-                  icon: Scale,
-                  color: COLORS.todoFeedback.primary,
-                  bg: COLORS.todoFeedback.light,
+                  icon: PieChart,
                 },
-              ].map(({ label, icon: Icon, color, bg }, index) => (
+              ].map(({ label, icon: Icon }, index) => (
                 <div
                   key={label}
                   className="relative flex items-center gap-4 rounded-xl p-4 overflow-visible"
@@ -355,7 +383,7 @@ function MembershipPageContent() {
                   <span
                     className="absolute -top-2 -left-2 w-6 h-6 flex items-center justify-center rounded-full font-semibold tabular-nums text-xs shadow-sm"
                     style={{
-                      backgroundColor: COLORS.text.primary,
+                      backgroundColor: COLORS.brand.primary,
                       color: COLORS.text.white,
                       boxShadow: "0 1px 3px rgba(43, 43, 43, 0.15)",
                     }}
@@ -365,8 +393,9 @@ function MembershipPageContent() {
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                     style={{
-                      backgroundColor: bg,
-                      color,
+                      backgroundColor: COLORS.primary[100],
+                      color: COLORS.brand.primary,
+                      border: `1px solid ${COLORS.primary[200]}`,
                     }}
                   >
                     <Icon className="h-5 w-5" />
@@ -397,7 +426,7 @@ function MembershipPageContent() {
           accentLight={COLORS.primary[50]}
           accentBorder={COLORS.primary[200]}
         >
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-8 xl:grid-cols-2">
             <MembershipWeeklyKeywordsPreview
               weeklyKeywordsAnalysis={membershipWeeklyKeywordsPreview}
             />
@@ -423,6 +452,7 @@ function MembershipPageContent() {
             patterns={membershipPatternsPreview}
             isLocked={false}
             hasRealData={true}
+            scrollAnimated
           />
         </MembershipSection>
 
@@ -441,65 +471,67 @@ function MembershipPageContent() {
           />
         </MembershipSection>
 
-        <section
-          className="relative overflow-hidden rounded-2xl p-5 sm:p-6 space-y-5"
-          style={{
-            background: `linear-gradient(180deg, ${COLORS.background.cardElevated} 0%, ${COLORS.primary[50]} 100%)`,
-            border: `1px solid ${COLORS.primary[200]}`,
-            boxShadow: "0 1px 3px rgba(43, 43, 43, 0.04)",
-          }}
-        >
-          <div
-            className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-            style={{ backgroundColor: COLORS.brand.primary }}
-          />
-          <div className="pl-4 sm:pl-5">
-            <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6">
-              <div className="flex flex-col gap-3">
-                <div
-                  className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
-                  style={{
-                    backgroundColor: COLORS.primary[100],
-                    color: COLORS.brand.primary,
-                    border: `1px solid ${COLORS.primary[200]}`,
-                  }}
-                >
-                  <MessageSquareQuote className="w-5 h-5" />
+        <ScrollAnimation delay={150}>
+          <section
+            className="relative overflow-hidden rounded-2xl p-5 sm:p-6 space-y-5"
+            style={{
+              background: `linear-gradient(180deg, ${COLORS.background.cardElevated} 0%, ${COLORS.primary[50]} 100%)`,
+              border: `1px solid ${COLORS.primary[200]}`,
+              boxShadow: "0 1px 3px rgba(43, 43, 43, 0.04)",
+            }}
+          >
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+              style={{ backgroundColor: COLORS.brand.primary }}
+            />
+            <div className="pl-4 sm:pl-5">
+              <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6">
+                <div className="flex flex-col gap-3">
+                  <div
+                    className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
+                    style={{
+                      backgroundColor: COLORS.primary[100],
+                      color: COLORS.brand.primary,
+                      border: `1px solid ${COLORS.primary[200]}`,
+                    }}
+                  >
+                    <MessageSquareQuote className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p
+                      className={cn(
+                        TYPOGRAPHY.label.fontSize,
+                        TYPOGRAPHY.label.fontWeight,
+                        TYPOGRAPHY.label.letterSpacing,
+                        "uppercase"
+                      )}
+                      style={{ color: COLORS.brand.primary }}
+                    >
+                      실제 사용자 후기
+                    </p>
+                    <h2
+                      className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
+                      style={{ color: COLORS.text.primary }}
+                    >
+                      {membershipPreviewCopy.reviewsTitle}
+                    </h2>
+                  </div>
                 </div>
-                <div className="space-y-1">
+                <div className="sm:pt-0 min-w-0">
                   <p
-                    className={cn(
-                      TYPOGRAPHY.label.fontSize,
-                      TYPOGRAPHY.label.fontWeight,
-                      TYPOGRAPHY.label.letterSpacing,
-                      "uppercase"
-                    )}
-                    style={{ color: COLORS.brand.primary }}
+                    className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
+                    style={{ color: COLORS.text.secondary }}
                   >
-                    실제 사용자 후기
+                    {membershipPreviewCopy.reviewsDescription}
                   </p>
-                  <h2
-                    className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}
-                    style={{ color: COLORS.text.primary }}
-                  >
-                    {membershipPreviewCopy.reviewsTitle}
-                  </h2>
                 </div>
-              </div>
-              <div className="sm:pt-0 min-w-0">
-                <p
-                  className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.lineHeight)}
-                  style={{ color: COLORS.text.secondary }}
-                >
-                  {membershipPreviewCopy.reviewsDescription}
-                </p>
               </div>
             </div>
-          </div>
-          <div className="pl-4 sm:pl-5 pt-1">
-            <MembershipReviewsSection />
-          </div>
-        </section>
+            <div className="pl-4 sm:pl-5 pt-1">
+              <MembershipReviewsSection />
+            </div>
+          </section>
+        </ScrollAnimation>
       </div>
 
       <div className="mt-12 flex flex-col gap-3">

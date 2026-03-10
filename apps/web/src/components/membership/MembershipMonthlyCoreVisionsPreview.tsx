@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, TrendingUp } from "lucide-react";
+import { ScrollAnimation } from "@/components/ui/ScrollAnimation";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { MonthlyReport } from "@/types/monthly-vivid";
 import { COLORS, TYPOGRAPHY } from "@/lib/design-system";
@@ -35,7 +36,7 @@ function CoreVisionPreviewCard({
       <span
         className="absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center font-semibold text-xs tabular-nums"
         style={{
-          backgroundColor: COLORS.text.primary,
+          backgroundColor: COLORS.brand.primary,
           color: COLORS.text.white,
           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
         }}
@@ -108,36 +109,38 @@ export function MembershipMonthlyCoreVisionsPreview({
   visionEvolution,
 }: MembershipMonthlyCoreVisionsPreviewProps) {
   return (
-    <div className="space-y-4">
-      <div>
-        <p
-          className={cn(
-            TYPOGRAPHY.label.fontSize,
-            TYPOGRAPHY.label.fontWeight,
-            TYPOGRAPHY.label.letterSpacing,
-            "uppercase mb-1"
-          )}
-          style={{ color: COLORS.text.tertiary }}
-        >
-          Monthly Vivid Preview
-        </p>
-        <h3
-          className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
-          style={{ color: COLORS.text.primary }}
-        >
-          핵심 비전들
-        </h3>
-      </div>
-
+    <ScrollAnimation delay={200}>
       <div className="space-y-4">
-        {visionEvolution.core_visions.map((vision, idx) => (
-          <CoreVisionPreviewCard
-            key={`${vision.vision}-${idx}`}
-            vision={vision}
-            idx={idx}
-          />
-        ))}
+        <div>
+          <p
+            className={cn(
+              TYPOGRAPHY.label.fontSize,
+              TYPOGRAPHY.label.fontWeight,
+              TYPOGRAPHY.label.letterSpacing,
+              "uppercase mb-1"
+            )}
+            style={{ color: COLORS.text.tertiary }}
+          >
+            월간 비비드 미리보기
+          </p>
+          <h3
+            className={cn(TYPOGRAPHY.h4.fontSize, TYPOGRAPHY.h4.fontWeight)}
+            style={{ color: COLORS.text.primary }}
+          >
+            핵심 비전들
+          </h3>
+        </div>
+
+        <div className="space-y-4">
+          {visionEvolution.core_visions.map((vision, idx) => (
+            <CoreVisionPreviewCard
+              key={`${vision.vision}-${idx}`}
+              vision={vision}
+              idx={idx}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollAnimation>
   );
 }
