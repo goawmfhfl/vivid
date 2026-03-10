@@ -305,13 +305,6 @@ export function MembershipReviewsSection() {
                 >
                   {review.comment}
                 </p>
-
-                <p
-                  className={cn(TYPOGRAPHY.caption.fontSize)}
-                  style={{ color: COLORS.text.tertiary }}
-                >
-                  {new Date(review.createdAt).toLocaleDateString("ko-KR")}
-                </p>
               </div>
             </div>
           ))}
