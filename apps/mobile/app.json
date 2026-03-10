@@ -32,7 +32,8 @@
           "image": "../../packages/assets/splash.png",
           "resizeMode": "contain",
           "backgroundColor": "#FAFAF8",
-          "imageWidth": 200
+          "imageWidth": 200,
+          "imageHeight": 200
         }
       ],
       "expo-router",
