@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "absolute:/Users/iron/Desktop/product/vivid/Configuration.storekit">
-   </FileRef>
-   <FileRef
       location = "group:Vivid.xcodeproj">
    </FileRef>
    <FileRef
