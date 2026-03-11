@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { BarChart3, CheckCircle2, HelpCircle, Lock } from "lucide-react";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { COLORS, TYPOGRAPHY, hexToRgba } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -182,6 +183,7 @@ function AlignmentScoreInfoDialog({
 
 export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) {
   const router = useRouter();
+  const isNativeApp = useIsNativeApp();
   const hasAlignmentScore =
     view.alignment_score !== null && view.alignment_score !== undefined;
   const alignmentBasedOnPersona = view.alignment_based_on_persona === true;
@@ -361,8 +363,9 @@ export function AlignmentAnalysisSection({ view, isPro = false }: SectionProps) 
                 ) : (
                   <button
                     type="button"
-                    onClick={() => router.push("/membership")}
-                    className="w-full py-4 rounded-lg flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:opacity-90"
+                    onClick={() => isNativeApp && router.push("/membership")}
+                    className="w-full py-4 rounded-lg flex flex-col items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{ cursor: isNativeApp ? "pointer" : "default" }}
                     style={{
                       backgroundColor: `${alignmentColor}10`,
                       border: `1px dashed ${alignmentColor}40`,

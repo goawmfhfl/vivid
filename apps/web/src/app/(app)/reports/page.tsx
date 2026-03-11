@@ -12,6 +12,7 @@ import { GrowthInsightsSection } from "@/components/reports/GrowthInsightsSectio
 import { ReportsPageSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
 import { useUserPersonaInsights } from "@/hooks/useUserPersonaInsights";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import {
   COLORS,
   SPACING,
@@ -77,6 +78,7 @@ function ReportsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isPro, isLoading: isLoadingSubscription } = useSubscription();
+  const isNativeApp = useIsNativeApp();
   const growthSectionTriggerRef = useRef<HTMLDivElement | null>(null);
   const [isGrowthSectionVisible, setIsGrowthSectionVisible] = useState(false);
 
@@ -167,7 +169,7 @@ function ReportsPage() {
           onClick={() => {
             if (isPro) {
               router.push("/reports/weekly");
-            } else {
+            } else if (isNativeApp) {
               router.push("/membership");
             }
           }}
@@ -261,7 +263,7 @@ function ReportsPage() {
           onClick={() => {
             if (isPro) {
               router.push("/reports/monthly");
-            } else {
+            } else if (isNativeApp) {
               router.push("/membership");
             }
           }}

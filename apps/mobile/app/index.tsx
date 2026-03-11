@@ -14,6 +14,7 @@ import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import Purchases from "react-native-purchases";
+import { signInWithGoogle } from "../lib/google-signin";
 import { supabase } from "../lib/supabase";
 
 const WEB_APP_URL_BASE =
@@ -25,6 +26,11 @@ const WEB_APP_URL_BASE =
 const WEB_APP_URL = WEB_APP_URL_BASE
   ? `${WEB_APP_URL_BASE.replace(/\/$/, "")}${WEB_APP_URL_BASE.includes("?") ? "&" : "?"}embed=1`
   : "";
+
+type WebSessionBridgePayload = {
+  access_token: string;
+  refresh_token: string;
+};
 
 export default function Page() {
   const router = useRouter();
@@ -85,6 +91,59 @@ export default function Page() {
     []
   );
 
+  const injectJavaScriptToWebView = React.useCallback((script: string) => {
+    webViewRef.current?.injectJavaScript(script);
+  }, []);
+
+  const notifyGoogleLoginError = React.useCallback(
+    (message: string) => {
+      injectJavaScriptToWebView(`(function(){
+        window.__handleGoogleLoginErrorFromNative?.(${JSON.stringify(message)});
+        true;
+      })();`);
+    },
+    [injectJavaScriptToWebView]
+  );
+
+  const handleGoogleLoginFromWeb = React.useCallback(async () => {
+    try {
+      const data = await signInWithGoogle();
+      const session = data.session;
+
+      if (!session?.access_token || !session.refresh_token) {
+        throw new Error("구글 로그인 세션을 생성하지 못했습니다.");
+      }
+
+      const sessionPayload: WebSessionBridgePayload = {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      };
+
+      injectJavaScriptToWebView(`(function(){
+        if (!window.__setSupabaseSessionFromNative) {
+          window.__handleGoogleLoginErrorFromNative?.("웹 세션 브리지를 찾지 못했습니다.");
+          return true;
+        }
+
+        window.__setSupabaseSessionFromNative(${JSON.stringify(sessionPayload)})
+          .catch(function(error) {
+            var message =
+              error && typeof error.message === "string"
+                ? error.message
+                : "웹 세션 동기화 중 오류가 발생했습니다.";
+            window.__handleGoogleLoginErrorFromNative?.(message);
+          });
+        true;
+      })();`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "구글 로그인 중 오류가 발생했습니다.";
+      notifyGoogleLoginError(message);
+    }
+  }, [injectJavaScriptToWebView, notifyGoogleLoginError]);
+
   // URL이 없으면 바로 에러 표시 (하얀 화면 방지)
   React.useEffect(() => {
     if (!WEB_APP_URL || !WEB_APP_URL.startsWith("http")) {
@@ -139,7 +198,7 @@ export default function Page() {
     void hideNativeSplash();
   };
 
-  const handleMessage = (event: any) => {
+  const handleMessage = React.useCallback((event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data) as {
         type?: string;
@@ -150,6 +209,8 @@ export default function Page() {
         Purchases.logIn(data.userId).catch((e) =>
           console.warn("[RevenueCat] logIn from SUPABASE_SESSION_READY failed:", e)
         );
+      } else if (data.type === "TRIGGER_GOOGLE_LOGIN") {
+        void handleGoogleLoginFromWeb();
       } else if (data.type === "MEMBERSHIP_LOADED") {
         console.log("[Membership] MEMBERSHIP_LOADED 수신 → 가격 전송 시작");
         void sendOfferingsToWeb();
@@ -174,7 +235,7 @@ export default function Page() {
     } catch {
       // ignore parse errors
     }
-  };
+  }, [handleGoogleLoginFromWeb, router]);
 
   const sendOfferingsToWeb = async () => {
     if (!webViewRef.current) return;

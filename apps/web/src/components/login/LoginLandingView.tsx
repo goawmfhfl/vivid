@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
@@ -15,9 +15,9 @@ import {
   SHADOWS,
 } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
+import { useGoogleLogin } from "@/hooks/useGoogleLogin";
 import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { useAppleLogin } from "@/hooks/useAppleLogin";
-import { useIsBrowser } from "@/hooks/useIsBrowser";
 import { useIsIOS } from "@/hooks/useIsIOS";
 import { useModalStore } from "@/store/useModalStore";
 import { useToast } from "@/hooks/useToast";
@@ -74,16 +74,23 @@ export function LoginLandingView() {
   const [mounted, setMounted] = useState(false);
   const [isOAuthProcessing, setIsOAuthProcessing] = useState(false);
   const [activeSocialProvider, setActiveSocialProvider] = useState<
-    "kakao" | "apple" | null
+    "google" | "kakao" | "apple" | null
   >(null);
-  const isBrowser = useIsBrowser();
   const isIOS = useIsIOS();
-  // SSR/CSR 초기 마크업을 맞추기 위해 첫 렌더에서는 버튼을 유지하고,
-  // 마운트 후 실제 환경(isBrowser/isIOS)에 맞게 최종 노출 여부를 결정한다.
-  const shouldShowAppleLogin = mounted ? isBrowser || isIOS : true;
+  const hasReactNativeWebView =
+    mounted &&
+    typeof window !== "undefined" &&
+    typeof window.ReactNativeWebView?.postMessage === "function";
+  // 웹에서는 항상 노출하고, 앱 환경에서는 iOS에서만 애플 로그인을 노출한다.
+  const shouldShowAppleLogin = !hasReactNativeWebView || isIOS;
+  const googleLoginMutation = useGoogleLogin();
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
   const processingProvider = searchParams?.get("oauth_provider");
+  const googleLoading =
+    googleLoginMutation.isPending ||
+    activeSocialProvider === "google" ||
+    (isOAuthProcessing && processingProvider === "google");
   const kakaoLoading =
     kakaoLoginMutation.isPending ||
     activeSocialProvider === "kakao" ||
@@ -92,13 +99,41 @@ export function LoginLandingView() {
     appleLoginMutation.isPending ||
     activeSocialProvider === "apple" ||
     (isOAuthProcessing && processingProvider === "apple");
-  const disableSocialButtons = kakaoLoading || appleLoading || isOAuthProcessing;
+  const disableSocialButtons =
+    googleLoading || kakaoLoading || appleLoading || isOAuthProcessing;
   const openSuccessModal = useModalStore((state) => state.openSuccessModal);
   const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const completeAuthenticatedLogin = useCallback(
+    async (params: URLSearchParams) => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        showToast("로그인 세션 확인에 실패했습니다. 다시 시도해주세요.", 5000);
+        router.replace(getLoginPath(params));
+        return;
+      }
+
+      const user = session.user;
+      if (!isProfileCompleted(user)) {
+        const emailQuery = user.email ? `&email=${encodeURIComponent(user.email)}` : "";
+        router.replace(`/signup?social=1${emailQuery}`);
+        return;
+      }
+
+      await syncPhoneVerificationStatus(user);
+      await updateLastLoginAt(user.id);
+      router.replace("/");
+    },
+    [router, showToast]
+  );
 
   useEffect(() => {
     if (!mounted || typeof window === "undefined") return;
@@ -140,27 +175,7 @@ export function LoginLandingView() {
           }
         }
 
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        if (sessionError || !session?.user) {
-          showToast("로그인 세션 확인에 실패했습니다. 다시 시도해주세요.", 5000);
-          router.replace(getLoginPath(params));
-          return;
-        }
-
-        const user = session.user;
-        if (!isProfileCompleted(user)) {
-          const emailQuery = user.email ? `&email=${encodeURIComponent(user.email)}` : "";
-          router.replace(`/signup?social=1${emailQuery}`);
-          return;
-        }
-
-        await syncPhoneVerificationStatus(user);
-        await updateLastLoginAt(user.id);
-        router.replace("/");
+        await completeAuthenticatedLogin(params);
       } catch (error) {
         const message =
           error instanceof Error
@@ -181,7 +196,65 @@ export function LoginLandingView() {
     return () => {
       cancelled = true;
     };
-  }, [mounted, router, showToast]);
+  }, [completeAuthenticatedLogin, mounted, router, showToast]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let cancelled = false;
+
+    const handleNativeGoogleLoginComplete = async () => {
+      setIsOAuthProcessing(true);
+      try {
+        const params = new URLSearchParams(window.location.search);
+        await completeAuthenticatedLogin(params);
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "구글 로그인 중 오류가 발생했습니다.";
+        showToast(message, 5000);
+      } finally {
+        if (!cancelled) {
+          setIsOAuthProcessing(false);
+          setActiveSocialProvider(null);
+        }
+      }
+    };
+
+    const handleNativeGoogleLoginError = (event: Event) => {
+      const message =
+        event instanceof CustomEvent && typeof event.detail === "string"
+          ? event.detail
+          : "구글 로그인 중 오류가 발생했습니다.";
+      showToast(message, 5000);
+      if (!cancelled) {
+        setIsOAuthProcessing(false);
+        setActiveSocialProvider(null);
+      }
+    };
+
+    window.addEventListener(
+      "native-google-auth-complete",
+      handleNativeGoogleLoginComplete
+    );
+    window.addEventListener(
+      "native-google-auth-error",
+      handleNativeGoogleLoginError
+    );
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(
+        "native-google-auth-complete",
+        handleNativeGoogleLoginComplete
+      );
+      window.removeEventListener(
+        "native-google-auth-error",
+        handleNativeGoogleLoginError
+      );
+    };
+  }, [completeAuthenticatedLogin, showToast]);
 
   useEffect(() => {
     if (searchParams?.get("oauth") === "1") return;
@@ -252,7 +325,7 @@ export function LoginLandingView() {
           />
         </div>
 
-        {/* 하단: 로그인 버튼. 카카오/이메일은 항상, 애플은 앱(WebView)+iOS에서만 */}
+        {/* 하단: 카카오/구글/이메일은 항상, 애플은 웹 또는 iOS 앱에서만 */}
         <div
           className={cn(
             "w-full mt-10 sm:mt-12 flex flex-col",
@@ -297,7 +370,66 @@ export function LoginLandingView() {
             </span>
           </button>
 
-          {/* 애플 로그인: 브라우저(PC 테스트용) + 앱(WebView) iOS에서 표시 */}
+          {/* 구글 로그인 */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSocialProvider("google");
+              googleLoginMutation.mutate(undefined, {
+                onError: (error) => {
+                  setActiveSocialProvider(null);
+                  showToast(error.message, 5000);
+                },
+              });
+            }}
+            disabled={disableSocialButtons}
+            className={cn(
+              "w-full flex items-center rounded-xl py-3.5 px-4 transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
+              TYPOGRAPHY.body.fontSize,
+              TYPOGRAPHY.body.fontWeight
+            )}
+            style={{
+              ...loginButtonTextureBase,
+              background: GRADIENT_UTILS.cardBackground(
+                COLORS.text.white,
+                0.96,
+                COLORS.text.white
+              ),
+              color: COLORS.text.primary,
+              border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.text.primary, "20")}`,
+              boxShadow: SHADOWS.default,
+            }}
+          >
+            <span className="flex-shrink-0 w-6 flex items-center justify-center" aria-hidden>
+              <svg width="24" height="24" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M21.805 12.23c0-.68-.061-1.334-.175-1.961H12v3.71h5.5a4.704 4.704 0 0 1-2.04 3.088v2.565h3.3c1.93-1.776 3.045-4.395 3.045-7.402Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 22c2.76 0 5.074-.915 6.765-2.468l-3.3-2.565c-.915.614-2.084.978-3.465.978-2.66 0-4.913-1.797-5.718-4.213H2.87v2.646A9.997 9.997 0 0 0 12 22Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M6.282 13.732A5.995 5.995 0 0 1 5.962 12c0-.601.109-1.184.32-1.732V7.622H2.87A9.998 9.998 0 0 0 2 12c0 1.61.386 3.134 1.07 4.378l3.212-2.646Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 6.055c1.5 0 2.848.516 3.91 1.53l2.93-2.93C17.069 2.99 14.756 2 12 2A9.997 9.997 0 0 0 2.87 7.622l3.412 2.646C7.087 7.852 9.34 6.055 12 6.055Z"
+                />
+              </svg>
+            </span>
+            <span className="flex-1 flex justify-center">
+              {googleLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "구글 로그인"
+              )}
+            </span>
+          </button>
+
+          {/* 애플 로그인: 웹 또는 iOS 앱에서만 표시 */}
           {shouldShowAppleLogin && (
           <button
             type="button"
@@ -336,15 +468,6 @@ export function LoginLandingView() {
               )}
             </span>
           </button>
-          )}
-
-          {!shouldShowAppleLogin && (
-            <p
-              className={cn("text-center py-4", TYPOGRAPHY.bodySmall.fontSize)}
-              style={{ color: COLORS.text.tertiary }}
-            >
-              애플 로그인은 iOS에서만 이용할 수 있습니다.
-            </p>
           )}
 
           {/* 이메일 로그인 */}

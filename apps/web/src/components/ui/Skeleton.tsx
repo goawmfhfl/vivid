@@ -1,6 +1,6 @@
 "use client";
 
-import { COLORS, SPACING } from "@/lib/design-system";
+import { COLORS, SPACING, CARD_STYLES } from "@/lib/design-system";
 
 interface SkeletonProps {
   className?: string;
@@ -188,5 +188,55 @@ export function RecordItemSkeleton() {
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * 할 일 리스트 형태의 스켈레톤 (리패칭 시 표시)
+ */
+export function TodoListSkeleton() {
+  return (
+    <div
+      className="px-3 py-2 rounded-xl space-y-0"
+      style={{
+        ...CARD_STYLES.default,
+        borderRadius: "12px",
+      }}
+    >
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="flex items-start gap-2.5 py-2"
+        >
+          <div
+            className="w-[18px] h-[18px] rounded flex-shrink-0 mt-0.5"
+            style={{
+              backgroundColor: COLORS.background.hover,
+              animation: "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            }}
+          />
+          <div className="flex-1 min-w-0 space-y-1">
+            <div
+              className="h-3 rounded"
+              style={{
+                backgroundColor: COLORS.background.hover,
+                width: i % 3 === 0 ? "70%" : i % 3 === 1 ? "90%" : "55%",
+                animation: "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              }}
+            />
+            {i <= 2 && (
+              <div
+                className="h-3 rounded"
+                style={{
+                  backgroundColor: COLORS.background.hover,
+                  width: "40%",
+                  animation: "skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                }}
+              />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

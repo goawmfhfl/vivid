@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { COLORS, SHADOWS, GRADIENT_UTILS, TYPOGRAPHY } from "@/lib/design-system";
 
 interface ProNoticeBoxProps {
@@ -16,6 +17,9 @@ interface ProNoticeBoxProps {
  */
 export function ProNoticeBox({ message, className = "" }: ProNoticeBoxProps) {
   const router = useRouter();
+  const isNativeApp = useIsNativeApp();
+
+  if (!isNativeApp) return null;
 
   return (
     <div

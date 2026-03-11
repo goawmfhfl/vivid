@@ -13,6 +13,12 @@ import { getKSTDateString } from "@/lib/date-utils";
 declare global {
   interface Window {
     __completePurchaseSync?: () => Promise<void>;
+    ReactNativeWebView?: { postMessage?: (msg: string) => void };
+    __setSupabaseSessionFromNative?: (session: {
+      access_token: string;
+      refresh_token: string;
+    }) => Promise<void>;
+    __handleGoogleLoginErrorFromNative?: (message: string) => void;
   }
 }
 
@@ -155,6 +161,31 @@ export function JournalProvider({ children }: { children: ReactNode }) {
     };
     return () => {
       delete window.__completePurchaseSync;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.__setSupabaseSessionFromNative = async (session) => {
+      const { error } = await supabase.auth.setSession(session);
+      if (error) {
+        throw error;
+      }
+      window.dispatchEvent(new CustomEvent("native-google-auth-complete"));
+    };
+
+    window.__handleGoogleLoginErrorFromNative = (message: string) => {
+      window.dispatchEvent(
+        new CustomEvent("native-google-auth-error", {
+          detail: message,
+        })
+      );
+    };
+
+    return () => {
+      delete window.__setSupabaseSessionFromNative;
+      delete window.__handleGoogleLoginErrorFromNative;
     };
   }, []);
 

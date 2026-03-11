@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { Heart, Lock, Target, User } from "lucide-react";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { Card } from "../ui/card";
 import { ScrollAnimation } from "../ui/ScrollAnimation";
 import { COLORS, TYPOGRAPHY, SHADOWS, hexToRgba } from "@/lib/design-system";
@@ -12,6 +13,7 @@ const PRO_TOTAL_COUNT = 5;
 
 export function UserCharacteristicsSection({ view, isPro = false }: SectionProps) {
   const router = useRouter();
+  const isNativeApp = useIsNativeApp();
   const hasUserCharacteristics =
     view.user_characteristics && view.user_characteristics.length > 0;
   const hasAspiredTraits = view.aspired_traits && view.aspired_traits.length > 0;
@@ -125,8 +127,9 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
                 {!isPro && view.user_characteristics.length > FREE_VISIBLE_COUNT && (
                   <button
                     type="button"
-                    onClick={() => router.push("/membership")}
+                    onClick={() => isNativeApp && router.push("/membership")}
                     className="mt-4 w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{ cursor: isNativeApp ? "pointer" : "default" }}
                     style={{
                       backgroundColor: `${alignmentColor}10`,
                       border: `1px dashed ${alignmentColor}40`,
@@ -233,8 +236,9 @@ export function UserCharacteristicsSection({ view, isPro = false }: SectionProps
                 {!isPro && view.aspired_traits.length > FREE_VISIBLE_COUNT && (
                   <button
                     type="button"
-                    onClick={() => router.push("/membership")}
+                    onClick={() => isNativeApp && router.push("/membership")}
                     className="mt-4 w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:opacity-90"
+                    style={{ cursor: isNativeApp ? "pointer" : "default" }}
                     style={{
                       backgroundColor: `${futureColor}10`,
                       border: `1px dashed ${futureColor}40`,

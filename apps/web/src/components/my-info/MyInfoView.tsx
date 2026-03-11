@@ -4,6 +4,7 @@ import type { MouseEvent } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEnvironment } from "@/hooks/useEnvironment";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import {
   COLORS,
   TYPOGRAPHY,
@@ -30,6 +31,7 @@ type MenuItem = {
 export function MyInfoView() {
   const { data: currentUser, isLoading } = useCurrentUser();
   const { isPro } = useSubscription();
+  const isNativeApp = useIsNativeApp();
 
   if (isLoading) {
     return (
@@ -60,11 +62,15 @@ export function MyInfoView() {
   const userEmail = currentUser.email || "";
 
   const menuItems: MenuItem[] = [
-    {
-      title: "프로 멤버십",
-      href: "/membership",
-      enabled: true,
-    },
+    ...(isNativeApp
+      ? [
+          {
+            title: "프로 멤버십",
+            href: "/membership",
+            enabled: true,
+          },
+        ]
+      : []),
     {
       title: "공지사항",
       href: "/announcements",

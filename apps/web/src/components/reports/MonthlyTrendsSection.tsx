@@ -12,6 +12,7 @@ import { COLORS } from "@/lib/design-system";
 const MONTHLY_ACCENT = COLORS.monthly.primary;
 import type { MonthlyTrendsResponse } from "@/types/monthly-vivid";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { PreviewDataNotice } from "./PreviewDataNotice";
 
 /** 데이터 없을 때 미리보기용 플레이스홀더 (31세 마케터 여성 페르소나 예시) */
@@ -47,6 +48,7 @@ export function MonthlyTrendsSection({
 }: MonthlyTrendsSectionProps) {
   const router = useRouter();
   const { isPro } = useSubscription();
+  const isNativeApp = useIsNativeApp();
 
   // 실제 데이터 있으면 사용, 없으면 미리보기 데이터
   const processedData = useMemo(() => {
@@ -208,8 +210,9 @@ export function MonthlyTrendsSection({
                 }}
               />
               <div
-                className="absolute inset-0 z-30 flex items-center justify-center rounded-xl cursor-pointer"
-                onClick={() => router.push("/membership")}
+                className="absolute inset-0 z-30 flex items-center justify-center rounded-xl"
+                style={{ cursor: isNativeApp ? "pointer" : "default" }}
+                onClick={() => isNativeApp && router.push("/membership")}
               >
                 <div
                   className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"

@@ -11,8 +11,6 @@ import {
   RECORD_TYPES,
   type RecordType,
 } from "../signup/RecordTypeCard";
-import { Timer } from "./Timer";
-import { useTimer } from "@/hooks/useTimer";
 import { useToast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
@@ -41,7 +39,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { TodoItemRow } from "./TodoItemRow";
-import { motion } from "framer-motion";
+import { TodoListSkeleton } from "../ui/Skeleton";
+import { AnimatePresence, motion } from "framer-motion";
 
 export type HomeTabType = "vivid" | "review" | "todo";
 
@@ -93,7 +92,6 @@ export function RecordForm({
   const lastQ3ScrollBeforeChangeRef = useRef<{ x: number; y: number } | null>(null);
   const router = useRouter();
   const { subscription } = useSubscription();
-  const { state: timerState } = useTimer();
   const { showToast } = useToast();
 
   // 날짜 상태 계산
@@ -105,7 +103,7 @@ export function RecordForm({
     (selectedType === "review" || activeTab === "todo") && targetDateIso
       ? targetDateIso
       : "";
-  const { data: vividFeedback } = useGetDailyVivid(vividDate, "vivid");
+  const { data: vividFeedback, isFetching: isTodoFetching } = useGetDailyVivid(vividDate, "vivid");
   const createTodoList = useCreateTodoList(targetDateIso || "");
   const addTodoItem = useAddTodoItem(targetDateIso || "");
   const reorderTodoItems = useReorderTodoItems(targetDateIso || "");
@@ -747,38 +745,37 @@ export function RecordForm({
 
   return (
     <>
-      {/* Sticky 타이머 바 (타이머 실행 중일 때만 표시) */}
-      {timerState.isRunning && recordType && (
-        <div
-          className="sticky top-0 z-50 mb-3"
-          style={{
-            backgroundColor: COLORS.background.base,
-            paddingTop: "1rem",
-            paddingBottom: "0.75rem",
-            marginTop: "-1rem",
-            marginLeft: "-1rem",
-            marginRight: "-1rem",
-            paddingLeft: "1rem",
-            paddingRight: "1rem",
-            marginBottom: "0.75rem",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)",
-            borderBottom: `1px solid ${COLORS.border.light}`,
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          <div className="flex justify-between items-center">
-            <Timer />
-            <div style={{ width: "1px" }} /> {/* 타입 선택 버튼 공간 확보 */}
-          </div>
-        </div>
-      )}
-
       <div className="mb-6">
-        {/* 비비드 | 회고 | 할 일 3탭 - 물결 인디케이터 */}
-        {!timerState.isRunning && (
-          <div className="mb-3 flex justify-between items-center gap-2">
-            <Timer />
+        {/* 비비드 | 회고 | 할 일 3탭 - 할 일 탭 시 환경설정(왼쪽) + 탭(오른쪽) */}
+        <div className="mb-3 flex justify-end items-center gap-2">
+            {/* 할 일 탭에서만 환경설정 버튼 - 탭 왼쪽에 애니메이션 표시 */}
+            <AnimatePresence mode="wait">
+              {activeTab === "todo" && (
+                <motion.button
+                  key="todo-settings"
+                  type="button"
+                  onClick={() => setShowTodoSettingsModal(true)}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="flex items-center justify-center rounded-full flex-shrink-0 transition-colors hover:opacity-90 active:scale-95"
+                  style={{
+                    padding: "6px 10px",
+                    height: "28px",
+                    minWidth: "28px",
+                    backgroundColor: COLORS.background.hover,
+                    border: `1px solid ${COLORS.border.light}`,
+                    boxShadow: "inset 0 1px 2px rgba(0,0,0,0.04)",
+                    color: COLORS.brand.primary,
+                  }}
+                  aria-label="할 일 환경설정"
+                  title="환경설정"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
             <div
               className="relative flex rounded-full p-1"
               style={{
@@ -828,7 +825,6 @@ export function RecordForm({
               />
             </div>
           </div>
-        )}
 
       {/* 비비드 탭: Q1, Q2만 */}
       {activeTab === "vivid" && recordType === "dream" ? (
@@ -1256,46 +1252,29 @@ export function RecordForm({
       ) : activeTab === "todo" ? (
         /* 할 일 탭: 할 일만 관리, 항상 펼쳐진 상태 */
         <div className="mb-4 space-y-2">
-          {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 조그만 가이드 버튼 + 환경설정 버튼 */}
-          <div className="flex items-center justify-between gap-2 w-full">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="text-base font-semibold"
-                style={{ color: COLORS.text.primary, fontSize: "0.875rem" }}
-              >
-                {targetDateIso && targetDateIso > todayIso
-                  ? "예정된 할 일"
-                  : "오늘의 할 일"}
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowTodoGuidePanel(true)}
-                className="flex items-center justify-center w-6 h-6 rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
-                style={{
-                  background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
-                  border: `1px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
-                  color: COLORS.brand.primary,
-                }}
-                aria-label="할 일 가이드 보기"
-                title="가이드"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          {/* 오늘의 할 일 / 예정된 할 일 타이틀 + 조그만 가이드 버튼 */}
+          <div className="flex items-center gap-1.5">
+            <span
+              className="text-base font-semibold"
+              style={{ color: COLORS.text.primary, fontSize: "0.875rem" }}
+            >
+              {targetDateIso && targetDateIso > todayIso
+                ? "예정된 할 일"
+                : "오늘의 할 일"}
+            </span>
             <button
               type="button"
-              onClick={() => setShowTodoSettingsModal(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+              onClick={() => setShowTodoGuidePanel(true)}
+              className="flex items-center justify-center w-6 h-6 rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
               style={{
                 background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
-                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                border: `1px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
                 color: COLORS.brand.primary,
-                boxShadow: SHADOWS.default,
               }}
-              aria-label="할 일 환경설정"
-              title="환경설정"
+              aria-label="할 일 가이드 보기"
+              title="가이드"
             >
-              <Settings className="w-4 h-4" />
+              <BookOpen className="w-3.5 h-3.5" />
             </button>
           </div>
           <TodoGuidePanel
@@ -1341,7 +1320,9 @@ export function RecordForm({
                   </Button>
                 )}
               <div className="space-y-2">
-                {(vividFeedback?.todoLists?.length ?? 0) > 0 ? (
+                {isTodoFetching ? (
+                  <TodoListSkeleton />
+                ) : (vividFeedback?.todoLists?.length ?? 0) > 0 ? (
                   <div
                     className="px-3 py-2 rounded-xl space-y-0"
                     style={{ ...CARD_STYLES.default, borderRadius: "12px" }}

@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useIsNativeAppWithReady } from "@/hooks/useIsNativeApp";
 import Link from "next/link";
 import {
   BarChart3,
@@ -202,8 +203,25 @@ function MembershipHeader() {
 }
 
 function MembershipPageContent() {
+  const router = useRouter();
+  const { isNative: isNativeApp, isReady } = useIsNativeAppWithReady();
   const { data: policies } = useNotionPolicies();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
+
+  // 프로 멤버십 소개 페이지는 네이티브 환경에서만 노출 (웹에서는 홈으로 리다이렉트)
+  useEffect(() => {
+    if (!isReady || isNativeApp) return;
+    router.replace("/");
+  }, [isReady, isNativeApp, router]);
+
+  // 웹 환경에서는 리다이렉트 중 로딩 표시
+  if (isReady && !isNativeApp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.background.base }}>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: COLORS.brand.primary }} />
+      </div>
+    );
+  }
 
   // embed=1은 라우팅 시 사라지므로, WebView 내 여부는 ReactNativeWebView 존재로 판단
   const isInApp =

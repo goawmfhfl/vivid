@@ -130,7 +130,11 @@ function AuthCallbackContent() {
           });
 
           if (errorCode === "identity_already_exists" || errorParam === "identity_already_exists") {
-            const isLinkingFlow = searchParams.get("link") === "kakao" || searchParams.get("link") === "apple";
+            const linkProvider = searchParams.get("link");
+            const isLinkingFlow =
+              linkProvider === "kakao" ||
+              linkProvider === "apple" ||
+              linkProvider === "google";
             if (isLinkingFlow) {
               router.replace(
                 "/user?error=social_already_linked&message=" +
@@ -169,7 +173,7 @@ function AuthCallbackContent() {
             const redirectUrl = getRedirectUrl(
               "/login?error=" +
                 encodeURIComponent(
-                  "카카오 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+                  "소셜 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
                 )
             );
             window.location.href = redirectUrl;
@@ -244,7 +248,11 @@ function AuthCallbackContent() {
             }
 
             const linkProvider = searchParams.get("link");
-            if (linkProvider === "kakao" || linkProvider === "apple") {
+            if (
+              linkProvider === "kakao" ||
+              linkProvider === "apple" ||
+              linkProvider === "google"
+            ) {
               const redirectUrl = getRedirectUrl(`/user?linked=${linkProvider}`);
               window.location.href = redirectUrl;
               return;
@@ -298,7 +306,11 @@ function AuthCallbackContent() {
           }
 
           const linkProvider = searchParams.get("link");
-          if (linkProvider === "kakao" || linkProvider === "apple") {
+          if (
+            linkProvider === "kakao" ||
+            linkProvider === "apple" ||
+            linkProvider === "google"
+          ) {
             const redirectUrl = getRedirectUrl(`/user?linked=${linkProvider}`);
             window.location.href = redirectUrl;
             return;

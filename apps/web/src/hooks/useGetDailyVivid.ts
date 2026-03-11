@@ -98,15 +98,17 @@ export const useGetDailyVivid = (
   date: string,
   generationType: DailyVividGenerationType = "vivid"
 ) => {
+  const TWELVE_HOURS_MS = 1000 * 60 * 60 * 12;
+
   return useQuery({
     queryKey: [QUERY_KEYS.DAILY_VIVID, date, generationType],
     queryFn: () => fetchDailyVividByDate(date, generationType),
     enabled: !!date,
-    staleTime: 0, // 보기/생성하기 버튼 상태 정확도를 위해 항상 최신 데이터
-    gcTime: 0, // 할 일 섹션: 날짜별 캐시 혼선 방지를 위해 오래된 날짜 캐시 즉시 정리
+    staleTime: TWELVE_HOURS_MS, // 할 일 리스트: 12시간 캐시 후 무효화
+    gcTime: TWELVE_HOURS_MS,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchOnMount: "always",
+    refetchOnMount: "always", // 페이지 접근 시 리패칭 (캐시 데이터 먼저 표시 후 백그라운드 갱신)
   });
 };
 

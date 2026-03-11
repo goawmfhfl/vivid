@@ -33,15 +33,8 @@ const getRedirectUrl = (): string => {
     );
   }
 
-  const currentParams =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams();
-  currentParams.set("oauth", "1");
-  currentParams.set("oauth_provider", "apple");
-  const query = currentParams.toString();
-
-  return `${base.replace(/\/$/, "")}/login${query ? `?${query}` : ""}`;
+  // /auth/callback은 Redirect URLs에 등록되어 있음. /login은 프로덕션에 미등록됨.
+  return `${base.replace(/\/$/, "")}/auth/callback`;
 };
 
 const loginWithApple = async (): Promise<void> => {

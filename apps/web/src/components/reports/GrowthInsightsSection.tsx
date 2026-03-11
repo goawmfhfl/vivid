@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Lightbulb, Scale, Lock } from "lucide-react";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { AnimatedScoreBlock } from "@/components/reports/AnimatedScoreBlock";
 import { ReportDropdown } from "@/components/reports/ReportDropdown";
 import { GrowthInsightsSectionSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
@@ -34,6 +35,7 @@ export function GrowthInsightsSection({
   scrollAnimated = false,
 }: GrowthInsightsSectionProps) {
   const router = useRouter();
+  const isNativeApp = useIsNativeApp();
   if (isLoading) return <GrowthInsightsSectionSkeleton />;
   if (!growth_insights) return null;
 
@@ -93,13 +95,14 @@ export function GrowthInsightsSection({
               animationDelay: scrollAnimated ? undefined : `${cardIdx * 100}ms`,
             }}
           >
-            {/* 비Pro: Pro 전용 데이터 오버레이 */}
+            {/* 비Pro: Pro 전용 데이터 오버레이 (네이티브에서만 멤버십 페이지로 이동) */}
             {isLocked && (
               <button
                 type="button"
-                onClick={() => router.push("/membership")}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-opacity hover:opacity-100"
+                onClick={() => isNativeApp && router.push("/membership")}
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-opacity hover:opacity-100"
                 style={{
+                  cursor: isNativeApp ? "pointer" : "default",
                   backgroundColor: "rgba(250, 250, 248, 0.85)",
                   backdropFilter: "blur(4px)",
                   WebkitBackdropFilter: "blur(4px)",

@@ -27,6 +27,10 @@ import {
   useAppleIdentity,
   useLinkApple,
 } from "@/hooks/useAppleLinking";
+import {
+  useGoogleIdentity,
+  useLinkGoogle,
+} from "@/hooks/useGoogleLinking";
 import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
 
@@ -89,6 +93,10 @@ export function ProfileSettingsView() {
   const { data: appleIdentity, isLoading: isLoadingApple } = useAppleIdentity();
   const linkAppleMutation = useLinkApple();
   const isAppleLinked = Boolean(appleIdentity);
+
+  const { data: googleIdentity, isLoading: isLoadingGoogle } = useGoogleIdentity();
+  const linkGoogleMutation = useLinkGoogle();
+  const isGoogleLinked = Boolean(googleIdentity);
   const socialLinkButtonStyle = {
     backgroundColor: COLORS.brand.primary,
     color: COLORS.text.white,
@@ -103,7 +111,7 @@ export function ProfileSettingsView() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       
-      // 연동 성공 메시지 (카카오/애플)
+      // 연동 성공 메시지 (카카오/애플/구글)
       const linkedProvider = params.get("linked");
       if (linkedProvider === "kakao") {
         setLinkSuccess(true);
@@ -117,9 +125,15 @@ export function ProfileSettingsView() {
         router.replace("/user", { scroll: false });
         showToast("Apple 계정이 성공적으로 연동되었습니다.", 4000);
         setTimeout(() => setLinkSuccess(false), 4000);
+      } else if (linkedProvider === "google") {
+        setLinkSuccess(true);
+        setLinkError(null);
+        router.replace("/user", { scroll: false });
+        showToast("구글 계정이 성공적으로 연동되었습니다.", 4000);
+        setTimeout(() => setLinkSuccess(false), 4000);
       }
       
-      // 연동 에러 메시지 (카카오/애플 공통)
+      // 연동 에러 메시지 (카카오/애플/구글 공통)
       if (params.get("error") === "social_already_linked" || params.get("error") === "kakao_already_linked") {
         const errorMessage =
           params.get("message") || "이미 사용 중인 계정입니다.";
@@ -237,7 +251,7 @@ export function ProfileSettingsView() {
 
           <SectionCard
             title="소셜 로그인 연동"
-            description="카카오·애플 계정을 연동하면 더 편리하게 로그인할 수 있어요."
+            description="카카오·애플·구글 계정을 연동하면 더 편리하게 로그인할 수 있어요."
           >
             <div className="space-y-3">
               {/* 카카오 연동 */}
@@ -357,6 +371,78 @@ export function ProfileSettingsView() {
                       disabled={linkAppleMutation.isPending || isLoadingApple}
                     >
                       {linkAppleMutation.isPending ? "연동 중..." : "연동하기"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 구글 연동 */}
+              <div className="flex items-center justify-between rounded-2xl border border-[#F4F1EA] bg-[#FBFAF7] p-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: COLORS.text.white }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M21.805 12.23c0-.68-.061-1.334-.175-1.961H12v3.71h5.5a4.704 4.704 0 0 1-2.04 3.088v2.565h3.3c1.93-1.776 3.045-4.395 3.045-7.402Z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 22c2.76 0 5.074-.915 6.765-2.468l-3.3-2.565c-.915.614-2.084.978-3.465.978-2.66 0-4.913-1.797-5.718-4.213H2.87v2.646A9.997 9.997 0 0 0 12 22Z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M6.282 13.732A5.995 5.995 0 0 1 5.962 12c0-.601.109-1.184.32-1.732V7.622H2.87A9.998 9.998 0 0 0 2 12c0 1.61.386 3.134 1.07 4.378l3.212-2.646Z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 6.055c1.5 0 2.848.516 3.91 1.53l2.93-2.93C17.069 2.99 14.756 2 12 2A9.997 9.997 0 0 0 2.87 7.622l3.412 2.646C7.087 7.852 9.34 6.055 12 6.055Z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#333333]">
+                      구글 계정
+                    </p>
+                    {(!isGoogleLinked || isLoadingGoogle) && (
+                      <p className="mt-0.5 text-xs text-[#6B7A6F]">
+                        {isLoadingGoogle ? "확인 중..." : "연동되지 않음"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isGoogleLinked ? (
+                    <span
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{
+                        color: COLORS.text.tertiary,
+                        backgroundColor: COLORS.background.hoverLight,
+                      }}
+                    >
+                      연동됨
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await linkGoogleMutation.mutateAsync();
+                        } catch (error) {
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : "연동에 실패했습니다.";
+                          setErrors({ general: message });
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={socialLinkButtonStyle}
+                      disabled={linkGoogleMutation.isPending || isLoadingGoogle}
+                    >
+                      {linkGoogleMutation.isPending ? "연동 중..." : "연동하기"}
                     </button>
                   )}
                 </div>

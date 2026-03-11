@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import {
   COLORS,
   SPACING,
@@ -35,8 +36,9 @@ export interface FeedbackCardProps {
 }
 
 /**
- * 피드백 리포트에서 사용하는 공통 Card 컴포넌트
- * 월간 비비드의 Card 디자인 패턴을 재사용 가능한 컴포넌트로 추출
+ * 피드백 리포트에서 사용하는 공통 Card 컴포넌트.
+ * 월간 비비드의 Card 디자인 패턴을 재사용 가능한 컴포넌트로 추출.
+ * Pro 잠금 시 멤버십 링크는 네이티브 환경에서만 동작.
  */
 export function FeedbackCard({
   icon,
@@ -53,6 +55,7 @@ export function FeedbackCard({
   className,
 }: FeedbackCardProps) {
   const router = useRouter();
+  const isNativeApp = useIsNativeApp();
   // 기본 색상 설정
   const defaultGradientColor = gradientColor || COLORS.brand.primary;
   const defaultBorderColor =
@@ -139,13 +142,14 @@ export function FeedbackCard({
                 </p>
                 {isLocked && (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
                     style={{
                       background: `linear-gradient(135deg, ${COLORS.brand.primary} 0%, ${COLORS.brand.secondary || COLORS.brand.primary} 100%)`,
+                      cursor: isNativeApp ? "pointer" : "default",
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push("/membership");
+                      if (isNativeApp) router.push("/membership");
                     }}
                   >
                     <Lock className="w-3 h-3" style={{ color: COLORS.text.white }} />
