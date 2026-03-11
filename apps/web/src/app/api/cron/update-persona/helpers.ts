@@ -214,8 +214,8 @@ function parsePersonaResponse(raw: string): Record<string, unknown> {
 
 async function generatePersona(prompt: string): Promise<Record<string, unknown>> {
   const geminiClient = getGeminiClient();
-  // cron 인사이트: 항상 Flash (rate limit·비용 고려)
-  const modelName = "gemini-3-flash-preview";
+  // cron 인사이트: 항상 Flash-Lite (rate limit·비용 고려)
+  const modelName = "gemini-3.1-flash-lite-preview";
 
   const model = geminiClient.getGenerativeModel({
     model: modelName,

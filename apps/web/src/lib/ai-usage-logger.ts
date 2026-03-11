@@ -24,6 +24,7 @@ const PRICING: Record<
   "gemini-2.0-flash-exp": { input: 0.075, inputCached: 0.075, output: 0.3 },
   "gemini-3-flash-preview": { input: 0.075, inputCached: 0.075, output: 0.3 },
   "gemini-3.0-flash": { input: 0.075, inputCached: 0.075, output: 0.3 }, // 별칭 지원
+  "gemini-3.1-flash-lite-preview": { input: 0.25, inputCached: 0.25, output: 1.5 },
   "gemini-1.5-flash": { input: 0.075, inputCached: 0.075, output: 0.3 },
   "gemini-1.5-pro": { input: 1.25, inputCached: 0.625, output: 5.0 },
   "gemini-3-pro-preview": { input: 1.25, inputCached: 0.625, output: 5.0 }, // 레거시 로그 호환
@@ -87,8 +88,8 @@ export interface LogAIRequestParams {
 function calculateCost(model: string, usage: AIUsageInfo): CostCalculation {
   // Gemini 모델인지 확인하여 기본값 선택
   const defaultPricing = model.startsWith("gemini")
-    ? PRICING["gemini-3-flash-preview"] || PRICING["gemini-2.0-flash"]
-    : PRICING["gemini-3-flash-preview"]; // 기본값을 Gemini로 변경
+    ? PRICING["gemini-3.1-flash-lite-preview"] || PRICING["gemini-3-flash-preview"]
+    : PRICING["gemini-3.1-flash-lite-preview"]; // 기본값을 Gemini로 변경
   const modelPricing = PRICING[model] || defaultPricing;
 
   // 캐시된 토큰과 캐시되지 않은 토큰 구분

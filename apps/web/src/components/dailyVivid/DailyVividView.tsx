@@ -160,7 +160,7 @@ export function DailyVividView({
   // 타이머 기반 progress (재생성 중)
   useEffect(() => {
     if (timerStartTime === null) return;
-    const DURATION_MS = 20000;
+    const DURATION_MS = 6000;
     const TARGET = 99;
     const interval = setInterval(() => {
       const elapsed = Date.now() - timerStartTime;

@@ -108,8 +108,8 @@ async function generateSection<T>(
 
   const geminiClient = getGeminiClient();
 
-  // 모델 선택: 항상 Flash 사용 (사고모드 제거)
-  const modelName = "gemini-3-flash-preview";
+  // 모델 선택: 항상 Flash-Lite 사용 (사고모드 제거)
+  const modelName = "gemini-3.1-flash-lite-preview";
 
   // 전역 프롬프터와 시스템 프롬프트 결합
   const { enhanceSystemPromptWithGlobal } = await import(
@@ -1445,7 +1445,7 @@ ${reportSummary}
   } as unknown as GenerateContentRequest;
 
   const maxAttempts = 3;
-  const models: [string] = ["gemini-3-flash-preview"];
+  const models: [string] = ["gemini-3.1-flash-lite-preview"];
 
   for (const modelName of models) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {

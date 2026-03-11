@@ -25,6 +25,7 @@ import {
 } from "recharts";
 
 const GEMINI_MODELS = [
+  "gemini-3.1-flash-lite-preview",
   "gemini-3-flash-preview",
   "gemini-3.0-flash",
   "gemini-2.0-flash",
@@ -150,7 +151,8 @@ export function AIUsagePage() {
   ];
   if (modelOptions.length === 1) {
     modelOptions.push(
-      { value: "gemini-3-flash-preview", label: "Gemini 3 Flash" },
+      { value: "gemini-3.1-flash-lite-preview", label: "Gemini 3.1 Flash-Lite Preview" },
+      { value: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
       { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash" }
     );
   }

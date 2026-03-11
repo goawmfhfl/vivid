@@ -1,12 +1,13 @@
 /**
  * 리포트(daily/weekly/monthly) 생성용 Gemini 모델 선택
  * - GEMINI_REPORT_MODEL=pro | flash (기본: flash)
+ * - flash는 Gemini 3.1 Flash-Lite Preview를 가리킴
  * - cron(persona, user-trends)는 항상 flash 사용
  */
 
 export const GEMINI_MODELS = {
   pro: "gemini-3.1-pro-preview",
-  flash: "gemini-3-flash-preview",
+  flash: "gemini-3.1-flash-lite-preview",
 } as const;
 
 /**
