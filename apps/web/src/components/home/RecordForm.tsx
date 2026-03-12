@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, BookOpen, Lock, Loader2, Settings } from "lucide-react";
+import { Plus, BookOpen, Lock, Settings } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useCreateRecord } from "../../hooks/useRecords";
@@ -19,7 +19,6 @@ import { VividGuidePanel } from "./VividGuidePanel";
 import { TodoSettingsModal } from "./TodoSettingsModal";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
 import {
-  useCreateTodoList,
   useAddTodoItem,
   useReorderTodoItems,
   OPTIMISTIC_ID_PREFIX,
@@ -112,8 +111,7 @@ export function RecordForm({
     (selectedType === "review" || activeTab === "todo") && targetDateIso
       ? targetDateIso
       : "";
-  const { data: vividFeedback, isFetching: isTodoFetching } = useGetDailyVivid(vividDate, "vivid");
-  const createTodoList = useCreateTodoList(targetDateIso || "");
+  const { data: vividFeedback, isLoading: isTodoLoading } = useGetDailyVivid(vividDate, "vivid");
   const addTodoItem = useAddTodoItem(targetDateIso || "");
   const reorderTodoItems = useReorderTodoItems(targetDateIso || "");
 
@@ -1312,42 +1310,8 @@ export function RecordForm({
             open={showTodoSettingsModal}
             onClose={() => setShowTodoSettingsModal(false)}
           />
-          <>
-            {!vividFeedback?.hasNativeTodoList &&
-              (!targetDateIso || targetDateIso <= todayIso) && (
-                <Button
-                    type="button"
-                    onClick={() =>
-                      createTodoList.mutate(undefined, {
-                        onError: (err) =>
-                          showToast(
-                            err instanceof Error ? err.message : "생성에 실패했어요."
-                          ),
-                      })
-                    }
-                    disabled={createTodoList.isPending}
-                    className="w-full justify-center py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 transition-all"
-                    style={{
-                      backgroundColor: COLORS.primary[600],
-                      border: `2px solid ${COLORS.primary[600]}`,
-                      color: COLORS.text.white,
-                      fontWeight: "700",
-                      fontSize: "0.9375rem",
-                      boxShadow: SHADOWS.elevation2,
-                    }}
-                  >
-                    {createTodoList.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        생성 중...
-                      </>
-                    ) : (
-                      "오늘의 할 일 생성하기"
-                    )}
-                  </Button>
-                )}
-              <div className="space-y-2">
-                {isTodoFetching ? (
+          <div className="space-y-2">
+                {isTodoLoading ? (
                   <TodoListSkeleton />
                 ) : (vividFeedback?.todoLists?.length ?? 0) > 0 ? (
                   <div
@@ -1473,7 +1437,6 @@ export function RecordForm({
                   </Button>
                 </div>
               </div>
-            </>
         </div>
       ) : (
         /* 비비드/회고 타입일 때 기존 단일 입력 필드 */
