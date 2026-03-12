@@ -8,8 +8,19 @@ import { useMemo } from "react";
  */
 export function useIsIOS(): boolean {
   return useMemo(() => {
-    if (typeof window === "undefined" || !navigator?.userAgent) return false;
-    const ua = navigator.userAgent;
-    return /iPhone|iPad|iPod/i.test(ua);
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+
+    const ua = navigator.userAgent || "";
+    const platform = navigator.platform || "";
+    const maxTouchPoints = navigator.maxTouchPoints || 0;
+
+    const isiPhoneOrIPadOrIPod = /iPhone|iPad|iPod/i.test(ua);
+    // iPadOS 13+는 UA에 "Macintosh"가 포함될 수 있어 touch point로 보완
+    const isiPadOSDesktopUA = /Macintosh/i.test(ua) && maxTouchPoints > 1;
+    const isAppleMobilePlatform = /iPhone|iPad|iPod/i.test(platform);
+
+    return isiPhoneOrIPadOrIPod || isiPadOSDesktopUA || isAppleMobilePlatform;
   }, []);
 }

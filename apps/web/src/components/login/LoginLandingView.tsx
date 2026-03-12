@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useGoogleLogin } from "@/hooks/useGoogleLogin";
 import { useKakaoLogin } from "@/hooks/useKakaoLogin";
 import { useAppleLogin } from "@/hooks/useAppleLogin";
-import { useIsIOS } from "@/hooks/useIsIOS";
 import { useModalStore } from "@/store/useModalStore";
 import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
@@ -76,13 +75,9 @@ export function LoginLandingView() {
   const [activeSocialProvider, setActiveSocialProvider] = useState<
     "google" | "kakao" | "apple" | null
   >(null);
-  const isIOS = useIsIOS();
-  const hasReactNativeWebView =
-    mounted &&
-    typeof window !== "undefined" &&
-    typeof window.ReactNativeWebView?.postMessage === "function";
-  // 웹에서는 항상 노출하고, 앱 환경에서는 iOS에서만 애플 로그인을 노출한다.
-  const shouldShowAppleLogin = !hasReactNativeWebView || isIOS;
+  // Apple 심사 가이드라인 4.8 대응:
+  // 타사 로그인(구글/카카오)이 있는 화면에서는 Apple 로그인도 동등하게 항상 노출한다.
+  const shouldShowAppleLogin = true;
   const googleLoginMutation = useGoogleLogin();
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();

@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { COLORS, TYPOGRAPHY, SPACING } from "@/lib/design-system";
+import { PolicyBackButton } from "@/components/policy/PolicyBackButton";
 import { cn } from "@/lib/utils";
 import { NotionRenderer } from "@/components/notion/NotionRenderer";
 import { getPolicies, getPolicyContent } from "@/lib/server/notion";
@@ -56,17 +54,7 @@ export default async function PolicyPage({
           "pt-8 pb-16"
         )}
       >
-        <Button
-          variant="ghost"
-          asChild
-          className="mb-6 -ml-2"
-          style={{ color: COLORS.brand.primary }}
-        >
-          <Link href="/">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            돌아가기
-          </Link>
-        </Button>
+        <PolicyBackButton />
 
         <article className="max-w-3xl mx-auto">
           {title && (

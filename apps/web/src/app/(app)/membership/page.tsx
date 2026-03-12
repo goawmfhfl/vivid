@@ -31,7 +31,7 @@ import {
   membershipMonthlyVisionPreview,
 } from "@/lib/membership-preview-data";
 import { supabase } from "@/lib/supabase";
-import { COLORS, SPACING, TYPOGRAPHY } from "@/lib/design-system";
+import { COLORS, SPACING, TYPOGRAPHY, hexToRgba } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
 import img0 from "@/assets/membership/0.png";
@@ -51,20 +51,25 @@ interface PlanDetails {
 const PLANS: Record<PlanType, PlanDetails> = {
   annual: {
     id: "annual",
-    title: "연간",
+    title: "연간 VIVID Pro",
     price: 25000,
     originalPrice: 30000,
     period: "년",
     discount: 20,
-    description: "연마다 결제",
+    description: "1년마다 결제",
   },
   monthly: {
     id: "monthly",
-    title: "월간",
+    title: "월간 VIVID Pro",
     price: 2500,
     period: "월",
-    description: "월마다 결제",
+    description: "1개월마다 결제",
   },
+};
+
+const PLAN_ACCENT_COLORS: Record<PlanType, string> = {
+  annual: COLORS.brand.secondary, // 올리브 그린
+  monthly: COLORS.brand.primary, // 세이지 그린 (지금 시작하기 버튼 색상)
 };
 
 function PlanSelectionCard({
@@ -77,18 +82,15 @@ function PlanSelectionCard({
   onSelect: () => void;
 }) {
   const displayPrice = `₩${plan.price.toLocaleString("ko-KR")}`;
+  const accentColor = PLAN_ACCENT_COLORS[plan.id];
   return (
     <button
       type="button"
       onClick={onSelect}
       className="w-full relative overflow-hidden text-left transition-all duration-300"
       style={{
-        backgroundColor: isSelected
-          ? COLORS.brand.primary
-          : COLORS.background.card,
-        border: `2px solid ${
-          isSelected ? COLORS.brand.primary : COLORS.border.light
-        }`,
+        backgroundColor: isSelected ? accentColor : COLORS.background.card,
+        border: `2px solid ${isSelected ? accentColor : COLORS.border.light}`,
         borderRadius: "16px",
         padding: "16px",
         color: isSelected ? COLORS.text.white : COLORS.text.primary,
@@ -98,8 +100,8 @@ function PlanSelectionCard({
         <div
           className="absolute top-0 left-0 px-3 py-1 text-xs font-bold rounded-br-xl"
           style={{
-            backgroundColor: isSelected ? "#FFFFFF" : COLORS.brand.primary,
-            color: isSelected ? COLORS.brand.primary : COLORS.text.white,
+            backgroundColor: isSelected ? COLORS.text.white : accentColor,
+            color: isSelected ? accentColor : COLORS.text.white,
           }}
         >
           -{plan.discount}%
@@ -207,27 +209,21 @@ function MembershipPageContent() {
   const { isNative: isNativeApp, isReady } = useIsNativeAppWithReady();
   const { data: policies } = useNotionPolicies();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
-
-  // 프로 멤버십 소개 페이지는 네이티브 환경에서만 노출 (웹에서는 홈으로 리다이렉트)
-  useEffect(() => {
-    if (!isReady || isNativeApp) return;
-    router.replace("/");
-  }, [isReady, isNativeApp, router]);
-
-  // 웹 환경에서는 리다이렉트 중 로딩 표시
-  if (isReady && !isNativeApp) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.background.base }}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: COLORS.brand.primary }} />
-      </div>
-    );
-  }
+  const [isCtaVisible, setIsCtaVisible] = useState(true);
 
   // embed=1은 라우팅 시 사라지므로, WebView 내 여부는 ReactNativeWebView 존재로 판단
   const isInApp =
     typeof window !== "undefined" &&
     !!(window as { ReactNativeWebView?: { postMessage?: unknown } })
       .ReactNativeWebView;
+
+  const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
+
+  // 프로 멤버십 소개 페이지는 네이티브 환경에서만 노출 (웹에서는 홈으로 리다이렉트, 개발 환경은 예외)
+  useEffect(() => {
+    if (!isReady || isNativeApp || isDev) return;
+    router.replace("/");
+  }, [isReady, isNativeApp, isDev, router]);
 
   useEffect(() => {
     if (!isInApp || typeof window === "undefined") return;
@@ -249,6 +245,42 @@ function MembershipPageContent() {
     });
     return () => { mounted = false; };
   }, [isInApp]);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY;
+
+      if (currentScrollY <= 80) {
+        setIsCtaVisible(true);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (Math.abs(scrollDelta) < 8) {
+        return;
+      }
+
+      setIsCtaVisible(scrollDelta < 0);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // 웹 환경에서는 리다이렉트 중 로딩 표시 (개발 환경은 페이지 노출)
+  if (isReady && !isNativeApp && !isDev) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.background.base }}>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: COLORS.brand.primary }} />
+      </div>
+    );
+  }
 
   const handleStartNow = () => {
     const planInfo = PLANS[selectedPlan];
@@ -274,6 +306,11 @@ function MembershipPageContent() {
     }
   };
 
+  const handleSelectPlan = (plan: PlanType) => () => {
+    setSelectedPlan(plan);
+    setIsCtaVisible(true);
+  };
+
   const handleRestorePurchases = () => {
     if (isInApp && typeof window !== "undefined" && (window as any).ReactNativeWebView?.postMessage) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: "RESTORE" }));
@@ -295,6 +332,12 @@ function MembershipPageContent() {
       p.title?.includes("이용약관") ||
       p.type === "terms"
   );
+  const selectedPlanInfo = PLANS[selectedPlan];
+  const subscriptionPeriodLabel =
+    selectedPlan === "annual"
+      ? "1년 · 주간/월간 리포트, 인사이트, 균형 분석"
+      : "1개월 · 주간/월간 리포트, 인사이트, 균형 분석";
+  const subscriptionPriceLabel = `₩${selectedPlanInfo.price.toLocaleString("ko-KR")} / ${selectedPlanInfo.period}`;
 
   return (
     <div
@@ -310,12 +353,12 @@ function MembershipPageContent() {
         <PlanSelectionCard
           plan={PLANS.annual}
           isSelected={selectedPlan === "annual"}
-          onSelect={() => setSelectedPlan("annual")}
+          onSelect={handleSelectPlan("annual")}
         />
         <PlanSelectionCard
           plan={PLANS.monthly}
           isSelected={selectedPlan === "monthly"}
-          onSelect={() => setSelectedPlan("monthly")}
+          onSelect={handleSelectPlan("monthly")}
         />
       </div>
 
@@ -556,12 +599,12 @@ function MembershipPageContent() {
         <PlanSelectionCard
           plan={PLANS.annual}
           isSelected={selectedPlan === "annual"}
-          onSelect={() => setSelectedPlan("annual")}
+          onSelect={handleSelectPlan("annual")}
         />
         <PlanSelectionCard
           plan={PLANS.monthly}
           isSelected={selectedPlan === "monthly"}
-          onSelect={() => setSelectedPlan("monthly")}
+          onSelect={handleSelectPlan("monthly")}
         />
       </div>
 
@@ -605,27 +648,97 @@ function MembershipPageContent() {
 
       {/* 플로팅 CTA - 바텀 네비 위 */}
       <div
-        className="fixed left-0 right-0 z-[99] px-4 pb-2"
+        className="fixed left-0 right-0 z-[99] px-4 pb-2 transition-all duration-300"
         style={{
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+          opacity: isCtaVisible ? 1 : 0,
+          transform: isCtaVisible ? "translateY(0)" : "translateY(16px)",
+          pointerEvents: isCtaVisible ? "auto" : "none",
         }}
       >
-        <div className={`${SPACING.page.maxWidthNarrow} mx-auto`}>
+        <div className={`${SPACING.page.maxWidthNarrow} mx-auto space-y-3`}>
           <button
             type="button"
             onClick={handleStartNow}
             className="w-full py-4 rounded-2xl font-semibold text-base shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             style={{
-              backgroundColor: COLORS.brand.primary,
+              backgroundColor: PLAN_ACCENT_COLORS[selectedPlan],
               color: COLORS.text.white,
-              boxShadow: "0 8px 24px rgba(127, 143, 122, 0.4)",
+              boxShadow: `0 8px 24px ${hexToRgba(PLAN_ACCENT_COLORS[selectedPlan], 0.4)}`,
             }}
           >
             <span>지금 시작하기</span>
             <span className="text-sm font-normal opacity-90">
-              ({PLANS[selectedPlan].title} {PLANS[selectedPlan].discount ? `-${PLANS[selectedPlan].discount}%` : ""})
+              ({selectedPlanInfo.title}{" "}
+              {selectedPlanInfo.discount ? `-${selectedPlanInfo.discount}%` : ""})
             </span>
           </button>
+
+          <div
+            className="rounded-2xl px-4 py-3.5"
+            style={{
+              backgroundColor: hexToRgba(COLORS.background.cardElevated, 0.92),
+              backdropFilter: "blur(12px)",
+              border: `1px solid ${COLORS.border.light}`,
+            }}
+          >
+            <div
+              className={cn("flex flex-col gap-2.5", TYPOGRAPHY.caption.fontSize)}
+              style={{ color: COLORS.text.secondary }}
+            >
+              <div className="flex justify-between items-start gap-3">
+                <span className="shrink-0" style={{ color: COLORS.text.tertiary }}>서비스</span>
+                <span className="text-right min-w-0" style={{ color: COLORS.text.primary }}>{selectedPlanInfo.title}</span>
+              </div>
+              <div className="flex justify-between items-start gap-3">
+                <span className="shrink-0" style={{ color: COLORS.text.tertiary }}>구독 기간</span>
+                <span className="text-right min-w-0" style={{ color: COLORS.text.primary }}>{subscriptionPeriodLabel}</span>
+              </div>
+              <div className="flex justify-between items-baseline gap-3">
+                <span className="shrink-0" style={{ color: COLORS.text.tertiary }}>가격</span>
+                <span className="text-right" style={{ color: COLORS.text.primary }}>{subscriptionPriceLabel}</span>
+              </div>
+              <div
+                className="flex items-center justify-between gap-3 pt-1 mt-1"
+                style={{ borderTop: `1px solid ${COLORS.border.light}` }}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {termsPolicy ? (
+                    <Link
+                      href={`/policy/${termsPolicy.id}`}
+                      className="transition-opacity hover:opacity-70 shrink-0"
+                      style={{ color: COLORS.brand.primary }}
+                    >
+                      이용약관(EULA)
+                    </Link>
+                  ) : (
+                    <span>이용약관(EULA)</span>
+                  )}
+                  <span style={{ color: COLORS.border.light }}>·</span>
+                  {privacyPolicy ? (
+                    <Link
+                      href={`/policy/${privacyPolicy.id}`}
+                      className="transition-opacity hover:opacity-70 shrink-0"
+                      style={{ color: COLORS.brand.primary }}
+                    >
+                      개인정보 처리방침
+                    </Link>
+                  ) : (
+                    <span>개인정보 처리방침</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRestorePurchases}
+                  className={cn("flex items-center gap-1 py-1 px-2 rounded-md transition-all hover:opacity-80 shrink-0", TYPOGRAPHY.caption.fontSize)}
+                  style={{ color: COLORS.text.tertiary }}
+                >
+                  <RotateCcw className="w-3 h-3" style={{ color: COLORS.text.tertiary }} />
+                  <span>구입 내역 복원</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
