@@ -341,7 +341,7 @@ function MembershipPageContent() {
 
   return (
     <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-32 pt-14`}
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-72 pt-14`}
     >
       <MembershipHeader />
 
@@ -608,43 +608,7 @@ function MembershipPageContent() {
         />
       </div>
 
-      {/* Apple 정책 영역 */}
-      <div className="mt-6 pb-8 flex items-center justify-between px-1">
-        <div className={cn("flex items-center gap-2", TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.tertiary }}>
-          {privacyPolicy ? (
-            <Link
-              href={`/policy/${privacyPolicy.id}`}
-              className="transition-colors hover:opacity-80"
-              style={{ color: COLORS.text.tertiary }}
-            >
-              개인정보 처리방침
-            </Link>
-          ) : (
-            <span>개인정보 처리방침</span>
-          )}
-          <span style={{ color: COLORS.border.light }}>|</span>
-          {termsPolicy ? (
-            <Link
-              href={`/policy/${termsPolicy.id}`}
-              className="transition-colors hover:opacity-80"
-              style={{ color: COLORS.text.tertiary }}
-            >
-              이용 약관
-            </Link>
-          ) : (
-            <span>이용 약관</span>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={handleRestorePurchases}
-          className={cn("flex items-center gap-1 py-1 px-2 rounded-md transition-all hover:opacity-80", TYPOGRAPHY.caption.fontSize)}
-          style={{ color: COLORS.text.tertiary }}
-        >
-          <RotateCcw className="w-3 h-3" style={{ color: COLORS.text.tertiary }} />
-          <span>구입 내역 복원</span>
-        </button>
-      </div>
+      
 
       {/* 플로팅 CTA - 바텀 네비 위 */}
       <div
