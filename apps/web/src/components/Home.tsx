@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { useRecords, type Record } from "../hooks/useRecords";
@@ -11,6 +12,7 @@ import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
 import { useCreateDailyVivid } from "@/hooks/useCreateDailyVivid";
 import { AppHeader } from "./common/AppHeader";
 import { useModalStore } from "@/store/useModalStore";
+import { useOnboardingStore } from "@/store/useOnboardingStore";
 import { getKSTDateString } from "@/lib/date-utils";
 import { COLORS, SPACING, SHADOWS } from "@/lib/design-system";
 import { CircularProgress } from "./ui/CircularProgress";
@@ -19,6 +21,16 @@ import { getKSTDate } from "@/lib/date-utils";
 import { useRecordsAndFeedbackDates } from "@/hooks/useRecordsAndFeedbackDates";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpdateModal } from "./ui/modals/UpdateModal";
+import { HomeOnboardingOverlay } from "./home/HomeOnboardingOverlay";
+import { cn } from "@/lib/utils";
+import {
+  HOME_ONBOARDING_STEPS,
+  HOME_ONBOARDING_TARGET_IDS,
+  clearPendingHomeOnboarding,
+  hasPendingHomeOnboarding,
+  hasSeenHomeOnboarding,
+  markSeenHomeOnboarding,
+} from "@/lib/onboarding";
 
 interface HomeProps {
   selectedDate?: string; // YYYY-MM-DD
@@ -36,6 +48,8 @@ export function Home({ selectedDate }: HomeProps = {}) {
     refetch: refetchRecords,
   } = useRecords();
 
+  const { isPro, isLoading: isSubscriptionLoading } = useSubscription();
+
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingRecordId, setDeletingRecordId] = useState<number | null>(null);
@@ -43,6 +57,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
     null
   );
   const [activeTab, setActiveTab] = useState<HomeTabType>("vivid");
+  const [isClientMounted, setIsClientMounted] = useState(false);
+  const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
+  const [isOnboardingGateResolved, setIsOnboardingGateResolved] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingPreviewTab, setOnboardingPreviewTab] =
+    useState<HomeTabType | null>(null);
   const searchParamsString = searchParams?.toString() ?? "";
   const initialTab = useMemo((): HomeTabType | null => {
     const typeParam = searchParams?.get("type");
@@ -70,6 +90,56 @@ export function Home({ selectedDate }: HomeProps = {}) {
       setActiveRecordType(initialRecordType);
     }
   }, [initialRecordType, activeRecordType]);
+
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClientMounted || isSubscriptionLoading) return;
+
+    const hasSeenOnboarding = hasSeenHomeOnboarding();
+    const shouldShowOnboarding = !hasSeenOnboarding && !isPro;
+
+    setIsOnboardingVisible(shouldShowOnboarding);
+    setOnboardingStep(0);
+    setIsOnboardingGateResolved(true);
+
+    if (hasPendingHomeOnboarding() && !shouldShowOnboarding) {
+      clearPendingHomeOnboarding();
+    }
+  }, [isClientMounted, isPro, isSubscriptionLoading]);
+
+  useEffect(() => {
+    if (!isOnboardingVisible) {
+      setOnboardingPreviewTab(null);
+      return;
+    }
+
+    const tabsStepIndex = HOME_ONBOARDING_STEPS.findIndex(
+      (s) => s.id === HOME_ONBOARDING_TARGET_IDS.tabs
+    );
+    if (tabsStepIndex < 0 || onboardingStep !== tabsStepIndex) {
+      setOnboardingPreviewTab("vivid");
+      return;
+    }
+
+    const previewTabs: HomeTabType[] = ["vivid", "review", "todo"];
+    let currentIndex = 0;
+    setOnboardingPreviewTab(previewTabs[currentIndex]);
+
+    const interval = window.setInterval(() => {
+      currentIndex = (currentIndex + 1) % previewTabs.length;
+      setOnboardingPreviewTab(previewTabs[currentIndex]);
+    }, 1300);
+
+    return () => window.clearInterval(interval);
+  }, [isOnboardingVisible, onboardingStep]);
+
+  const setOnboarding = useOnboardingStore((s) => s.setOnboarding);
+  useEffect(() => {
+    setOnboarding(isOnboardingVisible, onboardingStep);
+  }, [isOnboardingVisible, onboardingStep, setOnboarding]);
 
   const handleTypeChange = useCallback(
     (type: RecordType | null) => {
@@ -219,7 +289,6 @@ export function Home({ selectedDate }: HomeProps = {}) {
   const isCreateButtonDisabled =
     isReviewTab && !canCreateReview && !hasDateFeedback;
 
-  const { isPro } = useSubscription();
   // 전역 모달 및 피드백 생성 상태 관리
   const openErrorModal = useModalStore((state) => state.openErrorModal);
   const dailyVividProgress = useModalStore(
@@ -289,7 +358,17 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
 
   const handleOpenDailyVivid = async () => {
-    if (isCreateButtonDisabled) return;
+    if (isCreateButtonDisabled && !isOnboardingAiStep) return;
+
+    if (isOnboardingAiStep) {
+      setTimerStartTime(Date.now());
+      setTimerProgress(0);
+      setTimeout(() => {
+        setTimerStartTime(null);
+        setTimerProgress(null);
+      }, 7000);
+      return;
+    }
 
     try {
       if (hasDateFeedback) {
@@ -390,6 +469,28 @@ export function Home({ selectedDate }: HomeProps = {}) {
     return `${baseLabel} 생성하기`;
   };
 
+  const displayedActiveTab = onboardingPreviewTab ?? activeTab;
+  const isDisplayedTodoTab = displayedActiveTab === "todo";
+  const isOnboardingAiPreview = isOnboardingVisible && !hasDateRecords;
+  const isOnboardingQuestionsStep = isOnboardingVisible && onboardingStep === 2;
+  const aiStepIndex = HOME_ONBOARDING_STEPS.findIndex(
+    (s) => s.id === HOME_ONBOARDING_TARGET_IDS.aiButton
+  );
+  const isOnboardingAiStep = isOnboardingVisible && onboardingStep === aiStepIndex;
+  const shouldShowPrimaryButton =
+    (!isDisplayedTodoTab && hasDateRecords) ||
+    (isOnboardingVisible &&
+      displayedActiveTab !== "todo" &&
+      !isOnboardingQuestionsStep);
+
+  const finishOnboarding = useCallback(() => {
+    markSeenHomeOnboarding();
+    clearPendingHomeOnboarding();
+    setIsOnboardingVisible(false);
+    setOnboardingStep(0);
+    setOnboardingPreviewTab(null);
+  }, []);
+
   return (
     <div
       className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24 hide-scrollbar`}
@@ -422,10 +523,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
         selectedDate={activeDate}
         onTypeChange={handleTypeChange}
         onTabChange={handleTabChange}
-        activeTab={activeTab}
+        activeTab={displayedActiveTab}
         initialType={initialRecordType}
+        onboardingStep={isOnboardingVisible ? onboardingStep : -1}
+        isOnboardingVisible={isOnboardingVisible}
       />
-      {!isTodoTab && (
+      {!isOnboardingVisible && !isDisplayedTodoTab && (
         <RecordList
           records={allRecords}
           isLoading={isLoading}
@@ -438,20 +541,46 @@ export function Home({ selectedDate }: HomeProps = {}) {
         />
       )}
 
-      {hasDateRecords && !isTodoTab && (
-        <div className="fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4 z-50">
+      {shouldShowPrimaryButton && (
+        <div
+          className={cn(
+            "fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4",
+            isOnboardingAiStep ? "z-[140]" : "z-50"
+          )}
+          data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.aiButton}
+        >
           <div className="flex items-center gap-2 sm:gap-3 justify-center">
-            <div
+            <motion.div
               className="relative transition-all duration-300 px-3 py-2.5 sm:px-4 sm:py-3.5"
+              animate={
+                isOnboardingAiStep && timerProgress === null
+                  ? { scale: [1, 1.03, 1] }
+                  : undefined
+              }
+              transition={
+                isOnboardingAiStep && timerProgress === null
+                  ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+                  : undefined
+              }
               onClick={
-                !isGeneratingFeedback && !isCreateButtonDisabled
+                isOnboardingAiStep ||
+                (!isOnboardingAiPreview &&
+                  !isGeneratingFeedback &&
+                  !isCreateButtonDisabled)
                   ? handleOpenDailyVivid
                   : undefined
               }
               role="button"
-              aria-disabled={isCreateButtonDisabled || isGeneratingFeedback}
+              aria-disabled={
+                !isOnboardingAiStep &&
+                (isOnboardingAiPreview ||
+                  isCreateButtonDisabled ||
+                  isGeneratingFeedback)
+              }
               title={
-                isCreateButtonDisabled
+                isOnboardingAiPreview
+                  ? "온보딩용 비비드 생성 미리보기"
+                  : isCreateButtonDisabled
                   ? "Q1·Q2와 Q3를 모두 입력해 주세요"
                   : undefined
               }
@@ -466,14 +595,27 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 `,
                 position: "relative",
                 overflow: "hidden",
-                opacity:
-                  isGeneratingFeedback || isCreateButtonDisabled ? 0.6 : 1,
-                pointerEvents:
-                  isGeneratingFeedback || isCreateButtonDisabled
+                opacity: isOnboardingAiStep
+                  ? 1
+                  : isGeneratingFeedback || isCreateButtonDisabled
+                    ? 0.6
+                    : 1,
+                pointerEvents: isOnboardingAiStep
+                  ? timerProgress !== null
+                    ? "none"
+                    : "auto"
+                  : isOnboardingAiPreview ||
+                      isGeneratingFeedback ||
+                      isCreateButtonDisabled
                     ? "none"
                     : "auto",
-                cursor:
-                  isGeneratingFeedback || isCreateButtonDisabled
+                cursor: isOnboardingAiStep
+                  ? timerProgress !== null
+                    ? "default"
+                    : "pointer"
+                  : isOnboardingAiPreview ||
+                      isGeneratingFeedback ||
+                      isCreateButtonDisabled
                     ? "not-allowed"
                     : "pointer",
                 // 종이 질감 배경 패턴
@@ -500,7 +642,13 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 filter: "contrast(1.02) brightness(1.01)",
               }}
               onMouseEnter={(e) => {
-                if (!isGeneratingFeedback && !isCreateButtonDisabled) {
+                if (
+                  isOnboardingAiStep ||
+                  (!isOnboardingAiPreview &&
+                    !isGeneratingFeedback &&
+                    !isCreateButtonDisabled)
+                ) {
+                  if (timerProgress !== null) return;
                   e.currentTarget.style.transform = "translateY(-2px)";
                   e.currentTarget.style.boxShadow = `
                     0 4px 16px rgba(107, 122, 111, 0.08),
@@ -510,14 +658,12 @@ export function Home({ selectedDate }: HomeProps = {}) {
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isGeneratingFeedback && !isCreateButtonDisabled) {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = `
-                    0 2px 8px rgba(0,0,0,0.04),
-                    0 1px 3px rgba(0,0,0,0.02),
-                    inset 0 1px 0 rgba(255,255,255,0.6)
-                  `;
-                }
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = `
+                  0 2px 8px rgba(0,0,0,0.04),
+                  0 1px 3px rgba(0,0,0,0.02),
+                  inset 0 1px 0 rgba(255,255,255,0.6)
+                `;
               }}
             >
               {/* 종이 질감 오버레이 */}
@@ -566,11 +712,13 @@ export function Home({ selectedDate }: HomeProps = {}) {
                       lineHeight: "1.2",
                     }}
                   >
-                    {getPrimaryButtonLabel()}
+                    {isOnboardingAiPreview
+                      ? "오늘의 비비드 생성하기"
+                      : getPrimaryButtonLabel()}
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
@@ -588,7 +736,15 @@ export function Home({ selectedDate }: HomeProps = {}) {
       />
 
       {/* 업데이트 공지: 로그인된 유저가 홈에서만 볼 수 있음 (Home은 withAuth로 보호됨) */}
-      <UpdateModal />
+      <UpdateModal deferred={!isOnboardingGateResolved || isOnboardingVisible} />
+      <HomeOnboardingOverlay
+        open={isOnboardingVisible}
+        step={onboardingStep}
+        previewTab={displayedActiveTab}
+        onStepChange={setOnboardingStep}
+        onComplete={finishOnboarding}
+        onSkip={finishOnboarding}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { markPendingHomeOnboarding } from "@/lib/onboarding";
 
 // 회원가입 데이터 타입 정의
 export interface SignUpData {
@@ -259,6 +260,7 @@ export const useSignUp = () => {
   return useMutation({
     mutationFn: signUpUser,
     onSuccess: () => {
+      markPendingHomeOnboarding();
       router.push("/");
     },
     onError: (error: SignUpError) => {

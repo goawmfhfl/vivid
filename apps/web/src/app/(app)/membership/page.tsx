@@ -656,7 +656,16 @@ function MembershipPageContent() {
           pointerEvents: isCtaVisible ? "auto" : "none",
         }}
       >
-        <div className={`${SPACING.page.maxWidthNarrow} mx-auto space-y-3`}>
+        <div
+          className={`${SPACING.page.maxWidthNarrow} mx-auto rounded-2xl p-4 space-y-3`}
+          style={{
+            backgroundColor: hexToRgba(COLORS.background.base, 0.95),
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: `1px solid ${COLORS.border.light}`,
+            boxShadow: "0 -4px 24px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)",
+          }}
+        >
           <button
             type="button"
             onClick={handleStartNow}
@@ -709,10 +718,10 @@ function MembershipPageContent() {
                       className="transition-opacity hover:opacity-70 shrink-0"
                       style={{ color: COLORS.brand.primary }}
                     >
-                      이용약관(EULA)
+                      이용약관
                     </Link>
                   ) : (
-                    <span>이용약관(EULA)</span>
+                    <span>이용약관</span>
                   )}
                   <span style={{ color: COLORS.border.light }}>·</span>
                   {privacyPolicy ? (

@@ -4,6 +4,8 @@ import { Home as HomeIcon, BarChart3, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { shouldShowBottomNav } from "@/lib/navigation";
+import { useOnboardingStore } from "@/store/useOnboardingStore";
+import { HOME_ONBOARDING_STEPS, HOME_ONBOARDING_TARGET_IDS } from "@/lib/onboarding";
 import { useEffect, useState, useRef } from "react";
 import { COLORS, GRADIENT_UTILS, SHADOWS } from "@/lib/design-system";
 
@@ -70,12 +72,21 @@ export function BottomNavigation() {
 
   const isVisible = shouldShowBottomNav(pathname ?? "") && !isErrorPage;
 
+  const onboardingStep = useOnboardingStore((s) => s.step);
+  const isOnboardingVisible = useOnboardingStore((s) => s.isVisible);
+  const reportsStepIndex = HOME_ONBOARDING_STEPS.findIndex(
+    (s) => s.id === HOME_ONBOARDING_TARGET_IDS.reportsTab
+  );
+  const isOnboardingReportsStep =
+    isOnboardingVisible && onboardingStep === reportsStepIndex;
+
   if (!isVisible) {
     return null;
   }
 
-  // 스크롤 애니메이션 적용
-  const shouldHide = isScrolledDown && !isAtTop;
+  // step5(reportsTab)에서는 스크롤과 관계없이 바텀 네비 항상 노출
+  const shouldHide =
+    !isOnboardingReportsStep && isScrolledDown && !isAtTop;
 
   // 내정보 관련 페이지 경로 목록
   const myInfoRelatedPaths = [
@@ -172,6 +183,11 @@ export function BottomNavigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                data-onboarding-id={
+                  item.href === "/reports"
+                    ? HOME_ONBOARDING_TARGET_IDS.reportsTab
+                    : undefined
+                }
                 className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg transition-all active:scale-95"
                 style={{
                   background: item.isActive

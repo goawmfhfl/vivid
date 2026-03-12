@@ -483,3 +483,48 @@ textarea::-webkit-scrollbar {
 .vivid-summary-dialog > button {
   display: none !important;
 }
+
+/* 온보딩 단계 전환 - opacity만 사용한 부드러운 페이드 인 */
+@keyframes onboarding-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.onboarding-step-fade {
+  animation: onboarding-fade-in 0.28s ease-out forwards;
+}
+
+/* 온보딩 하이라이트 배경 퍼짐 펄스 */
+@keyframes onboarding-background-pulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.36;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .onboarding-background-pulse {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(127, 143, 122, 0.36) 0%,
+      rgba(127, 143, 122, 0.2) 45%,
+      rgba(127, 143, 122, 0.04) 70%,
+      rgba(127, 143, 122, 0) 100%
+    );
+    filter: blur(2px);
+    transform-origin: center;
+    animation: onboarding-background-pulse 1.65s ease-out infinite;
+  }
+}

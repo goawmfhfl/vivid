@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { updateLastLoginAt } from "@/lib/profile-utils";
 import { getLoginPath } from "@/lib/navigation";
 import { COLORS } from "@/lib/design-system";
+import { markPendingHomeOnboarding } from "@/lib/onboarding";
 
 const isProfileCompleted = (user: User) => {
   const metadata = user.user_metadata || {};
@@ -270,6 +271,7 @@ function AuthCallbackContent() {
             await syncPhoneVerificationStatus(user);
             await updateLastLoginAt(user.id);
 
+            markPendingHomeOnboarding();
             const redirectUrl = getRedirectUrl("/");
             window.location.href = redirectUrl;
             return;
@@ -345,6 +347,7 @@ function AuthCallbackContent() {
           await syncPhoneVerificationStatus(user);
           await updateLastLoginAt(user.id);
 
+          markPendingHomeOnboarding();
           const redirectUrl = getRedirectUrl("/");
           window.location.href = redirectUrl;
         } else {

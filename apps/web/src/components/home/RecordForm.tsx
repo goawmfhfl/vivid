@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
 import { ReviewGuidePanel } from "./ReviewGuidePanel";
 import { TodoGuidePanel } from "./TodoGuidePanel";
+import { VividGuidePanel } from "./VividGuidePanel";
 import { TodoSettingsModal } from "./TodoSettingsModal";
 import { useGetDailyVivid } from "@/hooks/useGetDailyVivid";
 import {
@@ -41,6 +42,7 @@ import {
 import { TodoItemRow } from "./TodoItemRow";
 import { TodoListSkeleton } from "../ui/Skeleton";
 import { AnimatePresence, motion } from "framer-motion";
+import { HOME_ONBOARDING_TARGET_IDS } from "@/lib/onboarding";
 
 export type HomeTabType = "vivid" | "review" | "todo";
 
@@ -51,12 +53,16 @@ interface RecordFormProps {
   onTabChange?: (tab: HomeTabType) => void;
   initialType?: RecordType | null;
   activeTab?: HomeTabType;
+  onboardingStep?: number;
+  isOnboardingVisible?: boolean;
 }
 
 const STORAGE_KEY = "record-form-draft";
 const STORAGE_KEY_Q1 = "record-form-draft-q1";
 const STORAGE_KEY_Q2 = "record-form-draft-q2";
 const STORAGE_KEY_Q3 = "record-form-draft-q3";
+
+const QUESTIONS_GUIDE_STEP_INDEX = 2;
 
 export function RecordForm({
   onSuccess,
@@ -65,6 +71,8 @@ export function RecordForm({
   onTabChange,
   initialType,
   activeTab: activeTabProp,
+  onboardingStep = -1,
+  isOnboardingVisible = false,
 }: RecordFormProps) {
   const [content, setContent] = useState("");
   const [q1Content, setQ1Content] = useState("");
@@ -74,6 +82,7 @@ export function RecordForm({
   const [internalTab, setInternalTab] = useState<HomeTabType>("vivid");
   const [showReviewGuidePanel, setShowReviewGuidePanel] = useState(false);
   const [showTodoGuidePanel, setShowTodoGuidePanel] = useState(false);
+  const [showVividGuidePanel, setShowVividGuidePanel] = useState(false);
   const [showTodoSettingsModal, setShowTodoSettingsModal] = useState(false);
   const activeTab = activeTabProp ?? internalTab;
   const [newTodoContents, setNewTodoContents] = useState("");
@@ -746,9 +755,11 @@ export function RecordForm({
   return (
     <>
       <div className="mb-6">
-        {/* 비비드 | 회고 | 할 일 3탭 - 할 일 탭 시 환경설정(왼쪽) + 탭(오른쪽) */}
-        <div className="mb-3 flex justify-end items-center gap-2">
-            {/* 할 일 탭에서만 환경설정 버튼 - 탭 왼쪽에 애니메이션 표시 */}
+        {/* 비비드 | 회고 | 할 일 3탭 - VIVID/할 일 탭 시 가이드/환경설정(왼쪽) + 탭(오른쪽) */}
+        <div
+          className="mb-3 flex justify-end items-center gap-2"
+          data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.tabs}
+        >
             <AnimatePresence mode="wait">
               {activeTab === "todo" && (
                 <motion.button
@@ -828,7 +839,7 @@ export function RecordForm({
 
       {/* 비비드 탭: Q1, Q2만 */}
       {activeTab === "vivid" && recordType === "dream" ? (
-        <>
+        <div data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.questions}>
           {/* Q1 입력 필드 */}
           <div className="mb-4">
             <div
@@ -1049,8 +1060,24 @@ export function RecordForm({
             </div>
           </div>
 
-          {/* 제출 버튼 */}
-          <div className="flex justify-end mb-6">
+          {/* 제출 버튼 + 가이드북 (VIVID 탭: 기록 추가 왼쪽에 가이드북 버튼, 회고 탭과 동일한 레이아웃) */}
+          <div className="flex items-center justify-between gap-2 sm:gap-3 mb-6">
+            <button
+              type="button"
+              data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.questionsGuide}
+              onClick={() => setShowVividGuidePanel(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+              style={{
+                background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                color: COLORS.brand.primary,
+                boxShadow: SHADOWS.default,
+              }}
+              aria-label="VIVID 가이드북 보기"
+              title="가이드북"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
             <Button
               onClick={handleSubmit}
               disabled={(!q1Content.trim() && !q2Content.trim()) || createRecordMutation.isPending}
@@ -1082,7 +1109,7 @@ export function RecordForm({
               {createRecordMutation.isPending ? "추가 중..." : "기록 추가"}
             </Button>
           </div>
-        </>
+        </div>
       ) : activeTab === "review" && recordType === "review" ? (
         <>
           {/* 회고 탭: Q3만 (할 일 없음) */}
@@ -1559,7 +1586,22 @@ export function RecordForm({
               </span>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setShowVividGuidePanel(true)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0"
+                style={{
+                  background: GRADIENT_UTILS.cardBackground(COLORS.brand.light, 0.15),
+                  border: `1.5px solid ${GRADIENT_UTILS.borderColor(COLORS.brand.light, "30")}`,
+                  color: COLORS.brand.primary,
+                  boxShadow: SHADOWS.default,
+                }}
+                aria-label="VIVID 가이드북 보기"
+                title="가이드북"
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
               <Button
                 onClick={handleSubmit}
                 disabled={!content.trim() || createRecordMutation.isPending}
@@ -1595,6 +1637,11 @@ export function RecordForm({
         </div>
       )}
       </div>
+
+      <VividGuidePanel
+        open={showVividGuidePanel}
+        onClose={() => setShowVividGuidePanel(false)}
+      />
     </>
   );
 }

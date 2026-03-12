@@ -7,6 +7,7 @@ import { getSundayOfWeek } from "@/components/weeklyVivid/weekly-vivid-candidate
 import { COLORS, TRANSITIONS, SHADOWS, GRADIENT_UTILS } from "@/lib/design-system";
 import { motion, AnimatePresence } from "framer-motion";
 import { DateButtonSkeleton } from "@/components/ui/Skeleton";
+import { HOME_ONBOARDING_TARGET_IDS } from "@/lib/onboarding";
 
 interface WeeklyDateViewProps {
   selectedDate?: string; // YYYY-MM-DD 형식
@@ -240,6 +241,7 @@ export function WeeklyDateView({
   return (
     <div
       ref={containerRef}
+      data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.calendar}
       className="relative mb-6 pb-3 md:pb-4 overflow-hidden -mx-4 px-4 max-[411px]:px-2"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}

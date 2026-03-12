@@ -1,22 +1,23 @@
 "use client";
 
 import { X } from "lucide-react";
-import { COLORS, CARD_STYLES } from "@/lib/design-system";
+import Link from "next/link";
+import { COLORS, CARD_STYLES, TYPOGRAPHY } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 
-interface ReviewGuidePanelProps {
+interface VividGuidePanelProps {
   open: boolean;
   onClose: () => void;
 }
 
-export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
+export function VividGuidePanel({ open, onClose }: VividGuidePanelProps) {
   if (!open) return null;
 
   return (
     <div
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200"
       role="dialog"
-      aria-label="회고 탭 가이드"
+      aria-label="VIVID 탭 가이드"
     >
       <button
         type="button"
@@ -46,7 +47,7 @@ export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
             className="text-base font-semibold leading-tight"
             style={{ color: COLORS.brand.primary }}
           >
-            회고 가이드 북
+            VIVID 가이드북
           </h2>
           <button
             type="button"
@@ -75,10 +76,12 @@ export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
               className="text-xs font-semibold mb-1"
               style={{ color: COLORS.text.primary }}
             >
-              회고란은 어떤걸 적는건가요?
+              오늘 하루를 어떻게 보낼까?
             </h3>
             <p style={{ color: COLORS.text.secondary }}>
-             하루를 마무리하며 오늘 하루를 어떻게 보냈는지 돌아보고, 그때 느꼈던 감정이나 생각들을 자유롭게 기록하는 칸입니다.
+              오늘의 계획과 의도를 미리 생각해 적어보세요. 하루를 어떻게 보낼지
+              정해두면 더 의미 있는 하루가 되고, 주간·월간 리포트에서 나다운 삶에
+              대한 인사이트를 얻을 수 있습니다.
             </p>
           </section>
 
@@ -87,33 +90,32 @@ export function ReviewGuidePanel({ open, onClose }: ReviewGuidePanelProps) {
               className="text-xs font-semibold mb-1"
               style={{ color: COLORS.text.primary }}
             >
-              회고를 적으면?
+              앞으로의 나는 어떤 모습일까?
             </h3>
             <p style={{ color: COLORS.text.secondary }}>
-              이 칸에 오늘의 회고를 적어 주시면,{" "}
-              <strong style={{ color: COLORS.brand.primary }}>
-                오늘의 회고 생성하기
-              </strong>
-              를 눌러 리포트를 만들 수 있습니다.
-            </p>
-          </section>
-
-          <section>
-            <h3
-              className="text-xs font-semibold mb-1"
-              style={{ color: COLORS.text.primary }}
-            >
-              어떤 인사이트를 주나요?
-            </h3>
-            <p style={{ color: COLORS.text.secondary }}>
-              오늘 보낸 하루에 대한 정리, 그리고{" "}
-              <strong style={{ color: COLORS.brand.primary }}>
-                할 일 달성률
-              </strong>{" "}
-              인사이트를 얻을 수 있습니다.
+              꿈, 목표, 되고 싶은 모습을 자유롭게 기록해보세요. 미래의 나에 대한
+              생각을 꾸준히 적으면 VIVID 리포트에서 나를 선명하게 보여주는
+              인사이트로 이어집니다.
             </p>
           </section>
         </div>
+
+        <Link
+          href="/guide/recording"
+          onClick={onClose}
+          className={cn(
+            "mt-4 w-full flex items-center justify-center py-2.5 rounded-xl transition-all hover:opacity-90 active:scale-[0.98]",
+            TYPOGRAPHY.body.fontSize,
+            TYPOGRAPHY.body.fontWeight
+          )}
+          style={{
+            backgroundColor: COLORS.brand.primary,
+            color: COLORS.text.white,
+            border: `1.5px solid ${COLORS.brand.primary}`,
+          }}
+        >
+          왜 VIVID 기록을 하나요?
+        </Link>
       </div>
     </div>
   );

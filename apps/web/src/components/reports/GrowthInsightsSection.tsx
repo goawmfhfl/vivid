@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { Lightbulb, Scale, Lock } from "lucide-react";
-import { useIsNativeApp } from "@/hooks/useIsNativeApp";
 import { AnimatedScoreBlock } from "@/components/reports/AnimatedScoreBlock";
 import { ReportDropdown } from "@/components/reports/ReportDropdown";
 import { GrowthInsightsSectionSkeleton } from "@/components/reports/GrowthInsightsSkeleton";
@@ -35,7 +34,6 @@ export function GrowthInsightsSection({
   scrollAnimated = false,
 }: GrowthInsightsSectionProps) {
   const router = useRouter();
-  const isNativeApp = useIsNativeApp();
   if (isLoading) return <GrowthInsightsSectionSkeleton />;
   if (!growth_insights) return null;
 
@@ -79,6 +77,7 @@ export function GrowthInsightsSection({
         <PreviewDataNotice
           subtitle="나의 기록이 쌓이면 성장 인사이트가 표시됩니다"
           accentColor={ACCENT}
+          showProCta={isLocked}
         />
       )}
       {cards.map(({ id, title, Icon, score, rationale, blocks }, cardIdx) => {
@@ -95,14 +94,14 @@ export function GrowthInsightsSection({
               animationDelay: scrollAnimated ? undefined : `${cardIdx * 100}ms`,
             }}
           >
-            {/* 비Pro: Pro 전용 데이터 오버레이 (네이티브에서만 멤버십 페이지로 이동) */}
-            {isLocked && (
+            {/* 비Pro + 실제 데이터일 때만 오버레이 (미리보기 데이터는 모든 유저 노출) */}
+            {isLocked && hasRealData && (
               <button
                 type="button"
-                onClick={() => isNativeApp && router.push("/membership")}
+                onClick={() => router.push("/membership")}
                 className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 transition-opacity hover:opacity-100"
                 style={{
-                  cursor: isNativeApp ? "pointer" : "default",
+                  cursor: "pointer",
                   backgroundColor: "rgba(250, 250, 248, 0.85)",
                   backdropFilter: "blur(4px)",
                   WebkitBackdropFilter: "blur(4px)",

@@ -30,6 +30,10 @@ type Modal = {
   destination_path: string;
 };
 
+interface UpdateModalProps {
+  deferred?: boolean;
+}
+
 /** 영구 숨김 여부 확인 */
 function isPermanentlyDismissed(modalId: string): boolean {
   if (typeof window === "undefined") return false;
@@ -59,7 +63,7 @@ function addPermanentDismiss(modalId: string) {
 /**
  * 업데이트 모달 - 소비자 페이지(/admin 제외)에서만 노출
  */
-export function UpdateModal() {
+export function UpdateModal({ deferred = false }: UpdateModalProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [modal, setModal] = useState<Modal | null>(null);
@@ -68,7 +72,7 @@ export function UpdateModal() {
   const isConsumerPage = pathname && !pathname.startsWith("/admin");
 
   useEffect(() => {
-    if (!isConsumerPage) {
+    if (!isConsumerPage || deferred) {
       setIsLoading(false);
       setModal(null);
       return;
@@ -104,7 +108,7 @@ export function UpdateModal() {
     return () => {
       cancelled = true;
     };
-  }, [isConsumerPage]);
+  }, [deferred, isConsumerPage]);
 
   const handleConfirm = () => {
     if (!modal) return;
