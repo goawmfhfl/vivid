@@ -13,10 +13,11 @@ const ALT_TEXTS = [
   "VIVID 기록 가이드 2단계",
   "VIVID 기록 가이드 3단계",
   "VIVID 기록 가이드 4단계",
+  "VIVID 기록 가이드 5단계",
 ] as const;
 
 interface RecordingGuideContentProps {
-  images: [StaticImageData, StaticImageData, StaticImageData, StaticImageData];
+  images: [StaticImageData, StaticImageData, StaticImageData, StaticImageData, StaticImageData];
 }
 
 export function RecordingGuideContent({ images }: RecordingGuideContentProps) {
