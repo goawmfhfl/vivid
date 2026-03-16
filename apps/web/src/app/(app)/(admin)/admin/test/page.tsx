@@ -16,7 +16,6 @@ type CronResult = Record<string, unknown>;
 type MissingWeeklyIdea = {
   kstDate: string;
   type: string;
-  contentPreview: string;
 };
 
 type MissingWeeklyProUser = {
@@ -115,6 +114,7 @@ export default function AdminTestPage() {
   const [monthlyReportBaseDate, setMonthlyReportBaseDate] = useState("");
   const [missingUsersPage, setMissingUsersPage] = useState("1");
   const [missingUsersLimit, setMissingUsersLimit] = useState("20");
+  const [missingUsersBaseDate, setMissingUsersBaseDate] = useState("");
   const [missingUsersResult, setMissingUsersResult] =
     useState<MissingWeeklyProUsersResult | null>(null);
   const [missingUsersError, setMissingUsersError] = useState<string | null>(null);
@@ -417,12 +417,6 @@ export default function AdminTestPage() {
     }
   };
 
-  const getDebugBaseDateByTab = (): string => {
-    if (cronSubTab === "report") return reportBaseDate.trim();
-    if (cronSubTab === "monthlyReport") return monthlyReportBaseDate.trim();
-    return baseDate.trim();
-  };
-
   const handleFetchMissingWeeklyProUsers = async () => {
     const pageValue = Math.max(parseInt(missingUsersPage || "1", 10) || 1, 1);
     const limitValue = Math.min(
@@ -432,7 +426,7 @@ export default function AdminTestPage() {
     const params = new URLSearchParams();
     params.set("page", String(pageValue));
     params.set("limit", String(limitValue));
-    const baseDateValue = getDebugBaseDateByTab();
+    const baseDateValue = missingUsersBaseDate.trim();
     if (baseDateValue) params.set("baseDate", baseDateValue);
 
     setIsMissingUsersLoading(true);
@@ -547,7 +541,7 @@ export default function AdminTestPage() {
           미생성 Pro 유저 조회 (주간 기준)
         </h3>
         <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
-          현재 탭의 baseDate 값을 기준으로, 해당 주차에 weekly_vivid가 없고 vivid/dream 기록이 있는 Pro 유저를 조회합니다.
+          현재 탭의 baseDate 값을 기준으로, 해당 주차에 weekly_vivid가 없고 기록(type 무관)이 있는 Pro 유저를 조회합니다.
         </p>
       </div>
 
@@ -555,16 +549,19 @@ export default function AdminTestPage() {
         <div className="space-y-2">
           <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>기준 baseDate</label>
           <input
-            type="text"
-            value={getDebugBaseDateByTab() || "(미입력: 오늘 기준 직전 주)"}
-            readOnly
+            type="date"
+            value={missingUsersBaseDate}
+            onChange={(e) => setMissingUsersBaseDate(e.target.value)}
             className="w-full rounded-lg px-3 py-2 text-sm"
             style={{
               border: `1px solid ${COLORS.border.input}`,
               backgroundColor: COLORS.background.cardElevated,
-              color: COLORS.text.secondary,
+              color: COLORS.text.primary,
             }}
           />
+          <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+            비워두면 오늘 기준 직전 주(일~토)로 조회합니다.
+          </p>
         </div>
         <div className="space-y-2">
           <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>page</label>
@@ -746,7 +743,7 @@ export default function AdminTestPage() {
                     <div className="space-y-1">
                       {target.ideas.map((idea, index) => (
                         <p key={`${target.userId}-${idea.kstDate}-${index}`} className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
-                          [{idea.kstDate}] {idea.type}: {idea.contentPreview}
+                          [{idea.kstDate}] {idea.type}
                         </p>
                       ))}
                     </div>

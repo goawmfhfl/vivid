@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@upstash/qstash";
+import { createHash } from "node:crypto";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
 import { CRON_BATCH } from "@/constants/cron";
 import {
-  getPreviousWeekSunToSatKstRange,
+  getWeekSunToSatKstRange,
   isValidDateString,
 } from "../update-persona/helpers";
 
@@ -24,6 +25,36 @@ type WeeklyReportBatchPayload = {
   startDate: string;
   endDate: string;
 };
+
+function hashForDedup(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 20);
+}
+
+function getBatchDeduplicationId(payload: WeeklyReportBatchPayload): string {
+  const idsHash = hashForDedup(payload.userIds.join(","));
+  return [
+    "weekly-report-batch",
+    payload.startDate,
+    payload.endDate,
+    idsHash,
+    String(payload.userIds.length),
+  ].join("_");
+}
+
+function getNextPageDeduplicationId(
+  startDate: string,
+  endDate: string,
+  nextPage: number,
+  limit: number
+): string {
+  return [
+    "weekly-report-next-page",
+    startDate,
+    endDate,
+    String(nextPage),
+    String(limit),
+  ].join("_");
+}
 
 function getQstashClient(): Client {
   const token = process.env.QSTASH_TOKEN;
@@ -88,8 +119,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { startDate, endDate } =
-      getPreviousWeekSunToSatKstRange(baseDate || undefined);
+    const { startDate, endDate } = getWeekSunToSatKstRange(baseDate || undefined);
 
     const supabase = getServiceSupabase();
 
@@ -152,7 +182,6 @@ export async function GET(request: NextRequest) {
         .from(API_ENDPOINTS.RECORDS)
         .select("user_id")
         .in("user_id", userIdsBefore)
-        .in("type", ["vivid", "dream"])
         .gte("kst_date", startDate)
         .lte("kst_date", endDate);
 
@@ -178,6 +207,7 @@ export async function GET(request: NextRequest) {
 
     if (!users.length) {
       let nextPageScheduled = false;
+      let nextPageScheduleError: string | null = null;
       if (nextPage) {
         const baseUrl = process.env.QSTASH_CALLBACK_URL || request.nextUrl.origin;
         const cronSecret = process.env.CRON_SECRET;
@@ -192,14 +222,35 @@ export async function GET(request: NextRequest) {
         if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
 
         if (cronSecret) {
-          await qstash.publishJSON({
-            url: nextUrl.toString(),
-            body: {},
-            method: "GET",
-            headers: { Authorization: `Bearer ${cronSecret}` },
-            delay: "30s",
-          });
-          nextPageScheduled = true;
+          try {
+            await qstash.publishJSON({
+              url: nextUrl.toString(),
+              body: {},
+              method: "GET",
+              headers: { Authorization: `Bearer ${cronSecret}` },
+              delay: "30s",
+              deduplicationId: getNextPageDeduplicationId(
+                startDate,
+                endDate,
+                nextPage,
+                limit
+              ),
+            });
+            nextPageScheduled = true;
+          } catch (error) {
+            nextPageScheduleError =
+              error instanceof Error ? error.message : String(error);
+            console.error(
+              "[cron] generate-weekly-vivid-report failed to schedule next page:",
+              {
+                nextPage,
+                limit,
+                startDate,
+                endDate,
+                error: nextPageScheduleError,
+              }
+            );
+          }
         }
       }
       return NextResponse.json({
@@ -211,6 +262,7 @@ export async function GET(request: NextRequest) {
         batches: 0,
         nextPage,
         ...(nextPageScheduled && { nextPageScheduled: true }),
+        ...(nextPageScheduleError && { nextPageScheduleError }),
         startDate,
         endDate,
       });
@@ -233,18 +285,64 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    await Promise.all(
-      batches.map((payload) =>
+    const publishResults = await Promise.allSettled(
+      batches.map((payload, index) =>
         qstash.publishJSON({
           url: batchUrl,
           body: payload,
-        })
+          deduplicationId: getBatchDeduplicationId(payload),
+        }).then(() => ({
+          index,
+          size: payload.userIds.length,
+          firstUserId: payload.userIds[0] || "none",
+          lastUserId: payload.userIds[payload.userIds.length - 1] || "none",
+          deduplicationId: getBatchDeduplicationId(payload),
+        }))
       )
     );
 
-    console.log("[cron] generate-weekly-vivid-report published batches:", batches.length);
+    const publishedBatches = publishResults.filter(
+      (result) => result.status === "fulfilled"
+    ).length;
+    const failedBatchDetails = publishResults
+      .map((result, index) => {
+        if (result.status === "fulfilled") return null;
+        const payload = batches[index];
+        const reason =
+          result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason);
+        return {
+          index,
+          size: payload.userIds.length,
+          firstUserId: payload.userIds[0] || "none",
+          lastUserId: payload.userIds[payload.userIds.length - 1] || "none",
+          deduplicationId: getBatchDeduplicationId(payload),
+          reason,
+        };
+      })
+      .filter(
+        (
+          value
+        ): value is {
+          index: number;
+          size: number;
+          firstUserId: string;
+          lastUserId: string;
+          deduplicationId: string;
+          reason: string;
+        } => value !== null
+      );
+
+    console.log("[cron] generate-weekly-vivid-report published batches:", {
+      attemptedBatches: batches.length,
+      publishedBatches,
+      failedBatches: failedBatchDetails.length,
+      failedBatchDetails,
+    });
 
     let nextPageScheduled = false;
+    let nextPageScheduleError: string | null = null;
     if (nextPage) {
       const cronSecret = process.env.CRON_SECRET;
       const nextPath = `${baseUrl}/api/cron/generate-weekly-vivid-report`;
@@ -257,14 +355,35 @@ export async function GET(request: NextRequest) {
       if (baseDate) nextUrl.searchParams.set("baseDate", baseDate);
 
       if (cronSecret) {
-        await qstash.publishJSON({
-          url: nextUrl.toString(),
-          body: {},
-          method: "GET",
-          headers: { Authorization: `Bearer ${cronSecret}` },
-          delay: "30s",
-        });
-        nextPageScheduled = true;
+        try {
+          await qstash.publishJSON({
+            url: nextUrl.toString(),
+            body: {},
+            method: "GET",
+            headers: { Authorization: `Bearer ${cronSecret}` },
+            delay: "30s",
+            deduplicationId: getNextPageDeduplicationId(
+              startDate,
+              endDate,
+              nextPage,
+              limit
+            ),
+          });
+          nextPageScheduled = true;
+        } catch (error) {
+          nextPageScheduleError =
+            error instanceof Error ? error.message : String(error);
+          console.error(
+            "[cron] generate-weekly-vivid-report failed to schedule next page:",
+            {
+              nextPage,
+              limit,
+              startDate,
+              endDate,
+              error: nextPageScheduleError,
+            }
+          );
+        }
       }
     }
 
@@ -275,8 +394,12 @@ export async function GET(request: NextRequest) {
       batchSize,
       users: users.length,
       batches: batches.length,
+      publishedBatches,
+      failedBatches: failedBatchDetails.length,
+      failedBatchDetails,
       nextPage,
       ...(nextPageScheduled && { nextPageScheduled: true }),
+      ...(nextPageScheduleError && { nextPageScheduleError }),
       startDate,
       endDate,
     });

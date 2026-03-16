@@ -136,11 +136,19 @@ export async function POST(request: NextRequest) {
 
     const updatedCount = results.filter((r) => r.status === "updated").length;
     const skippedCount = results.length - updatedCount;
+    const skippedByReason = results
+      .filter((r) => r.status === "skipped")
+      .reduce<Record<string, number>>((acc, result) => {
+        const reason = result.reason || "unknown";
+        acc[reason] = (acc[reason] || 0) + 1;
+        return acc;
+      }, {});
 
     console.log("[cron] generate-weekly-vivid-report batch processed:", {
       processed: results.length,
       updated: updatedCount,
       skipped: skippedCount,
+      skippedByReason,
     });
 
     return NextResponse.json({
@@ -148,6 +156,7 @@ export async function POST(request: NextRequest) {
       processed: results.length,
       updated: updatedCount,
       skipped: skippedCount,
+      skippedByReason,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
@@ -14,6 +14,9 @@ import { useModalStore } from "@/store/useModalStore";
 import { COLORS } from "@/lib/design-system";
 import { CandidatesNoticeBox } from "./CandidatesNoticeBox";
 import { fetchWeeklyTrends } from "@/hooks/useWeeklyTrends";
+
+// week_end가 2026-03-07(포함) 이하인 과거 주차는 노출하지 않음
+const MIN_VISIBLE_WEEK_END = "2026-03-08";
 
 // 주간 후보 아이템 컴포넌트
 function WeeklyCandidateItem({
@@ -217,9 +220,11 @@ export function WeeklyCandidatesSection() {
     openSuccessModal,
   } = useModalStore();
 
+
   // 타이머 기반 progress 상태 (주별로 관리 -> 현재 생성중인 주차에 대해서만 단일 값 관리)
   const [timerProgress, setTimerProgress] = useState<number | null>(null);
   const [timerStartTime, setTimerStartTime] = useState<number | null>(null);
+  const isCreatingRef = useRef(false);
 
   // 진행 상태 추적 (테스트 환경에서만 - 요금 모달 자동 열기용)
   useEffect(() => {
@@ -268,7 +273,15 @@ export function WeeklyCandidatesSection() {
 
   // 필터링 로직 적용: 기준 날짜(오늘, KST 기준)를 기준으로 생성 가능한 주간 vivid 필터링
   const candidatesForCreation = useMemo(() => {
-    return filterWeeklyCandidatesForCreation(candidates, new Date());
+    const baseFiltered = filterWeeklyCandidatesForCreation(candidates, new Date());
+    const minVisibleWeekEndDate = new Date(`${MIN_VISIBLE_WEEK_END}T00:00:00+09:00`);
+
+    return baseFiltered.filter((candidate) => {
+      const weekStartDate = new Date(`${candidate.week_start}T00:00:00+09:00`);
+      const weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+      return weekEndDate >= minVisibleWeekEndDate;
+    });
   }, [candidates]);
 
   const getWeekRange = (weekStart: string) => {
@@ -297,10 +310,11 @@ export function WeeklyCandidatesSection() {
 
   const handleCreateFeedback = async (weekStart: string) => {
     // 이미 생성 중이면 무시
-    if (generatingWeek) return;
+    if (generatingWeek || isCreatingRef.current) return;
 
     const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
+    isCreatingRef.current = true;
     setGeneratingWeek(weekStart);
     setTimerStartTime(Date.now());
     setTimerProgress(0);
@@ -340,7 +354,6 @@ export function WeeklyCandidatesSection() {
       }
 
       const weekEnd = getWeekEnd(weekStart);
-      const apiStartTime = Date.now();
 
       // 일반 API 호출
       const feedbackData = await createWeeklyVivid.mutateAsync({
@@ -348,24 +361,6 @@ export function WeeklyCandidatesSection() {
         end: weekEnd,
         timezone: "Asia/Seoul",
       });
-
-      const apiEndTime = Date.now();
-      const durationSeconds = (apiEndTime - apiStartTime) / 1000;
-
-      // 생성 시간을 포함하여 다시 요청 (업데이트)
-      if (feedbackData?.id) {
-        try {
-          await createWeeklyVivid.mutateAsync({
-            start: weekStart,
-            end: weekEnd,
-            timezone: "Asia/Seoul",
-            generation_duration_seconds: durationSeconds,
-          });
-        } catch (error) {
-          // 업데이트 실패해도 무시 (이미 생성은 완료됨)
-          console.warn("생성 시간 업데이트 실패:", error);
-        }
-      }
 
       // 타이머 정리 및 완료 표시
       setTimerStartTime(null);
@@ -458,6 +453,7 @@ export function WeeklyCandidatesSection() {
       // 전역 에러 모달 표시 (재시도 없음)
       openErrorModal(errorMessage);
     } finally {
+      isCreatingRef.current = false;
       setGeneratingWeek(null);
     }
   };

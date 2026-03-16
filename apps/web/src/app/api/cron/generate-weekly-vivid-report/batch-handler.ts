@@ -7,6 +7,7 @@ import { fetchRecordsByDateRange, saveWeeklyVivid } from "@/app/api/weekly-vivid
 import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { generateWeeklyVividFromRecordsWithProgress } from "@/app/api/weekly-vivid/ai-service-stream";
 import { verifySubscription } from "@/lib/subscription-utils";
+import { API_ENDPOINTS } from "@/constants";
 import { logCronFailureAsync } from "@/lib/ai-usage-logger";
 import type { WeeklyVivid } from "@/types/weekly-vivid";
 import type { WithTracking } from "@/app/api/types";
@@ -49,6 +50,16 @@ export async function generateWeeklyReportForUser(
   const { isPro } = await verifySubscription(userId);
   if (!isPro) {
     return { userId, status: "skipped", reason: "not_pro" };
+  }
+
+  const { data: existingWeekly } = await supabase
+    .from(API_ENDPOINTS.WEEKLY_VIVID)
+    .select("id")
+    .eq("user_id", userId)
+    .eq("week_start", startDate)
+    .maybeSingle();
+  if (existingWeekly) {
+    return { userId, status: "skipped", reason: "already_exists" };
   }
 
   let records = [] as Awaited<ReturnType<typeof fetchRecordsByDateRange>>;

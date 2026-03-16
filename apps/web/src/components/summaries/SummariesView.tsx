@@ -6,6 +6,7 @@ import { ErrorDisplay } from "../ui/ErrorDisplay";
 import type { PeriodSummary } from "@/types/Entry";
 import { WeeklySummariesTab } from "./WeeklySummariesTab";
 import { MonthlySummariesTab } from "./MonthlySummariesTab";
+import { WeeklyCandidatesSection } from "./WeeklyCandidatesSection";
 import { useWeeklyVividList } from "@/hooks/useWeeklyVivid";
 import { useMonthlyVividList } from "@/hooks/useMonthlyVivid";
 import type { WeeklyVividListItem } from "@/types/weekly-vivid";
@@ -207,7 +208,10 @@ export function SummariesView() {
               />
             </div>
           ) : (
-            <WeeklySummariesTab summaries={weeklySummaries} />
+            <>
+              <WeeklyCandidatesSection />
+              <WeeklySummariesTab summaries={weeklySummaries} />
+            </>
           )}
         </TabsContent>
 

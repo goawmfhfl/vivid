@@ -19,6 +19,7 @@ import { withAuth } from "@/components/auth";
 import { List } from "lucide-react";
 import { PullToRefresh } from "@/components/common/PullToRefresh";
 import { QUERY_KEYS } from "@/constants";
+import { WeeklyCandidatesSection } from "@/components/summaries/WeeklyCandidatesSection";
 
 function WeeklyReportsPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ function WeeklyReportsPage() {
           showBackButton={true}
           onBack={() => router.push("/reports")}
         />
-
+        <WeeklyCandidatesSection />
       {/* 주간 리스트 보러가기 버튼 - 하늘빛 블루 */}
       <div className="mb-12">
         <button

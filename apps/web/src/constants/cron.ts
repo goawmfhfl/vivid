@@ -4,7 +4,7 @@
  * - process.env 오버라이드는 제거 (상수로 일원화)
  */
 export const CRON_BATCH = {
-  WEEKLY_REPORT: 10,
+  WEEKLY_REPORT: 5,
   MONTHLY_REPORT: 5,
   USER_TRENDS_WEEKLY: 5,
   USER_TRENDS_MONTHLY: 5,

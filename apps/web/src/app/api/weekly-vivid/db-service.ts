@@ -59,7 +59,7 @@ export async function fetchDailyVividByRange(
 
 /**
  * 날짜 범위로 vivid-records 조회 (주간 피드백 생성용)
- * 해당 주의 모든 VIVID 기록을 가져옴
+ * 해당 주의 모든 vivid-records를 가져옴 (type 무관)
  */
 export async function fetchRecordsByDateRange(
   supabase: SupabaseClient,
@@ -71,7 +71,6 @@ export async function fetchRecordsByDateRange(
     .from("vivid_records")
     .select("*")
     .eq("user_id", userId)
-    .in("type", ["vivid", "dream"]) // VIVID 타입만 조회
     .gte("kst_date", start)
     .lte("kst_date", end)
     .order("kst_date", { ascending: true })

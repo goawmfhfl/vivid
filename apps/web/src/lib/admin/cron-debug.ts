@@ -1,8 +1,7 @@
 import { API_ENDPOINTS } from "@/constants";
-import { decrypt } from "@/lib/encryption";
 import { getServiceSupabase } from "@/lib/supabase-service";
 import { isProFromMetadata } from "@/lib/subscription-utils";
-import { getPreviousWeekSunToSatKstRange } from "@/app/api/cron/update-persona/helpers";
+import { getWeekSunToSatKstRange } from "@/app/api/cron/update-persona/helpers";
 
 type AdminUserLite = {
   id: string;
@@ -14,7 +13,6 @@ type RecordRow = {
   user_id: string | null;
   kst_date: string;
   type: string;
-  content: string;
 };
 
 type WeeklyVividRow = {
@@ -24,7 +22,6 @@ type WeeklyVividRow = {
 export type MissingWeeklyIdea = {
   kstDate: string;
   type: string;
-  contentPreview: string;
 };
 
 export type MissingWeeklyProUser = {
@@ -60,20 +57,6 @@ export type MissingWeeklyProUsersQueryResult = {
     withIdeasUsers: number;
   };
 };
-
-function safeDecryptContent(value: string): string {
-  try {
-    return decrypt(value);
-  } catch {
-    return value;
-  }
-}
-
-function toPreview(value: string, max = 120): string {
-  const normalized = value.replace(/\s+/g, " ").trim();
-  if (normalized.length <= max) return normalized;
-  return `${normalized.slice(0, max)}...`;
-}
 
 function chunkArray<T>(items: T[], size: number): T[][]
 {
@@ -172,9 +155,8 @@ async function fetchIdeasByUser(
   for (const chunk of chunks) {
     const { data, error } = await supabase
       .from(API_ENDPOINTS.RECORDS)
-      .select("user_id, kst_date, type, content")
+      .select("user_id, kst_date, type")
       .in("user_id", chunk)
-      .in("type", ["vivid", "dream"])
       .gte("kst_date", weekStart)
       .lte("kst_date", weekEnd)
       .order("kst_date", { ascending: true });
@@ -197,7 +179,7 @@ async function fetchIdeasByUser(
 export async function queryMissingWeeklyProUsers(
   query: MissingWeeklyProUsersQuery
 ): Promise<MissingWeeklyProUsersQueryResult> {
-  const { startDate, endDate } = getPreviousWeekSunToSatKstRange(query.baseDate);
+  const { startDate, endDate } = getWeekSunToSatKstRange(query.baseDate);
   const allUsers = await listAllUsers();
   const proUsers = allUsers.filter((user) =>
     isProFromMetadata(user.user_metadata as Record<string, unknown> | undefined)
@@ -218,7 +200,6 @@ export async function queryMissingWeeklyProUsers(
       const ideas: MissingWeeklyIdea[] = records.slice(0, 5).map((record) => ({
         kstDate: record.kst_date,
         type: record.type,
-        contentPreview: toPreview(safeDecryptContent(record.content)),
       }));
 
       return {
