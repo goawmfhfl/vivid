@@ -22,7 +22,10 @@ export function BottomNavigation() {
     const params = new URLSearchParams(window.location.search);
     const isEmbedded = params.get("embed") === "1";
     const nativePlatform = params.get("native_platform");
-    setIsAndroidNativeApp(isEmbedded && nativePlatform === "android");
+    const hasNativeBridge =
+      typeof (window as { ReactNativeWebView?: { postMessage?: unknown } })
+        .ReactNativeWebView?.postMessage === "function";
+    setIsAndroidNativeApp((isEmbedded && nativePlatform === "android") || hasNativeBridge);
   }, []);
 
   useEffect(() => {
@@ -139,7 +142,9 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        paddingBottom: isAndroidNativeApp ? "env(safe-area-inset-bottom, 0px)" : 0,
+        paddingBottom: isAndroidNativeApp
+          ? "max(var(--native-safe-bottom, 0px), env(safe-area-inset-bottom, 0px))"
+          : 0,
         backgroundColor: "rgba(250, 250, 248, 0.96)",
         borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "35"),
         borderTopWidth: "1.5px",
