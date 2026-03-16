@@ -163,7 +163,8 @@ export function getPreviousWeekSunToSatKstRange(baseDate?: string): {
   endDate: string;
 } {
   const refDateStr = baseDate || getKSTDateString();
-  const ref = new Date(`${refDateStr}T00:00:00+09:00`);
+  const [year, month, day] = refDateStr.split("-").map(Number);
+  const ref = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
   const dayOfWeek = ref.getUTCDay(); // 0=Sun, 1=Mon, ...
   const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
   const lastSunday = new Date(ref);

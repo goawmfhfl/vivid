@@ -9,6 +9,7 @@ import {
   SPACING,
   TYPOGRAPHY,
 } from "@/lib/design-system";
+import { getKSTDateString } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { TestTube, CreditCard, User, TrendingUp, FileText } from "lucide-react";
 
@@ -146,6 +147,16 @@ export default function AdminTestPage() {
     subscriptionEventType as (typeof EVENTS_WITH_PLAN)[number]
   );
 
+  const getCurrentWeekSundayInKst = (): string => {
+    const todayKst = getKSTDateString();
+    const [year, month, day] = todayKst.split("-").map(Number);
+    const referenceDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+    const dayOfWeek = referenceDate.getUTCDay();
+    const weekSunday = new Date(referenceDate);
+    weekSunday.setUTCDate(referenceDate.getUTCDate() - dayOfWeek);
+    return getKSTDateString(weekSunday);
+  };
+
   const executeCron = async (
     path: string,
     options?: { sync?: boolean; type?: "weekly" | "monthly"; batchSize?: string; concurrency?: string }
@@ -261,6 +272,32 @@ export default function AdminTestPage() {
     try {
       const params = new URLSearchParams();
       if (reportBaseDate.trim()) params.set("baseDate", reportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-weekly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setReportResult(data as CronResult);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsReportLoading(false);
+    }
+  };
+
+  const handleRunWeeklyReportAtSundayMidnightKst = async () => {
+    setIsReportLoading(true);
+    setReportError(null);
+    setReportResult(null);
+    try {
+      const simulatedSundayBaseDate = getCurrentWeekSundayInKst();
+      setReportBaseDate(simulatedSundayBaseDate);
+
+      const params = new URLSearchParams();
+      params.set("baseDate", simulatedSundayBaseDate);
       const fullUrl = `/api/cron/generate-weekly-vivid-report?${params.toString()}`;
       const response = await fetch(fullUrl, {
         headers: { Authorization: `Bearer ${cronSecret}` },
@@ -1362,6 +1399,31 @@ export default function AdminTestPage() {
                   <pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(reportResult, null, 2)}</pre>
                 </div>
               )}
+              <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+                <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+                  일요일 00:00 KST 기준 실행
+                </h3>
+                <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+                  자동 주간 크론과 동일하게 전체 Pro 유저 대상 비동기 배치 경로를 실행합니다.
+                  실행 시 baseDate는 이번 주 일요일(KST)로 자동 설정됩니다.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRunWeeklyReportAtSundayMidnightKst}
+                  disabled={isReportLoading || !cronSecret.trim()}
+                  className={cn(
+                    "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                    BUTTON_STYLES.primary.borderRadius,
+                    BUTTON_STYLES.primary.padding
+                  )}
+                  style={{
+                    backgroundColor: BUTTON_STYLES.primary.background,
+                    color: BUTTON_STYLES.primary.color,
+                  }}
+                >
+                  {isReportLoading ? "실행 중..." : "일요일 00:00 KST 주간 크론 실행"}
+                </button>
+              </div>
             </div>
           )}
 

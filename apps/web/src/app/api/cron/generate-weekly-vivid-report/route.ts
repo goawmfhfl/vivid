@@ -6,7 +6,7 @@ import { isProFromMetadata, verifySubscription } from "@/lib/subscription-utils"
 import { API_ENDPOINTS } from "@/constants";
 import { CRON_BATCH } from "@/constants/cron";
 import {
-  getWeekSunToSatKstRange,
+  getPreviousWeekSunToSatKstRange,
   isValidDateString,
 } from "../update-persona/helpers";
 
@@ -119,7 +119,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { startDate, endDate } = getWeekSunToSatKstRange(baseDate || undefined);
+    const { startDate, endDate } = getPreviousWeekSunToSatKstRange(
+      baseDate || undefined
+    );
 
     const supabase = getServiceSupabase();
 
