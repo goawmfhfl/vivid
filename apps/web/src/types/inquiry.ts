@@ -23,12 +23,16 @@ export type InquiryStatus =
  */
 export interface Inquiry {
   id: string;
-  user_id: string;
+  user_id: string | null;
   type: InquiryType;
   title: string;
   content: string;
   images: string[]; // 이미지 URL 배열
   status: InquiryStatus;
+  requester_email?: string | null;
+  requester_name?: string | null;
+  request_source?: string;
+  is_authenticated_request?: boolean;
   admin_response: string | null;
   admin_response_images: string[]; // 관리자 답변 이미지 URL 배열
   created_at: string;

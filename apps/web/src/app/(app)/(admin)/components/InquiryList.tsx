@@ -299,6 +299,23 @@ export function InquiryList() {
     }
   };
 
+  const getRequesterLabel = (inquiry: InquiryWithUser) => {
+    if (inquiry.is_authenticated_request || inquiry.user_id) {
+      return "회원 요청";
+    }
+    return "비회원 요청";
+  };
+
+  const getRequesterDisplayName = (inquiry: InquiryWithUser) => {
+    return (
+      inquiry.user?.name ||
+      inquiry.user?.email ||
+      inquiry.requester_name ||
+      inquiry.requester_email ||
+      "외부 요청"
+    );
+  };
+
   if (loading && inquiries.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -454,8 +471,11 @@ export function InquiryList() {
                       className="text-sm mt-1"
                       style={{ color: COLORS.text.secondary }}
                     >
-                      {inquiry.user?.name || inquiry.user?.email || "알 수 없음"} ·{" "}
+                      {getRequesterDisplayName(inquiry)} ·{" "}
                       {new Date(inquiry.created_at).toLocaleString("ko-KR")}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: COLORS.text.tertiary }}>
+                      {getRequesterLabel(inquiry)}
                     </p>
                   </div>
                   <div className="flex gap-2">

@@ -9,6 +9,7 @@ import { fetchRecordsByDateRange } from "@/app/api/monthly-vivid/records-db";
 import { fetchTodoItemsByDateRange } from "@/app/api/daily-vivid/db-service";
 import { verifySubscription } from "@/lib/subscription-utils";
 import { API_ENDPOINTS } from "@/constants";
+import { logCronFailureAsync } from "@/lib/ai-usage-logger";
 import type { MonthlyVivid } from "@/types/monthly-vivid";
 import type { WithTracking } from "@/app/api/types";
 import { removeTrackingFromObject } from "@/app/api/utils/remove-tracking";
@@ -55,6 +56,9 @@ export async function generateMonthlyReportForUser(
   startDate: string,
   endDate: string
 ): Promise<MonthlyReportResult> {
+  const traceId = `monthly-cron-${userId}-${month}-${Date.now()}`;
+  const runStartMs = Date.now();
+  const modelName = "gemini-3.1-pro-preview";
   const { isPro } = await verifySubscription(userId);
   if (!isPro) {
     return { userId, status: "skipped", reason: "not_pro" };
@@ -73,14 +77,53 @@ export async function generateMonthlyReportForUser(
     return { userId, status: "skipped", reason: "already_exists" };
   }
 
-  const records = await fetchRecordsByDateRange(
-    supabase,
-    userId,
-    startDate,
-    endDate
-  );
+  let records = [] as Awaited<ReturnType<typeof fetchRecordsByDateRange>>;
+  try {
+    records = await fetchRecordsByDateRange(
+      supabase,
+      userId,
+      startDate,
+      endDate
+    );
+  } catch (error) {
+    logCronFailureAsync({
+      userId,
+      requestType: "monthly_vivid",
+      flow: "monthly_vivid",
+      status: "failed",
+      reasonCode: "UNEXPECTED_ERROR",
+      failedStep: "data_fetch",
+      periodStart: startDate,
+      periodEnd: endDate,
+      isProSnapshot: true,
+      model: modelName,
+      durationMs: Date.now() - runStartMs,
+      inputCount: 0,
+      auxCount: null,
+      traceId,
+      error,
+    });
+    return { userId, status: "skipped", reason: "records_fetch_failed" };
+  }
 
   if (records.length === 0) {
+    logCronFailureAsync({
+      userId,
+      requestType: "monthly_vivid",
+      flow: "monthly_vivid",
+      status: "skipped",
+      reasonCode: "NO_DATA",
+      failedStep: "data_fetch",
+      periodStart: startDate,
+      periodEnd: endDate,
+      isProSnapshot: true,
+      model: modelName,
+      durationMs: Date.now() - runStartMs,
+      inputCount: 0,
+      auxCount: null,
+      traceId,
+      error: "No records found for monthly range",
+    });
     return { userId, status: "skipped", reason: "no_records" };
   }
 
@@ -101,23 +144,69 @@ export async function generateMonthlyReportForUser(
 
   const dateRange = { start_date: startDate, end_date: endDate };
 
-  const todoData = await fetchTodoItemsByDateRange(
-    supabase,
-    userId,
-    startDate,
-    endDate
-  );
+  let todoData = null as Awaited<ReturnType<typeof fetchTodoItemsByDateRange>> | null;
+  try {
+    todoData = await fetchTodoItemsByDateRange(
+      supabase,
+      userId,
+      startDate,
+      endDate
+    );
+  } catch (error) {
+    logCronFailureAsync({
+      userId,
+      requestType: "monthly_vivid",
+      flow: "monthly_vivid",
+      status: "failed",
+      reasonCode: "UNEXPECTED_ERROR",
+      failedStep: "data_fetch",
+      periodStart: startDate,
+      periodEnd: endDate,
+      isProSnapshot: true,
+      model: modelName,
+      durationMs: Date.now() - runStartMs,
+      inputCount: records.length,
+      auxCount: null,
+      traceId,
+      error,
+    });
+    return { userId, status: "skipped", reason: "todo_fetch_failed" };
+  }
 
-  const monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
-    records,
-    month,
-    dateRange,
-    isPro,
-    userId,
-    userName,
-    personaContext,
-    todoData
-  );
+  let monthlyVivid = null as Awaited<
+    ReturnType<typeof generateMonthlyVividFromRecordsWithProgress>
+  > | null;
+  try {
+    monthlyVivid = await generateMonthlyVividFromRecordsWithProgress(
+      records,
+      month,
+      dateRange,
+      isPro,
+      userId,
+      userName,
+      personaContext,
+      todoData || undefined
+    );
+  } catch (error) {
+    logCronFailureAsync({
+      userId,
+      requestType: "monthly_vivid",
+      flow: "monthly_vivid",
+      status: "failed",
+      reasonCode: "AI_GENERATION_FAILED",
+      failedStep: "ai_generate",
+      periodStart: startDate,
+      periodEnd: endDate,
+      isProSnapshot: true,
+      model: modelName,
+      durationMs: Date.now() - runStartMs,
+      inputCount: records.length,
+      auxCount: todoData?.items?.length ?? null,
+      traceId,
+      error,
+    });
+    return { userId, status: "skipped", reason: "monthly_generation_failed" };
+  }
 
   if (!monthlyVivid.month_label) {
     const [year, monthNum] = month.split("-");
@@ -128,7 +217,28 @@ export async function generateMonthlyReportForUser(
   }
 
   const cleanedFeedback = removeTrackingInfo(monthlyVivid);
-  await saveMonthlyVivid(supabase, userId, cleanedFeedback);
+  try {
+    await saveMonthlyVivid(supabase, userId, cleanedFeedback);
+  } catch (error) {
+    logCronFailureAsync({
+      userId,
+      requestType: "monthly_vivid",
+      flow: "monthly_vivid",
+      status: "failed",
+      reasonCode: "DB_SAVE_FAILED",
+      failedStep: "save_result",
+      periodStart: startDate,
+      periodEnd: endDate,
+      isProSnapshot: true,
+      model: modelName,
+      durationMs: Date.now() - runStartMs,
+      inputCount: records.length,
+      auxCount: todoData?.items?.length ?? null,
+      traceId,
+      error,
+    });
+    return { userId, status: "skipped", reason: "monthly_save_failed" };
+  }
 
   return { userId, status: "updated" };
 }

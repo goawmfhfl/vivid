@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { PeriodSummary } from "@/types/Entry";
-// import { WeeklyCandidatesSection } from "./WeeklyCandidatesSection";
+import { WeeklyCandidatesSection } from "./WeeklyCandidatesSection";
 import { useWeeklyCandidates } from "@/hooks/useWeeklyCandidates";
 import { filterWeeklyCandidatesForCreation } from "../weeklyVivid/weekly-vivid-candidate-filter";
 import { SummaryList } from "./SummaryList";
@@ -52,8 +52,7 @@ export function WeeklySummariesTab({ summaries }: WeeklySummariesTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* 아직 생성되지 않은 주간 vivid 알림 - 일단 비표시 */}
-      {/* <WeeklyCandidatesSection /> */}
+      <WeeklyCandidatesSection />
 
       {/* 주간 VIVID 리스트 섹션 */}
       {currentSummaries.length > 0 && (

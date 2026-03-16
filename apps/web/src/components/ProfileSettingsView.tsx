@@ -8,8 +8,7 @@ import {
   ChevronRight,
   Megaphone,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getLoginPath } from "@/lib/navigation";
+import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUpdateProfile } from "@/hooks/useUpdateProfile";
 import { NameField } from "./forms/NameField";
@@ -17,7 +16,6 @@ import { EmailField } from "./forms/EmailField";
 import { SubmitButton } from "./forms/SubmitButton";
 import { AuthHeader } from "./forms/AuthHeader";
 import { Checkbox } from "./ui/checkbox";
-import { DeleteAccountDialog } from "./profile/DeleteAccountDialog";
 import { COLORS } from "@/lib/design-system";
 import {
   useKakaoIdentity,
@@ -56,7 +54,6 @@ const SectionCard = ({ title, description, children }: SectionCardProps) => (
 
 export function ProfileSettingsView() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { data: currentUser } = useCurrentUser();
   const updateProfileMutation = useUpdateProfile();
 
@@ -70,7 +67,6 @@ export function ProfileSettingsView() {
   }>({});
   const [_linkSuccess, setLinkSuccess] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [hasEmailProvider, setHasEmailProvider] = useState<boolean>(true);
 
   // 이메일 로그인 유저 여부 (identities에 email provider 있으면 true)
@@ -531,7 +527,7 @@ export function ProfileSettingsView() {
           <div className="mt-6 flex justify-end">
             <button
               type="button"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              onClick={() => router.push("/user/delete")}
               className="text-xs transition-colors hover:underline"
               style={{
                 color: COLORS.text.muted,
@@ -541,19 +537,6 @@ export function ProfileSettingsView() {
             </button>
           </div>
         </form>
-
-        {/* 회원 탈퇴 확인 다이얼로그 */}
-        <DeleteAccountDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          onSuccess={() => {
-            // 탈퇴 성공 시 로그인 페이지로 리다이렉션 (Development/Production 모두)
-            // 로딩 모달이 완료 메시지를 표시한 후 리다이렉션
-            setTimeout(() => {
-              router.push(getLoginPath(searchParams, { deleted: "true" }));
-            }, 500);
-          }}
-        />
       </div>
     </div>
   );

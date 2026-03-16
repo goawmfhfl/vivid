@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
         content: content.trim(),
         images: normalizedImages,
         status: "pending",
+        request_source: "app_inquiry",
+        is_authenticated_request: true,
       })
       .select()
       .single();

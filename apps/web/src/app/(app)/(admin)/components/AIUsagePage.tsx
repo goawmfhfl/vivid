@@ -13,6 +13,9 @@ import {
   DollarSign,
   List,
   ChevronRight,
+  Search,
+  X,
+  Copy,
 } from "lucide-react";
 import {
   BarChart,
@@ -58,6 +61,42 @@ interface ExtendedStats extends AIUsageStats {
   thisMonth: { requests: number; cost_usd: number; cost_krw: number };
 }
 
+type ErrorDetailsPayload = {
+  source?: string;
+  flow?: string;
+  status?: string;
+  reason_code?: string;
+  failed_step?: string;
+  user_id?: string;
+  period_start?: string;
+  period_end?: string;
+  is_pro_snapshot?: boolean;
+  model?: string;
+  duration_ms?: number;
+  input_count?: number;
+  aux_count?: number | null;
+  error?: {
+    name?: string;
+    message?: string;
+    code?: string;
+    status?: number;
+  };
+  stack_top?: string[];
+  trace_id?: string;
+  created_at?: string;
+};
+
+function parseErrorDetails(errorMessage: string | null | undefined): ErrorDetailsPayload | null {
+  if (!errorMessage) return null;
+  try {
+    const parsed = JSON.parse(errorMessage);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as ErrorDetailsPayload;
+  } catch {
+    return null;
+  }
+}
+
 export function AIUsagePage() {
   const router = useRouter();
   const [stats, setStats] = useState<ExtendedStats | null>(null);
@@ -75,6 +114,20 @@ export function AIUsagePage() {
   });
   const [modelFilter, setModelFilter] = useState("");
   const [requestTypeFilter, setRequestTypeFilter] = useState("");
+  const [userSearchInput, setUserSearchInput] = useState("");
+  const [debouncedUserSearch, setDebouncedUserSearch] = useState("");
+  const [selectedErrorRow, setSelectedErrorRow] = useState<(AIUsageDetail & {
+    user_name?: string;
+    user_email?: string;
+  }) | null>(null);
+  const [copiedError, setCopiedError] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUserSearch(userSearchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearchInput]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -104,6 +157,7 @@ export function AIUsagePage() {
         });
         if (modelFilter) params.append("model", modelFilter);
         if (requestTypeFilter) params.append("requestType", requestTypeFilter);
+        if (debouncedUserSearch) params.append("search", debouncedUserSearch);
         const res = await adminApiFetch(`/api/admin/ai-usage/list?${params}`);
         if (!res.ok) throw new Error("목록을 불러오는데 실패했습니다.");
         const data = await res.json();
@@ -116,7 +170,7 @@ export function AIUsagePage() {
       }
     };
     fetchList();
-  }, [listPage, modelFilter, requestTypeFilter]);
+  }, [listPage, modelFilter, requestTypeFilter, debouncedUserSearch]);
 
   if (loading && !stats) {
     return (
@@ -164,6 +218,9 @@ export function AIUsagePage() {
       label,
     })),
   ];
+
+  const selectedParsedError = parseErrorDetails(selectedErrorRow?.error_message);
+  const selectedRawError = selectedErrorRow?.error_message || "";
 
   return (
     <div className="space-y-6">
@@ -356,6 +413,36 @@ export function AIUsagePage() {
             </h3>
           </div>
           <div className="flex flex-wrap gap-2">
+            <div
+              className="relative w-full sm:w-64"
+              style={{ minWidth: "220px" }}
+            >
+              <Search
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: COLORS.text.tertiary }}
+              />
+              <input
+                type="text"
+                value={userSearchInput}
+                onChange={(e) => {
+                  setUserSearchInput(e.target.value);
+                  setListPage(1);
+                }}
+                placeholder="사용자 이름/이메일 검색"
+                className="w-full h-10 pl-9 pr-3 rounded-lg text-sm outline-none transition-colors"
+                style={{
+                  backgroundColor: COLORS.background.base,
+                  border: `1px solid ${COLORS.border.light}`,
+                  color: COLORS.text.primary,
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = COLORS.brand.primary;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = COLORS.border.light;
+                }}
+              />
+            </div>
             <AdminSelect
               value={requestTypeFilter}
               onChange={(e) => {
@@ -411,6 +498,9 @@ export function AIUsagePage() {
                     <th className="px-4 py-3 text-left font-semibold" style={{ color: COLORS.text.primary }}>
                       타입
                     </th>
+                    <th className="px-4 py-3 text-left font-semibold" style={{ color: COLORS.text.primary }}>
+                      상태
+                    </th>
                     <th className="px-4 py-3 text-right font-semibold" style={{ color: COLORS.text.primary }}>
                       토큰
                     </th>
@@ -426,7 +516,9 @@ export function AIUsagePage() {
                       key={row.id}
                       className="cursor-pointer hover:opacity-80 transition-opacity"
                       style={{ borderBottom: `1px solid ${COLORS.border.light}` }}
-                      onClick={() => row.user_id && router.push(`/admin/users/${row.user_id}`)}
+                      onClick={() => {
+                        if (row.user_id) router.push(`/admin/users/${row.user_id}`);
+                      }}
                     >
                       <td className="px-4 py-3" style={{ color: COLORS.text.secondary }}>
                         {new Date(row.created_at).toLocaleString("ko-KR", {
@@ -451,6 +543,32 @@ export function AIUsagePage() {
                       </td>
                       <td className="px-4 py-3" style={{ color: COLORS.text.secondary }}>
                         {REQUEST_TYPE_LABELS[row.request_type] || row.request_type}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!row.success) {
+                              setSelectedErrorRow(row);
+                              setCopiedError(false);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                          style={{
+                            backgroundColor: row.success
+                              ? `${COLORS.status.success}22`
+                              : `${COLORS.status.error}22`,
+                            color: row.success
+                              ? COLORS.status.success
+                              : COLORS.status.error,
+                            cursor: row.success ? "default" : "pointer",
+                          }}
+                          disabled={row.success}
+                          title={row.success ? "성공" : "실패 상세 보기"}
+                        >
+                          {row.success ? "성공" : "실패"}
+                        </button>
                       </td>
                       <td className="px-4 py-3 text-right" style={{ color: COLORS.text.primary }}>
                         {row.total_tokens?.toLocaleString() ?? 0}
@@ -506,6 +624,134 @@ export function AIUsagePage() {
           </>
         )}
       </div>
+
+      {selectedErrorRow && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}
+          onClick={() => setSelectedErrorRow(null)}
+        >
+          <div
+            className="w-full max-w-3xl rounded-2xl p-5 max-h-[85vh] overflow-hidden"
+            style={CARD_STYLES.default}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h4 className="text-lg font-semibold" style={{ color: COLORS.text.primary }}>
+                  실패 상세 정보
+                </h4>
+                <p className="text-sm mt-1" style={{ color: COLORS.text.secondary }}>
+                  요청 ID: {selectedErrorRow.id}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedErrorRow(null)}
+                className="p-2 rounded-lg"
+                style={{ color: COLORS.text.tertiary, backgroundColor: COLORS.background.hover }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[65vh] pr-1 space-y-4">
+              <div
+                className="rounded-lg p-3 text-sm"
+                style={{ backgroundColor: COLORS.background.hover, color: COLORS.text.secondary }}
+              >
+                <div>사용자: {selectedErrorRow.user_name || "알 수 없음"} ({selectedErrorRow.user_email || "-"})</div>
+                <div>생성 시각: {new Date(selectedErrorRow.created_at).toLocaleString("ko-KR")}</div>
+                <div>타입: {REQUEST_TYPE_LABELS[selectedErrorRow.request_type] || selectedErrorRow.request_type}</div>
+                <div>모델: {selectedErrorRow.model}</div>
+              </div>
+
+              {selectedParsedError ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div style={{ color: COLORS.text.secondary }}>flow: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.flow || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>reason_code: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.reason_code || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>failed_step: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.failed_step || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>status: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.status || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>error.status: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.error?.status ?? "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>error.code: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.error?.code || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>period_start: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.period_start || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>period_end: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.period_end || "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>duration_ms: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.duration_ms ?? "-"}</span></div>
+                    <div style={{ color: COLORS.text.secondary }}>trace_id: <span style={{ color: COLORS.text.primary }}>{selectedParsedError.trace_id || "-"}</span></div>
+                  </div>
+
+                  <div
+                    className="rounded-lg p-3 text-sm whitespace-pre-wrap break-words"
+                    style={{ backgroundColor: COLORS.background.hover, color: COLORS.text.primary }}
+                  >
+                    {selectedParsedError.error?.name ? `${selectedParsedError.error.name}: ` : ""}
+                    {selectedParsedError.error?.message || "(에러 메시지 없음)"}
+                  </div>
+
+                  {Array.isArray(selectedParsedError.stack_top) && selectedParsedError.stack_top.length > 0 && (
+                    <div>
+                      <p className="text-sm mb-2" style={{ color: COLORS.text.secondary }}>
+                        stack_top
+                      </p>
+                      <pre
+                        className="rounded-lg p-3 text-xs overflow-x-auto whitespace-pre-wrap break-words"
+                        style={{ backgroundColor: COLORS.background.hover, color: COLORS.text.primary }}
+                      >
+{selectedParsedError.stack_top.join("\n")}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm mb-2" style={{ color: COLORS.text.secondary }}>
+                    raw error_message
+                  </p>
+                  <pre
+                    className="rounded-lg p-3 text-xs overflow-x-auto whitespace-pre-wrap break-words"
+                    style={{ backgroundColor: COLORS.background.hover, color: COLORS.text.primary }}
+                  >
+{selectedRawError || "(빈 에러 메시지)"}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mt-4 pt-4" style={{ borderTop: `1px solid ${COLORS.border.light}` }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  const textToCopy = selectedRawError || JSON.stringify(selectedParsedError || {}, null, 2);
+                  try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    setCopiedError(true);
+                    setTimeout(() => setCopiedError(false), 1500);
+                  } catch {
+                    setCopiedError(false);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm"
+                style={{
+                  backgroundColor: COLORS.background.hover,
+                  color: COLORS.text.primary,
+                }}
+              >
+                <Copy className="w-4 h-4" />
+                {copiedError ? "복사됨" : "에러 복사"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedErrorRow(null)}
+                className="px-3 py-2 rounded-lg text-sm"
+                style={{ backgroundColor: COLORS.brand.primary, color: COLORS.text.white }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

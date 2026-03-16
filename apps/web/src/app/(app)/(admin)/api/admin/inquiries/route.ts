@@ -3,12 +3,16 @@ import { requireAdmin } from "../util/admin-auth";
 import { getServiceSupabase } from "@/lib/supabase-service";
 type InquiryRow = {
   id: string;
-  user_id: string;
+  user_id: string | null;
   type: string;
   title: string;
   content: string;
   images?: string[] | null;
   status: string;
+  requester_email?: string | null;
+  requester_name?: string | null;
+  request_source?: string | null;
+  is_authenticated_request?: boolean | null;
   admin_response?: string | null;
   admin_response_images?: string[] | null;
   created_at: string;
@@ -103,7 +107,11 @@ export async function GET(request: NextRequest) {
 
     // 유저 정보 조회 (Supabase Auth admin API 사용 - user_metadata에서 name 가져오기)
     const userIds = Array.from(
-      new Set((inquiries || []).map((inquiry: InquiryRow) => inquiry.user_id))
+      new Set(
+        (inquiries || [])
+          .map((inquiry: InquiryRow) => inquiry.user_id)
+          .filter((userId): userId is string => Boolean(userId))
+      )
     );
 
     const userMap = new Map<string, { id: string; email: string; name: string | null }>();
@@ -142,6 +150,12 @@ export async function GET(request: NextRequest) {
           content: inquiry.content,
           images: await toSignedUrls(supabase, inquiry.images || []),
           status: inquiry.status,
+          requester_email: inquiry.requester_email ?? null,
+          requester_name: inquiry.requester_name ?? null,
+          request_source: inquiry.request_source ?? "app_inquiry",
+          is_authenticated_request: Boolean(
+            inquiry.is_authenticated_request ?? inquiry.user_id
+          ),
           admin_response: inquiry.admin_response,
           admin_response_images: await toSignedUrls(
             supabase,

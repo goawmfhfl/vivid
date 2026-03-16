@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const model = searchParams.get("model") || "";
     const requestType = searchParams.get("requestType") || "";
     const userId = searchParams.get("userId") || "";
-    const searchQuery = searchParams.get("search") || "";
+    const searchQuery = (searchParams.get("search") || "").trim();
     const startDate = searchParams.get("startDate") || "";
     const endDate = searchParams.get("endDate") || "";
 
@@ -32,12 +32,46 @@ export async function GET(request: NextRequest) {
     // 검색 필터링을 위한 유저 정보 조회 (검색 쿼리가 있는 경우)
     let userIdsForSearch: string[] = [];
     if (searchQuery) {
-      // 검색어로 유저를 먼저 찾기
-      const { data: matchingUsers } = await supabase
-        .from("profiles")
-        .select("id")
-        .or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
-      userIdsForSearch = matchingUsers?.map((u) => u.id) || [];
+      const searchLower = searchQuery.toLowerCase();
+      const PER_PAGE = 1000;
+      let currentPage = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data: chunk, error: listError } =
+          await supabase.auth.admin.listUsers({
+            page: currentPage,
+            perPage: PER_PAGE,
+          });
+
+        if (listError) {
+          console.error("유저 검색 실패:", listError);
+          return NextResponse.json(
+            { error: "유저 검색 중 오류가 발생했습니다." },
+            { status: 500 }
+          );
+        }
+
+        const users = chunk.users || [];
+        const matchedIds = users
+          .filter((user) => {
+            const email = user.email?.toLowerCase() ?? "";
+            const name =
+              (user.user_metadata?.name as string)?.toLowerCase() ?? "";
+            const username =
+              (user.user_metadata?.username as string)?.toLowerCase() ?? "";
+            return (
+              email.includes(searchLower) ||
+              name.includes(searchLower) ||
+              username.includes(searchLower)
+            );
+          })
+          .map((user) => user.id);
+
+        userIdsForSearch.push(...matchedIds);
+        hasMore = users.length === PER_PAGE;
+        currentPage += 1;
+      }
     }
 
     // 기본 쿼리

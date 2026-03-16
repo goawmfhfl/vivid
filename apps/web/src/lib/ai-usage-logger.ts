@@ -82,6 +82,145 @@ export interface LogAIRequestParams {
   errorMessage?: string;
 }
 
+export type CronFailureStep =
+  | "data_fetch"
+  | "ai_generate"
+  | "save_result"
+  | "unknown";
+
+export type CronFailureReasonCode =
+  | "NO_DATA"
+  | "AI_GENERATION_FAILED"
+  | "DB_SAVE_FAILED"
+  | "UNEXPECTED_ERROR";
+
+type CronFailureError = {
+  name?: string;
+  message: string;
+  code?: string;
+  status?: number;
+};
+
+type CronFailureStatus = "skipped" | "failed";
+
+export interface CronFailureLogPayload {
+  source: "cron";
+  flow:
+    | "weekly_vivid"
+    | "monthly_vivid"
+    | "user_trends_weekly"
+    | "user_trends_monthly";
+  status: CronFailureStatus;
+  reason_code: CronFailureReasonCode;
+  failed_step: CronFailureStep;
+  user_id: string;
+  period_start: string;
+  period_end: string;
+  is_pro_snapshot: boolean;
+  model: string;
+  duration_ms: number;
+  input_count: number;
+  aux_count: number | null;
+  error: CronFailureError;
+  stack_top: string[];
+  trace_id: string;
+  created_at: string;
+}
+
+export interface LogCronFailureParams {
+  userId: string;
+  requestType:
+    | "weekly_vivid"
+    | "monthly_vivid"
+    | "user_trends_weekly"
+    | "user_trends_monthly";
+  flow: CronFailureLogPayload["flow"];
+  status: CronFailureStatus;
+  reasonCode: CronFailureReasonCode;
+  failedStep: CronFailureStep;
+  periodStart: string;
+  periodEnd: string;
+  isProSnapshot: boolean;
+  model: string;
+  durationMs: number;
+  inputCount: number;
+  auxCount: number | null;
+  traceId: string;
+  error: unknown;
+}
+
+function toCronFailureError(error: unknown): CronFailureError {
+  if (error instanceof Error) {
+    const err = error as Error & { code?: string; status?: number };
+    return {
+      name: err.name,
+      message: err.message || "Unknown error",
+      code: typeof err.code === "string" ? err.code : undefined,
+      status: typeof err.status === "number" ? err.status : undefined,
+    };
+  }
+  if (typeof error === "string") {
+    return { message: error };
+  }
+  if (error && typeof error === "object") {
+    const maybe = error as Record<string, unknown>;
+    return {
+      name: typeof maybe.name === "string" ? maybe.name : undefined,
+      message:
+        typeof maybe.message === "string"
+          ? maybe.message
+          : JSON.stringify(maybe),
+      code: typeof maybe.code === "string" ? maybe.code : undefined,
+      status: typeof maybe.status === "number" ? maybe.status : undefined,
+    };
+  }
+  return { message: "Unknown error" };
+}
+
+function getStackTop(error: unknown): string[] {
+  if (!(error instanceof Error) || !error.stack) return [];
+  return error.stack.split("\n").slice(0, 20);
+}
+
+export function buildCronFailureLogMessage(
+  params: LogCronFailureParams
+): string {
+  const payload: CronFailureLogPayload = {
+    source: "cron",
+    flow: params.flow,
+    status: params.status,
+    reason_code: params.reasonCode,
+    failed_step: params.failedStep,
+    user_id: params.userId,
+    period_start: params.periodStart,
+    period_end: params.periodEnd,
+    is_pro_snapshot: params.isProSnapshot,
+    model: params.model,
+    duration_ms: params.durationMs,
+    input_count: params.inputCount,
+    aux_count: params.auxCount,
+    error: toCronFailureError(params.error),
+    stack_top: getStackTop(params.error),
+    trace_id: params.traceId,
+    created_at: new Date().toISOString(),
+  };
+  return JSON.stringify(payload);
+}
+
+export function logCronFailureAsync(params: LogCronFailureParams): void {
+  const errorMessage = buildCronFailureLogMessage(params);
+  logAIRequestAsync({
+    userId: params.userId,
+    model: params.model,
+    requestType: params.requestType,
+    sectionName: `cron_${params.failedStep}`,
+    usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    duration_ms: params.durationMs,
+    success: false,
+    errorMessage,
+  });
+}
+
 /**
  * 비용 계산 함수
  */

@@ -8,6 +8,7 @@ import {
   type JsonbValue,
 } from "@/lib/jsonb-encryption";
 import { logAIRequest } from "@/lib/ai-usage-logger";
+import { logCronFailureAsync } from "@/lib/ai-usage-logger";
 import type { Report } from "@/types/daily-vivid";
 import type {
   WeeklyUserTrendDataQuality,
@@ -26,6 +27,7 @@ import {
 import type { MonthlyTrendData } from "@/types/monthly-vivid";
 import { GEMINI_MODELS } from "../../utils/gemini-model";
 import { withGeminiRetry } from "../../utils/gemini-retry";
+import { verifySubscription } from "@/lib/subscription-utils";
 
 type VividRecordRow = {
   kst_date: string;
@@ -579,13 +581,104 @@ export async function updateUserTrendsForUser(
   startDate: string,
   endDate: string
 ): Promise<UserTrendResult> {
-  const records = await fetchVividRecords(supabase, userId, startDate, endDate);
+  const traceId = `trends-weekly-${userId}-${startDate}-${Date.now()}`;
+  const runStartMs = Date.now();
+  const modelName = GEMINI_MODELS.flash;
+  const { isPro } = await verifySubscription(userId);
+
+  let records: VividRecordRow[] = [];
+  try {
+    records = await fetchVividRecords(supabase, userId, startDate, endDate);
+  } catch (error) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_weekly",
+        flow: "user_trends_weekly",
+        status: "failed",
+        reasonCode: "UNEXPECTED_ERROR",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: 0,
+        auxCount: null,
+        traceId,
+        error,
+      });
+    }
+    return { userId, status: "skipped", reason: "records_fetch_failed" };
+  }
   if (records.length === 0) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_weekly",
+        flow: "user_trends_weekly",
+        status: "skipped",
+        reasonCode: "NO_DATA",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: 0,
+        auxCount: null,
+        traceId,
+        error: "No vivid records found for trends weekly range",
+      });
+    }
     return { userId, status: "skipped", reason: "no_records" };
   }
 
-  const dailyRows = await fetchDailyScores(supabase, userId, startDate, endDate);
+  let dailyRows: DailyScoreRow[] = [];
+  try {
+    dailyRows = await fetchDailyScores(supabase, userId, startDate, endDate);
+  } catch (error) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_weekly",
+        flow: "user_trends_weekly",
+        status: "failed",
+        reasonCode: "UNEXPECTED_ERROR",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: records.length,
+        auxCount: null,
+        traceId,
+        error,
+      });
+    }
+    return { userId, status: "skipped", reason: "daily_scores_fetch_failed" };
+  }
   if (dailyRows.length === 0) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_weekly",
+        flow: "user_trends_weekly",
+        status: "skipped",
+        reasonCode: "NO_DATA",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: records.length,
+        auxCount: null,
+        traceId,
+        error: "No daily_vivid rows found for trends weekly range",
+      });
+    }
     return { userId, status: "skipped", reason: "no_daily_scores" };
   }
 
@@ -638,15 +731,38 @@ export async function updateUserTrendsForUser(
     unknown
   >;
 
-  await upsertWeeklyTrend(supabase, {
-    user_id: userId,
-    type: "weekly",
-    period_start: startDate,
-    period_end: endDate,
-    trend: trendEncrypted,
-    generated_at: now,
-    updated_at: now,
-  });
+  try {
+    await upsertWeeklyTrend(supabase, {
+      user_id: userId,
+      type: "weekly",
+      period_start: startDate,
+      period_end: endDate,
+      trend: trendEncrypted,
+      generated_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_weekly",
+        flow: "user_trends_weekly",
+        status: "failed",
+        reasonCode: "DB_SAVE_FAILED",
+        failedStep: "save_result",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: records.length,
+        auxCount: dailyRows.length,
+        traceId,
+        error,
+      });
+    }
+    return { userId, status: "skipped", reason: "weekly_trends_save_failed" };
+  }
 
   return { userId, status: "updated" };
 }
@@ -662,15 +778,86 @@ export async function updateUserTrendsMonthlyForUser(
   startDate: string,
   endDate: string
 ): Promise<UserTrendResult> {
+  const traceId = `trends-monthly-${userId}-${month}-${Date.now()}`;
+  const runStartMs = Date.now();
+  const modelName = GEMINI_MODELS.flash;
+  const { isPro } = await verifySubscription(userId);
   const [year, monthNum] = month.split("-");
   const monthLabel = `${year}년 ${monthNum}월`;
 
-  const dailyRows = await fetchDailyScores(supabase, userId, startDate, endDate);
+  let dailyRows: DailyScoreRow[] = [];
+  try {
+    dailyRows = await fetchDailyScores(supabase, userId, startDate, endDate);
+  } catch (error) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_monthly",
+        flow: "user_trends_monthly",
+        status: "failed",
+        reasonCode: "UNEXPECTED_ERROR",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: 0,
+        auxCount: null,
+        traceId,
+        error,
+      });
+    }
+    return { userId, status: "skipped", reason: "daily_scores_fetch_failed" };
+  }
   if (dailyRows.length === 0) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_monthly",
+        flow: "user_trends_monthly",
+        status: "skipped",
+        reasonCode: "NO_DATA",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: 0,
+        auxCount: null,
+        traceId,
+        error: "No daily_vivid rows found for trends monthly range",
+      });
+    }
     return { userId, status: "skipped", reason: "no_daily_scores" };
   }
 
-  const records = await fetchVividRecords(supabase, userId, startDate, endDate);
+  let records: VividRecordRow[] = [];
+  try {
+    records = await fetchVividRecords(supabase, userId, startDate, endDate);
+  } catch (error) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_monthly",
+        flow: "user_trends_monthly",
+        status: "failed",
+        reasonCode: "UNEXPECTED_ERROR",
+        failedStep: "data_fetch",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: dailyRows.length,
+        auxCount: null,
+        traceId,
+        error,
+      });
+    }
+    return { userId, status: "skipped", reason: "records_fetch_failed" };
+  }
 
   const monthlyTrend = await generateMonthlyTrendFromDailyData(
     records,
@@ -682,6 +869,25 @@ export async function updateUserTrendsMonthlyForUser(
   );
 
   if (!monthlyTrend) {
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_monthly",
+        flow: "user_trends_monthly",
+        status: "failed",
+        reasonCode: "AI_GENERATION_FAILED",
+        failedStep: "ai_generate",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: dailyRows.length,
+        auxCount: records.length,
+        traceId,
+        error: "Monthly trend generation returned null",
+      });
+    }
     return { userId, status: "skipped", reason: "trend_generation_failed" };
   }
 
@@ -710,7 +916,26 @@ export async function updateUserTrendsMonthlyForUser(
   );
 
   if (error) {
-    throw new Error(`Failed to upsert monthly user_trends: ${error.message}`);
+    if (isPro) {
+      logCronFailureAsync({
+        userId,
+        requestType: "user_trends_monthly",
+        flow: "user_trends_monthly",
+        status: "failed",
+        reasonCode: "DB_SAVE_FAILED",
+        failedStep: "save_result",
+        periodStart: startDate,
+        periodEnd: endDate,
+        isProSnapshot: true,
+        model: modelName,
+        durationMs: Date.now() - runStartMs,
+        inputCount: dailyRows.length,
+        auxCount: records.length,
+        traceId,
+        error: new Error(`Failed to upsert monthly user_trends: ${error.message}`),
+      });
+    }
+    return { userId, status: "skipped", reason: "monthly_trends_save_failed" };
   }
 
   return { userId, status: "updated" };
