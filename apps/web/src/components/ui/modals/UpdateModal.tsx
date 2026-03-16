@@ -12,7 +12,6 @@ import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   COLORS,
-  SPACING,
   TYPOGRAPHY,
   BUTTON_STYLES,
   CARD_STYLES,
@@ -139,11 +138,10 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
       <DialogContent
         hideOverlay
         className={cn(
-          "max-w-[380px] w-[calc(100vw-2rem)] p-0 overflow-hidden gap-0 border-0",
+          "max-w-[340px] sm:max-w-[360px] w-[calc(100vw-1.25rem)] p-0 overflow-hidden gap-0 border-0",
           TRANSITIONS.default
         )}
         style={{
-          width: 380,
           borderRadius: CARD_STYLES.default.borderRadius,
           boxShadow: SHADOWS.elevation5,
           backgroundColor: COLORS.surface.elevated,
@@ -159,7 +157,7 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
           <div
             className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
             style={{
-              maxWidth: 380,
+              maxWidth: 360,
               backgroundColor: COLORS.background.card,
             }}
           >
@@ -171,10 +169,10 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
           </div>
           {/* 액션 영역 */}
           <div
-            className={cn("flex gap-3 w-full", SPACING.card.padding)}
+            className={cn("flex gap-2 sm:gap-3 w-full px-3 sm:px-4")}
             style={{
-              paddingTop: 16,
-              paddingBottom: 20,
+              paddingTop: 10,
+              paddingBottom: 12,
               borderTop: `1px solid ${COLORS.border.light}`,
               backgroundColor: COLORS.surface.elevated,
             }}
@@ -183,7 +181,7 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
               type="button"
               onClick={handleClose}
               className={cn(
-                "flex-1 rounded-xl text-sm font-medium",
+                "flex-1 rounded-xl text-sm font-medium py-2.5 sm:py-3",
                 BUTTON_STYLES.ghost.padding,
                 TRANSITIONS.colors
               )}
@@ -209,7 +207,7 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
               type="button"
               onClick={handleConfirm}
               className={cn(
-                "flex-1 rounded-xl font-medium",
+                "flex-1 rounded-xl font-medium py-2.5 sm:py-3",
                 BUTTON_STYLES.primary.padding,
                 BUTTON_STYLES.primary.borderRadius,
                 TRANSITIONS.colors

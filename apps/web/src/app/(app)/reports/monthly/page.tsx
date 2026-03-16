@@ -4,7 +4,6 @@ import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/common/AppHeader";
-import { MonthlyCandidatesSection } from "@/components/summaries/MonthlyCandidatesSection";
 import { FourMonthTrendsSection } from "@/components/reports/FourMonthTrendsSection";
 import { MonthlyTrendsSection } from "@/components/reports/MonthlyTrendsSection";
 import { useMonthlyTrends } from "@/hooks/useMonthlyTrends";
@@ -64,11 +63,6 @@ function MonthlyReportsPage() {
           showBackButton={true}
           onBack={() => router.push("/reports")}
         />
-
-      {/* 아직 생성되지 않은 월간 vivid 알림 */}
-      <div className="mb-8">
-        <MonthlyCandidatesSection />
-      </div>
 
       {/* 월간 리스트 보러가기 버튼 - 부드러운 옐로우 */}
       <div className="mb-12">

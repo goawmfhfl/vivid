@@ -14,7 +14,16 @@ export function BottomNavigation() {
   const [isErrorPage, setIsErrorPage] = useState(false);
   const [isScrolledDown, setIsScrolledDown] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [isAndroidNativeApp, setIsAndroidNativeApp] = useState(false);
   const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const isEmbedded = params.get("embed") === "1";
+    const nativePlatform = params.get("native_platform");
+    setIsAndroidNativeApp(isEmbedded && nativePlatform === "android");
+  }, []);
 
   useEffect(() => {
     // 에러 페이지나 404 페이지 감지
@@ -130,6 +139,7 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
+        paddingBottom: isAndroidNativeApp ? "env(safe-area-inset-bottom, 0px)" : 0,
         backgroundColor: "rgba(250, 250, 248, 0.96)",
         borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "35"),
         borderTopWidth: "1.5px",

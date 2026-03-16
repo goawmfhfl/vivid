@@ -13,6 +13,40 @@ import { cn } from "@/lib/utils";
 import { TestTube, CreditCard, User, TrendingUp, FileText } from "lucide-react";
 
 type CronResult = Record<string, unknown>;
+type MissingWeeklyIdea = {
+  kstDate: string;
+  type: string;
+  contentPreview: string;
+};
+
+type MissingWeeklyProUser = {
+  userId: string;
+  email: string | null;
+  name: string | null;
+  weekStart: string;
+  weekEnd: string;
+  isPro: true;
+  hasWeeklyVivid: false;
+  ideaCount: number;
+  ideas: MissingWeeklyIdea[];
+};
+
+type MissingWeeklyProUsersResult = {
+  ok: boolean;
+  weekStart: string;
+  weekEnd: string;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  users: MissingWeeklyProUser[];
+  stats: {
+    totalUsers: number;
+    proUsers: number;
+    missingWeeklyVividUsers: number;
+    withIdeasUsers: number;
+  };
+};
 
 const SUBSCRIPTION_EVENT_TYPES = [
   "TEST",
@@ -79,6 +113,12 @@ export default function AdminTestPage() {
   const [isMonthlyReportLoading, setIsMonthlyReportLoading] = useState(false);
   const [monthlyReportUserId, setMonthlyReportUserId] = useState("1bebb0d4-9908-4e98-817b-06e19331cd0f");
   const [monthlyReportBaseDate, setMonthlyReportBaseDate] = useState("");
+  const [missingUsersPage, setMissingUsersPage] = useState("1");
+  const [missingUsersLimit, setMissingUsersLimit] = useState("20");
+  const [missingUsersResult, setMissingUsersResult] =
+    useState<MissingWeeklyProUsersResult | null>(null);
+  const [missingUsersError, setMissingUsersError] = useState<string | null>(null);
+  const [isMissingUsersLoading, setIsMissingUsersLoading] = useState(false);
 
   // 크론 서브탭: persona | trends | report | monthlyReport
   const [cronSubTab, setCronSubTab] = useState<"persona" | "trends" | "report" | "monthlyReport">("persona");
@@ -289,6 +329,134 @@ export default function AdminTestPage() {
     }
   };
 
+  const handleRunWeeklyReportForTargetUser = async (targetUserId: string) => {
+    setReportUserId(targetUserId);
+    setIsReportLoading(true);
+    setReportError(null);
+    setReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("userId", targetUserId);
+      params.set("sync", "1");
+      if (reportBaseDate.trim()) params.set("baseDate", reportBaseDate.trim());
+      const fullUrl = `/api/cron/generate-weekly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setReportResult(data as CronResult);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsReportLoading(false);
+    }
+  };
+
+  const handleRunMonthlyReportForTargetUser = async (targetUserId: string) => {
+    setMonthlyReportUserId(targetUserId);
+    setIsMonthlyReportLoading(true);
+    setMonthlyReportError(null);
+    setMonthlyReportResult(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("userId", targetUserId);
+      params.set("sync", "1");
+      if (monthlyReportBaseDate.trim()) {
+        params.set("baseDate", monthlyReportBaseDate.trim());
+      }
+      const fullUrl = `/api/cron/generate-monthly-vivid-report?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setMonthlyReportResult(data as CronResult);
+    } catch (err) {
+      setMonthlyReportError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsMonthlyReportLoading(false);
+    }
+  };
+
+  const handleRunUserTrendsForTargetUser = async (
+    type: "weekly" | "monthly",
+    targetUserId: string
+  ) => {
+    setUserId(targetUserId);
+    const setLoading = type === "weekly" ? setIsTrendsLoading : setIsTrendsMonthlyLoading;
+    const setError = type === "weekly" ? setTrendsError : setTrendsMonthlyError;
+    const setResult = type === "weekly" ? setTrendsResult : setTrendsMonthlyResult;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("userId", targetUserId);
+      params.set("sync", "1");
+      if (baseDate.trim()) params.set("baseDate", baseDate.trim());
+      if (batchSize.trim()) params.set("batchSize", batchSize.trim());
+      if (concurrency.trim()) params.set("concurrency", concurrency.trim());
+      const fullUrl = `/api/cron/update-user-trends/${type}?${params.toString()}`;
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : "요청에 실패했습니다.");
+      }
+      setResult(data as CronResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDebugBaseDateByTab = (): string => {
+    if (cronSubTab === "report") return reportBaseDate.trim();
+    if (cronSubTab === "monthlyReport") return monthlyReportBaseDate.trim();
+    return baseDate.trim();
+  };
+
+  const handleFetchMissingWeeklyProUsers = async () => {
+    const pageValue = Math.max(parseInt(missingUsersPage || "1", 10) || 1, 1);
+    const limitValue = Math.min(
+      Math.max(parseInt(missingUsersLimit || "20", 10) || 20, 1),
+      100
+    );
+    const params = new URLSearchParams();
+    params.set("page", String(pageValue));
+    params.set("limit", String(limitValue));
+    const baseDateValue = getDebugBaseDateByTab();
+    if (baseDateValue) params.set("baseDate", baseDateValue);
+
+    setIsMissingUsersLoading(true);
+    setMissingUsersError(null);
+    setMissingUsersResult(null);
+    try {
+      const response = await adminApiFetch(
+        `/api/admin/cron-debug/missing-weekly-pro-users?${params.toString()}`
+      );
+      const data = (await response.json()) as MissingWeeklyProUsersResult & {
+        error?: string;
+        details?: string;
+      };
+      if (!response.ok) {
+        throw new Error(data.error || data.details || "조회 요청에 실패했습니다.");
+      }
+      setMissingUsersResult(data);
+    } catch (err) {
+      setMissingUsersError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsMissingUsersLoading(false);
+    }
+  };
+
   const handleFetchPersona = async () => {
     if (!userId.trim()) {
       setPersonaError("userId를 입력해주세요.");
@@ -369,6 +537,228 @@ export default function AdminTestPage() {
       setIsSubscriptionLoading(false);
     }
   };
+
+  const renderMissingUsersPanel = (
+    tab: "trends" | "report" | "monthlyReport"
+  ) => (
+    <div className={cn("space-y-4", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}>
+      <div className="space-y-2">
+        <h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)} style={{ color: TYPOGRAPHY.h3.color }}>
+          미생성 Pro 유저 조회 (주간 기준)
+        </h3>
+        <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+          현재 탭의 baseDate 값을 기준으로, 해당 주차에 weekly_vivid가 없고 vivid/dream 기록이 있는 Pro 유저를 조회합니다.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>기준 baseDate</label>
+          <input
+            type="text"
+            value={getDebugBaseDateByTab() || "(미입력: 오늘 기준 직전 주)"}
+            readOnly
+            className="w-full rounded-lg px-3 py-2 text-sm"
+            style={{
+              border: `1px solid ${COLORS.border.input}`,
+              backgroundColor: COLORS.background.cardElevated,
+              color: COLORS.text.secondary,
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>page</label>
+          <input
+            type="number"
+            min="1"
+            value={missingUsersPage}
+            onChange={(e) => setMissingUsersPage(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 text-sm"
+            style={{
+              border: `1px solid ${COLORS.border.input}`,
+              backgroundColor: COLORS.background.cardElevated,
+              color: COLORS.text.primary,
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className={cn(TYPOGRAPHY.label.fontSize, TYPOGRAPHY.label.fontWeight)}>limit</label>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            value={missingUsersLimit}
+            onChange={(e) => setMissingUsersLimit(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 text-sm"
+            style={{
+              border: `1px solid ${COLORS.border.input}`,
+              backgroundColor: COLORS.background.cardElevated,
+              color: COLORS.text.primary,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleFetchMissingWeeklyProUsers}
+          disabled={isMissingUsersLoading}
+          className={cn(
+            "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+            BUTTON_STYLES.secondary.borderRadius,
+            BUTTON_STYLES.secondary.padding
+          )}
+          style={{
+            backgroundColor: BUTTON_STYLES.secondary.background,
+            color: BUTTON_STYLES.secondary.color,
+            border: `1px solid ${COLORS.border.light}`,
+          }}
+        >
+          {isMissingUsersLoading ? "조회 중..." : "미생성 Pro 유저 조회"}
+        </button>
+      </div>
+
+      {missingUsersError && (
+        <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>
+          {missingUsersError}
+        </div>
+      )}
+
+      {missingUsersResult && (
+        <div className="space-y-3">
+          <div
+            className={cn("rounded-lg px-3 py-2", SPACING.card.borderRadius)}
+            style={{
+              backgroundColor: COLORS.background.base,
+              border: `1px solid ${COLORS.border.light}`,
+            }}
+          >
+            <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+              주차: {missingUsersResult.weekStart} ~ {missingUsersResult.weekEnd} / 전체 {missingUsersResult.total}명
+            </p>
+            <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+              totalUsers={missingUsersResult.stats.totalUsers}, proUsers={missingUsersResult.stats.proUsers}, missingWeeklyVividUsers={missingUsersResult.stats.missingWeeklyVividUsers}, withIdeasUsers={missingUsersResult.stats.withIdeasUsers}
+            </p>
+          </div>
+
+          {missingUsersResult.users.length === 0 ? (
+            <p className={cn(TYPOGRAPHY.body.fontSize)} style={{ color: COLORS.text.muted }}>
+              조건에 맞는 유저가 없습니다.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {missingUsersResult.users.map((target) => (
+                <div
+                  key={target.userId}
+                  className={cn("space-y-2 rounded-lg px-3 py-3", SPACING.card.borderRadius)}
+                  style={{
+                    border: `1px solid ${COLORS.border.light}`,
+                    backgroundColor: COLORS.background.cardElevated,
+                  }}
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                      <p className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)} style={{ color: COLORS.text.primary }}>
+                        {target.name || "(이름 없음)"} / {target.email || "(이메일 없음)"}
+                      </p>
+                      <p className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.muted }}>
+                        userId: {target.userId} · ideas: {target.ideaCount}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {tab === "report" && (
+                        <button
+                          type="button"
+                          onClick={() => void handleRunWeeklyReportForTargetUser(target.userId)}
+                          disabled={isReportLoading || !cronSecret.trim()}
+                          className={cn(
+                            "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                            BUTTON_STYLES.primary.borderRadius,
+                            BUTTON_STYLES.primary.padding
+                          )}
+                          style={{
+                            backgroundColor: BUTTON_STYLES.primary.background,
+                            color: BUTTON_STYLES.primary.color,
+                          }}
+                        >
+                          주간 리포트 실행
+                        </button>
+                      )}
+                      {tab === "monthlyReport" && (
+                        <button
+                          type="button"
+                          onClick={() => void handleRunMonthlyReportForTargetUser(target.userId)}
+                          disabled={isMonthlyReportLoading || !cronSecret.trim()}
+                          className={cn(
+                            "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                            BUTTON_STYLES.primary.borderRadius,
+                            BUTTON_STYLES.primary.padding
+                          )}
+                          style={{
+                            backgroundColor: BUTTON_STYLES.primary.background,
+                            color: BUTTON_STYLES.primary.color,
+                          }}
+                        >
+                          월간 리포트 실행
+                        </button>
+                      )}
+                      {tab === "trends" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void handleRunUserTrendsForTargetUser("weekly", target.userId)}
+                            disabled={isTrendsLoading || !cronSecret.trim()}
+                            className={cn(
+                              "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                              BUTTON_STYLES.primary.borderRadius,
+                              BUTTON_STYLES.primary.padding
+                            )}
+                            style={{
+                              backgroundColor: BUTTON_STYLES.primary.background,
+                              color: BUTTON_STYLES.primary.color,
+                            }}
+                          >
+                            Weekly trends 실행
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleRunUserTrendsForTargetUser("monthly", target.userId)}
+                            disabled={isTrendsMonthlyLoading || !cronSecret.trim()}
+                            className={cn(
+                              "transition-all disabled:opacity-50 disabled:cursor-not-allowed",
+                              BUTTON_STYLES.secondary.borderRadius,
+                              BUTTON_STYLES.secondary.padding
+                            )}
+                            style={{
+                              backgroundColor: BUTTON_STYLES.secondary.background,
+                              color: BUTTON_STYLES.secondary.color,
+                              border: `1px solid ${COLORS.border.light}`,
+                            }}
+                          >
+                            Monthly trends 실행
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {target.ideas.length > 0 && (
+                    <div className="space-y-1">
+                      {target.ideas.map((idea, index) => (
+                        <p key={`${target.userId}-${idea.kstDate}-${index}`} className={cn(TYPOGRAPHY.caption.fontSize)} style={{ color: COLORS.text.secondary }}>
+                          [{idea.kstDate}] {idea.type}: {idea.contentPreview}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="w-full space-y-6">
@@ -867,6 +1257,7 @@ export default function AdminTestPage() {
                   </button>
                 </div>
               </div>
+              {renderMissingUsersPanel("trends")}
               {(trendsError || trendsMonthlyError) && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{trendsError || trendsMonthlyError}</div>}
               {trendsResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Weekly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsResult, null, 2)}</pre></div>}
               {trendsMonthlyResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Monthly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsMonthlyResult, null, 2)}</pre></div>}
@@ -962,6 +1353,7 @@ export default function AdminTestPage() {
                   </button>
                 </div>
               </div>
+              {renderMissingUsersPanel("report")}
               {reportError && (
                 <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>
                   {reportError}
@@ -1065,6 +1457,7 @@ export default function AdminTestPage() {
                   </button>
                 </div>
               </div>
+              {renderMissingUsersPanel("monthlyReport")}
               {monthlyReportError && (
                 <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>
                   {monthlyReportError}

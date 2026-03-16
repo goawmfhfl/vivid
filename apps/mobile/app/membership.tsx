@@ -10,6 +10,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Purchases, {
   PurchasesPackage,
@@ -29,6 +30,7 @@ const LABELS: Record<string, string> = {
 
 export default function MembershipScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { plan: planParam } = useLocalSearchParams<{ plan?: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -225,7 +227,12 @@ export default function MembershipScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS === "android"
+            ? { paddingBottom: 40 + insets.bottom }
+            : null,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
