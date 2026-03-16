@@ -14,6 +14,7 @@ import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import Purchases from "react-native-purchases";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { signInWithGoogle } from "../lib/google-signin";
 import { supabase } from "../lib/supabase";
 
@@ -24,7 +25,7 @@ const WEB_APP_URL_BASE =
 
 // WebView에서 로드할 때 웹이 '앱 내'로 인식하도록 embed=1 추가 (로그인 버튼 조건: 앱에서는 iOS만 애플 로그인)
 const WEB_APP_URL = WEB_APP_URL_BASE
-  ? `${WEB_APP_URL_BASE.replace(/\/$/, "")}${WEB_APP_URL_BASE.includes("?") ? "&" : "?"}embed=1`
+  ? `${WEB_APP_URL_BASE.replace(/\/$/, "")}${WEB_APP_URL_BASE.includes("?") ? "&" : "?"}embed=1&native_platform=${Platform.OS}`
   : "";
 
 type WebSessionBridgePayload = {
@@ -34,6 +35,7 @@ type WebSessionBridgePayload = {
 
 export default function Page() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncingSubscription, setSyncingSubscription] = useState(false);
@@ -462,7 +464,12 @@ export default function Page() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { paddingBottom: Platform.OS === "android" ? insets.bottom : 0 },
+      ]}
+    >
       <StatusBar barStyle="dark-content" />
       {loading && (
         <View style={styles.loadingContainer}>

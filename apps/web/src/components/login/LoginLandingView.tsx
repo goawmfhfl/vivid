@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
@@ -75,9 +75,18 @@ export function LoginLandingView() {
   const [activeSocialProvider, setActiveSocialProvider] = useState<
     "google" | "kakao" | "apple" | null
   >(null);
-  // Apple 심사 가이드라인 4.8 대응:
-  // 타사 로그인(구글/카카오)이 있는 화면에서는 Apple 로그인도 동등하게 항상 노출한다.
-  const shouldShowAppleLogin = true;
+  const shouldShowAppleLogin = useMemo(() => {
+    if (!mounted || typeof window === "undefined") {
+      return false;
+    }
+
+    const nativePlatform = searchParams?.get("native_platform");
+    const isEmbeddedApp = searchParams?.get("embed") === "1";
+    const isAndroidNativeApp = isEmbeddedApp && nativePlatform === "android";
+    const isAndroidDevice = /Android/i.test(window.navigator.userAgent || "");
+
+    return !isAndroidNativeApp && !isAndroidDevice;
+  }, [mounted, searchParams]);
   const googleLoginMutation = useGoogleLogin();
   const kakaoLoginMutation = useKakaoLogin();
   const appleLoginMutation = useAppleLogin();
