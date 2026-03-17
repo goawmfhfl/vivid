@@ -6,10 +6,10 @@ import Purchases from "react-native-purchases";
 import { configureGoogleSignIn } from "../lib/google-signin";
 import { supabase } from "../lib/supabase";
 
-// RevenueCat API 키 (.env.local의 EXPO_PUBLIC_REVENUECAT_SDK_API_KEY 사용)
+// RevenueCat API 키 (.env.local의 플랫폼별 키 사용)
 const REVENUECAT_API_KEYS = {
-  apple:
-    process.env.EXPO_PUBLIC_REVENUECAT_SDK_API_KEY || "",
+  ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || "",
+  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || "",
 };
 
 const WEB_APP_URL_BASE =
@@ -29,12 +29,21 @@ export default function RootLayout() {
     configureGoogleSignIn();
   }, []);
 
-  // RevenueCat 초기화 (iOS 전용) + app_user_id = Supabase user id (웹훅 연동용)
+  // RevenueCat 초기화 (iOS/Android) + app_user_id = Supabase user id (웹훅 연동용)
   // configure 완료 후 logIn 호출 (configure 전 logIn은 SDK에서 무시됨)
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" && Platform.OS !== "android") return;
 
-    Purchases.configure({ apiKey: REVENUECAT_API_KEYS.apple });
+    const apiKey =
+      Platform.OS === "ios"
+        ? REVENUECAT_API_KEYS.ios
+        : REVENUECAT_API_KEYS.android;
+    if (!apiKey) {
+      console.warn(`[RevenueCat] Missing API key for platform: ${Platform.OS}`);
+      return;
+    }
+
+    Purchases.configure({ apiKey });
 
     const syncRevenueCatUserId = async () => {
       try {

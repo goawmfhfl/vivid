@@ -124,7 +124,6 @@ export default function MembershipScreen() {
 
   // RevenueCat app_user_id = Supabase user id 연동 (웹훅 404 방지)
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.id) {
         Purchases.logIn(session.user.id).catch((e) =>

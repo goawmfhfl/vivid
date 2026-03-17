@@ -224,7 +224,7 @@ export default function Page() {
         plan?: string;
         userId?: string;
       };
-      if (data.type === "SUPABASE_SESSION_READY" && data.userId && Platform.OS === "ios") {
+      if (data.type === "SUPABASE_SESSION_READY" && data.userId) {
         Purchases.logIn(data.userId).catch((e) =>
           console.warn("[RevenueCat] logIn from SUPABASE_SESSION_READY failed:", e)
         );
@@ -283,13 +283,11 @@ export default function Page() {
     console.log("[Membership] handlePurchaseFromWeb 시작, plan:", plan);
     try {
       // RevenueCat app_user_id = Supabase user id 보장 (웹훅 404 방지)
-      if (Platform.OS === "ios") {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await Purchases.logIn(session.user.id).catch((e) =>
-            console.warn("[RevenueCat] logIn before purchase failed:", e)
-          );
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await Purchases.logIn(session.user.id).catch((e) =>
+          console.warn("[RevenueCat] logIn before purchase failed:", e)
+        );
       }
       const offerings = await Purchases.getOfferings();
       const current = offerings.current ?? offerings.all["Default"];
@@ -374,13 +372,11 @@ export default function Page() {
   const handleRestoreFromWeb = async () => {
     console.log("[Membership] handleRestoreFromWeb 시작");
     try {
-      if (Platform.OS === "ios") {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          await Purchases.logIn(session.user.id).catch((e) =>
-            console.warn("[RevenueCat] logIn before restore failed:", e)
-          );
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await Purchases.logIn(session.user.id).catch((e) =>
+          console.warn("[RevenueCat] logIn before restore failed:", e)
+        );
       }
       const customerInfo = await Purchases.restorePurchases();
       const isPro = customerInfo.entitlements.active["pro"] != null;
