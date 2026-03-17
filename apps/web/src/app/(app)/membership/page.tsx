@@ -547,7 +547,7 @@ function MembershipPageContent() {
             style={{
               background: `linear-gradient(180deg, ${COLORS.background.cardElevated} 0%, ${COLORS.primary[50]} 100%)`,
               border: `1px solid ${COLORS.primary[200]}`,
-              boxShadow: "0 1px 3px rgba(43, 43, 43, 0.04)",
+              boxShadow: "0 1px 3px rgba(67, 45, 45, 0.04)",
             }}
           >
             <div
@@ -623,7 +623,7 @@ function MembershipPageContent() {
       <div
         className="fixed left-0 right-0 z-[99] px-4 pb-2 transition-all duration-300"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+          bottom: "12px",
           opacity: isCtaVisible ? 1 : 0,
           transform: isCtaVisible ? "translateY(0)" : "translateY(16px)",
           pointerEvents: isCtaVisible ? "auto" : "none",
