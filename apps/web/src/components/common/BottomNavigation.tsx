@@ -81,10 +81,6 @@ export function BottomNavigation() {
   const isOnboardingReportsStep =
     isOnboardingVisible && onboardingStep === reportsStepIndex;
 
-  if (!isVisible) {
-    return null;
-  }
-
   // step5(reportsTab)에서는 스크롤과 관계없이 바텀 네비 항상 노출
   const shouldHide =
     !isOnboardingReportsStep && isScrolledDown && !isAtTop;
@@ -124,6 +120,10 @@ export function BottomNavigation() {
       document.documentElement.style.setProperty("--bottom-nav-height", "0px");
     };
   }, []);
+
+  if (!isVisible) {
+    return null;
+  }
 
   // 내정보 관련 페이지 경로 목록
   const myInfoRelatedPaths = [
