@@ -493,9 +493,10 @@ export function Home({ selectedDate }: HomeProps = {}) {
 
   return (
     <div
-      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} pb-24 hide-scrollbar`}
+      className={`${SPACING.page.maxWidthNarrow} mx-auto ${SPACING.page.padding} hide-scrollbar`}
       style={{
         overflowX: "hidden",
+        paddingBottom: "calc(var(--bottom-nav-height, 0px) + 12px)",
       }}
     >
       <AppHeader
@@ -544,9 +545,10 @@ export function Home({ selectedDate }: HomeProps = {}) {
       {shouldShowPrimaryButton && (
         <div
           className={cn(
-            "fixed bottom-20 left-0 right-0 flex justify-center px-3 sm:px-4",
+            "fixed left-0 right-0 flex justify-center px-3 sm:px-4",
             isOnboardingAiStep ? "z-[140]" : "z-50"
           )}
+          style={{ bottom: "calc(var(--bottom-nav-height, 0px) + 12px)" }}
           data-onboarding-id={HOME_ONBOARDING_TARGET_IDS.aiButton}
         >
           <div className="flex items-center gap-2 sm:gap-3 justify-center">

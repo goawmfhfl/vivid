@@ -16,6 +16,7 @@ export function BottomNavigation() {
   const [isAtTop, setIsAtTop] = useState(true);
   const [isAndroidNativeApp, setIsAndroidNativeApp] = useState(false);
   const lastScrollY = useRef(0);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -100,6 +101,42 @@ export function BottomNavigation() {
   const shouldHide =
     !isOnboardingReportsStep && isScrolledDown && !isAtTop;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    const setNavHeight = () => {
+      if (!isVisible || shouldHide) {
+        root.style.setProperty("--bottom-nav-height", "0px");
+        return;
+      }
+      const nav = navRef.current;
+      if (!nav) return;
+      const measuredHeight = Math.max(Math.round(nav.getBoundingClientRect().height), 0);
+      root.style.setProperty("--bottom-nav-height", `${measuredHeight}px`);
+    };
+
+    setNavHeight();
+
+    const nav = navRef.current;
+    if (!nav || !isVisible || shouldHide) return;
+
+    const resizeObserver = new ResizeObserver(setNavHeight);
+    resizeObserver.observe(nav);
+    window.addEventListener("resize", setNavHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", setNavHeight);
+    };
+  }, [isVisible, shouldHide, isAndroidNativeApp]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === "undefined") return;
+      document.documentElement.style.setProperty("--bottom-nav-height", "0px");
+    };
+  }, []);
+
   // 내정보 관련 페이지 경로 목록
   const myInfoRelatedPaths = [
     "/my-info",
@@ -136,6 +173,7 @@ export function BottomNavigation() {
 
   return (
     <nav
+      ref={navRef}
       className="fixed bottom-0 left-0 right-0"
       style={{
         position: "fixed",
