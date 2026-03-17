@@ -29,6 +29,10 @@ export interface UserListItem {
     status: "active" | "canceled" | "expired" | "past_due";
     started_at: string | null;
     expires_at: string | null;
+    updated_at: string | null;
+    store?: string | null;
+    product_id?: string | null;
+    last_event_timestamp_ms?: number | null;
   };
   aiUsage?: {
     total_requests: number;

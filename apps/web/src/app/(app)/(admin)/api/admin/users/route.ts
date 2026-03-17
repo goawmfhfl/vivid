@@ -192,6 +192,10 @@ export async function GET(request: NextRequest) {
               status: subscription.status,
               started_at: subscription.started_at || null,
               expires_at: subscription.expires_at,
+              updated_at: subscription.updated_at || null,
+              store: subscription.store ?? null,
+              product_id: subscription.product_id ?? null,
+              last_event_timestamp_ms: subscription.last_event_timestamp_ms ?? null,
             }
           : undefined,
         aiUsage: aiUsageMap.get(user.id),

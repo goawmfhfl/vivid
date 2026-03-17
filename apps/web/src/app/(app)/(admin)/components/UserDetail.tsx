@@ -67,6 +67,22 @@ function formatGenerationDuration(seconds: number | null | undefined): string {
   return `${minutes}분 ${remainingSeconds.toFixed(0)}초`;
 }
 
+function formatOptionalText(value: string | null | undefined): string {
+  if (value == null) return "-";
+  const trimmed = value.trim();
+  return trimmed ? trimmed : "-";
+}
+
+function formatEventTimestampMs(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "-";
+  try {
+    const iso = new Date(value).toISOString();
+    return `${value.toLocaleString("ko-KR")} (${formatKSTDateLong(iso)})`;
+  } catch {
+    return value.toLocaleString("ko-KR");
+  }
+}
+
 export function UserDetail({ userId }: UserDetailProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -1158,6 +1174,48 @@ export function UserDetail({ userId }: UserDetailProps) {
                             </span>
                           ) : null;
                         })()}
+                    </div>
+                  </div>
+                  <div
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl"
+                    style={{
+                      backgroundColor: COLORS.background.card,
+                      border: `1px solid ${COLORS.border.light}`,
+                    }}
+                  >
+                    <div>
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
+                        스토어
+                      </p>
+                      <p className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+                        {formatOptionalText(user.subscription.store)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
+                        상품 ID
+                      </p>
+                      <p className="text-sm font-medium break-all" style={{ color: COLORS.text.primary }}>
+                        {formatOptionalText(user.subscription.product_id)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
+                        마지막 업데이트
+                      </p>
+                      <p className="text-sm font-medium" style={{ color: COLORS.text.primary }}>
+                        {user.subscription.updated_at
+                          ? formatKSTDateLong(user.subscription.updated_at)
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium mb-1" style={{ color: COLORS.text.tertiary }}>
+                        마지막 이벤트 타임스탬프(ms)
+                      </p>
+                      <p className="text-sm font-medium break-all" style={{ color: COLORS.text.primary }}>
+                        {formatEventTimestampMs(user.subscription.last_event_timestamp_ms)}
+                      </p>
                     </div>
                   </div>
                 </div>
