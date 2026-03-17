@@ -142,6 +142,8 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
+        // Safe area bottom is owned by web BottomNavigation only.
+        // Avoid duplicating bottom inset in native container.
         paddingBottom: isAndroidNativeApp
           ? "max(var(--native-safe-bottom, 0px), env(safe-area-inset-bottom, 0px))"
           : 0,

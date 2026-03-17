@@ -476,13 +476,10 @@ export default function Page() {
     };
   }, []);
 
+  // Bottom safe area spacing is applied in web BottomNavigation.
+  // Keep native container padding neutral to prevent double inset.
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { paddingBottom: Platform.OS === "android" ? insets.bottom : 0 },
-      ]}
-    >
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       {loading && (
         <View style={styles.loadingContainer}>
