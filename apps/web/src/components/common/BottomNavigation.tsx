@@ -168,7 +168,7 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        paddingBottom: 0,
+        paddingBottom: "var(--native-bottom-inset, env(safe-area-inset-bottom, 0px))",
         backgroundColor: "rgba(250, 250, 248, 0.96)",
         borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "35"),
         borderTopWidth: "1.5px",

@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -34,6 +35,7 @@ type WebSessionBridgePayload = {
 
 export default function Page() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncingSubscription, setSyncingSubscription] = useState(false);
@@ -506,6 +508,11 @@ export default function Page() {
         onMessage={handleMessage}
         injectedJavaScriptBeforeContentLoaded={`
           (function() {
+            // Android 시스템 NavBar 높이를 CSS 변수로 주입
+            document.documentElement.style.setProperty('--native-bottom-inset', '${insets.bottom}px');
+            window.__NATIVE_BOTTOM_INSET__ = ${insets.bottom};
+            window.__NATIVE_PLATFORM__ = '${Platform.OS}';
+
             // 중복 패치 방지
             if (window.__VIVID_BRIDGE_PATCHED__) return;
             window.__VIVID_BRIDGE_PATCHED__ = true;

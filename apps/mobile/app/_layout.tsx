@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AppState, type AppStateStatus, LogBox, Platform } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import Purchases from "react-native-purchases";
@@ -92,6 +93,7 @@ export default function RootLayout() {
     );
 
     let previousState: AppStateStatus = AppState.currentState;
+    
     const appStateSubscription = AppState.addEventListener(
       "change",
       (nextState) => {
@@ -114,10 +116,12 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <SafeAreaProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    </SafeAreaProvider>
   );
 }
