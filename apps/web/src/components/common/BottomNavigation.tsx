@@ -14,20 +14,8 @@ export function BottomNavigation() {
   const [isErrorPage, setIsErrorPage] = useState(false);
   const [isScrolledDown, setIsScrolledDown] = useState(false);
   const [isAtTop, setIsAtTop] = useState(true);
-  const [isAndroidNativeApp, setIsAndroidNativeApp] = useState(false);
   const lastScrollY = useRef(0);
   const navRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const isEmbedded = params.get("embed") === "1";
-    const nativePlatform = params.get("native_platform");
-    const hasNativeBridge =
-      typeof (window as { ReactNativeWebView?: { postMessage?: unknown } })
-        .ReactNativeWebView?.postMessage === "function";
-    setIsAndroidNativeApp((isEmbedded && nativePlatform === "android") || hasNativeBridge);
-  }, []);
 
   useEffect(() => {
     // 에러 페이지나 404 페이지 감지
@@ -128,7 +116,7 @@ export function BottomNavigation() {
       resizeObserver.disconnect();
       window.removeEventListener("resize", setNavHeight);
     };
-  }, [isVisible, shouldHide, isAndroidNativeApp]);
+  }, [isVisible, shouldHide]);
 
   useEffect(() => {
     return () => {
@@ -180,11 +168,7 @@ export function BottomNavigation() {
         bottom: 0,
         left: 0,
         right: 0,
-        // Safe area bottom is owned by web BottomNavigation only.
-        // Avoid duplicating bottom inset in native container.
-        paddingBottom: isAndroidNativeApp
-          ? "max(var(--native-safe-bottom, 0px), env(safe-area-inset-bottom, 0px))"
-          : 0,
+        paddingBottom: 0,
         backgroundColor: "rgba(250, 250, 248, 0.96)",
         borderColor: GRADIENT_UTILS.borderColor(COLORS.brand.light, "35"),
         borderTopWidth: "1.5px",

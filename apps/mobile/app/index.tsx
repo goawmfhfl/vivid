@@ -14,7 +14,6 @@ import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import Purchases from "react-native-purchases";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { signInWithGoogle } from "../lib/google-signin";
 import { supabase } from "../lib/supabase";
 
@@ -35,8 +34,6 @@ type WebSessionBridgePayload = {
 
 export default function Page() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const nativeSafeBottom = Platform.OS === "android" ? Math.max(insets.bottom, 0) : 0;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncingSubscription, setSyncingSubscription] = useState(false);
@@ -49,21 +46,6 @@ export default function Page() {
       // Ignore if splash is already hidden.
     }
   }, []);
-
-  const injectNativeSafeBottomScript = React.useMemo(
-    () => `(function(){
-      var safeBottom = ${nativeSafeBottom};
-      document.documentElement.style.setProperty('--native-safe-bottom', safeBottom + 'px');
-      window.__NATIVE_SAFE_BOTTOM__ = safeBottom;
-      true;
-    })();`,
-    [nativeSafeBottom]
-  );
-
-  const applyNativeSafeBottomInset = React.useCallback(() => {
-    if (Platform.OS !== "android") return;
-    webViewRef.current?.injectJavaScript(injectNativeSafeBottomScript);
-  }, [injectNativeSafeBottomScript]);
 
   const syncSubscription = React.useCallback(
     async (productId?: string) => {
@@ -180,7 +162,6 @@ export default function Page() {
   // WebView가 로드 완료되면 호출
   const handleLoadEnd = () => {
     setLoading(false);
-    applyNativeSafeBottomInset();
     void hideNativeSplash();
   };
 
@@ -532,12 +513,6 @@ export default function Page() {
               }
             }
           };
-          (function() {
-            var safeBottom = ${nativeSafeBottom};
-            document.documentElement.style.setProperty('--native-safe-bottom', safeBottom + 'px');
-            window.__NATIVE_SAFE_BOTTOM__ = safeBottom;
-            true;
-          })();
         `}
         javaScriptEnabled={true}
         domStorageEnabled={true}

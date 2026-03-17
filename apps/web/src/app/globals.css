@@ -164,7 +164,6 @@
   --foreground: var(--color-text-primary);
   --font-geist-sans: var(--font-sans);
   --font-geist-mono: var(--font-mono);
-  --native-safe-bottom: 0px;
 }
 
 @media (prefers-color-scheme: dark) {
