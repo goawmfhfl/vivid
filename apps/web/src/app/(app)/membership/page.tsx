@@ -209,6 +209,7 @@ function MembershipPageContent() {
   const { isNative: isNativeApp, isReady } = useIsNativeAppWithReady();
   const { data: policies } = useNotionPolicies();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("annual");
+  const [isCtaVisible, setIsCtaVisible] = useState(true);
 
   // embed=1은 라우팅 시 사라지므로, WebView 내 여부는 ReactNativeWebView 존재로 판단
   const isInApp =
@@ -245,6 +246,42 @@ function MembershipPageContent() {
     return () => { mounted = false; };
   }, [isInApp]);
 
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY;
+      const viewportBottom = currentScrollY + window.innerHeight;
+      const pageBottom = document.documentElement.scrollHeight;
+      const isNearBottom = viewportBottom >= pageBottom - 24;
+
+      if (isNearBottom) {
+        setIsCtaVisible(true);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY <= 80) {
+        setIsCtaVisible(true);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      if (Math.abs(scrollDelta) < 8) {
+        return;
+      }
+
+      setIsCtaVisible(scrollDelta < 0);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   // 웹 환경에서는 리다이렉트 중 로딩 표시 (개발 환경은 페이지 노출)
   if (isReady && !isNativeApp && !isDev) {
     return (
@@ -280,6 +317,7 @@ function MembershipPageContent() {
 
   const handleSelectPlan = (plan: PlanType) => () => {
     setSelectedPlan(plan);
+    setIsCtaVisible(true);
   };
 
   const handleRestorePurchases = () => {
@@ -585,9 +623,10 @@ function MembershipPageContent() {
       <div
         className="fixed left-0 right-0 z-[99] px-4 pb-2 transition-all duration-300"
         style={{
-          opacity: 1,
-          transform: "translateY(0)",
-          pointerEvents: "auto",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+          opacity: isCtaVisible ? 1 : 0,
+          transform: isCtaVisible ? "translateY(0)" : "translateY(16px)",
+          pointerEvents: isCtaVisible ? "auto" : "none",
         }}
       >
         <div
