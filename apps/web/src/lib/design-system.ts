@@ -349,6 +349,12 @@ export const CARD_STYLES = {
 // 버튼 스타일
 // ============================================
 export const BUTTON_STYLES = {
+  mini: {
+    borderRadius: "rounded-md",
+    padding: "px-2 py-2 sm:px-2.5 sm:py-2",
+    fontSize: "text-[0.72rem] sm:text-xs",
+    lineHeight: "leading-none",
+  },
   primary: {
     background: COLORS.brand.primary,
     color: COLORS.text.white,

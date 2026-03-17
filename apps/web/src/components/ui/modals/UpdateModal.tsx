@@ -138,7 +138,7 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
       <DialogContent
         hideOverlay
         className={cn(
-          "max-w-[340px] sm:max-w-[360px] w-[calc(100vw-1.25rem)] p-0 overflow-hidden gap-0 border-0",
+          "max-w-[300px] sm:max-w-[320px] w-[calc(100vw-1.25rem)] p-0 overflow-hidden gap-0 border-0",
           TRANSITIONS.default
         )}
         style={{
@@ -155,24 +155,28 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
         <div className="flex flex-col overflow-hidden">
           {/* 이미지 영역 */}
           <div
-            className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
+            className="relative w-full flex items-center justify-center overflow-hidden"
             style={{
-              maxWidth: 360,
               backgroundColor: COLORS.background.card,
             }}
           >
             <img
               src={modal.image_url}
               alt=""
-              className="w-full h-full object-contain"
+              className="block w-full h-auto object-contain"
+              style={{
+                maxHeight: "58vh",
+              }}
+              loading="eager"
+              decoding="async"
             />
           </div>
           {/* 액션 영역 */}
           <div
-            className={cn("flex gap-2 sm:gap-3 w-full px-3 sm:px-4")}
+            className={cn("flex gap-1 w-full px-1.5 sm:px-2")}
             style={{
-              paddingTop: 10,
-              paddingBottom: 12,
+              paddingTop: 5,
+              paddingBottom: 5,
               borderTop: `1px solid ${COLORS.border.light}`,
               backgroundColor: COLORS.surface.elevated,
             }}
@@ -181,13 +185,16 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
               type="button"
               onClick={handleClose}
               className={cn(
-                "flex-1 rounded-xl text-sm font-medium py-2.5 sm:py-3",
-                BUTTON_STYLES.ghost.padding,
-                TRANSITIONS.colors
+                TRANSITIONS.colors,
+                BUTTON_STYLES.mini.borderRadius,
+                BUTTON_STYLES.mini.padding,
+                BUTTON_STYLES.mini.fontSize,
+                BUTTON_STYLES.mini.lineHeight,
+                "flex-1 min-w-0 font-medium overflow-hidden"
               )}
               style={{
                 color: COLORS.text.secondary,
-                border: `1.5px solid ${COLORS.border.light}`,
+                border: `1.5px solid ${COLORS.border.default}`,
                 backgroundColor: "transparent",
               }}
               onMouseEnter={(e) => {
@@ -196,10 +203,15 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.borderColor = COLORS.border.light;
+                e.currentTarget.style.borderColor = COLORS.border.default;
               }}
             >
-              <span className={cn(TYPOGRAPHY.body.fontSize, TYPOGRAPHY.body.fontWeight)}>
+              <span
+                className={cn(
+                  TYPOGRAPHY.body.fontWeight,
+                  "block w-full text-center whitespace-nowrap truncate"
+                )}
+              >
                 더이상 보지 않기
               </span>
             </button>
@@ -207,14 +219,17 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
               type="button"
               onClick={handleConfirm}
               className={cn(
-                "flex-1 rounded-xl font-medium py-2.5 sm:py-3",
-                BUTTON_STYLES.primary.padding,
-                BUTTON_STYLES.primary.borderRadius,
-                TRANSITIONS.colors
+                TRANSITIONS.colors,
+                BUTTON_STYLES.mini.borderRadius,
+                BUTTON_STYLES.mini.padding,
+                BUTTON_STYLES.mini.fontSize,
+                BUTTON_STYLES.mini.lineHeight,
+                "flex-1 min-w-0 font-medium overflow-hidden"
               )}
               style={{
                 backgroundColor: COLORS.brand.primary,
                 color: COLORS.text.white,
+                border: `1.5px solid ${COLORS.border.default}`,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = COLORS.brand.secondary;
@@ -223,7 +238,7 @@ export function UpdateModal({ deferred = false }: UpdateModalProps) {
                 e.currentTarget.style.backgroundColor = COLORS.brand.primary;
               }}
             >
-              <span className={cn(TYPOGRAPHY.body.fontSize, "font-semibold")}>
+              <span className="block w-full text-center whitespace-nowrap truncate font-semibold">
                 확인하기
               </span>
             </button>
