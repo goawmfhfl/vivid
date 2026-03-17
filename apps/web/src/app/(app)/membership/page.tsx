@@ -216,6 +216,10 @@ function MembershipPageContent() {
     typeof window !== "undefined" &&
     !!(window as { ReactNativeWebView?: { postMessage?: unknown } })
       .ReactNativeWebView;
+  const isAndroidInApp =
+    isInApp &&
+    typeof navigator !== "undefined" &&
+    /Android/i.test(navigator.userAgent);
 
   const isDev = process.env.NEXT_PUBLIC_NODE_ENV === "development";
 
@@ -614,7 +618,6 @@ function MembershipPageContent() {
       <div
         className="fixed left-0 right-0 z-[99] px-4 pb-2 transition-all duration-300"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
           opacity: isCtaVisible ? 1 : 0,
           transform: isCtaVisible ? "translateY(0)" : "translateY(16px)",
           pointerEvents: isCtaVisible ? "auto" : "none",
