@@ -294,12 +294,14 @@ function MembershipPageContent() {
   const handleStartNow = () => {
     const planInfo = PLANS[selectedPlan];
     const payload = { type: "PURCHASE", plan: planInfo.id };
+    
     console.log("[Membership] 지금 시작하기 클릭", {
       planInfo,
       isInApp,
       hasReactNativeWebView: typeof window !== "undefined" && !!(window as any).ReactNativeWebView,
       hasPostMessage: typeof window !== "undefined" && !!(window as any).ReactNativeWebView?.postMessage,
     });
+    
     if (isInApp) {
       if (
         typeof window !== "undefined" &&

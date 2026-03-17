@@ -505,14 +505,48 @@ export default function Page() {
           onError={handleError}
         onMessage={handleMessage}
         injectedJavaScriptBeforeContentLoaded={`
-          window.ReactNativeWebView = {
-            postMessage: function(data) {
-              var msg = typeof data === 'string' ? data : JSON.stringify(data);
-              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ReactNativeWebView) {
-                window.webkit.messageHandlers.ReactNativeWebView.postMessage(msg);
+          (function() {
+            // 중복 패치 방지
+            if (window.__VIVID_BRIDGE_PATCHED__) return;
+            window.__VIVID_BRIDGE_PATCHED__ = true;
+
+            var existingPostMessage =
+              window.ReactNativeWebView &&
+              typeof window.ReactNativeWebView.postMessage === "function"
+                ? window.ReactNativeWebView.postMessage.bind(window.ReactNativeWebView)
+                : null;
+
+            var webkitPostMessage =
+              window.webkit &&
+              window.webkit.messageHandlers &&
+              window.webkit.messageHandlers.ReactNativeWebView &&
+              typeof window.webkit.messageHandlers.ReactNativeWebView.postMessage === "function"
+                ? window.webkit.messageHandlers.ReactNativeWebView.postMessage.bind(
+                    window.webkit.messageHandlers.ReactNativeWebView
+                  )
+                : null;
+
+            // react-native-webview 기본 브리지를 우선 사용하고, 없을 때만 iOS webkit 경로로 폴백
+            function postToNative(data) {
+              var msg = typeof data === "string" ? data : JSON.stringify(data);
+              if (existingPostMessage) {
+                existingPostMessage(msg);
+                return;
+              }
+              if (webkitPostMessage) {
+                webkitPostMessage(msg);
               }
             }
-          };
+
+            if (!window.ReactNativeWebView) {
+              window.ReactNativeWebView = { postMessage: postToNative };
+              return;
+            }
+
+            // 기존 객체는 유지하고 postMessage만 안전 래핑 (Android 기본 브리지 훼손 방지)
+            window.ReactNativeWebView.postMessage = postToNative;
+          })();
+          true;
         `}
         javaScriptEnabled={true}
         domStorageEnabled={true}
