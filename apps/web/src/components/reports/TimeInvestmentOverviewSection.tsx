@@ -19,6 +19,7 @@ import {
 import { COLORS } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { useRecentTimeInvestment } from "@/hooks/useRecentTimeInvestment";
+import { useInvestmentTrends } from "@/hooks/useInvestmentTrends";
 import { TimeInvestmentOverviewSkeleton } from "./GrowthInsightsSkeleton";
 import { PreviewDataNotice } from "./PreviewDataNotice";
 import type { TimeInvestmentWeekItem } from "@/app/api/weekly-vivid/recent-time-investment/route";
@@ -45,12 +46,6 @@ function normalizeBreakdown(
   }));
 }
 
-/** 주간 변화 요약 텍스트 생성 (예: "35% → 38% → 32% → 40%") */
-function getWeeklyChangeSummary(percentages: number[]): string {
-  if (percentages.length === 0) return "";
-  return percentages.map((p) => `${p}%`).join(" → ");
-}
-
 /** 스파이더 차트용 데이터 변환 */
 function toRadarData(
   breakdown: Array<{ category: string; percentage: number }>
@@ -68,17 +63,6 @@ function toRadarData(
     fullMark: 100,
     displayPercent: b.percentage,
   }));
-}
-
-/** 추이 방향 설명 (상승/하락/유지) */
-function getTrendDescription(percentages: number[]): string {
-  if (percentages.length < 2) return "";
-  const first = percentages[0];
-  const last = percentages[percentages.length - 1];
-  const delta = last - first;
-  if (delta > 2) return "전주 대비 상승 추세예요";
-  if (delta < -2) return "전주 대비 하락 추세예요";
-  return "전주 대비 비슷한 수준이에요";
 }
 
 /** 4주치 예제 데이터 */
@@ -148,6 +132,8 @@ export function TimeInvestmentOverviewSection({
     isLoading,
     error,
   } = useRecentTimeInvestment();
+
+  const { data: investmentTrends } = useInvestmentTrends();
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setIsAnimated(true));
@@ -325,8 +311,8 @@ export function TimeInvestmentOverviewSection({
               };
               const isExpanded = expandedCategory === cat;
               const lineData = getLineChartDataForCategory(cat);
-              const trendDesc = getTrendDescription(percentages);
-              const weeklySummary = getWeeklyChangeSummary(percentages);
+              const catRising = investmentTrends?.focus_pattern?.rising?.find((r) => r.category === cat);
+              const catDeclining = investmentTrends?.focus_pattern?.declining?.find((d) => d.category === cat);
 
               return (
                 <div
@@ -446,54 +432,63 @@ export function TimeInvestmentOverviewSection({
                         </ResponsiveContainer>
                       </div>
 
-                      {/* 주간 변화 요약 */}
-                      <div
-                        className="mb-4 px-3 py-2 rounded-lg"
-                        style={{
-                          backgroundColor: `${accent}12`,
-                          border: `1px solid ${COLORS.border.light}`,
-                        }}
-                      >
-                        <p
-                          className="text-xs font-medium mb-1"
-                          style={{ color: COLORS.text.secondary }}
+                      {/* 집중 패턴 AI 인사이트 */}
+                      {investmentTrends?.focus_pattern && (investmentTrends.based_on_weeks ?? 0) >= 2 ? (
+                        <div
+                          className="rounded-lg px-3 py-3"
+                          style={{
+                            backgroundColor: `${accent}10`,
+                            border: `1px solid ${accent}30`,
+                          }}
                         >
-                          주간 변화
-                        </p>
-                        <p
-                          className="text-xs tabular-nums"
-                          style={{ color: COLORS.text.primary }}
-                        >
-                          {weeklySummary}
-                        </p>
-                        {trendDesc && (
+                          {(catRising || catDeclining) && (
+                            <div className="flex items-center gap-1.5 mb-2">
+                              {catRising && (
+                                <span
+                                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                  style={{
+                                    backgroundColor: "#22c55e20",
+                                    color: "#16a34a",
+                                    border: "1px solid #22c55e40",
+                                  }}
+                                >
+                                  ↑ {catRising.delta}
+                                </span>
+                              )}
+                              {catDeclining && (
+                                <span
+                                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                  style={{
+                                    backgroundColor: COLORS.background.hover,
+                                    color: COLORS.text.muted,
+                                    border: `1px solid ${COLORS.border.light}`,
+                                  }}
+                                >
+                                  ↓ {catDeclining.delta}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <p
-                            className="text-xs mt-1"
-                            style={{ color: accent }}
+                            className="text-xs leading-relaxed"
+                            style={{ color: COLORS.text.secondary }}
                           >
-                            {trendDesc}
+                            {investmentTrends.focus_pattern.insight}
                           </p>
-                        )}
-                      </div>
-
-                      {/* AI 인사이트 영역 (placeholder) */}
-                      <div
-                        className={cn(
-                          "rounded-lg px-3 py-3 min-h-[60px]",
-                          "border border-dashed"
-                        )}
-                        style={{
-                          backgroundColor: COLORS.background.hover + "40",
-                          borderColor: COLORS.border.light,
-                        }}
-                      >
-                        <p
-                          className="text-xs"
-                          style={{ color: COLORS.text.muted }}
+                        </div>
+                      ) : (
+                        <div
+                          className={cn("rounded-lg px-3 py-3 min-h-[52px]", "border border-dashed")}
+                          style={{
+                            backgroundColor: COLORS.background.hover + "40",
+                            borderColor: COLORS.border.light,
+                          }}
                         >
-                          AI 피드백이 여기에 표시됩니다
-                        </p>
-                      </div>
+                          <p className="text-xs" style={{ color: COLORS.text.muted }}>
+                            주간 VIVID를 2개 이상 작성하면 AI 인사이트가 생성돼요
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -571,7 +566,7 @@ export function TimeInvestmentOverviewSection({
             )}
           </div>
 
-          {/* 종합 AI 피드백 영역 */}
+          {/* 관심사 키워드 변화 */}
           <div
             className="mt-6 pt-6 border-t"
             style={{ borderColor: COLORS.border.light }}
@@ -580,25 +575,127 @@ export function TimeInvestmentOverviewSection({
               className="text-xs font-medium mb-3"
               style={{ color: COLORS.text.secondary }}
             >
-              종합 AI 피드백
+              관심사 키워드 변화
             </p>
-            <div
-              className={cn(
-                "rounded-xl px-4 py-4 min-h-[100px]",
-                "border"
-              )}
-              style={{
-                backgroundColor: COLORS.background.base,
-                borderColor: COLORS.border.light,
-              }}
-            >
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: COLORS.text.muted }}
+            {investmentTrends?.keyword_trend && (investmentTrends.based_on_weeks ?? 0) >= 2 ? (
+              <div
+                className="rounded-xl px-4 py-4"
+                style={{
+                  backgroundColor: COLORS.background.base,
+                  border: `1px solid ${COLORS.border.light}`,
+                }}
               >
-                최근 4주간의 시간 투자 패턴을 분석한 AI 피드백이 여기에 표시됩니다.
-              </p>
-            </div>
+                {/* insight 텍스트 */}
+                <p
+                  className="text-sm leading-relaxed mb-4"
+                  style={{ color: COLORS.text.secondary }}
+                >
+                  {investmentTrends.keyword_trend.insight}
+                </p>
+
+                {/* 주차별 키워드 */}
+                {investmentTrends.keyword_trend.keywords_by_week.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    {investmentTrends.keyword_trend.keywords_by_week.map((w) => (
+                      <div key={w.week_label} className="flex items-start gap-2">
+                        <span
+                          className="text-[10px] font-medium flex-shrink-0 mt-0.5 min-w-[56px]"
+                          style={{ color: COLORS.text.muted }}
+                        >
+                          {w.week_label}
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {w.keywords.map((kw) => {
+                            const isRising = investmentTrends.keyword_trend?.rising.includes(kw);
+                            const isDeclining = investmentTrends.keyword_trend?.declining.includes(kw);
+                            return (
+                              <span
+                                key={kw}
+                                className="text-[10px] px-1.5 py-0.5 rounded-full"
+                                style={{
+                                  backgroundColor: isRising
+                                    ? "#22c55e20"
+                                    : isDeclining
+                                    ? COLORS.background.hover
+                                    : `${accent}15`,
+                                  color: isRising
+                                    ? "#16a34a"
+                                    : isDeclining
+                                    ? COLORS.text.muted
+                                    : accent,
+                                  border: isRising
+                                    ? "1px solid #22c55e40"
+                                    : isDeclining
+                                    ? `1px solid ${COLORS.border.light}`
+                                    : `1px solid ${accent}30`,
+                                }}
+                              >
+                                {kw}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* rising / declining 요약 뱃지 */}
+                {(investmentTrends.keyword_trend.rising.length > 0 ||
+                  investmentTrends.keyword_trend.declining.length > 0) && (
+                  <div className="flex flex-wrap gap-2 pt-3 border-t" style={{ borderColor: COLORS.border.light }}>
+                    {investmentTrends.keyword_trend.rising.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px]" style={{ color: COLORS.text.muted }}>↑ 증가</span>
+                        {investmentTrends.keyword_trend.rising.map((kw) => (
+                          <span
+                            key={kw}
+                            className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                            style={{
+                              backgroundColor: "#22c55e20",
+                              color: "#16a34a",
+                              border: "1px solid #22c55e40",
+                            }}
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {investmentTrends.keyword_trend.declining.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px]" style={{ color: COLORS.text.muted }}>↓ 감소</span>
+                        {investmentTrends.keyword_trend.declining.map((kw) => (
+                          <span
+                            key={kw}
+                            className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                            style={{
+                              backgroundColor: COLORS.background.hover,
+                              color: COLORS.text.muted,
+                              border: `1px solid ${COLORS.border.light}`,
+                            }}
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                className={cn("rounded-xl px-4 py-4 min-h-[80px]", "border border-dashed")}
+                style={{
+                  backgroundColor: COLORS.background.hover + "40",
+                  borderColor: COLORS.border.light,
+                }}
+              >
+                <p className="text-sm" style={{ color: COLORS.text.muted }}>
+                  주간 VIVID를 2개 이상 작성하면 관심사 키워드 변화를 분석해드려요
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

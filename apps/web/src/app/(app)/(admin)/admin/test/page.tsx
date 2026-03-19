@@ -64,6 +64,9 @@ export default function AdminTestPage() {
   const [trendsMonthlyError, setTrendsMonthlyError] = useState<string | null>(null);
   const [isTrendsLoading, setIsTrendsLoading] = useState(false);
   const [isTrendsMonthlyLoading, setIsTrendsMonthlyLoading] = useState(false);
+  const [investmentTrendResult, setInvestmentTrendResult] = useState<CronResult | null>(null);
+  const [investmentTrendError, setInvestmentTrendError] = useState<string | null>(null);
+  const [isInvestmentTrendLoading, setIsInvestmentTrendLoading] = useState(false);
   const [runSync, setRunSync] = useState(true);
 
   // 리포트 전용 cron 상태 (테스트용: 특정 유저만 실행)
@@ -182,6 +185,24 @@ export default function AdminTestPage() {
       setTrendsMonthlyError(err instanceof Error ? err.message : "알 수 없는 오류");
     } finally {
       setIsTrendsMonthlyLoading(false);
+    }
+  };
+
+  const handleRunInvestmentTrends = async () => {
+    setIsInvestmentTrendLoading(true);
+    setInvestmentTrendError(null);
+    setInvestmentTrendResult(null);
+    try {
+      const data = await executeCron("/api/cron/update-investment-trends", {
+        sync: runSync && userId.trim().length > 0,
+        batchSize,
+        concurrency,
+      });
+      setInvestmentTrendResult(data);
+    } catch (err) {
+      setInvestmentTrendError(err instanceof Error ? err.message : "알 수 없는 오류");
+    } finally {
+      setIsInvestmentTrendLoading(false);
     }
   };
 
@@ -865,11 +886,15 @@ export default function AdminTestPage() {
                   <button type="button" onClick={handleRunUserTrendsMonthly} disabled={isTrendsMonthlyLoading || !cronSecret.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.primary.borderRadius, BUTTON_STYLES.primary.padding)} style={{ backgroundColor: BUTTON_STYLES.primary.background, color: BUTTON_STYLES.primary.color }}>
                     {isTrendsMonthlyLoading ? "실행 중..." : "Monthly user_trends 실행"}
                   </button>
+                  <button type="button" onClick={handleRunInvestmentTrends} disabled={isInvestmentTrendLoading || !cronSecret.trim()} className={cn("transition-all disabled:opacity-50", BUTTON_STYLES.primary.borderRadius, BUTTON_STYLES.primary.padding)} style={{ backgroundColor: BUTTON_STYLES.primary.background, color: BUTTON_STYLES.primary.color }}>
+                    {isInvestmentTrendLoading ? "실행 중..." : "시간투자 트렌드 실행"}
+                  </button>
                 </div>
               </div>
-              {(trendsError || trendsMonthlyError) && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{trendsError || trendsMonthlyError}</div>}
+              {(trendsError || trendsMonthlyError || investmentTrendError) && <div className={cn("px-4 py-3 rounded-lg", SPACING.card.borderRadius)} style={{ backgroundColor: COLORS.status.errorLight, color: COLORS.text.white }}>{trendsError || trendsMonthlyError || investmentTrendError}</div>}
               {trendsResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Weekly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsResult, null, 2)}</pre></div>}
               {trendsMonthlyResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>Monthly user_trends 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(trendsMonthlyResult, null, 2)}</pre></div>}
+              {investmentTrendResult && <div className={cn("space-y-3", SPACING.card.padding, SPACING.card.borderRadius)} style={{ ...CARD_STYLES.default }}><h3 className={cn(TYPOGRAPHY.h3.fontSize, TYPOGRAPHY.h3.fontWeight)}>시간투자 트렌드 결과</h3><pre className="text-xs whitespace-pre-wrap" style={{ color: COLORS.text.secondary }}>{JSON.stringify(investmentTrendResult, null, 2)}</pre></div>}
             </div>
           )}
 
